@@ -444,12 +444,12 @@ model StoreVerification {
   userId                      String    @unique
   user                        User      @relation(fields: [userId], references: [id])
   commercialRegisterNumber    String?
-  commercialRegisterFile      String?
+  commercialRegisterFile      String?   @db.LongText
   iban                        String?
   beneficiaryName             String?
-  bankLetterFile              String?
-  managerIdFront              String?
-  managerIdBack               String?
+  bankLetterFile              String?   @db.LongText
+  managerIdFront              String?   @db.LongText
+  managerIdBack               String?   @db.LongText
   verificationStatus          String    @default("pending") // pending, approved, rejected
   rejectionReasons            String?   // JSON array of reasons
   adminNotes                  String?
@@ -464,10 +464,10 @@ model FreelancerVerification {
   id                    String    @id @default(cuid())
   userId                String    @unique
   user                  User      @relation(fields: [userId], references: [id])
-  freelanceDocFile      String?   // optional
-  nationalIdFront       String?
-  nationalIdBack        String?
-  selfieUrls            String?   @default("[]") // JSON array
+  freelanceDocFile      String?   @db.LongText // optional
+  nationalIdFront       String?   @db.LongText
+  nationalIdBack        String?   @db.LongText
+  selfieUrls            String?   @db.LongText @default("[]") // JSON array
   livenessScore         Float?    // 0-1
   iban                  String?
   verificationStatus    String    @default("pending")
@@ -484,8 +484,8 @@ model SupplierVerification {
   id                    String    @id @default(cuid())
   userId                String    @unique
   user                  User      @relation(fields: [userId], references: [id])
-  commercialLicense     String?
-  importLicense         String?
+  commercialLicense     String?   @db.LongText
+  importLicense         String?   @db.LongText
   iban                  String?
   productSamples        String?   @default("[]") // JSON
   verificationStatus    String    @default("pending")
@@ -502,8 +502,8 @@ model LogisticsVerification {
   id                      String    @id @default(cuid())
   userId                  String    @unique
   user                    User      @relation(fields: [userId], references: [id])
-  transportLicenseFile    String?
-  insuranceCertificateFile String?
+  transportLicenseFile    String?   @db.LongText
+  insuranceCertificateFile String?   @db.LongText
   numberOfVehicles        String?
   numberOfDrivers         String?
   iban                    String?

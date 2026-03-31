@@ -58,5 +58,9 @@ server.log
 /db/*.db
 /db/*.db-journal
 
+# Upload files (stored in external persistent directory)
+/chariday-uploads/
+../chariday-uploads/
+
 # Worklog
 worklog.md

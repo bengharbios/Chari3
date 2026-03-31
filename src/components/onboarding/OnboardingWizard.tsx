@@ -165,6 +165,14 @@ function maskIban(iban: string): string {
   return `${iban.slice(0, 2)}${'•'.repeat(iban.length - 6)}${iban.slice(-4)}`;
 }
 
+// Extract URL from stored format "/api/files/{hex}.jpg::{filename}"
+function extractUrl(f: string | null): string | null {
+  if (!f) return null;
+  const parts = f.split('::');
+  if (parts.length >= 2) return parts[0];
+  return f;
+}
+
 // ============================================
 // STEP DEFINITIONS PER ROLE
 // ============================================
@@ -245,16 +253,80 @@ function FileUploadZone({
   const inputRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleFile = useCallback(
-    (file: File) => {
+    async (file: File) => {
       if (file.size > maxSizeMB * 1024 * 1024) {
+        toast.error(t(locale, `حجم الملف كبير جداً. الحد الأقصى ${maxSizeMB}MB`, `File too large. Max ${maxSizeMB}MB`));
         return;
       }
-      onFileSelect(file.name);
+
+      setIsUploading(true);
+      try {
+        // Upload file to server — saved to persistent external directory
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Timeout: abort if upload takes more than 20 seconds
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
+
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error('[FileUpload] Upload failed:', res.status, errData);
+          toast.error(
+            (errData as { error?: string }).error || t(locale, 'فشل رفع الملف', 'Upload failed')
+          );
+          return;
+        }
+
+        const data = await res.json();
+        console.log('[FileUpload] Upload response:', data.success, data.url);
+
+        if (data.success && data.url) {
+          // Store URL — lightweight string, fits in any DB column
+          // Format: "/api/files/{hex}.jpg::{original_filename}"
+          onFileSelect(`${data.url}::${file.name}`);
+        } else {
+          console.error('[FileUpload] No URL in response:', data);
+          toast.error(
+            data.error || t(locale, 'فشل رفع الملف', 'Upload failed')
+          );
+        }
+      } catch (err) {
+        console.error('[FileUpload] Error:', err);
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          toast.error(t(locale, 'انتهت مهلة الرفع. حاول مرة أخرى.', 'Upload timed out. Try again.'));
+        } else {
+          toast.error(
+            t(locale, 'خطأ في الاتصال. تحقق من الإنترنت وحاول مرة أخرى.', 'Connection error. Check your internet and try again.')
+          );
+        }
+      } finally {
+        setIsUploading(false);
+      }
     },
-    [maxSizeMB, onFileSelect]
+    [maxSizeMB, onFileSelect, locale]
   );
+
+  // Extract clean display name from stored URL
+  const getDisplayName = (f: string | null): string => {
+    if (!f) return '';
+    // Format: "/api/files/{hex}.jpg::{original_filename}"
+    const parts = f.split('::');
+    if (parts.length >= 2) return parts[parts.length - 1];
+    // Legacy: plain URL — extract filename
+    if (f.startsWith('/')) return f.split('/').pop() || f;
+    return f;
+  };
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -273,7 +345,7 @@ function FileUploadZone({
           <div className="h-8 w-8 rounded-lg bg-green-100 dark:bg-green-900/40 flex items-center justify-center shrink-0">
             <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
           </div>
-          <span className="text-sm font-medium truncate">{fileName}</span>
+          <span className="text-sm font-medium truncate">{getDisplayName(fileName)}</span>
         </div>
         <Button
           variant="ghost"
@@ -293,30 +365,43 @@ function FileUploadZone({
         {t(locale, label, labelEn)}
       </Label>
       <div
-        className={`relative flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed cursor-pointer transition-all ${
-          dragOver
-            ? 'border-primary bg-primary/5 scale-[1.01]'
-            : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30'
+        className={`relative flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed transition-all ${
+          isUploading
+            ? 'border-primary/50 bg-primary/5 pointer-events-none'
+            : dragOver
+              ? 'border-primary bg-primary/5 scale-[1.01] cursor-pointer'
+              : 'border-muted-foreground/25 hover:border-primary/50 hover:bg-muted/30 cursor-pointer'
         }`}
-        onClick={() => inputRef.current?.click()}
+        onClick={() => !isUploading && inputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
-        onDrop={handleDrop}
+        onDrop={(e) => { if (!isUploading) handleDrop(e); }}
       >
-        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-          <Upload className="h-5 w-5 text-muted-foreground" />
-        </div>
-        <p className="text-sm text-muted-foreground text-center">
-          {t(locale, 'اسحب الملف هنا أو انقر للرفع', 'Drag file or click to upload')}
-        </p>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-            PDF, JPG, PNG
-          </Badge>
-          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-            {maxSizeMB}MB
-          </Badge>
-        </div>
+        {isUploading ? (
+          <>
+            <Loader2 className="h-8 w-8 text-primary animate-spin" />
+            <p className="text-sm text-muted-foreground">
+              {t(locale, 'جاري رفع الملف...', 'Uploading...')}
+            </p>
+          </>
+        ) : (
+          <>
+            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+              <Upload className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground text-center">
+              {t(locale, 'اسحب الملف هنا أو انقر للرفع', 'Drag file or click to upload')}
+            </p>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                PDF, JPG, PNG
+              </Badge>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                {maxSizeMB}MB
+              </Badge>
+            </div>
+          </>
+        )}
         <input
           ref={inputRef}
           type="file"
@@ -580,24 +665,24 @@ export default function OnboardingWizard() {
             userId: authUser.id,
             role,
             commercialRegisterNumber,
-            commercialRegisterFile,
+            commercialRegisterFile: extractUrl(commercialRegisterFile),
             iban,
             beneficiaryName,
-            bankLetterFile,
-            idFrontFile,
-            idBackFile,
-            freelanceDocumentFile,
-            freelancerIdFrontFile,
-            freelancerIdBackFile,
+            bankLetterFile: extractUrl(bankLetterFile),
+            idFrontFile: extractUrl(idFrontFile),
+            idBackFile: extractUrl(idBackFile),
+            freelanceDocumentFile: extractUrl(freelanceDocumentFile),
+            freelancerIdFrontFile: extractUrl(freelancerIdFrontFile),
+            freelancerIdBackFile: extractUrl(freelancerIdBackFile),
             livenessCompleted,
-            livenessSelfie,
+            livenessSelfie: null,
             freelancerIban,
-            transportLicenseFile,
-            insuranceCertificateFile,
+            transportLicenseFile: extractUrl(transportLicenseFile),
+            insuranceCertificateFile: extractUrl(insuranceCertificateFile),
             numberOfVehicles,
             numberOfDrivers,
-            commercialLicenseFile,
-            importLicenseFile,
+            commercialLicenseFile: extractUrl(commercialLicenseFile),
+            importLicenseFile: extractUrl(importLicenseFile),
             supplierIban,
           }),
         });
@@ -636,83 +721,81 @@ export default function OnboardingWizard() {
   // Save draft and go back to dashboard
   const handleSaveDraft = async () => {
     setIsSavingDraft(true);
+    const { user: authUser } = useAuthStore.getState();
+
+    // ALWAYS save locally first (Zustand persist)
+    saveDraft();
+
+    if (!authUser) {
+      setIsSavingDraft(false);
+      toast.success(
+        locale === 'ar' ? 'تم حفظ المسودة محلياً' : 'Draft saved locally'
+      );
+      return;
+    }
+
+    // Save all data to DB — files stored as URLs only (lightweight payload)
     try {
-      const { user: authUser } = useAuthStore.getState();
-      if (!authUser) {
-        setIsSavingDraft(false);
-        return;
-      }
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 15000);
 
       const res = await fetch('/api/onboarding/draft', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
         body: JSON.stringify({
           userId: authUser.id,
           role,
           step: currentStep,
           commercialRegisterNumber,
-          commercialRegisterFile,
+          commercialRegisterFile: extractUrl(commercialRegisterFile),
           iban,
           beneficiaryName,
-          bankLetterFile,
-          idFrontFile,
-          idBackFile,
-          freelanceDocumentFile,
-          freelancerIdFrontFile,
-          freelancerIdBackFile,
+          bankLetterFile: extractUrl(bankLetterFile),
+          idFrontFile: extractUrl(idFrontFile),
+          idBackFile: extractUrl(idBackFile),
+          freelanceDocumentFile: extractUrl(freelanceDocumentFile),
+          freelancerIdFrontFile: extractUrl(freelancerIdFrontFile),
+          freelancerIdBackFile: extractUrl(freelancerIdBackFile),
           livenessCompleted,
-          livenessSelfie,
+          livenessSelfie: null,
           freelancerIban,
-          transportLicenseFile,
-          insuranceCertificateFile,
+          transportLicenseFile: extractUrl(transportLicenseFile),
+          insuranceCertificateFile: extractUrl(insuranceCertificateFile),
           numberOfVehicles,
           numberOfDrivers,
-          commercialLicenseFile,
-          importLicenseFile,
+          commercialLicenseFile: extractUrl(commercialLicenseFile),
+          importLicenseFile: extractUrl(importLicenseFile),
           supplierIban,
         }),
       });
+      clearTimeout(timeout);
 
       const data = await res.json();
-      setIsSavingDraft(false);
-
       if (data.success) {
-        saveDraft();
         toast.success(
-          locale === 'ar'
-            ? 'تم حفظ المسودة بنجاح'
-            : 'Draft saved successfully'
-        );
-        // Navigate back to dashboard
-        useAppStore.getState().setCurrentPage(
-          role === 'store_manager' ? 'store' :
-          role === 'seller' ? 'seller' :
-          role === 'supplier' ? 'supplier' :
-          role === 'logistics' ? 'logistics' : 'login'
+          locale === 'ar' ? 'تم حفظ المسودة بنجاح' : 'Draft saved successfully'
         );
       } else {
-        toast.error(
-          locale === 'ar'
-            ? (data.error || 'فشل حفظ المسودة')
-            : (data.error || 'Failed to save draft')
+        toast.success(
+          locale === 'ar' ? 'تم حفظ المسودة محلياً' : 'Draft saved locally'
         );
       }
     } catch {
-      // Fallback: still save locally and navigate out
-      setIsSavingDraft(false);
-      saveDraft();
       toast.success(
-        locale === 'ar'
-          ? 'تم حفظ المسودة محلياً'
-          : 'Draft saved locally'
-      );
-      useAppStore.getState().setCurrentPage(
-        role === 'store_manager' ? 'store' :
-        role === 'seller' ? 'seller' :
-        role === 'supplier' ? 'supplier' :
-        role === 'logistics' ? 'logistics' : 'login'
+        locale === 'ar' ? 'تم حفظ المسودة محلياً' : 'Draft saved locally'
       );
     }
+
+    setIsSavingDraft(false);
+
+    // Navigate back to dashboard
+    useAppStore.getState().setCurrentPage(
+      role === 'store_manager' ? 'store' :
+      role === 'seller' ? 'seller' :
+      role === 'supplier' ? 'supplier' :
+      role === 'logistics' ? 'logistics' : 'login'
+    );
   };
 
   const currentStepData = steps[currentStep];
@@ -885,17 +968,14 @@ export default function OnboardingWizard() {
                 onChange={(e) => setField('beneficiaryName', e.target.value)}
               />
             </div>
-            {financeConfig.docs.map((doc) => (
-              <FileUploadZone
-                key={doc.id}
-                label={doc.labelAr}
-                labelEn={doc.labelEn}
-                fileName={doc.id === 'bank_letter' ? bankLetterFile : bankLetterFile}
-                onFileSelect={(name) => { if (doc.id === 'bank_letter') setField('bankLetterFile', name); }}
-                onRemove={() => { if (doc.id === 'bank_letter') setField('bankLetterFile', null); }}
-                locale={locale}
-              />
-            ))}
+            <FileUploadZone
+              label={financeConfig.docs[0]?.labelAr || t(locale, 'كشف حساب بنكي', 'Bank Statement')}
+              labelEn={financeConfig.docs[0]?.labelEn || 'Bank Statement'}
+              fileName={bankLetterFile}
+              onFileSelect={(name) => setField('bankLetterFile', name)}
+              onRemove={() => setField('bankLetterFile', null)}
+              locale={locale}
+            />
             {renderFinancialNotes()}
           </div>
         );

@@ -125,6 +125,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Client sends base64 file data — DB LONGTEXT columns can handle it
+    // Values are stored as-is (format: "data:{mime};base64,{data}::{filename}")
+
     const user = await db.user.findUnique({
       where: { id: userId },
       select: { id: true, role: true, accountStatus: true },
@@ -173,7 +176,7 @@ export async function POST(request: NextRequest) {
             nationalIdFront: body.freelancerIdFrontFile || undefined,
             nationalIdBack: body.freelancerIdBackFile || undefined,
             iban: body.freelancerIban || undefined,
-            selfieUrls: body.livenessSelfie ? JSON.stringify([body.livenessSelfie]) : undefined,
+            selfieUrls: body.livenessCompleted ? JSON.stringify(['__UPLOADED__']) : undefined,
             livenessScore: body.livenessCompleted ? 0.85 : undefined,
           },
           update: {
@@ -181,7 +184,7 @@ export async function POST(request: NextRequest) {
             nationalIdFront: body.freelancerIdFrontFile || undefined,
             nationalIdBack: body.freelancerIdBackFile || undefined,
             iban: body.freelancerIban || undefined,
-            selfieUrls: body.livenessSelfie ? JSON.stringify([body.livenessSelfie]) : undefined,
+            selfieUrls: body.livenessCompleted ? JSON.stringify(['__UPLOADED__']) : undefined,
             livenessScore: body.livenessCompleted ? 0.85 : undefined,
           },
         });
@@ -232,13 +235,18 @@ export async function POST(request: NextRequest) {
         break;
     }
 
-    await db.auditLog.create({
-      data: {
-        userId,
-        action: 'draft_saved',
-        details: JSON.stringify({ role, step: step || 0 }),
-      },
-    });
+    // Audit log — best-effort, don't fail draft save if this fails
+    try {
+      await db.auditLog.create({
+        data: {
+          userId,
+          action: 'draft_saved',
+          details: JSON.stringify({ role, step: step || 0 }),
+        },
+      });
+    } catch (auditErr) {
+      console.warn('[draft save] Audit log failed (non-blocking):', auditErr);
+    }
 
     return NextResponse.json({ success: true, saved: true });
   } catch (error) {
