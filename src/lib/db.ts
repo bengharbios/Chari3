@@ -3,6 +3,8 @@ import { PrismaClient } from '@prisma/client';
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
   dbWorkingUrl: string | undefined;
+  dbConnectionMode: string | undefined;
+  dbSocketPath: string | undefined;
 };
 
 // ============================================
@@ -24,33 +26,55 @@ function parseMysqlUrl(url: string) {
   }
 }
 
-function buildMysqlUrl(user: string, pass: string, host: string, port: string, database: string, extra = '') {
-  return `mysql://${encodeURIComponent(user)}:${encodeURIComponent(pass)}@${host}:${port}/${database}${extra}`;
+function buildMysqlUrl(user: string, pass: string, host: string, port: string, database: string) {
+  return `mysql://${encodeURIComponent(user)}:${encodeURIComponent(pass)}@${host}:${port}/${database}`;
 }
 
 // ============================================
 // CONNECTION PROBER
-// Key insight: On Hostinger, "localhost" resolves to ::1 (IPv6)
-// but MySQL only accepts 127.0.0.1 (IPv4).
-// Also try the website hostname as MySQL user might be restricted to it.
+// Hostinger shared hosting: MySQL user 'u...@localhost' means Unix socket only.
+// TCP connections (127.0.0.1 / ::1) are treated as different hosts in MySQL.
+// Try Unix socket first, then TCP as fallback.
 // ============================================
 
-async function probeConnection(url: string, label: string, timeoutMs = 5000) {
+async function probeTcpConnection(user: string, pass: string, host: string, port: string, database: string, label: string, timeoutMs = 5000) {
   try {
     const mysql = await import('mysql2/promise');
     const start = Date.now();
     const conn = await mysql.createConnection({
-      uri: url,
+      uri: buildMysqlUrl(user, pass, host, port, database),
       connectTimeout: timeoutMs,
       enableKeepAlive: false,
     });
     await conn.execute('SELECT 1');
     await conn.end();
-    return { ok: true, url, latency: Date.now() - start };
+    return { ok: true as const, mode: 'tcp', host, label, latency: Date.now() - start };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.log(`[DB] ✗ ${label}: ${msg.substring(0, 120)}`);
-    return { ok: false, url, latency: 0, error: msg };
+    console.log(`[DB] ✗ TCP ${label}: ${msg.substring(0, 120)}`);
+    return { ok: false as const, mode: 'tcp', host, label, error: msg };
+  }
+}
+
+async function probeSocketConnection(user: string, pass: string, database: string, socketPath: string, label: string) {
+  try {
+    const mysql = await import('mysql2/promise');
+    const start = Date.now();
+    const conn = await mysql.createConnection({
+      user,
+      password: pass,
+      database,
+      socketPath,
+      connectTimeout: 5000,
+      enableKeepAlive: false,
+    });
+    await conn.execute('SELECT 1');
+    await conn.end();
+    return { ok: true as const, mode: 'socket', socketPath, label, latency: Date.now() - start };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.log(`[DB] ✗ Socket ${label}: ${msg.substring(0, 120)}`);
+    return { ok: false as const, mode: 'socket', socketPath, label, error: msg };
   }
 }
 
@@ -62,35 +86,49 @@ async function findWorkingDbUrl(originalUrl: string): Promise<string | null> {
   }
 
   const { user, pass, port, database } = creds;
-  const poolParams = '?connect_timeout=5&pool_timeout=5&connection_limit=5';
 
-  // Priority order for Hostinger:
-  // 1. 127.0.0.1 — IPv4 localhost (avoids ::1 IPv6 issue)
-  // 2. Original host from DATABASE_URL
-  // 3. srv2069.hstgr.io — external MySQL hostname
-  // DO NOT use "localhost" — it resolves to ::1 (IPv6) on Hostinger
-  const hosts = [
-    { host: '127.0.0.1', label: '127.0.0.1 (IPv4)' },
-    { host: creds.host, label: `${creds.host} (original)` },
-    { host: 'srv2069.hstgr.io', label: 'srv2069.hstgr.io' },
+  // ── Phase 1: Try Unix socket paths (Hostinger shared hosting) ──
+  const socketPaths = [
+    { path: '/tmp/mysql.sock', label: '/tmp/mysql.sock (Hostinger default)' },
+    { path: '/var/run/mysqld/mysqld.sock', label: '/var/run/mysqld/mysqld.sock' },
+    { path: '/var/lib/mysql/mysql.sock', label: '/var/lib/mysql/mysql.sock' },
+    { path: '/tmp/mysqlx.sock', label: '/tmp/mysqlx.sock' },
   ];
 
-  const seen = new Set<string>();
-  for (const { host, label } of hosts) {
-    if (seen.has(host)) continue;
-    seen.add(host);
-
-    const url = buildMysqlUrl(user, pass, host, port, database, poolParams);
-    console.log(`[DB] Probing ${label}...`);
-    const result = await probeConnection(url, label);
-
+  console.log('[DB] Phase 1: Probing Unix socket paths...');
+  for (const { path: socketPath, label } of socketPaths) {
+    const result = await probeSocketConnection(user, pass, database, socketPath, label);
     if (result.ok) {
-      console.log(`[DB] ✓ Connected to ${label} (${result.latency}ms)`);
-      return url;
+      console.log(`[DB] ✓ Connected via ${label} (${result.latency}ms)`);
+      // Store the socket path for Prisma connection
+      globalForPrisma.dbConnectionMode = 'socket';
+      globalForPrisma.dbSocketPath = socketPath;
+      return buildMysqlUrl(user, pass, 'localhost', port, database);
     }
   }
 
-  console.error('[DB] ❌ All MySQL hosts failed');
+  // ── Phase 2: Try TCP connections ──
+  const tcpHosts = [
+    { host: '127.0.0.1', label: '127.0.0.1 (IPv4 TCP)' },
+    { host: creds.host, label: `${creds.host} (original)` },
+    { host: 'srv2069.hstgr.io', label: 'srv2069.hstgr.io (external)' },
+  ];
+
+  console.log('[DB] Phase 2: Probing TCP hosts...');
+  const seen = new Set<string>();
+  for (const { host, label } of tcpHosts) {
+    if (seen.has(host)) continue;
+    seen.add(host);
+
+    const result = await probeTcpConnection(user, pass, host, port, database, label);
+    if (result.ok) {
+      console.log(`[DB] ✓ Connected to ${label} (${result.latency}ms)`);
+      globalForPrisma.dbConnectionMode = 'tcp';
+      return buildMysqlUrl(user, pass, host, port, database);
+    }
+  }
+
+  console.error('[DB] ❌ All MySQL connection methods failed');
   return null;
 }
 
@@ -99,9 +137,21 @@ async function findWorkingDbUrl(originalUrl: string): Promise<string | null> {
 // ============================================
 
 function createPrisma(url: string) {
-  // Force IPv4: replace localhost with 127.0.0.1 in the URL
+  const connectionMode = globalForPrisma.dbConnectionMode;
   let finalUrl = url;
-  if (finalUrl.includes('@localhost:')) {
+
+  // If socket mode worked, we need to pass socket path via directUrl
+  // Prisma doesn't support Unix socket in the main URL well,
+  // but we can set it in the datasource URL
+  if (connectionMode === 'socket') {
+    // For Prisma with Unix socket, use the discovered socket path in URL
+    const socketPath = globalForPrisma.dbSocketPath || '/tmp/mysql.sock';
+    const sep = finalUrl.includes('?') ? '&' : '?';
+    finalUrl = `${finalUrl}${sep}socketPath=${encodeURIComponent(socketPath)}`;
+  }
+
+  // Force IPv4 for TCP connections
+  if (connectionMode !== 'socket' && finalUrl.includes('@localhost:')) {
     finalUrl = finalUrl.replace('@localhost:', '@127.0.0.1:');
   }
 
@@ -143,16 +193,24 @@ function buildInitialUrl(): string | undefined {
   if (!url) return undefined;
   if (!url.startsWith('mysql')) return undefined;
 
-  // Force IPv4
-  if (url.includes('@localhost:')) {
-    url = url.replace('@localhost:', '@127.0.0.1:');
+  // Strip any query params to avoid connect_timeout warning
+  const idx = url.indexOf('?');
+  if (idx !== -1) {
+    url = url.substring(0, idx);
   }
 
-  if (!url.includes('connect_timeout')) {
-    const sep = url.includes('?') ? '&' : '?';
-    url = `${url}${sep}connect_timeout=15&pool_timeout=10&connection_limit=5`;
-  }
   return url;
+}
+
+// ============================================
+// GET SOCKET PATH
+// ============================================
+
+export function getWorkingSocketPath(): string | null {
+  if (globalForPrisma.dbConnectionMode === 'socket') {
+    return globalForPrisma.dbSocketPath || '/tmp/mysql.sock';
+  }
+  return null;
 }
 
 // ============================================
@@ -172,6 +230,8 @@ export async function ensureDbConnection(): Promise<boolean> {
     } catch {
       globalForPrisma.dbWorkingUrl = undefined;
       globalForPrisma.prisma = undefined;
+      globalForPrisma.dbConnectionMode = undefined;
+      globalForPrisma.dbSocketPath = undefined;
     }
   }
 
@@ -191,7 +251,7 @@ export async function ensureDbConnection(): Promise<boolean> {
         } catch { /* re-probe */ }
       }
 
-      console.log('[DB] Probing MySQL hosts...');
+      console.log('[DB] Probing MySQL connection methods...');
       const workingUrl = await findWorkingDbUrl(originalUrl);
 
       if (workingUrl) {
@@ -222,6 +282,7 @@ export function getDbInfo() {
     workingHost: globalForPrisma.dbWorkingUrl
       ? parseMysqlUrl(globalForPrisma.dbWorkingUrl)?.host || 'unknown'
       : 'none',
+    connectionMode: globalForPrisma.dbConnectionMode || 'none',
     hasClient: !!globalForPrisma.prisma,
   };
 }

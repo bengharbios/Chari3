@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { ensureDbConnection, getDbInfo } from '@/lib/db';
 
 const DEBUG_TOKEN = 'chari3-debug';
 
@@ -31,14 +30,9 @@ export async function GET(request: Request) {
   const creds = parseMysqlUrl(originalUrl);
   const results: Record<string, unknown>[] = [];
 
-  // ── Action: push schema ──
-  if (action === 'push-schema') {
-    return handlePushSchema(originalUrl, creds);
-  }
-
   // ── Action: create tables (raw SQL fallback) ──
   if (action === 'create-tables') {
-    return handleCreateTables(originalUrl, creds);
+    return handleCreateTables(creds);
   }
 
   // ── Default: lightweight diagnostic ──
@@ -49,38 +43,105 @@ export async function GET(request: Request) {
     dbHost: creds?.host,
     dbPort: creds?.port,
     dbName: creds?.db,
-    dbWorkingHost: getDbInfo().workingHost,
+    passwordLength: creds?.pass?.length,
+    passwordEncoded: originalUrl.includes('%40') ? 'contains %40 (@ encoded)' : 'no encoding',
   });
 
-  // Quick connection test — try 127.0.0.1 (IPv4) then original host
-  if (creds) {
-    const testHosts = [
+  if (!creds) {
+    return NextResponse.json({ debug: 'Chari3 DB', results, hint: 'DATABASE_URL is not a valid MySQL URL' });
+  }
+
+  // ── Phase 1: Try Unix socket paths ──
+  const socketPaths = [
+    '/tmp/mysql.sock',
+    '/var/run/mysqld/mysqld.sock',
+    '/var/lib/mysql/mysql.sock',
+  ];
+
+  results.push({ step: 'Phase', info: 'Testing Unix socket connections...' });
+
+  let workingMethod: { type: 'socket'; path: string } | { type: 'tcp'; url: string; label: string } | null = null;
+
+  for (const socketPath of socketPaths) {
+    try {
+      const mysql = await import('mysql2/promise');
+      const start = Date.now();
+      const conn = await mysql.createConnection({
+        user: creds.user,
+        password: creds.pass,
+        database: creds.db,
+        socketPath,
+        connectTimeout: 5000,
+        enableKeepAlive: false,
+      });
+      const [rows] = await conn.execute('SELECT VERSION() as ver, DATABASE() as db');
+      await conn.end();
+      results.push({
+        step: `Socket (${socketPath})`,
+        status: '✅ OK',
+        latency: `${Date.now() - start}ms`,
+        data: (rows as Record<string, unknown>[])[0],
+      });
+      workingMethod = { type: 'socket', path: socketPath };
+
+      // Count existing tables
+      const conn2 = await (await import('mysql2/promise')).createConnection({
+        user: creds.user,
+        password: creds.pass,
+        database: creds.db,
+        socketPath,
+        connectTimeout: 5000,
+        multipleStatements: true,
+      });
+      const [tables] = await conn2.execute('SHOW TABLES');
+      const tableList = (tables as Record<string, unknown>[]).map((r) => Object.values(r)[0]);
+      await conn2.end();
+      results.push({ step: 'Tables', count: tableList.length, tables: tableList });
+      break;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      results.push({
+        step: `Socket (${socketPath})`,
+        status: '❌ FAILED',
+        error: msg.substring(0, 200),
+      });
+    }
+  }
+
+  // ── Phase 2: Try TCP connections if socket failed ──
+  if (!workingMethod) {
+    results.push({ step: 'Phase', info: 'Socket failed. Testing TCP connections...' });
+
+    const tcpHosts = [
       { host: '127.0.0.1', label: '127.0.0.1 (IPv4)' },
       { host: creds.host, label: `${creds.host} (original)` },
     ];
     const seen = new Set<string>();
-    let connected = false;
 
-    for (const { host, label } of testHosts) {
+    for (const { host, label } of tcpHosts) {
       if (seen.has(host)) continue;
       seen.add(host);
-      const url = `mysql://${encodeURIComponent(creds.user)}:${encodeURIComponent(creds.pass)}@${host}:${creds.port}/${creds.db}?connect_timeout=5`;
+      const url = `mysql://${encodeURIComponent(creds.user)}:${encodeURIComponent(creds.pass)}@${host}:${creds.port}/${creds.db}`;
       try {
         const mysql = await import('mysql2/promise');
         const start = Date.now();
-        const conn = await mysql.createConnection({ uri: url, connectTimeout: 5000 });
+        const conn = await mysql.createConnection({ uri: url, connectTimeout: 5000, enableKeepAlive: false });
         const [rows] = await conn.execute('SELECT VERSION() as ver, DATABASE() as db');
         await conn.end();
         results.push({
-          step: `Connection (${label})`,
+          step: `TCP (${label})`,
           status: '✅ OK',
           latency: `${Date.now() - start}ms`,
           data: (rows as Record<string, unknown>[])[0],
         });
-        connected = true;
+        workingMethod = { type: 'tcp', url, label };
 
         // Count existing tables
-        const conn2 = await mysql.createConnection({ uri: url, connectTimeout: 5000 });
+        const conn2 = await (await import('mysql2/promise')).createConnection({
+          uri: url,
+          connectTimeout: 5000,
+          multipleStatements: true,
+        });
         const [tables] = await conn2.execute('SHOW TABLES');
         const tableList = (tables as Record<string, unknown>[]).map((r) => Object.values(r)[0]);
         await conn2.end();
@@ -88,195 +149,131 @@ export async function GET(request: Request) {
         break;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        results.push({ step: `Connection (${label})`, status: '❌ FAILED', error: msg.substring(0, 200) });
+        results.push({
+          step: `TCP (${label})`,
+          status: '❌ FAILED',
+          error: msg.substring(0, 200),
+        });
       }
     }
-
-    if (!connected) {
-      // No connection worked — return without trying Prisma
-      return NextResponse.json({ debug: 'Chari3 DB', results, hint: 'Password may be incorrect. Check Hostinger MySQL panel.' });
-    }
   }
 
-  // Prisma client test
-  try {
-    const ok = await ensureDbConnection();
-    results.push({ step: 'Prisma Client', status: ok ? '✅ OK' : '❌ FAILED' });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    results.push({ step: 'Prisma Client', status: '❌ FAILED', error: msg.substring(0, 200) });
+  if (!workingMethod) {
+    return NextResponse.json({
+      debug: 'Chari3 DB',
+      results,
+      hint: 'All connection methods failed. On Hostinger: MySQL user is restricted to Unix socket. Verify password in Hostinger MySQL panel. Try: Reset MySQL password → Update DATABASE_URL.',
+      fix: '1. Go to Hostinger → Databases → Click "Change Password" for your MySQL user\n2. Copy the new password\n3. Update DATABASE_URL env var with new password\n4. Redeploy',
+    });
   }
 
-  return NextResponse.json({ debug: 'Chari3 DB', results });
+  return NextResponse.json({ debug: 'Chari3 DB', results, workingMethod });
 }
 
 // ============================================
-// Push Schema via Prisma CLI
+// Create Tables via Raw SQL (with Unix socket support)
 // ============================================
 
-async function handlePushSchema(originalUrl: string, creds: ReturnType<typeof parseMysqlUrl>) {
+async function handleCreateTables(creds: ReturnType<typeof parseMysqlUrl>) {
   const results: Record<string, unknown>[] = [];
 
-  // Step 1: Test connection with localhost
-  if (creds) {
-    // Try both 127.0.0.1 and original host
-    const testHosts = [
+  if (!creds) {
+    return NextResponse.json({ action: 'create-tables', results: [{ step: 'Error', msg: 'Invalid DATABASE_URL' }], success: false });
+  }
+
+  // Try to establish a working connection
+  let workingConn: Awaited<ReturnType<typeof import('mysql2/promise').then>> | null = null;
+  let connMethod = '';
+
+  // Phase 1: Try Unix socket
+  const socketPaths = ['/tmp/mysql.sock', '/var/run/mysqld/mysqld.sock', '/var/lib/mysql/mysql.sock'];
+
+  for (const socketPath of socketPaths) {
+    try {
+      const mysql = await import('mysql2/promise');
+      workingConn = await mysql.createConnection({
+        user: creds.user,
+        password: creds.pass,
+        database: creds.db,
+        socketPath,
+        connectTimeout: 5000,
+        multipleStatements: true,
+      });
+      connMethod = `Socket: ${socketPath}`;
+      break;
+    } catch {
+      continue;
+    }
+  }
+
+  // Phase 2: Try TCP
+  if (!workingConn) {
+    const tcpHosts = [
       { host: '127.0.0.1', label: '127.0.0.1' },
       { host: creds.host, label: creds.host },
     ];
-    let connectedHost = '';
     const seen = new Set<string>();
 
-    for (const { host, label } of testHosts) {
+    for (const { host, label } of tcpHosts) {
       if (seen.has(host)) continue;
       seen.add(host);
-      const url = `mysql://${encodeURIComponent(creds.user)}:${encodeURIComponent(creds.pass)}@${host}:${creds.port}/${creds.db}?connect_timeout=5`;
+      const url = `mysql://${encodeURIComponent(creds.user)}:${encodeURIComponent(creds.pass)}@${host}:${creds.port}/${creds.db}`;
       try {
         const mysql = await import('mysql2/promise');
-        const conn = await mysql.createConnection({ uri: url, connectTimeout: 5000 });
-        await conn.execute('SELECT 1');
-        await conn.end();
-        results.push({ step: 'Connection', status: '✅ OK', host: label });
-        connectedHost = url;
-        break;
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        results.push({ step: `Connection (${label})`, status: '❌ FAILED', error: msg.substring(0, 200) });
-      }
-    }
-
-    if (!connectedHost) return NextResponse.json({ action: 'push-schema', results, success: false });
-  }
-
-  // Step 2: Run prisma db push via node
-  try {
-    const { execSync } = await import('child_process');
-    const path = await import('path');
-
-    const prismaBin = path.join(process.cwd(), 'node_modules', '.bin', 'prisma');
-    const nodeBin = process.execPath;
-
-    // Make sure schema.prisma exists (it should from build)
-    const fs = await import('fs/promises');
-    const schemaPath = path.join(process.cwd(), 'prisma', 'schema.prisma');
-    const mysqlSchemaPath = path.join(process.cwd(), 'prisma', 'schema.mysql.prisma');
-
-    if (!(await fs.stat(schemaPath).catch(() => null))) {
-      // Copy mysql schema if schema.prisma doesn't exist
-      if (await fs.stat(mysqlSchemaPath).catch(() => null)) {
-        await fs.copyFile(mysqlSchemaPath, schemaPath);
-        results.push({ step: 'Schema', status: 'Copied schema.mysql.prisma → schema.prisma' });
-      } else {
-        results.push({ step: 'Schema', status: '❌ Neither schema.prisma nor schema.mysql.prisma found' });
-        return NextResponse.json({ action: 'push-schema', results, success: false });
-      }
-    }
-
-    // Ensure schema is the MySQL version
-    const schemaContent = await fs.readFile(schemaPath, 'utf-8');
-    if (!schemaContent.includes('provider = "mysql"')) {
-      await fs.copyFile(mysqlSchemaPath, schemaPath);
-      results.push({ step: 'Schema', status: 'Replaced with MySQL schema' });
-    }
-
-    const cmd = `"${nodeBin}" "${prismaBin}" db push --skip-generate --accept-data-loss`;
-    const output = execSync(cmd, {
-      cwd: process.cwd(),
-      env: { ...process.env, DATABASE_URL: connectedHost },
-      timeout: 90000,
-      encoding: 'utf-8',
-      stdio: 'pipe',
-    });
-
-    results.push({ step: 'prisma db push', status: '✅ OK', output: output.substring(0, 500) });
-    return NextResponse.json({ action: 'push-schema', results, success: true });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    results.push({
-      step: 'prisma db push',
-      status: '❌ FAILED',
-      error: msg.substring(0, 500),
-      hint: 'Try /api/debug/db?token=chari3-debug&action=create-tables instead',
-    });
-    return NextResponse.json({ action: 'push-schema', results, success: false });
-  }
-}
-
-// ============================================
-// Create Tables via Raw SQL (fallback)
-// ============================================
-
-async function handleCreateTables(originalUrl: string, creds: ReturnType<typeof parseMysqlUrl>) {
-  const results: Record<string, unknown>[] = [];
-
-  // Test connection first
-  if (creds) {
-    // Try both 127.0.0.1 and original host
-    const testHosts = [
-      { host: '127.0.0.1', label: '127.0.0.1' },
-      { host: creds.host, label: creds.host },
-    ];
-    let connectedUrl = '';
-    const seen = new Set<string>();
-
-    for (const { host, label } of testHosts) {
-      if (seen.has(host)) continue;
-      seen.add(host);
-      const url = `mysql://${encodeURIComponent(creds.user)}:${encodeURIComponent(creds.pass)}@${host}:${creds.port}/${creds.db}?connect_timeout=5`;
-      try {
-        const mysql = await import('mysql2/promise');
-        const conn = await mysql.createConnection({
+        workingConn = await mysql.createConnection({
           uri: url,
           connectTimeout: 5000,
           multipleStatements: true,
         });
-        results.push({ step: 'Connection', status: '✅ OK', host: label });
-        connectedUrl = url;
+        connMethod = `TCP: ${label}`;
         break;
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : String(err);
-        results.push({ step: `Connection (${label})`, status: '❌ FAILED', error: msg.substring(0, 200) });
+      } catch {
+        continue;
       }
-    }
-
-    if (!connectedUrl) return NextResponse.json({ action: 'create-tables', results, success: false });
-
-    // Create tables
-    try {
-      const mysql = await import('mysql2/promise');
-      const conn = await mysql.createConnection({ uri: connectedUrl, connectTimeout: 5000, multipleStatements: true });
-
-      // Create tables using raw SQL
-      const sql = getCreateTablesSql();
-      const statements = sql.split(';').filter(s => s.trim().length > 0);
-
-      let created = 0;
-      let skipped = 0;
-      for (const stmt of statements) {
-        try {
-          await conn.execute(stmt);
-          created++;
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : String(err);
-          if (msg.includes('already exists')) {
-            skipped++;
-          } else {
-            results.push({ step: 'SQL Error', sql: stmt.substring(0, 100), error: msg.substring(0, 150) });
-          }
-        }
-      }
-
-      await conn.end();
-      results.push({ step: 'Tables', created, skipped, total: created + skipped });
-      return NextResponse.json({ action: 'create-tables', results, success: true });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      results.push({ step: 'Connection', status: '❌ FAILED', error: msg.substring(0, 200) });
-      return NextResponse.json({ action: 'create-tables', results, success: false });
     }
   }
 
-  return NextResponse.json({ action: 'create-tables', results, success: false });
+  if (!workingConn) {
+    return NextResponse.json({
+      action: 'create-tables',
+      results: [{ step: 'Error', msg: 'Cannot connect to database. Run /api/debug/db?token=chari3-debug first to diagnose.' }],
+      success: false,
+    });
+  }
+
+  results.push({ step: 'Connection', status: '✅ OK', method: connMethod });
+
+  // Create tables
+  try {
+    const sql = getCreateTablesSql();
+    const statements = sql.split(';').filter(s => s.trim().length > 0);
+
+    let created = 0;
+    let skipped = 0;
+    let errors = 0;
+    for (const stmt of statements) {
+      try {
+        await workingConn.execute(stmt);
+        created++;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes('already exists')) {
+          skipped++;
+        } else {
+          errors++;
+          results.push({ step: 'SQL Error', sql: stmt.substring(0, 80), error: msg.substring(0, 120) });
+        }
+      }
+    }
+
+    await workingConn.end();
+    results.push({ step: 'Result', created, skipped, errors, total: created + skipped + errors });
+    return NextResponse.json({ action: 'create-tables', results, success: errors === 0 });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await workingConn.end().catch(() => {});
+    return NextResponse.json({ action: 'create-tables', results: [{ step: 'Error', error: msg.substring(0, 300) }], success: false });
+  }
 }
 
 function getCreateTablesSql(): string {
