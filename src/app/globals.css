@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Explicitly tell Tailwind v4 which directories to scan for class names.
+   Without this, Hostinger build may fail to detect classes in src/ subdirs. */
+@source "../components";
+@source "../lib";
+@source "../app";
+
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================
