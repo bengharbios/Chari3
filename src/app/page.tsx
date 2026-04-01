@@ -7,7 +7,7 @@ import AppShell from '@/components/layout/AppShell';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import LoginPage from '@/components/auth/LoginPage';
+import AuthPage from '@/components/auth/AuthPage';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import VerificationStatusPage from '@/components/onboarding/VerificationStatusPage';
 import { StickyStatusBanner } from '@/components/onboarding/VerificationWidget';
@@ -299,7 +299,7 @@ export default function HomePage() {
 
       {!isAuthenticated ? (
         <main className="flex-1">
-          <LoginPage />
+          <AuthPage />
         </main>
       ) : DashboardComponent ? (
         <DashboardLayout>
