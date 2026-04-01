@@ -24,17 +24,18 @@ function parseMysqlUrl(url: string) {
   }
 }
 
-function buildMysqlUrl(user: string, pass: string, host: string, port: string, database: string) {
-  return `mysql://${encodeURIComponent(user)}:${encodeURIComponent(pass)}@${host}:${port}/${database}`;
+function buildMysqlUrl(user: string, pass: string, host: string, port: string, database: string, extra = '') {
+  return `mysql://${encodeURIComponent(user)}:${encodeURIComponent(pass)}@${host}:${port}/${database}${extra}`;
 }
 
 // ============================================
 // CONNECTION PROBER
-// Hostinger Node.js apps share the same server as MySQL.
-// Always try localhost first — it's ~10x faster and always works.
+// Key insight: On Hostinger, "localhost" resolves to ::1 (IPv6)
+// but MySQL only accepts 127.0.0.1 (IPv4).
+// Also try the website hostname as MySQL user might be restricted to it.
 // ============================================
 
-async function probeConnection(url: string, label: string, timeoutMs = 5000): Promise<{ ok: boolean; url: string; latency: number; error?: string }> {
+async function probeConnection(url: string, label: string, timeoutMs = 5000) {
   try {
     const mysql = await import('mysql2/promise');
     const start = Date.now();
@@ -45,43 +46,41 @@ async function probeConnection(url: string, label: string, timeoutMs = 5000): Pr
     });
     await conn.execute('SELECT 1');
     await conn.end();
-    const latency = Date.now() - start;
-    return { ok: true, url, latency };
+    return { ok: true, url, latency: Date.now() - start };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     console.log(`[DB] ✗ ${label}: ${msg.substring(0, 120)}`);
-    return { ok: false, url, latency: 0, error: msg.substring(0, 200) };
+    return { ok: false, url, latency: 0, error: msg };
   }
 }
 
-async function findWorkingDbUrl(originalUrl: string) {
+async function findWorkingDbUrl(originalUrl: string): Promise<string | null> {
   const creds = parseMysqlUrl(originalUrl);
   if (!creds) {
     console.error('[DB] Cannot parse DATABASE_URL');
     return null;
   }
 
-  const { user, pass, host, port, database } = creds;
+  const { user, pass, port, database } = creds;
+  const poolParams = '?connect_timeout=5&pool_timeout=5&connection_limit=5';
 
-  // On Hostinger: Node.js and MySQL are on the SAME server.
-  // localhost is always faster and more reliable than the external hostname.
-  // Priority: localhost → 127.0.0.1 → original host
-  const hostsToTry = [
-    { host: 'localhost', label: 'localhost' },
-    { host: '127.0.0.1', label: '127.0.0.1' },
-    { host, label: host },
+  // Priority order for Hostinger:
+  // 1. 127.0.0.1 — IPv4 localhost (avoids ::1 IPv6 issue)
+  // 2. Original host from DATABASE_URL
+  // 3. srv2069.hstgr.io — external MySQL hostname
+  // DO NOT use "localhost" — it resolves to ::1 (IPv6) on Hostinger
+  const hosts = [
+    { host: '127.0.0.1', label: '127.0.0.1 (IPv4)' },
+    { host: creds.host, label: `${creds.host} (original)` },
+    { host: 'srv2069.hstgr.io', label: 'srv2069.hstgr.io' },
   ];
 
-  // Deduplicate
   const seen = new Set<string>();
-  const unique = hostsToTry.filter(h => {
-    if (seen.has(h.host)) return false;
-    seen.add(h.host);
-    return true;
-  });
+  for (const { host, label } of hosts) {
+    if (seen.has(host)) continue;
+    seen.add(host);
 
-  for (const { host: h, label } of unique) {
-    const url = buildMysqlUrl(user, pass, h, port, database);
+    const url = buildMysqlUrl(user, pass, host, port, database, poolParams);
     console.log(`[DB] Probing ${label}...`);
     const result = await probeConnection(url, label);
 
@@ -100,23 +99,16 @@ async function findWorkingDbUrl(originalUrl: string) {
 // ============================================
 
 function createPrisma(url: string) {
+  // Force IPv4: replace localhost with 127.0.0.1 in the URL
+  let finalUrl = url;
+  if (finalUrl.includes('@localhost:')) {
+    finalUrl = finalUrl.replace('@localhost:', '@127.0.0.1:');
+  }
+
   return new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
-    datasources: { db: { url } },
+    datasources: { db: { url: finalUrl } },
   });
-}
-
-function buildInitialUrl(): string | undefined {
-  let url = process.env.DATABASE_URL;
-  if (!url) return undefined;
-  if (!url.startsWith('mysql')) return undefined;
-
-  // Add pool params
-  if (!url.includes('connect_timeout')) {
-    const sep = url.includes('?') ? '&' : '?';
-    url = `${url}${sep}connect_timeout=15&pool_timeout=10&connection_limit=5`;
-  }
-  return url;
 }
 
 // ============================================
@@ -127,11 +119,10 @@ const db = new Proxy({} as any, {
   get(_target, prop) {
     if (prop === '__isProxy') return true;
 
-    // If we already found a working URL, create Prisma with it
     if (!globalForPrisma.prisma) {
-      const workingUrl = globalForPrisma.dbWorkingUrl || buildInitialUrl();
-      if (workingUrl) {
-        globalForPrisma.prisma = createPrisma(workingUrl);
+      const url = globalForPrisma.dbWorkingUrl || buildInitialUrl();
+      if (url) {
+        globalForPrisma.prisma = createPrisma(url);
       }
     }
 
@@ -144,13 +135,33 @@ const db = new Proxy({} as any, {
 });
 
 // ============================================
-// ENSURE DB CONNECTION (call before any DB query)
+// BUILD INITIAL URL
+// ============================================
+
+function buildInitialUrl(): string | undefined {
+  let url = process.env.DATABASE_URL;
+  if (!url) return undefined;
+  if (!url.startsWith('mysql')) return undefined;
+
+  // Force IPv4
+  if (url.includes('@localhost:')) {
+    url = url.replace('@localhost:', '@127.0.0.1:');
+  }
+
+  if (!url.includes('connect_timeout')) {
+    const sep = url.includes('?') ? '&' : '?';
+    url = `${url}${sep}connect_timeout=15&pool_timeout=10&connection_limit=5`;
+  }
+  return url;
+}
+
+// ============================================
+// ENSURE DB CONNECTION
 // ============================================
 
 let probePromise: Promise<boolean> | null = null;
 
 export async function ensureDbConnection(): Promise<boolean> {
-  // If we already have a working URL, quick-check it's still alive
   if (globalForPrisma.dbWorkingUrl) {
     try {
       const instance = globalForPrisma.prisma;
@@ -159,63 +170,39 @@ export async function ensureDbConnection(): Promise<boolean> {
         return true;
       }
     } catch {
-      // Connection lost — will re-probe below
       globalForPrisma.dbWorkingUrl = undefined;
       globalForPrisma.prisma = undefined;
     }
   }
 
-  // Re-use in-flight probe to avoid multiple concurrent probes
   if (probePromise) return probePromise;
 
   probePromise = (async () => {
     try {
       const originalUrl = process.env.DATABASE_URL;
-      if (!originalUrl) {
-        console.error('[DB] DATABASE_URL is not set');
-        return false;
-      }
+      if (!originalUrl) return false;
 
-      // Quick test with existing Prisma client first
+      // Quick test with existing client
       if (globalForPrisma.prisma) {
         try {
           await globalForPrisma.prisma.$queryRaw`SELECT 1 as ok`;
           globalForPrisma.dbWorkingUrl = originalUrl;
           return true;
-        } catch {
-          // Current client is broken — re-probe
-        }
+        } catch { /* re-probe */ }
       }
 
-      // Probe all hosts (localhost first)
       console.log('[DB] Probing MySQL hosts...');
       const workingUrl = await findWorkingDbUrl(originalUrl);
 
       if (workingUrl) {
-        // Disconnect old broken client
-        try {
-          if (globalForPrisma.prisma) {
-            await globalForPrisma.prisma.$disconnect();
-          }
-        } catch { /* ignore */ }
+        try { if (globalForPrisma.prisma) await globalForPrisma.prisma.$disconnect(); } catch { /* ignore */ }
 
-        // Create new Prisma client with working URL
         globalForPrisma.prisma = createPrisma(workingUrl);
         globalForPrisma.dbWorkingUrl = workingUrl;
-        process.env.DATABASE_URL = workingUrl;
 
-        // Verify the new client actually works
-        try {
-          await globalForPrisma.prisma.$queryRaw`SELECT 1 as ok`;
-          console.log('[DB] ✓ Prisma client ready');
-          return true;
-        } catch (err: unknown) {
-          const msg = err instanceof Error ? err.message : String(err);
-          console.error(`[DB] Prisma verification failed: ${msg.substring(0, 150)}`);
-          globalForPrisma.prisma = undefined;
-          globalForPrisma.dbWorkingUrl = undefined;
-          return false;
-        }
+        await globalForPrisma.prisma.$queryRaw`SELECT 1 as ok`;
+        console.log('[DB] ✓ Prisma client ready');
+        return true;
       }
 
       return false;
@@ -227,9 +214,6 @@ export async function ensureDbConnection(): Promise<boolean> {
   return probePromise;
 }
 
-/**
- * Get current working DB URL for diagnostics
- */
 export function getDbInfo() {
   const originalUrl = process.env.DATABASE_URL || '';
   const creds = parseMysqlUrl(originalUrl);
