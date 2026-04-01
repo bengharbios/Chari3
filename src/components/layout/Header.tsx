@@ -52,32 +52,10 @@ export default function Header() {
           : 'bg-background border-b border-transparent'
       }`}
     >
-      {/* Top Bar */}
-      <div className="hidden md:block border-b border-border/50 bg-surface">
-        <div className="container-platform flex items-center justify-between py-1 text-xs text-muted-foreground">
-          <span>{t('🚚 شحن مجاني للطلبات فوق 5000 د.ج', '🚚 Free shipping on orders over 5000 DZD')}</span>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
-              className="flex items-center gap-1 hover:text-foreground transition-colors"
-            >
-              <Globe className="h-3 w-3" />
-              {locale === 'ar' ? 'English' : 'العربية'}
-            </button>
-            <button
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-              className="hover:text-foreground transition-colors"
-            >
-              {theme === 'light' ? <Moon className="h-3 w-3" /> : <Sun className="h-3 w-3" />}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Header */}
+      {/* Main Header — Single clean row: Logo | Search | Actions */}
       <div className="container-platform">
-        <div className="flex items-center justify-between h-[var(--header-height)] md:h-[var(--header-height)] gap-4">
-          {/* Logo & Mobile Menu */}
+        <div className="flex items-center justify-between h-[var(--header-height)] gap-4">
+          {/* Logo */}
           <div className="flex items-center gap-3 shrink-0">
             {isAuthenticated && (
               <Button
@@ -93,16 +71,16 @@ export default function Header() {
               onClick={() => useAppStore.getState().setCurrentPage(isAuthenticated ? rolePages[user?.role || 'buyer'] : 'login')}
               className="flex items-center gap-2"
             >
-              <div className="gradient-brand rounded-lg px-2 py-1 font-bold text-navy text-lg">
-                شاري داي
+              <div className="gradient-brand rounded-lg px-2.5 py-1 font-bold text-navy text-lg">
+                {t('شاري داي', 'CharyDay')}
               </div>
             </button>
           </div>
 
-          {/* Search Bar - Desktop */}
+          {/* Search Bar — Desktop only */}
           <div className="hidden md:flex flex-1 max-w-2xl mx-4">
             <div className="relative w-full">
-              <Search className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground ${isRTL ? 'start-3' : 'start-3'}`} />
+              <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder={t('ابحث عن منتجات، ماركات، وأكثر...', 'Search for products, brands, and more...')}
                 className="ps-10 pe-4 h-10 rounded-full border-border bg-surface focus:ring-2 focus:ring-brand"
@@ -110,7 +88,7 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Actions */}
+          {/* Actions — Right side: search(mobile) | theme | lang | cart | user */}
           <div className="flex items-center gap-1 md:gap-2">
             {/* Mobile Search Toggle */}
             <Button
@@ -122,26 +100,30 @@ export default function Header() {
               {mobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
             </Button>
 
-            {/* Theme Toggle - Mobile */}
+            {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden"
               onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
             >
               {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             </Button>
 
-            {/* Notifications with Quick Actions */}
+            {/* Language Toggle — ONE button only */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
+            >
+              <Globe className="h-5 w-5" />
+            </Button>
+
+            {/* Notifications */}
             {isAuthenticated && <NotificationPanel />}
 
             {/* Cart */}
             {user?.role === 'buyer' && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative"
-              >
+              <Button variant="ghost" size="icon" className="relative">
                 <ShoppingCart className="h-5 w-5" />
                 {itemCount > 0 && (
                   <Badge className="absolute -top-1 -end-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] bg-brand text-navy border-2 border-background">
@@ -151,7 +133,7 @@ export default function Header() {
               </Button>
             )}
 
-            {/* User Menu */}
+            {/* User Menu (authenticated) or empty space (not authenticated) */}
             {isAuthenticated && user ? (
               <DropdownMenu dir={isRTL ? 'rtl' : 'ltr'}>
                 <DropdownMenuTrigger asChild>
@@ -202,23 +184,11 @@ export default function Header() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
-                  className="hidden md:flex text-xs"
-                >
-                  <Globe className="h-3.5 w-3.5 me-1" />
-                  {locale === 'ar' ? 'EN' : 'عربي'}
-                </Button>
-              </div>
-            )}
+            ) : null}
           </div>
         </div>
 
-        {/* Mobile Search */}
+        {/* Mobile Search (only when toggled) */}
         {mobileSearchOpen && (
           <div className="md:hidden pb-3 animate-fade-in">
             <div className="relative">
@@ -232,7 +202,6 @@ export default function Header() {
           </div>
         )}
       </div>
-
     </header>
   );
 }
