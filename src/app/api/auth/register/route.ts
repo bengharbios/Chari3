@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { validatePhone, validateEmail, validateFullName, validateRole, sanitizeInput } from '@/lib/validators';
+import { validatePhone, validateEmail, validateFullName, validateRole } from '@/lib/validators';
 import { randomUUID } from 'crypto';
 
 const DB_TIMEOUT = Symbol('DB_TIMEOUT');
@@ -45,8 +45,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Invalid email' }, { status: 400 });
     }
 
-    const sanitizedName = sanitizeInput(fullName);
-    const sanitizedStoreName = storeName ? sanitizeInput(storeName) : undefined;
+    // Only trim — React auto-escapes JSX, so no need for HTML-entity encoding at storage time
+    const sanitizedName = fullName.trim();
+    const sanitizedStoreName = storeName ? storeName.trim() : undefined;
     const accountStatus = role === 'buyer' ? 'active' : 'incomplete';
     const userId = randomUUID();
     const now = new Date().toISOString();
@@ -104,6 +105,7 @@ export async function POST(request: Request) {
             ...(sanitizedStoreName && role !== 'buyer' && { nameEn: sanitizedStoreName }),
             ...(role === 'seller' && { sellerProfile: { create: { ...(sanitizedStoreName && { storeName: sanitizedStoreName }) } } }),
             ...(role === 'supplier' && { sellerProfile: { create: { ...(sanitizedStoreName && { storeName: sanitizedStoreName }) } } }),
+            ...(role === 'store_manager' && { sellerProfile: { create: { ...(sanitizedStoreName && { storeName: sanitizedStoreName }) } } }),
             ...(role === 'logistics' && { logisticsProfile: { create: {} } }),
             ...(role === 'buyer' && { buyerProfile: { create: {} } }),
             ...(role === 'store_manager' && { wallet: { create: { balance: 0, totalEarned: 0, totalSpent: 0, currency: 'DZD' } } }),

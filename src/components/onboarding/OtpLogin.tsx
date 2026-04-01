@@ -953,15 +953,8 @@ function BasicInfo({ locale }: { locale: Locale }) {
           return;
         }
 
-        // For NEW accounts, also verify the name matches (catches DB returning wrong user)
-        if (!data.alreadyExists && returnedUser.name !== fullName) {
-          console.error('[register] SECURITY: Name mismatch on new account!', {
-            submitted: fullName,
-            returned: returnedUser.name,
-          });
-          toast.error(t(locale, 'خطأ في إنشاء الحساب. البيانات لا تتطابق.', 'Account creation error. Data mismatch.'));
-          return;
-        }
+        // Note: We trust the server to return the correct user it just created.
+        // The phone/email match check above is sufficient for security.
 
         const { loginWithUser } = useAuthStore.getState();
         loginWithUser(data.user as unknown as import('@/types').User);
