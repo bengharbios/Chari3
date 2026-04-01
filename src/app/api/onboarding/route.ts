@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, ensureDbConnection } from '@/lib/db';
 
 // ============================================
 // Helper: Build verification items for a role
@@ -252,6 +252,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    await ensureDbConnection();
+
     // Get user with verification data
     const user = await db.user.findUnique({
       where: { id: userId },
@@ -351,7 +353,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Onboarding GET error:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to fetch onboarding status' },
+      { success: false, error: dbErrorMsg(error) },
       { status: 500 }
     );
   }
@@ -700,6 +702,8 @@ async function handleResubmit(body: Record<string, unknown>) {
 
 export async function POST(request: NextRequest) {
   try {
+    await ensureDbConnection();
+
     // Check for sub-action via header or body field
     const body = await request.json();
     const action = body._action;
@@ -716,8 +720,29 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Onboarding POST error:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to process onboarding request' },
+      { success: false, error: dbErrorMsg(error) },
       { status: 500 }
     );
   }
+}
+
+// ============================================
+// Error message helper
+// ============================================
+
+function dbErrorMsg(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (msg.includes('Authentication') || msg.includes('Access denied')) {
+    return 'Database authentication failed. Check DATABASE_URL in Hostinger env vars.';
+  }
+  if (msg.includes('ECONNREFUSED') || msg.includes('connect')) {
+    return 'Cannot connect to database. The server may be down.';
+  }
+  if (msg.includes('Table') && msg.includes("doesn't exist")) {
+    return 'Database tables not found. Visit /api/debug/db?token=chari3-debug&action=push-schema to create them.';
+  }
+  if (msg.includes('Unknown database')) {
+    return 'Database does not exist. Create it in Hostinger MySQL panel first.';
+  }
+  return 'Database error. Please try again.';
 }

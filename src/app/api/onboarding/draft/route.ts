@@ -1,5 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, ensureDbConnection } from '@/lib/db';
+
+const DB_TIMEOUT = Symbol('DB_TIMEOUT');
+
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | typeof DB_TIMEOUT> {
+  let timer: ReturnType<typeof setTimeout>;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<typeof DB_TIMEOUT>((resolve) => {
+        timer = setTimeout(() => resolve(DB_TIMEOUT), ms);
+      }),
+    ]);
+  } catch (err) {
+    console.error(`[draft] Query failed:`, err);
+    return DB_TIMEOUT;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function dbErrorMsg(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (msg.includes('Authentication') || msg.includes('Access denied')) {
+    return 'Database authentication failed. Please check DATABASE_URL credentials.';
+  }
+  if (msg.includes('ECONNREFUSED') || msg.includes('connect')) {
+    return 'Cannot connect to database server.';
+  }
+  if (msg.includes('Too many connections')) {
+    return 'Database is busy. Please try again in a moment.';
+  }
+  if (msg.includes('Unknown database') || msg.includes("doesn't exist")) {
+    return 'Database does not exist. Run /api/setup to initialize.';
+  }
+  if (msg.includes('Table') && msg.includes("doesn't exist")) {
+    return 'Database tables not created. Run /api/debug/db?token=chari3-debug&action=push-schema';
+  }
+  return 'Database error. Please try again.';
+}
 
 // ============================================
 // GET /api/onboarding/draft?userId=xxx
@@ -18,10 +57,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { id: true, role: true, accountStatus: true },
-    });
+    // Ensure DB connection before querying
+    await ensureDbConnection();
+
+    const user = await withTimeout(
+      db.user.findUnique({
+        where: { id: userId },
+        select: { id: true, role: true, accountStatus: true },
+      }),
+      15000
+    );
+
+    if (user === DB_TIMEOUT) {
+      return NextResponse.json(
+        { success: false, error: 'Database timeout. Please try again.' },
+        { status: 504 }
+      );
+    }
 
     if (!user) {
       return NextResponse.json(
@@ -34,10 +86,11 @@ export async function GET(request: NextRequest) {
 
     switch (user.role) {
       case 'store_manager': {
-        const v = await db.storeVerification.findUnique({
-          where: { userId },
-        });
-        if (v && (!v.submittedAt || v.verificationStatus === 'rejected')) {
+        const v = await withTimeout(
+          db.storeVerification.findUnique({ where: { userId } }),
+          10000
+        );
+        if (v !== DB_TIMEOUT && v && (!v.submittedAt || v.verificationStatus === 'rejected')) {
           data.hasDraft = true;
           data.step = inferStep('store_manager', v);
           data.commercialRegisterNumber = v.commercialRegisterNumber;
@@ -52,10 +105,11 @@ export async function GET(request: NextRequest) {
       }
 
       case 'seller': {
-        const v = await db.freelancerVerification.findUnique({
-          where: { userId },
-        });
-        if (v && (!v.submittedAt || v.verificationStatus === 'rejected')) {
+        const v = await withTimeout(
+          db.freelancerVerification.findUnique({ where: { userId } }),
+          10000
+        );
+        if (v !== DB_TIMEOUT && v && (!v.submittedAt || v.verificationStatus === 'rejected')) {
           data.hasDraft = true;
           data.step = inferStep('seller', v);
           data.freelanceDocumentFile = v.freelanceDocFile;
@@ -68,10 +122,11 @@ export async function GET(request: NextRequest) {
       }
 
       case 'supplier': {
-        const v = await db.supplierVerification.findUnique({
-          where: { userId },
-        });
-        if (v && (!v.submittedAt || v.verificationStatus === 'rejected')) {
+        const v = await withTimeout(
+          db.supplierVerification.findUnique({ where: { userId } }),
+          10000
+        );
+        if (v !== DB_TIMEOUT && v && (!v.submittedAt || v.verificationStatus === 'rejected')) {
           data.hasDraft = true;
           data.step = inferStep('supplier', v);
           data.commercialLicenseFile = v.commercialLicense;
@@ -82,10 +137,11 @@ export async function GET(request: NextRequest) {
       }
 
       case 'logistics': {
-        const v = await db.logisticsVerification.findUnique({
-          where: { userId },
-        });
-        if (v && (!v.submittedAt || v.verificationStatus === 'rejected')) {
+        const v = await withTimeout(
+          db.logisticsVerification.findUnique({ where: { userId } }),
+          10000
+        );
+        if (v !== DB_TIMEOUT && v && (!v.submittedAt || v.verificationStatus === 'rejected')) {
           data.hasDraft = true;
           data.step = inferStep('logistics', v);
           data.transportLicenseFile = v.transportLicenseFile;
@@ -102,7 +158,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('[draft load] Error:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to load draft' },
+      { success: false, error: dbErrorMsg(error) },
       { status: 500 }
     );
   }
@@ -125,13 +181,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Client sends file URLs from /api/upload (e.g. "/api/files/{uuid}.jpg::filename")
-    // Only URL is stored in DB — actual file saved to disk by upload endpoint
+    // Ensure DB connection before querying
+    await ensureDbConnection();
 
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      select: { id: true, role: true, accountStatus: true },
-    });
+    const user = await withTimeout(
+      db.user.findUnique({
+        where: { id: userId },
+        select: { id: true, role: true, accountStatus: true },
+      }),
+      15000
+    );
+
+    if (user === DB_TIMEOUT) {
+      return NextResponse.json(
+        { success: false, error: 'Database timeout. Please try again.' },
+        { status: 504 }
+      );
+    }
 
     if (!user) {
       return NextResponse.json(
@@ -140,110 +206,121 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    switch (role) {
-      case 'store_manager': {
-        await db.storeVerification.upsert({
-          where: { userId },
-          create: {
-            userId,
-            commercialRegisterNumber: body.commercialRegisterNumber || undefined,
-            commercialRegisterFile: body.commercialRegisterFile || undefined,
-            iban: body.iban || undefined,
-            beneficiaryName: body.beneficiaryName || undefined,
-            bankLetterFile: body.bankLetterFile || undefined,
-            managerIdFront: body.idFrontFile || undefined,
-            managerIdBack: body.idBackFile || undefined,
-          },
-          update: {
-            commercialRegisterNumber: body.commercialRegisterNumber || undefined,
-            commercialRegisterFile: body.commercialRegisterFile || undefined,
-            iban: body.iban || undefined,
-            beneficiaryName: body.beneficiaryName || undefined,
-            bankLetterFile: body.bankLetterFile || undefined,
-            managerIdFront: body.idFrontFile || undefined,
-            managerIdBack: body.idBackFile || undefined,
-          },
-        });
-        break;
-      }
+    const upsertResult = await withTimeout(
+      (async () => {
+        switch (role) {
+          case 'store_manager': {
+            return db.storeVerification.upsert({
+              where: { userId },
+              create: {
+                userId,
+                commercialRegisterNumber: body.commercialRegisterNumber || undefined,
+                commercialRegisterFile: body.commercialRegisterFile || undefined,
+                iban: body.iban || undefined,
+                beneficiaryName: body.beneficiaryName || undefined,
+                bankLetterFile: body.bankLetterFile || undefined,
+                managerIdFront: body.idFrontFile || undefined,
+                managerIdBack: body.idBackFile || undefined,
+              },
+              update: {
+                commercialRegisterNumber: body.commercialRegisterNumber || undefined,
+                commercialRegisterFile: body.commercialRegisterFile || undefined,
+                iban: body.iban || undefined,
+                beneficiaryName: body.beneficiaryName || undefined,
+                bankLetterFile: body.bankLetterFile || undefined,
+                managerIdFront: body.idFrontFile || undefined,
+                managerIdBack: body.idBackFile || undefined,
+              },
+            });
+          }
 
-      case 'seller': {
-        await db.freelancerVerification.upsert({
-          where: { userId },
-          create: {
-            userId,
-            freelanceDocFile: body.freelanceDocumentFile || undefined,
-            nationalIdFront: body.freelancerIdFrontFile || undefined,
-            nationalIdBack: body.freelancerIdBackFile || undefined,
-            iban: body.freelancerIban || undefined,
-            selfieUrls: body.livenessCompleted ? JSON.stringify(['__UPLOADED__']) : undefined,
-            livenessScore: body.livenessCompleted ? 0.85 : undefined,
-          },
-          update: {
-            freelanceDocFile: body.freelanceDocumentFile || undefined,
-            nationalIdFront: body.freelancerIdFrontFile || undefined,
-            nationalIdBack: body.freelancerIdBackFile || undefined,
-            iban: body.freelancerIban || undefined,
-            selfieUrls: body.livenessCompleted ? JSON.stringify(['__UPLOADED__']) : undefined,
-            livenessScore: body.livenessCompleted ? 0.85 : undefined,
-          },
-        });
-        break;
-      }
+          case 'seller': {
+            return db.freelancerVerification.upsert({
+              where: { userId },
+              create: {
+                userId,
+                freelanceDocFile: body.freelanceDocumentFile || undefined,
+                nationalIdFront: body.freelancerIdFrontFile || undefined,
+                nationalIdBack: body.freelancerIdBackFile || undefined,
+                iban: body.freelancerIban || undefined,
+                selfieUrls: body.livenessCompleted ? JSON.stringify(['__UPLOADED__']) : undefined,
+                livenessScore: body.livenessCompleted ? 0.85 : undefined,
+              },
+              update: {
+                freelanceDocFile: body.freelanceDocumentFile || undefined,
+                nationalIdFront: body.freelancerIdFrontFile || undefined,
+                nationalIdBack: body.freelancerIdBackFile || undefined,
+                iban: body.freelancerIban || undefined,
+                selfieUrls: body.livenessCompleted ? JSON.stringify(['__UPLOADED__']) : undefined,
+                livenessScore: body.livenessCompleted ? 0.85 : undefined,
+              },
+            });
+          }
 
-      case 'supplier': {
-        await db.supplierVerification.upsert({
-          where: { userId },
-          create: {
-            userId,
-            commercialLicense: body.commercialLicenseFile || undefined,
-            importLicense: body.importLicenseFile || undefined,
-            iban: body.supplierIban || undefined,
-          },
-          update: {
-            commercialLicense: body.commercialLicenseFile || undefined,
-            importLicense: body.importLicenseFile || undefined,
-            iban: body.supplierIban || undefined,
-          },
-        });
-        break;
-      }
+          case 'supplier': {
+            return db.supplierVerification.upsert({
+              where: { userId },
+              create: {
+                userId,
+                commercialLicense: body.commercialLicenseFile || undefined,
+                importLicense: body.importLicenseFile || undefined,
+                iban: body.supplierIban || undefined,
+              },
+              update: {
+                commercialLicense: body.commercialLicenseFile || undefined,
+                importLicense: body.importLicenseFile || undefined,
+                iban: body.supplierIban || undefined,
+              },
+            });
+          }
 
-      case 'logistics': {
-        await db.logisticsVerification.upsert({
-          where: { userId },
-          create: {
-            userId,
-            transportLicenseFile: body.transportLicenseFile || undefined,
-            insuranceCertificateFile: body.insuranceCertificateFile || undefined,
-            numberOfVehicles: body.numberOfVehicles || undefined,
-            numberOfDrivers: body.numberOfDrivers || undefined,
-            iban: body.logisticsIban || undefined,
-          },
-          update: {
-            transportLicenseFile: body.transportLicenseFile || undefined,
-            insuranceCertificateFile: body.insuranceCertificateFile || undefined,
-            numberOfVehicles: body.numberOfVehicles || undefined,
-            numberOfDrivers: body.numberOfDrivers || undefined,
-            iban: body.logisticsIban || undefined,
-          },
-        });
-        break;
-      }
+          case 'logistics': {
+            return db.logisticsVerification.upsert({
+              where: { userId },
+              create: {
+                userId,
+                transportLicenseFile: body.transportLicenseFile || undefined,
+                insuranceCertificateFile: body.insuranceCertificateFile || undefined,
+                numberOfVehicles: body.numberOfVehicles || undefined,
+                numberOfDrivers: body.numberOfDrivers || undefined,
+                iban: body.logisticsIban || undefined,
+              },
+              update: {
+                transportLicenseFile: body.transportLicenseFile || undefined,
+                insuranceCertificateFile: body.insuranceCertificateFile || undefined,
+                numberOfVehicles: body.numberOfVehicles || undefined,
+                numberOfDrivers: body.numberOfDrivers || undefined,
+                iban: body.logisticsIban || undefined,
+              },
+            });
+          }
 
-      default:
-        break;
+          default:
+            return null;
+        }
+      })(),
+      20000
+    );
+
+    if (upsertResult === DB_TIMEOUT) {
+      return NextResponse.json(
+        { success: false, error: 'Database timeout while saving. Please try again.' },
+        { status: 504 }
+      );
     }
 
     // Audit log — best-effort, don't fail draft save if this fails
     try {
-      await db.auditLog.create({
-        data: {
-          userId,
-          action: 'draft_saved',
-          details: JSON.stringify({ role, step: step || 0 }),
-        },
-      });
+      await withTimeout(
+        db.auditLog.create({
+          data: {
+            userId,
+            action: 'draft_saved',
+            details: JSON.stringify({ role, step: step || 0 }),
+          },
+        }),
+        5000
+      );
     } catch (auditErr) {
       console.warn('[draft save] Audit log failed (non-blocking):', auditErr);
     }
@@ -252,7 +329,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[draft save] Error:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to save draft' },
+      { success: false, error: dbErrorMsg(error) },
       { status: 500 }
     );
   }
