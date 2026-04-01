@@ -1,0 +1,553 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider        = "sqlite"
+  url             = env("DATABASE_URL")
+}
+
+// ============================================
+// USER & AUTH MODELS
+// ============================================
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  phone           String?   @unique
+  password        String?
+  name            String
+  nameEn          String?
+  avatar          String?
+  role            String    @default("buyer") // store, freelancer, supplier, logistics, buyer
+  accountStatus   String    @default("incomplete") // incomplete, pending, active, rejected, suspended
+  isActive        Boolean   @default(true)
+  isVerified      Boolean   @default(false)
+  phoneVerified   Boolean   @default(false)
+  emailVerified   Boolean   @default(false)
+  locale          String    @default("ar")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  store              Store?           @relation("StoreManager")
+  sellerProfile      SellerProfile?
+  logisticsProfile   LogisticsProfile?
+  buyerProfile       BuyerProfile?
+  addresses          Address[]
+  notifications      Notification[]
+  orders             Order[]          @relation("OrderBuyer")
+  reviews            Review[]
+  wallet             Wallet?
+  staffOf            StoreStaff[]
+  storeVerification  StoreVerification?
+  freelancerVerification FreelancerVerification?
+  supplierVerification  SupplierVerification?
+  logisticsVerification LogisticsVerification?
+  auditLogs          AuditLog[]
+}
+
+model Store {
+  id            String    @id @default(cuid())
+  name          String
+  nameEn        String?
+  slug          String    @unique
+  description   String?
+  logo          String?
+  coverImage    String?
+  isActive      Boolean   @default(true)
+  rating        Float     @default(0)
+  totalSales    Int       @default(0)
+  commission    Float     @default(10)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  managerId     String    @unique
+  manager       User      @relation("StoreManager", fields: [managerId], references: [id])
+
+  products      Product[]
+  staff         StoreStaff[]
+}
+
+model StoreStaff {
+  id        String   @id @default(cuid())
+  role      String   @default("staff")
+  joinedAt  DateTime @default(now())
+
+  storeId   String
+  store     Store    @relation(fields: [storeId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([storeId, userId])
+}
+
+model SellerProfile {
+  id                String    @id @default(cuid())
+  storeName         String?
+  storeNameEn       String?
+  bio               String?
+  rating            Float     @default(0)
+  totalSales        Int       @default(0)
+  isVerified        Boolean   @default(false)
+  wantsUpgrade      Boolean   @default(false)
+  upgradeRequestedAt DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id])
+
+  products          Product[]
+}
+
+model LogisticsProfile {
+  id              String    @id @default(cuid())
+  vehicleType     String    @default("motorcycle")
+  plateNumber     String?
+  licenseNumber   String?
+  isOnline        Boolean   @default(false)
+  currentLat      Float?
+  currentLng      Float?
+  rating          Float     @default(0)
+  totalDeliveries Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id])
+
+  shipments       Shipment[]
+}
+
+model BuyerProfile {
+  id            String    @id @default(cuid())
+  totalOrders   Int       @default(0)
+  totalSpent    Float     @default(0)
+  loyaltyPoints Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id])
+
+  wishlist      WishlistItem[]
+}
+
+// ============================================
+// PRODUCT & CATEGORY MODELS
+// ============================================
+
+model Category {
+  id          String      @id @default(cuid())
+  name        String
+  nameEn      String?
+  slug        String      @unique
+  icon        String?
+  image       String?
+  parentId    String?
+  parent      Category?   @relation("CategoryTree", fields: [parentId], references: [id])
+  children    Category[]  @relation("CategoryTree")
+  sortOrder   Int         @default(0)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  products    Product[]
+}
+
+model Product {
+  id              String    @id @default(cuid())
+  name            String
+  nameEn          String?
+  slug            String    @unique
+  description     String?
+  descriptionEn   String?
+  price           Float
+  comparePrice    Float?
+  costPrice       Float?
+  sku             String?
+  barcode         String?
+  images          String    @default("[]")
+  videoUrl        String?
+  specifications  String    @default("{}")
+  status          String    @default("draft")
+  stock           Int       @default(0)
+  lowStock        Int       @default(5)
+  weight          Float?
+  dimensions      String?
+  rating          Float     @default(0)
+  reviewCount     Int       @default(0)
+  soldCount       Int       @default(0)
+  viewCount       Int       @default(0)
+  isFeatured      Boolean   @default(false)
+  brandId         String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  categoryId      String
+  category        Category  @relation(fields: [categoryId], references: [id])
+
+  storeId         String?
+  store           Store?    @relation(fields: [storeId], references: [id])
+  sellerId        String?
+  seller          SellerProfile? @relation(fields: [sellerId], references: [id])
+  brand           Brand?    @relation(fields: [brandId], references: [id])
+
+  orderItems      OrderItem[]
+  reviews         Review[]
+  wishlistItems   WishlistItem[]
+}
+
+model Brand {
+  id        String   @id @default(cuid())
+  name      String
+  nameEn    String?
+  logo      String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products  Product[]
+}
+
+// ============================================
+// ORDER & SHIPPING MODELS
+// ============================================
+
+model Order {
+  id              String    @id @default(cuid())
+  orderNumber     String    @unique
+  status          String    @default("pending")
+  paymentStatus   String    @default("pending")
+  paymentMethod   String    @default("cod")
+  subtotal        Float
+  shippingCost    Float     @default(0)
+  tax             Float     @default(0)
+  discount        Float     @default(0)
+  total           Float
+  currency        String    @default("SAR")
+  note            String?
+
+  buyerId         String
+  buyer           User      @relation("OrderBuyer", fields: [buyerId], references: [id])
+  address         String
+  couponId        String?
+  shippingMethod  String    @default("standard")
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  items           OrderItem[]
+  shipments       Shipment[]
+  reviews         Review[]
+  statusHistory   OrderStatusHistory[]
+}
+
+model OrderItem {
+  id          String  @id @default(cuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id])
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  productName String
+  productImage String?
+  price       Float
+  quantity    Int
+  total       Float
+}
+
+model Shipment {
+  id                String    @id @default(cuid())
+  trackingNumber    String    @unique
+  status            String    @default("pending")
+  pickupAddress     String?
+  deliveryAddress   String
+  notes             String?
+
+  orderId           String
+  order             Order     @relation(fields: [orderId], references: [id])
+  logisticsId       String
+  logistics         LogisticsProfile @relation(fields: [logisticsId], references: [id])
+
+  estimatedDelivery DateTime?
+  actualDelivery    DateTime?
+  pickedUpAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  statusHistory     ShipmentStatusHistory[]
+}
+
+model OrderStatusHistory {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id])
+  status    String
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model ShipmentStatusHistory {
+  id          String   @id @default(cuid())
+  shipmentId  String
+  shipment    Shipment @relation(fields: [shipmentId], references: [id])
+  status      String
+  location    String?
+  note        String?
+  createdAt   DateTime @default(now())
+}
+
+// ============================================
+// ADDRESS & WALLET MODELS
+// ============================================
+
+model Address {
+  id          String   @id @default(cuid())
+  label       String?
+  fullName    String
+  phone       String
+  street      String
+  city        String
+  state       String?
+  zipCode     String?
+  country     String   @default("SA")
+  isDefault   Boolean  @default(false)
+  lat         Float?
+  lng         Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+model Wallet {
+  id          String   @id @default(cuid())
+  balance     Float    @default(0)
+  totalEarned Float    @default(0)
+  totalSpent  Float    @default(0)
+  currency    String   @default("SAR")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
+
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  type        String
+  amount      Float
+  balance     Float
+  description String?
+  referenceId String?
+  createdAt   DateTime @default(now())
+
+  walletId    String
+  wallet      Wallet   @relation(fields: [walletId], references: [id])
+}
+
+// ============================================
+// REVIEW & WISHLIST MODELS
+// ============================================
+
+model Review {
+  id        String   @id @default(cuid())
+  rating    Int
+  title     String?
+  comment   String?
+  images    String   @default("[]")
+  isApproved Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id])
+}
+
+model WishlistItem {
+  id             String   @id @default(cuid())
+  createdAt      DateTime @default(now())
+
+  buyerProfileId String
+  buyerProfile   BuyerProfile @relation(fields: [buyerProfileId], references: [id])
+  productId      String
+  product        Product      @relation(fields: [productId], references: [id])
+
+  @@unique([buyerProfileId, productId])
+}
+
+// ============================================
+// NOTIFICATION MODEL
+// ============================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  titleEn   String?
+  body      String
+  bodyEn    String?
+  type      String
+  isRead    Boolean  @default(false)
+  data      String?
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+// ============================================
+// COUPON MODEL
+// ============================================
+
+model Coupon {
+  id          String    @id @default(cuid())
+  code        String    @unique
+  type        String    @default("percentage")
+  value       Float
+  minOrder    Float?
+  maxDiscount Float?
+  usageLimit  Int?
+  usedCount   Int       @default(0)
+  startsAt    DateTime?
+  expiresAt   DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ============================================
+// SETTINGS MODEL
+// ============================================
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+  type  String @default("string")
+  group String @default("general")
+}
+
+// ============================================
+// VERIFICATION & ONBOARDING MODELS
+// ============================================
+
+model StoreVerification {
+  id                          String    @id @default(cuid())
+  userId                      String    @unique
+  user                        User      @relation(fields: [userId], references: [id])
+  commercialRegisterNumber    String?
+  commercialRegisterFile      String?
+  iban                        String?
+  beneficiaryName             String?
+  bankLetterFile              String?
+  managerIdFront              String?
+  managerIdBack               String?
+  verificationStatus          String    @default("pending") // pending, approved, rejected
+  rejectionReasons            String?   // JSON array of reasons
+  adminNotes                  String?
+  reviewedBy                  String?
+  reviewedAt                  DateTime?
+  submittedAt                 DateTime  @default(now())
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+}
+
+model FreelancerVerification {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id])
+  freelanceDocFile      String?   // optional
+  nationalIdFront       String?
+  nationalIdBack        String?
+  selfieUrls            String?   @default("[]") // JSON array
+  livenessScore         Float?    // 0-1
+  iban                  String?
+  verificationStatus    String    @default("pending")
+  rejectionReasons      String?   // JSON
+  adminNotes            String?
+  reviewedBy            String?
+  reviewedAt            DateTime?
+  submittedAt           DateTime  @default(now())
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+model SupplierVerification {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  user                  User      @relation(fields: [userId], references: [id])
+  commercialLicense     String?
+  importLicense         String?
+  iban                  String?
+  productSamples        String?   @default("[]") // JSON
+  verificationStatus    String    @default("pending")
+  rejectionReasons      String?
+  adminNotes            String?
+  reviewedBy            String?
+  reviewedAt            DateTime?
+  submittedAt           DateTime  @default(now())
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+model LogisticsVerification {
+  id                      String    @id @default(cuid())
+  userId                  String    @unique
+  user                    User      @relation(fields: [userId], references: [id])
+  transportLicenseFile    String?
+  insuranceCertificateFile String?
+  numberOfVehicles        String?
+  numberOfDrivers         String?
+  iban                    String?
+  verificationStatus      String    @default("pending")
+  rejectionReasons        String?
+  adminNotes              String?
+  reviewedBy              String?
+  reviewedAt              DateTime?
+  submittedAt             DateTime  @default(now())
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  roleId      String?
+  role        Role?    @relation(fields: [roleId], references: [id])
+  adminId     String?
+  action      String   // submitted, approved, rejected, edited, login, logout
+  details     String?  // JSON
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+}
+
+// ============================================
+// ROLES & PERMISSIONS MODEL
+// ============================================
+
+model Role {
+  id          String   @id @default(cuid())
+  key         String   @unique  // e.g. admin, store_manager, seller
+  nameAr      String   // Arabic display name
+  nameEn      String   // English display name
+  descriptionAr  String?  // Arabic description
+  descriptionEn  String?  // English description
+  color       String   @default("#6B7280") // Hex color for badges
+  icon        String   @default("UserCircle") // Lucide icon name
+  permissions String   @default("[]") // JSON array of permission keys
+  isSystem    Boolean  @default(false) // System roles cannot be deleted
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  auditLogs   AuditLog[]
+}
