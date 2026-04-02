@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@config "../../tailwind.config.js";
+
 @source "../components";
 @source "../lib";
 @source "../app";
