@@ -11,6 +11,14 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "10mb",
     },
   },
+  // CRITICAL: Inline PostCSS config ensures Tailwind CSS v4
+  // is ALWAYS processed during production builds on Hostinger.
+  // Without this, CSS variables and utility classes are not generated.
+  postcss: {
+    plugins: {
+      "@tailwindcss/postcss": {},
+    },
+  },
 };
 
 export default nextConfig;
