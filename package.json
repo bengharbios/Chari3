@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "cp prisma/schema.mysql.prisma prisma/schema.prisma && prisma generate && next build",
+    "build": "cp prisma/schema.mysql.prisma prisma/schema.prisma && prisma generate && next build && mkdir -p .next/standalone/.next && cp -r .next/static .next/standalone/.next/",
     "start": "next start",
     "lint": "eslint .",
     "postinstall": "prisma generate",
