@@ -11,13 +11,6 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "10mb",
     },
   },
-  // Inline PostCSS config - most reliable for Hostinger
-  // Ensures @tailwindcss/postcss is ALWAYS loaded
-  postcss: {
-    plugins: {
-      "@tailwindcss/postcss": {},
-    },
-  },
 };
 
 export default nextConfig;
