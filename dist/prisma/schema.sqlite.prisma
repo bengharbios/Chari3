@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider        = "mysql"
+  provider        = "sqlite"
   url             = env("DATABASE_URL")
-  relationMode    = "prisma"
 }
 
 // ============================================
@@ -146,7 +145,7 @@ model Category {
   icon        String?
   image       String?
   parentId    String?
-  parent      Category?   @relation("CategoryTree", fields: [parentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  parent      Category?   @relation("CategoryTree", fields: [parentId], references: [id])
   children    Category[]  @relation("CategoryTree")
   sortOrder   Int         @default(0)
   isActive    Boolean     @default(true)
@@ -186,7 +185,7 @@ model Product {
   updatedAt       DateTime  @updatedAt
 
   categoryId      String
-  category        Category  @relation(fields: [categoryId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  category        Category  @relation(fields: [categoryId], references: [id])
 
   storeId         String?
   store           Store?    @relation(fields: [storeId], references: [id])
@@ -249,7 +248,7 @@ model OrderItem {
   orderId     String
   order       Order   @relation(fields: [orderId], references: [id])
   productId   String
-  product     Product @relation(fields: [productId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  product     Product @relation(fields: [productId], references: [id])
   productName String
   productImage String?
   price       Float
@@ -367,7 +366,7 @@ model Review {
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  product   Product  @relation(fields: [productId], references: [id])
   orderId   String?
   order     Order?   @relation(fields: [orderId], references: [id])
 }
@@ -379,7 +378,7 @@ model WishlistItem {
   buyerProfileId String
   buyerProfile   BuyerProfile @relation(fields: [buyerProfileId], references: [id])
   productId      String
-  product        Product      @relation(fields: [productId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  product        Product      @relation(fields: [productId], references: [id])
 
   @@unique([buyerProfileId, productId])
 }
@@ -444,12 +443,12 @@ model StoreVerification {
   userId                      String    @unique
   user                        User      @relation(fields: [userId], references: [id])
   commercialRegisterNumber    String?
-  commercialRegisterFile      String?   @db.LongText
+  commercialRegisterFile      String?
   iban                        String?
   beneficiaryName             String?
-  bankLetterFile              String?   @db.LongText
-  managerIdFront              String?   @db.LongText
-  managerIdBack               String?   @db.LongText
+  bankLetterFile              String?
+  managerIdFront              String?
+  managerIdBack               String?
   verificationStatus          String    @default("pending") // pending, approved, rejected
   rejectionReasons            String?   // JSON array of reasons
   adminNotes                  String?
@@ -464,10 +463,10 @@ model FreelancerVerification {
   id                    String    @id @default(cuid())
   userId                String    @unique
   user                  User      @relation(fields: [userId], references: [id])
-  freelanceDocFile      String?   @db.LongText // optional
-  nationalIdFront       String?   @db.LongText
-  nationalIdBack        String?   @db.LongText
-  selfieUrls            String?   @db.LongText @default("[]") // JSON array
+  freelanceDocFile      String?   // optional
+  nationalIdFront       String?
+  nationalIdBack        String?
+  selfieUrls            String?   @default("[]") // JSON array
   livenessScore         Float?    // 0-1
   iban                  String?
   verificationStatus    String    @default("pending")
@@ -484,8 +483,8 @@ model SupplierVerification {
   id                    String    @id @default(cuid())
   userId                String    @unique
   user                  User      @relation(fields: [userId], references: [id])
-  commercialLicense     String?   @db.LongText
-  importLicense         String?   @db.LongText
+  commercialLicense     String?
+  importLicense         String?
   iban                  String?
   productSamples        String?   @default("[]") // JSON
   verificationStatus    String    @default("pending")
@@ -502,8 +501,8 @@ model LogisticsVerification {
   id                      String    @id @default(cuid())
   userId                  String    @unique
   user                    User      @relation(fields: [userId], references: [id])
-  transportLicenseFile    String?   @db.LongText
-  insuranceCertificateFile String?   @db.LongText
+  transportLicenseFile    String?
+  insuranceCertificateFile String?
   numberOfVehicles        String?
   numberOfDrivers         String?
   iban                    String?
