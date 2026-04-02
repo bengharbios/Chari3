@@ -6,14 +6,6 @@
 @source "../app";
 @custom-variant dark (&:is(.dark *));
 
-/* Explicitly tell Tailwind v4 which directories to scan for class names.
-   Without this, Hostinger build may fail to detect classes in src/ subdirs. */
-@source "../components";
-@source "../lib";
-@source "../app";
-
-@custom-variant dark (&:is(.dark *));
-
 /* ============================================
    NOON-INSPIRED DESIGN SYSTEM
    Comprehensive RTL/LTR Platform Theme
@@ -86,7 +78,6 @@
    LIGHT THEME (Default)
    ============================================ */
 :root {
-  /* Base */
   --radius: 0.75rem;
   --background: #FFFFFF;
   --foreground: #1A1A2E;
@@ -94,33 +85,19 @@
   --card-foreground: #1A1A2E;
   --popover: #FFFFFF;
   --popover-foreground: #1A1A2E;
-
-  /* Primary = Navy */
   --primary: #1B1464;
   --primary-foreground: #FFFFFF;
-
-  /* Secondary = Light Gray */
   --secondary: #F5F5F7;
   --secondary-foreground: #1A1A2E;
-
-  /* Muted */
   --muted: #F5F5F7;
   --muted-foreground: #6B7280;
-
-  /* Accent = Brand Yellow */
   --accent: #FEEE00;
   --accent-foreground: #1B1464;
-
-  /* Destructive */
   --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
-
-  /* Borders & Inputs */
   --border: #E5E7EB;
   --input: #E5E7EB;
   --ring: #1B1464;
-
-  /* Brand Colors */
   --brand: #FEEE00;
   --brand-foreground: #1B1464;
   --brand-hover: #E6DC00;
@@ -129,21 +106,15 @@
   --navy-foreground: #FFFFFF;
   --hot: #F68B1E;
   --hot-foreground: #FFFFFF;
-
-  /* Status Colors */
   --success: #22C55E;
   --success-foreground: #FFFFFF;
   --warning: #F59E0B;
   --warning-foreground: #1A1A2E;
   --info: #3B82F6;
   --info-foreground: #FFFFFF;
-
-  /* Surface */
   --surface: #F8F9FA;
   --surface-hover: #F0F1F3;
   --surface-active: #E5E7EB;
-
-  /* Sidebar */
   --sidebar: #1B1464;
   --sidebar-foreground: #E8E8F0;
   --sidebar-primary: #FEEE00;
@@ -152,20 +123,14 @@
   --sidebar-accent-foreground: #FEEE00;
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: #FEEE00;
-
-  /* Charts */
   --chart-1: #FEEE00;
   --chart-2: #1B1464;
   --chart-3: #F68B1E;
   --chart-4: #22C55E;
   --chart-5: #3B82F6;
-
-  /* Typography */
   --font-platform: 'Inter', 'Cairo', 'Segoe UI', system-ui, -apple-system, 'Noto Sans Arabic', sans-serif;
   --font-heading: 'Inter', 'Cairo', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-
-  /* Spacing Scale */
   --space-xs: 0.25rem;
   --space-sm: 0.5rem;
   --space-md: 1rem;
@@ -173,32 +138,24 @@
   --space-xl: 2rem;
   --space-2xl: 3rem;
   --space-3xl: 4rem;
-
-  /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
   --shadow-brand: 0 4px 14px 0 rgba(254, 238, 0, 0.4);
-
-  /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
-
-  /* Z-index Scale */
   --z-dropdown: 50;
   --z-sticky: 100;
   --z-overlay: 200;
   --z-modal: 300;
   --z-toast: 400;
   --z-tooltip: 500;
-
-  /* Layout */
   --header-height: 64px;
   --header-height-mobile: 56px;
-  --header-top-bar-height: 29px; /* py-1(8px) + text-xs(~16px) + border(1px) */
-  --header-total-height: 93px; /* header(64px) + top-bar(29px) */
+  --header-top-bar-height: 29px;
+  --header-total-height: 93px;
   --sidebar-width: 280px;
   --sidebar-collapsed-width: 72px;
   --bottom-nav-height: 64px;
@@ -214,26 +171,19 @@
   --card-foreground: #E8E8F0;
   --popover: #141428;
   --popover-foreground: #E8E8F0;
-
   --primary: #FEEE00;
   --primary-foreground: #1B1464;
-
   --secondary: #1E1E38;
   --secondary-foreground: #E8E8F0;
-
   --muted: #1E1E38;
   --muted-foreground: #9CA3AF;
-
   --accent: #2D2A8C;
   --accent-foreground: #E8E8F0;
-
   --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
-
   --border: rgba(255, 255, 255, 0.1);
   --input: rgba(255, 255, 255, 0.12);
   --ring: #FEEE00;
-
   --brand: #FEEE00;
   --brand-foreground: #1B1464;
   --brand-hover: #FFE633;
@@ -242,18 +192,15 @@
   --navy-foreground: #FFFFFF;
   --hot: #F68B1E;
   --hot-foreground: #FFFFFF;
-
   --success: #22C55E;
   --success-foreground: #FFFFFF;
   --warning: #F59E0B;
   --warning-foreground: #0A0A1A;
   --info: #60A5FA;
   --info-foreground: #1B1464;
-
   --surface: #111122;
   --surface-hover: #1A1A33;
   --surface-active: #252540;
-
   --sidebar: #0E0E20;
   --sidebar-foreground: #E8E8F0;
   --sidebar-primary: #FEEE00;
@@ -262,13 +209,11 @@
   --sidebar-accent-foreground: #FEEE00;
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: #FEEE00;
-
   --chart-1: #FEEE00;
   --chart-2: #818CF8;
   --chart-3: #F68B1E;
   --chart-4: #34D399;
   --chart-5: #60A5FA;
-
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
@@ -309,7 +254,6 @@
     overflow-x: hidden;
   }
 
-  /* Scrollbar Styling */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -330,13 +274,11 @@
     background: var(--foreground);
   }
 
-  /* Focus visible styles */
   :focus-visible {
     outline: 2px solid var(--brand);
     outline-offset: 2px;
   }
 
-  /* Selection */
   ::selection {
     background: var(--brand);
     color: var(--navy);
@@ -347,7 +289,6 @@
    COMPONENT UTILITIES
    ============================================ */
 @layer components {
-  /* Card Surface */
   .card-surface {
     background: var(--card);
     border: 1px solid var(--border);
@@ -365,7 +306,6 @@
     box-shadow: var(--shadow-lg);
   }
 
-  /* Glass Effect */
   .glass {
     backdrop-filter: blur(12px) saturate(180%);
     -webkit-backdrop-filter: blur(12px) saturate(180%);
@@ -378,7 +318,6 @@
     border-color: rgba(255, 255, 255, 0.08);
   }
 
-  /* Gradient Backgrounds */
   .gradient-brand {
     background: linear-gradient(135deg, var(--brand) 0%, #FFE066 100%);
   }
@@ -391,7 +330,6 @@
     background: linear-gradient(135deg, var(--hot) 0%, #FF9A4A 100%);
   }
 
-  /* Badge Styles */
   .badge-success {
     background: var(--success);
     color: var(--success-foreground);
@@ -412,20 +350,17 @@
     color: var(--destructive-foreground);
   }
 
-  /* Sidebar active item */
   .sidebar-active {
     background: var(--sidebar-accent);
     color: var(--sidebar-accent-foreground);
     font-weight: 600;
   }
 
-  /* Table styles */
   .table-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* RTL-safe padding */
   .px-safe {
     padding-inline-start: var(--space-md);
     padding-inline-end: var(--space-md);
@@ -436,7 +371,6 @@
     margin-inline-end: var(--space-md);
   }
 
-  /* Status dot */
   .status-dot {
     width: 8px;
     height: 8px;
@@ -448,7 +382,6 @@
   .status-dot-busy { background: var(--warning); }
   .status-dot-offline { background: var(--muted-foreground); }
 
-  /* Truncate text */
   .line-clamp-1 {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -462,7 +395,6 @@
     overflow: hidden;
   }
 
-  /* Hide scrollbar */
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -472,17 +404,14 @@
     display: none;
   }
 
-  /* RTL flip utility */
   [dir="rtl"] .flip-rtl {
     transform: scaleX(-1);
   }
 
-  /* Safe area for mobile bottom nav */
   .safe-bottom {
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
   }
 
-  /* Animated gradient border */
   .animated-border {
     position: relative;
     border-radius: var(--radius);
@@ -506,44 +435,28 @@
 
 /* ============================================
    SKELETON / LOADING PLACEHOLDER
-   ============================================
-   Industry standard: muted gray background with shimmer sweep.
-   NEVER use accent/brand color for loading states.
-
-   Classes:
-     .skeleton-pulse  — Subtle pulse animation (default)
-     .skeleton-shimmer — Premium gradient sweep (Stripe/YouTube style)
-
-   Usage:
-     <Skeleton className="h-4 w-48" />           → pulse (default)
-     <Skeleton className="h-4 w-48 skeleton-shimmer" /> → shimmer sweep
-*/
+   ============================================ */
 @layer components {
-  /* Base skeleton styles */
   .skeleton-pulse,
   .skeleton-shimmer {
     background: var(--surface-active);
     border-radius: var(--radius-sm);
   }
 
-  /* Light mode: light gray */
   :root .skeleton-pulse,
   :root .skeleton-shimmer {
     background: #E5E7EB;
   }
 
-  /* Dark mode: subtle dark */
   .dark .skeleton-pulse,
   .dark .skeleton-shimmer {
     background: #252540;
   }
 
-  /* Pulse animation — gentle opacity change */
   .skeleton-pulse {
     animation: skeleton-pulse-anim 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  /* Shimmer animation — gradient sweep (premium) */
   .skeleton-shimmer {
     position: relative;
     overflow: hidden;
@@ -558,22 +471,12 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.4) 50%,
-      transparent 100%
-    );
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
     animation: skeleton-shimmer-anim 2s infinite;
   }
 
   .dark .skeleton-shimmer::after {
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.06) 50%,
-      transparent 100%
-    );
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.06) 50%, transparent 100%);
   }
 }
 
@@ -663,7 +566,6 @@
    RESPONSIVE UTILITIES
    ============================================ */
 @layer utilities {
-  /* Mobile-first container */
   .container-platform {
     width: 100%;
     margin-inline: auto;
@@ -701,7 +603,6 @@
     }
   }
 
-  /* Responsive text */
   .text-responsive-xs { font-size: 0.75rem; line-height: 1rem; }
   .text-responsive-sm { font-size: 0.875rem; line-height: 1.25rem; }
   .text-responsive-base { font-size: 1rem; line-height: 1.5rem; }
@@ -717,19 +618,14 @@
   }
 }
 
-/* ============================================
-   PRINT STYLES
-   ============================================ */
 @media print {
   body {
     background: white !important;
     color: black !important;
   }
-
   .no-print {
     display: none !important;
   }
-
   .card-surface {
     box-shadow: none !important;
     border: 1px solid #ddd !important;
