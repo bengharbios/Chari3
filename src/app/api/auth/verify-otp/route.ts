@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db, ensureDbConnection } from '@/lib/db';
+import { checkRateLimit } from '@/lib/rate-limiter';
+import { verifyOTP, getRemainingAttempts, MAX_ATTEMPTS } from '@/lib/otp-store';
 
 const DEMO_CODE = '123456';
 const DB_TIMEOUT = Symbol('DB_TIMEOUT');
@@ -125,7 +127,6 @@ export async function POST(request: Request) {
     }
 
     // ── Rate limit ──
-    const { checkRateLimit } = await import('@/lib/rate-limiter');
     const rateCheck = checkRateLimit(`otp-verify:${method}:${value}`, 10, 60_000);
     if (!rateCheck.allowed) {
       return NextResponse.json(
@@ -135,7 +136,6 @@ export async function POST(request: Request) {
     }
 
     // ── Verify OTP via in-memory store ──
-    const { verifyOTP, getRemainingAttempts, MAX_ATTEMPTS } = await import('@/lib/otp-store');
     if (!verifyOTP(value, trimmedCode, method)) {
       const attemptsLeft = getRemainingAttempts(value, method);
       if (attemptsLeft === 0) {
