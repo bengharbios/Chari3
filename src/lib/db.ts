@@ -96,28 +96,41 @@ async function findWorkingDbUrl(originalUrl: string): Promise<string | null> {
     { p: rawPass, encoded: true, label: 'raw/encoded' },
   ];
 
-  // ── Phase 1: Try Unix socket paths (Hostinger internal shared hosting fallback) ──
+  // ── Phase 1: Try Unix socket paths concurrently ──
   const socketPaths = [
-    { path: '/tmp/mysql.sock', label: '/tmp/mysql.sock (Hostinger default)' },
+    { path: '/tmp/mysql.sock', label: '/tmp/mysql.sock' },
     { path: '/var/run/mysqld/mysqld.sock', label: '/var/run/mysqld/mysqld.sock' },
     { path: '/var/lib/mysql/mysql.sock', label: '/var/lib/mysql/mysql.sock' },
     { path: '/tmp/mysqlx.sock', label: '/tmp/mysqlx.sock' },
   ];
 
-  console.log('[DB] Phase 1: Probing Unix socket paths...');
+  console.log('[DB] Phase 1: Probing Unix sockets concurrently...');
+  const socketPromises: Promise<string>[] = [];
+
   for (const { path: socketPath, label } of socketPaths) {
     for (const { p, encoded, label: pLabel } of passwordsToTest) {
-      const result = await probeSocketConnection(user, p, database, socketPath, `${label} [pass:${pLabel}]`);
-      if (result.ok) {
-        console.log(`[DB] ✓ Connected via ${label} [pass:${pLabel}] (${result.latency}ms)`);
-        globalForPrisma.dbConnectionMode = 'socket';
-        globalForPrisma.dbSocketPath = socketPath;
-        return buildMysqlUrl(user, p, 'localhost', port, database, encoded);
-      }
+      socketPromises.push(
+        probeSocketConnection(user, p, database, socketPath, `${label} [pass:${pLabel}]`).then((res) => {
+          if (res.ok) {
+            console.log(`[DB] ✓ Connected via ${label} [pass:${pLabel}] (${res.latency}ms)`);
+            globalForPrisma.dbConnectionMode = 'socket';
+            globalForPrisma.dbSocketPath = socketPath;
+            return buildMysqlUrl(user, p, 'localhost', port, database, encoded);
+          }
+          throw new Error('Socket probe failed');
+        })
+      );
     }
   }
 
-  // ── Phase 2: Try TCP connections (fastest on remote host) ──
+  try {
+    const workingUrl = await Promise.any(socketPromises);
+    return workingUrl;
+  } catch {
+    console.log('[DB] ✗ All Unix socket probes failed.');
+  }
+
+  // ── Phase 2: Try TCP connections concurrently ──
   const tcpHosts = [
     { host: creds.host, label: `${creds.host} (original)` },
     { host: '127.0.0.1', label: '127.0.0.1 (IPv4 TCP)' },
@@ -125,24 +138,35 @@ async function findWorkingDbUrl(originalUrl: string): Promise<string | null> {
     { host: 'srv2069.hstgr.io', label: 'srv2069.hstgr.io (external)' },
   ];
 
-  console.log('[DB] Phase 2: Probing TCP hosts...');
+  console.log('[DB] Phase 2: Probing TCP hosts concurrently...');
+  const tcpPromises: Promise<string>[] = [];
   const seen = new Set<string>();
+
   for (const { host, label } of tcpHosts) {
     if (seen.has(host)) continue;
     seen.add(host);
 
     for (const { p, encoded, label: pLabel } of passwordsToTest) {
-      const result = await probeTcpConnection(user, p, host, port, database, `${label} [pass:${pLabel}]`, 3500);
-      if (result.ok) {
-        console.log(`[DB] ✓ Connected to ${label} [pass:${pLabel}] (${result.latency}ms)`);
-        globalForPrisma.dbConnectionMode = 'tcp';
-        return buildMysqlUrl(user, p, host, port, database, encoded);
-      }
+      tcpPromises.push(
+        probeTcpConnection(user, p, host, port, database, `${label} [pass:${pLabel}]`, 3500).then((res) => {
+          if (res.ok) {
+            console.log(`[DB] ✓ Connected to ${label} [pass:${pLabel}] (${res.latency}ms)`);
+            globalForPrisma.dbConnectionMode = 'tcp';
+            return buildMysqlUrl(user, p, host, port, database, encoded);
+          }
+          throw new Error('TCP probe failed');
+        })
+      );
     }
   }
 
-  console.error('[DB] ❌ All MySQL connection methods failed');
-  return null;
+  try {
+    const workingUrl = await Promise.any(tcpPromises);
+    return workingUrl;
+  } catch {
+    console.error('[DB] ❌ All MySQL connection methods failed');
+    return null;
+  }
 }
 
 // ============================================
