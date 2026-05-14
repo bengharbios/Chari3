@@ -70,7 +70,7 @@ const ALLOWED_EXTRA_PAGES: PageType[] = [
   'admin-sellers', 'admin-shipping', 'admin-analytics', 'admin-settings',
 ];
 
-export default function HomePage() {
+export default function HomePage({ initialPage }: { initialPage?: PageType }) {
   const { currentPage, setCurrentPage, locale } = useAppStore();
   const { isAuthenticated, user } = useAuthStore();
   const {
@@ -81,6 +81,34 @@ export default function HomePage() {
   const pollRef = useRef<NodeJS.Timeout | null>(null);
   const lastKnownStatus = useRef<string | null>(null);
   const draftRestoredRef = useRef(false);
+
+  // If initialPage prop is passed from a specific route (e.g. /store), set it
+  useEffect(() => {
+    if (initialPage && currentPage !== initialPage) {
+      setCurrentPage(initialPage);
+    }
+  }, [initialPage, currentPage, setCurrentPage]);
+
+  // Synchronize browser URL bar with Zustand currentPage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const pathMap: Record<string, string> = {
+        admin: '/admin',
+        'admin-users': '/admin/users',
+        'admin-roles': '/admin/roles',
+        store: '/store',
+        seller: '/seller',
+        supplier: '/supplier',
+        logistics: '/logistics',
+        buyer: '/buyer',
+        verification: '/verification',
+      };
+      const targetPath = pathMap[currentPage] || '/';
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState(null, '', targetPath);
+      }
+    }
+  }, [currentPage]);
 
   const DashboardComponent = DASHBOARD_MAP[currentPage];
 
