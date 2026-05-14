@@ -50,6 +50,7 @@ export async function PATCH(request: Request) {
       where: { id },
       data: {
         ...(data.name && { name: data.name }),
+        ...(data.email && { email: data.email, emailVerified: true }),
         ...(data.role && { role: data.role }),
         ...(typeof data.isActive === 'boolean' && { isActive: data.isActive }),
         ...(typeof data.isVerified === 'boolean' && { isVerified: data.isVerified }),

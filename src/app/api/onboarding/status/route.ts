@@ -205,7 +205,8 @@ export async function GET(request: NextRequest) {
           submittedAt,
           rejectionReasons: rejectionReasons.length > 0 ? rejectionReasons : undefined,
           adminNotes,
-        } satisfies StatusResponse);
+          details: v || {},
+        } satisfies StatusResponse & { details: Record<string, unknown> });
       }
 
       case 'seller': {
@@ -302,7 +303,8 @@ export async function GET(request: NextRequest) {
           submittedAt,
           rejectionReasons: rejectionReasons.length > 0 ? rejectionReasons : undefined,
           adminNotes,
-        } satisfies StatusResponse);
+          details: v || {},
+        } satisfies StatusResponse & { details: Record<string, unknown> });
       }
 
       case 'logistics': {
@@ -399,7 +401,8 @@ export async function GET(request: NextRequest) {
           submittedAt,
           rejectionReasons: rejectionReasons.length > 0 ? rejectionReasons : undefined,
           adminNotes,
-        } satisfies StatusResponse);
+          details: v || {},
+        } satisfies StatusResponse & { details: Record<string, unknown> });
       }
 
       case 'supplier': {
@@ -480,7 +483,8 @@ export async function GET(request: NextRequest) {
           submittedAt,
           rejectionReasons: rejectionReasons.length > 0 ? rejectionReasons : undefined,
           adminNotes,
-        } satisfies StatusResponse);
+          details: v || {},
+        } satisfies StatusResponse & { details: Record<string, unknown> });
       }
 
       default: {
