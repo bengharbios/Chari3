@@ -25,6 +25,18 @@ export async function GET(request: Request) {
       console.log(`[GET /api/admin/roles] Seeding triggered:`, seedResult);
     }
 
+    // Fix MySQL zero-date values that Prisma cannot parse (0000-00-00 00:00:00)
+    try {
+      await db.$executeRawUnsafe(
+        `UPDATE \`Role\` SET \`updatedAt\` = NOW() WHERE \`updatedAt\` = '0000-00-00 00:00:00' OR \`updatedAt\` IS NULL`
+      );
+      await db.$executeRawUnsafe(
+        `UPDATE \`Role\` SET \`createdAt\` = NOW() WHERE \`createdAt\` = '0000-00-00 00:00:00' OR \`createdAt\` IS NULL`
+      );
+    } catch (fixErr) {
+      console.warn('[GET /api/admin/roles] Zero-date fix skipped:', fixErr);
+    }
+
     // Fetch all roles ordered by sortOrder
     const roles = await db.role.findMany({
       orderBy: { sortOrder: 'asc' },
