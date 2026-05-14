@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { validatePhone, validateEmail, validateFullName, validateRole } from '@/lib/validators';
 import { randomUUID } from 'crypto';
+import { db, ensureDbConnection } from '@/lib/db';
 
 const DB_TIMEOUT = Symbol('DB_TIMEOUT');
 const DB_TIMEOUT_MS = 15000;
@@ -104,7 +105,7 @@ export async function POST(request: Request) {
     let dbUser: Record<string, unknown> | null = null;
 
     try {
-      const { db } = await import('@/lib/db');
+      await ensureDbConnection();
 
       // ── Step 1: Check if user already exists ──
       const existing = await withTimeout(
