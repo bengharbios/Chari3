@@ -330,7 +330,7 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
 
       {!isAuthenticated ? (
         <main className="flex-1">
-          <AuthPage />
+          {currentPage === 'login' ? <AuthPage /> : <HomepagePage />}
         </main>
       ) : DashboardComponent ? (
         <DashboardLayout>
