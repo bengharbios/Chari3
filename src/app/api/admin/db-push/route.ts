@@ -12,8 +12,8 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Run npx prisma db push inside the Hostinger server environment (handles standalone pathing)
-    const { stdout, stderr } = await execAsync('npx --no-install prisma db push --accept-data-loss');
+    // Run npx prisma db push using explicit node binary and local node_modules path
+    const { stdout, stderr } = await execAsync('node ./node_modules/prisma/build/index.js db push --accept-data-loss');
     return NextResponse.json({ success: true, output: stdout, errorOutput: stderr });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
