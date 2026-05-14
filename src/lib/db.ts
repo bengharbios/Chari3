@@ -18,6 +18,7 @@ function parseMysqlUrl(url: string) {
     return {
       user: decodeURIComponent(u.username),
       pass: decodeURIComponent(u.password),
+      rawPass: u.password,
       host: u.hostname,
       port: u.port || '3306',
       database: u.pathname.slice(1),
@@ -27,8 +28,9 @@ function parseMysqlUrl(url: string) {
   }
 }
 
-function buildMysqlUrl(user: string, pass: string, host: string, port: string, database: string) {
-  return `mysql://${encodeURIComponent(user)}:${encodeURIComponent(pass)}@${host}:${port}/${database}`;
+function buildMysqlUrl(user: string, pass: string, host: string, port: string, database: string, isAlreadyEncoded = false) {
+  const encPass = isAlreadyEncoded ? pass : encodeURIComponent(pass);
+  return `mysql://${encodeURIComponent(user)}:${encPass}@${host}:${port}/${database}`;
 }
 
 // ============================================
@@ -38,11 +40,15 @@ function buildMysqlUrl(user: string, pass: string, host: string, port: string, d
 // Try Unix socket first, then TCP as fallback.
 // ============================================
 
-async function probeTcpConnection(user: string, pass: string, host: string, port: string, database: string, label: string, timeoutMs = 1500) {
+async function probeTcpConnection(user: string, pass: string, host: string, port: string, database: string, label: string, timeoutMs = 3500) {
   try {
     const start = Date.now();
     const conn = await mysql.createConnection({
-      uri: buildMysqlUrl(user, pass, host, port, database),
+      host,
+      port: Number(port),
+      user,
+      password: pass,
+      database,
       connectTimeout: timeoutMs,
       enableKeepAlive: false,
     });
@@ -64,7 +70,7 @@ async function probeSocketConnection(user: string, pass: string, database: strin
       password: pass,
       database,
       socketPath,
-      connectTimeout: 1500,
+      connectTimeout: 3500,
       enableKeepAlive: false,
     });
     await conn.execute('SELECT 1');
@@ -84,7 +90,11 @@ async function findWorkingDbUrl(originalUrl: string): Promise<string | null> {
     return null;
   }
 
-  const { user, pass, port, database } = creds;
+  const { user, pass, rawPass, port, database } = creds;
+  const passwordsToTest = [
+    { p: pass, encoded: false, label: 'decoded' },
+    { p: rawPass, encoded: true, label: 'raw/encoded' },
+  ];
 
   // ── Phase 1: Try Unix socket paths (Hostinger internal shared hosting fallback) ──
   const socketPaths = [
@@ -94,35 +104,40 @@ async function findWorkingDbUrl(originalUrl: string): Promise<string | null> {
     { path: '/tmp/mysqlx.sock', label: '/tmp/mysqlx.sock' },
   ];
 
-  console.log('[DB] Phase 1: Probing Unix socket paths (1.5s timeout)...');
+  console.log('[DB] Phase 1: Probing Unix socket paths...');
   for (const { path: socketPath, label } of socketPaths) {
-    const result = await probeSocketConnection(user, pass, database, socketPath, label);
-    if (result.ok) {
-      console.log(`[DB] ✓ Connected via ${label} (${result.latency}ms)`);
-      globalForPrisma.dbConnectionMode = 'socket';
-      globalForPrisma.dbSocketPath = socketPath;
-      return buildMysqlUrl(user, pass, 'localhost', port, database);
+    for (const { p, encoded, label: pLabel } of passwordsToTest) {
+      const result = await probeSocketConnection(user, p, database, socketPath, `${label} [pass:${pLabel}]`);
+      if (result.ok) {
+        console.log(`[DB] ✓ Connected via ${label} [pass:${pLabel}] (${result.latency}ms)`);
+        globalForPrisma.dbConnectionMode = 'socket';
+        globalForPrisma.dbSocketPath = socketPath;
+        return buildMysqlUrl(user, p, 'localhost', port, database, encoded);
+      }
     }
   }
 
   // ── Phase 2: Try TCP connections (fastest on remote host) ──
   const tcpHosts = [
     { host: creds.host, label: `${creds.host} (original)` },
-    { host: 'srv2069.hstgr.io', label: 'srv2069.hstgr.io (external)' },
     { host: '127.0.0.1', label: '127.0.0.1 (IPv4 TCP)' },
+    { host: 'localhost', label: 'localhost (TCP)' },
+    { host: 'srv2069.hstgr.io', label: 'srv2069.hstgr.io (external)' },
   ];
 
-  console.log('[DB] Phase 2: Probing TCP hosts (1.5s timeout)...');
+  console.log('[DB] Phase 2: Probing TCP hosts...');
   const seen = new Set<string>();
   for (const { host, label } of tcpHosts) {
     if (seen.has(host)) continue;
     seen.add(host);
 
-    const result = await probeTcpConnection(user, pass, host, port, database, label, 1500);
-    if (result.ok) {
-      console.log(`[DB] ✓ Connected to ${label} (${result.latency}ms)`);
-      globalForPrisma.dbConnectionMode = 'tcp';
-      return buildMysqlUrl(user, pass, host, port, database);
+    for (const { p, encoded, label: pLabel } of passwordsToTest) {
+      const result = await probeTcpConnection(user, p, host, port, database, `${label} [pass:${pLabel}]`, 3500);
+      if (result.ok) {
+        console.log(`[DB] ✓ Connected to ${label} [pass:${pLabel}] (${result.latency}ms)`);
+        globalForPrisma.dbConnectionMode = 'tcp';
+        return buildMysqlUrl(user, p, host, port, database, encoded);
+      }
     }
   }
 
