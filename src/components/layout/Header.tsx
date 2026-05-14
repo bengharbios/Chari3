@@ -184,7 +184,17 @@ export default function Header() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : null}
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                className="gradient-brand text-navy font-bold ms-2"
+                onClick={() => useAppStore.getState().setCurrentPage('login')}
+              >
+                <User className="h-4 w-4 me-1.5" />
+                {t('تسجيل الدخول', 'Sign In')}
+              </Button>
+            )}
           </div>
         </div>
 
