@@ -37,7 +37,7 @@ function buildMysqlUrl(user: string, pass: string, host: string, port: string, d
 // Try Unix socket first, then TCP as fallback.
 // ============================================
 
-async function probeTcpConnection(user: string, pass: string, host: string, port: string, database: string, label: string, timeoutMs = 5000) {
+async function probeTcpConnection(user: string, pass: string, host: string, port: string, database: string, label: string, timeoutMs = 1500) {
   try {
     const mysql = await import('mysql2/promise');
     const start = Date.now();
@@ -65,7 +65,7 @@ async function probeSocketConnection(user: string, pass: string, database: strin
       password: pass,
       database,
       socketPath,
-      connectTimeout: 5000,
+      connectTimeout: 1500,
       enableKeepAlive: false,
     });
     await conn.execute('SELECT 1');
@@ -87,28 +87,7 @@ async function findWorkingDbUrl(originalUrl: string): Promise<string | null> {
 
   const { user, pass, port, database } = creds;
 
-  // ── Phase 1: Try TCP connections (fastest on remote host) ──
-  const tcpHosts = [
-    { host: creds.host, label: `${creds.host} (original)` },
-    { host: 'srv2069.hstgr.io', label: 'srv2069.hstgr.io (external)' },
-    { host: '127.0.0.1', label: '127.0.0.1 (IPv4 TCP)' },
-  ];
-
-  console.log('[DB] Phase 1: Probing TCP hosts...');
-  const seen = new Set<string>();
-  for (const { host, label } of tcpHosts) {
-    if (seen.has(host)) continue;
-    seen.add(host);
-
-    const result = await probeTcpConnection(user, pass, host, port, database, label, 3000);
-    if (result.ok) {
-      console.log(`[DB] ✓ Connected to ${label} (${result.latency}ms)`);
-      globalForPrisma.dbConnectionMode = 'tcp';
-      return buildMysqlUrl(user, pass, host, port, database);
-    }
-  }
-
-  // ── Phase 2: Try Unix socket paths (Hostinger shared hosting fallback) ──
+  // ── Phase 1: Try Unix socket paths (Hostinger internal shared hosting fallback) ──
   const socketPaths = [
     { path: '/tmp/mysql.sock', label: '/tmp/mysql.sock (Hostinger default)' },
     { path: '/var/run/mysqld/mysqld.sock', label: '/var/run/mysqld/mysqld.sock' },
@@ -116,7 +95,7 @@ async function findWorkingDbUrl(originalUrl: string): Promise<string | null> {
     { path: '/tmp/mysqlx.sock', label: '/tmp/mysqlx.sock' },
   ];
 
-  console.log('[DB] Phase 2: Probing Unix socket paths...');
+  console.log('[DB] Phase 1: Probing Unix socket paths (1.5s timeout)...');
   for (const { path: socketPath, label } of socketPaths) {
     const result = await probeSocketConnection(user, pass, database, socketPath, label);
     if (result.ok) {
@@ -124,6 +103,27 @@ async function findWorkingDbUrl(originalUrl: string): Promise<string | null> {
       globalForPrisma.dbConnectionMode = 'socket';
       globalForPrisma.dbSocketPath = socketPath;
       return buildMysqlUrl(user, pass, 'localhost', port, database);
+    }
+  }
+
+  // ── Phase 2: Try TCP connections (fastest on remote host) ──
+  const tcpHosts = [
+    { host: creds.host, label: `${creds.host} (original)` },
+    { host: 'srv2069.hstgr.io', label: 'srv2069.hstgr.io (external)' },
+    { host: '127.0.0.1', label: '127.0.0.1 (IPv4 TCP)' },
+  ];
+
+  console.log('[DB] Phase 2: Probing TCP hosts (1.5s timeout)...');
+  const seen = new Set<string>();
+  for (const { host, label } of tcpHosts) {
+    if (seen.has(host)) continue;
+    seen.add(host);
+
+    const result = await probeTcpConnection(user, pass, host, port, database, label, 1500);
+    if (result.ok) {
+      console.log(`[DB] ✓ Connected to ${label} (${result.latency}ms)`);
+      globalForPrisma.dbConnectionMode = 'tcp';
+      return buildMysqlUrl(user, pass, host, port, database);
     }
   }
 
@@ -219,19 +219,8 @@ export function getWorkingSocketPath(): string | null {
 let probePromise: Promise<boolean> | null = null;
 
 export async function ensureDbConnection(): Promise<boolean> {
-  if (globalForPrisma.dbWorkingUrl) {
-    try {
-      const instance = globalForPrisma.prisma;
-      if (instance) {
-        await instance.$queryRaw`SELECT 1 as ok`;
-        return true;
-      }
-    } catch {
-      globalForPrisma.dbWorkingUrl = undefined;
-      globalForPrisma.prisma = undefined;
-      globalForPrisma.dbConnectionMode = undefined;
-      globalForPrisma.dbSocketPath = undefined;
-    }
+  if (globalForPrisma.dbWorkingUrl && globalForPrisma.prisma) {
+    return true;
   }
 
   if (probePromise) return probePromise;
@@ -240,22 +229,6 @@ export async function ensureDbConnection(): Promise<boolean> {
     try {
       const originalUrl = process.env.DATABASE_URL;
       if (!originalUrl) return false;
-
-      // Quick test with existing or newly created client
-      if (!globalForPrisma.prisma) {
-        const initial = buildInitialUrl();
-        if (initial) {
-          globalForPrisma.prisma = createPrisma(initial);
-        }
-      }
-
-      if (globalForPrisma.prisma) {
-        try {
-          await globalForPrisma.prisma.$queryRaw`SELECT 1 as ok`;
-          globalForPrisma.dbWorkingUrl = originalUrl;
-          return true;
-        } catch { /* re-probe */ }
-      }
 
       console.log('[DB] Probing MySQL connection methods...');
       const workingUrl = await findWorkingDbUrl(originalUrl);
@@ -266,8 +239,7 @@ export async function ensureDbConnection(): Promise<boolean> {
         globalForPrisma.prisma = createPrisma(workingUrl);
         globalForPrisma.dbWorkingUrl = workingUrl;
 
-        await globalForPrisma.prisma.$queryRaw`SELECT 1 as ok`;
-        console.log('[DB] ✓ Prisma client ready');
+        console.log('[DB] ✓ Prisma client ready on discovered URL');
         return true;
       }
 
