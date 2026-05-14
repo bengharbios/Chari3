@@ -3,6 +3,8 @@ import { db, ensureDbConnection } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rate-limiter';
 import { verifyOTP, getRemainingAttempts, MAX_ATTEMPTS } from '@/lib/otp-store';
 
+export const dynamic = 'force-dynamic';
+
 const DEMO_CODE = '123456';
 const DB_TIMEOUT = Symbol('DB_TIMEOUT');
 const DB_TIMEOUT_MS = 15000;

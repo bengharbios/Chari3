@@ -3,6 +3,8 @@ import { validatePhone, validateEmail } from '@/lib/validators';
 import { checkRateLimit } from '@/lib/rate-limiter';
 import { generateOTP } from '@/lib/otp-store';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

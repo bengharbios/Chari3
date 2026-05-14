@@ -3,6 +3,8 @@ import { validatePhone, validateEmail, validateFullName, validateRole } from '@/
 import { randomUUID } from 'crypto';
 import { db, ensureDbConnection } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 const DB_TIMEOUT = Symbol('DB_TIMEOUT');
 const DB_TIMEOUT_MS = 15000;
 
