@@ -1304,7 +1304,7 @@ export default function OnboardingWizard() {
             { label: 'وثيقة العمل الحر (اختياري)', labelEn: 'Freelance Document (optional)', done: true },
             { label: 'الهوية (أمام)', labelEn: 'National ID Front', done: !!freelancerIdFrontFile },
             { label: 'الهوية (خلف)', labelEn: 'National ID Back', done: !!freelancerIdBackFile },
-            { label: 'التحقق الحي', labelEn: 'Liveness Detection', done: livenessCompleted },
+            { label: 'التحقق الحي (يمكن استكماله لاحقاً)', labelEn: 'Liveness Detection (postponable)', done: true },
             { label: 'IBAN', labelEn: 'IBAN', done: validateIban(freelancerIban, ibanConfig) },
           ];
         case 'supplier':
@@ -1386,26 +1386,36 @@ export default function OnboardingWizard() {
           </p>
         </div>
 
-        <Button
-          className="w-full h-12 text-base gradient-navy text-white font-semibold"
-          disabled={!allDone || isSubmitting}
-          onClick={() => {
-            console.log('[OnboardingWizard] Submit button clicked, allDone:', allDone, 'isSubmitting:', isSubmitting, 'items:', items.map(i => `${i.label}=${i.done}`));
-            handleSubmit();
-          }}
-        >
-          {isSubmitting ? (
-            <>
-              <RefreshCw className="h-4 w-4 me-2 animate-spin" />
-              {t(locale, 'جاري الإرسال...', 'Submitting...')}
-            </>
-          ) : (
-            <>
-              <Shield className="h-4 w-4 me-2" />
-              {t(locale, 'إرسال للمراجعة', 'Submit for Review')}
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-3 pt-2">
+          <Button
+            variant="outline"
+            className="h-12 px-6 text-sm"
+            onClick={() => setShowReview(false)}
+            disabled={isSubmitting}
+          >
+            {t(locale, 'الرجوع للتعديل', 'Back to Edit')}
+          </Button>
+          <Button
+            className="flex-1 h-12 text-base gradient-navy text-white font-semibold"
+            disabled={!allDone || isSubmitting}
+            onClick={() => {
+              console.log('[OnboardingWizard] Submit button clicked, allDone:', allDone, 'isSubmitting:', isSubmitting);
+              handleSubmit();
+            }}
+          >
+            {isSubmitting ? (
+              <>
+                <RefreshCw className="h-4 w-4 me-2 animate-spin" />
+                {t(locale, 'جاري الإرسال...', 'Submitting...')}
+              </>
+            ) : (
+              <>
+                <Shield className="h-4 w-4 me-2" />
+                {t(locale, 'إرسال للمراجعة', 'Submit for Review')}
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     );
   };
