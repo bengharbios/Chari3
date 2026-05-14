@@ -271,7 +271,20 @@ export async function ensureDbConnection(): Promise<boolean> {
       if (!originalUrl) return false;
 
       console.log('[DB] Probing MySQL connection methods...');
-      const workingUrl = await findWorkingDbUrl(originalUrl);
+      let workingUrl: string | null = null;
+      try {
+        workingUrl = await Promise.race([
+          findWorkingDbUrl(originalUrl),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
+        ]);
+      } catch {
+        workingUrl = null;
+      }
+
+      if (!workingUrl) {
+        console.log('[DB] Prober timeout/failure — falling back to original DATABASE_URL');
+        workingUrl = originalUrl;
+      }
 
       if (workingUrl) {
         try { if (globalForPrisma.prisma) await globalForPrisma.prisma.$disconnect(); } catch { /* ignore */ }
@@ -279,7 +292,7 @@ export async function ensureDbConnection(): Promise<boolean> {
         globalForPrisma.prisma = createPrisma(workingUrl);
         globalForPrisma.dbWorkingUrl = workingUrl;
 
-        console.log('[DB] ✓ Prisma client ready on discovered URL');
+        console.log('[DB] ✓ Prisma client ready');
         return true;
       }
 
