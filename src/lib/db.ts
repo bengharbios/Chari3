@@ -145,7 +145,7 @@ function createPrisma(url: string) {
     // For Prisma with Unix socket, use the discovered socket path in URL
     const socketPath = globalForPrisma.dbSocketPath || '/tmp/mysql.sock';
     const sep = finalUrl.includes('?') ? '&' : '?';
-    finalUrl = `${finalUrl}${sep}socketPath=${encodeURIComponent(socketPath)}`;
+    finalUrl = `${finalUrl}${sep}socket=${encodeURIComponent(socketPath)}`;
   }
 
   // Force IPv4 for TCP connections
