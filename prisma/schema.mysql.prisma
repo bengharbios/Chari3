@@ -65,6 +65,14 @@ model Store {
   managerId     String    @unique
   manager       User      @relation("StoreManager", fields: [managerId], references: [id])
 
+  packageId     String?
+  package       SellerPackage? @relation(fields: [packageId], references: [id])
+
+  level         Int      @default(1)
+  totalCustomers Int     @default(0)
+  totalEarnings  Float   @default(0)
+  completionRate Float   @default(100)
+
   products      Product[]
   staff         StoreStaff[]
 }
@@ -83,22 +91,234 @@ model StoreStaff {
 }
 
 model SellerProfile {
-  id                String    @id @default(cuid())
-  storeName         String?
-  storeNameEn       String?
-  bio               String?
-  rating            Float     @default(0)
-  totalSales        Int       @default(0)
-  isVerified        Boolean   @default(false)
-  wantsUpgrade      Boolean   @default(false)
-  upgradeRequestedAt DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  storeName           String?
+  storeNameEn         String?
+  bio                 String?
+  coverImage          String?
+  logo                String?
+  socialLinks         String    @default("{}")   // JSON: instagram, facebook, tiktok
+  returnPolicy        String?
+  shippingPolicy      String?
 
-  userId            String    @unique
-  user              User      @relation(fields: [userId], references: [id])
+  // Performance metrics
+  rating              Float     @default(0)
+  totalSales          Int       @default(0)
+  totalCustomers      Int       @default(0)
+  totalEarnings       Float     @default(0)
+  commissionPaid      Float     @default(0)
+  completionRate      Float     @default(100) // %
+  responseRate        Float     @default(100) // %
+  avgResponseHours    Float     @default(24)
+  challengePoints     Int       @default(0)
 
-  products          Product[]
+  // Level system
+  level               Int       @default(1)
+  levelUpdatedAt      DateTime?
+  levelGraceUntil     DateTime? // Grace period before demotion
+
+  // Package
+  packageId           String?
+  package             SellerPackage? @relation(fields: [packageId], references: [id])
+
+  isVerified          Boolean   @default(false)
+  wantsUpgrade        Boolean   @default(false)
+  upgradeRequestedAt  DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  userId              String    @unique
+  user                User      @relation(fields: [userId], references: [id])
+
+  products            Product[]
+  sellerReviews       SellerReview[]
+  withdrawals         WithdrawalRequest[]
+}
+
+// ============================================
+// SELLER PACKAGE MODEL (Admin-controlled)
+// ============================================
+
+model SellerPackage {
+  id                    String   @id @default(cuid())
+  name                  String   // "مجاني", "أساسي", "محترف", "بريميوم"
+  nameEn                String?
+  description           String?
+  price                 Float    @default(0)     // Monthly price
+  commissionRate        Float    @default(10)    // % per sale
+  maxProducts           Int      @default(5)
+  maxMonthlyOrders      Int      @default(50)
+  maxImagesPerProduct   Int      @default(3)
+  hasVideoUpload        Boolean  @default(false)
+  hasAnalytics          Boolean  @default(false)
+  hasPromotedListing    Boolean  @default(false)
+  hasCoupons            Boolean  @default(false)
+  hasApiAccess          Boolean  @default(false)
+  hasPrioritySupport    Boolean  @default(false)
+  color                 String   @default("#6B7280")
+  icon                  String   @default("Package")
+  isActive              Boolean  @default(true)
+  sortOrder             Int      @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  sellers               SellerProfile[]
+  stores                Store[]
+}
+
+// ============================================
+// SELLER LEVEL MODEL (Admin-controlled, 1-10)
+// ============================================
+
+model SellerLevel {
+  id                  String   @id @default(cuid())
+  level               Int      @unique          // 1-10
+  nameAr              String
+  nameEn              String
+  badge               String                    // emoji or label
+  badgeColor          String   @default("#6B7280")
+  minCustomers        Int      @default(0)
+  minRating           Float    @default(0)
+  minCompletionRate   Float    @default(0)      // %
+  minResponseRate     Float    @default(0)      // %
+  maxResponseHours    Int      @default(48)
+  maxProducts         Int      @default(5)      // Product listing cap
+  commissionDiscount  Float    @default(0)      // % discount on package commission
+  bonusFeatures       String   @default("[]")   // JSON array of feature keys
+  gracePeriodDays     Int      @default(180)    // Days before demotion
+  searchBoost         Float    @default(1.0)    // Multiplier for search ranking
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// ============================================
+// SELLER REVIEW (separate from product review)
+// ============================================
+
+model SellerReview {
+  id              String   @id @default(cuid())
+  rating          Int                           // 1-5 overall
+  speedRating     Int?                          // 1-5 speed
+  qualityRating   Int?                          // 1-5 quality
+  commRating      Int?                          // 1-5 communication
+  comment         String?
+  sellerReply     String?
+  replyAt         DateTime?
+  isApproved      Boolean  @default(true)
+
+  sellerId        String
+  seller          SellerProfile @relation(fields: [sellerId], references: [id])
+  buyerId         String
+  orderId         String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================
+// PRODUCT VARIANT (color, size, etc.)
+// ============================================
+
+model ProductVariant {
+  id          String   @id @default(cuid())
+  name        String                            // "اللون", "المقاس"
+  value       String                            // "أحمر", "XL"
+  sku         String?
+  price       Float?                            // Override product price if set
+  stock       Int      @default(0)
+  image       String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+}
+
+// ============================================
+// ADVERTISEMENT MODEL
+// ============================================
+
+model Advertisement {
+  id          String   @id @default(cuid())
+  title       String
+  titleEn     String?
+  imageUrl    String
+  linkUrl     String?
+  zone        String                            // hero, banner_top, banner_mid, sidebar, inline_products, category_header
+  targetRole  String   @default("all")         // all, buyer, guest
+  isActive    Boolean  @default(true)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  clicks      Int      @default(0)
+  impressions Int      @default(0)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// SHIPPING METHOD MODEL
+// ============================================
+
+model ShippingMethod {
+  id            String   @id @default(cuid())
+  name          String                          // "شحن المنصة", "توصيل بالسائق", "استلام من المحل"
+  nameEn        String?
+  description   String?
+  type          String                          // platform, self, pickup, partner
+  basePrice     Float    @default(0)
+  perKgPrice    Float    @default(0)
+  freeAbove     Float?                          // Free shipping if order > X DZD
+  estimatedDays String   @default("1-3")
+  isActive      Boolean  @default(true)
+  icon          String   @default("Truck")
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ============================================
+// WITHDRAWAL REQUEST MODEL
+// ============================================
+
+model WithdrawalRequest {
+  id            String   @id @default(cuid())
+  amount        Float
+  method        String                          // ccp, cib, bank_transfer, cash
+  status        String   @default("pending")    // pending, approved, paid, rejected
+  accountNumber String?                         // CCP/CIB/Bank account
+  accountName   String?
+  bankName      String?
+  note          String?
+  adminNote     String?
+  processedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sellerId      String
+  seller        SellerProfile @relation(fields: [sellerId], references: [id])
+}
+
+// ============================================
+// CHALLENGE MODEL (Yassir-style)
+// ============================================
+
+model Challenge {
+  id            String   @id @default(cuid())
+  title         String
+  titleEn       String?
+  description   String?
+  type          String                          // orders_count, revenue, rating
+  targetValue   Float
+  rewardType    String   @default("badge")     // badge, commission_discount, cash
+  rewardValue   String                          // "خصم 5%", "شارة ذهبية"
+  startsAt      DateTime
+  endsAt        DateTime
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model LogisticsProfile {
@@ -197,6 +417,7 @@ model Product {
   orderItems      OrderItem[]
   reviews         Review[]
   wishlistItems   WishlistItem[]
+  variants        ProductVariant[]
 }
 
 model Brand {

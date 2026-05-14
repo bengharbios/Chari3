@@ -1,546 +1,385 @@
 'use client';
 
-import { useAppStore } from '@/lib/store';
+import { useState, useEffect } from 'react';
 import {
-  MOCK_PRODUCTS,
-  MOCK_ORDERS,
-  MOCK_SELLERS,
-  formatCurrency,
-  formatNumber,
-  getOrderStatusColor,
-  getOrderStatusText,
-} from '@/lib/mock-data';
-import { StatsCard, PageHeader } from '@/components/shared/StatsCard';
+  TrendingUp, Package, Star, ShieldCheck, ArrowLeft, ArrowRight,
+  Wallet, AlertTriangle, ChevronUp, BarChart3, Clock, CheckCircle,
+  XCircle, Eye, Plus, Edit, Trash2, Trophy, Target, Zap
+} from 'lucide-react';
+import { useAppStore, useAuthStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
-import {
-  Package,
-  ShoppingCart,
-  DollarSign,
-  Star,
-  Plus,
-  Pencil,
-  Trash2,
-  BarChart3,
-  Headphones,
-  Rocket,
-  Crown,
-  Store,
-  Users,
-  TrendingUp,
-  FileText,
-  ArrowUpRight,
-  CheckCircle2,
-  Clock,
-} from 'lucide-react';
-import type { Locale } from '@/types';
+import { Separator } from '@/components/ui/separator';
+import { useOnboardingStore } from '@/lib/store/onboarding';
+import { useAppStore as appStore } from '@/lib/store';
 
-// ============================================
-// HELPERS
-// ============================================
+const DZD = (n: number) => `${n.toLocaleString('ar-DZ')} د.ج`;
 
-const t = (locale: Locale, ar: string, en: string) =>
-  locale === 'ar' ? ar : en;
+const LEVEL_INFO: Record<number, { name: string; badge: string; color: string }> = {
+  1: { name: 'صاعد', badge: '🌱', color: 'from-gray-500 to-gray-600' },
+  2: { name: 'نشط', badge: '⭐', color: 'from-blue-500 to-blue-600' },
+  3: { name: 'محترف', badge: '🌟', color: 'from-teal-500 to-teal-600' },
+  4: { name: 'متميز', badge: '💫', color: 'from-purple-500 to-purple-600' },
+  5: { name: 'خبير', badge: '🔥', color: 'from-orange-500 to-orange-600' },
+  6: { name: 'نجم', badge: '💎', color: 'from-cyan-500 to-cyan-600' },
+  7: { name: 'ستار', badge: '👑', color: 'from-yellow-500 to-amber-600' },
+  8: { name: 'ليجند', badge: '🏆', color: 'from-rose-500 to-red-600' },
+  9: { name: 'إمبراطور', badge: '🦅', color: 'from-indigo-500 to-violet-600' },
+  10: { name: 'أسطورة', badge: '🌠', color: 'from-amber-400 to-yellow-500' },
+};
 
-const productColors = [
-  'bg-[#1B1464]',
-  'bg-[#FEEE00]',
-  'bg-[#F68B1E]',
-  'bg-[#22C55E]',
-  'bg-[#3B82F6]',
-  'bg-[#8B5CF6]',
-];
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+  pending:    { label: 'جديد', color: 'bg-blue-100 text-blue-700', icon: Clock },
+  processing: { label: 'قيد التجهيز', color: 'bg-yellow-100 text-yellow-700', icon: Package },
+  shipped:    { label: 'تم الشحن', color: 'bg-purple-100 text-purple-700', icon: TrendingUp },
+  delivered:  { label: 'مكتمل', color: 'bg-green-100 text-green-700', icon: CheckCircle },
+  cancelled:  { label: 'ملغي', color: 'bg-red-100 text-red-700', icon: XCircle },
+};
 
-const monthlySales = [
-  { month: 'يناير', monthEn: 'Jan', sales: 12 },
-  { month: 'فبراير', monthEn: 'Feb', sales: 19 },
-  { month: 'مارس', monthEn: 'Mar', sales: 25 },
-  { month: 'أبريل', monthEn: 'Apr', sales: 18 },
-  { month: 'مايو', monthEn: 'May', sales: 31 },
-  { month: 'يونيو', monthEn: 'Jun', sales: 28 },
-];
-
-const sellerProfile = MOCK_SELLERS[0];
-const maxSales = Math.max(...monthlySales.map((m) => m.sales));
-
-// ============================================
-// MAIN COMPONENT
-// ============================================
+interface DashboardData {
+  seller: {
+    storeName?: string;
+    rating: number;
+    level: number;
+    completionRate: number;
+    responseRate: number;
+    totalSales: number;
+    totalEarnings: number;
+    package?: { name: string; commissionRate: number; maxProducts: number };
+  };
+  kpis: {
+    monthRevenue: number;
+    monthCommission: number;
+    monthNetEarnings: number;
+    monthOrderCount: number;
+    totalSales: number;
+    totalEarnings: number;
+    rating: number;
+    level: number;
+    completionRate: number;
+    responseRate: number;
+    walletBalance: number;
+  };
+  products: { id: string; name: string; price: number; stock: number; status: string; soldCount: number; rating: number }[];
+  recentOrders: { order: { orderNumber: string; status: string; total: number; createdAt: string }; product: { name: string; price: number }; quantity: number; total: number }[];
+  reviews: { id: string; rating: number; comment?: string; sellerReply?: string; createdAt: string }[];
+  challenges: { id: string; title: string; description?: string; type: string; targetValue: number; rewardValue: string; endsAt: string }[];
+  sellerLevel?: { level: number; nameAr: string; maxProducts: number; commissionDiscount: number };
+  nextLevel?: { level: number; nameAr: string; minCustomers: number; minRating: number; minCompletionRate: number };
+  pendingWithdrawals: { id: string; amount: number; method: string; createdAt: string }[];
+}
 
 export default function SellerDashboard() {
   const { locale } = useAppStore();
-  const isRTL = locale === 'ar';
-  const products = MOCK_PRODUCTS.slice(0, 6);
-  const recentOrders = MOCK_ORDERS.slice(0, 6);
+  const { user } = useAuthStore();
+  const { currentPage } = useAppStore();
+  const isAr = locale === 'ar';
+  const t = (ar: string, en: string) => isAr ? ar : en;
+
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    setIsLoading(true);
+    fetch(`/api/seller/dashboard?userId=${user.id}`)
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setData(d); })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, [user?.id]);
+
+  // Show different sub-pages
+  if (currentPage === 'seller-products') return <SellerProductsTab data={data} isLoading={isLoading} t={t} isAr={isAr} />;
+  if (currentPage === 'seller-orders') return <SellerOrdersTab data={data} isLoading={isLoading} t={t} isAr={isAr} />;
+
+  if (isLoading) return (
+    <div className="space-y-4 animate-pulse">
+      {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 rounded-2xl bg-muted" />)}
+    </div>
+  );
+
+  const kpis = data?.kpis;
+  const lvl = kpis?.level ?? 1;
+  const lvlInfo = LEVEL_INFO[lvl] ?? LEVEL_INFO[1];
+  const nextLevel = data?.nextLevel;
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
-      {/* Page Header */}
-      <PageHeader
-        title={t(locale, 'لوحة تحكم البائع', 'Seller Dashboard')}
-        description={t(
-          locale,
-          `مرحباً ${sellerProfile.storeName} — ملخص نشاطك التجاري`,
-          `Welcome ${sellerProfile.storeNameEn} — Your business activity overview`
-        )}
-        actions={
-          <Button className="gradient-brand">
-            <Plus className="h-4 w-4" />
-            {t(locale, 'إضافة منتج', 'Add Product')}
-          </Button>
-        }
-      />
-
-      {/* ============================================ */}
-      {/* SELLER STATS */}
-      {/* ============================================ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title={t(locale, 'إجمالي المنتجات', 'Total Products')}
-          value={sellerProfile.productCount ?? 45}
-          icon={<Package className="h-5 w-5 text-blue-600" />}
-          iconBg="bg-blue-100 dark:bg-blue-900/30"
-          change={8.2}
-        />
-        <StatsCard
-          title={t(locale, 'إجمالي المبيعات', 'Total Sales')}
-          value={sellerProfile.totalSales}
-          icon={<ShoppingCart className="h-5 w-5 text-green-600" />}
-          iconBg="bg-green-100 dark:bg-green-900/30"
-          change={12.5}
-        />
-        <StatsCard
-          title={t(locale, 'الإيرادات', 'Revenue')}
-          value={formatCurrency(15670)}
-          icon={<DollarSign className="h-5 w-5 text-purple-600" />}
-          iconBg="bg-purple-100 dark:bg-purple-900/30"
-          change={15.3}
-        />
-        <StatsCard
-          title={t(locale, 'التقييم', 'Rating')}
-          value={
-            <span className="flex items-center gap-1.5">
-              {sellerProfile.rating}
-              <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-              <span className="text-base font-normal text-muted-foreground">/5</span>
-            </span>
-          }
-          icon={<Star className="h-5 w-5 text-yellow-600" />}
-          iconBg="bg-yellow-100 dark:bg-yellow-900/30"
-          subtitle={t(locale, 'من 89 تقييم', 'from 89 reviews')}
-        />
-      </div>
-
-      {/* ============================================ */}
-      {/* SALES CHART + RECENT ORDERS */}
-      {/* ============================================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Sales Chart */}
-        <Card className="card-surface lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">
-              {t(locale, 'المبيعات الشهرية', 'Monthly Sales')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-end gap-2 h-48">
-              {monthlySales.map((item, idx) => {
-                const height = (item.sales / maxSales) * 100;
-                return (
-                  <div
-                    key={idx}
-                    className="flex-1 flex flex-col items-center gap-2"
-                  >
-                    <span className="text-xs font-semibold text-muted-foreground">
-                      {item.sales}
-                    </span>
-                    <div className="w-full relative rounded-t-md overflow-hidden" style={{ height: `${height}%` }}>
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#1B1464] to-[#F68B1E] opacity-90 rounded-t-md" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-transparent to-white/20 rounded-t-md" />
-                    </div>
-                    <span className="text-[10px] text-muted-foreground font-medium">
-                      {isRTL ? item.month : item.monthEn}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-              <TrendingUp className="h-3.5 w-3.5 text-green-500" />
-              <span>
-                {t(locale, 'نمو بنسبة 15% مقارنة بالشهر السابق', '15% growth compared to last month')}
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Orders */}
-        <Card className="card-surface lg:col-span-3">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">
-              {t(locale, 'الطلبات الأخيرة', 'Recent Orders')}
-            </CardTitle>
-            <Button variant="ghost" size="sm">
-              {t(locale, 'عرض الكل', 'View All')}
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto -mx-6 px-6">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      {t(locale, 'رقم الطلب', 'Order #')}
-                    </TableHead>
-                    <TableHead>
-                      {t(locale, 'المنتج', 'Product')}
-                    </TableHead>
-                    <TableHead>
-                      {t(locale, 'المبلغ', 'Total')}
-                    </TableHead>
-                    <TableHead>
-                      {t(locale, 'الحالة', 'Status')}
-                    </TableHead>
-                    <TableHead>
-                      {t(locale, 'التاريخ', 'Date')}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentOrders.map((order) => (
-                    <TableRow key={order.id}>
-                      <TableCell className="font-mono text-xs font-semibold">
-                        {order.orderNumber}
-                      </TableCell>
-                      <TableCell>
-                        <span className="truncate max-w-[140px] block text-sm">
-                          {isRTL
-                            ? order.items[0]?.productName
-                            : order.items[0]?.productName}
-                        </span>
-                      </TableCell>
-                      <TableCell className="font-semibold">
-                        {formatCurrency(order.total)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className={getOrderStatusColor(order.status)}
-                        >
-                          {getOrderStatusText(order.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-xs">
-                        {new Date(order.createdAt).toLocaleDateString(
-                          isRTL ? 'ar-SA' : 'en-US',
-                          { month: 'short', day: 'numeric' }
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ============================================ */}
-      {/* MY PRODUCTS */}
-      {/* ============================================ */}
-      <Card className="card-surface">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">
-            {t(locale, 'منتجاتي', 'My Products')}
-          </CardTitle>
-          <Button variant="ghost" size="sm">
-            {t(locale, 'عرض الكل', 'View All')}
-            <ArrowUpRight className="h-3.5 w-3.5" />
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {products.map((product, idx) => {
-              const stockPercent = Math.min(
-                (product.stock / (product.lowStock * 10)) * 100,
-                100
-              );
-              const isLowStock = product.stock <= product.lowStock;
-              const statusMap: Record<string, string> = {
-                active: t(locale, 'نشط', 'Active'),
-                draft: t(locale, 'مسودة', 'Draft'),
-                archived: t(locale, 'مؤرشف', 'Archived'),
-              };
-              const statusColorMap: Record<string, string> = {
-                active:
-                  'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-                draft:
-                  'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-                archived:
-                  'bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400',
-              };
-
-              return (
-                <div
-                  key={product.id}
-                  className="rounded-xl border bg-card overflow-hidden transition-shadow hover:shadow-md"
-                >
-                  {/* Product Image Placeholder */}
-                  <div
-                    className={`h-36 ${productColors[idx % productColors.length]} flex items-center justify-center`}
-                  >
-                    <Package className="h-10 w-10 text-white/60" />
-                  </div>
-                  <div className="p-4 space-y-3">
-                    {/* Name & Status */}
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-sm truncate">
-                          {isRTL ? product.name : (product.nameEn || product.name)}
-                        </h3>
-                        <p className="text-base font-bold mt-0.5">
-                          {formatCurrency(product.price)}
-                        </p>
-                      </div>
-                      <Badge
-                        variant="secondary"
-                        className={statusColorMap[product.status]}
-                      >
-                        {statusMap[product.status]}
-                      </Badge>
-                    </div>
-
-                    {/* Stock */}
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>
-                          {t(locale, 'المخزون', 'Stock')}: {product.stock}
-                        </span>
-                        {isLowStock && (
-                          <span className="text-red-500 font-medium">
-                            {t(locale, 'مخزون منخفض!', 'Low stock!')}
-                          </span>
-                        )}
-                      </div>
-                      <Progress value={stockPercent} className="h-1.5" />
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 pt-1">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Pencil className="h-3.5 w-3.5" />
-                        {t(locale, 'تعديل', 'Edit')}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+    <div className="space-y-6 pb-12">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black">{t('لوحة تحكم التاجر', 'Seller Dashboard')}</h1>
+          <p className="text-muted-foreground text-sm">{data?.seller?.storeName || user?.name}</p>
+        </div>
+        <div className={`flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${lvlInfo.color} text-white`}>
+          <span className="text-xl">{lvlInfo.badge}</span>
+          <div>
+            <p className="text-xs opacity-80">{t('المستوى', 'Level')} {lvl}</p>
+            <p className="text-sm font-bold">{lvlInfo.name}</p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* ============================================ */}
-      {/* UPGRADE TO STORE CTA */}
-      {/* ============================================ */}
-      {sellerProfile.wantsUpgrade ? (
-        /* Already requested upgrade */
-        <Card className="card-surface">
-          <CardContent className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="h-12 w-12 rounded-xl bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center shrink-0">
-                <Clock className="h-6 w-6 text-yellow-600" />
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: t('أرباح الشهر', 'Month Earnings'), value: DZD(kpis?.monthNetEarnings ?? 0), icon: Wallet, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-900/10' },
+          { label: t('طلبات الشهر', 'Month Orders'), value: kpis?.monthOrderCount ?? 0, icon: Package, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/10' },
+          { label: t('التقييم العام', 'Overall Rating'), value: `${(kpis?.rating ?? 0).toFixed(1)} ⭐`, icon: Star, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/10' },
+          { label: t('رصيد المحفظة', 'Wallet Balance'), value: DZD(kpis?.walletBalance ?? 0), icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/10' },
+        ].map((kpi) => (
+          <Card key={kpi.label} className={kpi.bg}>
+            <CardContent className="pt-5">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground mb-1">{kpi.label}</p>
+                  <p className="text-xl font-black">{kpi.value}</p>
+                </div>
+                <kpi.icon className={`size-5 ${kpi.color}`} />
               </div>
-              <div className="space-y-2">
-                <h3 className="font-semibold text-lg">
-                  {t(locale, 'طلب الترقية قيد المراجعة', 'Upgrade Request Under Review')}
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {t(
-                    locale,
-                    'تم تقديم طلب ترقية حسابك إلى متجر في ' +
-                      (sellerProfile.upgradeRequestedAt
-                        ? new Date(sellerProfile.upgradeRequestedAt).toLocaleDateString(
-                            isRTL ? 'ar-SA' : 'en-US',
-                            { year: 'numeric', month: 'long', day: 'numeric' }
-                          )
-                        : '') +
-                      '. سيتم إشعارك بالنتيجة قريباً.',
-                    'Your store upgrade request was submitted on ' +
-                      (sellerProfile.upgradeRequestedAt
-                        ? new Date(sellerProfile.upgradeRequestedAt).toLocaleDateString(
-                            isRTL ? 'ar-SA' : 'en-US',
-                            { year: 'numeric', month: 'long', day: 'numeric' }
-                          )
-                        : '') +
-                      '. You will be notified of the result soon.'
-                  )}
-                </p>
-                <Badge
-                  variant="secondary"
-                  className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                >
-                  <Clock className="h-3 w-3 ms-1" />
-                  {t(locale, 'قيد المراجعة', 'Under Review')}
-                </Badge>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Level Progress */}
+      {nextLevel && (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="pt-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Target className="size-4 text-primary" />
+                <span className="text-sm font-semibold">{t('تقدمك نحو المستوى', 'Progress to Level')} {nextLevel.level} — {nextLevel.nameAr}</span>
               </div>
+              <Badge variant="outline" className="text-primary border-primary/30">{t('مستوى', 'Level')} {lvl} / 10</Badge>
             </div>
-          </CardContent>
-        </Card>
-      ) : (
-        /* Upgrade CTA with animated border */
-        <Card className="animated-border overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#FEEE00]/10 via-transparent to-[#F68B1E]/10 pointer-events-none" />
-          <CardContent className="p-6 md:p-8 relative z-10">
-            <div className="flex flex-col md:flex-row md:items-center gap-6">
-              <div className="flex-1 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[#FEEE00] to-[#F68B1E] flex items-center justify-center shadow-lg">
-                    <Crown className="h-6 w-6 text-[#1B1464]" />
+            <div className="grid grid-cols-3 gap-3 text-xs">
+              {[
+                { label: t('معدل الإكمال', 'Completion'), current: kpis?.completionRate ?? 0, target: nextLevel.minCompletionRate, unit: '%' },
+                { label: t('التقييم', 'Rating'), current: kpis?.rating ?? 0, target: nextLevel.minRating, unit: '⭐' },
+                { label: t('العملاء', 'Customers'), current: data?.seller?.totalSales ?? 0, target: nextLevel.minCustomers, unit: '' },
+              ].map((m) => (
+                <div key={m.label} className="space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">{m.label}</span>
+                    <span className="font-medium">{m.current.toFixed(m.unit === '%' ? 0 : 1)}{m.unit} / {m.target}{m.unit}</span>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-lg">
-                      {t(locale, 'ارتقِ بحسابك إلى متجر!', 'Upgrade to a Store!')}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {t(
-                        locale,
-                        'انضم للتجار المميزين واستمتع بمزايا حصرية',
-                        'Join premium sellers and enjoy exclusive benefits'
-                      )}
-                    </p>
-                  </div>
+                  <Progress value={Math.min(100, (m.current / (m.target || 1)) * 100)} className="h-1.5" />
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    {
-                      icon: <Store className="h-4 w-4" />,
-                      ar: 'صفحة علامتك التجارية الخاصة',
-                      en: 'Your own brand page',
-                    },
-                    {
-                      icon: <Users className="h-4 w-4" />,
-                      ar: 'إدارة فريق العمل',
-                      en: 'Staff management',
-                    },
-                    {
-                      icon: <BarChart3 className="h-4 w-4" />,
-                      ar: 'تحليلات متقدمة وتقارير مفصلة',
-                      en: 'Advanced analytics & detailed reports',
-                    },
-                    {
-                      icon: <TrendingUp className="h-4 w-4" />,
-                      ar: 'ظهور أعلى في نتائج البحث',
-                      en: 'Higher visibility in search results',
-                    },
-                  ].map((benefit, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm">
-                      <div className="h-7 w-7 rounded-lg bg-[#FEEE00]/20 flex items-center justify-center text-[#F68B1E] shrink-0">
-                        {benefit.icon}
-                      </div>
-                      <span className="text-muted-foreground">
-                        {isRTL ? benefit.ar : benefit.en}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="shrink-0 flex flex-col items-center gap-3">
-                <Button size="lg" className="gradient-brand text-base px-8 py-6 shadow-lg">
-                  <Rocket className="h-5 w-5" />
-                  {t(locale, 'ارتقِ الآن', 'Upgrade Now')}
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  {t(locale, 'مجاني لفترة محدودة', 'Free for a limited time')}
-                </span>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* ============================================ */}
-      {/* QUICK ACTIONS */}
-      {/* ============================================ */}
-      <Card className="card-surface">
-        <CardHeader>
-          <CardTitle className="text-base">
-            {t(locale, 'إجراءات سريعة', 'Quick Actions')}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Button
-              variant="outline"
-              className="h-auto py-4 px-4 justify-start gap-3"
-            >
-              <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                <Plus className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="text-start">
-                <p className="font-semibold text-sm">
-                  {t(locale, 'إضافة منتج جديد', 'Add New Product')}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {t(locale, 'أضف منتجات للبيع', 'List products for sale')}
-                </p>
-              </div>
-            </Button>
-
-            <Button
-              variant="outline"
-              className="h-auto py-4 px-4 justify-start gap-3"
-            >
-              <div className="h-10 w-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
-                <FileText className="h-5 w-5 text-green-600" />
-              </div>
-              <div className="text-start">
-                <p className="font-semibold text-sm">
-                  {t(locale, 'تقرير المبيعات', 'Sales Report')}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {t(locale, 'عرض تحليلات المبيعات', 'View sales analytics')}
-                </p>
-              </div>
-            </Button>
-
-            <Button
-              variant="outline"
-              className="h-auto py-4 px-4 justify-start gap-3"
-            >
-              <div className="h-10 w-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center shrink-0">
-                <Headphones className="h-5 w-5 text-purple-600" />
-              </div>
-              <div className="text-start">
-                <p className="font-semibold text-sm">
-                  {t(locale, 'تواصل مع الدعم', 'Contact Support')}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {t(locale, 'احصل على مساعدة فورية', 'Get instant help')}
-                </p>
-              </div>
-            </Button>
+      {/* Commission info */}
+      <Card>
+        <CardContent className="pt-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold">{t('الباقة الحالية', 'Current Package')}: <span className="text-primary">{data?.seller?.package?.name ?? t('مجاني', 'Free')}</span></p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {t('نسبة العمولة', 'Commission rate')}: <strong>{data?.seller?.package?.commissionRate ?? 10}%</strong>
+                {' · '}
+                {t('حد المنتجات', 'Product limit')}: <strong>{data?.seller?.package?.maxProducts ?? 5}</strong>
+                {' · '}
+                {t('عمولة هذا الشهر', 'This month commission')}: <strong>{DZD(kpis?.monthCommission ?? 0)}</strong>
+              </p>
+            </div>
+            <Button size="sm" variant="outline" className="shrink-0">{t('ترقية الباقة', 'Upgrade')}</Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Active Challenges */}
+      {(data?.challenges?.length ?? 0) > 0 && (
+        <div>
+          <h2 className="text-lg font-bold mb-3 flex items-center gap-2"><Trophy className="size-5 text-amber-500" />{t('تحديات نشطة', 'Active Challenges')}</h2>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {data?.challenges?.map((c) => (
+              <Card key={c.id} className="border-amber-200 bg-amber-50 dark:bg-amber-900/10">
+                <CardContent className="pt-4 pb-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-semibold text-sm">{c.title}</p>
+                      {c.description && <p className="text-xs text-muted-foreground mt-0.5">{c.description}</p>}
+                      <Badge className="mt-2 bg-amber-500/20 text-amber-700 border-0 text-xs">{t('المكافأة:', 'Reward:')} {c.rewardValue}</Badge>
+                    </div>
+                    <Zap className="size-5 text-amber-500 shrink-0" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Performance metrics */}
+      <Card>
+        <CardHeader><CardTitle className="text-base">{t('📊 مؤشرات الأداء', '📊 Performance Metrics')}</CardTitle></CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { label: t('معدل إكمال الطلبات', 'Completion Rate'), value: kpis?.completionRate ?? 100, suffix: '%', good: 90 },
+              { label: t('معدل نجاح التواصل', 'Response Rate'), value: kpis?.responseRate ?? 100, suffix: '%', good: 80 },
+            ].map((m) => (
+              <div key={m.label}>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-muted-foreground">{m.label}</span>
+                  <span className={`font-bold ${m.value >= m.good ? 'text-green-600' : 'text-orange-500'}`}>{m.value.toFixed(0)}{m.suffix}</span>
+                </div>
+                <Progress value={m.value} className="h-2" />
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent orders */}
+      {(data?.recentOrders?.length ?? 0) > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center justify-between">
+              {t('آخر الطلبات', 'Recent Orders')}
+              <Button size="sm" variant="ghost" onClick={() => appStore.getState().setCurrentPage('seller-orders' as any)}>
+                {t('عرض الكل', 'View All')}
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y divide-border">
+              {data?.recentOrders?.slice(0, 5).map((item, i) => {
+                const st = STATUS_CONFIG[item.order.status] ?? STATUS_CONFIG.pending;
+                const StatusIcon = st.icon;
+                return (
+                  <div key={i} className="py-3 flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-medium">{item.product.name}</p>
+                      <p className="text-xs text-muted-foreground">#{item.order.orderNumber} · {item.quantity} × {DZD(item.product.price)}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1 ${st.color}`}>
+                        <StatusIcon className="size-3" />{st.label}
+                      </span>
+                      <span className="text-sm font-bold text-primary">{DZD(item.total)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recent reviews */}
+      {(data?.reviews?.length ?? 0) > 0 && (
+        <Card>
+          <CardHeader><CardTitle className="text-base">{t('أحدث التقييمات', 'Latest Reviews')}</CardTitle></CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {data?.reviews?.slice(0, 3).map((rev) => (
+                <div key={rev.id} className="p-3 rounded-lg bg-muted/40">
+                  <div className="flex items-center gap-1 mb-1">
+                    {Array.from({ length: 5 }).map((_, s) => (
+                      <Star key={s} className={`size-3 ${s < rev.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                    ))}
+                  </div>
+                  {rev.comment && <p className="text-sm text-muted-foreground">{rev.comment}</p>}
+                  {rev.sellerReply && <p className="text-xs text-primary mt-1 ps-2 border-s-2 border-primary/30">{rev.sellerReply}</p>}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ── Products sub-page ──────────────────────────────────────────────────────────
+function SellerProductsTab({ data, isLoading, t, isAr }: { data: DashboardData | null; isLoading: boolean; t: (a: string, e: string) => string; isAr: boolean }) {
+  const STATUS_COLOR: Record<string, string> = {
+    active: 'bg-green-100 text-green-700',
+    draft: 'bg-gray-100 text-gray-600',
+    inactive: 'bg-red-100 text-red-600',
+  };
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold">{t('إدارة المنتجات', 'Product Management')}</h1>
+        <Button className="gap-2"><Plus className="size-4" />{t('إضافة منتج', 'Add Product')}</Button>
+      </div>
+      <Card>
+        <CardContent className="pt-4">
+          {isLoading ? <div className="h-48 animate-pulse bg-muted rounded-xl" /> : (
+            <div className="divide-y divide-border">
+              {(data?.products ?? []).length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">
+                  <Package className="size-10 mx-auto mb-2 opacity-30" />
+                  <p>{t('لا توجد منتجات بعد', 'No products yet')}</p>
+                  <Button size="sm" className="mt-3"><Plus className="size-4 me-1" />{t('أضف أول منتج', 'Add first product')}</Button>
+                </div>
+              ) : (data?.products ?? []).map((p) => (
+                <div key={p.id} className="py-3 flex items-center gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{p.name}</p>
+                    <p className="text-xs text-muted-foreground">{`${p.price.toLocaleString()} د.ج · مخزون: ${p.stock} · مباع: ${p.soldCount}`}</p>
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLOR[p.status] ?? STATUS_COLOR.draft}`}>
+                    {p.status === 'active' ? t('نشط', 'Active') : p.status === 'draft' ? t('مسودة', 'Draft') : t('غير نشط', 'Inactive')}
+                  </span>
+                  <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" className="size-7"><Edit className="size-3.5" /></Button>
+                    <Button size="icon" variant="ghost" className="size-7 text-destructive"><Trash2 className="size-3.5" /></Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ── Orders sub-page ────────────────────────────────────────────────────────────
+function SellerOrdersTab({ data, isLoading, t, isAr }: { data: DashboardData | null; isLoading: boolean; t: (a: string, e: string) => string; isAr: boolean }) {
+  const DZD2 = (n: number) => `${n.toLocaleString('ar-DZ')} د.ج`;
+  return (
+    <div className="space-y-5">
+      <h1 className="text-xl font-bold">{t('إدارة الطلبات', 'Orders Management')}</h1>
+      <Card>
+        <CardContent className="pt-4">
+          {isLoading ? <div className="h-48 animate-pulse bg-muted rounded-xl" /> : (
+            <div className="divide-y divide-border">
+              {(data?.recentOrders ?? []).length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground">
+                  <Package className="size-10 mx-auto mb-2 opacity-30" />
+                  <p>{t('لا توجد طلبات بعد', 'No orders yet')}</p>
+                </div>
+              ) : (data?.recentOrders ?? []).map((item, i) => {
+                const st = STATUS_CONFIG[item.order.status] ?? STATUS_CONFIG.pending;
+                const SIcon = st.icon;
+                return (
+                  <div key={i} className="py-3.5 flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-medium">{item.product.name}</p>
+                      <p className="text-xs text-muted-foreground">#{item.order.orderNumber}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${st.color}`}>
+                        <SIcon className="size-3" />{st.label}
+                      </span>
+                      <span className="font-bold text-sm">{DZD2(item.total)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

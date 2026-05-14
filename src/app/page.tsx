@@ -19,6 +19,7 @@ import StoreDashboard from '@/components/dashboards/StoreDashboard';
 import SellerDashboard from '@/components/dashboards/SellerDashboard';
 import LogisticsDashboard from '@/components/dashboards/LogisticsDashboard';
 import BuyerDashboard from '@/components/dashboards/BuyerDashboard';
+import HomepagePage from '@/components/storefront/HomepagePage';
 import { toast } from 'sonner';
 import type { PageType, UserRole } from '@/types';
 
@@ -52,6 +53,8 @@ const DASHBOARD_MAP: Record<string, React.ComponentType> = {
   'buyer-reviews': BuyerDashboard,
   buyer: BuyerDashboard,
   verification: VerificationStatusPage,
+  home: HomepagePage,
+  login: AuthPage,
 };
 
 const ROLE_TO_PAGE: Record<UserRole, PageType> = {
