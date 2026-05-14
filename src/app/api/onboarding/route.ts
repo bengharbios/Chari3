@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ensureDbConnection } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // ============================================
 // Helper: Build verification items for a role
 // ============================================

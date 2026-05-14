@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ensureDbConnection } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 const DB_TIMEOUT = Symbol('DB_TIMEOUT');
 
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | typeof DB_TIMEOUT> {

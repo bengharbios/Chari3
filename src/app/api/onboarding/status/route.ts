@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ensureDbConnection } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 // ============================================
 // GET /api/onboarding/status?userId=xxx
 // Returns detailed verification progress with per-item status,
