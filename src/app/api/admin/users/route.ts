@@ -9,6 +9,8 @@ import type { RoleTransition } from '@/lib/role-transitions';
 
 const VALID_ROLES = ALL_ROLES;
 
+export const dynamic = 'force-dynamic';
+
 // ============================================
 // GET — List users with advanced filtering & pagination
 // ============================================

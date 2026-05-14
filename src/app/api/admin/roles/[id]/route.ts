@@ -6,6 +6,8 @@ import { filterValidPermissions } from '@/lib/permissions';
 // GET — Get single role by ID
 // ============================================
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }

@@ -16,6 +16,8 @@ const ROLE_REJECTION_ITEMS: Record<string, string[]> = {
 // Body: { action: 'approve' | 'reject' | 'request_edit', reason?: string, editItems?: string[], adminId: string }
 // ============================================
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
