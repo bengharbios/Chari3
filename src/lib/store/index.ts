@@ -126,7 +126,7 @@ export const useAppStore = create<AppState>()(
     (set) => ({
       locale: 'ar',
       theme: 'light',
-      currentPage: 'login',
+      currentPage: 'home',
       isSidebarOpen: true,
       isMobileMenuOpen: false,
       searchQuery: '',
@@ -368,7 +368,7 @@ export const useAuthStore = create<AuthState>()(
           error: null,
         });
         const { setCurrentPage } = useAppStore.getState();
-        setCurrentPage('login');
+        setCurrentPage('home');
         // Reset OTP flow and onboarding state on logout
         const onboardingState = useOnboardingStore.getState();
         onboardingState.resetOtpFlow();
