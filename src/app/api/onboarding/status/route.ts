@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, ensureDbConnection } from '@/lib/db';
 
 // ============================================
 // GET /api/onboarding/status?userId=xxx
@@ -78,11 +78,13 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
 
     if (!userId) {
-      return NextResponse.json(
+       return NextResponse.json(
         { success: false, error: 'userId query parameter is required' },
         { status: 400 }
       );
     }
+
+    await ensureDbConnection();
 
     // Fetch user with all verification relations
     const user = await db.user.findUnique({

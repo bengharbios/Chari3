@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import mysql from 'mysql2/promise';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -39,7 +40,6 @@ function buildMysqlUrl(user: string, pass: string, host: string, port: string, d
 
 async function probeTcpConnection(user: string, pass: string, host: string, port: string, database: string, label: string, timeoutMs = 1500) {
   try {
-    const mysql = await import('mysql2/promise');
     const start = Date.now();
     const conn = await mysql.createConnection({
       uri: buildMysqlUrl(user, pass, host, port, database),
@@ -58,7 +58,6 @@ async function probeTcpConnection(user: string, pass: string, host: string, port
 
 async function probeSocketConnection(user: string, pass: string, database: string, socketPath: string, label: string) {
   try {
-    const mysql = await import('mysql2/promise');
     const start = Date.now();
     const conn = await mysql.createConnection({
       user,

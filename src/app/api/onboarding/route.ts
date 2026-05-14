@@ -420,6 +420,8 @@ async function handleSubmit(body: Record<string, unknown>) {
     return { success: false, error: `Invalid role: ${role}. Must be one of: ${validRoles.join(', ')}`, status: 400 };
   }
 
+  await ensureDbConnection();
+
   // Check user exists
   const user = await db.user.findUnique({
     where: { id: userId as string },
