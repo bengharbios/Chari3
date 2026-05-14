@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { db, ensureDbConnection } from '@/lib/db';
 
 const DEMO_CODE = '123456';
 const DB_TIMEOUT = Symbol('DB_TIMEOUT');
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
       let existingUser: Record<string, unknown> | null = null;
 
       try {
-        const { db } = await import('@/lib/db');
+        await ensureDbConnection();
         const result = await withTimeout(
           db.user.findFirst({
             where: method === 'phone' ? { phone: value } : { email: value },
@@ -152,7 +153,7 @@ export async function POST(request: Request) {
     // ── Find user in DB (with 15s timeout) ──
     let existingUser: Record<string, unknown> | null = null;
     try {
-      const { db } = await import('@/lib/db');
+      await ensureDbConnection();
       const result = await withTimeout(
         db.user.findFirst({
           where: method === 'phone' ? { phone: value } : { email: value },
