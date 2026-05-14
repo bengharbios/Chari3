@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -91,6 +92,17 @@ export default function Sidebar({ className }: SidebarProps) {
   const { locale, currentPage, setCurrentPage, isSidebarOpen, setSidebarOpen } = useAppStore();
   const { user, logout } = useAuthStore();
   const isRTL = locale === 'ar';
+
+  // Automatically collapse sidebar when window is resized below 1024px (tablet/mobile)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024 && isSidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isSidebarOpen, setSidebarOpen]);
 
   if (!user) return null;
 
