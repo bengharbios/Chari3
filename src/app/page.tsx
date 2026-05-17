@@ -325,16 +325,18 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
     accountStatus === 'pending' || accountStatus === 'rejected' ||
     (accountStatus === 'incomplete' && isDraftSaved)
   );
+  const isStorefrontPage = ['home', 'product-detail', 'seller-profile', 'login', 'verification'].includes(currentPage);
 
   return (
     <AppShell>
       <Header />
 
-      {!isAuthenticated ? (
+      {isStorefrontPage ? (
         <main className="flex-1">
           {currentPage === 'login' ? <AuthPage /> :
            currentPage === 'product-detail' ? <ProductDetailPage /> :
            currentPage === 'seller-profile' ? <SellerProfilePage /> :
+           currentPage === 'verification' ? <VerificationStatusPage /> :
            <HomepagePage />}
         </main>
       ) : DashboardComponent ? (

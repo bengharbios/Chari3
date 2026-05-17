@@ -310,7 +310,7 @@ export const useAuthStore = create<AuthState>()(
         });
         const { setCurrentPage, setLocale } = useAppStore.getState();
         setLocale(role === 'admin' && user.locale ? user.locale : 'ar');
-        setCurrentPage(ROLE_TO_PAGE[role]);
+        setCurrentPage(role === 'buyer' ? 'home' : ROLE_TO_PAGE[role]);
       },
 
       loginWithUser: (user: User) => {
@@ -331,7 +331,7 @@ export const useAuthStore = create<AuthState>()(
         });
         const { setCurrentPage, setLocale } = useAppStore.getState();
         setLocale(user.locale || 'ar');
-        setCurrentPage(ROLE_TO_PAGE[user.role]);
+        setCurrentPage(user.role === 'buyer' ? 'home' : ROLE_TO_PAGE[user.role]);
 
         // Sync onboarding store with user's account status from DB
         const onboardingState = useOnboardingStore.getState();
@@ -380,6 +380,10 @@ export const useAuthStore = create<AuthState>()(
         // Reset OTP flow and onboarding state on logout
         const onboardingState = useOnboardingStore.getState();
         onboardingState.resetOtpFlow();
+
+        if (typeof window !== 'undefined') {
+          window.location.reload();
+        }
       },
 
       updateProfile: (data) => {
