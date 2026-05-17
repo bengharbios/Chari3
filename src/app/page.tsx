@@ -120,7 +120,12 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
   // Navigate to correct dashboard on role change (but allow verification page)
   useEffect(() => {
     if (isAuthenticated && user) {
-      if (ALLOWED_EXTRA_PAGES.includes(currentPage)) return;
+      const rolePrefix = user.role === 'store_manager' ? 'store' : user.role;
+      const isRoleAllowed = currentPage === rolePrefix || currentPage.startsWith(`${rolePrefix}-`);
+      const isGlobalAllowed = ['verification', 'home', 'product-detail', 'seller-profile', 'login'].includes(currentPage);
+      const isAdminAllowed = ALLOWED_EXTRA_PAGES.includes(currentPage);
+
+      if (isRoleAllowed || isGlobalAllowed || isAdminAllowed) return;
       const targetPage = ROLE_TO_PAGE[user.role as UserRole];
       if (targetPage && currentPage !== targetPage) {
         setCurrentPage(targetPage);
