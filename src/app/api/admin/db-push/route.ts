@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { db } from '@/lib/db';
 
-const execAsync = promisify(exec);
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
@@ -12,33 +10,52 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const nodeBinary = process.execPath;
-    const npxBinary = nodeBinary.replace(/\/node$/, '/npx');
-    
-    // List of commands to try depending on the environment structure
-    const commands = [
-      `${npxBinary} -y prisma db push --accept-data-loss`,
-      `npx -y prisma db push --accept-data-loss`,
-      `${nodeBinary} ./node_modules/prisma/build/index.js db push --accept-data-loss`,
-      `${nodeBinary} ./node_modules/.bin/prisma db push --accept-data-loss`,
-      `${nodeBinary} ../node_modules/prisma/build/index.js db push --accept-data-loss`
-    ];
+    const results = [];
 
-    let errors = [];
-    for (const cmd of commands) {
-      try {
-        const { stdout, stderr } = await execAsync(cmd);
-        return NextResponse.json({ success: true, cmd_used: cmd, output: stdout, errorOutput: stderr });
-      } catch (err: any) {
-        errors.push({ cmd, error: err.message });
+    // 1. Add coverImage to SellerProfile if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE SellerProfile ADD COLUMN coverImage VARCHAR(191) NULL;`);
+      results.push('Added coverImage to SellerProfile');
+    } catch (e: any) {
+      if (e.message && e.message.includes('Duplicate column name')) {
+        results.push('coverImage already exists in SellerProfile');
+      } else {
+        results.push(`Error adding coverImage: ${e.message}`);
       }
     }
 
+    // 2. Create Advertisement table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS Advertisement (
+          id VARCHAR(191) NOT NULL,
+          title VARCHAR(191) NOT NULL,
+          titleEn VARCHAR(191) NULL,
+          imageUrl VARCHAR(191) NOT NULL,
+          linkUrl VARCHAR(191) NULL,
+          zone VARCHAR(191) NOT NULL,
+          targetRole VARCHAR(191) NOT NULL DEFAULT 'all',
+          isActive BOOLEAN NOT NULL DEFAULT true,
+          startsAt DATETIME(3) NULL,
+          endsAt DATETIME(3) NULL,
+          clicks INTEGER NOT NULL DEFAULT 0,
+          impressions INTEGER NOT NULL DEFAULT 0,
+          sortOrder INTEGER NOT NULL DEFAULT 0,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL,
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured Advertisement table exists');
+    } catch (e: any) {
+      results.push(`Error creating Advertisement table: ${e.message}`);
+    }
+
     return NextResponse.json({ 
-      success: false, 
-      error: 'All push commands failed', 
-      details: errors 
-    }, { status: 500 });
+      success: true, 
+      message: 'Database schema sync executed',
+      details: results 
+    });
 
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
