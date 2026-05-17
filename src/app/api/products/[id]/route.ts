@@ -3,8 +3,9 @@ import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function GET(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await context.params;
+  const id = resolvedParams.id;
 
   try {
     const product = await db.product.findUnique({
@@ -66,8 +67,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     return NextResponse.json({ success: true, product, related });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('[product-detail] Error:', error);
-    return NextResponse.json({ success: false, error: 'Failed to load product' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Failed to load product', details: error.message }, { status: 500 });
   }
 }
