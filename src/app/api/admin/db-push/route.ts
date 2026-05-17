@@ -17,8 +17,8 @@ export async function GET(req: NextRequest) {
     
     // List of commands to try depending on the environment structure
     const commands = [
-      `${npxBinary} prisma db push --accept-data-loss`,
-      `npx prisma db push --accept-data-loss`,
+      `${npxBinary} -y prisma db push --accept-data-loss`,
+      `npx -y prisma db push --accept-data-loss`,
       `${nodeBinary} ./node_modules/prisma/build/index.js db push --accept-data-loss`,
       `${nodeBinary} ./node_modules/.bin/prisma db push --accept-data-loss`,
       `${nodeBinary} ../node_modules/prisma/build/index.js db push --accept-data-loss`
