@@ -68,7 +68,7 @@ export default function Header() {
               </Button>
             )}
             <button
-              onClick={() => useAppStore.getState().setCurrentPage(isAuthenticated ? rolePages[user?.role || 'buyer'] : 'login')}
+              onClick={() => useAppStore.getState().setCurrentPage(isAuthenticated ? rolePages[user?.role || 'buyer'] : 'home')}
               className="flex items-center gap-2"
             >
               <div className="gradient-brand rounded-lg px-2.5 py-1 font-bold text-navy text-lg">
