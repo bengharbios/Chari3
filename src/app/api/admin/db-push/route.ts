@@ -12,14 +12,36 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // In Hostinger Next.js standalone container, node is not in path but available via process.execPath.
-    // Also Prisma CLI is located in @prisma/client or root node_modules.
     const nodeBinary = process.execPath;
-    const cmd = `${nodeBinary} ./node_modules/prisma/build/index.js db push --accept-data-loss`;
-    const { stdout, stderr } = await execAsync(cmd);
-    return NextResponse.json({ success: true, output: stdout, errorOutput: stderr });
+    const npxBinary = nodeBinary.replace(/\/node$/, '/npx');
+    
+    // List of commands to try depending on the environment structure
+    const commands = [
+      `${npxBinary} prisma db push --accept-data-loss`,
+      `npx prisma db push --accept-data-loss`,
+      `${nodeBinary} ./node_modules/prisma/build/index.js db push --accept-data-loss`,
+      `${nodeBinary} ./node_modules/.bin/prisma db push --accept-data-loss`,
+      `${nodeBinary} ../node_modules/prisma/build/index.js db push --accept-data-loss`
+    ];
+
+    let errors = [];
+    for (const cmd of commands) {
+      try {
+        const { stdout, stderr } = await execAsync(cmd);
+        return NextResponse.json({ success: true, cmd_used: cmd, output: stdout, errorOutput: stderr });
+      } catch (err: any) {
+        errors.push({ cmd, error: err.message });
+      }
+    }
+
+    return NextResponse.json({ 
+      success: false, 
+      error: 'All push commands failed', 
+      details: errors 
+    }, { status: 500 });
+
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ success: false, error: errorMsg, execPath: process.execPath }, { status: 500 });
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }
 }
