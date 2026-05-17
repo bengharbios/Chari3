@@ -57,6 +57,25 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const storeColumns = [
+      "level INTEGER NOT NULL DEFAULT 1",
+      "totalCustomers INTEGER NOT NULL DEFAULT 0",
+      "totalEarnings DOUBLE NOT NULL DEFAULT 0",
+      "completionRate DOUBLE NOT NULL DEFAULT 100",
+      "packageId VARCHAR(191) NULL"
+    ];
+
+    for (const col of storeColumns) {
+      try {
+        await db.$executeRawUnsafe(`ALTER TABLE Store ADD COLUMN ${col};`);
+        results.push(`Added ${col.split(' ')[0]} to Store`);
+      } catch (e: any) {
+        if (!e.message?.includes('Duplicate column name')) {
+          results.push(`Error adding ${col.split(' ')[0]} to Store: ${e.message}`);
+        }
+      }
+    }
+
     // 2. Create Advertisement table if it doesn't exist
     try {
       await db.$executeRawUnsafe(`
