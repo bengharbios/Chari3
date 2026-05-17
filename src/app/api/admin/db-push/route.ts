@@ -24,14 +24,36 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    try {
-      await db.$executeRawUnsafe(`ALTER TABLE SellerProfile ADD COLUMN logo VARCHAR(191) NULL;`);
-      results.push('Added logo to SellerProfile');
-    } catch (e: any) {
-      if (e.message && e.message.includes('Duplicate column name')) {
-        results.push('logo already exists in SellerProfile');
-      } else {
-        results.push(`Error adding logo: ${e.message}`);
+    const newColumns = [
+      "socialLinks VARCHAR(191) DEFAULT '{}'",
+      "returnPolicy VARCHAR(191) NULL",
+      "shippingPolicy VARCHAR(191) NULL",
+      "rating DOUBLE NOT NULL DEFAULT 0",
+      "totalSales INTEGER NOT NULL DEFAULT 0",
+      "totalCustomers INTEGER NOT NULL DEFAULT 0",
+      "totalEarnings DOUBLE NOT NULL DEFAULT 0",
+      "commissionPaid DOUBLE NOT NULL DEFAULT 0",
+      "completionRate DOUBLE NOT NULL DEFAULT 100",
+      "responseRate DOUBLE NOT NULL DEFAULT 100",
+      "avgResponseHours DOUBLE NOT NULL DEFAULT 24",
+      "challengePoints INTEGER NOT NULL DEFAULT 0",
+      "level INTEGER NOT NULL DEFAULT 1",
+      "levelUpdatedAt DATETIME(3) NULL",
+      "levelGraceUntil DATETIME(3) NULL",
+      "packageId VARCHAR(191) NULL",
+      "isVerified BOOLEAN NOT NULL DEFAULT false",
+      "wantsUpgrade BOOLEAN NOT NULL DEFAULT false",
+      "upgradeRequestedAt DATETIME(3) NULL"
+    ];
+
+    for (const col of newColumns) {
+      try {
+        await db.$executeRawUnsafe(`ALTER TABLE SellerProfile ADD COLUMN ${col};`);
+        results.push(`Added ${col.split(' ')[0]} to SellerProfile`);
+      } catch (e: any) {
+        if (!e.message?.includes('Duplicate column name')) {
+          results.push(`Error adding ${col.split(' ')[0]}: ${e.message}`);
+        }
       }
     }
 
