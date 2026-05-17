@@ -148,19 +148,19 @@ export default function StorefrontHomepage() {
             <Badge className="mb-4 bg-white/20 text-white border-white/30 text-sm px-4 py-1.5">
               {slide.badge}
             </Badge>
-            <h1 className="text-4xl md:text-6xl font-black mb-4 leading-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-4 leading-tight">
               {isAr ? slide.title : slide.titleEn}
             </h1>
-            <p className="text-lg md:text-xl text-white/80 mb-8">
+            <p className="text-base sm:text-lg md:text-xl text-white/80 mb-6 md:mb-8">
               {isAr ? slide.subtitle : slide.subtitleEn}
             </p>
-            <div className="flex gap-3">
-              <Button size="lg" className="bg-white text-blue-900 hover:bg-white/90 font-bold px-8">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button size="lg" className="bg-white text-blue-900 hover:bg-white/90 font-bold px-8 w-full sm:w-auto">
                 {slide.cta}
                 {isAr ? <ArrowLeft className="ms-2 size-5" /> : <ArrowRight className="ms-2 size-5" />}
               </Button>
               {!isAuthenticated && (
-                <Button size="lg" variant="outline" className="border-white/40 text-white hover:bg-white/10">
+                <Button size="lg" variant="outline" className="border-white/40 text-white hover:bg-white/10 w-full sm:w-auto">
                   {t('سجل متجرك', 'Start Selling')}
                 </Button>
               )}
@@ -176,11 +176,11 @@ export default function StorefrontHomepage() {
         </div>
         {/* Nav arrows */}
         <button onClick={() => setHeroIndex((i) => (i - 1 + DEFAULT_HERO_SLIDES.length) % DEFAULT_HERO_SLIDES.length)}
-          className="absolute start-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/20 hover:bg-white/30 text-white z-10">
+          className="absolute start-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/20 hover:bg-white/30 text-white z-10 hidden md:block">
           {isAr ? <ChevronRight className="size-5" /> : <ChevronLeft className="size-5" />}
         </button>
         <button onClick={() => setHeroIndex((i) => (i + 1) % DEFAULT_HERO_SLIDES.length)}
-          className="absolute end-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/20 hover:bg-white/30 text-white z-10">
+          className="absolute end-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/20 hover:bg-white/30 text-white z-10 hidden md:block">
           {isAr ? <ChevronLeft className="size-5" /> : <ChevronRight className="size-5" />}
         </button>
       </section>
@@ -188,15 +188,15 @@ export default function StorefrontHomepage() {
       {/* ── FEATURES STRIP ── */}
       <section className="bg-muted/30 border-y border-border">
         <div className="container-platform py-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             {FEATURES.map((f) => (
-              <div key={f.title} className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-primary/10 shrink-0">
+              <div key={f.title} className="flex flex-col md:flex-row items-center md:items-start text-center md:text-start gap-2 md:gap-3">
+                <div className="p-2 md:p-2.5 rounded-xl bg-primary/10 shrink-0">
                   <f.icon className="size-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">{f.title}</p>
-                  <p className="text-xs text-muted-foreground">{f.desc}</p>
+                  <p className="text-xs md:text-sm font-semibold">{f.title}</p>
+                  <p className="hidden md:block text-xs text-muted-foreground">{f.desc}</p>
                 </div>
               </div>
             ))}
@@ -243,7 +243,7 @@ export default function StorefrontHomepage() {
             <p className="text-sm text-muted-foreground">{t('اختيارات حصرية من أفضل التجار', 'Exclusive picks from top sellers')}</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
           {isLoading
             ? Array.from({ length: 10 }).map((_, i) => (
                 <div key={i} className="rounded-2xl bg-muted animate-pulse h-64" />
@@ -259,8 +259,8 @@ export default function StorefrontHomepage() {
                   : 0;
 
                 return (
-                  <Card key={product.id} className="overflow-hidden group hover:shadow-lg transition-all duration-300 cursor-pointer border-border hover:border-primary/30">
-                    <div className="relative aspect-square bg-muted overflow-hidden">
+                  <Card key={product.id} className="overflow-hidden flex flex-col group hover:shadow-lg transition-all duration-300 cursor-pointer border-border hover:border-primary/30">
+                    <div className="relative aspect-square bg-muted overflow-hidden shrink-0">
                       {images[0] ? (
                         <img src={images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       ) : (
@@ -272,27 +272,29 @@ export default function StorefrontHomepage() {
                         <Badge className="absolute top-2 start-2 bg-red-500 text-white text-xs">-{discount}%</Badge>
                       )}
                     </div>
-                    <CardContent className="p-3">
-                      <p className="text-xs text-muted-foreground mb-1">{product.category.name}</p>
-                      <p className="text-sm font-semibold line-clamp-2 mb-2">{product.name}</p>
+                    <CardContent className="p-2.5 md:p-3 flex flex-col grow">
+                      <p className="text-[10px] md:text-xs text-muted-foreground mb-1 truncate">{product.category.name}</p>
+                      <p className="text-xs md:text-sm font-semibold line-clamp-2 mb-1.5">{product.name}</p>
                       <div className="flex items-center gap-1 mb-2">
                         <StarRating rating={product.rating} />
-                        <span className="text-xs text-muted-foreground">({product.soldCount})</span>
+                        <span className="text-[10px] md:text-xs text-muted-foreground">({product.soldCount})</span>
                       </div>
-                      <div className="flex items-end justify-between">
-                        <div>
-                          <p className="text-base font-bold text-primary">{fmt(product.price)}</p>
-                          {product.comparePrice && (
-                            <p className="text-xs text-muted-foreground line-through">{fmt(product.comparePrice)}</p>
-                          )}
+                      <div className="mt-auto">
+                        <div className="flex items-end justify-between">
+                          <div className="w-full">
+                            <p className="text-sm md:text-base font-bold text-primary truncate">{fmt(product.price)}</p>
+                            {product.comparePrice && (
+                              <p className="text-[10px] md:text-xs text-muted-foreground line-through truncate">{fmt(product.comparePrice)}</p>
+                            )}
+                          </div>
                         </div>
+                        {sellerName && (
+                          <div className="flex items-center gap-1 mt-2 pt-2 border-t border-border">
+                            <span className="text-xs">{LEVEL_BADGE[sellerLevel] || '🌱'}</span>
+                            <span className="text-[10px] md:text-xs text-muted-foreground truncate">{sellerName}</span>
+                          </div>
+                        )}
                       </div>
-                      {sellerName && (
-                        <div className="flex items-center gap-1 mt-2 pt-2 border-t border-border">
-                          <span className="text-xs">{LEVEL_BADGE[sellerLevel] || '🌱'}</span>
-                          <span className="text-xs text-muted-foreground truncate">{sellerName}</span>
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 );
@@ -303,12 +305,12 @@ export default function StorefrontHomepage() {
       {/* ── TOP SELLERS ── */}
       <section className="bg-gradient-to-br from-slate-900 to-slate-800 text-white py-14 mt-10">
         <div className="container-platform">
-          <div className="text-center mb-10">
+          <div className="text-center mb-8 md:mb-10 px-4">
             <Badge className="mb-3 bg-amber-500/20 text-amber-400 border-amber-500/30">
               {t('التجار الأفضل', 'Top Sellers')}
             </Badge>
-            <h2 className="text-3xl font-black mb-2">{t('تجار موثوقون بتقييمات عالية', 'Trusted Sellers with High Ratings')}</h2>
-            <p className="text-white/60">{t('تسوق من التجار الأكثر تميزاً ومصداقية على المنصة', 'Shop from our most distinguished and reliable sellers')}</p>
+            <h2 className="text-2xl md:text-3xl font-black mb-2">{t('تجار موثوقون بتقييمات عالية', 'Trusted Sellers with High Ratings')}</h2>
+            <p className="text-sm md:text-base text-white/60">{t('تسوق من التجار الأكثر تميزاً ومصداقية على المنصة', 'Shop from our most distinguished and reliable sellers')}</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {isLoading
@@ -373,17 +375,17 @@ export default function StorefrontHomepage() {
       )}
 
       {/* ── CTA SECTION ── */}
-      <section className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-y border-primary/20 py-14">
-        <div className="container-platform text-center">
-          <h2 className="text-3xl font-black mb-3">{t('ابدأ البيع اليوم!', 'Start Selling Today!')}</h2>
-          <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
+      <section className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-y border-primary/20 py-10 md:py-14">
+        <div className="container-platform text-center px-4">
+          <h2 className="text-2xl md:text-3xl font-black mb-3">{t('ابدأ البيع اليوم!', 'Start Selling Today!')}</h2>
+          <p className="text-sm md:text-base text-muted-foreground mb-6 max-w-xl mx-auto">
             {t('انضم لآلاف التجار الناجحين على منصة شاري داي وابدأ رحلتك نحو النجاح التجاري', 'Join thousands of successful sellers on Chariday and start your journey to commercial success')}
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button size="lg" className="gradient-navy text-white px-8">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto sm:max-w-none">
+            <Button size="lg" className="gradient-navy text-white px-8 w-full sm:w-auto">
               {t('أنشئ حساب تاجر', 'Create Seller Account')}
             </Button>
-            <Button size="lg" variant="outline" className="px-8">
+            <Button size="lg" variant="outline" className="px-8 w-full sm:w-auto">
               {t('تعرف على الباقات', 'View Packages')}
             </Button>
           </div>
