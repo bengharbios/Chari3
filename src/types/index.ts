@@ -34,6 +34,9 @@ export interface AuthState {
 export type PageType =
   | 'login'
   | 'register'
+  | 'home'
+  | 'product-detail'
+  | 'seller-profile'
   | 'admin'
   | 'store'
   | 'seller'

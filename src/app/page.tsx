@@ -20,6 +20,8 @@ import SellerDashboard from '@/components/dashboards/SellerDashboard';
 import LogisticsDashboard from '@/components/dashboards/LogisticsDashboard';
 import BuyerDashboard from '@/components/dashboards/BuyerDashboard';
 import HomepagePage from '@/components/storefront/HomepagePage';
+import ProductDetailPage from '@/components/storefront/ProductDetailPage';
+import SellerProfilePage from '@/components/storefront/SellerProfilePage';
 import { toast } from 'sonner';
 import type { PageType, UserRole } from '@/types';
 
@@ -330,7 +332,10 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
 
       {!isAuthenticated ? (
         <main className="flex-1">
-          {currentPage === 'login' ? <AuthPage /> : <HomepagePage />}
+          {currentPage === 'login' ? <AuthPage /> :
+           currentPage === 'product-detail' ? <ProductDetailPage /> :
+           currentPage === 'seller-profile' ? <SellerProfilePage /> :
+           <HomepagePage />}
         </main>
       ) : DashboardComponent ? (
         <DashboardLayout>

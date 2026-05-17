@@ -259,7 +259,13 @@ export default function StorefrontHomepage() {
                   : 0;
 
                 return (
-                  <Card key={product.id} className="overflow-hidden flex flex-col group hover:shadow-lg transition-all duration-300 cursor-pointer border-border hover:border-primary/30">
+                  <Card key={product.id}
+                    className="overflow-hidden flex flex-col group hover:shadow-lg transition-all duration-300 cursor-pointer border-border hover:border-primary/30"
+                    onClick={() => {
+                      useAppStore.getState().setSelectedProductId(product.id);
+                      useAppStore.getState().setCurrentPage('product-detail');
+                    }}
+                  >
                     <div className="relative aspect-square bg-muted overflow-hidden shrink-0">
                       {images[0] ? (
                         <img src={images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -316,7 +322,13 @@ export default function StorefrontHomepage() {
             {isLoading
               ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="rounded-2xl bg-white/10 animate-pulse h-36" />)
               : (data?.topSellers ?? []).map((seller) => (
-                  <Card key={seller.id} className="bg-white/10 border-white/10 hover:bg-white/15 transition-all cursor-pointer group">
+                  <Card key={seller.id}
+                    className="bg-white/10 border-white/10 hover:bg-white/15 transition-all cursor-pointer group"
+                    onClick={() => {
+                      useAppStore.getState().setSelectedSellerId(seller.id);
+                      useAppStore.getState().setCurrentPage('seller-profile');
+                    }}
+                  >
                     <CardContent className="p-4 text-center">
                       <div className="relative mx-auto mb-3 w-14 h-14">
                         {seller.user.avatar ? (

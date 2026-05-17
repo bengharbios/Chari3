@@ -109,6 +109,8 @@ interface AppState {
   isMobileMenuOpen: boolean;
   searchQuery: string;
   notifications: number;
+  selectedProductId: string | null;
+  selectedSellerId: string | null;
 
   setLocale: (locale: Locale) => void;
   setTheme: (theme: Theme) => void;
@@ -119,6 +121,8 @@ interface AppState {
   setMobileMenuOpen: (open: boolean) => void;
   setSearchQuery: (query: string) => void;
   setNotifications: (count: number) => void;
+  setSelectedProductId: (id: string | null) => void;
+  setSelectedSellerId: (id: string | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -131,6 +135,8 @@ export const useAppStore = create<AppState>()(
       isMobileMenuOpen: false,
       searchQuery: '',
       notifications: 5,
+      selectedProductId: null,
+      selectedSellerId: null,
 
       setLocale: (locale) => set({ locale }),
       setTheme: (theme) => set({ theme }),
@@ -141,6 +147,8 @@ export const useAppStore = create<AppState>()(
       setMobileMenuOpen: (isMobileMenuOpen) => set({ isMobileMenuOpen }),
       setSearchQuery: (searchQuery) => set({ searchQuery }),
       setNotifications: (notifications) => set({ notifications }),
+      setSelectedProductId: (selectedProductId) => set({ selectedProductId }),
+      setSelectedSellerId: (selectedSellerId) => set({ selectedSellerId }),
     }),
     {
       name: 'platform-app-store',
