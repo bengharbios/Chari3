@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   try {
     const results = [];
 
-    // 1. Add coverImage to SellerProfile if it doesn't exist
+    // 1. Add coverImage and logo to SellerProfile if they don't exist
     try {
       await db.$executeRawUnsafe(`ALTER TABLE SellerProfile ADD COLUMN coverImage VARCHAR(191) NULL;`);
       results.push('Added coverImage to SellerProfile');
@@ -21,6 +21,17 @@ export async function GET(req: NextRequest) {
         results.push('coverImage already exists in SellerProfile');
       } else {
         results.push(`Error adding coverImage: ${e.message}`);
+      }
+    }
+
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE SellerProfile ADD COLUMN logo VARCHAR(191) NULL;`);
+      results.push('Added logo to SellerProfile');
+    } catch (e: any) {
+      if (e.message && e.message.includes('Duplicate column name')) {
+        results.push('logo already exists in SellerProfile');
+      } else {
+        results.push(`Error adding logo: ${e.message}`);
       }
     }
 
