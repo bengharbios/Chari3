@@ -773,3 +773,25 @@ model Role {
 
   auditLogs   AuditLog[]
 }
+
+// ============================================
+// ENTERPRISE ADMIN MODELS
+// ============================================
+
+model SystemSetting {
+  key         String   @id // e.g., "site_colors", "commission_rate", "home_layout"
+  value       Json     // Stores any type of data
+  updatedBy   String   // ID of the admin who made the change
+  updatedAt   DateTime @updatedAt
+}
+
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  adminId     String
+  action      String   // e.g., "UPDATE_SETTING", "IMPERSONATE_USER"
+  targetId    String?  // ID of the target object
+  details     Json?    // Before/After details
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+}
+
