@@ -10,12 +10,14 @@ interface AdminAuthState {
   isLoading: boolean;
   error: string | null;
   adminStep: 'login' | 'otp' | 'success';
+  adminLocale: 'ar' | 'en';
 
   login: (email: string, pass: string) => Promise<boolean>;
   verifyOtp: (code: string) => Promise<boolean>;
   logout: () => void;
   setError: (error: string | null) => void;
   setStep: (step: 'login' | 'otp' | 'success') => void;
+  setAdminLocale: (locale: 'ar' | 'en') => void;
 }
 
 export const useAdminAuthStore = create<AdminAuthState>()(
@@ -26,6 +28,7 @@ export const useAdminAuthStore = create<AdminAuthState>()(
       isLoading: false,
       error: null,
       adminStep: 'login',
+      adminLocale: 'ar',
 
       login: async (email: string, pass: string) => {
         set({ isLoading: true, error: null });
@@ -86,12 +89,14 @@ export const useAdminAuthStore = create<AdminAuthState>()(
 
       setError: (error) => set({ error }),
       setStep: (adminStep) => set({ adminStep }),
+      setAdminLocale: (adminLocale) => set({ adminLocale }),
     }),
     {
       name: 'platform-admin-auth-store',
       partialize: (state) => ({
         adminUser: state.adminUser,
         isAdminAuthenticated: state.isAdminAuthenticated,
+        adminLocale: state.adminLocale,
       }),
     }
   )

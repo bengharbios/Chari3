@@ -41,56 +41,8 @@ export default function AdminRootPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Top Admin Navbar */}
-      <header className="bg-navy text-white h-16 flex items-center justify-between px-6 shadow-md">
-        <div className="flex items-center gap-3">
-          <div className="bg-brand text-navy p-1.5 rounded-lg">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-          <span className="font-bold text-lg">لوحة تحكم النظام (المسار السري)</span>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="text-sm">
-            <span className="text-slate-300">مرحباً، </span>
-            <span className="font-medium text-brand">{adminUser?.name || 'المدير'}</span>
-          </div>
-          
-          <Link href={`${typeof window !== 'undefined' ? window.location.pathname : ''}/settings`}>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="gap-2 border-slate-600 text-white hover:bg-slate-700"
-            >
-              <Settings className="h-4 w-4" />
-              <span>الإعدادات</span>
-            </Button>
-          </Link>
-          
-          <Button 
-            variant="destructive" 
-            size="sm" 
-            className="gap-2 bg-red-600 hover:bg-red-700"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4" />
-            <span>خروج آمن</span>
-          </Button>
-        </div>
-      </header>
-
-      {/* Main Content Area */}
-      <main className="flex-1 p-6 bg-slate-50 dark:bg-slate-900 overflow-auto">
-        <div className="max-w-[1400px] mx-auto">
-          <AdminDashboard />
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-white dark:bg-slate-800 border-t py-4 px-6 text-center text-xs text-slate-500 dark:text-slate-400">
-        بوابة الإدارة الآمنة — ChariDay Enterprise Architecture
-      </footer>
+    <div className="max-w-[1400px] mx-auto">
+      <AdminDashboard />
     </div>
   );
 }
