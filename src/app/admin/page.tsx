@@ -1,5 +1,7 @@
-import HomePage from '@/app/page';
+import { redirect } from 'next/navigation';
 
 export default function AdminRoute() {
-  return <HomePage initialPage="admin" />;
+  // Deprecated: Admin route has moved to a secure, dynamic slug handled by middleware.
+  // Redirecting to home page.
+  redirect('/');
 }
