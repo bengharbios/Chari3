@@ -8,8 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { Loader2, Save, Settings, Paintbrush, DollarSign, ShieldCheck, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2, Save, Paintbrush, DollarSign, ShieldCheck } from 'lucide-react';
 
 export default function AdminSettingsPage() {
   const { adminUser, isAdminAuthenticated } = useAdminAuthStore();

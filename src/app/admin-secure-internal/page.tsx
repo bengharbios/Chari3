@@ -3,9 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import AdminDashboard from '@/components/dashboards/AdminDashboard';
-import { Button } from '@/components/ui/button';
-import { LogOut, Loader2, ShieldCheck, Settings } from 'lucide-react';
-import Link from 'next/link';
+import { Loader2 } from 'lucide-react';
 
 export default function AdminRootPage() {
   const { isAdminAuthenticated, logout, adminUser } = useAdminAuthStore();
