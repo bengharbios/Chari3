@@ -4,15 +4,19 @@ import React, { useState, useEffect } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import AdminSidebar from './AdminSidebar';
 import { Button } from '@/components/ui/button';
-import { Globe, LogOut, Menu } from 'lucide-react';
+import { Globe, LogOut, Menu, LayoutDashboard, Settings, Sliders, ToggleRight } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import Link from 'next/link';
 
 export default function AdminLayoutWrapper({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { adminLocale, setAdminLocale, logout, adminUser } = useAdminAuthStore();
+  const { adminLocale, setAdminLocale, logout, adminUser, isAdminAuthenticated } = useAdminAuthStore();
   const [isMounted, setIsMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setIsMounted(true);
@@ -32,13 +36,23 @@ export default function AdminLayoutWrapper({
   }
 
   const isRTL = adminLocale === 'ar';
+  const isLoginPage = pathname.includes('/login');
+
+  // CRITICAL FIX: Do not show sidebar or header if not authenticated OR on login page
+  if (!isAdminAuthenticated || isLoginPage) {
+    return (
+      <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-slate-50 dark:bg-slate-900">
+        {children}
+      </div>
+    );
+  }
 
   return (
     <div 
       dir={isRTL ? 'rtl' : 'ltr'} 
       className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100"
     >
-      {/* Sidebar */}
+      {/* Sidebar (Desktop) */}
       <AdminSidebar />
 
       {/* Main Content Area */}
@@ -46,10 +60,38 @@ export default function AdminLayoutWrapper({
         {/* Top Header */}
         <header className="bg-navy text-white h-16 flex items-center justify-between px-6 shadow-md flex-shrink-0">
           <div className="flex items-center gap-3">
-            {/* Mobile Menu Button (Placeholder for now) */}
-            <Button variant="ghost" size="icon" className="lg:hidden text-white">
-              <Menu className="h-5 w-5" />
-            </Button>
+            {/* Mobile Menu Button with Sheet */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden text-white">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side={isRTL ? "right" : "left"} className="p-0 bg-navy text-white w-64 border-none">
+                <div className="h-16 flex items-center px-4 border-b border-slate-700">
+                  <span className="font-bold text-lg text-brand">{isRTL ? 'الإدارة' : 'Admin Panel'}</span>
+                </div>
+                <nav className="p-4 space-y-2">
+                  <Link href="." className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-white">
+                    <LayoutDashboard className="h-5 w-5 text-blue-500" />
+                    <span>{isRTL ? 'لوحة التحكم' : 'Dashboard'}</span>
+                  </Link>
+                  <Link href="./settings" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-white">
+                    <Settings className="h-5 w-5 text-amber-500" />
+                    <span>{isRTL ? 'الإعدادات العامة' : 'General Settings'}</span>
+                  </Link>
+                  <Link href="./cms" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-white">
+                    <Sliders className="h-5 w-5 text-emerald-500" />
+                    <span>{isRTL ? 'إدارة الواجهة (CMS)' : 'Storefront CMS'}</span>
+                  </Link>
+                  <Link href="./flags" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-white">
+                    <ToggleRight className="h-5 w-5 text-red-500" />
+                    <span>{isRTL ? 'مفاتيح الميزات' : 'Feature Flags'}</span>
+                  </Link>
+                </nav>
+              </SheetContent>
+            </Sheet>
+
             <span className="font-bold text-lg hidden md:block">
               {isRTL ? 'لوحة تحكم النظام' : 'System Dashboard'}
             </span>
