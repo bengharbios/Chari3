@@ -4,7 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import AdminDashboard from '@/components/dashboards/AdminDashboard';
 import { Button } from '@/components/ui/button';
-import { LogOut, Loader2, ShieldCheck } from 'lucide-react';
+import { LogOut, Loader2, ShieldCheck, Settings } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AdminRootPage() {
   const { isAdminAuthenticated, logout, adminUser } = useAdminAuthStore();
@@ -55,6 +56,17 @@ export default function AdminRootPage() {
             <span className="text-slate-300">مرحباً، </span>
             <span className="font-medium text-brand">{adminUser?.name || 'المدير'}</span>
           </div>
+          
+          <Link href={`${typeof window !== 'undefined' ? window.location.pathname : ''}/settings`}>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2 border-slate-600 text-white hover:bg-slate-700"
+            >
+              <Settings className="h-4 w-4" />
+              <span>الإعدادات</span>
+            </Button>
+          </Link>
           
           <Button 
             variant="destructive" 
