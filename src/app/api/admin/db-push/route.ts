@@ -103,6 +103,41 @@ export async function GET(req: NextRequest) {
       results.push(`Error creating Advertisement table: ${e.message}`);
     }
 
+    // 3. Create SystemSetting table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS SystemSetting (
+          \`key\` VARCHAR(191) NOT NULL,
+          \`value\` JSON NOT NULL,
+          \`updatedBy\` VARCHAR(191) NOT NULL,
+          \`updatedAt\` DATETIME(3) NOT NULL,
+          PRIMARY KEY (\`key\`)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured SystemSetting table exists');
+    } catch (e: any) {
+      results.push(`Error creating SystemSetting table: ${e.message}`);
+    }
+
+    // 4. Create AdminAuditLog table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS AdminAuditLog (
+          id VARCHAR(191) NOT NULL,
+          adminId VARCHAR(191) NOT NULL,
+          action VARCHAR(191) NOT NULL,
+          targetId VARCHAR(191) NULL,
+          details JSON NULL,
+          ipAddress VARCHAR(191) NULL,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured AdminAuditLog table exists');
+    } catch (e: any) {
+      results.push(`Error creating AdminAuditLog table: ${e.message}`);
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: 'Database schema sync executed',
