@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     // Fetch data for the homepage in parallel
-    const [categories, featuredProducts, topSellers, advertisements, testimonials] = await Promise.all([
+    const [categories, featuredProducts, topSellers, advertisements, testimonials, layoutSetting, heroSlidesSetting, maintenanceSetting] = await Promise.all([
       // Active categories with product counts
       db.category.findMany({
         where: { isActive: true, parentId: null },
@@ -82,6 +82,15 @@ export async function GET() {
 
       // Testimonials from settings (stored as JSON)
       db.setting.findUnique({ where: { key: 'homepage_testimonials' } }),
+      
+      // Dynamic Homepage Layout
+      db.setting.findUnique({ where: { key: 'homepage_layout' } }),
+
+      // Dynamic Hero Slides
+      db.setting.findUnique({ where: { key: 'homepage_hero_slides' } }),
+
+      // Maintenance mode flag
+      db.setting.findUnique({ where: { key: 'flag_maintenance_mode' } }),
     ]);
 
     // Track impressions for ads (fire and forget)
@@ -110,6 +119,22 @@ export async function GET() {
       }
     } catch {}
 
+    // Parse dynamic layout
+    let parsedLayout: string[] = ['hero', 'features', 'categories', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
+    try {
+      if (layoutSetting?.value) {
+        parsedLayout = JSON.parse(layoutSetting.value);
+      }
+    } catch {}
+
+    // Parse dynamic hero slides
+    let parsedHeroSlides: unknown[] = [];
+    try {
+      if (heroSlidesSetting?.value) {
+        parsedHeroSlides = JSON.parse(heroSlidesSetting.value);
+      }
+    } catch {}
+
     return NextResponse.json({
       success: true,
       categories,
@@ -117,6 +142,9 @@ export async function GET() {
       topSellers,
       advertisements: adsByZone,
       testimonials: parsedTestimonials,
+      layout: parsedLayout,
+      heroSlides: parsedHeroSlides,
+      isMaintenance: maintenanceSetting?.value === 'true',
     });
   } catch (error) {
     console.error('[homepage] Error:', error);

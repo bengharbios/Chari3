@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Wrench } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { useOnboardingStore, restoreDraftFields, calcResumeStep } from '@/lib/store/onboarding';
 import AppShell from '@/components/layout/AppShell';
@@ -86,6 +87,19 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
   const pollRef = useRef<NodeJS.Timeout | null>(null);
   const lastKnownStatus = useRef<string | null>(null);
   const draftRestoredRef = useRef(false);
+
+  const [isMaintenance, setIsMaintenance] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/homepage')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.isMaintenance) {
+          setIsMaintenance(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // If initialPage prop is passed from a specific route (e.g. /store), set it
   useEffect(() => {
@@ -331,6 +345,52 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
     (accountStatus === 'incomplete' && isDraftSaved)
   );
   const isStorefrontPage = ['home', 'product-detail', 'seller-profile', 'login', 'verification'].includes(currentPage);
+
+  if (isMaintenance && user?.role !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col items-center justify-center p-6 text-white text-center font-cairo">
+        {/* Glowing glassmorphic container */}
+        <div className="max-w-2xl w-full p-8 md:p-12 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl space-y-8 relative overflow-hidden">
+          {/* Subtle ambient light shapes */}
+          <div className="absolute -top-24 -left-24 w-48 h-48 bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Animated tool icon */}
+          <div className="flex justify-center">
+            <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-400/20 to-indigo-500/20 border border-amber-400/30 shadow-inner animate-pulse">
+              <Wrench className="h-12 w-12 text-amber-400 animate-bounce" />
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="space-y-4">
+            <h1 className="text-3xl md:text-4xl font-black leading-tight bg-gradient-to-r from-amber-400 via-white to-amber-400 bg-clip-text text-transparent">
+              {locale === 'ar' ? 'أعمال صيانة مجدولة' : 'Scheduled Maintenance'}
+            </h1>
+            <p className="text-sm md:text-base text-slate-300 leading-relaxed">
+              {locale === 'ar' 
+                ? 'نعمل حالياً على ترقية خوادمنا وتطوير ميزات المنصة لنقدم لكم تجربة تسوق فائقة السرعة والأمان. سنعود للعمل قريباً جداً!'
+                : 'We are currently upgrading our cloud infrastructure and core systems to deliver a premium, high-speed trading environment. We will be back online shortly!'}
+            </p>
+          </div>
+
+          {/* Details / ETA */}
+          <div className="p-4 rounded-xl bg-white/5 border border-white/5 text-xs text-slate-400">
+            {locale === 'ar' 
+              ? 'يرجى مراجعة منصة الدعم الفني أو التواصل معنا لمزيد من التفاصيل.' 
+              : 'Please contact support or consult your account manager if you require urgent assistance.'}
+          </div>
+
+          {/* Logo brand */}
+          <div className="pt-4 border-t border-white/10 flex items-center justify-center gap-2">
+            <span className="font-black text-lg text-amber-400">شاري داي</span>
+            <span className="text-slate-500 font-light">|</span>
+            <span className="font-extrabold text-sm tracking-wider">ChariDay</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AppShell>
