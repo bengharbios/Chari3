@@ -70,7 +70,7 @@ async function probeSocketConnection(user: string, pass: string, database: strin
       password: pass,
       database,
       socketPath,
-      connectTimeout: 3500,
+      connectTimeout: 1000,
       enableKeepAlive: false,
     });
     await conn.execute('SELECT 1');
@@ -275,7 +275,7 @@ export async function ensureDbConnection(): Promise<boolean> {
       try {
         workingUrl = await Promise.race([
           findWorkingDbUrl(originalUrl),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500)),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
         ]);
       } catch {
         workingUrl = null;

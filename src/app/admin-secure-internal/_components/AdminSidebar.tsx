@@ -82,6 +82,13 @@ export default function AdminSidebar() {
     },
   ];
 
+  const getAdminPath = (subPath: string) => {
+    if (typeof window === 'undefined') return '';
+    const segments = window.location.pathname.split('/');
+    const baseSlug = segments[1] || 'super-admin';
+    return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
+  };
+
   return (
     <div 
       className={`relative h-screen bg-navy text-white transition-all duration-300 ease-in-out flex flex-col z-20 ${
@@ -117,7 +124,7 @@ export default function AdminSidebar() {
           return (
             <Link 
               key={item.path} 
-              href={item.path === '' ? '.' : `./${item.path}`}
+              href={getAdminPath(item.path)}
               className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${
                 isActive 
                   ? 'bg-brand text-navy font-bold' 

@@ -38,6 +38,13 @@ export default function AdminLayoutWrapper({
   const isRTL = adminLocale === 'ar';
   const isLoginPage = pathname.includes('/login');
 
+  const getAdminPath = (subPath: string) => {
+    if (typeof window === 'undefined') return '';
+    const segments = window.location.pathname.split('/');
+    const baseSlug = segments[1] || 'super-admin';
+    return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
+  };
+
   // CRITICAL FIX: Do not show sidebar or header if not authenticated OR on login page
   if (!isAdminAuthenticated || isLoginPage) {
     return (
@@ -72,19 +79,19 @@ export default function AdminLayoutWrapper({
                   <span className="font-bold text-lg text-brand">{isRTL ? 'الإدارة' : 'Admin Panel'}</span>
                 </div>
                 <nav className="p-4 space-y-2">
-                  <Link href="." className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-white">
+                  <Link href={getAdminPath('')} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-white">
                     <LayoutDashboard className="h-5 w-5 text-blue-500" />
                     <span>{isRTL ? 'لوحة التحكم' : 'Dashboard'}</span>
                   </Link>
-                  <Link href="./settings" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-white">
+                  <Link href={getAdminPath('settings')} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-white">
                     <Settings className="h-5 w-5 text-amber-500" />
                     <span>{isRTL ? 'الإعدادات العامة' : 'General Settings'}</span>
                   </Link>
-                  <Link href="./cms" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-white">
+                  <Link href={getAdminPath('cms')} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-white">
                     <Sliders className="h-5 w-5 text-emerald-500" />
                     <span>{isRTL ? 'إدارة الواجهة (CMS)' : 'Storefront CMS'}</span>
                   </Link>
-                  <Link href="./flags" className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-white">
+                  <Link href={getAdminPath('flags')} className="flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-800 text-white">
                     <ToggleRight className="h-5 w-5 text-red-500" />
                     <span>{isRTL ? 'مفاتيح الميزات' : 'Feature Flags'}</span>
                   </Link>
