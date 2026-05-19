@@ -109,6 +109,24 @@ export async function POST(request: Request) {
     try {
       await ensureDbConnection();
 
+      // ── Check if merchant registration is disabled by admin ──
+      if (role !== 'buyer') {
+        const regFlag = await db.setting.findUnique({
+          where: { key: 'flag_disable_registration' }
+        });
+        if (regFlag?.value === 'true') {
+          return NextResponse.json(
+            { 
+              success: false, 
+              message: locale === 'en' 
+                ? 'Merchant registration is temporarily suspended by administrator' 
+                : 'تسجيل التجار الجدد معطل مؤقتاً من قبل الإدارة' 
+            },
+            { status: 403 }
+          );
+        }
+      }
+
       // ── Step 1: Check if user already exists ──
       const existing = await withTimeout(
         db.user.findFirst({
