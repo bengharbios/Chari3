@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Wrench } from 'lucide-react';
+import { Wrench, Loader2 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { useOnboardingStore, restoreDraftFields, calcResumeStep } from '@/lib/store/onboarding';
@@ -91,6 +91,7 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
   const draftRestoredRef = useRef(false);
 
   const [isMaintenance, setIsMaintenance] = useState(false);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
 
   useEffect(() => {
     fetch('/api/homepage')
@@ -100,7 +101,10 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
           setIsMaintenance(true);
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        setIsLoadingConfig(false);
+      });
   }, []);
 
   // If initialPage prop is passed from a specific route (e.g. /store), set it
@@ -348,6 +352,14 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
   );
   const isStorefrontPage = ['home', 'product-detail', 'seller-profile', 'login', 'verification'].includes(currentPage);
 
+  if (isLoadingConfig) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center space-y-4">
+        <Loader2 className="h-10 w-10 animate-spin text-amber-400" />
+      </div>
+    );
+  }
+
   if (isMaintenance && !isAdminAuthenticated && user?.role !== 'admin') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col items-center justify-center p-6 text-white text-center font-cairo">
@@ -396,6 +408,17 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
 
   return (
     <AppShell>
+      {/* Dynamic Maintenance Warning Bar for Admins */}
+      {isMaintenance && (isAdminAuthenticated || user?.role === 'admin') && (
+        <div className="bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 py-2.5 px-4 text-center text-xs md:text-sm font-bold flex items-center justify-center gap-2 z-50 relative font-cairo shadow-md select-none">
+          <Wrench className="h-4 w-4 animate-bounce text-slate-950" />
+          <span>
+            {locale === 'ar' 
+              ? '⚠️ وضع الصيانة نشط حالياً — المنصة مغلقة أمام الزوار، وتظهر لك فقط بصفتك مسؤولاً للنظام.' 
+              : '⚠️ Maintenance Mode Active — Storefront is offline for visitors, visible to you as administrator.'}
+          </span>
+        </div>
+      )}
       <Header />
 
       {isStorefrontPage ? (
