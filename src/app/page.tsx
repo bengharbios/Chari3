@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Wrench } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
+import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { useOnboardingStore, restoreDraftFields, calcResumeStep } from '@/lib/store/onboarding';
 import AppShell from '@/components/layout/AppShell';
 import Header from '@/components/layout/Header';
@@ -79,6 +80,7 @@ const ALLOWED_EXTRA_PAGES: PageType[] = [
 export default function HomePage({ initialPage }: { initialPage?: PageType }) {
   const { currentPage, setCurrentPage, locale } = useAppStore();
   const { isAuthenticated, user } = useAuthStore();
+  const { isAdminAuthenticated } = useAdminAuthStore();
   const {
     accountStatus, isCompleted, isSubmitted, isDraftSaved,
     setAccountStatus, setVerificationItems,
@@ -346,7 +348,7 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
   );
   const isStorefrontPage = ['home', 'product-detail', 'seller-profile', 'login', 'verification'].includes(currentPage);
 
-  if (isMaintenance && user?.role !== 'admin') {
+  if (isMaintenance && !isAdminAuthenticated && user?.role !== 'admin') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex flex-col items-center justify-center p-6 text-white text-center font-cairo">
         {/* Glowing glassmorphic container */}
