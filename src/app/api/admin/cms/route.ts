@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, ensureDbConnection } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    await ensureDbConnection();
     const [layout, heroSlides, testimonials] = await Promise.all([
       db.setting.findUnique({ where: { key: 'homepage_layout' } }),
       db.setting.findUnique({ where: { key: 'homepage_hero_slides' } }),
@@ -24,6 +25,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    await ensureDbConnection();
     const { layout, heroSlides, testimonials } = await req.json();
 
     const updates = [];

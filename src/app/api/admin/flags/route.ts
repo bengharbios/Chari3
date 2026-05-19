@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, ensureDbConnection } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    await ensureDbConnection();
     const flags = await db.setting.findMany({
       where: { key: { startsWith: 'flag_' } },
     });
@@ -33,6 +34,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
+    await ensureDbConnection();
     const { flags } = await req.json();
 
     if (!flags || typeof flags !== 'object') {

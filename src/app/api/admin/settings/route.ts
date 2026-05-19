@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, ensureDbConnection } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +8,7 @@ export const dynamic = 'force-dynamic';
 // ============================================
 export async function GET() {
   try {
+    await ensureDbConnection();
     const settings = await db.systemSetting.findMany();
     
     // Convert array of {key, value} to a single object { [key]: value }
@@ -34,6 +35,7 @@ export async function GET() {
 // ============================================
 export async function POST(request: Request) {
   try {
+    await ensureDbConnection();
     const body = await request.json();
     const { settings, adminId } = body; // settings is an object { key: value }
 

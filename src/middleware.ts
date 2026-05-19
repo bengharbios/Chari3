@@ -7,9 +7,10 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. Block direct access to the internal routing folder
-  // We don't want anyone accessing /admin-secure-internal directly
-  if (pathname.startsWith('/admin-secure-internal')) {
-    return new NextResponse('Not Found', { status: 404 });
+  // We check the original browser requested URL to avoid blocking Next.js rewrites
+  const originalUrl = new URL(request.url);
+  if (originalUrl.pathname.startsWith('/admin-secure-internal')) {
+    return new Response('Not Found', { status: 404 });
   }
 
   // 2. Rewrite the secret slug to our internal admin folder

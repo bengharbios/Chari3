@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { db, ensureDbConnection } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    await ensureDbConnection();
     // Fetch data for the homepage in parallel
     const [categories, featuredProducts, topSellers, advertisements, testimonials, layoutSetting, heroSlidesSetting, maintenanceSetting] = await Promise.all([
       // Active categories with product counts
