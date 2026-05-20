@@ -486,18 +486,6 @@ function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t, isAr }
   const [stock, setStock] = useState(product?.stock || 10);
   const [status, setStatus] = useState<'active' | 'draft' | 'inactive'>(product?.status || 'draft');
 
-  // Bullet Points
-  let initialBullets = ['', '', ''];
-  if (product?.shortDescription) {
-    try {
-      const parsed = JSON.parse(product.shortDescription);
-      if (Array.isArray(parsed)) initialBullets = [...parsed, '', '', ''].slice(0, 3);
-    } catch {}
-  }
-  const [bullet1, setBullet1] = useState(initialBullets[0]);
-  const [bullet2, setBullet2] = useState(initialBullets[1]);
-  const [bullet3, setBullet3] = useState(initialBullets[2]);
-
   // Specifications
   let initialSpecs: any = {};
   if (product?.specifications) {
@@ -509,6 +497,21 @@ function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t, isAr }
       }
     } catch {}
   }
+
+  // Bullet Points
+  let initialBullets = ['', '', ''];
+  if (initialSpecs.bullets && Array.isArray(initialSpecs.bullets)) {
+    initialBullets = [...initialSpecs.bullets, '', '', ''].slice(0, 3);
+  } else if (product?.shortDescription) {
+    try {
+      const parsed = JSON.parse(product.shortDescription);
+      if (Array.isArray(parsed)) initialBullets = [...parsed, '', '', ''].slice(0, 3);
+    } catch {}
+  }
+  const [bullet1, setBullet1] = useState(initialBullets[0]);
+  const [bullet2, setBullet2] = useState(initialBullets[1]);
+  const [bullet3, setBullet3] = useState(initialBullets[2]);
+
   const [weight, setWeight] = useState(initialSpecs.weight || '0.85 كجم');
   const [dimensions, setDimensions] = useState(initialSpecs.dimensions || '40 × 30 × 10 سم');
   const [material, setMaterial] = useState(initialSpecs.material || 'جلد طبيعي + بوليستر مبطن');
@@ -516,8 +519,8 @@ function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t, isAr }
   const [warranty, setWarranty] = useState(initialSpecs.warranty || 'ضمان 12 شهراً ضد عيوب الصناعة');
 
   // SEO & Variants
-  const [metaTitle, setMetaTitle] = useState(product?.seoTitle || '');
-  const [metaDesc, setMetaDesc] = useState(product?.seoDescription || '');
+  const [metaTitle, setMetaTitle] = useState(initialSpecs.seoTitle || product?.seoTitle || '');
+  const [metaDesc, setMetaDesc] = useState(initialSpecs.seoDescription || product?.seoDescription || '');
   const [slug, setSlug] = useState(product?.slug || '');
 
   const [color1, setColor1] = useState(initialSpecs.color1 || 'أسود فاخر');
@@ -574,7 +577,10 @@ function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t, isAr }
       warranty,
       color1,
       color2,
-      sizes
+      sizes,
+      bullets: shortDescArray,
+      seoTitle: metaTitle,
+      seoDescription: metaDesc
     };
 
     const payload = {

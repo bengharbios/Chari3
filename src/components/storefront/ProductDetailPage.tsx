@@ -33,6 +33,7 @@ interface ProductDetail {
   stock: number;
   status: string;
   isFeatured: boolean;
+  specifications?: string;
   category: { name: string; nameEn?: string };
   seller?: {
     id: string;
@@ -85,6 +86,10 @@ export default function ProductDetailPage() {
   const [addedToCart, setAddedToCart] = useState(false);
   const [wishlist, setWishlist] = useState(false);
 
+  // Variant States
+  const [selectedColor, setSelectedColor] = useState<string>('');
+  const [selectedSize, setSelectedSize] = useState<string>('');
+
   useEffect(() => {
     if (!selectedProductId) { setCurrentPage('home'); return; }
     setIsLoading(true);
@@ -94,11 +99,48 @@ export default function ProductDetailPage() {
         if (d.success) {
           setProduct(d.product);
           setRelated(d.related || []);
+          
+          // Pre-select variants
+          let s: any = {};
+          try {
+            s = typeof d.product.specifications === 'string'
+              ? JSON.parse(d.product.specifications)
+              : d.product.specifications || {};
+          } catch {}
+          if (s.color1) setSelectedColor(s.color1);
+          else setSelectedColor('');
+          
+          if (s.sizes) {
+            const arr = s.sizes.split(',').map((x: string) => x.trim());
+            if (arr[0]) setSelectedSize(arr[0]);
+            else setSelectedSize('');
+          } else {
+            setSelectedSize('');
+          }
         } else setCurrentPage('home');
       })
       .catch(() => setCurrentPage('home'))
       .finally(() => setIsLoading(false));
   }, [selectedProductId]);
+
+  // Dynamic Browser Document Title and Meta Description for SEO
+  useEffect(() => {
+    if (product) {
+      let s: any = {};
+      try {
+        s = typeof product.specifications === 'string'
+          ? JSON.parse(product.specifications)
+          : product.specifications || {};
+      } catch {}
+      const title = s.seoTitle || product.name;
+      const desc = s.seoDescription || product.description || '';
+      if (title && typeof window !== 'undefined') {
+        document.title = `${title} - ChariDay`;
+        const meta = document.querySelector('meta[name="description"]');
+        if (meta) meta.setAttribute('content', desc);
+      }
+    }
+  }, [product]);
 
   const handleAddToCart = () => {
     if (!isAuthenticated) { setCurrentPage('login'); return; }
@@ -138,6 +180,14 @@ export default function ProductDetailPage() {
   const discount = product.comparePrice
     ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
     : 0;
+
+  // Extract custom specifications structure
+  let specs: any = {};
+  try {
+    specs = typeof product.specifications === 'string'
+      ? JSON.parse(product.specifications)
+      : product.specifications || {};
+  } catch {}
 
   return (
     <div className="min-h-screen bg-background">
@@ -242,6 +292,21 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
+            {/* Amazon-Style Bullet Points / High-Converting Features */}
+            {specs.bullets && Array.isArray(specs.bullets) && specs.bullets.filter(Boolean).length > 0 && (
+              <div className="p-4 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-border space-y-2 font-cairo">
+                <p className="text-xs font-bold text-amber-500 uppercase tracking-wider">{t('مميزات وفوائد المنتج:', 'Product Benefits & Features:')}</p>
+                <ul className="space-y-1.5 text-sm text-muted-foreground">
+                  {specs.bullets.filter(Boolean).map((bullet: string, idx: number) => (
+                    <li key={idx} className="flex items-start gap-2">
+                      <span className="text-amber-500 font-bold shrink-0">✓</span>
+                      <span>{bullet}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             {/* Stock indicator */}
             <div className="flex items-center gap-2">
               <div className={`size-2.5 rounded-full ${product.stock > 10 ? 'bg-green-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
@@ -251,6 +316,50 @@ export default function ProductDetailPage() {
                     t('غير متوفر', 'Out of Stock')}
               </span>
             </div>
+
+            {/* Color Variant Selector */}
+            {((specs.color1 && specs.color1.trim()) || (specs.color2 && specs.color2.trim())) && (
+              <div className="space-y-2">
+                <span className="text-sm font-medium">{t('اللون:', 'Color:')} <span className="font-bold text-foreground">{selectedColor}</span></span>
+                <div className="flex gap-2">
+                  {[specs.color1, specs.color2].filter(Boolean).map((col: string) => (
+                    <button
+                      key={col}
+                      onClick={() => setSelectedColor(col)}
+                      className={`text-xs px-3.5 py-2 rounded-xl border transition-all font-bold ${
+                        selectedColor === col
+                          ? 'border-amber-500 bg-amber-500/10 text-amber-500'
+                          : 'border-border bg-transparent text-muted-foreground hover:border-border/80'
+                      }`}
+                    >
+                      {col}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Size Variant Selector */}
+            {specs.sizes && specs.sizes.trim() && (
+              <div className="space-y-2">
+                <span className="text-sm font-medium">{t('المقاس:', 'Size:')} <span className="font-bold text-foreground">{selectedSize}</span></span>
+                <div className="flex gap-2 flex-wrap">
+                  {specs.sizes.split(',').map((sz: string) => sz.trim()).filter(Boolean).map((sz: string) => (
+                    <button
+                      key={sz}
+                      onClick={() => setSelectedSize(sz)}
+                      className={`text-xs px-3.5 py-2 rounded-xl border transition-all font-bold ${
+                        selectedSize === sz
+                          ? 'border-amber-500 bg-amber-500/10 text-amber-500'
+                          : 'border-border bg-transparent text-muted-foreground hover:border-border/80'
+                      }`}
+                    >
+                      {sz}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Quantity + Actions */}
             <div className="space-y-3">
@@ -354,15 +463,45 @@ export default function ProductDetailPage() {
           </Card>
         )}
 
-        {/* ── DESCRIPTION ── */}
-        {product.description && (
-          <div className="mt-8">
-            <h2 className="text-xl font-bold mb-4">{t('وصف المنتج', 'Product Description')}</h2>
-            <div className="prose dark:prose-invert max-w-none p-5 bg-muted/30 rounded-2xl border border-border">
-              <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+        {/* ── DESCRIPTION & SPECIFICATIONS GRID ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10">
+          {product.description && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold">{t('وصف المنتج التفصيلي', 'Detailed Product Description')}</h2>
+              <div className="prose dark:prose-invert max-w-none p-5 bg-muted/30 rounded-2xl border border-border min-h-[220px]">
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-line text-sm">{product.description}</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
+          {/* Dynamic Technical Specifications Table */}
+          {Object.keys(specs).some(k => ['weight', 'dimensions', 'material', 'origin', 'warranty'].includes(k)) && (
+            <div className="space-y-4">
+              <h2 className="text-xl font-bold">{t('المواصفات الفنية المعتمدة', 'Approved Technical Specifications')}</h2>
+              <div className="p-5 bg-muted/30 rounded-2xl border border-border min-h-[220px] flex flex-col justify-center">
+                <table className="w-full text-sm divide-y divide-border">
+                  <tbody>
+                    {specs.weight && (
+                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('الوزن الكلي', 'Total Weight')}</td><td className="font-medium text-foreground">{specs.weight}</td></tr>
+                    )}
+                    {specs.dimensions && (
+                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('الأبعاد القياسية', 'Standard Dimensions')}</td><td className="font-medium text-foreground">{specs.dimensions}</td></tr>
+                    )}
+                    {specs.material && (
+                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('الخامات المستخدمة', 'Materials Used')}</td><td className="font-medium text-foreground">{specs.material}</td></tr>
+                    )}
+                    {specs.origin && (
+                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('بلد المنشأ', 'Country of Origin')}</td><td className="font-medium text-foreground">{specs.origin}</td></tr>
+                    )}
+                    {specs.warranty && (
+                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('الضمان المعتمد', 'Warranty Details')}</td><td className="font-medium text-foreground">{specs.warranty}</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* ── RELATED PRODUCTS ── */}
         {related.length > 0 && (
