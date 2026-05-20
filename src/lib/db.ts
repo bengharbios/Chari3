@@ -275,7 +275,7 @@ export async function ensureDbConnection(): Promise<boolean> {
       try {
         workingUrl = await Promise.race([
           findWorkingDbUrl(originalUrl),
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000)),
         ]);
       } catch {
         workingUrl = null;
