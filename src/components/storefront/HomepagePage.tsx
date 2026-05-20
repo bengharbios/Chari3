@@ -81,7 +81,7 @@ interface HomepageData {
 }
 
 function AdBanner({ ads, className = '' }: { ads?: { id: string; title: string; imageUrl: string; linkUrl?: string }[]; className?: string }) {
-  if (!ads || ads.length === 0) return null;
+  if (!ads || ads.length === 0 || !ads[0]) return null;
   const ad = ads[0];
   return (
     <a href={ad.linkUrl || '#'} className={`block overflow-hidden rounded-2xl ${className}`} onClick={() => fetch(`/api/admin/advertisements`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: ad.id, clicks: 1 }) }).catch(() => {})}>
@@ -126,9 +126,11 @@ export default function StorefrontHomepage() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const currentHeroSlides = data?.heroSlides && data.heroSlides.length > 0
-    ? data.heroSlides
-    : DEFAULT_HERO_SLIDES;
+  const rawSlides = data?.heroSlides ?? [];
+  const validSlides = Array.isArray(rawSlides)
+    ? rawSlides.filter((s: any) => s && typeof s === 'object' && (s.title || s.titleEn))
+    : [];
+  const currentHeroSlides = validSlides.length > 0 ? validSlides : DEFAULT_HERO_SLIDES;
 
   // Auto-advance hero
   useEffect(() => {
@@ -137,25 +139,29 @@ export default function StorefrontHomepage() {
     return () => clearInterval(interval);
   }, [currentHeroSlides]);
 
-  const slide = currentHeroSlides[heroIndex] || currentHeroSlides[0];
+  const slide = currentHeroSlides[heroIndex] || currentHeroSlides[0] || DEFAULT_HERO_SLIDES[0];
+  const slideBg = slide?.bg || 'from-blue-900 via-blue-800 to-indigo-900';
+  const slideBadge = slide?.badge || '';
+  const slideTitle = isAr ? (slide?.title || '') : (slide?.titleEn || slide?.title || '');
+  const slideSubtitle = isAr ? (slide?.subtitle || '') : (slide?.subtitleEn || slide?.subtitle || '');
 
   const renderSection = (sectionName: string) => {
     switch (sectionName) {
       case 'hero':
         return (
-          <section key="hero" className={`relative overflow-hidden bg-gradient-to-br ${slide.bg} text-white`}>
+          <section key="hero" className={`relative overflow-hidden bg-gradient-to-br ${slideBg} text-white`}>
             <div className="container-platform py-20 md:py-28 relative z-10">
               <div className="max-w-2xl">
-                {slide.badge && (
+                {slideBadge && (
                   <Badge className="mb-4 bg-white/20 text-white border-white/30 text-sm px-4 py-1.5">
-                    {slide.badge}
+                    {slideBadge}
                   </Badge>
                 )}
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-4 leading-tight">
-                  {isAr ? slide.title : (slide.titleEn || slide.title)}
+                  {slideTitle}
                 </h1>
                 <p className="text-base sm:text-lg md:text-xl text-white/80 mb-6 md:mb-8">
-                  {isAr ? slide.subtitle : (slide.subtitleEn || slide.subtitle)}
+                  {slideSubtitle}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button size="lg" className="bg-white text-blue-900 hover:bg-white/90 font-bold px-8 w-full sm:w-auto">
@@ -231,13 +237,15 @@ export default function StorefrontHomepage() {
                 ? Array.from({ length: 8 }).map((_, i) => (
                     <div key={i} className="shrink-0 w-24 h-24 rounded-2xl bg-muted animate-pulse" />
                   ))
-                : (data?.categories ?? []).map((cat) => (
-                    <button key={cat.id}
-                      className="shrink-0 flex flex-col items-center gap-2 p-4 w-24 rounded-2xl bg-card border border-border hover:border-primary hover:bg-primary/5 transition-all group">
-                      <span className="text-2xl">{cat.icon || '🛍️'}</span>
-                      <span className="text-xs font-medium text-center truncate w-full">{isAr ? cat.name : (cat.nameEn || cat.name)}</span>
-                    </button>
-                  ))}
+                : (data?.categories ?? [])
+                    .filter((cat) => cat && cat.id)
+                    .map((cat) => (
+                      <button key={cat.id}
+                        className="shrink-0 flex flex-col items-center gap-2 p-4 w-24 rounded-2xl bg-card border border-border hover:border-primary hover:bg-primary/5 transition-all group">
+                        <span className="text-2xl">{cat.icon || '🛍️'}</span>
+                        <span className="text-xs font-medium text-center truncate w-full">{isAr ? cat.name : (cat.nameEn || cat.name)}</span>
+                      </button>
+                    ))}
             </div>
           </section>
         );
@@ -256,63 +264,71 @@ export default function StorefrontHomepage() {
                 ? Array.from({ length: 10 }).map((_, i) => (
                     <div key={i} className="rounded-2xl bg-muted animate-pulse h-64" />
                   ))
-                : (data?.featuredProducts ?? []).map((product) => {
-                    let images: string[] = [];
-                    try { images = JSON.parse(product.images); } catch {}
-                    const seller = product.seller || product.store;
-                    const sellerName = product.seller?.storeName || product.store?.name || '';
-                    const sellerLevel = product.seller?.level || product.store?.level || 1;
-                    const discount = product.comparePrice
-                      ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
-                      : 0;
+                : (data?.featuredProducts ?? [])
+                    .filter((product) => product && product.id)
+                    .map((product) => {
+                      let images: string[] = [];
+                      if (Array.isArray(product.images)) {
+                        images = product.images;
+                      } else if (typeof product.images === 'string') {
+                        try { images = JSON.parse(product.images); } catch {}
+                      }
+                      if (!Array.isArray(images)) images = [];
 
-                    return (
-                      <Card key={product.id}
-                        className="overflow-hidden flex flex-col group hover:shadow-lg transition-all duration-300 cursor-pointer border-border hover:border-primary/30"
-                        onClick={() => {
-                          useAppStore.getState().setSelectedProductId(product.id);
-                          useAppStore.getState().setCurrentPage('product-detail');
-                        }}
-                      >
-                        <div className="relative aspect-square bg-muted overflow-hidden shrink-0">
-                          {images[0] ? (
-                            <img src={images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-primary/10 to-primary/5">
-                              <ShoppingBag className="size-10 text-primary/30" />
-                            </div>
-                          )}
-                          {discount > 0 && (
-                            <Badge className="absolute top-2 start-2 bg-red-500 text-white text-xs">-{discount}%</Badge>
-                          )}
-                        </div>
-                        <CardContent className="p-2.5 md:p-3 flex flex-col grow">
-                          <p className="text-[10px] md:text-xs text-muted-foreground mb-1 truncate">{product.category.name}</p>
-                          <p className="text-xs md:text-sm font-semibold line-clamp-2 mb-1.5">{product.name}</p>
-                          <div className="flex items-center gap-1 mb-2">
-                            <StarRating rating={product.rating} />
-                            <span className="text-[10px] md:text-xs text-muted-foreground">({product.soldCount})</span>
-                          </div>
-                          <div className="mt-auto">
-                            <div className="flex items-end justify-between">
-                              <div className="w-full">
-                                <p className="text-sm md:text-base font-bold text-primary truncate">{fmt(product.price)}</p>
-                                {product.comparePrice && (
-                                  <p className="text-[10px] md:text-xs text-muted-foreground line-through truncate">{fmt(product.comparePrice)}</p>
-                                )}
-                              </div>
-                            </div>
-                            {sellerName && (
-                              <div className="flex items-center gap-1 mt-2 pt-2 border-t border-border">
-                                <span className="text-xs">{LEVEL_BADGE[sellerLevel] || '🌱'}</span>
-                                <span className="text-[10px] md:text-xs text-muted-foreground truncate">{sellerName}</span>
+                      const seller = product.seller || product.store;
+                      const sellerName = product.seller?.storeName || product.store?.name || '';
+                      const sellerLevel = product.seller?.level || product.store?.level || 1;
+                      const discount = product.comparePrice
+                        ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
+                        : 0;
+
+                      return (
+                        <Card key={product.id}
+                          className="overflow-hidden flex flex-col group hover:shadow-lg transition-all duration-300 cursor-pointer border-border hover:border-primary/30"
+                          onClick={() => {
+                            useAppStore.getState().setSelectedProductId(product.id);
+                            useAppStore.getState().setCurrentPage('product-detail');
+                          }}
+                        >
+                          <div className="relative aspect-square bg-muted overflow-hidden shrink-0">
+                            {images[0] ? (
+                              <img src={images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-primary/10 to-primary/5">
+                                <ShoppingBag className="size-10 text-primary/30" />
                               </div>
                             )}
+                            {discount > 0 && (
+                              <Badge className="absolute top-2 start-2 bg-red-500 text-white text-xs">-{discount}%</Badge>
+                            )}
                           </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
+                          <CardContent className="p-2.5 md:p-3 flex flex-col grow">
+                            <p className="text-[10px] md:text-xs text-muted-foreground mb-1 truncate">{product.category?.name || ''}</p>
+                            <p className="text-xs md:text-sm font-semibold line-clamp-2 mb-1.5">{product.name}</p>
+                            <div className="flex items-center gap-1 mb-2">
+                              <StarRating rating={product.rating} />
+                              <span className="text-[10px] md:text-xs text-muted-foreground">({product.soldCount})</span>
+                            </div>
+                            <div className="mt-auto">
+                              <div className="flex items-end justify-between">
+                                <div className="w-full">
+                                  <p className="text-sm md:text-base font-bold text-primary truncate">{fmt(product.price)}</p>
+                                  {product.comparePrice && (
+                                    <p className="text-[10px] md:text-xs text-muted-foreground line-through truncate">{fmt(product.comparePrice)}</p>
+                                  )}
+                                </div>
+                              </div>
+                              {sellerName && (
+                                <div className="flex items-center gap-1 mt-2 pt-2 border-t border-border">
+                                  <span className="text-xs">{LEVEL_BADGE[sellerLevel] || '🌱'}</span>
+                                  <span className="text-[10px] md:text-xs text-muted-foreground truncate">{sellerName}</span>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
             </div>
           </section>
         );
@@ -331,34 +347,36 @@ export default function StorefrontHomepage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                 {isLoading
                   ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="rounded-2xl bg-white/10 animate-pulse h-36" />)
-                  : (data?.topSellers ?? []).map((seller) => (
-                      <Card key={seller.id}
-                        className="bg-white/10 border-white/10 hover:bg-white/15 transition-all cursor-pointer group"
-                        onClick={() => {
-                          useAppStore.getState().setSelectedSellerId(seller.id);
-                          useAppStore.getState().setCurrentPage('seller-profile');
-                        }}
-                      >
-                        <CardContent className="p-4 text-center">
-                          <div className="relative mx-auto mb-3 w-14 h-14">
-                            {seller.user.avatar ? (
-                              <img src={seller.user.avatar} className="w-full h-full rounded-full object-cover border-2 border-amber-400" alt={seller.user.name} />
-                            ) : (
-                              <div className="w-full h-full rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-xl font-bold text-white">
-                                {seller.user.name.charAt(0)}
-                              </div>
-                            )}
-                            <span className="absolute -bottom-1 -end-1 text-base">{LEVEL_BADGE[seller.level] || '⭐'}</span>
-                          </div>
-                          <p className="text-white font-semibold text-sm truncate">{seller.storeName || seller.user.name}</p>
-                          <div className="flex items-center justify-center gap-1 my-1">
-                            <StarRating rating={seller.rating} />
-                            <span className="text-white/60 text-xs">{seller.rating.toFixed(1)}</span>
-                          </div>
-                          <p className="text-white/50 text-xs">{seller._count.products} {t('منتج', 'products')}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
+                  : (data?.topSellers ?? [])
+                      .filter((seller) => seller && seller.user)
+                      .map((seller) => (
+                        <Card key={seller.id}
+                          className="bg-white/10 border-white/10 hover:bg-white/15 transition-all cursor-pointer group"
+                          onClick={() => {
+                            useAppStore.getState().setSelectedSellerId(seller.id);
+                            useAppStore.getState().setCurrentPage('seller-profile');
+                          }}
+                        >
+                          <CardContent className="p-4 text-center">
+                            <div className="relative mx-auto mb-3 w-14 h-14">
+                              {seller.user.avatar ? (
+                                <img src={seller.user.avatar} className="w-full h-full rounded-full object-cover border-2 border-amber-400" alt={seller.user.name} />
+                              ) : (
+                                <div className="w-full h-full rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-xl font-bold text-white">
+                                  {seller.user.name.charAt(0)}
+                                </div>
+                              )}
+                              <span className="absolute -bottom-1 -end-1 text-base">{LEVEL_BADGE[seller.level] || '⭐'}</span>
+                            </div>
+                            <p className="text-white font-semibold text-sm truncate">{seller.storeName || seller.user.name}</p>
+                            <div className="flex items-center justify-center gap-1 my-1">
+                              <StarRating rating={seller.rating} />
+                              <span className="text-white/60 text-xs">{seller.rating.toFixed(1)}</span>
+                            </div>
+                            <p className="text-white/50 text-xs">{seller._count.products} {t('منتج', 'products')}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
               </div>
             </div>
           </section>
