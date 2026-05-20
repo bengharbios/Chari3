@@ -99,7 +99,7 @@ export default function SellerDashboard() {
   }, [user?.id]);
 
   // Show different sub-pages
-  if (currentPage === 'seller-products') {
+  if (currentPage === 'seller-products' || currentPage === 'supplier-products' || currentPage === 'store-products') {
     if (showAddForm) {
       return (
         <ProductFormTab
@@ -109,8 +109,8 @@ export default function SellerDashboard() {
             setEditingProduct(null);
           }}
           onSave={refreshData}
-          storeId={user?.id || ''}
-          sellerId={user?.id || ''}
+          storeId={data?.seller?.id || user?.id || ''}
+          sellerId={data?.seller?.id || user?.id || ''}
           t={t}
           isAr={isAr}
         />
@@ -134,7 +134,7 @@ export default function SellerDashboard() {
       />
     );
   }
-  if (currentPage === 'seller-orders') return <SellerOrdersTab data={data} isLoading={isLoading} t={t} isAr={isAr} />;
+  if (currentPage === 'seller-orders' || currentPage === 'supplier-orders' || currentPage === 'store-orders') return <SellerOrdersTab data={data} isLoading={isLoading} t={t} isAr={isAr} />;
 
   if (isLoading) return (
     <div className="space-y-4 animate-pulse">

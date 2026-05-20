@@ -373,21 +373,23 @@ export default function StorefrontHomepage() {
               <p className="text-muted-foreground">{t('آراء حقيقية من مشترين حقيقيين', 'Real reviews from real buyers')}</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {(data?.testimonials?.length ? data.testimonials : DEFAULT_TESTIMONIALS).map((t2, i) => (
-                <Card key={i} className="border-border hover:shadow-lg transition-all">
-                  <CardContent className="p-5">
-                    <Quote className="size-6 text-primary/30 mb-3" />
-                    <p className="text-sm text-muted-foreground mb-4 leading-relaxed">"{t2.text}"</p>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold">{t2.name}</p>
-                        <p className="text-xs text-muted-foreground">{t2.city}</p>
+              {(data?.testimonials?.length ? data.testimonials : DEFAULT_TESTIMONIALS)
+                .filter((t2) => t2 && typeof t2 === 'object')
+                .map((t2, i) => (
+                  <Card key={i} className="border-border hover:shadow-lg transition-all">
+                    <CardContent className="p-5">
+                      <Quote className="size-6 text-primary/30 mb-3" />
+                      <p className="text-sm text-muted-foreground mb-4 leading-relaxed">"{t2.text || ''}"</p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-semibold">{t2.name || ''}</p>
+                          <p className="text-xs text-muted-foreground">{t2.city || ''}</p>
+                        </div>
+                        <StarRating rating={Number(t2.rating) || 5} />
                       </div>
-                      <StarRating rating={t2.rating} />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
             </div>
           </section>
         );
