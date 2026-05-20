@@ -138,6 +138,178 @@ export async function GET(req: NextRequest) {
       results.push(`Error creating AdminAuditLog table: ${e.message}`);
     }
 
+    // 5. Create SellerLevel table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS SellerLevel (
+          id VARCHAR(191) NOT NULL,
+          level INTEGER NOT NULL,
+          nameAr VARCHAR(191) NOT NULL,
+          nameEn VARCHAR(191) NOT NULL,
+          badge VARCHAR(191) NOT NULL,
+          badgeColor VARCHAR(191) NOT NULL DEFAULT '#6B7280',
+          minCustomers INTEGER NOT NULL DEFAULT 0,
+          minRating DOUBLE NOT NULL DEFAULT 0,
+          minCompletionRate DOUBLE NOT NULL DEFAULT 0,
+          minResponseRate DOUBLE NOT NULL DEFAULT 0,
+          maxResponseHours INTEGER NOT NULL DEFAULT 48,
+          maxProducts INTEGER NOT NULL DEFAULT 5,
+          commissionDiscount DOUBLE NOT NULL DEFAULT 0,
+          bonusFeatures VARCHAR(191) NOT NULL DEFAULT '[]',
+          gracePeriodDays INTEGER NOT NULL DEFAULT 180,
+          searchBoost DOUBLE NOT NULL DEFAULT 1.0,
+          isActive BOOLEAN NOT NULL DEFAULT true,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL,
+          PRIMARY KEY (id),
+          UNIQUE KEY SellerLevel_level_key (level)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured SellerLevel table exists');
+    } catch (e: any) {
+      results.push(`Error creating SellerLevel table: ${e.message}`);
+    }
+
+    // 6. Create SellerReview table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS SellerReview (
+          id VARCHAR(191) NOT NULL,
+          rating INTEGER NOT NULL,
+          speedRating INTEGER NULL,
+          qualityRating INTEGER NULL,
+          commRating INTEGER NULL,
+          comment VARCHAR(191) NULL,
+          sellerReply VARCHAR(191) NULL,
+          replyAt DATETIME(3) NULL,
+          isApproved BOOLEAN NOT NULL DEFAULT true,
+          sellerId VARCHAR(191) NOT NULL,
+          buyerId VARCHAR(191) NOT NULL,
+          orderId VARCHAR(191) NULL,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL,
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured SellerReview table exists');
+    } catch (e: any) {
+      results.push(`Error creating SellerReview table: ${e.message}`);
+    }
+
+    // 7. Create WithdrawalRequest table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS WithdrawalRequest (
+          id VARCHAR(191) NOT NULL,
+          amount DOUBLE NOT NULL,
+          method VARCHAR(191) NOT NULL,
+          status VARCHAR(191) NOT NULL DEFAULT 'pending',
+          accountNumber VARCHAR(191) NULL,
+          accountName VARCHAR(191) NULL,
+          bankName VARCHAR(191) NULL,
+          note VARCHAR(191) NULL,
+          adminNote VARCHAR(191) NULL,
+          processedAt DATETIME(3) NULL,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL,
+          sellerId VARCHAR(191) NOT NULL,
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured WithdrawalRequest table exists');
+    } catch (e: any) {
+      results.push(`Error creating WithdrawalRequest table: ${e.message}`);
+    }
+
+    // 8. Create Challenge table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS Challenge (
+          id VARCHAR(191) NOT NULL,
+          title VARCHAR(191) NOT NULL,
+          titleEn VARCHAR(191) NULL,
+          description VARCHAR(191) NULL,
+          type VARCHAR(191) NOT NULL,
+          targetValue DOUBLE NOT NULL,
+          rewardType VARCHAR(191) NOT NULL DEFAULT 'badge',
+          rewardValue VARCHAR(191) NOT NULL,
+          startsAt DATETIME(3) NOT NULL,
+          endsAt DATETIME(3) NOT NULL,
+          isActive BOOLEAN NOT NULL DEFAULT true,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL,
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured Challenge table exists');
+    } catch (e: any) {
+      results.push(`Error creating Challenge table: ${e.message}`);
+    }
+
+    // 9. Create Wallet table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS Wallet (
+          id VARCHAR(191) NOT NULL,
+          balance DOUBLE NOT NULL DEFAULT 0,
+          totalEarned DOUBLE NOT NULL DEFAULT 0,
+          totalSpent DOUBLE NOT NULL DEFAULT 0,
+          currency VARCHAR(191) NOT NULL DEFAULT 'SAR',
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL,
+          userId VARCHAR(191) NOT NULL,
+          PRIMARY KEY (id),
+          UNIQUE KEY Wallet_userId_key (userId)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured Wallet table exists');
+    } catch (e: any) {
+      results.push(`Error creating Wallet table: ${e.message}`);
+    }
+
+    // 10. Create WalletTransaction table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS WalletTransaction (
+          id VARCHAR(191) NOT NULL,
+          type VARCHAR(191) NOT NULL,
+          amount DOUBLE NOT NULL,
+          balance DOUBLE NOT NULL,
+          description VARCHAR(191) NULL,
+          referenceId VARCHAR(191) NULL,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          walletId VARCHAR(191) NOT NULL,
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured WalletTransaction table exists');
+    } catch (e: any) {
+      results.push(`Error creating WalletTransaction table: ${e.message}`);
+    }
+
+    // 11. Create ProductVariant table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS ProductVariant (
+          id VARCHAR(191) NOT NULL,
+          name VARCHAR(191) NOT NULL,
+          value VARCHAR(191) NOT NULL,
+          sku VARCHAR(191) NULL,
+          price DOUBLE NULL,
+          stock INTEGER NOT NULL DEFAULT 0,
+          image VARCHAR(191) NULL,
+          sortOrder INTEGER NOT NULL DEFAULT 0,
+          isActive BOOLEAN NOT NULL DEFAULT true,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          productId VARCHAR(191) NOT NULL,
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured ProductVariant table exists');
+    } catch (e: any) {
+      results.push(`Error creating ProductVariant table: ${e.message}`);
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: 'Database schema sync executed',
