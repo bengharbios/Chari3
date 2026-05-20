@@ -121,10 +121,14 @@ export async function GET() {
     } catch {}
 
     // Parse dynamic layout
-    let parsedLayout: string[] = ['hero', 'features', 'categories', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
+    const defaultLayout = ['hero', 'features', 'categories', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
+    let parsedLayout: string[] = defaultLayout;
     try {
       if (layoutSetting?.value) {
-        parsedLayout = JSON.parse(layoutSetting.value);
+        const val = JSON.parse(layoutSetting.value);
+        if (Array.isArray(val) && val.length > 0) {
+          parsedLayout = val;
+        }
       }
     } catch {}
 

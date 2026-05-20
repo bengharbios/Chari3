@@ -437,7 +437,10 @@ export default function StorefrontHomepage() {
     }
   };
 
-  const activeLayout = data?.layout || ['hero', 'features', 'categories', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
+  const defaultLayout = ['hero', 'features', 'categories', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
+  const activeLayout = Array.isArray(data?.layout) && data.layout.length > 0
+    ? data.layout
+    : defaultLayout;
 
   return (
     <div className="min-h-screen">

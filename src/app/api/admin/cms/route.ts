@@ -12,9 +12,20 @@ export async function GET() {
       db.setting.findUnique({ where: { key: 'homepage_testimonials' } }),
     ]);
 
+    const defaultLayout = ['hero', 'features', 'categories', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
+    let parsedLayout = defaultLayout;
+    if (layout?.value) {
+      try {
+        const val = JSON.parse(layout.value);
+        if (Array.isArray(val) && val.length > 0) {
+          parsedLayout = val;
+        }
+      } catch {}
+    }
+
     return NextResponse.json({
       success: true,
-      layout: layout?.value ? JSON.parse(layout.value) : ['hero', 'features', 'categories', 'featured_products', 'top_sellers', 'testimonials', 'cta'],
+      layout: parsedLayout,
       heroSlides: heroSlides?.value ? JSON.parse(heroSlides.value) : [],
       testimonials: testimonials?.value ? JSON.parse(testimonials.value) : [],
     });

@@ -46,7 +46,8 @@ export default function AdminCMSPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   // States
-  const [layout, setLayout] = useState<string[]>([]);
+  const defaultLayout = ['hero', 'features', 'categories', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
+  const [layout, setLayout] = useState<string[]>(defaultLayout);
   const [heroSlides, setHeroSlides] = useState<HeroSlide[]>([]);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
 
@@ -130,7 +131,7 @@ export default function AdminCMSPage() {
       const res = await fetch('/api/admin/cms');
       const data = await res.json();
       if (data.success) {
-        setLayout(data.layout || []);
+        setLayout(Array.isArray(data.layout) && data.layout.length > 0 ? data.layout : defaultLayout);
         setHeroSlides(data.heroSlides || []);
         setTestimonials(data.testimonials || []);
       }
