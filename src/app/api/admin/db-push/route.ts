@@ -296,6 +296,7 @@ export async function GET(req: NextRequest) {
           value VARCHAR(191) NOT NULL,
           sku VARCHAR(191) NULL,
           price DOUBLE NULL,
+          comparePrice DOUBLE NULL,
           stock INTEGER NOT NULL DEFAULT 0,
           image VARCHAR(191) NULL,
           sortOrder INTEGER NOT NULL DEFAULT 0,
@@ -308,6 +309,20 @@ export async function GET(req: NextRequest) {
       results.push('Ensured ProductVariant table exists');
     } catch (e: any) {
       results.push(`Error creating ProductVariant table: ${e.message}`);
+    }
+
+    // 12. Ensure comparePrice column exists in ProductVariant table
+    try {
+      await db.$executeRawUnsafe(`
+        ALTER TABLE ProductVariant ADD COLUMN comparePrice DOUBLE NULL;
+      `);
+      results.push('Added comparePrice column to ProductVariant table');
+    } catch (e: any) {
+      if (e.message?.includes('1060') || e.message?.includes('Duplicate column')) {
+        results.push('comparePrice column already exists in ProductVariant');
+      } else {
+        results.push(`Error adding comparePrice column: ${e.message}`);
+      }
     }
 
     return NextResponse.json({ 

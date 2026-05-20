@@ -12,6 +12,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
       where: { id },
       include: {
         category: { select: { name: true, nameEn: true, slug: true } },
+        variants: { orderBy: { sortOrder: 'asc' } },
         seller: {
           select: {
             id: true,
@@ -99,6 +100,29 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         specifications: JSON.stringify(body.specifications || {}),
       },
     });
+
+    // Delete existing variants
+    await db.productVariant.deleteMany({
+      where: { productId: id },
+    });
+
+    // Create associated variants if present
+    if (body.variants && Array.isArray(body.variants) && body.variants.length > 0) {
+      await db.productVariant.createMany({
+        data: body.variants.map((v: any, idx: number) => ({
+          productId: product.id,
+          name: v.name,
+          value: v.value,
+          sku: v.sku || null,
+          price: v.price !== undefined && v.price !== null ? parseFloat(v.price) : null,
+          comparePrice: v.comparePrice !== undefined && v.comparePrice !== null ? parseFloat(v.comparePrice) : null,
+          stock: parseInt(v.stock || '0', 10),
+          image: v.image || null,
+          sortOrder: v.sortOrder !== undefined && v.sortOrder !== null ? parseInt(v.sortOrder, 10) : idx,
+          isActive: v.isActive !== undefined ? !!v.isActive : true,
+        })),
+      });
+    }
 
     return NextResponse.json({ success: true, product });
   } catch (error: any) {

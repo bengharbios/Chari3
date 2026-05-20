@@ -19,6 +19,19 @@ const LEVEL_BADGE: Record<number, string> = {
   6: '💎', 7: '👑', 8: '🏆', 9: '🦅', 10: '🌠',
 };
 
+interface ProductVariantItem {
+  id: string;
+  name: string;
+  value: string;
+  sku?: string;
+  price?: number | null;
+  comparePrice?: number | null;
+  stock: number;
+  image?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+}
+
 interface ProductDetail {
   id: string;
   name: string;
@@ -34,6 +47,7 @@ interface ProductDetail {
   status: string;
   isFeatured: boolean;
   specifications?: string;
+  variants?: ProductVariantItem[];
   category: { name: string; nameEn?: string };
   seller?: {
     id: string;
@@ -101,21 +115,28 @@ export default function ProductDetailPage() {
           setRelated(d.related || []);
           
           // Pre-select variants
-          let s: any = {};
-          try {
-            s = typeof d.product.specifications === 'string'
-              ? JSON.parse(d.product.specifications)
-              : d.product.specifications || {};
-          } catch {}
-          if (s.color1) setSelectedColor(s.color1);
-          else setSelectedColor('');
-          
-          if (s.sizes) {
-            const arr = s.sizes.split(',').map((x: string) => x.trim());
-            if (arr[0]) setSelectedSize(arr[0]);
-            else setSelectedSize('');
+          if (d.product.variants && d.product.variants.length > 0) {
+            const colorVariant = d.product.variants.find((v: any) => v.name === 'اللون' || v.name === 'Color' || v.name === 'color');
+            const sizeVariant = d.product.variants.find((v: any) => v.name === 'المقاس' || v.name === 'Size' || v.name === 'size');
+            if (colorVariant) setSelectedColor(colorVariant.value);
+            if (sizeVariant) setSelectedSize(sizeVariant.value);
           } else {
-            setSelectedSize('');
+            let s: any = {};
+            try {
+              s = typeof d.product.specifications === 'string'
+                ? JSON.parse(d.product.specifications)
+                : d.product.specifications || {};
+            } catch {}
+            if (s.color1) setSelectedColor(s.color1);
+            else setSelectedColor('');
+            
+            if (s.sizes) {
+              const arr = s.sizes.split(',').map((x: string) => x.trim());
+              if (arr[0]) setSelectedSize(arr[0]);
+              else setSelectedSize('');
+            } else {
+              setSelectedSize('');
+            }
           }
         } else setCurrentPage('home');
       })
@@ -177,9 +198,49 @@ export default function ProductDetailPage() {
   try { images = JSON.parse(product.images); } catch {}
   if (images.length === 0) images = [];
 
-  const discount = product.comparePrice
-    ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
+  // Find current matching variant
+  const getSelectedVariant = () => {
+    if (!product || !product.variants || product.variants.length === 0) return null;
+    
+    // Look up matching color
+    const colorVar = product.variants.find((v: any) => 
+      (v.name === 'اللون' || v.name === 'Color' || v.name === 'color') && v.value === selectedColor
+    );
+    // Look up matching size
+    const sizeVar = product.variants.find((v: any) => 
+      (v.name === 'المقاس' || v.name === 'Size' || v.name === 'size') && v.value === selectedSize
+    );
+    
+    if (colorVar && (colorVar.price !== null || colorVar.image !== null)) return colorVar;
+    if (sizeVar && (sizeVar.price !== null)) return sizeVar;
+    return colorVar || sizeVar || null;
+  };
+
+  const activeVariant = getSelectedVariant();
+  const displayPrice = activeVariant?.price !== null && activeVariant?.price !== undefined 
+    ? activeVariant.price 
+    : product.price;
+
+  const displayComparePrice = activeVariant && activeVariant.comparePrice !== null && activeVariant.comparePrice !== undefined
+    ? activeVariant.comparePrice
+    : product.comparePrice;
+
+  const displayStock = activeVariant && activeVariant.stock !== null && activeVariant.stock !== undefined
+    ? activeVariant.stock
+    : product.stock;
+
+  const discount = displayComparePrice
+    ? Math.round(((displayComparePrice - displayPrice) / displayComparePrice) * 100)
     : 0;
+
+  useEffect(() => {
+    if (activeVariant && activeVariant.image && images.length > 0) {
+      const idx = images.indexOf(activeVariant.image);
+      if (idx !== -1) {
+        setSelectedImg(idx);
+      }
+    }
+  }, [selectedColor, selectedSize, activeVariant]);
 
   // Extract custom specifications structure
   let specs: any = {};
@@ -280,12 +341,12 @@ export default function ProductDetailPage() {
             {/* Price */}
             <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
               <div className="flex items-end gap-3 flex-wrap">
-                <p className="text-3xl md:text-4xl font-black text-primary">{fmt(product.price)}</p>
-                {product.comparePrice && (
+                <p className="text-3xl md:text-4xl font-black text-primary">{fmt(displayPrice)}</p>
+                {displayComparePrice && (
                   <div className="mb-1">
-                    <p className="text-lg text-muted-foreground line-through">{fmt(product.comparePrice)}</p>
+                    <p className="text-lg text-muted-foreground line-through">{fmt(displayComparePrice)}</p>
                     <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs">
-                      {t(`وفر ${fmt(product.comparePrice - product.price)}`, `Save ${fmt(product.comparePrice - product.price)}`)}
+                      {t(`وفر ${fmt(displayComparePrice - displayPrice)}`, `Save ${fmt(displayComparePrice - displayPrice)}`)}
                     </Badge>
                   </div>
                 )}
@@ -309,56 +370,121 @@ export default function ProductDetailPage() {
 
             {/* Stock indicator */}
             <div className="flex items-center gap-2">
-              <div className={`size-2.5 rounded-full ${product.stock > 10 ? 'bg-green-500' : product.stock > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
+              <div className={`size-2.5 rounded-full ${displayStock > 10 ? 'bg-green-500' : displayStock > 0 ? 'bg-amber-500' : 'bg-red-500'}`} />
               <span className="text-sm font-medium">
-                {product.stock > 10 ? t('متوفر في المخزن', 'In Stock') :
-                  product.stock > 0 ? t(`متبقي ${product.stock} فقط!`, `Only ${product.stock} left!`) :
+                {displayStock > 10 ? t('متوفر في المخزن', 'In Stock') :
+                  displayStock > 0 ? t(`متبقي ${displayStock} فقط!`, `Only ${displayStock} left!`) :
                     t('غير متوفر', 'Out of Stock')}
               </span>
             </div>
 
-            {/* Color Variant Selector */}
-            {((specs.color1 && specs.color1.trim()) || (specs.color2 && specs.color2.trim())) && (
+            {/* Color Swatch Picker or Specification Fallback */}
+            {product.variants && product.variants.some((v: any) => v.name === 'اللون' || v.name === 'Color' || v.name === 'color') ? (
               <div className="space-y-2">
-                <span className="text-sm font-medium">{t('اللون:', 'Color:')} <span className="font-bold text-foreground">{selectedColor}</span></span>
-                <div className="flex gap-2">
-                  {[specs.color1, specs.color2].filter(Boolean).map((col: string) => (
-                    <button
-                      key={col}
-                      onClick={() => setSelectedColor(col)}
-                      className={`text-xs px-3.5 py-2 rounded-xl border transition-all font-bold ${
-                        selectedColor === col
-                          ? 'border-amber-500 bg-amber-500/10 text-amber-500'
-                          : 'border-border bg-transparent text-muted-foreground hover:border-border/80'
-                      }`}
-                    >
-                      {col}
-                    </button>
-                  ))}
+                <span className="text-sm font-medium">
+                  {t('اللون:', 'Color:')}{' '}
+                  <span className="font-bold text-foreground">
+                    {product.variants.find((v: any) => v.value === selectedColor)?.value || selectedColor}
+                  </span>
+                </span>
+                <div className="flex gap-2.5 flex-wrap">
+                  {product.variants
+                    .filter((v: any) => v.name === 'اللون' || v.name === 'Color' || v.name === 'color')
+                    .map((v: any) => {
+                      const isHex = v.value.startsWith('#');
+                      return (
+                        <button
+                          key={v.id}
+                          onClick={() => setSelectedColor(v.value)}
+                          className={`relative size-8 rounded-full border-2 transition-all flex items-center justify-center ${
+                            selectedColor === v.value
+                              ? 'border-amber-500 scale-110 shadow'
+                              : 'border-border hover:border-muted-foreground'
+                          }`}
+                          title={v.value}
+                        >
+                          {isHex ? (
+                            <span 
+                              className="size-full rounded-full border border-black/10" 
+                              style={{ backgroundColor: v.value }} 
+                            />
+                          ) : (
+                            <span className="text-[10px] font-bold px-2 truncate max-w-full">{v.value}</span>
+                          )}
+                          {selectedColor === v.value && (
+                            <span className="absolute size-2 bg-white rounded-full shadow" />
+                          )}
+                        </button>
+                      );
+                    })}
                 </div>
               </div>
+            ) : (
+              ((specs.color1 && specs.color1.trim()) || (specs.color2 && specs.color2.trim())) && (
+                <div className="space-y-2">
+                  <span className="text-sm font-medium">{t('اللون:', 'Color:')} <span className="font-bold text-foreground">{selectedColor}</span></span>
+                  <div className="flex gap-2">
+                    {[specs.color1, specs.color2].filter(Boolean).map((col: string) => (
+                      <button
+                        key={col}
+                        onClick={() => setSelectedColor(col)}
+                        className={`text-xs px-3.5 py-2 rounded-xl border transition-all font-bold ${
+                          selectedColor === col
+                            ? 'border-amber-500 bg-amber-500/10 text-amber-500'
+                            : 'border-border bg-transparent text-muted-foreground hover:border-border/80'
+                        }`}
+                      >
+                        {col}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
             )}
 
             {/* Size Variant Selector */}
-            {specs.sizes && specs.sizes.trim() && (
+            {product.variants && product.variants.some((v: any) => v.name === 'المقاس' || v.name === 'Size' || v.name === 'size') ? (
               <div className="space-y-2">
                 <span className="text-sm font-medium">{t('المقاس:', 'Size:')} <span className="font-bold text-foreground">{selectedSize}</span></span>
                 <div className="flex gap-2 flex-wrap">
-                  {specs.sizes.split(',').map((sz: string) => sz.trim()).filter(Boolean).map((sz: string) => (
-                    <button
-                      key={sz}
-                      onClick={() => setSelectedSize(sz)}
-                      className={`text-xs px-3.5 py-2 rounded-xl border transition-all font-bold ${
-                        selectedSize === sz
-                          ? 'border-amber-500 bg-amber-500/10 text-amber-500'
-                          : 'border-border bg-transparent text-muted-foreground hover:border-border/80'
-                      }`}
-                    >
-                      {sz}
-                    </button>
-                  ))}
+                  {product.variants
+                    .filter((v: any) => v.name === 'المقاس' || v.name === 'Size' || v.name === 'size')
+                    .map((v: any) => (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedSize(v.value)}
+                        className={`text-xs px-3.5 py-2 rounded-xl border transition-all font-bold ${
+                          selectedSize === v.value
+                            ? 'border-amber-500 bg-amber-500/10 text-amber-500'
+                            : 'border-border bg-transparent text-muted-foreground hover:border-border/80'
+                        }`}
+                      >
+                        {v.value}
+                      </button>
+                    ))}
                 </div>
               </div>
+            ) : (
+              specs.sizes && specs.sizes.trim() && (
+                <div className="space-y-2">
+                  <span className="text-sm font-medium">{t('المقاس:', 'Size:')} <span className="font-bold text-foreground">{selectedSize}</span></span>
+                  <div className="flex gap-2 flex-wrap">
+                    {specs.sizes.split(',').map((sz: string) => sz.trim()).filter(Boolean).map((sz: string) => (
+                      <button
+                        key={sz}
+                        onClick={() => setSelectedSize(sz)}
+                        className={`text-xs px-3.5 py-2 rounded-xl border transition-all font-bold ${
+                          selectedSize === sz
+                            ? 'border-amber-500 bg-amber-500/10 text-amber-500'
+                            : 'border-border bg-transparent text-muted-foreground hover:border-border/80'
+                        }`}
+                      >
+                        {sz}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )
             )}
 
             {/* Quantity + Actions */}
@@ -369,7 +495,7 @@ export default function ProductDetailPage() {
                   <button onClick={() => setQty(q => Math.max(1, q - 1))}
                     className="px-4 py-2.5 hover:bg-muted text-lg font-bold transition-colors">−</button>
                   <span className="px-5 py-2.5 font-bold min-w-[50px] text-center border-x border-border">{qty}</span>
-                  <button onClick={() => setQty(q => Math.min(product.stock, q + 1))}
+                  <button onClick={() => setQty(q => Math.min(displayStock, q + 1))}
                     className="px-4 py-2.5 hover:bg-muted text-lg font-bold transition-colors">+</button>
                 </div>
               </div>

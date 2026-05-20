@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   TrendingUp, Package, Star, ShieldCheck, ArrowLeft, ArrowRight,
   Wallet, AlertTriangle, ChevronUp, BarChart3, Clock, CheckCircle,
-  XCircle, Eye, Plus, Edit, Trash2, Trophy, Target, Zap, Wrench, Loader2
+  XCircle, Eye, Plus, Edit, Trash2, Trophy, Target, Zap, Wrench, Loader2, Upload, X, Layers
 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -542,7 +542,108 @@ function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t, isAr }
       if (Array.isArray(parsed) && parsed.length > 0) initialImages = parsed;
     } catch {}
   }
-  const [selectedImage, setSelectedImage] = useState(initialImages[0]);
+  const [selectedImage, setSelectedImage] = useState(initialImages[0] || '');
+  const [uploadedImages, setUploadedImages] = useState<string[]>(initialImages);
+  const [isUploading, setIsUploading] = useState(false);
+  const [variants, setVariants] = useState<any[]>([]);
+
+  // Asynchronous full product fetch to load variants & actual specs when editing
+  useEffect(() => {
+    if (!product?.id) return;
+    fetch(`/api/products/${product.id}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.product) {
+          const p = data.product;
+          setName(p.name || '');
+          setNameEn(p.nameEn || '');
+          setCategoryId(p.categoryId || '');
+          setPrice(p.price || 0);
+          setComparePrice(p.comparePrice || 0);
+          setDescription(p.description || '');
+          setSku(p.sku || '');
+          setStock(p.stock || 0);
+          setStatus(p.status || 'draft');
+          
+          if (p.images) {
+            try {
+              const imgs = typeof p.images === 'string' ? JSON.parse(p.images) : p.images;
+              if (Array.isArray(imgs) && imgs.length > 0) {
+                setUploadedImages(imgs);
+                setSelectedImage(imgs[0]);
+              }
+            } catch {}
+          }
+          if (p.specifications) {
+            try {
+              const specs = typeof p.specifications === 'string' ? JSON.parse(p.specifications) : p.specifications;
+              if (specs.bullets && Array.isArray(specs.bullets)) {
+                setBullet1(specs.bullets[0] || '');
+                setBullet2(specs.bullets[1] || '');
+                setBullet3(specs.bullets[2] || '');
+              }
+              setWeight(specs.weight || '0.85 كجم');
+              setDimensions(specs.dimensions || '40 × 30 × 10 سم');
+              setMaterial(specs.material || 'جلد طبيعي + بوليستر مبطن');
+              setOrigin(specs.origin || 'الجزائر');
+              setWarranty(specs.warranty || 'ضمان 12 شهراً ضد عيوب الصناعة');
+              setMetaTitle(specs.seoTitle || '');
+              setMetaDesc(specs.seoDescription || '');
+            } catch {}
+          }
+          
+          if (p.variants && Array.isArray(p.variants)) {
+            setVariants(p.variants.map((v: any) => ({
+              id: v.id,
+              name: v.name,
+              value: v.value,
+              sku: v.sku || '',
+              price: v.price !== null && v.price !== undefined ? String(v.price) : '',
+              comparePrice: v.comparePrice !== null && v.comparePrice !== undefined ? String(v.comparePrice) : '',
+              stock: String(v.stock || '0'),
+              image: v.image || '',
+              isActive: v.isActive !== undefined ? v.isActive : true,
+            })));
+          }
+        }
+      })
+      .catch(() => {});
+  }, [product?.id]);
+
+  useEffect(() => {
+    if (uploadedImages.length > 0 && (!selectedImage || !uploadedImages.includes(selectedImage))) {
+      setSelectedImage(uploadedImages[0]);
+    } else if (uploadedImages.length === 0) {
+      setSelectedImage('');
+    }
+  }, [uploadedImages, selectedImage]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    setIsUploading(true);
+    const files = Array.from(e.target.files);
+    const newImages = [...uploadedImages];
+    for (const file of files) {
+      const fd = new FormData();
+      fd.append('file', file);
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          body: fd,
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          newImages.push(data.url);
+        } else {
+          toast.error(`${isAr ? 'فشل رفع الصورة:' : 'Failed to upload image:'} ${data.error || ''}`);
+        }
+      } catch (err) {
+        toast.error(isAr ? 'خطأ أثناء رفع الصورة' : 'Error uploading image');
+      }
+    }
+    setUploadedImages(newImages);
+    setIsUploading(false);
+  };
 
   // Fetch Categories
   useEffect(() => {
@@ -595,11 +696,21 @@ function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t, isAr }
       categoryId,
       storeId,
       sellerId,
-      images: [selectedImage],
+      images: uploadedImages,
       shortDescription: JSON.stringify(shortDescArray),
       specifications: specData,
       seoTitle: metaTitle,
-      seoDescription: metaDesc
+      seoDescription: metaDesc,
+      variants: variants.map(v => ({
+        name: v.name,
+        value: v.value,
+        sku: v.sku || null,
+        price: v.price ? Number(v.price) : null,
+        comparePrice: v.comparePrice ? Number(v.comparePrice) : null,
+        stock: Number(v.stock || 0),
+        image: v.image || null,
+        isActive: true
+      }))
     };
 
     try {
@@ -781,19 +892,63 @@ function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t, isAr }
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">{isAr ? 'صور المنتج (اختر صورة نمط حياة احترافية)' : 'Product Images (Choose Lifestyle)'}</label>
-                <select
-                  value={selectedImage}
-                  onChange={(e) => setSelectedImage(e.target.value)}
-                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
-                >
-                  <option value="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80">حقيبة جلدية سوداء (ستايل كلاسيكي)</option>
-                  <option value="https://images.unsplash.com/photo-1622560480605-d83c853bc5c3?w=800&auto=format&fit=crop&q=80">حقيبة بني كلاسيكي (نمط حياة/مكتب)</option>
-                  <option value="https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&auto=format&fit=crop&q=80">حقيبة ظهر عصرية (نمط كاجوال)</option>
-                  <option value="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80">حذاء رياضي أحمر متوهج (سنيكرز)</option>
-                  <option value="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&auto=format&fit=crop&q=80">ساعة بيضاء فاخرة (عصرية)</option>
-                </select>
+              {/* Multi-Image Uploader UI */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-foreground">
+                  {isAr ? 'صور المنتج (يمكنك رفع عدة صور)' : 'Product Images (Upload Multiple)'}
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {uploadedImages.map((imgUrl, idx) => (
+                    <div key={idx} className={`relative group aspect-square rounded-xl overflow-hidden border-2 ${selectedImage === imgUrl ? 'border-amber-500' : 'border-border'} bg-muted`}>
+                      <img src={imgUrl} alt="Product" className="w-full h-full object-cover" />
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          const updated = uploadedImages.filter((_, i) => i !== idx);
+                          setUploadedImages(updated);
+                          if (selectedImage === imgUrl) {
+                            setSelectedImage(updated[0] || '');
+                          }
+                        }}
+                        className="absolute top-1.5 right-1.5 bg-black/70 hover:bg-red-500 text-white rounded-full p-1 transition-all opacity-0 group-hover:opacity-100"
+                      >
+                        <X className="size-3" />
+                      </button>
+                      <div className="absolute bottom-0 inset-x-0 bg-black/60 py-1 text-center opacity-0 group-hover:opacity-100 transition-all">
+                        <button 
+                          type="button" 
+                          onClick={() => setSelectedImage(imgUrl)}
+                          className="text-[10px] text-white font-bold hover:underline"
+                        >
+                          {selectedImage === imgUrl ? (isAr ? 'الصورة الرئيسية' : 'Primary') : (isAr ? 'تعيين كرئيسية' : 'Set Primary')}
+                        </button>
+                      </div>
+                      {selectedImage === imgUrl && (
+                        <span className="absolute top-1.5 left-1.5 bg-amber-500 text-slate-950 font-bold text-[9px] px-1.5 py-0.5 rounded-md shadow">
+                          {isAr ? 'الرئيسية' : 'Primary'}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                  <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-amber-500 hover:bg-amber-500/5 transition-all text-muted-foreground hover:text-amber-500">
+                    {isUploading ? (
+                      <Loader2 className="size-6 animate-spin" />
+                    ) : (
+                      <>
+                        <Upload className="size-6 mb-1" />
+                        <span className="text-[10px] font-bold text-center px-2">{isAr ? 'رفع صور جديدة' : 'Upload Images'}</span>
+                      </>
+                    )}
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept="image/png, image/jpeg, image/jpg" 
+                      className="hidden" 
+                      onChange={handleImageUpload} 
+                      disabled={isUploading}
+                    />
+                  </label>
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -933,38 +1088,233 @@ function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t, isAr }
 
           {/* TAB CONTENT: Variants */}
           {activeTab === 'variants' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">{isAr ? 'اللون الأساسي' : 'Primary Color'}</label>
-                  <input
-                    type="text"
-                    value={color1}
-                    onChange={(e) => setColor1(e.target.value)}
-                    className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
-                  />
+            <div className="space-y-5">
+              <div className="flex justify-between items-center bg-slate-50 dark:bg-slate-900/35 p-3.5 rounded-xl border border-border">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">{isAr ? 'إدارة متغيرات المنتج' : 'Product Variants'}</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">{isAr ? 'أضف ألواناً، مقاسات أو خصائص أخرى بأسعار ومخزون مخصص' : 'Add custom colors, sizes or other options with individual prices & stock'}</p>
                 </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">{isAr ? 'اللون البديل' : 'Secondary Color'}</label>
-                  <input
-                    type="text"
-                    value={color2}
-                    onChange={(e) => setColor2(e.target.value)}
-                    className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
-                  />
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-xs gap-1 border-amber-500/30 text-amber-500 hover:bg-amber-500/10"
+                    onClick={() => {
+                      setVariants([...variants, {
+                        name: isAr ? 'اللون' : 'Color',
+                        value: '#FF0000',
+                        sku: '',
+                        price: '',
+                        comparePrice: '',
+                        stock: '10',
+                        image: '',
+                        isActive: true
+                      }]);
+                    }}
+                  >
+                    <Plus className="size-3.5" /> {isAr ? 'إضافة لون' : 'Add Color'}
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="text-xs gap-1"
+                    onClick={() => {
+                      setVariants([...variants, {
+                        name: isAr ? 'المقاس' : 'Size',
+                        value: 'XL',
+                        sku: '',
+                        price: '',
+                        comparePrice: '',
+                        stock: '10',
+                        image: '',
+                        isActive: true
+                      }]);
+                    }}
+                  >
+                    <Plus className="size-3.5" /> {isAr ? 'إضافة مقاس' : 'Add Size'}
+                  </Button>
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">{isAr ? 'المقاسات المتاحة (مفصولة بفاصلة)' : 'Available Sizes (comma separated)'}</label>
-                <input
-                  type="text"
-                  value={sizes}
-                  onChange={(e) => setSizes(e.target.value)}
-                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
-                />
-              </div>
+              {variants.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-border rounded-xl">
+                  <Layers className="size-8 mx-auto mb-2 opacity-35" />
+                  <p className="text-xs">{isAr ? 'لا توجد متغيرات مضافة حالياً لهذا المنتج' : 'No variants added yet for this product'}</p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                  {variants.map((v, idx) => {
+                    const isColor = v.name === 'اللون' || v.name === 'Color' || v.name === 'color';
+                    return (
+                      <div key={idx} className="bg-slate-50/50 dark:bg-slate-900/10 p-3 rounded-xl border border-border space-y-3 relative">
+                        {/* Header of variant */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold bg-muted px-2 py-0.5 rounded text-muted-foreground">{isAr ? 'متغير' : 'Variant'} #{idx + 1}</span>
+                            <select
+                              value={v.name}
+                              onChange={(e) => {
+                                const updated = [...variants];
+                                updated[idx].name = e.target.value;
+                                if (e.target.value === 'اللون' || e.target.value === 'Color') {
+                                  updated[idx].value = '#ff0000';
+                                } else {
+                                  updated[idx].value = 'M';
+                                }
+                                setVariants(updated);
+                              }}
+                              className="bg-transparent border-0 text-xs font-bold text-foreground focus:ring-0 cursor-pointer p-0"
+                            >
+                              <option value={isAr ? 'اللون' : 'Color'}>{isAr ? 'اللون' : 'Color'}</option>
+                              <option value={isAr ? 'المقاس' : 'Size'}>{isAr ? 'المقاس' : 'Size'}</option>
+                              <option value={isAr ? 'خيار مخصص' : 'Custom Option'}>{isAr ? 'خيار مخصص' : 'Custom Option'}</option>
+                            </select>
+                          </div>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="size-6 text-destructive hover:bg-destructive/10 rounded-full"
+                            onClick={() => {
+                              setVariants(variants.filter((_, i) => i !== idx));
+                            }}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </div>
+
+                        {/* Content Inputs */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                          {/* Swatch or Text Input */}
+                          {isColor ? (
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'اختر اللون' : 'Choose Color'}</label>
+                              <div className="flex items-center gap-2 bg-background border border-border px-2 py-1 rounded-lg h-9">
+                                <input 
+                                  type="color" 
+                                  value={v.value.startsWith('#') ? v.value : '#ff0000'}
+                                  onChange={(e) => {
+                                    const updated = [...variants];
+                                    updated[idx].value = e.target.value;
+                                    setVariants(updated);
+                                  }}
+                                  className="size-5 rounded border border-border cursor-pointer p-0 bg-transparent shrink-0"
+                                />
+                                <input 
+                                  type="text" 
+                                  value={v.value}
+                                  onChange={(e) => {
+                                    const updated = [...variants];
+                                    updated[idx].value = e.target.value;
+                                    setVariants(updated);
+                                  }}
+                                  placeholder={isAr ? 'رمز اللون أو اسمه' : 'Color hex or name'}
+                                  className="bg-transparent border-0 text-xs text-foreground p-0 focus:ring-0 w-full min-w-0"
+                                />
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'القيمة (مثال: XL)' : 'Value (e.g., XL)'}</label>
+                              <input 
+                                type="text" 
+                                value={v.value}
+                                onChange={(e) => {
+                                  const updated = [...variants];
+                                  updated[idx].value = e.target.value;
+                                  setVariants(updated);
+                                }}
+                                className="w-full bg-background border border-border text-foreground px-2.5 py-1.5 rounded-lg text-xs"
+                              />
+                            </div>
+                          )}
+
+                          {/* Price */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'سعر مخصص (د.ج)' : 'Custom Price (DZD)'}</label>
+                            <input 
+                              type="number" 
+                              value={v.price}
+                              onChange={(e) => {
+                                const updated = [...variants];
+                                updated[idx].price = e.target.value;
+                                setVariants(updated);
+                              }}
+                              placeholder={isAr ? 'سعر افتراضي للمنتج' : 'Product default'}
+                              className="w-full bg-background border border-border text-foreground px-2.5 py-1.5 rounded-lg text-xs"
+                            />
+                          </div>
+
+                          {/* Slashed Price */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'سعر مشطوب مخصص (د.ج)' : 'Compare Price (DZD)'}</label>
+                            <input 
+                              type="number" 
+                              value={v.comparePrice}
+                              onChange={(e) => {
+                                const updated = [...variants];
+                                updated[idx].comparePrice = e.target.value;
+                                setVariants(updated);
+                              }}
+                              placeholder={isAr ? 'اختياري' : 'Optional'}
+                              className="w-full bg-background border border-border text-foreground px-2.5 py-1.5 rounded-lg text-xs"
+                            />
+                          </div>
+
+                          {/* Stock */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'المخزون المخصص' : 'Custom Stock'}</label>
+                            <input 
+                              type="number" 
+                              value={v.stock}
+                              onChange={(e) => {
+                                const updated = [...variants];
+                                updated[idx].stock = e.target.value;
+                                setVariants(updated);
+                              }}
+                              className="w-full bg-background border border-border text-foreground px-2.5 py-1.5 rounded-lg text-xs"
+                            />
+                          </div>
+
+                          {/* SKU */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'رمز SKU مخصص' : 'Custom SKU'}</label>
+                            <input 
+                              type="text" 
+                              value={v.sku}
+                              onChange={(e) => {
+                                const updated = [...variants];
+                                updated[idx].sku = e.target.value;
+                                setVariants(updated);
+                              }}
+                              placeholder="e.g. BAG-RED-XL"
+                              className="w-full bg-background border border-border text-foreground px-2.5 py-1.5 rounded-lg text-xs"
+                            />
+                          </div>
+
+                          {/* Image picker from uploaded images */}
+                          <div className="space-y-1">
+                            <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'صورة المتغير' : 'Variant Image'}</label>
+                            <select
+                              value={v.image}
+                              onChange={(e) => {
+                                const updated = [...variants];
+                                updated[idx].image = e.target.value;
+                                setVariants(updated);
+                              }}
+                              className="w-full bg-background border border-border text-foreground px-2 py-1.5 rounded-lg text-xs h-[31px]"
+                            >
+                              <option value="">{isAr ? 'الافتراضية للمنتج' : 'Default Product Image'}</option>
+                              {uploadedImages.map((img, i) => (
+                                <option key={i} value={img}>{isAr ? `الصورة #${i + 1}` : `Image #${i + 1}`}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

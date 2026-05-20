@@ -226,6 +226,7 @@ model ProductVariant {
   value       String                            // "أحمر", "XL"
   sku         String?
   price       Float?                            // Override product price if set
+  comparePrice Float?                           // Slashed price for variant
   stock       Int      @default(0)
   image       String?
   sortOrder   Int      @default(0)

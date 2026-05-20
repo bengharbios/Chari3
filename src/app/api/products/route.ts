@@ -57,8 +57,27 @@ export async function POST(request: Request) {
       },
     });
 
+    // Create associated variants if present
+    if (body.variants && Array.isArray(body.variants) && body.variants.length > 0) {
+      await db.productVariant.createMany({
+        data: body.variants.map((v: any, idx: number) => ({
+          productId: product.id,
+          name: v.name,
+          value: v.value,
+          sku: v.sku || null,
+          price: v.price !== undefined && v.price !== null ? parseFloat(v.price) : null,
+          comparePrice: v.comparePrice !== undefined && v.comparePrice !== null ? parseFloat(v.comparePrice) : null,
+          stock: parseInt(v.stock || '0', 10),
+          image: v.image || null,
+          sortOrder: v.sortOrder !== undefined && v.sortOrder !== null ? parseInt(v.sortOrder, 10) : idx,
+          isActive: v.isActive !== undefined ? !!v.isActive : true,
+        })),
+      });
+    }
+
     return NextResponse.json(product, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
+  } catch (error: any) {
+    console.error('[products-create] Error:', error);
+    return NextResponse.json({ error: 'Failed to create product', details: error.message }, { status: 500 });
   }
 }
