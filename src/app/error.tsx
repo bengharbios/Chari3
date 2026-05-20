@@ -16,6 +16,22 @@ export default function Error({
 
   useEffect(() => {
     console.error('[ErrorBoundary]', error);
+    // If it's a chunk loading error (common during redeployments), reload the page automatically to fetch the new manifest and chunks.
+    const isChunkError = 
+      error.name === 'ChunkLoadError' ||
+      error.message?.toLowerCase().includes('chunk') ||
+      error.message?.toLowerCase().includes('loading');
+
+    if (isChunkError) {
+      const now = Date.now();
+      const lastReload = sessionStorage.getItem('last-chunk-reload');
+      // Loop prevention: only reload if the last reload was more than 10 seconds ago
+      if (!lastReload || now - Number(lastReload) > 10000) {
+        sessionStorage.setItem('last-chunk-reload', String(now));
+        console.log('Chunk load error detected, triggering auto page reload...');
+        window.location.reload();
+      }
+    }
   }, [error]);
 
   return (
@@ -41,7 +57,10 @@ export default function Error({
         {/* Action buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <Button
-            onClick={() => reset()}
+            onClick={() => {
+              reset();
+              window.location.reload();
+            }}
             className="gradient-navy text-white gap-2 px-6 h-11"
           >
             <RefreshCw className="h-4 w-4" />
