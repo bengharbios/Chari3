@@ -6,7 +6,7 @@ import {
   ArrowLeft, ArrowRight, ChevronRight, ChevronLeft, Package,
   MessageCircle, ThumbsUp, Award
 } from 'lucide-react';
-import { useAppStore, useAuthStore } from '@/lib/store';
+import { useAppStore, useAuthStore, useCartStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -179,6 +179,16 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (!isAuthenticated) { setCurrentPage('login'); return; }
+    
+    const variantName = [selectedColor, selectedSize].filter(Boolean).join(' / ');
+    const displayName = isAr ? product.name : (product.nameEn || product.name);
+    const cartProduct = {
+      ...product,
+      name: variantName ? `${displayName} (${variantName})` : displayName,
+      images: images.length > 0 ? images : ['/images/placeholder.jpg'],
+    };
+    
+    useCartStore.getState().addItem(cartProduct as any, qty);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
   };

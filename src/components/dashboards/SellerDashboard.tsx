@@ -135,7 +135,7 @@ export default function SellerDashboard() {
       />
     );
   }
-  if (currentPage === 'seller-orders' || currentPage === 'supplier-orders' || currentPage === 'store-orders') return <SellerOrdersTab data={data} isLoading={isLoading} t={t} isAr={isAr} />;
+  if (currentPage === 'seller-orders' || currentPage === 'supplier-orders' || currentPage === 'store-orders') return <SellerOrdersTab data={data} isLoading={isLoading} t={t} isAr={isAr} onRefresh={refreshData} />;
 
   if (isLoading) return (
     <div className="space-y-4 animate-pulse">
@@ -990,42 +990,233 @@ function ProductVariantsPreview({ variants, isAr, t }: { variants: any; isAr: bo
 }
 
 // ── Orders sub-page ────────────────────────────────────────────────────────────
-function SellerOrdersTab({ data, isLoading, t, isAr }: { data: DashboardData | null; isLoading: boolean; t: (a: string, e: string) => string; isAr: boolean }) {
+function SellerOrdersTab({ data, isLoading, t, isAr, onRefresh }: { data: DashboardData | null; isLoading: boolean; t: (a: string, e: string) => string; isAr: boolean; onRefresh: () => void }) {
   const DZD2 = (n: number) => `${n.toLocaleString('ar-DZ')} د.ج`;
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  
+  const handleStatusChange = async (orderId: string, status: string) => {
+    setUpdatingId(orderId);
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, status }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(t('تم تحديث حالة الطلب بنجاح', 'Order status updated successfully'));
+      onRefresh();
+    } catch {
+      toast.error(t('فشل تحديث حالة الطلب', 'Failed to update order status'));
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
+    pending: { label: t('معلق', 'Pending'), color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', icon: Package },
+    confirmed: { label: t('مؤكد', 'Confirmed'), color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400', icon: ClipboardCheck },
+    shipped: { label: t('تم الشحن', 'Shipped'), color: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400', icon: Truck },
+    delivered: { label: t('تم التوصيل', 'Delivered'), color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400', icon: CheckSquare },
+    cancelled: { label: t('ملغي', 'Cancelled'), color: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', icon: X },
+  };
+
   return (
-    <div className="space-y-5">
-      <h1 className="text-xl font-bold">{t('إدارة الطلبات', 'Orders Management')}</h1>
-      <Card>
-        <CardContent className="pt-4">
-          {isLoading ? <div className="h-48 animate-pulse bg-muted rounded-xl" /> : (
-            <div className="divide-y divide-border">
-              {(data?.recentOrders ?? []).length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">
-                  <Package className="size-10 mx-auto mb-2 opacity-30" />
-                  <p>{t('لا توجد طلبات بعد', 'No orders yet')}</p>
-                </div>
-              ) : (data?.recentOrders ?? []).map((item, i) => {
-                const st = STATUS_CONFIG[item.order.status] ?? STATUS_CONFIG.pending;
-                const SIcon = st.icon;
-                return (
-                  <div key={i} className="py-3.5 flex items-center justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-medium">{item.product.name}</p>
-                      <p className="text-xs text-muted-foreground">#{item.order.orderNumber}</p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-black">{t('إدارة الطلبات الواردة', 'Incoming Orders Management')}</h1>
+        <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading}>
+          {t('تحديث', 'Refresh')}
+        </Button>
+      </div>
+
+      {isLoading ? (
+        <div className="h-64 animate-pulse bg-muted rounded-2xl" />
+      ) : (
+        <div className="space-y-4">
+          {(data?.recentOrders ?? []).length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                <Package className="size-12 mx-auto mb-3 opacity-25" />
+                <p className="font-bold">{t('لا توجد طلبات واردة بعد', 'No incoming orders yet')}</p>
+                <p className="text-xs max-w-xs mx-auto mt-1">{t('بمجرد قيام العملاء بشراء منتجاتك، ستظهر طلباتهم هنا بالتفصيل.', 'Once customers buy your products, their orders will appear here in detail.')}</p>
+              </CardContent>
+            </Card>
+          ) : (
+            (data?.recentOrders ?? []).map((item, i) => {
+              const orderId = item.order.id;
+              const status = item.order.status;
+              const st = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
+              const SIcon = st.icon;
+              
+              // Parse shipping address
+              let addressDetails: any = {};
+              try {
+                addressDetails = typeof item.order.address === 'string' 
+                  ? JSON.parse(item.order.address) 
+                  : item.order.address || {};
+              } catch {}
+
+              const buyerName = item.order.buyer?.name || addressDetails.fullName || t('عميل زائر', 'Guest Customer');
+              const buyerPhone = item.order.buyer?.phone || addressDetails.phone || t('غير متوفر', 'N/A');
+              const fullAddress = `${addressDetails.street || ''}, ${addressDetails.city || ''}`;
+
+              return (
+                <Card key={i} className="overflow-hidden border border-primary/10 hover:border-primary/20 transition-all shadow-md">
+                  <div className="p-4 bg-primary/5 border-b border-border flex items-center justify-between flex-wrap gap-2">
+                    <div className="space-y-0.5">
+                      <span className="text-xs text-muted-foreground font-bold">{t('رقم الطلب', 'Order No.')}</span>
+                      <p className="text-sm font-mono font-bold text-foreground">#{item.order.orderNumber}</p>
                     </div>
+                    
                     <div className="flex items-center gap-3">
-                      <span className={`text-xs px-2 py-1 rounded-full flex items-center gap-1 ${st.color}`}>
-                        <SIcon className="size-3" />{st.label}
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(item.order.createdAt).toLocaleDateString(isAr ? 'ar-DZ' : 'en-US', {
+                          year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })}
                       </span>
-                      <span className="font-bold text-sm">{DZD2(item.total)}</span>
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-bold flex items-center gap-1 ${st.color}`}>
+                        <SIcon className="size-3" />
+                        {st.label}
+                      </span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
+
+                  <CardContent className="p-5 space-y-4">
+                    {/* Item row */}
+                    <div className="flex items-start gap-4 pb-4 border-b border-border/60">
+                      <div className="size-16 rounded-xl bg-muted border border-border flex items-center justify-center font-bold text-2xl">📦</div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-black text-sm text-foreground truncate">{item.product.name}</h4>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t('الكمية: ', 'Qty: ')}<span className="font-bold text-foreground">{item.quantity}</span>
+                          {' • '}{t('سعر الوحدة: ', 'Unit Price: ')}<span className="font-bold text-foreground">{DZD2(item.product.price)}</span>
+                        </p>
+                      </div>
+                      <div className="text-end">
+                        <span className="text-xs text-muted-foreground block">{t('إجمالي العنصر', 'Item Total')}</span>
+                        <span className="font-black text-base text-primary block mt-0.5">{DZD2(item.total)}</span>
+                      </div>
+                    </div>
+
+                    {/* Customer info */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-cairo">
+                      <div className="space-y-2">
+                        <p className="text-xs font-bold text-muted-foreground uppercase">{t('بيانات المشتري', 'Customer Details')}</p>
+                        <div className="p-3 bg-muted/40 rounded-xl space-y-1.5 text-xs text-start">
+                          <div>
+                            <span className="text-muted-foreground">{t('الاسم: ', 'Name: ')}</span>
+                            <span className="font-bold text-foreground">{buyerName}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">{t('الهاتف: ', 'Phone: ')}</span>
+                            <a href={`tel:${buyerPhone}`} className="font-bold text-primary hover:underline">{buyerPhone}</a>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <p className="text-xs font-bold text-muted-foreground uppercase">{t('عنوان الشحن والدفع', 'Shipping & Payment')}</p>
+                        <div className="p-3 bg-muted/40 rounded-xl space-y-1.5 text-xs text-start">
+                          <div>
+                            <span className="text-muted-foreground">{t('العنوان: ', 'Address: ')}</span>
+                            <span className="font-bold text-foreground">{fullAddress}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">{t('طريقة الدفع: ', 'Payment: ')}</span>
+                            <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                              {item.order.paymentMethod === 'cod' ? t('الدفع عند الاستلام (COD)', 'Cash on Delivery') : item.order.paymentMethod}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action buttons based on status */}
+                    <div className="pt-2 flex items-center justify-end gap-2 flex-wrap border-t border-border/40">
+                      {updatingId === orderId ? (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-semibold">
+                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                          <span>{t('جاري تحديث الحالة...', 'Updating status...')}</span>
+                        </div>
+                      ) : (
+                        <>
+                          {status === 'pending' && (
+                            <>
+                              <Button 
+                                size="sm" 
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl"
+                                onClick={() => handleStatusChange(orderId, 'confirmed')}
+                              >
+                                {t('تأكيد الطلب', 'Confirm Order')}
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="destructive" 
+                                className="rounded-xl font-bold"
+                                onClick={() => handleStatusChange(orderId, 'cancelled')}
+                              >
+                                {t('إلغاء الطلب', 'Cancel Order')}
+                              </Button>
+                            </>
+                          )}
+                          {status === 'confirmed' && (
+                            <>
+                              <Button 
+                                size="sm" 
+                                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl"
+                                onClick={() => handleStatusChange(orderId, 'shipped')}
+                              >
+                                {t('شحن الطلب', 'Ship Order')}
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="destructive" 
+                                className="rounded-xl font-bold"
+                                onClick={() => handleStatusChange(orderId, 'cancelled')}
+                              >
+                                {t('إلغاء الطلب', 'Cancel Order')}
+                              </Button>
+                            </>
+                          )}
+                          {status === 'shipped' && (
+                            <>
+                              <Button 
+                                size="sm" 
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl"
+                                onClick={() => handleStatusChange(orderId, 'delivered')}
+                              >
+                                {t('تأكيد التوصيل', 'Mark Delivered')}
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="destructive" 
+                                className="rounded-xl font-bold"
+                                onClick={() => handleStatusChange(orderId, 'cancelled')}
+                              >
+                                {t('إلغاء الطلب', 'Cancel Order')}
+                              </Button>
+                            </>
+                          )}
+                          {status === 'delivered' && (
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1.5 rounded-lg">
+                              ✓ {t('تم اكتمال وتوصيل هذا الطلب بنجاح', 'This order has been completed successfully')}
+                            </span>
+                          )}
+                          {status === 'cancelled' && (
+                            <span className="text-xs text-red-600 dark:text-red-400 font-bold bg-red-50 dark:bg-red-950/20 px-3 py-1.5 rounded-lg">
+                              ✗ {t('تم إلغاء هذا الطلب', 'This order has been cancelled')}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
           )}
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 }

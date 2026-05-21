@@ -422,6 +422,7 @@ export interface CartItem {
 interface CartState {
   items: CartItem[];
   itemCount: number;
+  isCartOpen: boolean;
 
   addItem: (product: Product, quantity?: number) => void;
   removeItem: (productId: string) => void;
@@ -429,11 +430,13 @@ interface CartState {
   clearCart: () => void;
   getTotal: () => number;
   getSubtotal: () => number;
+  setCartOpen: (open: boolean) => void;
 }
 
 export const useCartStore = create<CartState>()((set, get) => ({
   items: [],
   itemCount: 0,
+  isCartOpen: false,
 
   addItem: (product, quantity = 1) => {
     const items = [...get().items];
@@ -443,7 +446,7 @@ export const useCartStore = create<CartState>()((set, get) => ({
     } else {
       items.push({ product, quantity });
     }
-    set({ items, itemCount: items.reduce((sum, i) => sum + i.quantity, 0) });
+    set({ items, itemCount: items.reduce((sum, i) => sum + i.quantity, 0), isCartOpen: true });
   },
 
   removeItem: (productId) => {
@@ -472,4 +475,6 @@ export const useCartStore = create<CartState>()((set, get) => ({
     const shipping = subtotal > 200 ? 0 : 25;
     return subtotal + shipping;
   },
+
+  setCartOpen: (isCartOpen) => set({ isCartOpen }),
 }));

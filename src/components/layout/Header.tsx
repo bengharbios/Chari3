@@ -5,8 +5,9 @@ import { useAppStore, useAuthStore, useCartStore } from '@/lib/store';
 import {
   Search, ShoppingCart, Moon, Sun, Globe,
   Menu, X, ChevronDown, User, LogOut, Settings,
-  ClipboardCheck
+  ClipboardCheck, Trash2, Plus, Minus, Loader2, CheckSquare
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -33,9 +34,95 @@ const rolePages: Record<string, PageType> = {
 export default function Header() {
   const { locale, setLocale, theme, setTheme, toggleMobileMenu, setSidebarOpen, isSidebarOpen } = useAppStore();
   const { user, isAuthenticated, logout } = useAuthStore();
-  const { itemCount } = useCartStore();
+  const {
+    itemCount,
+    items,
+    updateQuantity,
+    removeItem,
+    getSubtotal,
+    getTotal,
+    clearCart,
+    isCartOpen,
+    setCartOpen
+  } = useCartStore();
+
   const [scrolled, setScrolled] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [checkoutSuccess, setCheckoutSuccess] = useState<string | null>(null);
+
+  // Form states
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [note, setNote] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      setFullName(user.name || '');
+      setPhone(user.phone || '');
+    }
+  }, [user]);
+
+  const handleCheckout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) {
+      toast.error(t('الرجاء تسجيل الدخول أولاً للطلب', 'Please sign in first to place an order'));
+      return;
+    }
+    if (!fullName || !phone || !address || !city) {
+      toast.error(t('الرجاء ملء جميع الحقول المطلوبة', 'Please fill all required fields'));
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const orderItems = items.map((item) => ({
+        productId: item.product.id,
+        productName: item.product.name,
+        productImage: item.product.images[0] || '',
+        price: item.product.price,
+        quantity: item.quantity,
+        total: item.product.price * item.quantity,
+      }));
+
+      const shippingCost = getSubtotal() > 200 ? 0 : 25;
+
+      const res = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          buyerId: user.id,
+          paymentMethod: 'cod',
+          subtotal: getSubtotal(),
+          shippingCost,
+          tax: 0,
+          discount: 0,
+          total: getTotal(),
+          address: {
+            fullName,
+            phone,
+            street: address,
+            city,
+            country: 'DZ',
+          },
+          shippingMethod: 'standard',
+          items: orderItems,
+        }),
+      });
+
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setCheckoutSuccess(data.orderNumber);
+      clearCart();
+      toast.success(t('تم تسجيل طلبك بنجاح!', 'Order placed successfully!'));
+    } catch (err) {
+      toast.error(t('فشل إرسال الطلب. الرجاء المحاولة مرة أخرى', 'Failed to place order. Please try again.'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -125,8 +212,13 @@ export default function Header() {
             {isAuthenticated && <NotificationPanel />}
 
             {/* Cart */}
-            {user?.role === 'buyer' && (
-              <Button variant="ghost" size="icon" className="relative">
+            {(!user || user?.role === 'buyer') && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                onClick={() => setCartOpen(true)}
+              >
                 <ShoppingCart className="h-5 w-5" />
                 {itemCount > 0 && (
                   <Badge className="absolute -top-1 -end-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] bg-brand text-navy border-2 border-background">
@@ -216,8 +308,292 @@ export default function Header() {
         )}
       </div>
     </header>
-      {/* Mobile Sidebar Drawer */}
-      
-    </>
-  );
+
+    {/* Shopping Cart & COD Checkout Drawer */}
+    {isCartOpen && (
+      <div 
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] transition-opacity duration-300"
+        onClick={() => setCartOpen(false)}
+      />
+    )}
+    
+    <div 
+      className={`fixed top-0 bottom-0 ${isRTL ? 'left-0 border-r' : 'right-0 border-l'} w-full max-w-md bg-background/95 backdrop-blur-md z-[101] shadow-2xl border-primary/20 flex flex-col transition-transform duration-300 ease-in-out ${
+        isCartOpen ? 'translate-x-0' : (isRTL ? '-translate-x-full' : 'translate-x-full')
+      }`}
+    >
+      {/* Drawer Header */}
+      <div className="p-4 border-b border-border flex items-center justify-between">
+        <div className="flex items-center gap-2 font-black text-lg">
+          <ShoppingCart className="h-5 w-5 text-primary animate-pulse" />
+          <span>{t('سلة التسوق', 'Shopping Cart')}</span>
+          <Badge variant="secondary" className="ms-2">{itemCount}</Badge>
+        </div>
+        <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setCartOpen(false)}>
+          <X className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* Drawer Body */}
+      <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-6">
+        {checkoutSuccess ? (
+          /* Success Screen */
+          <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4 animate-fade-in">
+            <div className="size-20 rounded-full bg-green-500/10 border-4 border-green-500/30 flex items-center justify-center text-green-500 text-4xl animate-bounce">
+              ✓
+            </div>
+            <h3 className="text-2xl font-black text-foreground font-cairo">
+              {t('شكراً لطلبك!', 'Thank you for your order!')}
+            </h3>
+            <p className="text-muted-foreground text-sm">
+              {t(
+                'تم تسجيل طلبك بنجاح وسوف يقوم التاجر بالتواصل معك لتأكيد الشحن.',
+                'Your order has been placed successfully. The seller will contact you to confirm shipping.'
+              )}
+            </p>
+            <div className="p-4 bg-muted/50 border border-border rounded-2xl w-full text-center">
+              <span className="text-xs text-muted-foreground block">{t('رقم الطلب المرجعي', 'Order Reference Number')}</span>
+              <span className="text-xl font-mono font-bold text-primary block mt-1">#{checkoutSuccess}</span>
+            </div>
+            <div className="w-full pt-4 space-y-2">
+              <Button
+                variant="default"
+                className="w-full gradient-brand text-navy font-bold h-11 rounded-xl shadow-md shadow-brand/20 hover:scale-[1.02] transition-all"
+                onClick={() => {
+                  setCheckoutSuccess(null);
+                  setCartOpen(false);
+                  useAppStore.getState().setCurrentPage('buyer');
+                }}
+              >
+                {t('تتبع طلبك في لوحة التحكم', 'Track Order in Dashboard')}
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => {
+                  setCheckoutSuccess(null);
+                  setCartOpen(false);
+                }}
+              >
+                {t('الاستمرار في التسوق', 'Continue Shopping')}
+              </Button>
+            </div>
+          </div>
+        ) : items.length === 0 ? (
+          /* Empty Cart */
+          <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4 text-muted-foreground">
+            <div className="size-16 rounded-full bg-muted flex items-center justify-center">
+              <ShoppingCart className="h-8 w-8" />
+            </div>
+            <div>
+              <p className="font-bold text-lg text-foreground">{t('سلتك فارغة', 'Your cart is empty')}</p>
+              <p className="text-xs max-w-[240px] mx-auto mt-1">
+                {t('تصفح المتجر وأضف بعض المنتجات الرائعة للبدء في التسوق!', 'Browse the store and add some great products to start shopping!')}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              className="mt-2"
+              onClick={() => {
+                setCartOpen(false);
+                useAppStore.getState().setCurrentPage('home');
+              }}
+            >
+              {t('تسوق الآن', 'Shop Now')}
+            </Button>
+          </div>
+        ) : (
+          /* Items + Form */
+          <>
+            {/* Items List */}
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('المنتجات المضافة', 'Added Products')}</p>
+              {items.map((item) => (
+                <div key={item.product.id} className="flex gap-3 p-3 bg-muted/30 border border-border rounded-xl">
+                  <img 
+                    src={item.product.images[0] || '/images/placeholder.jpg'} 
+                    alt={item.product.name} 
+                    className="size-16 object-cover rounded-lg border border-border shrink-0" 
+                  />
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold truncate text-foreground leading-tight">
+                        {item.product.name}
+                      </h4>
+                      <span className="text-[10px] text-muted-foreground">
+                        {t('سعر الوحدة: ', 'Unit: ')}{item.product.price} DZD
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-1">
+                      <div className="flex items-center border border-border rounded-lg overflow-hidden bg-background">
+                        <button 
+                          className="p-1 hover:bg-muted transition-colors"
+                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="px-2.5 font-bold text-xs min-w-[24px] text-center">
+                          {item.quantity}
+                        </span>
+                        <button 
+                          className="p-1 hover:bg-muted transition-colors"
+                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 text-destructive hover:bg-destructive/10"
+                        onClick={() => removeItem(item.product.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Checkout Form */}
+            <div className="space-y-4 border-t border-border pt-4">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{t('تفاصيل الشحن والدفع عند الاستلام (COD)', 'Shipping & Cash on Delivery Details')}</p>
+              
+              {!isAuthenticated ? (
+                /* Guest Banner */
+                <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center space-y-3">
+                  <p className="text-sm font-semibold text-amber-500 font-cairo">
+                    {t('الرجاء تسجيل الدخول لإتمام عملية الشراء', 'Please sign in to complete your purchase')}
+                  </p>
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    className="gradient-brand text-navy font-bold w-full"
+                    onClick={() => {
+                      setCartOpen(false);
+                      useAppStore.getState().setCurrentPage('login');
+                    }}
+                  >
+                    {t('تسجيل الدخول الآن', 'Sign In Now')}
+                  </Button>
+                </div>
+              ) : (
+                /* Auth COD Form */
+                <form onSubmit={handleCheckout} className="space-y-3 text-start">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-muted-foreground">{t('الاسم الكامل *', 'Full Name *')}</label>
+                    <Input 
+                      placeholder={t('أحمد محمد', 'Ahmed Mohamed')} 
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      required
+                      className="h-10 rounded-xl"
+                    />
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-muted-foreground">{t('رقم الهاتف *', 'Phone Number *')}</label>
+                    <Input 
+                      placeholder="05XXXXXXXX" 
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                      className="h-10 rounded-xl"
+                    />
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-muted-foreground">{t('العنوان الكامل بالتفصيل *', 'Detailed Shipping Address *')}</label>
+                    <Input 
+                      placeholder={t('حي 20 مسكن، الطابق الثاني شقة 4', '20 Dwellings, 2nd floor apt 4')} 
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      required
+                      className="h-10 rounded-xl"
+                    />
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-muted-foreground">{t('المدينة / الولاية *', 'City / Province *')}</label>
+                    <Input 
+                      placeholder={t('الجزائر العاصمة', 'Algiers')} 
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      required
+                      className="h-10 rounded-xl"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-muted-foreground">{t('ملاحظات إضافية (اختياري)', 'Additional Notes (Optional)')}</label>
+                    <textarea 
+                      placeholder={t('اتصل بي قبل التوصيل...', 'Call me before delivery...')} 
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      className="w-full text-sm p-3 rounded-xl border border-input bg-background focus:outline-none focus:ring-1 focus:ring-ring min-h-[60px]"
+                    />
+                  </div>
+
+                  {/* Shipping Method Indicator */}
+                  <div className="p-3 bg-muted/40 border border-border rounded-xl flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="size-2 bg-emerald-500 rounded-full animate-ping" />
+                      <span className="text-xs font-semibold">{t('طريقة التوصيل والدفع', 'Shipping & Payment')}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground font-bold">
+                      {t('شحن قياسي - الدفع عند الاستلام', 'Standard - COD')}
+                    </span>
+                  </div>
+                </form>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Drawer Footer */}
+      {!checkoutSuccess && items.length > 0 && (
+        <div className="p-4 border-t border-border bg-muted/10 space-y-4">
+          <div className="space-y-1.5 text-sm">
+            <div className="flex justify-between text-muted-foreground text-xs">
+              <span>{t('المجموع الفرعي', 'Subtotal')}</span>
+              <span>{getSubtotal()} DZD</span>
+            </div>
+            <div className="flex justify-between text-muted-foreground text-xs">
+              <span>{t('تكلفة الشحن', 'Shipping Cost')}</span>
+              <span>{getSubtotal() > 200 ? t('مجاني', 'Free') : '25 DZD'}</span>
+            </div>
+            <div className="flex justify-between text-foreground font-black border-t border-border/60 pt-1.5">
+              <span>{t('المجموع الإجمالي', 'Total')}</span>
+              <span>{getTotal()} DZD</span>
+            </div>
+          </div>
+
+          {isAuthenticated && (
+            <Button
+              disabled={isSubmitting}
+              className="w-full gradient-brand text-navy font-bold h-11 rounded-xl shadow-lg shadow-brand/10 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+              onClick={handleCheckout}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{t('جاري إرسال الطلب...', 'Submitting Order...')}</span>
+                </>
+              ) : (
+                <>
+                  <CheckSquare className="h-4 w-4" />
+                  <span>{t('تأكيد الطلب والدفع عند الاستلام', 'Confirm Order (COD)')}</span>
+                </>
+              )}
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
+  </>
+);
 }

@@ -1,11 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
+import { toast } from 'sonner';
 import {
-  MOCK_ANALYTICS,
-  MOCK_USERS,
-  MOCK_STORES,
-  MOCK_SELLERS,
   formatCurrency,
   formatNumber,
   getOrderStatusColor,
@@ -43,6 +41,12 @@ import {
   BarChart3,
   Clock,
   Activity,
+  Loader2,
+  AlertCircle,
+  ShieldCheck,
+  ShieldAlert,
+  UserX,
+  UserCheck
 } from 'lucide-react';
 import type { Locale, UserRole } from '@/types';
 
@@ -60,11 +64,11 @@ const getRoleLabel = (locale: Locale, role: UserRole): string => {
   const labels: Record<UserRole, { ar: string; en: string }> = {
     admin: { ar: 'مدير النظام', en: 'Admin' },
     store_manager: { ar: 'مدير المتجر', en: 'Store Manager' },
-    seller: { ar: 'بائع', en: 'Seller' },
+    seller: { ar: 'بائع مستقل', en: 'Seller' },
     logistics: { ar: 'مندوب توصيل', en: 'Courier' },
     buyer: { ar: 'مشتري', en: 'Buyer' },
   };
-  return locale === 'ar' ? labels[role].ar : labels[role].en;
+  return labels[role] ? (locale === 'ar' ? labels[role].ar : labels[role].en) : role;
 };
 
 const getRoleColor = (role: UserRole): string => {
@@ -75,7 +79,7 @@ const getRoleColor = (role: UserRole): string => {
     logistics: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400',
     buyer: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
   };
-  return colors[role];
+  return colors[role] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
 };
 
 // ============================================
@@ -116,6 +120,176 @@ export default function AdminDashboard() {
   const { locale } = useAppStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [togglingUserId, setTogglingUserId] = useState<string | null>(null);
+
+  const fetchAdminData = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/admin/dashboard');
+      if (!res.ok) throw new Error('Failed to fetch admin metrics');
+      const d = await res.json();
+      if (d.success) {
+        setDashboardData(d);
+      } else {
+        throw new Error(d.error || 'Failed to parse admin metrics');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error occurred while loading admin portal');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAdminData();
+  }, []);
+
+  const handleStatusChange = async (orderId: string, status: string) => {
+    setUpdatingOrderId(orderId);
+    try {
+      const res = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: orderId, status }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(t(locale, 'تم تحديث حالة الطلب بنجاح', 'Order status updated successfully'));
+      
+      // Update local state instead of full page reloading for instant feedback
+      setDashboardData((prev: any) => {
+        if (!prev) return prev;
+        const updatedRecent = prev.analytics.recentOrders.map((o: any) => {
+          if (o.id === orderId) {
+            return { ...o, status };
+          }
+          return o;
+        });
+
+        // Recalculate orders status stats
+        const updatedStatusMap = new Map();
+        updatedRecent.forEach((o: any) => {
+          updatedStatusMap.set(o.status, (updatedStatusMap.get(o.status) || 0) + 1);
+        });
+
+        const allStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+        const updatedStatusList = allStatuses.map((st) => ({
+          status: st,
+          count: updatedStatusMap.get(st) || 0,
+        }));
+
+        return {
+          ...prev,
+          analytics: {
+            ...prev.analytics,
+            recentOrders: updatedRecent,
+            ordersByStatus: updatedStatusList,
+          }
+        };
+      });
+
+      // Silently refresh in background
+      const refreshRes = await fetch('/api/admin/dashboard');
+      if (refreshRes.ok) {
+        const d = await refreshRes.json();
+        if (d.success) setDashboardData(d);
+      }
+    } catch {
+      toast.error(t(locale, 'فشل تحديث حالة الطلب', 'Failed to update order status'));
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
+  const handleUserToggleActive = async (userId: string, currentActive: boolean) => {
+    setTogglingUserId(userId);
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId, isActive: !currentActive }),
+      });
+      if (!res.ok) throw new Error();
+      
+      toast.success(
+        currentActive
+          ? t(locale, 'تم تعليق حساب المستخدم بنجاح', 'User account suspended successfully')
+          : t(locale, 'تم تفعيل حساب المستخدم بنجاح', 'User account activated successfully')
+      );
+
+      // Fetch fresh data
+      const refreshRes = await fetch('/api/admin/dashboard');
+      if (refreshRes.ok) {
+        const d = await refreshRes.json();
+        if (d.success) setDashboardData(d);
+      }
+    } catch {
+      toast.error(t(locale, 'فشل تعديل حالة حساب المستخدم', 'Failed to change user account status'));
+    } finally {
+      setTogglingUserId(null);
+    }
+  };
+
+  const handleUserToggleVerify = async (userId: string, currentVerified: boolean) => {
+    setTogglingUserId(userId);
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId, isVerified: !currentVerified }),
+      });
+      if (!res.ok) throw new Error();
+
+      toast.success(
+        currentVerified
+          ? t(locale, 'تم إزالة التوثيق من البائع بنجاح', 'Verification removed from merchant successfully')
+          : t(locale, 'تم توثيق البائع بنجاح في المنصة', 'Merchant successfully verified on the platform')
+      );
+
+      // Fetch fresh data
+      const refreshRes = await fetch('/api/admin/dashboard');
+      if (refreshRes.ok) {
+        const d = await refreshRes.json();
+        if (d.success) setDashboardData(d);
+      }
+    } catch {
+      toast.error(t(locale, 'فشل تعديل حالة توثيق البائع', 'Failed to edit merchant verification status'));
+    } finally {
+      setTogglingUserId(null);
+    }
+  };
+
+  if (isLoading && !dashboardData) {
+    return (
+      <div className="h-[80vh] w-full flex flex-col items-center justify-center space-y-4">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <p className="text-sm font-bold text-muted-foreground">
+          {t(locale, 'جاري جلب إحصائيات المنصة والعمليات في الوقت الفعلي...', 'Fetching platform aggregates and real-time operations...')}
+        </p>
+      </div>
+    );
+  }
+
+  if (error || !dashboardData) {
+    return (
+      <div className="h-[80vh] w-full flex flex-col items-center justify-center space-y-4 p-6">
+        <AlertCircle className="h-12 w-12 text-destructive" />
+        <h3 className="text-lg font-black">{t(locale, 'عذراً، فشل تحميل البيانات', 'Sorry, failed to load data')}</h3>
+        <p className="text-sm text-muted-foreground text-center max-w-sm">
+          {error || t(locale, 'يرجى التحقق من إعدادات الاتصال وحالة خادم قاعدة البيانات.', 'Please check connection settings and database status.')}
+        </p>
+        <Button onClick={fetchAdminData} variant="outline" className="mt-2 font-bold">
+          {t(locale, 'إعادة المحاولة', 'Try Again')}
+        </Button>
+      </div>
+    );
+  }
+
+  const { analytics, stats, users } = dashboardData;
   const {
     totalRevenue,
     totalOrders,
@@ -129,28 +303,22 @@ export default function AdminDashboard() {
     ordersByStatus,
     topProducts,
     recentOrders,
-  } = MOCK_ANALYTICS;
+  } = analytics;
 
-  const maxRevenue = Math.max(...revenueByMonth.map((m) => m.revenue));
-  const totalStatusOrders = ordersByStatus.reduce((sum, s) => sum + s.count, 0);
-
-  const activeCouriers = MOCK_USERS.filter((u) => u.role === 'logistics' && u.isActive).length;
+  const maxRevenue = Math.max(...revenueByMonth.map((m: any) => m.revenue), 100);
+  const totalStatusOrders = ordersByStatus.reduce((sum: number, s: any) => sum + s.count, 0);
 
   return (
-    <div dir={dir} className="space-y-6">
+    <div dir={dir} className="space-y-6 text-start">
       {/* Page Header */}
       <PageHeader
-        title={t(locale, 'لوحة تحكم المدير', 'Admin Dashboard')}
-        description={t(locale, 'نظرة شاملة على أداء المنصة', 'Platform-wide overview & analytics')}
+        title={t(locale, 'لوحة تحكم المدير العام', 'General Admin Dashboard')}
+        description={t(locale, 'نظرة شاملة على أداء المنصة والتحكم في الطلبات والمستخدمين في الوقت الفعلي', 'Platform-wide live overview, user control & real-time transaction updates')}
         actions={
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              {t(locale, 'تقرير مفصل', 'Full Report')}
-            </Button>
-            <Button size="sm" className="gap-2">
+            <Button variant="outline" size="sm" onClick={fetchAdminData} className="gap-2 font-bold">
               <Activity className="h-4 w-4" />
-              {t(locale, 'تصدير', 'Export')}
+              {t(locale, 'تحديث البيانات', 'Refresh Portal')}
             </Button>
           </div>
         }
@@ -204,7 +372,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <TrendingUp className="h-4 w-4 text-brand" />
-                {t(locale, 'الإيرادات الشهرية', 'Monthly Revenue')}
+                {t(locale, 'الإيرادات الشهرية الحقيقية', 'Dynamic Monthly Revenue')}
               </CardTitle>
               <Badge variant="secondary" className="text-xs">
                 {t(locale, 'آخر 12 شهر', 'Last 12 months')}
@@ -213,16 +381,14 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex items-end gap-1.5 sm:gap-2 h-48">
-              {revenueByMonth.map((item, index) => {
+              {revenueByMonth.map((item: any, index: number) => {
                 const height = (item.revenue / maxRevenue) * 100;
-                const isHighest = item.revenue === maxRevenue;
+                const isHighest = item.revenue === maxRevenue && maxRevenue > 0;
                 return (
                   <div key={index} className="flex-1 flex flex-col items-center gap-1.5 min-w-0">
-                    {/* Tooltip value */}
                     <span className="text-[10px] text-muted-foreground font-medium truncate w-full text-center hidden sm:block">
                       {formatNumber(item.revenue)}
                     </span>
-                    {/* Bar */}
                     <div className="w-full relative group">
                       <div
                         className={`w-full rounded-t-sm transition-all duration-500 cursor-pointer ${
@@ -230,18 +396,14 @@ export default function AdminDashboard() {
                             ? 'bg-brand'
                             : 'bg-brand/60 hover:bg-brand/80'
                         }`}
-                        style={{ height: `${height * 1.5}px` }}
+                        style={{ height: `${Math.max(4, height * 1.3)}px` }}
                       />
-                      {/* Hover tooltip for mobile */}
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none sm:hidden">
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
                         {formatCurrency(item.revenue)}
                       </div>
                     </div>
-                    {/* Month label */}
                     <span className="text-[10px] text-muted-foreground truncate w-full text-center">
-                      {locale === 'ar'
-                        ? item.month
-                        : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][index]}
+                      {locale === 'ar' ? item.month : item.monthEn}
                     </span>
                   </div>
                 );
@@ -259,12 +421,12 @@ export default function AdminDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {ordersByStatus.map((item) => {
-              const percentage = Math.round((item.count / totalStatusOrders) * 100);
+            {ordersByStatus.map((item: any) => {
+              const percentage = totalStatusOrders > 0 ? Math.round((item.count / totalStatusOrders) * 100) : 0;
               return (
                 <div key={item.status} className="space-y-1.5">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
+                    <span className="text-muted-foreground font-bold">
                       {locale === 'ar'
                         ? getOrderStatusText(item.status as any)
                         : item.status.charAt(0).toUpperCase() + item.status.slice(1)}
@@ -285,8 +447,8 @@ export default function AdminDashboard() {
             })}
             <div className="pt-3 border-t mt-3">
               <div className="flex items-center justify-between text-sm font-medium">
-                <span>{t(locale, 'إجمالي الطلبات', 'Total Orders')}</span>
-                <span>{totalStatusOrders.toLocaleString()}</span>
+                <span>{t(locale, 'إجمالي الطلبات الفعلي', 'Real-Time Orders count')}</span>
+                <span className="font-bold">{totalStatusOrders.toLocaleString()}</span>
               </div>
             </div>
           </CardContent>
@@ -298,32 +460,33 @@ export default function AdminDashboard() {
       {/* ============================================ */}
       <Tabs defaultValue="orders" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="orders" className="gap-1.5">
+          <TabsTrigger value="orders" className="gap-1.5 font-bold">
             <ShoppingCart className="h-3.5 w-3.5" />
-            {t(locale, 'الطلبات الأخيرة', 'Recent Orders')}
+            {t(locale, 'الطلبات المعالجة والتحكم الفوري', 'Platform Orders & Control')}
           </TabsTrigger>
-          <TabsTrigger value="products" className="gap-1.5">
+          <TabsTrigger value="products" className="gap-1.5 font-bold">
             <Star className="h-3.5 w-3.5" />
-            {t(locale, 'المنتجات الأكثر مبيعاً', 'Top Products')}
+            {t(locale, 'المنتجات الأكثر مبيعاً في النظام', 'Platform Top Selling')}
           </TabsTrigger>
-          <TabsTrigger value="users" className="gap-1.5">
+          <TabsTrigger value="users" className="gap-1.5 font-bold">
             <Users className="h-3.5 w-3.5" />
-            {t(locale, 'إدارة المستخدمين', 'User Management')}
+            {t(locale, 'إدارة حسابات المستخدمين', 'Interactive Users Directory')}
           </TabsTrigger>
         </TabsList>
 
-        {/* ---- RECENT ORDERS TAB ---- */}
+        {/* ---- LIVE RECENT ORDERS TAB ---- */}
         <TabsContent value="orders">
           <Card className="card-surface">
             <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold">
-                  {t(locale, 'أحدث الطلبات', 'Latest Orders')}
-                </CardTitle>
-                <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-brand">
-                  {t(locale, 'عرض الكل', 'View All')}
-                  <ArrowUpRight className="h-3 w-3" />
-                </Button>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <CardTitle className="text-base font-semibold">
+                    {t(locale, 'إدارة وتحديث الطلبات المنفذة', 'Manage & Dispatch Platform Orders')}
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {t(locale, 'لوحة تحكم المدير تملك حق التجاوز المباشر (Override) لتحديث أي حالة دفع أو توصيل', 'Admin overrides orders and triggers immediate transaction updates globally')}
+                  </p>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -331,60 +494,88 @@ export default function AdminDashboard() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-start ps-2">
-                        {t(locale, 'رقم الطلب', 'Order #')}
-                      </TableHead>
-                      <TableHead className="text-start">
-                        {t(locale, 'المشتري', 'Buyer')}
-                      </TableHead>
-                      <TableHead className="text-start">
-                        {t(locale, 'الحالة', 'Status')}
-                      </TableHead>
-                      <TableHead className="text-start">
-                        {t(locale, 'المبلغ', 'Total')}
-                      </TableHead>
-                      <TableHead className="text-start pe-2">
-                        {t(locale, 'التاريخ', 'Date')}
-                      </TableHead>
+                      <TableHead className="text-start ps-2">{t(locale, 'رقم الطلب', 'Order #')}</TableHead>
+                      <TableHead className="text-start">{t(locale, 'المشتري والمعلومات', 'Buyer Details')}</TableHead>
+                      <TableHead className="text-start">{t(locale, 'الحالة الحالية', 'Current Status')}</TableHead>
+                      <TableHead className="text-start">{t(locale, 'المبلغ', 'Total')}</TableHead>
+                      <TableHead className="text-start">{t(locale, 'تحديث الحالة فورياً', 'Override Status')}</TableHead>
+                      <TableHead className="text-start pe-2">{t(locale, 'التاريخ', 'Date')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {recentOrders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="ps-2 font-medium text-brand">
-                          {order.orderNumber}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-7 w-7">
-                              <AvatarFallback className="text-[10px] bg-surface">
-                                {locale === 'ar'
-                                  ? order.buyer.name.charAt(0)
-                                  : order.buyer.nameEn?.charAt(0) || order.buyer.name.charAt(0)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm">
-                              {locale === 'ar' ? order.buyer.name : (order.buyer.nameEn || order.buyer.name)}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <StatusBadge
-                            status={getOrderStatusText(order.status)}
-                            colorClass={getOrderStatusColor(order.status)}
-                          />
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {formatCurrency(order.total)}
-                        </TableCell>
-                        <TableCell className="pe-2 text-muted-foreground text-xs">
-                          {new Date(order.createdAt).toLocaleDateString(
-                            locale === 'ar' ? 'ar-SA' : 'en-US',
-                            { month: 'short', day: 'numeric', year: 'numeric' }
-                          )}
+                    {recentOrders.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground font-bold">
+                          {t(locale, 'لا توجد طلبات مسجلة في النظام بعد.', 'No orders registered in the system yet.')}
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      recentOrders.map((order: any) => {
+                        let addressData: any = {};
+                        try {
+                          addressData = typeof order.address === 'string' ? JSON.parse(order.address) : order.address || {};
+                        } catch (e) {}
+
+                        const buyerName = order.buyer?.name || addressData.fullName || t(locale, 'عميل زائر', 'Guest Buyer');
+                        const buyerPhone = order.buyer?.phone || addressData.phone || t(locale, 'غير متوفر', 'N/A');
+
+                        return (
+                          <TableRow key={order.id} className="hover:bg-muted/30 transition-colors">
+                            <TableCell className="ps-2 font-bold font-mono text-brand">
+                              {order.orderNumber}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-7 w-7 shrink-0">
+                                  <AvatarFallback className="text-[10px] bg-brand/10 text-brand font-bold">
+                                    {buyerName.charAt(0)}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="text-xs text-start">
+                                  <p className="font-semibold text-foreground">{buyerName}</p>
+                                  <p className="text-[10px] text-muted-foreground">{buyerPhone}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <StatusBadge
+                                status={getOrderStatusText(order.status)}
+                                colorClass={getOrderStatusColor(order.status)}
+                              />
+                            </TableCell>
+                            <TableCell className="font-bold">
+                              {formatCurrency(order.total)}
+                            </TableCell>
+                            <TableCell>
+                              {updatingOrderId === order.id ? (
+                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                  <Loader2 className="h-3 w-3 animate-spin text-brand" />
+                                  <span>{t(locale, 'تحديث...', 'Saving...')}</span>
+                                </div>
+                              ) : (
+                                <select
+                                  value={order.status}
+                                  onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                                  className="bg-surface text-foreground text-xs font-bold border border-border/80 rounded-xl px-2 py-1 focus:ring-1 focus:ring-brand focus:outline-none cursor-pointer"
+                                >
+                                  <option value="pending">{t(locale, 'معلق', 'Pending')}</option>
+                                  <option value="confirmed">{t(locale, 'مؤكد', 'Confirmed')}</option>
+                                  <option value="shipped">{t(locale, 'تم الشحن', 'Shipped')}</option>
+                                  <option value="delivered">{t(locale, 'تم التوصيل', 'Delivered')}</option>
+                                  <option value="cancelled">{t(locale, 'ملغي', 'Cancelled')}</option>
+                                </select>
+                              )}
+                            </TableCell>
+                            <TableCell className="pe-2 text-muted-foreground text-xs font-mono">
+                              {new Date(order.createdAt).toLocaleDateString(
+                                locale === 'ar' ? 'ar-SA' : 'en-US',
+                                { month: 'short', day: 'numeric', year: 'numeric' }
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -392,147 +583,183 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
 
-        {/* ---- TOP PRODUCTS TAB ---- */}
+        {/* ---- REAL TOP PRODUCTS TAB ---- */}
         <TabsContent value="products">
           <Card className="card-surface">
             <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold">
-                  {t(locale, 'المنتجات الأكثر مبيعاً', 'Top Selling Products')}
-                </CardTitle>
-                <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-brand">
-                  {t(locale, 'عرض الكل', 'View All')}
-                  <ArrowUpRight className="h-3 w-3" />
-                </Button>
-              </div>
+              <CardTitle className="text-base font-semibold">
+                {t(locale, 'المنتجات الأكثر طلباً ومبيعاً', 'Real Top Selling Products')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[420px]">
                 <div className="space-y-3">
-                  {topProducts.map((item, index) => (
-                    <div
-                      key={item.product.id}
-                      className="flex items-center gap-3 p-3 rounded-xl border bg-surface/50 hover:bg-surface transition-colors"
-                    >
-                      {/* Rank */}
+                  {topProducts.length === 0 ? (
+                    <p className="text-center py-12 text-muted-foreground font-bold">
+                      {t(locale, 'لا توجد مبيعات مسجلة في المنتجات بعد.', 'No sales statistics captured for products yet.')}
+                    </p>
+                  ) : (
+                    topProducts.map((item: any, index: number) => (
                       <div
-                        className={`h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
-                          index === 0
-                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                            : index === 1
-                              ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                              : index === 2
-                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                : 'bg-surface text-muted-foreground'
-                        }`}
+                        key={item.product.id}
+                        className="flex items-center gap-3 p-3 rounded-xl border bg-surface/50 hover:bg-surface transition-colors hover:scale-[1.005]"
                       >
-                        {index + 1}
-                      </div>
+                        <div
+                          className={`h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
+                            index === 0
+                              ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                              : index === 1
+                                ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                                : index === 2
+                                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                  : 'bg-surface text-muted-foreground'
+                          }`}
+                        >
+                          {index + 1}
+                        </div>
 
-                      {/* Product Image */}
-                      <div className="h-12 w-12 rounded-lg bg-surface overflow-hidden shrink-0">
-                        <img
-                          src={item.product.images[0]}
-                          alt={locale === 'ar' ? item.product.name : (item.product.nameEn || item.product.name)}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
+                        <div className="h-12 w-12 rounded-lg bg-surface overflow-hidden shrink-0 border">
+                          <img
+                            src={item.product.images[0] || 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=120'}
+                            alt={locale === 'ar' ? item.product.name : (item.product.nameEn || item.product.name)}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
 
-                      {/* Product Info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {locale === 'ar' ? item.product.name : (item.product.nameEn || item.product.name)}
-                        </p>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Package className="h-3 w-3" />
-                            {item.soldCount.toLocaleString()} {t(locale, 'مباع', 'sold')}
-                          </span>
-                          <span className="text-xs flex items-center gap-0.5 text-yellow-500">
-                            <Star className="h-3 w-3 fill-yellow-500" />
-                            {item.product.rating}
-                          </span>
+                        <div className="flex-1 min-w-0 text-start">
+                          <p className="text-sm font-bold truncate text-foreground">
+                            {locale === 'ar' ? item.product.name : (item.product.nameEn || item.product.name)}
+                          </p>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className="text-xs text-muted-foreground flex items-center gap-1 font-semibold">
+                              <Package className="h-3 w-3" />
+                              {item.soldCount.toLocaleString()} {t(locale, 'مباع فعلياً', 'sold units')}
+                            </span>
+                            <span className="text-xs flex items-center gap-0.5 text-yellow-500 font-bold">
+                              <Star className="h-3 w-3 fill-yellow-500" />
+                              {item.product.rating}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="text-end shrink-0">
+                          <p className="text-sm font-black text-brand">
+                            {formatCurrency(item.revenue)}
+                          </p>
+                          <p className="text-xs text-muted-foreground font-semibold">
+                            {formatCurrency(item.product.price)} / {t(locale, 'قطعة', 'unit')}
+                          </p>
                         </div>
                       </div>
-
-                      {/* Revenue */}
-                      <div className="text-end shrink-0">
-                        <p className="text-sm font-semibold text-brand">
-                          {formatCurrency(item.revenue)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatCurrency(item.product.price)} / {t(locale, 'قطعة', 'unit')}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </ScrollArea>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* ---- USER MANAGEMENT TAB ---- */}
+        {/* ---- REAL INTERACTIVE USER MANAGEMENT TAB ---- */}
         <TabsContent value="users">
           <Card className="card-surface">
             <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold">
-                  {t(locale, 'إدارة المستخدمين', 'User Management')}
-                </CardTitle>
-                <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-brand">
-                  {t(locale, 'عرض الكل', 'View All')}
-                  <ArrowUpRight className="h-3 w-3" />
-                </Button>
-              </div>
+              <CardTitle className="text-base font-semibold">
+                {t(locale, 'دليل حسابات المستخدمين النشطين والتوثيق', 'Live Directory of Users & Merchant Approvals')}
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t(locale, 'يمكنك مراجعة وتعديل مستويات توثيق البائعين والتحكم في قفل أو تفعيل الحسابات المنتهكة فورياً', 'Review, toggle verification levels, suspend or reactivate violator merchant profiles instantly')}
+              </p>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {MOCK_USERS.map((user) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {users.map((u: any) => (
                   <div
-                    key={user.id}
-                    className="flex items-center gap-3 p-3 rounded-xl border bg-surface/50 hover:bg-surface transition-colors"
+                    key={u.id}
+                    className="flex items-center gap-3 p-4 rounded-xl border bg-surface/50 hover:bg-surface transition-all duration-300 hover:scale-[1.01] hover:border-brand/30"
                   >
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="text-sm font-medium bg-surface">
-                        {locale === 'ar'
-                          ? user.name.charAt(0)
-                          : (user.nameEn?.charAt(0) || user.name.charAt(0))}
+                    <Avatar className="h-10 w-10 shrink-0 border">
+                      <AvatarFallback className="text-sm font-bold bg-surface text-brand">
+                        {u.name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
 
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 text-start space-y-0.5">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-medium truncate">
-                          {locale === 'ar' ? user.name : (user.nameEn || user.name)}
+                        <p className="text-sm font-black text-foreground truncate">
+                          {locale === 'ar' ? u.name : (u.nameEn || u.name)}
                         </p>
-                        {user.isVerified && (
-                          <Award className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+                        {u.isVerified && (
+                          <Award className="h-4 w-4 text-blue-500 shrink-0" title={t(locale, 'موثق', 'Verified')} />
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      <p className="text-[11px] text-muted-foreground truncate font-mono">{u.email}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono">{u.phone || '-'}</p>
                     </div>
 
-                    <div className="flex flex-col items-end gap-1 shrink-0">
+                    <div className="flex flex-col items-end gap-2 shrink-0">
                       <StatusBadge
-                        status={getRoleLabel(locale, user.role)}
-                        colorClass={getRoleColor(user.role)}
+                        status={getRoleLabel(locale, u.role)}
+                        colorClass={getRoleColor(u.role)}
                       />
+                      
+                      <div className="flex items-center gap-1">
+                        {/* Suspension Toggle */}
+                        {togglingUserId === u.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin text-brand" />
+                        ) : (
+                          <>
+                            {(u.role === 'seller' || u.role === 'store_manager') && (
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                className="h-7 w-7 rounded-lg hover:bg-blue-500/10 border-blue-500/20"
+                                onClick={() => handleUserToggleVerify(u.id, u.isVerified)}
+                                title={u.isVerified ? t(locale, 'إلغاء التوثيق', 'Remove Verification') : t(locale, 'توثيق الحساب', 'Verify Account')}
+                              >
+                                {u.isVerified ? (
+                                  <ShieldAlert className="h-3.5 w-3.5 text-orange-500" />
+                                ) : (
+                                  <ShieldCheck className="h-3.5 w-3.5 text-blue-500" />
+                                )}
+                              </Button>
+                            )}
+
+                            <Button
+                              size="icon"
+                              variant="outline"
+                              className={`h-7 w-7 rounded-lg border-2 ${
+                                u.isActive
+                                  ? 'hover:bg-red-500/10 border-red-500/20'
+                                  : 'hover:bg-green-500/10 border-green-500/20'
+                              }`}
+                              onClick={() => handleUserToggleActive(u.id, u.isActive)}
+                              title={u.isActive ? t(locale, 'تعليق الحساب', 'Suspend Account') : t(locale, 'تفعيل الحساب', 'Activate Account')}
+                            >
+                              {u.isActive ? (
+                                <UserX className="h-3.5 w-3.5 text-red-500" />
+                              ) : (
+                                <UserCheck className="h-3.5 w-3.5 text-green-500" />
+                              )}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+
                       <span
-                        className={`inline-flex items-center gap-1 text-[10px] font-medium ${
-                          user.isActive
+                        className={`inline-flex items-center gap-1 text-[10px] font-bold ${
+                          u.isActive
                             ? 'text-green-600 dark:text-green-400'
                             : 'text-red-600 dark:text-red-400'
                         }`}
                       >
                         <span
                           className={`h-1.5 w-1.5 rounded-full ${
-                            user.isActive ? 'bg-green-500' : 'bg-red-500'
+                            u.isActive ? 'bg-green-500' : 'bg-red-500'
                           }`}
                         />
-                        {user.isActive
+                        {u.isActive
                           ? t(locale, 'نشط', 'Active')
-                          : t(locale, 'غير نشط', 'Inactive')}
+                          : t(locale, 'موقوف', 'Suspended')}
                       </span>
                     </div>
                   </div>
@@ -549,28 +776,28 @@ export default function AdminDashboard() {
       <div>
         <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
           <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          {t(locale, 'إحصائيات المنصة', 'Platform Statistics')}
+          {t(locale, 'إحصائيات المنصة الإجمالية الحقيقية', 'Dynamic Platform Aggregates')}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Stores Count */}
           <Card className="card-surface">
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 text-start">
                 <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
                   <Store className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{MOCK_STORES.length}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t(locale, 'المتاجر النشطة', 'Active Stores')}
+                  <p className="text-2xl font-bold">{stats.totalStores}</p>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    {t(locale, 'المتاجر النشطة', 'Registered Stores')}
                   </p>
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{t(locale, 'إجمالي المبيعات', 'Total Sales')}</span>
-                  <span className="font-medium text-foreground">
-                    {MOCK_STORES.reduce((sum, s) => sum + s.totalSales, 0).toLocaleString()}
+                <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
+                  <span>{t(locale, 'مبيعات المتاجر الفعلي', 'Live Sales Count')}</span>
+                  <span className="font-bold text-foreground">
+                    {stats.totalSalesSum.toLocaleString()}
                   </span>
                 </div>
               </div>
@@ -580,22 +807,22 @@ export default function AdminDashboard() {
           {/* Sellers Count */}
           <Card className="card-surface">
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 text-start">
                 <div className="h-10 w-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
                   <UserCog className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{MOCK_SELLERS.length}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t(locale, 'البائعين', 'Sellers')}
+                  <p className="text-2xl font-bold">{stats.totalSellers}</p>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    {t(locale, 'البائعين المستقلين', 'Independent Merchants')}
                   </p>
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{t(locale, 'بانتظار الترقية', 'Upgrade Requests')}</span>
-                  <span className="font-medium text-foreground">
-                    {MOCK_SELLERS.filter((s) => s.wantsUpgrade).length}
+                <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
+                  <span>{t(locale, 'طلبات توثيق بانتظار المراجعة', 'Pending Verifications')}</span>
+                  <span className="font-bold text-yellow-600 dark:text-yellow-400">
+                    {stats.wantsUpgradeCount}
                   </span>
                 </div>
               </div>
@@ -605,22 +832,22 @@ export default function AdminDashboard() {
           {/* Active Couriers */}
           <Card className="card-surface">
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 text-start">
                 <div className="h-10 w-10 rounded-xl bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
                   <Truck className="h-5 w-5" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{activeCouriers}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-2xl font-bold">{stats.activeCouriers}</p>
+                  <p className="text-xs text-muted-foreground font-semibold">
                     {t(locale, 'المندوبين النشطين', 'Active Couriers')}
                   </p>
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{t(locale, 'إجمالي المندوبين', 'Total Couriers')}</span>
-                  <span className="font-medium text-foreground">
-                    {MOCK_USERS.filter((u) => u.role === 'logistics').length}
+                <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
+                  <span>{t(locale, 'إجمالي المندوبين بالمنصة', 'Total Registered Couriers')}</span>
+                  <span className="font-bold text-foreground">
+                    {stats.totalCouriers}
                   </span>
                 </div>
               </div>
@@ -630,209 +857,30 @@ export default function AdminDashboard() {
           {/* Avg Rating */}
           <Card className="card-surface">
             <CardContent className="p-4">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 text-start">
                 <div className="h-10 w-10 rounded-xl bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 flex items-center justify-center">
                   <Star className="h-5 w-5 fill-yellow-500" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">
-                    {(MOCK_STORES.reduce((sum, s) => sum + s.rating, 0) / MOCK_STORES.length).toFixed(1)}
+                    {stats.avgStoreRating ? Number(stats.avgStoreRating).toFixed(1) : '5.0'}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground font-semibold">
                     {t(locale, 'متوسط تقييم المتاجر', 'Avg Store Rating')}
                   </p>
                 </div>
               </div>
               <div className="mt-3 pt-3 border-t">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{t(locale, 'إجمالي المنتجات', 'Total Products')}</span>
-                  <span className="font-medium text-foreground">
-                    {MOCK_STORES.reduce((sum, s) => sum + (s.productCount || 0), 0).toLocaleString()}
+                <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
+                  <span>{t(locale, 'إجمالي المعروض بالمنصة', 'Total Platform Products')}</span>
+                  <span className="font-bold text-foreground">
+                    {totalProducts.toLocaleString()}
                   </span>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
-      </div>
-
-      {/* ============================================ */}
-      {/* QUICK ACTIONS & LIVE FEED                   */}
-      {/* ============================================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Quick Actions */}
-        <Card className="card-surface">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Eye className="h-4 w-4 text-brand" />
-              {t(locale, 'إجراءات سريعة', 'Quick Actions')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                variant="outline"
-                className="h-auto py-3 flex-col gap-2 text-start hover:bg-brand/5 hover:border-brand/30"
-              >
-                <Package className="h-5 w-5 text-brand ms-auto" />
-                <div>
-                  <p className="text-sm font-medium">{t(locale, 'إدارة المنتجات', 'Manage Products')}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {t(locale, 'إضافة وتعديل المنتجات', 'Add & edit products')}
-                  </p>
-                </div>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-3 flex-col gap-2 text-start hover:bg-blue-500/5 hover:border-blue-500/30"
-              >
-                <ShoppingCart className="h-5 w-5 text-blue-500 ms-auto" />
-                <div>
-                  <p className="text-sm font-medium">{t(locale, 'إدارة الطلبات', 'Manage Orders')}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {t(locale, 'متابعة وتحديث الطلبات', 'Track & update orders')}
-                  </p>
-                </div>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-3 flex-col gap-2 text-start hover:bg-purple-500/5 hover:border-purple-500/30"
-              >
-                <Users className="h-5 w-5 text-purple-500 ms-auto" />
-                <div>
-                  <p className="text-sm font-medium">{t(locale, 'إدارة المستخدمين', 'Manage Users')}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {t(locale, 'مراجعة وتفعيل الحسابات', 'Review & activate accounts')}
-                  </p>
-                </div>
-              </Button>
-              <Button
-                variant="outline"
-                className="h-auto py-3 flex-col gap-2 text-start hover:bg-green-500/5 hover:border-green-500/30"
-              >
-                <Store className="h-5 w-5 text-green-500 ms-auto" />
-                <div>
-                  <p className="text-sm font-medium">{t(locale, 'إدارة المتاجر', 'Manage Stores')}</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {t(locale, 'مراجعة واعتماد المتاجر', 'Review & approve stores')}
-                  </p>
-                </div>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Activity */}
-        <Card className="card-surface">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Clock className="h-4 w-4 text-amber-500" />
-              {t(locale, 'النشاط الأخير', 'Recent Activity')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[250px]">
-              <div className="space-y-4">
-                {/* Activity Item 1 */}
-                <div className="flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0">
-                    <ShoppingCart className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm">
-                      {t(locale, 'طلب جديد', 'New order')}{' '}
-                      <span className="font-medium text-brand">NOON-2024-010</span>{' '}
-                      {t(locale, 'من', 'from')} {locale === 'ar' ? 'عمر المشتري' : 'Omar Buyer'}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {t(locale, 'منذ 5 دقائق', '5 minutes ago')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Activity Item 2 */}
-                <div className="flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-                    <Truck className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm">
-                      {t(locale, 'تم شحن الطلب', 'Order shipped')}{' '}
-                      <span className="font-medium text-brand">NOON-2024-002</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {t(locale, 'منذ 30 دقيقة', '30 minutes ago')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Activity Item 3 */}
-                <div className="flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                    <UserCog className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm">
-                      {t(locale, 'طلب ترقية جديد من', 'Upgrade request from')}{' '}
-                      <span className="font-medium">{locale === 'ar' ? 'سارة التاجرة' : 'Sara Seller'}</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {t(locale, 'منذ ساعة', '1 hour ago')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Activity Item 4 */}
-                <div className="flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-                    <Store className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm">
-                      {t(locale, 'تم إضافة متجر جديد', 'New store registered')}:{' '}
-                      <span className="font-medium">{locale === 'ar' ? 'المنزل الذكي' : 'Smart Home'}</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {t(locale, 'منذ 3 ساعات', '3 hours ago')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Activity Item 5 */}
-                <div className="flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 flex items-center justify-center shrink-0">
-                    <Package className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm">
-                      {t(locale, 'تم تسليم الطلب', 'Order delivered')}{' '}
-                      <span className="font-medium text-brand">NOON-2024-001</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {t(locale, 'أمس في 10:30 ص', 'Yesterday at 10:30 AM')}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Activity Item 6 */}
-                <div className="flex gap-3">
-                  <div className="h-8 w-8 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center justify-center shrink-0">
-                    <Users className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm">
-                      {t(locale, 'تم تعطيل حساب', 'Account deactivated')}:{' '}
-                      <span className="font-medium">{locale === 'ar' ? 'ليلى المشترية' : 'Layla Buyer'}</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {t(locale, 'أمس في 3:15 م', 'Yesterday at 3:15 PM')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );

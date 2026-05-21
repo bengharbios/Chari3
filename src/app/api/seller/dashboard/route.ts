@@ -9,18 +9,57 @@ export async function GET(req: NextRequest) {
     const userId = req.nextUrl.searchParams.get('userId');
     if (!userId) return NextResponse.json({ success: false, error: 'userId required' }, { status: 400 });
 
-    const seller = await db.sellerProfile.findUnique({
+    let seller: any = await db.sellerProfile.findUnique({
       where: { userId },
       include: {
         package: true,
         user: { select: { name: true, email: true, phone: true } },
       },
     });
-    if (!seller) return NextResponse.json({ success: false, error: 'Seller not found' }, { status: 404 });
 
-    // Get seller's products
+    let isStoreManager = false;
+
+    if (!seller) {
+      // Look up in Store model for StoreManager
+      const store = await db.store.findFirst({
+        where: { managerId: userId },
+        include: {
+          package: true,
+          manager: { select: { name: true, email: true, phone: true } },
+        },
+      });
+
+      if (!store) {
+        return NextResponse.json({ success: false, error: 'Seller or Store not found' }, { status: 404 });
+      }
+
+      isStoreManager = true;
+
+      // Polymorphically map the Store to look exactly like seller profile
+      seller = {
+        id: store.id,
+        userId: store.managerId,
+        storeName: store.name,
+        storeNameEn: store.nameEn,
+        bio: store.description,
+        logo: store.logo,
+        coverImage: store.coverImage,
+        isActive: store.isActive,
+        rating: store.rating,
+        level: store.level,
+        totalSales: store.totalSales,
+        totalEarnings: store.totalEarnings,
+        completionRate: store.completionRate,
+        responseRate: 98, // default fallback
+        packageId: store.packageId,
+        package: store.package,
+        user: store.manager,
+      };
+    }
+
+    // Get products (polymorphic: store manager queries storeId, independent seller queries sellerId)
     const products = await db.product.findMany({
-      where: { sellerId: seller.id },
+      where: isStoreManager ? { storeId: seller.id } : { sellerId: seller.id },
       select: { 
         id: true, 
         name: true, 
@@ -53,7 +92,26 @@ export async function GET(req: NextRequest) {
         order: { createdAt: { gte: startOfMonth } },
       },
       include: {
-        order: { select: { status: true, createdAt: true, total: true, orderNumber: true } },
+        order: {
+          select: {
+            id: true,
+            status: true,
+            createdAt: true,
+            total: true,
+            orderNumber: true,
+            address: true,
+            paymentMethod: true,
+            buyer: {
+              select: {
+                id: true,
+                name: true,
+                nameEn: true,
+                phone: true,
+                email: true,
+              }
+            }
+          }
+        },
         product: { select: { name: true, price: true } },
       },
     });
@@ -62,18 +120,22 @@ export async function GET(req: NextRequest) {
     const wallet = await db.wallet.findUnique({ where: { userId } });
 
     // Pending withdrawals
-    const pendingWithdrawals = await db.withdrawalRequest.findMany({
-      where: { sellerId: seller.id, status: 'pending' },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    });
+    const pendingWithdrawals = isStoreManager
+      ? []
+      : await db.withdrawalRequest.findMany({
+          where: { sellerId: seller.id, status: 'pending' },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        });
 
-    // Recent seller reviews
-    const reviews = await db.sellerReview.findMany({
-      where: { sellerId: seller.id },
-      orderBy: { createdAt: 'desc' },
-      take: 5,
-    });
+    // Recent reviews
+    const reviews = isStoreManager
+      ? []
+      : await db.sellerReview.findMany({
+          where: { sellerId: seller.id },
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        });
 
     // Active challenges
     const challenges = await db.challenge.findMany({
@@ -114,7 +176,7 @@ export async function GET(req: NextRequest) {
         walletBalance: wallet?.balance ?? 0,
       },
       products,
-      recentOrders: monthOrders.slice(0, 10),
+      recentOrders: monthOrders.slice(0, 50),
       reviews,
       challenges,
       sellerLevel,

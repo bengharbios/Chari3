@@ -23,6 +23,15 @@ export async function GET(request: Request) {
         orderBy: { createdAt: 'desc' },
         include: {
           items: true,
+          buyer: {
+            select: {
+              id: true,
+              name: true,
+              nameEn: true,
+              email: true,
+              phone: true,
+            },
+          },
         },
       }),
       db.order.count({ where }),
@@ -31,7 +40,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ orders, total, page, limit });
   } catch (error) {
     console.error('[GET /api/orders]', error);
-    // Return empty result instead of crashing
     return NextResponse.json({ orders: [], total: 0, page: 1, limit: 10 });
   }
 }
@@ -69,8 +77,55 @@ export async function POST(request: Request) {
       include: { items: true },
     });
 
+    // Create initial history entry
+    await db.orderStatusHistory.create({
+      data: {
+        orderId: order.id,
+        status: 'pending',
+        note: 'Order placed successfully by customer via COD.',
+      },
+    });
+
     return NextResponse.json(order, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error('[POST /api/orders]', error);
     return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, status, paymentStatus, note } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
+    }
+
+    const updateData: Record<string, any> = {};
+    if (status) updateData.status = status;
+    if (paymentStatus) updateData.paymentStatus = paymentStatus;
+    if (note) updateData.note = note;
+
+    const updatedOrder = await db.order.update({
+      where: { id },
+      data: updateData,
+    });
+
+    // Create history entry
+    if (status) {
+      await db.orderStatusHistory.create({
+        data: {
+          orderId: id,
+          status,
+          note: note || `Order status updated to: ${status}`,
+        },
+      });
+    }
+
+    return NextResponse.json({ success: true, order: updatedOrder });
+  } catch (error: any) {
+    console.error('[PATCH /api/orders]', error);
+    return NextResponse.json({ error: error.message || 'Failed to update order' }, { status: 500 });
   }
 }
