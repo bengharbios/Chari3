@@ -128,8 +128,8 @@ export default function SellerProfilePage() {
               {seller.isVerified && <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">✓ {t('تاجر موثق', 'Verified Seller')}</Badge>}
             </div>
             <div className="flex items-center gap-3 flex-wrap">
-              <StarRating rating={seller.rating} />
-              <span className="font-bold">{seller.rating.toFixed(1)}</span>
+              <StarRating rating={seller.rating ?? 0} />
+              <span className="font-bold">{(seller.rating ?? 0).toFixed(1)}</span>
               <span className="text-muted-foreground text-sm">•</span>
               <span className="text-sm text-muted-foreground">{t(`عضو منذ ${joinYear}`, `Member since ${joinYear}`)}</span>
             </div>
@@ -143,9 +143,9 @@ export default function SellerProfilePage() {
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           {[
-            { icon: TrendingUp, label: t('إجمالي المبيعات', 'Total Sales'), value: seller.totalSales.toLocaleString(), color: 'text-green-500' },
-            { icon: Users, label: t('العملاء', 'Customers'), value: seller.totalCustomers.toLocaleString(), color: 'text-blue-500' },
-            { icon: Package, label: t('المنتجات', 'Products'), value: seller._count.products.toString(), color: 'text-purple-500' },
+            { icon: TrendingUp, label: t('إجمالي المبيعات', 'Total Sales'), value: (seller.totalSales ?? 0).toLocaleString(), color: 'text-green-500' },
+            { icon: Users, label: t('العملاء', 'Customers'), value: (seller.totalCustomers ?? 0).toLocaleString(), color: 'text-blue-500' },
+            { icon: Package, label: t('المنتجات', 'Products'), value: (seller._count?.products ?? 0).toString(), color: 'text-purple-500' },
             { icon: Award, label: t('معدل الإنجاز', 'Completion Rate'), value: `${seller.completionRate || 95}%`, color: 'text-amber-500' },
           ].map(({ icon: Icon, label, value, color }) => (
             <Card key={label} className="border-border hover:border-primary/30 transition-all">
@@ -180,7 +180,18 @@ export default function SellerProfilePage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 pb-10">
             {seller.products.map((p) => {
               let imgs: string[] = [];
-              try { imgs = JSON.parse(p.images); } catch {}
+              try {
+                if (p.images) {
+                  if (typeof p.images === 'string') {
+                    const parsed = JSON.parse(p.images);
+                    if (Array.isArray(parsed)) imgs = parsed;
+                  } else if (Array.isArray(p.images)) {
+                    imgs = p.images;
+                  }
+                }
+              } catch {}
+              if (!Array.isArray(imgs)) imgs = [];
+
               const disc = p.comparePrice ? Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100) : 0;
               return (
                 <Card
@@ -203,7 +214,7 @@ export default function SellerProfilePage() {
                     {p.isFeatured && <Badge className="absolute top-2 end-2 bg-amber-500 text-white text-xs">⭐</Badge>}
                   </div>
                   <CardContent className="p-3">
-                    <p className="text-xs text-muted-foreground mb-1 truncate">{p.category.name}</p>
+                    <p className="text-xs text-muted-foreground mb-1 truncate">{p.category?.name || ''}</p>
                     <p className="text-xs md:text-sm font-semibold line-clamp-2 mb-1.5">{isAr ? p.name : (p.nameEn || p.name)}</p>
                     <div className="flex items-center gap-1 mb-2">
                       <div className="flex">

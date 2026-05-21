@@ -118,6 +118,19 @@ export default function ProductDetailPage() {
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [selectedSize, setSelectedSize] = useState<string>('');
 
+  let images: string[] = [];
+  if (product) {
+    try {
+      if (typeof product.images === 'string') {
+        const parsed = JSON.parse(product.images);
+        if (Array.isArray(parsed)) images = parsed;
+      } else if (Array.isArray(product.images)) {
+        images = product.images;
+      }
+    } catch {}
+  }
+  if (!Array.isArray(images)) images = [];
+
   useEffect(() => {
     if (!selectedProductId) { setCurrentPage('home'); return; }
     setIsLoading(true);
@@ -178,6 +191,7 @@ export default function ProductDetailPage() {
   }, [product]);
 
   const handleAddToCart = () => {
+    if (!product) return;
     if (!isAuthenticated) { setCurrentPage('login'); return; }
     
     const variantName = [selectedColor, selectedSize].filter(Boolean).join(' / ');
@@ -232,10 +246,6 @@ export default function ProductDetailPage() {
   }
 
   if (!product) return null;
-
-  let images: string[] = [];
-  try { images = JSON.parse(product.images); } catch {}
-  if (images.length === 0) images = [];
 
   // Find current matching variant
   const getSelectedVariant = () => {
@@ -295,11 +305,11 @@ export default function ProductDetailPage() {
       <div className="bg-muted/30 border-b border-border">
         <div className="container-platform py-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <button onClick={() => setCurrentPage('home')} className="hover:text-primary transition-colors">
+             <button onClick={() => setCurrentPage('home')} className="hover:text-primary transition-colors">
               {t('الرئيسية', 'Home')}
             </button>
             {isAr ? <ChevronLeft className="size-3.5" /> : <ChevronRight className="size-3.5" />}
-            <span className="text-xs">{product.category.name}</span>
+            <span className="text-xs">{product.category?.name || ''}</span>
             {isAr ? <ChevronLeft className="size-3.5" /> : <ChevronRight className="size-3.5" />}
             <span className="text-foreground font-medium truncate max-w-[200px]">{product.name}</span>
           </div>
@@ -364,17 +374,17 @@ export default function ProductDetailPage() {
           <div className="space-y-5">
             {/* Category & Title */}
             <div>
-              <p className="text-sm text-muted-foreground mb-1">{product.category.name}</p>
+              <p className="text-sm text-muted-foreground mb-1">{product.category?.name || ''}</p>
               <h1 className="text-2xl md:text-3xl font-black leading-tight">{isAr ? product.name : (product.nameEn || product.name)}</h1>
             </div>
 
             {/* Rating */}
             <div className="flex items-center gap-3 flex-wrap">
-              <StarRating rating={product.rating} size="md" />
-              <span className="text-sm font-semibold">{product.rating.toFixed(1)}</span>
-              <span className="text-sm text-muted-foreground">({product.reviewCount} {t('تقييم', 'reviews')})</span>
+              <StarRating rating={product.rating ?? 0} size="md" />
+              <span className="text-sm font-semibold">{(product.rating ?? 0).toFixed(1)}</span>
+              <span className="text-sm text-muted-foreground">({product.reviewCount ?? 0} {t('تقييم', 'reviews')})</span>
               <span className="text-sm text-muted-foreground">•</span>
-              <span className="text-sm text-muted-foreground">{product.soldCount.toLocaleString()} {t('مبيعة', 'sold')}</span>
+              <span className="text-sm text-muted-foreground">{(product.soldCount ?? 0).toLocaleString()} {t('مبيعة', 'sold')}</span>
             </div>
 
             {/* Price */}
@@ -599,9 +609,6 @@ export default function ProductDetailPage() {
                   ) : (
                     <div className="size-16 rounded-xl bg-primary/10 flex items-center justify-center text-2xl">🏪</div>
                   )}
-                  {merchant.isVerified && (
-                    <div className="absolute -bottom-1 -end-1 size-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">✓</div>
-                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -612,10 +619,10 @@ export default function ProductDetailPage() {
                   {merchant.bio && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{merchant.bio}</p>}
                   <div className="flex items-center gap-4 mt-2 flex-wrap">
                     <div className="flex items-center gap-1">
-                      <StarRating rating={merchant.rating} size="sm" />
-                      <span className="text-sm font-semibold">{merchant.rating.toFixed(1)}</span>
+                      <StarRating rating={merchant.rating ?? 0} size="sm" />
+                      <span className="text-sm font-semibold">{(merchant.rating ?? 0).toFixed(1)}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">{merchant.totalSales.toLocaleString()} {t('مبيعة', 'sales')}</span>
+                    <span className="text-xs text-muted-foreground">{(merchant.totalSales ?? 0).toLocaleString()} {t('مبيعة', 'sales')}</span>
                     {merchant._count && <span className="text-xs text-muted-foreground">{merchant._count.products} {t('منتج', 'products')}</span>}
                   </div>
                 </div>
