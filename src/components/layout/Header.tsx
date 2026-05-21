@@ -19,6 +19,8 @@ import { Input } from '@/components/ui/input';
 import NotificationPanel from '@/components/notifications/NotificationPanel';
 import type { PageType } from '@/types';
 
+import Sidebar from './Sidebar';
+
 const rolePages: Record<string, PageType> = {
   admin: 'admin',
   store_manager: 'store',
@@ -29,7 +31,7 @@ const rolePages: Record<string, PageType> = {
 };
 
 export default function Header() {
-  const { locale, setLocale, theme, setTheme, toggleMobileMenu } = useAppStore();
+  const { locale, setLocale, theme, setTheme, toggleMobileMenu, setSidebarOpen, isSidebarOpen } = useAppStore();
   const { user, isAuthenticated, logout } = useAuthStore();
   const { itemCount } = useCartStore();
   const [scrolled, setScrolled] = useState(false);
@@ -45,6 +47,7 @@ export default function Header() {
   const t = (ar: string, en: string) => (locale === 'ar' ? ar : en);
 
   return (
+    <>
     <header
       className={`sticky top-0 z-[var(--z-sticky)] w-full transition-all duration-300 ${
         scrolled
@@ -62,7 +65,7 @@ export default function Header() {
                 variant="ghost"
                 size="icon"
                 className="md:hidden"
-                onClick={toggleMobileMenu}
+                onClick={() => setSidebarOpen(true)}
               >
                 <Menu className="h-5 w-5" />
               </Button>
@@ -213,5 +216,8 @@ export default function Header() {
         )}
       </div>
     </header>
+      {/* Mobile Sidebar Drawer */}
+      {isSidebarOpen && <Sidebar className="lg:hidden" />}
+    </>
   );
 }

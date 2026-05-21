@@ -16,6 +16,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   if (!user) return null;
 
   return (
+    <div className="overflow-x-hidden">
     <div className="flex flex-1">
       <Sidebar />
       <main
@@ -28,6 +29,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </main>
       <BottomNav />
+    </div>
     </div>
   );
 }
