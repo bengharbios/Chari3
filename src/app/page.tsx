@@ -8,6 +8,7 @@ import { useOnboardingStore, restoreDraftFields, calcResumeStep } from '@/lib/st
 import AppShell from '@/components/layout/AppShell';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import BottomNav from '@/components/layout/BottomNav';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import AuthPage from '@/components/auth/AuthPage';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
@@ -452,6 +453,7 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
       )}
 
       <Footer />
+      <BottomNav />
     </AppShell>
   );
 }

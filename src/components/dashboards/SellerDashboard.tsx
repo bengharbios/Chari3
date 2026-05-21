@@ -663,8 +663,8 @@ function SellerProductsTab({
 
       {/* Preview Modal */}
       {previewProductId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full h-full max-w-full max-h-full sm:max-w-4xl sm:max-h-[90vh] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200" dir={isAr ? 'rtl' : 'ltr'}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-[95%] max-h-[92vh] sm:w-full sm:max-w-4xl sm:max-h-[90vh] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200" dir={isAr ? 'rtl' : 'ltr'}>
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
               <div>
@@ -721,7 +721,7 @@ function SellerProductsTab({
                     </div>
 
                     {/* Pricing & Stock Card */}
-                    <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-muted/30 border border-border/60">
+                    <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-4 p-4 rounded-xl bg-muted/30 border border-border/60">
                       <div>
                         <p className="text-xs text-muted-foreground mb-1">{t('سعر البيع الحالي', 'Current Sale Price')}</p>
                         <p className="text-base sm:text-lg font-black text-amber-600">

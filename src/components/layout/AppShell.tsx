@@ -25,7 +25,7 @@ export default function AppShell({ children }: AppShellProps) {
 
   return (
     <div
-      className={`min-h-dvh flex flex-col bg-background text-foreground transition-colors duration-300 ${
+      className={`min-h-dvh max-w-full overflow-x-hidden flex flex-col bg-background text-foreground transition-colors duration-300 ${
         locale === 'ar' ? 'font-[Cairo]' : 'font-[Inter]'
       }`}
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
