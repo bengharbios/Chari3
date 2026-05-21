@@ -15,9 +15,9 @@ export async function GET() {
         take: 12,
       }),
 
-      // Featured products sorted by level boost (higher seller level = higher rank)
+      // Featured and recent products
       db.product.findMany({
-        where: { status: 'active', isFeatured: true },
+        where: { status: 'active' },
         include: {
           category: { select: { name: true, nameEn: true } },
           seller: {
@@ -40,6 +40,8 @@ export async function GET() {
           },
         },
         orderBy: [
+          { isFeatured: 'desc' },
+          { createdAt: 'desc' },
           { soldCount: 'desc' },
           { rating: 'desc' },
         ],

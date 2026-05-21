@@ -143,6 +143,18 @@ async function approveUser(
         },
       });
     }
+
+    // Sync isVerified flag to SellerProfile (upsert to guarantee record exists)
+    await db.sellerProfile.upsert({
+      where: { userId: user.id },
+      update: { isVerified: true },
+      create: {
+        userId: user.id,
+        isVerified: true,
+        storeName: user.name,
+        storeNameEn: user.nameEn || user.name,
+      },
+    });
   }
 
   if (role === 'supplier') {

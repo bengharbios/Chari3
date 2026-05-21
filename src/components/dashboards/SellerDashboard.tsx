@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import {
   TrendingUp, Package, Star, ShieldCheck, ArrowLeft, ArrowRight,
   Wallet, AlertTriangle, ChevronUp, BarChart3, Clock, CheckCircle,
-  XCircle, Eye, Plus, Edit, Trash2, Trophy, Target, Zap, Wrench, Loader2, Upload, X, Layers
+  XCircle, Eye, Plus, Edit, Trash2, Trophy, Target, Zap, Wrench, Loader2, Upload, X, Layers,
+  LayoutGrid, List
 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,7 +64,7 @@ interface DashboardData {
     responseRate: number;
     walletBalance: number;
   };
-  products: { id: string; name: string; price: number; stock: number; status: string; soldCount: number; rating: number }[];
+  products: { id: string; name: string; price: number; comparePrice?: number; stock: number; status: string; soldCount: number; rating: number; images?: any; category?: any }[];
   recentOrders: { order: { orderNumber: string; status: string; total: number; createdAt: string }; product: { name: string; price: number }; quantity: number; total: number }[];
   reviews: { id: string; rating: number; comment?: string; sellerReply?: string; createdAt: string }[];
   challenges: { id: string; title: string; description?: string; type: string; targetValue: number; rewardValue: string; endsAt: string }[];
@@ -358,11 +359,39 @@ function SellerProductsTab({
   onEditClick: (prod: any) => void;
   onDeleteSuccess: () => void;
 }) {
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [previewProductId, setPreviewProductId] = useState<string | null>(null);
+  const [previewProduct, setPreviewProduct] = useState<any | null>(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+
   const STATUS_COLOR: Record<string, string> = {
     active: 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400',
     draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
     inactive: 'bg-red-100 text-red-600 dark:bg-red-950/30 dark:text-red-400',
   };
+
+  useEffect(() => {
+    if (!previewProductId) {
+      setPreviewProduct(null);
+      return;
+    }
+    setIsPreviewLoading(true);
+    fetch(`/api/products/${previewProductId}`)
+      .then((res) => res.json())
+      .then((d) => {
+        if (d.success && d.product) {
+          setPreviewProduct(d.product);
+        } else {
+          toast.error(isAr ? 'فشل تحميل تفاصيل المنتج' : 'Failed to load product details');
+          setPreviewProductId(null);
+        }
+      })
+      .catch(() => {
+        toast.error(isAr ? 'خطأ في الاتصال بالشبكة' : 'Network communication error');
+        setPreviewProductId(null);
+      })
+      .finally(() => setIsPreviewLoading(false));
+  }, [previewProductId, isAr]);
 
   const handleDelete = async (prodId: string) => {
     if (!confirm(isAr ? 'هل أنت متأكد من حذف هذا المنتج؟' : 'Are you sure you want to delete this product?')) return;
@@ -381,39 +410,581 @@ function SellerProductsTab({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-xl font-bold">{t('إدارة المنتجات', 'Product Management')}</h1>
-        <Button className="gap-2" onClick={onAddClick}><Plus className="size-4" />{t('إضافة منتج', 'Add Product')}</Button>
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          {/* View Mode Toggle Buttons */}
+          <div className="flex items-center bg-muted border border-border p-1 rounded-xl">
+            <button
+              onClick={() => setViewMode('table')}
+              className={`p-1.5 rounded-lg transition-all ${
+                viewMode === 'table'
+                  ? 'bg-background shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title={t('عرض كجدول', 'Table View')}
+            >
+              <List className="size-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-lg transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-background shadow-sm text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+              title={t('عرض كشبكة', 'Grid View')}
+            >
+              <LayoutGrid className="size-4" />
+            </button>
+          </div>
+          <Button className="gap-2" onClick={onAddClick}>
+            <Plus className="size-4" />
+            {t('إضافة منتج', 'Add Product')}
+          </Button>
+        </div>
       </div>
+
       <Card>
-        <CardContent className="pt-4">
-          {isLoading ? <div className="h-48 animate-pulse bg-muted rounded-xl" /> : (
-            <div className="divide-y divide-border">
-              {(data?.products ?? []).length === 0 ? (
-                <div className="text-center py-10 text-muted-foreground">
-                  <Package className="size-10 mx-auto mb-2 opacity-30" />
-                  <p>{t('لا توجد منتجات بعد', 'No products yet')}</p>
-                  <Button size="sm" className="mt-3" onClick={onAddClick}><Plus className="size-4 me-1" />{t('أضف أول منتج', 'Add first product')}</Button>
-                </div>
-              ) : (data?.products ?? []).map((p) => (
-                <div key={p.id} className="py-3 flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{p.name}</p>
-                    <p className="text-xs text-muted-foreground">{`${p.price.toLocaleString()} د.ج · مخزون: ${p.stock} · مباع: ${p.soldCount}`}</p>
+        <CardContent className="pt-4 px-3 sm:px-6">
+          {isLoading ? (
+            <div className="h-48 animate-pulse bg-muted rounded-xl" />
+          ) : (data?.products ?? []).length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">
+              <Package className="size-10 mx-auto mb-2 opacity-30" />
+              <p>{t('لا توجد منتجات بعد', 'No products yet')}</p>
+              <Button size="sm" className="mt-3" onClick={onAddClick}>
+                <Plus className="size-4 me-1" />
+                {t('أضف أول منتج', 'Add first product')}
+              </Button>
+            </div>
+          ) : viewMode === 'table' ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-start border-collapse">
+                <thead>
+                  <tr className="border-b border-border bg-muted/20 text-muted-foreground text-xs font-bold">
+                    <th className="py-3 px-4 text-start font-bold">{t('المنتج', 'Product')}</th>
+                    <th className="py-3 px-4 text-start font-bold hidden md:table-cell">{t('الفئة', 'Category')}</th>
+                    <th className="py-3 px-4 text-start font-bold">{t('السعر', 'Price')}</th>
+                    <th className="py-3 px-4 text-start font-bold">{t('المخزون', 'Stock')}</th>
+                    <th className="py-3 px-4 text-start font-bold hidden sm:table-cell">{t('المبيعات', 'Sales')}</th>
+                    <th className="py-3 px-4 text-start font-bold hidden lg:table-cell">{t('الحالة', 'Status')}</th>
+                    <th className="py-3 px-4 text-end font-bold">{t('إجراءات', 'Actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/60">
+                  {(data?.products ?? []).map((p) => {
+                    const productImg = parseImages(p.images)[0];
+                    return (
+                      <tr key={p.id} className="hover:bg-muted/10 transition-colors group">
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="size-11 rounded-lg overflow-hidden border border-border bg-muted flex-shrink-0">
+                              <img src={productImg} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate max-w-[150px] sm:max-w-[240px]">
+                                {p.name}
+                              </p>
+                              <span className="text-[10px] text-muted-foreground font-mono block mt-0.5 sm:hidden">
+                                {isAr ? p.category?.name : (p.category?.nameEn || p.category?.name)}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 text-sm font-medium text-muted-foreground hidden md:table-cell">
+                          {isAr ? p.category?.name : (p.category?.nameEn || p.category?.name)}
+                        </td>
+                        <td className="py-3 px-4 text-sm font-bold text-amber-600">
+                          {p.price.toLocaleString('ar-DZ')} د.ج
+                          {p.comparePrice && p.comparePrice > p.price && (
+                            <span className="block text-[10px] line-through text-muted-foreground font-normal">
+                              {p.comparePrice.toLocaleString('ar-DZ')} د.ج
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-sm font-medium">
+                          {p.stock > 0 ? (
+                            <span className="text-foreground">{p.stock}</span>
+                          ) : (
+                            <span className="text-red-500 font-bold text-xs">{t('نفذ', 'Out')}</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">
+                          {p.soldCount || 0}
+                        </td>
+                        <td className="py-3 px-4 hidden lg:table-cell">
+                          <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${STATUS_COLOR[p.status] ?? STATUS_COLOR.draft}`}>
+                            {p.status === 'active' ? t('نشط', 'Active') : p.status === 'draft' ? t('مسودة', 'Draft') : t('غير نشط', 'Inactive')}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-end">
+                          <div className="flex gap-1.5 justify-end">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="size-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                              onClick={() => setPreviewProductId(p.id)}
+                              title={t('تفاصيل ومعاينة', 'Preview Details')}
+                            >
+                              <Eye className="size-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="size-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+                              onClick={() => onEditClick(p)}
+                              title={t('تعديل', 'Edit')}
+                            >
+                              <Edit className="size-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="size-8 text-destructive hover:text-destructive hover:bg-red-50 dark:hover:bg-red-950/20"
+                              onClick={() => handleDelete(p.id)}
+                              title={t('حذف', 'Delete')}
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            /* Grid View */
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {(data?.products ?? []).map((p) => {
+                const productImg = parseImages(p.images)[0];
+                return (
+                  <div key={p.id} className="group relative bg-card border border-border/80 hover:border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                    {/* Status Badge & Image */}
+                    <div className="relative aspect-square w-full bg-muted overflow-hidden">
+                      <img src={productImg} alt="" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                      <div className="absolute top-2 start-2 flex flex-col gap-1.5">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm ${STATUS_COLOR[p.status] ?? STATUS_COLOR.draft}`}>
+                          {p.status === 'active' ? t('نشط', 'Active') : p.status === 'draft' ? t('مسودة', 'Draft') : t('غير نشط', 'Inactive')}
+                        </span>
+                      </div>
+                      {/* Quick action buttons overlay for Desktop/Hover */}
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center gap-2">
+                        <Button
+                          size="icon"
+                          className="size-8 rounded-full bg-white hover:bg-white/90 text-slate-900 border-0"
+                          onClick={() => setPreviewProductId(p.id)}
+                          title={t('معاينة', 'Preview')}
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          className="size-8 rounded-full bg-white hover:bg-white/90 text-slate-900 border-0"
+                          onClick={() => onEditClick(p)}
+                          title={t('تعديل', 'Edit')}
+                        >
+                          <Edit className="size-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          className="size-8 rounded-full bg-red-600 hover:bg-red-700 text-white border-0"
+                          onClick={() => handleDelete(p.id)}
+                          title={t('حذف', 'Delete')}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    {/* Product Details */}
+                    <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground truncate font-semibold">
+                          {isAr ? p.category?.name : (p.category?.nameEn || p.category?.name)}
+                        </p>
+                        <h4 className="text-sm font-bold text-foreground line-clamp-2 mt-0.5 leading-snug">
+                          {p.name}
+                        </h4>
+                      </div>
+                      <div>
+                        <div className="flex items-baseline justify-between gap-1 flex-wrap">
+                          <span className="text-sm font-black text-amber-600">
+                            {p.price.toLocaleString('ar-DZ')} د.ج
+                          </span>
+                          {p.comparePrice && p.comparePrice > p.price && (
+                            <span className="text-[10px] line-through text-muted-foreground">
+                              {p.comparePrice.toLocaleString('ar-DZ')} د.ج
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground border-t border-border/40 mt-2 pt-1.5">
+                          <span>
+                            {t('المخزون:', 'Stock:')} <strong className={p.stock > 0 ? 'text-foreground' : 'text-red-500'}>{p.stock}</strong>
+                          </span>
+                          <span>
+                            {t('المبيعات:', 'Sales:')} <strong className="text-foreground">{p.soldCount || 0}</strong>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {/* Quick actions for Touch/Mobile devices where hover doesn't exist */}
+                    <div className="flex border-t border-border bg-muted/10 sm:hidden">
+                      <button
+                        onClick={() => setPreviewProductId(p.id)}
+                        className="flex-1 py-2 text-center text-[10px] font-semibold text-muted-foreground hover:text-foreground border-e border-border/80 flex items-center justify-center gap-1"
+                      >
+                        <Eye className="size-3.5" />
+                        {t('معاينة', 'Preview')}
+                      </button>
+                      <button
+                        onClick={() => onEditClick(p)}
+                        className="flex-1 py-2 text-center text-[10px] font-semibold text-muted-foreground hover:text-foreground border-e border-border/80 flex items-center justify-center gap-1"
+                      >
+                        <Edit className="size-3.5" />
+                        {t('تعديل', 'Edit')}
+                      </button>
+                      <button
+                        onClick={() => handleDelete(p.id)}
+                        className="flex-1 py-2 text-center text-[10px] font-semibold text-destructive hover:bg-red-50 dark:hover:bg-red-950/15 flex items-center justify-center gap-1"
+                      >
+                        <Trash2 className="size-3.5" />
+                        {t('حذف', 'Delete')}
+                      </button>
+                    </div>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLOR[p.status] ?? STATUS_COLOR.draft}`}>
-                    {p.status === 'active' ? t('نشط', 'Active') : p.status === 'draft' ? t('مسودة', 'Draft') : t('غير نشط', 'Inactive')}
-                  </span>
-                  <div className="flex gap-1">
-                    <Button size="icon" variant="ghost" className="size-7" onClick={() => onEditClick(p)}><Edit className="size-3.5" /></Button>
-                    <Button size="icon" variant="ghost" className="size-7 text-destructive" onClick={() => handleDelete(p.id)}><Trash2 className="size-3.5" /></Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Preview Modal */}
+      {previewProductId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] bg-background border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200" dir={isAr ? 'rtl' : 'ltr'}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
+              <div>
+                <h3 className="font-bold text-base sm:text-lg text-foreground">
+                  {isAr ? 'معاينة تفاصيل المنتج' : 'Product Details Preview'}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {isAr ? 'عرض كامل المواصفات والمعلومات المدخلة للمنتج' : 'View full product specifications and details'}
+                </p>
+              </div>
+              <button
+                onClick={() => setPreviewProductId(null)}
+                className="p-1.5 rounded-lg hover:bg-muted-foreground/10 text-muted-foreground hover:text-foreground transition-all"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+              {isPreviewLoading ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-3">
+                  <Loader2 className="size-8 text-amber-500 animate-spin" />
+                  <p className="text-sm text-muted-foreground font-medium">
+                    {isAr ? 'جاري تحميل تفاصيل المنتج...' : 'Loading product details...'}
+                  </p>
+                </div>
+              ) : previewProduct ? (
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                  {/* Left side: Images (5 cols on md) */}
+                  <div className="md:col-span-5 space-y-3">
+                    <ProductPreviewImages images={previewProduct.images} isAr={isAr} />
+                  </div>
+
+                  {/* Right side: Specifications & details (7 cols on md) */}
+                  <div className="md:col-span-7 space-y-6">
+                    {/* Product Info Card */}
+                    <div>
+                      <div className="flex items-center justify-between gap-2 flex-wrap mb-2">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_COLOR[previewProduct.status] ?? STATUS_COLOR.draft}`}>
+                          {previewProduct.status === 'active' ? t('نشط', 'Active') : previewProduct.status === 'draft' ? t('مسودة', 'Draft') : t('غير نشط', 'Inactive')}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          ID: <span className="font-mono text-[10px] sm:text-xs">{previewProduct.id}</span>
+                        </span>
+                      </div>
+                      <h4 className="text-lg sm:text-xl font-bold text-foreground mb-1 leading-snug">
+                        {isAr ? previewProduct.name : (previewProduct.nameEn || previewProduct.name)}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        {t('الفئة:', 'Category:')} <span className="font-semibold text-foreground">{isAr ? previewProduct.category?.name : (previewProduct.category?.nameEn || previewProduct.category?.name)}</span>
+                        {previewProduct.sku && ` · SKU: ${previewProduct.sku}`}
+                      </p>
+                    </div>
+
+                    {/* Pricing & Stock Card */}
+                    <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-muted/30 border border-border/60">
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">{t('سعر البيع الحالي', 'Current Sale Price')}</p>
+                        <p className="text-base sm:text-lg font-black text-amber-600">
+                          {previewProduct.price.toLocaleString('ar-DZ')} د.ج
+                        </p>
+                        {previewProduct.comparePrice && previewProduct.comparePrice > previewProduct.price && (
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-xs line-through text-muted-foreground">
+                              {previewProduct.comparePrice.toLocaleString('ar-DZ')} د.ج
+                            </span>
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400">
+                              {Math.round(((previewProduct.comparePrice - previewProduct.price) / previewProduct.comparePrice) * 100)}%-
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground mb-1">{t('حالة المخزون والمبيعات', 'Stock & Sales Status')}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className={`size-2.5 rounded-full ${previewProduct.stock > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+                          <span className="text-xs sm:text-sm font-bold text-foreground">
+                            {previewProduct.stock} {t('وحدات متوفرة', 'units available')}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          {t('الكمية المباعة:', 'Sold count:')} <span className="font-semibold text-foreground">{previewProduct.soldCount || 0}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Description & Bullet Points */}
+                    <div className="space-y-3">
+                      <h5 className="text-xs sm:text-sm font-bold text-foreground border-s-4 border-amber-500 ps-2">
+                        {t('وصف وتفاصيل العرض', 'Description & Key Highlights')}
+                      </h5>
+                      
+                      {/* Bullet Points */}
+                      <ProductBullets specs={previewProduct.specifications} shortDescription={previewProduct.shortDescription} isAr={isAr} />
+
+                      {previewProduct.description && (
+                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed whitespace-pre-line p-3 rounded-lg bg-muted/20 border border-border/40 max-h-40 overflow-y-auto">
+                          {previewProduct.description}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Specifications table */}
+                    <ProductSpecsTable specs={previewProduct.specifications} isAr={isAr} t={t} />
+
+                    {/* Variants table */}
+                    <ProductVariantsPreview variants={previewProduct.variants} isAr={isAr} t={t} />
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-10 text-muted-foreground">
+                  {isAr ? 'حدث خطأ أثناء تحميل تفاصيل المنتج.' : 'Error loading product details.'}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-border bg-muted/30 flex justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setPreviewProductId(null)}>
+                {isAr ? 'إغلاق المعاينة' : 'Close Preview'}
+              </Button>
+              {previewProduct && (
+                <Button
+                  size="sm"
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold gap-1.5"
+                  onClick={() => {
+                    setPreviewProductId(null);
+                    onEditClick(previewProduct);
+                  }}
+                >
+                  <Edit className="size-4" />
+                  {isAr ? 'تعديل هذا المنتج' : 'Edit Product'}
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Product Details Modal Helpers ───────────────────────────────────────────
+
+function parseImages(imagesField: any): string[] {
+  let initialImages: string[] = [
+    'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80'
+  ];
+  if (imagesField) {
+    try {
+      let parsed;
+      if (typeof imagesField === 'string') {
+        parsed = JSON.parse(imagesField);
+      } else {
+        parsed = imagesField;
+      }
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    } catch {}
+  }
+  return initialImages;
+}
+
+function ProductPreviewImages({ images, isAr }: { images: any; isAr: boolean }) {
+  const parsed = parseImages(images);
+  const [selected, setSelected] = useState(parsed[0] || '');
+
+  return (
+    <div className="space-y-2">
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-muted border border-border">
+        {selected ? (
+          <img
+            src={selected}
+            alt="Product Preview"
+            className="w-full h-full object-cover transition-all duration-300"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+            {isAr ? 'لا توجد صورة' : 'No image'}
+          </div>
+        )}
+      </div>
+      {parsed.length > 1 && (
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
+          {parsed.map((img, idx) => (
+            <button
+              key={idx}
+              onClick={() => setSelected(img)}
+              className={`relative size-12 rounded-lg overflow-hidden border bg-muted flex-shrink-0 transition-all ${
+                selected === img ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-border hover:border-muted-foreground/30'
+              }`}
+            >
+              <img src={img} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ProductBullets({ specs, shortDescription, isAr }: { specs: any; shortDescription: any; isAr: boolean }) {
+  let bullets: string[] = [];
+  
+  if (specs) {
+    try {
+      const parsedSpecs = typeof specs === 'string' ? JSON.parse(specs) : specs;
+      if (parsedSpecs.bullets && Array.isArray(parsedSpecs.bullets)) {
+        bullets = parsedSpecs.bullets.filter(Boolean);
+      }
+    } catch {}
+  }
+  
+  if (bullets.length === 0 && shortDescription) {
+    try {
+      const parsedShort = typeof shortDescription === 'string' ? JSON.parse(shortDescription) : shortDescription;
+      if (Array.isArray(parsedShort)) {
+        bullets = parsedShort.filter(Boolean);
+      } else if (typeof parsedShort === 'string') {
+        bullets = [parsedShort];
+      }
+    } catch {
+      if (typeof shortDescription === 'string') {
+        bullets = [shortDescription];
+      }
+    }
+  }
+
+  if (bullets.length === 0) return null;
+
+  return (
+    <ul className="list-disc list-inside space-y-1.5 text-xs sm:text-sm text-foreground/80 ps-2">
+      {bullets.map((b, i) => (
+        <li key={i} className="leading-relaxed">
+          {b}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ProductSpecsTable({ specs, isAr, t }: { specs: any; isAr: boolean; t: (a: string, e: string) => string }) {
+  let specData: any = {};
+  if (specs) {
+    try {
+      specData = typeof specs === 'string' ? JSON.parse(specs) : specs;
+    } catch {}
+  }
+
+  const items = [
+    { label: t('الوزن', 'Weight'), value: specData.weight },
+    { label: t('الأبعاد', 'Dimensions'), value: specData.dimensions },
+    { label: t('المواد/الخامات', 'Material'), value: specData.material },
+    { label: t('بلد المنشأ', 'Country of Origin'), value: specData.origin },
+    { label: t('الضمان', 'Warranty'), value: specData.warranty },
+  ].filter((i) => i.value);
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      <h5 className="text-xs sm:text-sm font-bold text-foreground border-s-4 border-amber-500 ps-2">
+        {t('المواصفات الفنية', 'Technical Specifications')}
+      </h5>
+      <div className="border border-border rounded-xl overflow-hidden text-xs bg-muted/10">
+        <table className="w-full border-collapse">
+          <tbody>
+            {items.map((item, idx) => (
+              <tr key={idx} className="border-b border-border/80 last:border-0 hover:bg-muted/30 transition-colors">
+                <td className="p-2.5 font-bold text-muted-foreground w-1/3 bg-muted/40">{item.label}</td>
+                <td className="p-2.5 text-foreground font-medium">{item.value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function ProductVariantsPreview({ variants, isAr, t }: { variants: any; isAr: boolean; t: (a: string, e: string) => string }) {
+  if (!variants || !Array.isArray(variants) || variants.length === 0) return null;
+
+  return (
+    <div className="space-y-2">
+      <h5 className="text-xs sm:text-sm font-bold text-foreground border-s-4 border-amber-500 ps-2">
+        {t('خيارات ومتغيرات المنتج', 'Product Variants & Options')}
+      </h5>
+      <div className="border border-border rounded-xl overflow-hidden text-xs bg-muted/10 overflow-x-auto">
+        <table className="w-full border-collapse min-w-[400px]">
+          <thead>
+            <tr className="border-b border-border bg-muted/40 text-muted-foreground font-bold text-[10px] sm:text-xs text-start">
+              <th className="p-2 text-start">{t('الخيار', 'Option')}</th>
+              <th className="p-2 text-start">{t('القيمة', 'Value')}</th>
+              <th className="p-2 text-start">{t('السعر', 'Price')}</th>
+              <th className="p-2 text-start">{t('المخزون', 'Stock')}</th>
+              <th className="p-2 text-start">SKU</th>
+            </tr>
+          </thead>
+          <tbody>
+            {variants.map((v: any, idx: number) => (
+              <tr key={idx} className="border-b border-border/80 last:border-0 hover:bg-muted/30 transition-colors">
+                <td className="p-2 font-bold text-foreground">{v.name}</td>
+                <td className="p-2 text-foreground">{v.value}</td>
+                <td className="p-2 text-amber-600 font-bold">
+                  {v.price ? `${v.price.toLocaleString('ar-DZ')} د.ج` : t('افتراضي', 'Default')}
+                </td>
+                <td className="p-2 font-semibold">
+                  {v.stock > 0 ? (
+                    <span className="text-green-600">{v.stock}</span>
+                  ) : (
+                    <span className="text-red-500">{t('نفذ', 'Out of stock')}</span>
+                  )}
+                </td>
+                <td className="p-2 text-muted-foreground font-mono text-[10px] sm:text-xs">{v.sku || '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

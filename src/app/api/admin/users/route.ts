@@ -333,6 +333,19 @@ export async function PATCH(request: Request) {
       if (typeof isVerified === 'boolean') {
         updateData.isVerified = isVerified;
         changes.push(`isVerified→${isVerified}`);
+
+        if (existing.role === 'freelancer' || existing.role === 'seller' || existing.sellerProfile) {
+          await db.sellerProfile.upsert({
+            where: { userId: id },
+            update: { isVerified },
+            create: {
+              userId: id,
+              isVerified,
+              storeName: existing.name,
+              storeNameEn: existing.nameEn || existing.name,
+            },
+          });
+        }
       }
 
       if (Object.keys(updateData).length === 0) {

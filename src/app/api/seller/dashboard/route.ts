@@ -21,7 +21,24 @@ export async function GET(req: NextRequest) {
     // Get seller's products
     const products = await db.product.findMany({
       where: { sellerId: seller.id },
-      select: { id: true, name: true, price: true, stock: true, status: true, soldCount: true, rating: true },
+      select: { 
+        id: true, 
+        name: true, 
+        price: true, 
+        comparePrice: true, 
+        stock: true, 
+        status: true, 
+        soldCount: true, 
+        rating: true, 
+        images: true,
+        category: {
+          select: {
+            id: true,
+            name: true,
+            nameEn: true,
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' },
       take: 50,
     });
