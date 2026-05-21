@@ -75,8 +75,8 @@ export async function GET(request: Request) {
           createdAt: true,
           _count: { select: { orders: true } },
           wallet: { select: { balance: true } },
-          store: { select: { name: true, isActive: true } },
-          sellerProfile: { select: { rating: true } },
+          store: { select: { id: true, name: true, isActive: true, rating: true, level: true, packageId: true } },
+          sellerProfile: { select: { id: true, rating: true, level: true, packageId: true } },
           logisticsProfile: { select: { totalDeliveries: true } },
         },
       }),
@@ -348,21 +348,72 @@ export async function PATCH(request: Request) {
         }
       }
 
-      if (Object.keys(updateData).length === 0) {
+      // Handle SellerProfile and Store overrides if provided
+      let profileUpdated = false;
+      if (existing.role === 'seller' || existing.sellerProfile) {
+        const sellerUpdate: Record<string, any> = {};
+        if (typeof body.level === 'number') sellerUpdate.level = body.level;
+        if (typeof body.rating === 'number') sellerUpdate.rating = body.rating;
+        if (body.packageId !== undefined) sellerUpdate.packageId = body.packageId || null;
+
+        if (Object.keys(sellerUpdate).length > 0) {
+          await db.sellerProfile.upsert({
+            where: { userId: id },
+            update: sellerUpdate,
+            create: {
+              userId: id,
+              storeName: existing.name,
+              storeNameEn: existing.nameEn || existing.name,
+              ...sellerUpdate,
+            },
+          });
+          changes.push(`sellerProfileOverride:${Object.keys(sellerUpdate).join(',')}`);
+          profileUpdated = true;
+        }
+      }
+
+      if (existing.role === 'store_manager' || existing.store) {
+        const storeUpdate: Record<string, any> = {};
+        if (typeof body.level === 'number') storeUpdate.level = body.level;
+        if (typeof body.rating === 'number') storeUpdate.rating = body.rating;
+        if (body.packageId !== undefined) storeUpdate.packageId = body.packageId || null;
+
+        if (Object.keys(storeUpdate).length > 0) {
+          await db.store.update({
+            where: { managerId: id },
+            data: storeUpdate,
+          });
+          changes.push(`storeOverride:${Object.keys(storeUpdate).join(',')}`);
+          profileUpdated = true;
+        }
+      }
+
+      if (Object.keys(updateData).length === 0 && !profileUpdated) {
         return NextResponse.json(
           { success: false, error: 'No valid fields to update' },
           { status: 400 }
         );
       }
 
-      const user = await db.user.update({
-        where: { id },
-        data: updateData,
-        select: {
-          id: true, name: true, nameEn: true, email: true, phone: true,
-          role: true, accountStatus: true, isActive: true, isVerified: true, createdAt: true,
-        },
-      });
+      let user = null;
+      if (Object.keys(updateData).length > 0) {
+        user = await db.user.update({
+          where: { id },
+          data: updateData,
+          select: {
+            id: true, name: true, nameEn: true, email: true, phone: true,
+            role: true, accountStatus: true, isActive: true, isVerified: true, createdAt: true,
+          },
+        });
+      } else {
+        user = await db.user.findUnique({
+          where: { id },
+          select: {
+            id: true, name: true, nameEn: true, email: true, phone: true,
+            role: true, accountStatus: true, isActive: true, isVerified: true, createdAt: true,
+          },
+        });
+      }
 
       await db.auditLog.create({
         data: {
@@ -371,11 +422,12 @@ export async function PATCH(request: Request) {
           action: 'admin_update',
           details: JSON.stringify({
             updatedFields: Object.keys(updateData),
+            profileUpdated,
             previousValues: {
               role: existing.role, accountStatus: existing.accountStatus,
               isActive: existing.isActive, isVerified: existing.isVerified,
             },
-            newValues: updateData,
+            newValues: { ...updateData, level: body.level, rating: body.rating, packageId: body.packageId },
           }),
         },
       });

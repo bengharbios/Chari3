@@ -74,6 +74,11 @@ interface HomepageData {
     user: { name: string; avatar?: string };
     _count: { products: number };
   }[];
+  topStores: {
+    id: string; name: string; nameEn?: string; rating: number; level: number; totalSales: number; logo?: string;
+    manager: { name: string; avatar?: string };
+    _count: { products: number };
+  }[];
   advertisements: Record<string, { id: string; title: string; imageUrl: string; linkUrl?: string }[]>;
   testimonials: { name: string; text: string; rating: number; city: string }[];
   layout?: string[];
@@ -117,6 +122,7 @@ export default function StorefrontHomepage() {
   const [data, setData] = useState<HomepageData | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeMerchantTab, setActiveMerchantTab] = useState<'stores' | 'sellers'>('stores');
 
   useEffect(() => {
     fetch('/api/homepage')
@@ -319,9 +325,17 @@ export default function StorefrontHomepage() {
                                 </div>
                               </div>
                               {sellerName && (
-                                <div className="flex items-center gap-1 mt-2 pt-2 border-t border-border">
-                                  <span className="text-xs">{LEVEL_BADGE[sellerLevel] || '🌱'}</span>
-                                  <span className="text-[10px] md:text-xs text-muted-foreground truncate">{sellerName}</span>
+                                <div className="flex items-center justify-between mt-2 pt-2 border-t border-border gap-1.5 text-[10px] md:text-xs text-muted-foreground">
+                                  <div className="flex items-center gap-1 min-w-0">
+                                    <span className="text-sm shrink-0" title={`Level ${sellerLevel}`}>{LEVEL_BADGE[sellerLevel] || '🌱'}</span>
+                                    <span className="font-medium text-foreground/80 truncate">{sellerName}</span>
+                                  </div>
+                                  {(product.seller?.rating || product.store?.rating) !== undefined && (
+                                    <div className="flex items-center gap-0.5 shrink-0 text-amber-500 font-bold">
+                                      <Star className="size-3 fill-amber-400 text-amber-400" />
+                                      <span>{(product.seller?.rating || product.store?.rating || 0).toFixed(1)}</span>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -334,50 +348,146 @@ export default function StorefrontHomepage() {
         );
 
       case 'top_sellers':
+        const stores = data?.topStores || [];
+        const sellers = data?.topSellers || [];
+
         return (
-          <section key="top_sellers" className="bg-gradient-to-br from-slate-900 to-slate-800 text-white py-14 mt-10">
-            <div className="container-platform">
-              <div className="text-center mb-8 md:mb-10 px-4">
-                <Badge className="mb-3 bg-amber-500/20 text-amber-400 border-amber-500/30">
-                  {t('التجار الأفضل', 'Top Sellers')}
+          <section key="top_sellers" className="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white py-16 mt-12 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+              <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary rounded-full blur-[120px]" />
+              <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-primary rounded-full blur-[120px]" />
+            </div>
+
+            <div className="container-platform relative z-10">
+              <div className="text-center mb-10 px-4 max-w-2xl mx-auto">
+                <Badge className="mb-3.5 bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs px-3.5 py-1">
+                  ⭐ {t('تجار شاري داي المميزين', 'ChariDay Top Merchants')}
                 </Badge>
-                <h2 className="text-2xl md:text-3xl font-black mb-2">{t('تجار موثوقون بتقييمات عالية', 'Trusted Sellers with High Ratings')}</h2>
-                <p className="text-sm md:text-base text-white/60">{t('تسوق من التجار الأكثر تميزاً ومصداقية على المنصة', 'Shop from our most distinguished and reliable sellers')}</p>
+                <h2 className="text-2xl md:text-4xl font-black mb-3.5 leading-tight tracking-tight font-cairo">
+                  {t('تسوق من الشركاء الموثوقين', 'Shop from Our Certified Partners')}
+                </h2>
+                <p className="text-xs md:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
+                  {t('نوفر لك نخبة من كبرى المتاجر الجزائرية والتجار الأحرار الموثقين بشارات الجودة والمستويات الاحترافية.', 'We connect you with premier Algerian stores and verified independent merchants possessing professional badges.')}
+                </p>
+
+                {/* Tab Switcher */}
+                <div className="inline-flex p-1 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 mt-8 gap-1.5 font-cairo">
+                  <button
+                    onClick={() => setActiveMerchantTab('stores')}
+                    className={`px-5 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${
+                      activeMerchantTab === 'stores' ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]' : 'text-white/70 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    🏪 {t('المتاجر الكبرى المتميزة', 'Premium Stores')}
+                  </button>
+                  <button
+                    onClick={() => setActiveMerchantTab('sellers')}
+                    className={`px-5 py-2.5 rounded-lg text-xs md:text-sm font-bold transition-all ${
+                      activeMerchantTab === 'sellers' ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]' : 'text-white/70 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    💼 {t('التجار المستقلون الأحرار', 'Independent Sellers')}
+                  </button>
+                </div>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                {isLoading
-                  ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="rounded-2xl bg-white/10 animate-pulse h-36" />)
-                  : (data?.topSellers ?? [])
-                      .filter((seller) => seller && seller.user)
-                      .map((seller) => (
-                        <Card key={seller.id}
-                          className="bg-white/10 border-white/10 hover:bg-white/15 transition-all cursor-pointer group"
-                          onClick={() => {
-                            useAppStore.getState().setSelectedSellerId(seller.id);
-                            useAppStore.getState().setCurrentPage('seller-profile');
-                          }}
-                        >
-                          <CardContent className="p-4 text-center">
-                            <div className="relative mx-auto mb-3 w-14 h-14">
-                              {seller.user.avatar ? (
-                                <img src={seller.user.avatar} className="w-full h-full rounded-full object-cover border-2 border-amber-400" alt={seller.user.name} />
-                              ) : (
-                                <div className="w-full h-full rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-xl font-bold text-white">
-                                  {seller.user.name.charAt(0)}
-                                </div>
-                              )}
-                              <span className="absolute -bottom-1 -end-1 text-base">{LEVEL_BADGE[seller.level] || '⭐'}</span>
-                            </div>
-                            <p className="text-white font-semibold text-sm truncate">{seller.storeName || seller.user.name}</p>
-                            <div className="flex items-center justify-center gap-1 my-1">
-                              <StarRating rating={seller.rating} />
-                              <span className="text-white/60 text-xs">{seller.rating.toFixed(1)}</span>
-                            </div>
-                            <p className="text-white/50 text-xs">{seller._count.products} {t('منتج', 'products')}</p>
-                          </CardContent>
-                        </Card>
-                      ))}
-              </div>
+
+              {/* Render Stores Tab */}
+              {activeMerchantTab === 'stores' && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 font-cairo">
+                  {isLoading ? (
+                    Array.from({ length: 4 }).map((_, i) => <div key={i} className="rounded-2xl bg-white/5 animate-pulse h-44" />)
+                  ) : stores.length === 0 ? (
+                    <div className="col-span-full py-12 text-center text-white/50 text-sm">
+                      {t('لا توجد متاجر نشطة حالياً', 'No active stores at the moment.')}
+                    </div>
+                  ) : (
+                    stores.map((store) => (
+                      <Card
+                        key={store.id}
+                        className="bg-white/5 border-white/10 hover:border-amber-500/50 hover:bg-white/10 transition-all cursor-pointer group text-white shadow-xl"
+                        onClick={() => {
+                          useAppStore.getState().setSelectedSellerId(store.id);
+                          useAppStore.getState().setCurrentPage('seller-profile');
+                        }}
+                      >
+                        <CardContent className="p-5 text-center flex flex-col items-center h-full">
+                          <div className="relative mb-4 w-16 h-16 shrink-0 group-hover:scale-105 transition-transform duration-300">
+                            {store.logo ? (
+                              <img src={store.logo} className="w-full h-full rounded-2xl object-cover border-2 border-white/20 shadow-md" alt={store.name} />
+                            ) : (
+                              <div className="w-full h-full rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-2xl font-bold">🏪</div>
+                            )}
+                            <span className="absolute -bottom-1 -end-1 text-lg" title={`Level ${store.level}`}>{LEVEL_BADGE[store.level] || '⭐'}</span>
+                          </div>
+                          <div className="grow min-w-0">
+                            <h3 className="font-bold text-sm md:text-base truncate group-hover:text-amber-400 transition-colors">
+                              {isAr ? store.name : (store.nameEn || store.name)}
+                            </h3>
+                            <p className="text-[10px] md:text-xs text-white/40 mt-1 truncate">
+                              👤 {t('مدير المتجر:', 'Manager:')} {store.manager?.name || ''}
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-center gap-1.5 mt-3 pt-3 border-t border-white/5 w-full">
+                            <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                            <span className="text-xs font-bold">{store.rating.toFixed(1)}</span>
+                            <span className="text-white/30 text-[10px]">•</span>
+                            <span className="text-white/50 text-[10px]">{store._count?.products || 0} {t('منتج', 'products')}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* Render Sellers Tab */}
+              {activeMerchantTab === 'sellers' && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 font-cairo">
+                  {isLoading ? (
+                    Array.from({ length: 4 }).map((_, i) => <div key={i} className="rounded-2xl bg-white/5 animate-pulse h-44" />)
+                  ) : sellers.length === 0 ? (
+                    <div className="col-span-full py-12 text-center text-white/50 text-sm">
+                      {t('لا يوجد تجار مستقلون حالياً', 'No active independent sellers at the moment.')}
+                    </div>
+                  ) : (
+                    sellers.map((seller) => (
+                      <Card
+                        key={seller.id}
+                        className="bg-white/5 border-white/10 hover:border-amber-500/50 hover:bg-white/10 transition-all cursor-pointer group text-white shadow-xl"
+                        onClick={() => {
+                          useAppStore.getState().setSelectedSellerId(seller.id);
+                          useAppStore.getState().setCurrentPage('seller-profile');
+                        }}
+                      >
+                        <CardContent className="p-5 text-center flex flex-col items-center h-full">
+                          <div className="relative mb-4 w-16 h-16 shrink-0 group-hover:scale-105 transition-transform duration-300">
+                            {seller.user?.avatar ? (
+                              <img src={seller.user.avatar} className="w-full h-full rounded-full object-cover border-2 border-white/20 shadow-md" alt={seller.user.name} />
+                            ) : (
+                              <div className="w-full h-full rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-xl font-bold">{seller.user?.name?.charAt(0) || ''}</div>
+                            )}
+                            <span className="absolute -bottom-1 -end-1 text-lg" title={`Level ${seller.level}`}>{LEVEL_BADGE[seller.level] || '⭐'}</span>
+                          </div>
+                          <div className="grow min-w-0">
+                            <h3 className="font-bold text-sm md:text-base truncate group-hover:text-amber-400 transition-colors">
+                              {seller.storeName || seller.user?.name}
+                            </h3>
+                            <p className="text-[10px] md:text-xs text-white/40 mt-1 truncate">
+                              💼 {t('تاجر مستقل معتمد', 'Certified Freelance Merchant')}
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-center gap-1.5 mt-3 pt-3 border-t border-white/5 w-full">
+                            <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                            <span className="text-xs font-bold">{seller.rating.toFixed(1)}</span>
+                            <span className="text-white/30 text-[10px]">•</span>
+                            <span className="text-white/50 text-[10px]">{seller._count?.products || 0} {t('منتج', 'products')}</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </section>
         );

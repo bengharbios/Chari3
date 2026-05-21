@@ -63,6 +63,20 @@ interface ProductDetail {
     isVerified: boolean;
     _count?: { products: number };
   } | null;
+  store?: {
+    id: string;
+    name?: string;
+    nameEn?: string;
+    description?: string;
+    logo?: string;
+    coverImage?: string;
+    rating: number;
+    level: number;
+    totalSales: number;
+    totalCustomers: number;
+    isActive: boolean;
+    _count?: { products: number };
+  } | null;
 }
 
 interface RelatedProduct {
@@ -169,9 +183,24 @@ export default function ProductDetailPage() {
     setTimeout(() => setAddedToCart(false), 2000);
   };
 
+  const merchant = product?.seller || (product?.store ? {
+    id: product.store.id,
+    storeName: product.store.name,
+    storeNameEn: product.store.nameEn,
+    bio: product.store.description,
+    logo: product.store.logo,
+    coverImage: product.store.coverImage,
+    rating: product.store.rating,
+    level: product.store.level,
+    totalSales: product.store.totalSales,
+    totalCustomers: product.store.totalCustomers,
+    isVerified: product.store.isActive,
+    _count: product.store._count
+  } : null);
+
   const goToSeller = () => {
-    if (product?.seller?.id) {
-      useAppStore.getState().setSelectedSellerId(product.seller.id);
+    if (merchant?.id) {
+      useAppStore.getState().setSelectedSellerId(merchant.id);
       setCurrentPage('seller-profile');
     }
   };
@@ -544,40 +573,40 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* ── SELLER CARD ── */}
-        {product.seller && (
+        {/* ── MERCHANT CARD ── */}
+        {merchant && (
           <Card className="mt-10 overflow-hidden border-border hover:border-primary/30 transition-all">
-            {product.seller.coverImage && (
+            {merchant.coverImage && (
               <div className="h-24 overflow-hidden">
-                <img src={product.seller.coverImage} alt="" className="w-full h-full object-cover" />
+                <img src={merchant.coverImage} alt="" className="w-full h-full object-cover" />
               </div>
             )}
             <CardContent className="p-5">
               <div className="flex items-start gap-4 flex-wrap">
                 <div className="relative shrink-0">
-                  {product.seller.logo ? (
-                    <img src={product.seller.logo} alt={product.seller.storeName || ''} className="size-16 rounded-xl object-cover border-2 border-border" />
+                  {merchant.logo ? (
+                    <img src={merchant.logo} alt={merchant.storeName || ''} className="size-16 rounded-xl object-cover border-2 border-border" />
                   ) : (
                     <div className="size-16 rounded-xl bg-primary/10 flex items-center justify-center text-2xl">🏪</div>
                   )}
-                  {product.seller.isVerified && (
+                  {merchant.isVerified && (
                     <div className="absolute -bottom-1 -end-1 size-5 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">✓</div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-bold text-lg">{isAr ? product.seller.storeName : (product.seller.storeNameEn || product.seller.storeName)}</h3>
-                    <span className="text-xl">{LEVEL_BADGE[product.seller.level] || '🌱'}</span>
-                    {product.seller.isVerified && <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">✓ {t('موثق', 'Verified')}</Badge>}
+                    <h3 className="font-bold text-lg">{isAr ? merchant.storeName : (merchant.storeNameEn || merchant.storeName)}</h3>
+                    <span className="text-xl" title={`Level ${merchant.level}`}>{LEVEL_BADGE[merchant.level] || '🌱'}</span>
+                    {merchant.isVerified && <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">✓ {t('موثق', 'Verified')}</Badge>}
                   </div>
-                  {product.seller.bio && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{product.seller.bio}</p>}
+                  {merchant.bio && <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{merchant.bio}</p>}
                   <div className="flex items-center gap-4 mt-2 flex-wrap">
                     <div className="flex items-center gap-1">
-                      <StarRating rating={product.seller.rating} size="sm" />
-                      <span className="text-sm font-semibold">{product.seller.rating.toFixed(1)}</span>
+                      <StarRating rating={merchant.rating} size="sm" />
+                      <span className="text-sm font-semibold">{merchant.rating.toFixed(1)}</span>
                     </div>
-                    <span className="text-xs text-muted-foreground">{product.seller.totalSales.toLocaleString()} {t('مبيعة', 'sales')}</span>
-                    {product.seller._count && <span className="text-xs text-muted-foreground">{product.seller._count.products} {t('منتج', 'products')}</span>}
+                    <span className="text-xs text-muted-foreground">{merchant.totalSales.toLocaleString()} {t('مبيعة', 'sales')}</span>
+                    {merchant._count && <span className="text-xs text-muted-foreground">{merchant._count.products} {t('منتج', 'products')}</span>}
                   </div>
                 </div>
                 <Button onClick={goToSeller} variant="outline" className="shrink-0 gap-2">

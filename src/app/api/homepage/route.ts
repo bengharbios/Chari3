@@ -7,7 +7,7 @@ export async function GET() {
   try {
     await ensureDbConnection();
     // Fetch data for the homepage in parallel
-    const [categories, featuredProducts, topSellers, advertisements, testimonials, layoutSetting, heroSlidesSetting, maintenanceSetting] = await Promise.all([
+    const [categories, rawProducts, topSellers, topStores, advertisements, testimonials, layoutSetting, heroSlidesSetting, maintenanceSetting] = await Promise.all([
       // Active categories with product counts
       db.category.findMany({
         where: { isActive: true, parentId: null },
@@ -15,7 +15,7 @@ export async function GET() {
         take: 12,
       }),
 
-      // Featured and recent products
+      // Featured and recent products (fetching up to 100 for dynamic scoring)
       db.product.findMany({
         where: { status: 'active' },
         include: {
@@ -27,6 +27,7 @@ export async function GET() {
               rating: true,
               level: true,
               logo: true,
+              package: { select: { price: true } },
             },
           },
           store: {
@@ -36,16 +37,11 @@ export async function GET() {
               rating: true,
               level: true,
               logo: true,
+              package: { select: { price: true } },
             },
           },
         },
-        orderBy: [
-          { isFeatured: 'desc' },
-          { createdAt: 'desc' },
-          { soldCount: 'desc' },
-          { rating: 'desc' },
-        ],
-        take: 20,
+        take: 100,
       }),
 
       // Top sellers by rating and level
@@ -54,6 +50,21 @@ export async function GET() {
         include: {
           user: { select: { name: true, nameEn: true, avatar: true } },
           _count: { select: { products: true } },
+        },
+        orderBy: [
+          { level: 'desc' },
+          { rating: 'desc' },
+          { totalSales: 'desc' },
+        ],
+        take: 8,
+      }),
+
+      // Top stores by rating and level
+      db.store.findMany({
+        where: { isActive: true },
+        include: {
+          _count: { select: { products: true } },
+          manager: { select: { name: true, nameEn: true, avatar: true } },
         },
         orderBy: [
           { level: 'desc' },
@@ -95,6 +106,47 @@ export async function GET() {
       // Maintenance mode flag
       db.setting.findUnique({ where: { key: 'flag_maintenance_mode' } }),
     ]);
+
+    // Rank products dynamically in memory
+    const rankedProducts = rawProducts.map((product: any) => {
+      const merchant = product.seller || product.store;
+      const isFeaturedBoost = product.isFeatured ? 50 : 0;
+      
+      // Freshness boost: declines over 30 days
+      const ageInDays = (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+      const freshnessBoost = Math.max(0, 30 - ageInDays) * 1.5; // Up to 45 points
+      
+      // Level boost
+      const levelBoost = (merchant?.level || 1) * 3; // Up to 30 points
+      
+      // Rating boost
+      const ratingBoost = (merchant?.rating || 0) * 5; // Up to 25 points
+      
+      // Organic metrics
+      const salesBoost = Math.min(20, (product.soldCount || 0) * 0.5); // Up to 20 points
+      const viewsBoost = Math.min(10, (product.viewCount || 0) * 0.05); // Up to 10 points
+      const productRatingBoost = (product.rating || 0) * 2; // Up to 10 points
+      
+      // Package price boost
+      const packagePrice = merchant?.package?.price || 0;
+      const packageBoost = Math.min(30, packagePrice * 0.02); // Up to 30 points
+      
+      const score = 
+        isFeaturedBoost + 
+        freshnessBoost + 
+        levelBoost + 
+        ratingBoost + 
+        salesBoost + 
+        viewsBoost + 
+        productRatingBoost + 
+        packageBoost;
+        
+      return { ...product, score };
+    });
+    
+    // Sort in-memory
+    rankedProducts.sort((a, b) => b.score - a.score);
+    const featuredProducts = rankedProducts.slice(0, 20);
 
     // Track impressions for ads (fire and forget)
     if (advertisements.length > 0) {
@@ -147,6 +199,7 @@ export async function GET() {
       categories,
       featuredProducts,
       topSellers,
+      topStores,
       advertisements: adsByZone,
       testimonials: parsedTestimonials,
       layout: parsedLayout,

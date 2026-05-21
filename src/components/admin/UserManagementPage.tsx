@@ -360,6 +360,25 @@ export default function UserManagementPage() {
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+  // Overrides dialog state
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [overrideLevel, setOverrideLevel] = useState<number>(1);
+  const [overrideRating, setOverrideRating] = useState<string>('0.0');
+  const [overridePackageId, setOverridePackageId] = useState<string>('');
+  const [packages, setPackages] = useState<any[]>([]);
+  const [isSavingOverride, setIsSavingOverride] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/packages')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.packages) {
+          setPackages(data.packages);
+        }
+      })
+      .catch((err) => console.error('Error fetching packages:', err));
+  }, []);
+
   // ---- Data Fetching ----
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -1344,6 +1363,32 @@ export default function UserManagementPage() {
 
               {/* Footer Actions */}
               <SheetFooter className="p-4 border-t shrink-0 flex-col gap-2 sm:flex-col">
+                {(selectedUser.role === 'seller' || selectedUser.role === 'store_manager') && (
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-brand text-brand hover:bg-brand/10"
+                    onClick={() => {
+                      setDrawerOpen(false);
+                      const rating = selectedUser.role === 'store_manager'
+                        ? selectedUser.store?.rating ?? 0
+                        : selectedUser.sellerProfile?.rating ?? 0;
+                      const level = selectedUser.role === 'store_manager'
+                        ? selectedUser.store?.level ?? 1
+                        : selectedUser.sellerProfile?.level ?? 1;
+                      const packageId = selectedUser.role === 'store_manager'
+                        ? selectedUser.store?.packageId ?? ''
+                        : selectedUser.sellerProfile?.packageId ?? '';
+
+                      setOverrideLevel(level);
+                      setOverrideRating(String(rating));
+                      setOverridePackageId(packageId || 'none');
+                      setOverrideOpen(true);
+                    }}
+                  >
+                    <Star className="h-4 w-4 text-brand fill-brand" />
+                    {t(locale, 'تعديل التقييم والميزات', 'Edit Rating & Features')}
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   className="w-full gap-2"
@@ -1750,6 +1795,161 @@ export default function UserManagementPage() {
             >
               {deleteLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               {t(locale, 'حذف الحساب نهائياً', 'Delete Permanently')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* ============================================ */}
+      {/* 11. EDIT MERCHANT OVERRIDES DIALOG          */}
+      {/* ============================================ */}
+      <AlertDialog open={overrideOpen} onOpenChange={setOverrideOpen}>
+        <AlertDialogContent dir={dir} className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-brand font-bold text-lg">
+              <ShieldCheck className="h-5 w-5 text-brand" />
+              {t(locale, 'تعديل تقييم ومستوى التاجر', 'Edit Merchant Rating & Level')}
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4 text-start mt-4">
+                {/* User info display */}
+                <div className="p-3.5 rounded-xl bg-muted/40 border border-muted/80 flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-brand/10 text-brand text-sm font-bold">
+                      {selectedUser ? getDisplayName(selectedUser).charAt(0) : ''}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-semibold">{selectedUser ? getDisplayName(selectedUser) : ''}</p>
+                    <p className="text-xs text-muted-foreground">{selectedUser ? getRoleLabel(locale, selectedUser.role) : ''}</p>
+                  </div>
+                </div>
+
+                {/* Level (1 to 10) slider/select */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium">
+                    {t(locale, 'مستوى التاجر / المتجر', 'Merchant / Store Level')}
+                  </Label>
+                  <Select
+                    value={String(overrideLevel)}
+                    onValueChange={(val) => setOverrideLevel(Number(val))}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t(locale, 'اختر المستوى', 'Select Level')} />
+                    </SelectTrigger>
+                    <SelectContent dir={dir}>
+                      {Array.from({ length: 10 }, (_, i) => i + 1).map((lvl) => (
+                        <SelectItem key={lvl} value={String(lvl)}>
+                          {t(locale, `المستوى ${lvl}`, `Level ${lvl}`)}
+                          {lvl === 1 && ` (${t(locale, 'مبتدئ', 'Beginner')})`}
+                          {lvl === 5 && ` (${t(locale, 'متميز', 'Distinguished')})`}
+                          {lvl === 10 && ` (${t(locale, 'نخبة', 'Elite')})`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {t(locale, 'يمنح المستوى الأعلى ظهوراً أفضل للمنتجات وشارة موثوقية متقدمة.', 'Higher levels grant better product visibility and advanced trust badges.')}
+                  </p>
+                </div>
+
+                {/* Rating (0.0 to 5.0) */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium">
+                    {t(locale, 'التقييم الافتراضي (0.0 - 5.0)', 'Default Rating (0.0 - 5.0)')}
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0.0"
+                      max="5.0"
+                      value={overrideRating}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '' || (Number(val) >= 0 && Number(val) <= 5)) {
+                          setOverrideRating(val);
+                        }
+                      }}
+                      className="ps-8 font-semibold"
+                    />
+                    <Star className="absolute start-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-yellow-500 fill-yellow-500" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t(locale, 'يتم دمج هذا التقييم مع تقييمات المشترين لتحديد الترتيب في الصفحة الرئيسية.', 'This rating is combined with buyer reviews to determine homepage sorting.')}
+                  </p>
+                </div>
+
+                {/* Paid Package Id */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium">
+                    {t(locale, 'باقة الاشتراك المميزة', 'Premium Subscription Package')}
+                  </Label>
+                  <Select
+                    value={overridePackageId}
+                    onValueChange={(val) => setOverridePackageId(val)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={t(locale, 'بدون باقة (مجاني)', 'No Package (Free)')} />
+                    </SelectTrigger>
+                    <SelectContent dir={dir}>
+                      <SelectItem value="none">
+                        {t(locale, 'بدون باقة (مجاني)', 'No Package (Free)')}
+                      </SelectItem>
+                      {packages.map((pkg) => (
+                        <SelectItem key={pkg.id} value={pkg.id}>
+                          {locale === 'ar' ? pkg.name : (pkg.nameEn || pkg.name)} ({pkg.price} DZD)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {t(locale, 'تزيد الباقات المدفوعة من نقاط ترتيب المنتجات في نتائج البحث والصفحة الرئيسية.', 'Paid packages increase product score weight on the homepage and search.')}
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 flex gap-2">
+            <AlertDialogCancel disabled={isSavingOverride}>
+              {t(locale, 'إلغاء', 'Cancel')}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!selectedUser) return;
+                setIsSavingOverride(true);
+                try {
+                  const ratingNum = Number(overrideRating) || 0;
+                  const res = await fetch('/api/admin/users', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      id: selectedUser.id,
+                      level: overrideLevel,
+                      rating: ratingNum,
+                      packageId: overridePackageId === 'none' ? null : overridePackageId,
+                    }),
+                  });
+                  const data = await res.json();
+                  if (data.success) {
+                    toast.success(t(locale, 'تم حفظ الميزات والتقييم بنجاح', 'Rating & features saved successfully'));
+                    setOverrideOpen(false);
+                    fetchUsers();
+                  } else {
+                    toast.error(data.error || t(locale, 'حدث خطأ أثناء الحفظ', 'Error saving overrides'));
+                  }
+                } catch (err) {
+                  toast.error(t(locale, 'فشلت عملية الحفظ', 'Save operation failed'));
+                } finally {
+                  setIsSavingOverride(false);
+                }
+              }}
+              disabled={isSavingOverride}
+              className="bg-brand text-brand-foreground hover:bg-brand/90"
+            >
+              {isSavingOverride && <Loader2 className="h-4 w-4 animate-spin me-2" />}
+              {t(locale, 'حفظ التغييرات', 'Save Changes')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
