@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import NotificationPanel from '@/components/notifications/NotificationPanel';
 import type { PageType } from '@/types';
 
-import Sidebar from './Sidebar';
+
 
 const rolePages: Record<string, PageType> = {
   admin: 'admin',
@@ -217,7 +217,7 @@ export default function Header() {
       </div>
     </header>
       {/* Mobile Sidebar Drawer */}
-      {isSidebarOpen && <Sidebar className="lg:hidden" />}
+      
     </>
   );
 }

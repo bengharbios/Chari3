@@ -16,7 +16,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   if (!user) return null;
 
   return (
-    <div className="overflow-x-hidden">
+    <div className="min-h-screen overflow-x-hidden flex flex-col">
+  <div className="flex flex-1">
+    <Sidebar />
+    <main
+      className={`flex-1 min-w-0 transition-all duration-300 ${
+        isSidebarOpen ? 'lg:ms-0' : 'lg:ms-0'
+      }`}
+    >
+      <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-[1400px] mx-auto">
+        {children}
+      </div>
+    </main>
+  </div>
+  <BottomNav />
+</div>
     <div className="flex flex-1">
       <Sidebar />
       <main
