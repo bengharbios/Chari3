@@ -1,6 +1,6 @@
 'use client';
 
-import { useCartStore, useAppStore } from '@/lib/store';
+import { useCartStore, useAppStore, useAuthStore } from '@/lib/store';
 import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,15 @@ export default function FloatingCart() {
   // Optionally hide on some dashboards, but the requirement is to show across all screens
   // if there are items in the cart.
   // We hide it on the login/auth page though just to keep auth screen clean.
+  const { isBuyerMode, user } = useAuthStore();
+
+  // Hide on login page
   if (currentPage === 'login') {
+    return null;
+  }
+
+  // Hide for sellers/suppliers unless they are in Buyer Mode
+  if (user && ['seller', 'supplier'].includes(user.role) && !isBuyerMode) {
     return null;
   }
 

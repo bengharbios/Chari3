@@ -35,8 +35,8 @@ const rolePages: Record<string, PageType> = {
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
-  const { locale, setLocale, theme, setTheme, toggleMobileMenu, setSidebarOpen, isSidebarOpen } = useAppStore();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { locale, setLocale, theme, setTheme, toggleMobileMenu, setSidebarOpen, isSidebarOpen, allowGuestCheckout } = useAppStore();
+  const { user, isAuthenticated, logout, isBuyerMode } = useAuthStore();
   const {
     itemCount,
     items,
@@ -56,7 +56,7 @@ export default function Header() {
   // Two-step cart: 'cart' = view items, 'checkout' = shipping form
   const [cartStep, setCartStep] = useState<'cart' | 'checkout'>('cart');
   // Guest checkout flag from admin settings
-  const [allowGuestCheckout, setAllowGuestCheckout] = useState(true);
+  
 
   // Form states
   const [fullName, setFullName] = useState('');
@@ -228,6 +228,12 @@ export default function Header() {
               <Input
                 placeholder={t('ابحث عن منتجات، ماركات، وأكثر...', 'Search for products, brands, and more...')}
                 className="ps-10 pe-4 h-10 rounded-full border-border bg-surface focus:ring-2 focus:ring-brand"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                    useAppStore.getState().setCurrentPage('search' as PageType);
+                    router.push(`/?view=search&q=${encodeURIComponent(e.currentTarget.value.trim())}`);
+                  }
+                }}
               />
             </div>
           </div>
@@ -315,9 +321,17 @@ export default function Header() {
                     {t('لوحة التحكم', 'Dashboard')}
                   </DropdownMenuItem>
                   {user.role !== 'admin' && user.role !== 'buyer' && (
-                    <DropdownMenuItem onClick={() => navigateToDashboard('home')}>
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        const { setBuyerMode, isBuyerMode } = useAuthStore.getState();
+                        setBuyerMode(!isBuyerMode);
+                      }}
+                      className={useAuthStore.getState().isBuyerMode ? "bg-brand/10 text-brand" : ""}
+                    >
                       <ShoppingBag className="h-4 w-4" />
-                      {t('تصفح كـ مشتري', 'Browse as Buyer')}
+                      {useAuthStore.getState().isBuyerMode 
+                        ? t('العودة لحساب التاجر', 'Return to Dashboard') 
+                        : t('تصفح كـ مشتري', 'Browse as Buyer')}
                     </DropdownMenuItem>
                   )}
                   {user.role !== 'admin' && user.role !== 'buyer' && (
@@ -360,6 +374,13 @@ export default function Header() {
                 placeholder={t('ابحث عن منتجات...', 'Search for products...')}
                 className="ps-10 pe-4 h-10 rounded-full border-border bg-surface"
                 autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                    setMobileSearchOpen(false);
+                    useAppStore.getState().setCurrentPage('search' as PageType);
+                    router.push(`/?view=search&q=${encodeURIComponent(e.currentTarget.value.trim())}`);
+                  }
+                }}
               />
             </div>
           </div>

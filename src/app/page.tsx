@@ -19,6 +19,7 @@ import AdminReviewQueue from '@/components/onboarding/AdminReviewQueue';
 import AdminDashboard from '@/components/dashboards/AdminDashboard';
 import UserManagementPage from '@/components/admin/UserManagementPage';
 import RolesManagementPage from '@/components/admin/RolesManagementPage';
+import SettingsPage from '@/components/admin/SettingsPage';
 import StoreDashboard from '@/components/dashboards/StoreDashboard';
 import SellerDashboard from '@/components/dashboards/SellerDashboard';
 import LogisticsDashboard from '@/components/dashboards/LogisticsDashboard';
@@ -26,6 +27,7 @@ import BuyerDashboard from '@/components/dashboards/BuyerDashboard';
 import HomepagePage from '@/components/storefront/HomepagePage';
 import ProductDetailPage from '@/components/storefront/ProductDetailPage';
 import SellerProfilePage from '@/components/storefront/SellerProfilePage';
+import SearchPage from '@/components/storefront/SearchPage';
 import { toast } from 'sonner';
 import type { PageType, UserRole } from '@/types';
 
@@ -33,6 +35,7 @@ const DASHBOARD_MAP: Record<string, React.ComponentType> = {
   admin: AdminDashboard,
   'admin-users': UserManagementPage,
   'admin-roles': RolesManagementPage,
+  'admin-settings': SettingsPage,
   'store-settings': StoreDashboard,
   'store-products': SellerDashboard,
   'store-orders': SellerDashboard,
@@ -60,6 +63,7 @@ const DASHBOARD_MAP: Record<string, React.ComponentType> = {
   buyer: BuyerDashboard,
   verification: VerificationStatusPage,
   home: HomepagePage,
+  search: SearchPage,
   login: AuthPage,
 };
 
@@ -74,14 +78,14 @@ const ROLE_TO_PAGE: Record<UserRole, PageType> = {
 
 // Pages that should NOT be auto-redirected to role dashboard
 const ALLOWED_EXTRA_PAGES: PageType[] = [
-  'verification',
+  'verification', 'search',
   'admin-users', 'admin-roles', 'admin-orders', 'admin-products', 'admin-stores',
   'admin-sellers', 'admin-shipping', 'admin-analytics', 'admin-settings',
 ];
 
 function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   const { currentPage, setCurrentPage, locale } = useAppStore();
-  const { isAuthenticated, user } = useAuthStore();
+  const { isAuthenticated, user, isBuyerMode } = useAuthStore();
   const { isAdminAuthenticated } = useAdminAuthStore();
   const searchParams = useSearchParams();
   const {
@@ -111,17 +115,24 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
 
   useEffect(() => {
-    fetch('/api/homepage')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success && d.isMaintenance) {
-          setIsMaintenance(true);
+    Promise.all([
+      fetch('/api/homepage').then(r => r.json()).catch(() => ({})),
+      fetch('/api/admin/settings').then(r => r.json()).catch(() => ({}))
+    ]).then(([homepageData, settingsData]) => {
+      if (homepageData.success && homepageData.isMaintenance) {
+        setIsMaintenance(true);
+      }
+      if (settingsData.success && settingsData.settings) {
+        if (settingsData.settings.allow_guest_checkout !== undefined) {
+          useAppStore.getState().setAllowGuestCheckout(
+            settingsData.settings.allow_guest_checkout === 'true' || 
+            settingsData.settings.allow_guest_checkout === true
+          );
         }
-      })
-      .catch(() => {})
-      .finally(() => {
-        setIsLoadingConfig(false);
-      });
+      }
+    }).finally(() => {
+      setIsLoadingConfig(false);
+    });
   }, []);
 
   // If initialPage prop is passed from a specific route (e.g. /store), set it
@@ -157,9 +168,18 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   // Navigate to correct dashboard on role change (but allow verification page)
   useEffect(() => {
     if (isAuthenticated && user) {
+      // If user is in Buyer Mode, they can access any buyer-centric pages implicitly (home, search, checkout)
+      if (isBuyerMode) {
+        const targetPage = ROLE_TO_PAGE[user.role as UserRole];
+        // Only force redirect back to dashboard if they actively try to visit a restricted admin page?
+        // Actually, just let them be. The Navbar handles hiding/showing things.
+        const isBuyerAllowed = ['home', 'search', 'product-detail', 'seller-profile', 'cart'].includes(currentPage);
+        if (isBuyerAllowed) return;
+      }
+
       const rolePrefix = user.role === 'store_manager' ? 'store' : user.role;
       const isRoleAllowed = currentPage === rolePrefix || currentPage.startsWith(`${rolePrefix}-`);
-      const isGlobalAllowed = ['verification', 'home', 'product-detail', 'seller-profile', 'login'].includes(currentPage);
+      const isGlobalAllowed = ['verification', 'home', 'search', 'product-detail', 'seller-profile', 'login'].includes(currentPage);
       const isAdminAllowed = ALLOWED_EXTRA_PAGES.includes(currentPage);
 
       if (isRoleAllowed || isGlobalAllowed || isAdminAllowed) return;
@@ -168,7 +188,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
         setCurrentPage(targetPage);
       }
     }
-  }, [isAuthenticated, user?.role, currentPage, setCurrentPage]);
+  }, [isAuthenticated, user?.role, currentPage, setCurrentPage, isBuyerMode]);
 
   // Fetch real verification status from the database and sync store
   const fetchAndSyncStatus = useCallback(async (showToastOnChange: boolean = false) => {

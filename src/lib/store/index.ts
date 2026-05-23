@@ -111,6 +111,7 @@ interface AppState {
   notifications: number;
   selectedProductId: string | null;
   selectedSellerId: string | null;
+  allowGuestCheckout: boolean;
 
   setLocale: (locale: Locale) => void;
   setTheme: (theme: Theme) => void;
@@ -123,6 +124,7 @@ interface AppState {
   setNotifications: (count: number) => void;
   setSelectedProductId: (id: string | null) => void;
   setSelectedSellerId: (id: string | null) => void;
+  setAllowGuestCheckout: (allow: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -137,6 +139,7 @@ export const useAppStore = create<AppState>()(
       notifications: 5,
       selectedProductId: null,
       selectedSellerId: null,
+      allowGuestCheckout: true,
 
       setLocale: (locale) => set({ locale }),
       setTheme: (theme) => set({ theme }),
@@ -149,6 +152,7 @@ export const useAppStore = create<AppState>()(
       setNotifications: (notifications) => set({ notifications }),
       setSelectedProductId: (selectedProductId) => set({ selectedProductId }),
       setSelectedSellerId: (selectedSellerId) => set({ selectedSellerId }),
+      setAllowGuestCheckout: (allow) => set({ allowGuestCheckout: allow }),
     }),
     {
       name: 'platform-app-store',
@@ -166,6 +170,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  isBuyerMode: boolean;
 
   login: (email: string, password: string) => Promise<void>;
   loginAsDemo: (role: UserRole) => void;
@@ -173,6 +178,7 @@ interface AuthState {
   logout: () => void;
   updateProfile: (data: Partial<User>) => void;
   clearError: () => void;
+  setBuyerMode: (mode: boolean) => void;
 }
 
 const DEMO_USERS: Record<UserRole, User> = {
@@ -266,6 +272,18 @@ export const useAuthStore = create<AuthState>()(
       isAuthenticated: false,
       isLoading: false,
       error: null,
+      isBuyerMode: false,
+
+      setBuyerMode: (mode: boolean) => {
+        set({ isBuyerMode: mode });
+        const { setCurrentPage } = useAppStore.getState();
+        if (mode) {
+          setCurrentPage('home');
+        } else {
+          const user = get().user;
+          if (user) setCurrentPage(ROLE_TO_PAGE[user.role]);
+        }
+      },
 
       login: async (email: string, _password: string) => {
         set({ isLoading: true, error: null });
@@ -400,6 +418,7 @@ export const useAuthStore = create<AuthState>()(
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
+        isBuyerMode: state.isBuyerMode,
       }),
       // Prevent rehydration from overwriting a freshly logged-in user
       onRehydrateStorage: () => (state) => {
