@@ -5,9 +5,18 @@ import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
+import { useState, useEffect } from 'react';
+
 export default function FloatingCart() {
   const { itemCount, setCartOpen, isCartOpen } = useCartStore();
   const { currentPage } = useAppStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   // Do not show if cart is empty or if cart drawer is already open
   if (itemCount === 0 || isCartOpen) {
