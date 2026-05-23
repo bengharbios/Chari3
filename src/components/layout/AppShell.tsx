@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { Toaster } from 'sonner';
+import FloatingCart from './FloatingCart';
 
 interface AppShellProps {
   children: ReactNode;
@@ -31,6 +32,7 @@ export default function AppShell({ children }: AppShellProps) {
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
     >
       {children}
+      <FloatingCart />
       <Toaster
         position={locale === 'ar' ? 'top-left' : 'top-right'}
         richColors

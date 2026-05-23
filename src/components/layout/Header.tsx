@@ -265,22 +265,20 @@ export default function Header() {
             {/* Notifications */}
             {isAuthenticated && <NotificationPanel />}
 
-            {/* Cart — visible to all (guests and buyers) */}
-            {(!user || user?.role === 'buyer') && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative"
-                onClick={() => setCartOpen(true)}
-              >
-                <ShoppingCart className="h-5 w-5" />
-                {itemCount > 0 && (
-                  <Badge className="absolute -top-1 -end-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] bg-brand text-navy border-2 border-background">
-                    {itemCount}
-                  </Badge>
-                )}
-              </Button>
-            )}
+            {/* Cart — visible to everyone */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => setCartOpen(true)}
+            >
+              <ShoppingCart className="h-5 w-5" />
+              {itemCount > 0 && (
+                <Badge className="absolute -top-1 -end-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] bg-brand text-navy border-2 border-background">
+                  {itemCount}
+                </Badge>
+              )}
+            </Button>
 
             {/* User Menu (authenticated) or Sign In button */}
             {isAuthenticated && user ? (
@@ -316,6 +314,12 @@ export default function Header() {
                     <User className="h-4 w-4" />
                     {t('لوحة التحكم', 'Dashboard')}
                   </DropdownMenuItem>
+                  {user.role !== 'admin' && user.role !== 'buyer' && (
+                    <DropdownMenuItem onClick={() => navigateToDashboard('home')}>
+                      <ShoppingBag className="h-4 w-4" />
+                      {t('تصفح كـ مشتري', 'Browse as Buyer')}
+                    </DropdownMenuItem>
+                  )}
                   {user.role !== 'admin' && user.role !== 'buyer' && (
                     <DropdownMenuItem onClick={() => navigateToDashboard('verification')}>
                       <ClipboardCheck className="h-4 w-4" />
