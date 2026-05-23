@@ -9,22 +9,7 @@ const globalForPrisma = globalThis as unknown as {
 // ============================================
 
 function getPrismaUrl(): string | undefined {
-  let url = process.env.DATABASE_URL;
-  if (!url) return undefined;
-
-  // Strip any query params to avoid connect_timeout warning if present
-  const idx = url.indexOf('?');
-  if (idx !== -1) {
-    url = url.substring(0, idx);
-  }
-
-  // Force IPv4 for TCP connections because Hostinger shared hosting
-  // often fails with localhost due to IPv6/socket confusion
-  if (url.includes('@localhost:')) {
-    url = url.replace('@localhost:', '@127.0.0.1:');
-  }
-
-  return url;
+  return process.env.DATABASE_URL;
 }
 
 // ============================================
