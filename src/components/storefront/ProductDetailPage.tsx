@@ -236,24 +236,6 @@ export default function ProductDetailPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="container-platform py-8 animate-pulse">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="aspect-square bg-muted rounded-2xl" />
-          <div className="space-y-4">
-            <div className="h-8 bg-muted rounded w-3/4" />
-            <div className="h-4 bg-muted rounded w-1/2" />
-            <div className="h-12 bg-muted rounded w-1/3" />
-            <div className="h-32 bg-muted rounded" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!product) return null;
-
   // Find current matching variant
   const getSelectedVariant = () => {
     if (!product || !product.variants || product.variants.length === 0) return null;
@@ -275,15 +257,15 @@ export default function ProductDetailPage() {
   const activeVariant = getSelectedVariant();
   const displayPrice = activeVariant?.price !== null && activeVariant?.price !== undefined 
     ? activeVariant.price 
-    : product.price;
+    : product?.price || 0;
 
   const displayComparePrice = activeVariant && activeVariant.comparePrice !== null && activeVariant.comparePrice !== undefined
     ? activeVariant.comparePrice
-    : product.comparePrice;
+    : product?.comparePrice || 0;
 
   const displayStock = activeVariant && activeVariant.stock !== null && activeVariant.stock !== undefined
     ? activeVariant.stock
-    : product.stock;
+    : product?.stock || 0;
 
   const discount = displayComparePrice
     ? Math.round(((displayComparePrice - displayPrice) / displayComparePrice) * 100)
@@ -297,6 +279,24 @@ export default function ProductDetailPage() {
       }
     }
   }, [selectedColor, selectedSize, activeVariant]);
+
+  if (isLoading) {
+    return (
+      <div className="container-platform py-8 animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="aspect-square bg-muted rounded-2xl" />
+          <div className="space-y-4">
+            <div className="h-8 bg-muted rounded w-3/4" />
+            <div className="h-4 bg-muted rounded w-1/2" />
+            <div className="h-12 bg-muted rounded w-1/3" />
+            <div className="h-32 bg-muted rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) return null;
 
   // Extract custom specifications structure
   let specs: any = {};
@@ -704,7 +704,17 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {related.map((p) => {
                 let imgs: string[] = [];
-                try { imgs = JSON.parse(p.images); } catch {}
+                try {
+                  if (p.images) {
+                    if (typeof p.images === 'string') {
+                      const parsed = JSON.parse(p.images);
+                      if (Array.isArray(parsed)) imgs = parsed;
+                    } else if (Array.isArray(p.images)) {
+                      imgs = p.images;
+                    }
+                  }
+                } catch {}
+                if (!Array.isArray(imgs)) imgs = [];
                 const disc = p.comparePrice ? Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100) : 0;
                 return (
                   <Card
