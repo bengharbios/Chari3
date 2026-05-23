@@ -7,7 +7,8 @@ import { useAppStore } from '@/lib/store';
 import ProductCard from './ProductCard';
 
 export default function SearchPage() {
-  const { locale, t } = useAppStore();
+  const { locale } = useAppStore();
+  const t = (ar: string, en: string) => locale === 'ar' ? ar : en;
   const searchParams = useSearchParams();
   const query = searchParams?.get('q') || '';
   

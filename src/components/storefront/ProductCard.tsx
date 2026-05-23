@@ -32,7 +32,9 @@ function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md
 }
 
 export default function ProductCard({ product }: { product: any }) {
-  const { locale, t, setCurrentPage } = useAppStore();
+  const { locale, setCurrentPage } = useAppStore();
+  
+  const t = (ar: string, en: string) => locale === 'ar' ? ar : en;
   
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();

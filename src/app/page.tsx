@@ -115,24 +115,20 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/homepage').then(r => r.json()).catch(() => ({})),
-      fetch('/api/admin/settings').then(r => r.json()).catch(() => ({}))
-    ]).then(([homepageData, settingsData]) => {
-      if (homepageData.success && homepageData.isMaintenance) {
-        setIsMaintenance(true);
-      }
-      if (settingsData.success && settingsData.settings) {
-        if (settingsData.settings.allow_guest_checkout !== undefined) {
-          useAppStore.getState().setAllowGuestCheckout(
-            settingsData.settings.allow_guest_checkout === 'true' || 
-            settingsData.settings.allow_guest_checkout === true
-          );
+    fetch('/api/homepage')
+      .then(r => r.json())
+      .catch(() => ({}))
+      .then((homepageData) => {
+        if (homepageData.success) {
+          if (homepageData.isMaintenance) setIsMaintenance(true);
+          if (homepageData.allowGuestCheckout !== undefined) {
+            useAppStore.getState().setAllowGuestCheckout(homepageData.allowGuestCheckout);
+          }
         }
-      }
-    }).finally(() => {
-      setIsLoadingConfig(false);
-    });
+      })
+      .finally(() => {
+        setIsLoadingConfig(false);
+      });
   }, []);
 
   // If initialPage prop is passed from a specific route (e.g. /store), set it

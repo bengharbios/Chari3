@@ -7,7 +7,7 @@ export async function GET() {
   try {
     await ensureDbConnection();
     // Fetch data for the homepage in parallel
-    const [categories, rawProducts, topSellers, topStores, advertisements, testimonials, layoutSetting, heroSlidesSetting, maintenanceSetting] = await Promise.all([
+    const [categories, rawProducts, topSellers, topStores, advertisements, testimonials, layoutSetting, heroSlidesSetting, maintenanceSetting, allowGuestCheckoutSetting] = await Promise.all([
       // Active categories with product counts
       db.category.findMany({
         where: { isActive: true, parentId: null },
@@ -105,6 +105,9 @@ export async function GET() {
 
       // Maintenance mode flag
       db.setting.findUnique({ where: { key: 'flag_maintenance_mode' } }),
+
+      // Guest checkout flag
+      db.setting.findUnique({ where: { key: 'allow_guest_checkout' } }),
     ]);
 
     // Rank products dynamically in memory
@@ -205,6 +208,7 @@ export async function GET() {
       layout: parsedLayout,
       heroSlides: parsedHeroSlides,
       isMaintenance: maintenanceSetting?.value === 'true',
+      allowGuestCheckout: allowGuestCheckoutSetting?.value === 'true',
     });
   } catch (error) {
     console.error('[homepage] Error: Database connection failed. Returning graceful fallback mock data.', error);
