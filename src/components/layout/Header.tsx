@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAppStore, useAuthStore, useCartStore } from '@/lib/store';
 import {
   Search, ShoppingCart, Moon, Sun, Globe,
@@ -32,6 +33,7 @@ const rolePages: Record<string, PageType> = {
 };
 
 export default function Header() {
+  const router = useRouter();
   const { locale, setLocale, theme, setTheme, toggleMobileMenu, setSidebarOpen, isSidebarOpen } = useAppStore();
   const { user, isAuthenticated, logout } = useAuthStore();
   const {
@@ -158,7 +160,10 @@ export default function Header() {
               </Button>
             )}
             <button
-              onClick={() => useAppStore.getState().setCurrentPage('home')}
+              onClick={() => {
+                useAppStore.getState().setCurrentPage('home');
+                router.push('/');
+              }}
               className="flex items-center gap-2"
             >
               <div className="gradient-brand rounded-lg px-2.5 py-1 font-bold text-navy text-lg">
@@ -397,6 +402,7 @@ export default function Header() {
               onClick={() => {
                 setCartOpen(false);
                 useAppStore.getState().setCurrentPage('home');
+                router.push('/');
               }}
             >
               {t('تسوق الآن', 'Shop Now')}

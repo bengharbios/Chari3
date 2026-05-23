@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { ChevronLeft, ChevronRight, Star, TrendingUp, Shield, Truck, ArrowLeft, ArrowRight, ShoppingBag, Award, Quote } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
@@ -114,6 +115,7 @@ const LEVEL_BADGE: Record<number, string> = {
 };
 
 export default function StorefrontHomepage() {
+  const router = useRouter();
   const { locale } = useAppStore();
   const { isAuthenticated } = useAuthStore();
   const isAr = locale === 'ar';
@@ -293,7 +295,7 @@ export default function StorefrontHomepage() {
                           className="overflow-hidden flex flex-col group hover:shadow-lg transition-all duration-300 cursor-pointer border-border hover:border-primary/30"
                           onClick={() => {
                             useAppStore.getState().setSelectedProductId(product.id);
-                            useAppStore.getState().setCurrentPage('product-detail');
+                            router.push(`/products/${product.id}`);
                           }}
                         >
                           <div className="relative aspect-square bg-muted overflow-hidden shrink-0">
@@ -407,7 +409,7 @@ export default function StorefrontHomepage() {
                         className="bg-white/5 border-white/10 hover:border-amber-500/50 hover:bg-white/10 transition-all cursor-pointer group text-white shadow-xl"
                         onClick={() => {
                           useAppStore.getState().setSelectedSellerId(store.id);
-                          useAppStore.getState().setCurrentPage('seller-profile');
+                          router.push(`/sellers/${store.id}`);
                         }}
                       >
                         <CardContent className="p-5 text-center flex flex-col items-center h-full">
@@ -456,7 +458,7 @@ export default function StorefrontHomepage() {
                         className="bg-white/5 border-white/10 hover:border-amber-500/50 hover:bg-white/10 transition-all cursor-pointer group text-white shadow-xl"
                         onClick={() => {
                           useAppStore.getState().setSelectedSellerId(seller.id);
-                          useAppStore.getState().setCurrentPage('seller-profile');
+                          router.push(`/sellers/${seller.id}`);
                         }}
                       >
                         <CardContent className="p-5 text-center flex flex-col items-center h-full">

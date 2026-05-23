@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Star, Package, ArrowLeft, ArrowRight, ShoppingCart, Shield, TrendingUp, Users, Award } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,7 @@ interface SellerData {
 }
 
 export default function SellerProfilePage() {
+  const router = useRouter();
   const { locale, selectedSellerId, setCurrentPage } = useAppStore();
   const isAr = locale === 'ar';
   const t = (ar: string, en: string) => isAr ? ar : en;
@@ -99,7 +101,7 @@ export default function SellerProfilePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         <div className="absolute top-4 start-4">
           <button
-            onClick={() => setCurrentPage('home')}
+            onClick={() => router.push('/')}
             className="flex items-center gap-2 text-white bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full px-4 py-2 transition-all text-sm font-medium"
           >
             {isAr ? <ArrowRight className="size-4" /> : <ArrowLeft className="size-4" />}
@@ -199,7 +201,7 @@ export default function SellerProfilePage() {
                   className="overflow-hidden cursor-pointer hover:shadow-lg hover:border-primary/30 transition-all group"
                   onClick={() => {
                     useAppStore.getState().setSelectedProductId(p.id);
-                    setCurrentPage('product-detail');
+                    router.push(`/products/${p.id}`);
                   }}
                 >
                   <div className="relative aspect-square bg-muted overflow-hidden">

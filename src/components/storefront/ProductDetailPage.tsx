@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Star, ShoppingCart, Heart, Share2, Shield, Truck, RefreshCw,
   ArrowLeft, ArrowRight, ChevronRight, ChevronLeft, Package,
@@ -101,6 +102,7 @@ function StarRating({ rating, interactive = false, size = 'sm' }: { rating: numb
 }
 
 export default function ProductDetailPage() {
+  const router = useRouter();
   const { locale, selectedProductId, setCurrentPage } = useAppStore();
   const { isAuthenticated } = useAuthStore();
   const isAr = locale === 'ar';
@@ -225,7 +227,7 @@ export default function ProductDetailPage() {
   const goToSeller = () => {
     if (merchant?.id) {
       useAppStore.getState().setSelectedSellerId(merchant.id);
-      setCurrentPage('seller-profile');
+      router.push(`/sellers/${merchant.id}`);
     }
   };
 
@@ -305,7 +307,7 @@ export default function ProductDetailPage() {
       <div className="bg-muted/30 border-b border-border">
         <div className="container-platform py-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-             <button onClick={() => setCurrentPage('home')} className="hover:text-primary transition-colors">
+             <button onClick={() => router.push('/')} className="hover:text-primary transition-colors">
               {t('الرئيسية', 'Home')}
             </button>
             {isAr ? <ChevronLeft className="size-3.5" /> : <ChevronRight className="size-3.5" />}
@@ -688,7 +690,7 @@ export default function ProductDetailPage() {
                   <Card
                     key={p.id}
                     className="overflow-hidden cursor-pointer hover:shadow-lg hover:border-primary/30 transition-all group"
-                    onClick={() => { useAppStore.getState().setSelectedProductId(p.id); setCurrentPage('product-detail'); }}
+                    onClick={() => { useAppStore.getState().setSelectedProductId(p.id); router.push(`/products/${p.id}`); }}
                   >
                     <div className="relative aspect-square bg-muted overflow-hidden">
                       {imgs[0] ? (
