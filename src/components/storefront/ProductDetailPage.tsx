@@ -156,16 +156,21 @@ export default function ProductDetailPage() {
                 ? JSON.parse(d.product.specifications)
                 : d.product.specifications || {};
             } catch {}
-            if (s.color1) setSelectedColor(s.color1);
+            
+            const c1 = s.color1 !== undefined && s.color1 !== null ? String(s.color1).trim() : '';
+            if (c1) setSelectedColor(c1);
             else setSelectedColor('');
             
-            if (s.sizes) {
-              const arr = s.sizes.split(',').map((x: string) => x.trim());
-              if (arr[0]) setSelectedSize(arr[0]);
-              else setSelectedSize('');
-            } else {
-              setSelectedSize('');
+            let firstSize = '';
+            if (s.sizes !== undefined && s.sizes !== null) {
+              if (Array.isArray(s.sizes)) {
+                firstSize = s.sizes[0] !== undefined && s.sizes[0] !== null ? String(s.sizes[0]).trim() : '';
+              } else {
+                const arr = String(s.sizes).split(',').map((x: string) => x.trim()).filter(Boolean);
+                firstSize = arr[0] || '';
+              }
             }
+            setSelectedSize(firstSize);
           }
         } else setCurrentPage('home');
       })
@@ -300,6 +305,21 @@ export default function ProductDetailPage() {
       ? JSON.parse(product.specifications)
       : product.specifications || {};
   } catch {}
+
+  // Safe variants parsing from specifications to prevent crashes
+  const color1Str = specs.color1 !== undefined && specs.color1 !== null ? String(specs.color1).trim() : '';
+  const color2Str = specs.color2 !== undefined && specs.color2 !== null ? String(specs.color2).trim() : '';
+  let sizesArr: string[] = [];
+  if (specs.sizes !== undefined && specs.sizes !== null) {
+    if (Array.isArray(specs.sizes)) {
+      sizesArr = specs.sizes.map((s: any) => String(s).trim()).filter(Boolean);
+    } else {
+      sizesArr = String(specs.sizes)
+        .split(',')
+        .map((x: string) => x.trim())
+        .filter(Boolean);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -471,11 +491,11 @@ export default function ProductDetailPage() {
                 </div>
               </div>
             ) : (
-              ((specs.color1 && specs.color1.trim()) || (specs.color2 && specs.color2.trim())) && (
+              (color1Str || color2Str) && (
                 <div className="space-y-2">
                   <span className="text-sm font-medium">{t('اللون:', 'Color:')} <span className="font-bold text-foreground">{selectedColor}</span></span>
                   <div className="flex gap-2">
-                    {[specs.color1, specs.color2].filter(Boolean).map((col: string) => (
+                    {[color1Str, color2Str].filter(Boolean).map((col: string) => (
                       <button
                         key={col}
                         onClick={() => setSelectedColor(col)}
@@ -516,11 +536,11 @@ export default function ProductDetailPage() {
                 </div>
               </div>
             ) : (
-              specs.sizes && specs.sizes.trim() && (
+              sizesArr.length > 0 && (
                 <div className="space-y-2">
                   <span className="text-sm font-medium">{t('المقاس:', 'Size:')} <span className="font-bold text-foreground">{selectedSize}</span></span>
                   <div className="flex gap-2 flex-wrap">
-                    {specs.sizes.split(',').map((sz: string) => sz.trim()).filter(Boolean).map((sz: string) => (
+                    {sizesArr.map((sz: string) => (
                       <button
                         key={sz}
                         onClick={() => setSelectedSize(sz)}
