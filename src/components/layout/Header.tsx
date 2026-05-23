@@ -660,17 +660,17 @@ export default function Header() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                className="w-full h-11 rounded-xl text-muted-foreground hover:bg-secondary/50 border-border/40 font-semibold"
+                className="flex-1 h-11 rounded-xl text-muted-foreground hover:bg-secondary/50 border-border/40 font-semibold"
                 onClick={() => setCartOpen(false)}
               >
                 {t('استكمال التسوق', 'Continue Shopping')}
               </Button>
               <Button
-                className="w-full gradient-brand text-navy font-bold h-11 rounded-xl shadow-lg shadow-brand/10 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
+                className="flex-1 gradient-brand text-navy font-bold h-11 rounded-xl shadow-lg shadow-brand/10 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
                 onClick={() => setCartStep('checkout')}
               >
-                <CheckSquare className="h-4 w-4" />
-                <span>{t('الذهاب للدفع', 'Proceed to Checkout')}</span>
+                <CheckSquare className="h-4 w-4 shrink-0" />
+                <span className="truncate">{t('الذهاب للدفع', 'Proceed to Checkout')}</span>
               </Button>
             </div>
           ) : (
