@@ -199,7 +199,7 @@ export default function ProductDetailPage() {
 
   const handleAddToCart = () => {
     if (!product) return;
-    if (!isAuthenticated) { setCurrentPage('login'); return; }
+    
     
     const variantName = [selectedColor, selectedSize].filter(Boolean).join(' / ');
     const displayName = isAr ? product.name : (product.nameEn || product.name);

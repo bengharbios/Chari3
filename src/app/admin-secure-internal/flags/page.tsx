@@ -28,6 +28,7 @@ export default function AdminFlagsPage() {
     flag_disable_registration: false,
     flag_disable_cod: false,
     flag_disable_auctions: false,
+    flag_allow_guest_checkout: true,
   });
 
   const isRTL = adminLocale === 'ar';
@@ -47,6 +48,8 @@ export default function AdminFlagsPage() {
       codDesc: "أوقف خيار الدفع عند الاستلام لإجبار المستخدمين على الدفع الإلكتروني المؤكد.",
       auctionsTitle: "تعطيل نظام المزادات",
       auctionsDesc: "قم بإيقاف المزايدات على المنتجات مؤقتاً لأسباب أمنية أو تنظيمية.",
+      guestTitle: "السماح بالشراء للزوار دون تسجيل (Guest Checkout)",
+      guestDesc: "عند تفعيله، سيتمكن الزوار من إضافة المنتجات للسلة والدفع مباشرة دون الحاجة لامتلاك حساب مسجل.",
       warningHeader: "تنبيه أمني هام",
       warningBody: "تعديل هذه المفاتيح يؤثر بشكل فوري ومباشر على جميع زوار المنصة والعمليات الجارية. يرجى التوخي الدقيق للوعي الأمني قبل التفعيل.",
     },
@@ -64,6 +67,8 @@ export default function AdminFlagsPage() {
       codDesc: "Prevent buyers from checking out using COD, forcing digital payment validations.",
       auctionsTitle: "Disable Bidding & Auctions",
       auctionsDesc: "Temporarily pause the auction engine and freeze current placing offers.",
+      guestTitle: "Allow Guest Checkout",
+      guestDesc: "When enabled, visitors can add products to their cart and checkout directly without requiring a registered account.",
       warningHeader: "Critical Admin Warning",
       warningBody: "Mutating these switches will immediately affect thousands of concurrent storefront transactions. Exercise professional caution.",
     }
@@ -212,6 +217,25 @@ export default function AdminFlagsPage() {
                 <Switch 
                   checked={flags.flag_disable_auctions}
                   onCheckedChange={val => setFlags({ ...flags, flag_disable_auctions: val })}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Flag 5: Allow Guest Checkout */}
+            <Card className={`border-l-4 ${flags.flag_allow_guest_checkout ? 'border-l-green-500' : 'border-l-slate-200'} transition-all`}>
+              <CardContent className="p-6 flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className={`p-2.5 rounded-xl ${flags.flag_allow_guest_checkout ? 'bg-green-50 text-green-500' : 'bg-slate-100 text-slate-500'} shrink-0`}>
+                    <ToggleRight className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base">{t.guestTitle}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{t.guestDesc}</p>
+                  </div>
+                </div>
+                <Switch 
+                  checked={flags.flag_allow_guest_checkout}
+                  onCheckedChange={val => setFlags({ ...flags, flag_allow_guest_checkout: val })}
                 />
               </CardContent>
             </Card>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useAppStore, useCartStore, useAuthStore } from '@/lib/store';
 import {
@@ -50,6 +50,7 @@ import {
   ArrowDownLeft,
   ArrowUpRight,
   RotateCcw,
+  Loader2,
 } from 'lucide-react';
 import type { Order, OrderStatus, Locale } from '@/types';
 
@@ -91,20 +92,35 @@ export default function BuyerDashboard() {
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [hoverRatings, setHoverRatings] = useState<Record<string, number>>({});
 
-  // Active orders (pending/shipped/processing/confirmed)
-  const activeOrders = MOCK_ORDERS.filter((o) =>
+  // Live orders from DB
+  const [liveOrders, setLiveOrders] = useState<Order[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+
+  useEffect(() => {
+    if (!user?.id) { setIsLoadingOrders(false); return; }
+    setIsLoadingOrders(true);
+    fetch(`/api/orders?buyerId=${user.id}&limit=20`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.orders) setLiveOrders(data.orders as Order[]);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoadingOrders(false));
+  }, [user?.id]);
+
+  // Derived from live orders
+  const activeOrders = liveOrders.filter((o) =>
     ['pending', 'confirmed', 'processing', 'shipped'].includes(o.status)
   );
-  const firstShippedOrder = MOCK_ORDERS.find((o) => o.status === 'shipped');
+  const firstShippedOrder = liveOrders.find((o) => o.status === 'shipped');
+  const deliveredOrders = liveOrders.filter((o) => o.status === 'delivered');
 
-  // Wishlist products
+  // Wishlist products (still from mock until wishlist API is built)
   const wishlistProducts = MOCK_PRODUCTS.slice(0, 4);
-
-  // Delivered orders for reviews
-  const deliveredOrders = MOCK_ORDERS.filter((o) => o.status === 'delivered');
 
   const userName = locale === 'ar' ? user?.name : user?.nameEn || user?.name;
   const userInitial = userName?.charAt(0) ?? 'B';
+
 
   return (
     <div className="space-y-6">
@@ -221,12 +237,33 @@ export default function BuyerDashboard() {
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 {t(locale, 'الطلبات الأخيرة', 'Recent Orders')}
+                {!isLoadingOrders && (
+                  <Badge variant="secondary" className="ms-auto text-xs">
+                    {liveOrders.length}
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {MOCK_ORDERS.slice(0, 6).map((order) => (
-                <OrderCard key={order.id} order={order} locale={locale} />
-              ))}
+              {isLoadingOrders ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : liveOrders.length === 0 ? (
+                <div className="text-center py-8 space-y-2">
+                  <Package className="h-10 w-10 text-muted-foreground mx-auto" />
+                  <p className="text-sm font-semibold text-foreground">
+                    {t(locale, 'لا توجد طلبات بعد', 'No orders yet')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t(locale, 'عند إتمام أول طلب، ستظهر هنا تفاصيله لمتابعة حالته', 'When you place your first order, it will appear here for tracking')}
+                  </p>
+                </div>
+              ) : (
+                liveOrders.slice(0, 8).map((order) => (
+                  <OrderCard key={order.id} order={order as any} locale={locale} />
+                ))
+              )}
             </CardContent>
           </Card>
 

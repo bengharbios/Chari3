@@ -21,6 +21,7 @@ export async function GET() {
       flag_disable_registration: false,
       flag_disable_cod: false,
       flag_disable_auctions: false,
+      flag_allow_guest_checkout: true,
     };
 
     return NextResponse.json({

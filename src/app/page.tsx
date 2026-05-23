@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Wrench, Loader2 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
@@ -78,10 +79,11 @@ const ALLOWED_EXTRA_PAGES: PageType[] = [
   'admin-sellers', 'admin-shipping', 'admin-analytics', 'admin-settings',
 ];
 
-export default function HomePage({ initialPage }: { initialPage?: PageType }) {
+function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   const { currentPage, setCurrentPage, locale } = useAppStore();
   const { isAuthenticated, user } = useAuthStore();
   const { isAdminAuthenticated } = useAdminAuthStore();
+  const searchParams = useSearchParams();
   const {
     accountStatus, isCompleted, isSubmitted, isDraftSaved,
     setAccountStatus, setVerificationItems,
@@ -90,6 +92,20 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
   const pollRef = useRef<NodeJS.Timeout | null>(null);
   const lastKnownStatus = useRef<string | null>(null);
   const draftRestoredRef = useRef(false);
+
+  // Read ?view= query parameter to open the correct dashboard from any sub-route
+  useEffect(() => {
+    const view = searchParams?.get('view');
+    if (view && DASHBOARD_MAP[view]) {
+      setCurrentPage(view as PageType);
+      // Clean the URL without reloading
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('view');
+        window.history.replaceState(null, '', url.pathname);
+      }
+    }
+  }, [searchParams, setCurrentPage]);
 
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
@@ -455,5 +471,13 @@ export default function HomePage({ initialPage }: { initialPage?: PageType }) {
       <Footer />
       <BottomNav />
     </AppShell>
+  );
+}
+
+export default function HomePage({ initialPage }: { initialPage?: PageType }) {
+  return (
+    <Suspense fallback={null}>
+      <HomePageInner initialPage={initialPage} />
+    </Suspense>
   );
 }

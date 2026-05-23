@@ -5,7 +5,7 @@ import {
   TrendingUp, Package, Star, ShieldCheck, ArrowLeft, ArrowRight,
   Wallet, AlertTriangle, ChevronUp, BarChart3, Clock, CheckCircle,
   XCircle, Eye, Plus, Edit, Trash2, Trophy, Target, Zap, Wrench, Loader2, Upload, X, Layers,
-  LayoutGrid, List
+  LayoutGrid, List, ClipboardCheck, Truck, CheckSquare
 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -1043,21 +1043,23 @@ function SellerOrdersTab({ data, isLoading, t, isAr, onRefresh }: { data: Dashbo
             </Card>
           ) : (
             (data?.recentOrders ?? []).map((item, i) => {
-              const orderId = item.order.id;
-              const status = item.order.status;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const order = item.order as any;
+              const orderId = order.id;
+              const status = order.status;
               const st = STATUS_CONFIG[status] ?? STATUS_CONFIG.pending;
               const SIcon = st.icon;
               
               // Parse shipping address
               let addressDetails: any = {};
               try {
-                addressDetails = typeof item.order.address === 'string' 
-                  ? JSON.parse(item.order.address) 
-                  : item.order.address || {};
+                addressDetails = typeof order.address === 'string' 
+                  ? JSON.parse(order.address) 
+                  : order.address || {};
               } catch {}
 
-              const buyerName = item.order.buyer?.name || addressDetails.fullName || t('عميل زائر', 'Guest Customer');
-              const buyerPhone = item.order.buyer?.phone || addressDetails.phone || t('غير متوفر', 'N/A');
+              const buyerName = order.buyer?.name || addressDetails.fullName || t('عميل زائر', 'Guest Customer');
+              const buyerPhone = order.buyer?.phone || addressDetails.phone || t('غير متوفر', 'N/A');
               const fullAddress = `${addressDetails.street || ''}, ${addressDetails.city || ''}`;
 
               return (
@@ -1065,12 +1067,12 @@ function SellerOrdersTab({ data, isLoading, t, isAr, onRefresh }: { data: Dashbo
                   <div className="p-4 bg-primary/5 border-b border-border flex items-center justify-between flex-wrap gap-2">
                     <div className="space-y-0.5">
                       <span className="text-xs text-muted-foreground font-bold">{t('رقم الطلب', 'Order No.')}</span>
-                      <p className="text-sm font-mono font-bold text-foreground">#{item.order.orderNumber}</p>
+                      <p className="text-sm font-mono font-bold text-foreground">#{order.orderNumber}</p>
                     </div>
                     
                     <div className="flex items-center gap-3">
                       <span className="text-xs text-muted-foreground">
-                        {new Date(item.order.createdAt).toLocaleDateString(isAr ? 'ar-DZ' : 'en-US', {
+                        {new Date(order.createdAt).toLocaleDateString(isAr ? 'ar-DZ' : 'en-US', {
                           year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                         })}
                       </span>
@@ -1124,7 +1126,7 @@ function SellerOrdersTab({ data, isLoading, t, isAr, onRefresh }: { data: Dashbo
                           <div>
                             <span className="text-muted-foreground">{t('طريقة الدفع: ', 'Payment: ')}</span>
                             <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                              {item.order.paymentMethod === 'cod' ? t('الدفع عند الاستلام (COD)', 'Cash on Delivery') : item.order.paymentMethod}
+                              {order.paymentMethod === 'cod' ? t('الدفع عند الاستلام (COD)', 'Cash on Delivery') : order.paymentMethod}
                             </span>
                           </div>
                         </div>

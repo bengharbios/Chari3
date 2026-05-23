@@ -48,7 +48,41 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
-    const orderNumber = `NOON-${Date.now()}`;
+    let buyerId = body.buyerId;
+    if (!buyerId) {
+      const phone = body.address?.phone;
+      const fullName = body.address?.fullName || 'Guest Customer';
+      
+      if (!phone) {
+        return NextResponse.json({ error: 'Phone number is required for order shipping' }, { status: 400 });
+      }
+
+      // Check if a user already exists with this phone number
+      const existingUser = await db.user.findFirst({
+        where: { phone: String(phone) },
+      });
+
+      if (existingUser) {
+        buyerId = existingUser.id;
+      } else {
+        // Dynamically create a guest buyer account
+        const randomStr = Math.random().toString(36).substring(2, 8);
+        const email = `guest-${phone}-${randomStr}@chariday.com`;
+        const newUser = await db.user.create({
+          data: {
+            name: fullName,
+            phone: String(phone),
+            email,
+            role: 'buyer',
+            accountStatus: 'active',
+            isVerified: false,
+          },
+        });
+        buyerId = newUser.id;
+      }
+    }
+
+    const orderNumber = `CHARI-${Date.now()}`;
     const order = await db.order.create({
       data: {
         orderNumber,
@@ -60,7 +94,7 @@ export async function POST(request: Request) {
         tax: body.tax || 0,
         discount: body.discount || 0,
         total: body.total,
-        buyerId: body.buyerId,
+        buyerId: buyerId,
         address: JSON.stringify(body.address),
         shippingMethod: body.shippingMethod || 'standard',
         items: {
