@@ -565,10 +565,7 @@ export default function Header() {
                   variant="default" 
                   size="sm" 
                   className="gradient-brand text-navy font-bold w-full"
-                  onClick={() => {
-                    setCartOpen(false);
-                    useAppStore.getState().setCurrentPage('login');
-                  }}
+                  onClick={() => navigateToDashboard('login')}
                 >
                   {t('تسجيل الدخول الآن', 'Sign In Now')}
                 </Button>
