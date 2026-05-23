@@ -152,13 +152,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'platform-app-store',
-      partialize: (state) => ({
-        locale: state.locale,
-        theme: state.theme,
-        currentPage: state.currentPage,
-        selectedProductId: state.selectedProductId,
-        selectedSellerId: state.selectedSellerId,
-      }),
+      partialize: (state) => ({ locale: state.locale, theme: state.theme }),
     }
   )
 );

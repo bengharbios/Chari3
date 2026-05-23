@@ -654,19 +654,19 @@ export default function ProductDetailPage() {
                 <table className="w-full text-sm divide-y divide-border">
                   <tbody>
                     {specs.weight && (
-                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('الوزن الكلي', 'Total Weight')}</td><td className="font-medium text-foreground">{specs.weight}</td></tr>
+                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('الوزن الكلي', 'Total Weight')}</td><td className="font-medium text-foreground">{typeof specs.weight === 'object' ? JSON.stringify(specs.weight) : String(specs.weight)}</td></tr>
                     )}
                     {specs.dimensions && (
-                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('الأبعاد القياسية', 'Standard Dimensions')}</td><td className="font-medium text-foreground">{specs.dimensions}</td></tr>
+                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('الأبعاد القياسية', 'Standard Dimensions')}</td><td className="font-medium text-foreground">{typeof specs.dimensions === 'object' ? JSON.stringify(specs.dimensions) : String(specs.dimensions)}</td></tr>
                     )}
                     {specs.material && (
-                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('الخامات المستخدمة', 'Materials Used')}</td><td className="font-medium text-foreground">{specs.material}</td></tr>
+                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('الخامات المستخدمة', 'Materials Used')}</td><td className="font-medium text-foreground">{typeof specs.material === 'object' ? JSON.stringify(specs.material) : String(specs.material)}</td></tr>
                     )}
                     {specs.origin && (
-                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('بلد المنشأ', 'Country of Origin')}</td><td className="font-medium text-foreground">{specs.origin}</td></tr>
+                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('بلد المنشأ', 'Country of Origin')}</td><td className="font-medium text-foreground">{typeof specs.origin === 'object' ? JSON.stringify(specs.origin) : String(specs.origin)}</td></tr>
                     )}
                     {specs.warranty && (
-                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('الضمان المعتمد', 'Warranty Details')}</td><td className="font-medium text-foreground">{specs.warranty}</td></tr>
+                      <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('الضمان المعتمد', 'Warranty Details')}</td><td className="font-medium text-foreground">{typeof specs.warranty === 'object' ? JSON.stringify(specs.warranty) : String(specs.warranty)}</td></tr>
                     )}
                   </tbody>
                 </table>
