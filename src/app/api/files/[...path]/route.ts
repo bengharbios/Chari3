@@ -14,7 +14,7 @@ const MIME_MAP: Record<string, string> = {
 function getUploadDir(): string {
   const envDir = process.env.UPLOAD_DIR;
   if (envDir && !envDir.includes('/USER/')) return envDir;
-  return path.join(process.cwd(), 'upload');
+  return path.join(process.cwd(), '..', 'ChariDay_uploads');
 }
 
 export async function GET(
