@@ -88,11 +88,8 @@ export default function Header() {
   // Close cart safely without causing React state boundary crashes
   const closeCart = () => {
     setCartOpen(false);
-    // Wait for the drawer close animation to finish before resetting state
-    setTimeout(() => {
-      setCartStep('cart');
-      setCheckoutSuccess(null);
-    }, 300);
+    setCartStep('cart');
+    setCheckoutSuccess(null);
   };
 
   const handleCheckout = async (e?: React.FormEvent) => {

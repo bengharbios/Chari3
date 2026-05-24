@@ -18,9 +18,6 @@ export default function FloatingCart() {
 
   if (!mounted) return null;
 
-  // Do not show if cart is empty or if cart drawer is already open
-  return null;
-
   // Optionally hide on some dashboards, but the requirement is to show across all screens
   // if there are items in the cart.
   // We hide it on the login/auth page though just to keep auth screen clean.
