@@ -33,6 +33,7 @@ function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md
 
 export default function ProductCard({ product }: { product: any }) {
   const { locale, setCurrentPage } = useAppStore();
+  const isInCart = useCartStore((s) => s.items.some((i) => i.product.id === product?.id));
   
   const t = (ar: string, en: string) => locale === 'ar' ? ar : en;
   
@@ -71,14 +72,27 @@ export default function ProductCard({ product }: { product: any }) {
         )}
         
         {/* Hover Action */}
-        <div className="absolute inset-x-0 bottom-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300 bg-gradient-to-t from-black/50 to-transparent">
+        <div className={`absolute inset-x-0 bottom-0 p-3 transition-transform duration-300 bg-gradient-to-t from-black/50 to-transparent ${isInCart ? 'translate-y-0' : 'translate-y-full group-hover:translate-y-0'}`}>
           <Button 
             size="sm" 
-            className="w-full bg-white/90 text-navy hover:bg-brand hover:text-navy font-bold shadow-lg backdrop-blur-sm"
+            className={`w-full font-bold shadow-lg backdrop-blur-sm transition-colors ${
+              isInCart 
+                ? 'bg-green-500 text-white hover:bg-green-600 border-none' 
+                : 'bg-white/90 text-navy hover:bg-brand hover:text-navy'
+            }`}
             onClick={handleAddToCart}
           >
-            <ShoppingCart className="w-4 h-4 me-2" />
-            {t('أضف للسلة', 'Add to Cart')}
+            {isInCart ? (
+              <>
+                <ShoppingCart className="w-4 h-4 me-2 fill-current" />
+                {t('في السلة', 'In Cart')}
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4 me-2" />
+                {t('أضف للسلة', 'Add to Cart')}
+              </>
+            )}
           </Button>
         </div>
       </div>

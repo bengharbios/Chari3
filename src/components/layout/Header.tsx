@@ -85,13 +85,15 @@ export default function Header() {
       .catch(() => {});
   }, []);
 
-  // Reset cart step when drawer is opened/closed
-  useEffect(() => {
-    if (!isCartOpen) {
+  // Close cart safely without causing React state boundary crashes
+  const closeCart = () => {
+    setCartOpen(false);
+    // Wait for the drawer close animation to finish before resetting state
+    setTimeout(() => {
       setCartStep('cart');
       setCheckoutSuccess(null);
-    }
-  }, [isCartOpen]);
+    }, 300);
+  };
 
   const handleCheckout = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -392,7 +394,7 @@ export default function Header() {
     {isCartOpen && (
       <div 
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] transition-opacity duration-300"
-        onClick={() => setCartOpen(false)}
+        onClick={closeCart}
       />
     )}
     
@@ -425,7 +427,7 @@ export default function Header() {
             <Badge variant="secondary" className="ms-2">{itemCount}</Badge>
           )}
         </div>
-        <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setCartOpen(false)}>
+        <Button variant="ghost" size="icon" className="rounded-full" onClick={closeCart}>
           <X className="h-5 w-5" />
         </Button>
       </div>
@@ -464,10 +466,7 @@ export default function Header() {
               <Button
                 variant="ghost"
                 className="w-full"
-                onClick={() => {
-                  setCheckoutSuccess(null);
-                  setCartOpen(false);
-                }}
+                onClick={closeCart}
               >
                 {t('الاستمرار في التسوق', 'Continue Shopping')}
               </Button>
@@ -490,7 +489,7 @@ export default function Header() {
               variant="outline"
               className="mt-2 gap-2"
               onClick={() => {
-                setCartOpen(false);
+                closeCart();
                 useAppStore.getState().setCurrentPage('home');
                 router.push('/');
               }}
@@ -689,7 +688,7 @@ export default function Header() {
               <Button
                 variant="outline"
                 className="w-full h-11 rounded-xl text-muted-foreground hover:bg-secondary/50 border-border/40 font-semibold"
-                onClick={() => setCartOpen(false)}
+                onClick={closeCart}
               >
                 {t('استكمال التسوق', 'Continue Shopping')}
               </Button>

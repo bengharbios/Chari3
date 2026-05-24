@@ -115,6 +115,7 @@ export default function ProductDetailPage() {
   const [qty, setQty] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const [wishlist, setWishlist] = useState(false);
+  const isInCart = useCartStore((s) => s.items.some((i) => i.product.id === product?.id));
 
   // Variant States
   const [selectedColor, setSelectedColor] = useState<string>('');
@@ -574,12 +575,20 @@ export default function ProductDetailPage() {
               <div className="flex gap-3">
                 <Button
                   size="lg"
-                  className="flex-1 gap-2 text-base font-bold h-13"
+                  className={`flex-1 gap-2 text-base font-bold h-13 transition-colors ${
+                    isInCart 
+                      ? 'bg-green-500 text-white hover:bg-green-600' 
+                      : ''
+                  }`}
                   disabled={product.stock === 0}
                   onClick={handleAddToCart}
                 >
-                  <ShoppingCart className="size-5" />
-                  {addedToCart ? t('✓ تم الإضافة!', '✓ Added!') : t('أضف للسلة', 'Add to Cart')}
+                  <ShoppingCart className={`size-5 ${isInCart ? 'fill-current' : ''}`} />
+                  {addedToCart 
+                    ? t('✓ تم الإضافة!', '✓ Added!') 
+                    : isInCart 
+                      ? t('في السلة (أضف المزيد)', 'In Cart (Add More)') 
+                      : t('أضف للسلة', 'Add to Cart')}
                 </Button>
                 <Button
                   size="lg"
