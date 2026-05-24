@@ -77,6 +77,36 @@ export async function GET(req: NextRequest) {
         { name: 'كتب وتعليم', nameEn: 'Books & Education', slug: 'books-education', icon: '📚', sortOrder: 7 },
         { name: 'ألعاب وترفيه', nameEn: 'Toys & Entertainment', slug: 'toys-entertainment', icon: '🎮', sortOrder: 8 },
       ];
+
+      // Create Admin User
+      const adminEmail = 'bengharbios@gmail.com';
+      const existingAdmin = await db.user.findUnique({ where: { email: adminEmail } });
+      if (!existingAdmin) {
+        await db.user.create({
+          data: {
+            email: adminEmail,
+            name: 'عبدالقادر',
+            nameEn: 'Abd El-Kader',
+            role: 'admin',
+            isActive: true,
+            isVerified: true,
+            accountStatus: 'active',
+            password: '$2a$10$T1lA5.h9e6Q9Yt4O8Y7WXuQW.t3O6b.o7Yh9f1U6v0g3Q.X.y/Fv6' // This is 'admin1234' hashed with bcrypt (salt rounds: 10)
+          }
+        });
+        results.push(`✅ Admin User: ${adminEmail} (password: admin1234)`);
+      } else {
+        // Ensure the password is set to admin1234 just in case
+        await db.user.update({
+          where: { email: adminEmail },
+          data: {
+            role: 'admin',
+            password: '$2a$10$T1lA5.h9e6Q9Yt4O8Y7WXuQW.t3O6b.o7Yh9f1U6v0g3Q.X.y/Fv6'
+          }
+        });
+        results.push(`⏭ Exists: ${adminEmail} (password reset to admin1234)`);
+      }
+
       for (const cat of categories) {
         const existing = await db.category.findUnique({ where: { slug: cat.slug } });
         if (!existing) {
