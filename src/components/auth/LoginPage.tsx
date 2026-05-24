@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
 
 const DEMO_ACCOUNTS: { role: UserRole; labelAr: string; labelEn: string; email: string; icon: React.ComponentType<{ className?: string }>; color: string; status: string }[] = [
-  { role: 'admin', labelAr: 'مدير النظام', labelEn: 'System Admin', email: 'admin@charyday.com', icon: ShieldCheck, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', status: 'active' },
+  { role: 'admin', labelAr: 'مدير النظام', labelEn: 'System Admin', email: 'bengharbios@gmail.com', icon: ShieldCheck, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', status: 'active' },
   { role: 'store_manager', labelAr: 'مدير متجر', labelEn: 'Store Manager', email: 'store@charyday.com', icon: Store, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', status: 'active' },
   { role: 'seller', labelAr: 'تاجر مستقل', labelEn: 'Individual Seller', email: 'seller@charyday.com', icon: UserCircle, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', status: 'active' },
   { role: 'logistics', labelAr: 'مندوب شحن', labelEn: 'Courier', email: 'delivery@charyday.com', icon: Truck, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400', status: 'active' },
@@ -33,8 +33,32 @@ export default function LoginPage() {
   const [showDemo, setShowDemo] = useState(false);
   const [loadingRole, setLoadingRole] = useState<UserRole | null>(null);
 
-  const handleDemoLogin = async (role: UserRole, status: string) => {
+  const handleDemoLogin = async (role: UserRole, status: string, email?: string) => {
     setLoadingRole(role);
+
+    // If it's the admin role (bengharbios@gmail.com), use NextAuth
+    if (role === 'admin' && email === 'bengharbios@gmail.com') {
+      const { signIn } = await import('next-auth/react');
+      const res = await signIn('credentials', {
+        email: 'bengharbios@gmail.com',
+        password: 'admin1234',
+        redirect: false,
+      });
+
+      if (res?.error) {
+        toast.error(t(locale, 'فشل تسجيل الدخول. تأكد من تشغيل سكريبت إنشاء الإدارة.', 'Login failed. Make sure the seed script was run.'));
+        setLoadingRole(null);
+        return;
+      }
+      
+      // Still set Zustand store for UI purposes to not break existing mock UI
+      await new Promise((r) => setTimeout(r, 500));
+      loginAsDemo(role);
+      
+      // Force page reload to ensure session is picked up by all components
+      window.location.href = '/';
+      return;
+    }
 
     // Reset onboarding state for clean slate
     resetOnboarding();
@@ -130,7 +154,7 @@ export default function LoginPage() {
                 return (
                   <button
                     key={account.email}
-                    onClick={() => handleDemoLogin(account.role, account.status)}
+                    onClick={() => handleDemoLogin(account.role, account.status, account.email)}
                     disabled={loadingRole !== null}
                     className={cn(
                       'card-surface w-full text-start p-3 flex items-center gap-3 transition-all',

@@ -14,6 +14,8 @@ const inter = Inter({
   display: 'swap',
 });
 
+import NextAuthProvider from '@/providers/NextAuthProvider';
+
 export const metadata: Metadata = {
   title: 'شاري داي - منصة التجارة الإلكترونية | CharyDay E-Commerce Platform',
   description: 'منصة تجارة إلكترونية شاملة متعددة البائعين مع لوحات تحكم متكاملة',
@@ -27,7 +29,9 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={`${cairo.variable} ${inter.variable} antialiased`}>
-        {children}
+        <NextAuthProvider>
+          {children}
+        </NextAuthProvider>
       </body>
     </html>
   );
