@@ -35,7 +35,7 @@ const rolePages: Record<string, PageType> = {
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
-  const { locale, setLocale, theme, setTheme, toggleMobileMenu, setSidebarOpen, isSidebarOpen, allowGuestCheckout } = useAppStore();
+  const { locale, setLocale, theme, setTheme, toggleMobileMenu, setSidebarOpen, isSidebarOpen, allowGuestCheckout, setAllowGuestCheckout } = useAppStore();
   const { user, isAuthenticated, logout, isBuyerMode } = useAuthStore();
   const {
     itemCount,
