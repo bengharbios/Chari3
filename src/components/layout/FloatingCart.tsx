@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 export default function FloatingCart() {
   const { itemCount, setCartOpen, isCartOpen } = useCartStore();
   const { currentPage } = useAppStore();
+  const { isBuyerMode, user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -17,11 +18,6 @@ export default function FloatingCart() {
   }, []);
 
   if (!mounted) return null;
-
-  // Optionally hide on some dashboards, but the requirement is to show across all screens
-  // if there are items in the cart.
-  // We hide it on the login/auth page though just to keep auth screen clean.
-  const { isBuyerMode, user } = useAuthStore();
 
   // Hide on login page
   if (currentPage === 'login') {
