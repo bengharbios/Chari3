@@ -22,18 +22,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   ChevronUp, ArrowLeftRight, Layers,
 };
 
-const ADMIN_NAV: NavItem[] = [
-  { id: 'admin', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
-  { id: 'admin-users', labelAr: 'إدارة المستخدمين', labelEn: 'User Management', icon: 'Users' },
-  { id: 'admin-roles', labelAr: 'الأدوار والصلاحيات', labelEn: 'Roles & Permissions', icon: 'ShieldCheck' },
-  { id: 'admin-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 23 },
-  { id: 'admin-products', labelAr: 'المنتجات', labelEn: 'Products', icon: 'Boxes' },
-  { id: 'admin-stores', labelAr: 'المتاجر', labelEn: 'Stores', icon: 'Store' },
-  { id: 'admin-sellers', labelAr: 'التجار المستقلين', labelEn: 'Sellers', icon: 'UserCircle' },
-  { id: 'admin-shipping', labelAr: 'الشحن والتوصيل', labelEn: 'Shipping', icon: 'Truck' },
-  { id: 'admin-analytics', labelAr: 'التحليلات', labelEn: 'Analytics', icon: 'BarChart3' },
-  { id: 'admin-settings', labelAr: 'الإعدادات', labelEn: 'Settings', icon: 'Settings' },
-];
 
 const STORE_NAV: NavItem[] = [
   { id: 'store', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
@@ -76,7 +64,7 @@ const BUYER_NAV: NavItem[] = [
 ];
 
 const NAV_ITEMS: Record<UserRole, NavItem[]> = {
-  admin: ADMIN_NAV,
+  admin: BUYER_NAV,
   store_manager: STORE_NAV,
   seller: SELLER_NAV,
   supplier: SUPPLIER_NAV,

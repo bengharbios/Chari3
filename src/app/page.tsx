@@ -16,10 +16,6 @@ import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import VerificationStatusPage from '@/components/onboarding/VerificationStatusPage';
 import { StickyStatusBanner } from '@/components/onboarding/VerificationWidget';
 import AdminReviewQueue from '@/components/onboarding/AdminReviewQueue';
-import AdminDashboard from '@/components/dashboards/AdminDashboard';
-import UserManagementPage from '@/components/admin/UserManagementPage';
-import RolesManagementPage from '@/components/admin/RolesManagementPage';
-import SettingsPage from '@/components/admin/SettingsPage';
 import StoreDashboard from '@/components/dashboards/StoreDashboard';
 import SellerDashboard from '@/components/dashboards/SellerDashboard';
 import LogisticsDashboard from '@/components/dashboards/LogisticsDashboard';
@@ -32,10 +28,6 @@ import { toast } from 'sonner';
 import type { PageType, UserRole } from '@/types';
 
 const DASHBOARD_MAP: Record<string, React.ComponentType> = {
-  admin: AdminDashboard,
-  'admin-users': UserManagementPage,
-  'admin-roles': RolesManagementPage,
-  'admin-settings': SettingsPage,
   'store-settings': StoreDashboard,
   'store-products': SellerDashboard,
   'store-orders': SellerDashboard,
@@ -68,7 +60,7 @@ const DASHBOARD_MAP: Record<string, React.ComponentType> = {
 };
 
 const ROLE_TO_PAGE: Record<UserRole, PageType> = {
-  admin: 'admin',
+  admin: 'buyer',
   store_manager: 'store',
   seller: 'seller',
   supplier: 'supplier',
@@ -79,8 +71,6 @@ const ROLE_TO_PAGE: Record<UserRole, PageType> = {
 // Pages that should NOT be auto-redirected to role dashboard
 const ALLOWED_EXTRA_PAGES: PageType[] = [
   'verification', 'search',
-  'admin-users', 'admin-roles', 'admin-orders', 'admin-products', 'admin-stores',
-  'admin-sellers', 'admin-shipping', 'admin-analytics', 'admin-settings',
 ];
 
 function HomePageInner({ initialPage }: { initialPage?: PageType }) {
@@ -142,9 +132,6 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const pathMap: Record<string, string> = {
-        admin: '/admin',
-        'admin-users': '/admin/users',
-        'admin-roles': '/admin/roles',
         store: '/store',
         seller: '/seller',
         supplier: '/supplier',

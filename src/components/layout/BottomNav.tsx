@@ -43,12 +43,6 @@ const STORE_BOTTOM_NAV: BottomNavItem[] = [
   { id: 'store', labelAr: 'الرئيسية', labelEn: 'Dashboard', icon: UserCircle },
 ];
 
-const ADMIN_BOTTOM_NAV: BottomNavItem[] = [
-  { id: 'home', labelAr: 'المتجر', labelEn: 'Store', icon: Home },
-  { id: 'admin-users', labelAr: 'المستخدمين', labelEn: 'Users', icon: Users },
-  { id: 'admin-roles', labelAr: 'الصلاحيات', labelEn: 'Roles', icon: ShieldCheck },
-  { id: 'admin', labelAr: 'الرئيسية', labelEn: 'Dashboard', icon: UserCircle },
-];
 
 const SUPPLIER_BOTTOM_NAV: BottomNavItem[] = [
   { id: 'home', labelAr: 'المتجر', labelEn: 'Store', icon: Home },
@@ -73,8 +67,7 @@ export default function BottomNav() {
 
   // Determine items based on user role
   let navItems = BUYER_BOTTOM_NAV;
-  if (user.role === 'admin') navItems = ADMIN_BOTTOM_NAV;
-  else if (user.role === 'store_manager') navItems = STORE_BOTTOM_NAV;
+  if (user.role === 'store_manager') navItems = STORE_BOTTOM_NAV;
   else if (user.role === 'seller') navItems = SELLER_BOTTOM_NAV;
   else if (user.role === 'supplier') navItems = SUPPLIER_BOTTOM_NAV;
   else if (user.role === 'logistics') navItems = LOGISTICS_BOTTOM_NAV;
