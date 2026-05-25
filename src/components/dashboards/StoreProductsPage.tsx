@@ -57,17 +57,18 @@ import { useEffect } from 'react';export default function StoreProductsPage() {
   };
 
   const refreshData = () => {
+    if (!user?.id) return;
     setIsLoading(true);
-    fetch(`/api/products`)
+    fetch(`/api/seller/dashboard?userId=${user.id}`)
       .then((r) => r.json())
-      .then((d) => { setProducts(d.products || []); })
+      .then((d) => { if (d.success) setProducts(d.products || []); })
       .catch(() => {})
       .finally(() => setIsLoading(false));
   };
 
   useEffect(() => {
     refreshData();
-  }, []);
+  }, [user?.id]);
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.includes(searchTerm) || (p.nameEn && p.nameEn.toLowerCase().includes(searchTerm.toLowerCase())) || p.id.includes(searchTerm);
@@ -91,8 +92,8 @@ import { useEffect } from 'react';export default function StoreProductsPage() {
           setEditingProduct(null);
         }}
         onSave={() => refreshData()}
-        storeId={undefined as any}
-        sellerId={undefined as any}
+        storeId={user?.id || ''}
+        sellerId={user?.id || ''}
         t={t}
         isAr={isAr}
       />
