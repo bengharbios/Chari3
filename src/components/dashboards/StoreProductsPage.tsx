@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { useAppStore } from '@/lib/store';
+import { useAppStore, useAuthStore } from '@/lib/store';
+import { ProductFormTab } from './SellerDashboard';
 import { PageHeader } from '@/components/shared/StatsCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -49,6 +50,9 @@ export default function StoreProductsPage() {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'active' | 'draft' | 'out_of_stock'>('all');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const { user } = useAuthStore();
 
   const filteredProducts = MOCK_PRODUCTS.filter(p => {
     const matchesSearch = p.nameAr.includes(searchTerm) || p.nameEn.toLowerCase().includes(searchTerm.toLowerCase()) || p.id.includes(searchTerm);
@@ -62,6 +66,23 @@ export default function StoreProductsPage() {
     if (stock < 10) return <Badge className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border-amber-500/20">{t('مخزون منخفض', 'Low Stock')}</Badge>;
     return <Badge className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/20">{t('نشط', 'Active')}</Badge>;
   };
+
+  if (showAddForm) {
+    return (
+      <ProductFormTab
+        product={editingProduct}
+        onClose={() => {
+          setShowAddForm(false);
+          setEditingProduct(null);
+        }}
+        onSave={() => {}}
+        storeId={user?.id || ''}
+        sellerId={user?.id || ''}
+        t={t}
+        isAr={isAr}
+      />
+    );
+  }
 
   return (
     <motion.div 
@@ -80,7 +101,10 @@ export default function StoreProductsPage() {
             <Copy className="h-4 w-4 me-2" />
             {t('استيراد / تصدير', 'Import / Export')}
           </Button>
-          <Button className="rounded-xl font-bold bg-gradient-to-r from-primary to-primary/80 shadow-lg shadow-primary/20 hover:scale-105 transition-all">
+          <Button 
+            className="rounded-xl font-bold bg-gradient-to-r from-primary to-primary/80 shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+            onClick={() => setShowAddForm(true)}
+          >
             <Plus className="h-4 w-4 me-2" />
             {t('منتج جديد', 'New Product')}
           </Button>
@@ -229,7 +253,7 @@ export default function StoreProductsPage() {
                             <DropdownMenuContent align={isAr ? "start" : "end"} className="w-48 rounded-xl border-white/10 bg-background/95 backdrop-blur-xl">
                               <DropdownMenuLabel>{t('إدارة المنتج', 'Manage Product')}</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="cursor-pointer">
+                              <DropdownMenuItem className="cursor-pointer" onClick={() => { setEditingProduct(product); setShowAddForm(true); }}>
                                 <Edit className="h-4 w-4 me-2" />
                                 {t('تعديل البيانات', 'Edit Details')}
                               </DropdownMenuItem>

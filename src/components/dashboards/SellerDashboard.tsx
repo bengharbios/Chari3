@@ -1224,7 +1224,7 @@ function SellerOrdersTab({ data, isLoading, t, isAr, onRefresh }: { data: Dashbo
 }
 
 // ── Product Creator / Editor with Real-Time Preview ─────────────────────────────
-interface ProductFormProps {
+export interface ProductFormProps {
   product: any;
   onClose: () => void;
   onSave: () => void;
@@ -1234,7 +1234,7 @@ interface ProductFormProps {
   isAr: boolean;
 }
 
-function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t, isAr }: ProductFormProps) {
+export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t, isAr }: ProductFormProps) {
   const [activeTab, setActiveTab] = useState<'core' | 'specs' | 'seo' | 'variants'>('core');
   const [isSaving, setIsSaving] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
