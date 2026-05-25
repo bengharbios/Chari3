@@ -34,16 +34,7 @@ const FADE_UP = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
 };
 
-const MOCK_PRODUCTS = [
-  { id: 'P-1001', nameAr: 'سماعات بلوتوث برو', nameEn: 'Bluetooth Pro Earbuds', categoryAr: 'إلكترونيات', categoryEn: 'Electronics', price: 8500, stock: 124, status: 'active', variants: 3, sales: 342, image: 'bg-blue-500' },
-  { id: 'P-1002', nameAr: 'ساعة ذكية مقاومة للماء', nameEn: 'Waterproof Smartwatch', categoryAr: 'إلكترونيات', categoryEn: 'Electronics', price: 12000, stock: 45, status: 'active', variants: 2, sales: 189, image: 'bg-emerald-500' },
-  { id: 'P-1003', nameAr: 'حقيبة ظهر رياضية', nameEn: 'Sport Backpack', categoryAr: 'أزياء', categoryEn: 'Fashion', price: 4500, stock: 0, status: 'out_of_stock', variants: 4, sales: 512, image: 'bg-orange-500' },
-  { id: 'P-1004', nameAr: 'مصباح مكتب ليد ذكي', nameEn: 'Smart LED Desk Lamp', categoryAr: 'المنزل', categoryEn: 'Home', price: 3200, stock: 8, status: 'low_stock', variants: 1, sales: 76, image: 'bg-yellow-500' },
-  { id: 'P-1005', nameAr: 'حذاء رياضي مريح', nameEn: 'Comfort Running Shoes', categoryAr: 'أزياء', categoryEn: 'Fashion', price: 6800, stock: 210, status: 'active', variants: 6, sales: 890, image: 'bg-purple-500' },
-  { id: 'P-1006', nameAr: 'كاميرا أمان واي فاي', nameEn: 'WiFi Security Camera', categoryAr: 'إلكترونيات', categoryEn: 'Electronics', price: 9900, stock: 32, status: 'draft', variants: 1, sales: 0, image: 'bg-slate-500' },
-];
-
-export default function StoreProductsPage() {
+import { useEffect } from 'react';export default function StoreProductsPage() {
   const { locale } = useAppStore();
   const t = (ar: string, en: string) => locale === 'ar' ? ar : en;
   const isAr = locale === 'ar';
@@ -54,8 +45,33 @@ export default function StoreProductsPage() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const { user } = useAuthStore();
 
-  const filteredProducts = MOCK_PRODUCTS.filter(p => {
-    const matchesSearch = p.nameAr.includes(searchTerm) || p.nameEn.toLowerCase().includes(searchTerm.toLowerCase()) || p.id.includes(searchTerm);
+  const [products, setProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const parseImages = (images: string | string[] | null) => {
+    if (!images) return [];
+    if (typeof images === 'string') {
+      try { return JSON.parse(images); } catch { return []; }
+    }
+    return images;
+  };
+
+  const refreshData = () => {
+    if (!user?.id) return;
+    setIsLoading(true);
+    fetch(`/api/seller/dashboard?userId=${user.id}`)
+      .then((r) => r.json())
+      .then((d) => { if (d.success) setProducts(d.products || []); })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  };
+
+  useEffect(() => {
+    refreshData();
+  }, [user?.id]);
+
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.name.includes(searchTerm) || (p.nameEn && p.nameEn.toLowerCase().includes(searchTerm.toLowerCase())) || p.id.includes(searchTerm);
     const matchesTab = activeTab === 'all' || p.status === activeTab || (activeTab === 'out_of_stock' && p.stock === 0);
     return matchesSearch && matchesTab;
   });
@@ -75,7 +91,7 @@ export default function StoreProductsPage() {
           setShowAddForm(false);
           setEditingProduct(null);
         }}
-        onSave={() => {}}
+        onSave={() => refreshData()}
         storeId={user?.id || ''}
         sellerId={user?.id || ''}
         t={t}
@@ -200,9 +216,9 @@ export default function StoreProductsPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredProducts.map((product) => (
+                    filteredProducts.map((p) => (
                       <motion.tr 
-                        key={product.id}
+                        key={p.id}
                         layout
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -211,37 +227,41 @@ export default function StoreProductsPage() {
                       >
                         <TableCell>
                           <div className="flex items-center gap-3">
-                            <div className={`h-12 w-12 rounded-xl ${product.image} flex items-center justify-center shrink-0 shadow-inner`}>
-                              <ImageIcon className="h-5 w-5 text-white/50" />
-                            </div>
+                            {parseImages(p.images)[0] ? (
+                              <img src={parseImages(p.images)[0]} alt="" className="h-12 w-12 rounded-xl object-cover shrink-0 shadow-inner" />
+                            ) : (
+                              <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center shrink-0 shadow-inner">
+                                <ImageIcon className="h-5 w-5 text-muted-foreground/50" />
+                              </div>
+                            )}
                             <div>
-                              <p className="font-bold text-sm max-w-[200px] truncate">{isAr ? product.nameAr : product.nameEn}</p>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-[10px] text-muted-foreground font-mono">{product.id}</span>
-                                {product.variants > 1 && (
-                                  <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-bold flex items-center gap-1">
-                                    <SlidersHorizontal className="h-3 w-3" />
-                                    {product.variants} {t('متغيرات', 'Variants')}
-                                  </span>
-                                )}
+                                <p className="font-bold text-sm max-w-[200px] truncate">{isAr ? p.name : (p.nameEn || p.name)}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-[10px] text-muted-foreground font-mono">{p.id}</span>
+                                  {p.variants && p.variants.length > 1 && (
+                                    <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md font-bold flex items-center gap-1">
+                                      <SlidersHorizontal className="h-3 w-3" />
+                                      {p.variants.length} {t('متغيرات', 'Variants')}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="bg-background/50 border-white/10 font-medium">
-                            <Tag className="h-3 w-3 me-1 text-muted-foreground" />
-                            {isAr ? product.categoryAr : product.categoryEn}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center font-bold">
-                          {product.price.toLocaleString()} {t('د.ج', 'DZD')}
-                        </TableCell>
-                        <TableCell className="text-center font-mono font-medium">
-                          {product.stock}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {getStatusBadge(product.status, product.stock)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="bg-background/50 border-white/10 font-medium">
+                              <Tag className="h-3 w-3 me-1 text-muted-foreground" />
+                              {isAr ? p.category?.name : (p.category?.nameEn || p.category?.name)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center font-bold">
+                            {p.price.toLocaleString()} {t('د.ج', 'DZD')}
+                          </TableCell>
+                          <TableCell className="text-center font-mono font-medium">
+                            {p.stock}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {getStatusBadge(p.status, p.stock)}
                         </TableCell>
                         <TableCell className="text-end">
                           <DropdownMenu>
@@ -253,7 +273,7 @@ export default function StoreProductsPage() {
                             <DropdownMenuContent align={isAr ? "start" : "end"} className="w-48 rounded-xl border-white/10 bg-background/95 backdrop-blur-xl">
                               <DropdownMenuLabel>{t('إدارة المنتج', 'Manage Product')}</DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem className="cursor-pointer" onClick={() => { setEditingProduct(product); setShowAddForm(true); }}>
+                              <DropdownMenuItem className="cursor-pointer" onClick={() => { setEditingProduct(p); setShowAddForm(true); }}>
                                 <Edit className="h-4 w-4 me-2" />
                                 {t('تعديل البيانات', 'Edit Details')}
                               </DropdownMenuItem>
@@ -283,7 +303,7 @@ export default function StoreProductsPage() {
           
           {/* Pagination */}
           <div className="p-4 border-t border-border/50 flex items-center justify-between text-sm text-muted-foreground">
-            <p>{t('عرض', 'Showing')} <strong className="text-foreground">{filteredProducts.length}</strong> {t('من أصل', 'out of')} <strong className="text-foreground">{MOCK_PRODUCTS.length}</strong> {t('منتج', 'products')}</p>
+            <p>{t('عرض', 'Showing')} <strong className="text-foreground">{filteredProducts.length}</strong> {t('من أصل', 'out of')} <strong className="text-foreground">{products.length}</strong> {t('منتج', 'products')}</p>
             <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" className="h-8 rounded-lg" disabled>{t('السابق', 'Prev')}</Button>
               <Button variant="outline" size="sm" className="h-8 rounded-lg" disabled>{t('التالي', 'Next')}</Button>
