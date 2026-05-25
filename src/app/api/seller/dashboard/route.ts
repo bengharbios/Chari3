@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
 
     // Get products (polymorphic: store manager queries storeId, independent seller queries sellerId)
     const products = await db.product.findMany({
-      where: isStoreManager ? { storeId: seller.id } : { sellerId: seller.id },
+      where: isStoreManager ? { storeId: { in: [seller.id, userId] } } : { sellerId: { in: [seller.id, userId] } },
       select: { 
         id: true, 
         name: true, 

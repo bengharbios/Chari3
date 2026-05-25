@@ -56,12 +56,19 @@ import { useEffect } from 'react';export default function StoreProductsPage() {
     return images;
   };
 
+  const [seller, setSeller] = useState<any>(null);
+
   const refreshData = () => {
     if (!user?.id) return;
     setIsLoading(true);
     fetch(`/api/seller/dashboard?userId=${user.id}`)
       .then((r) => r.json())
-      .then((d) => { if (d.success) setProducts(d.products || []); })
+      .then((d) => { 
+        if (d.success) {
+          setProducts(d.products || []); 
+          setSeller(d.seller || null);
+        }
+      })
       .catch(() => {})
       .finally(() => setIsLoading(false));
   };
@@ -92,8 +99,8 @@ import { useEffect } from 'react';export default function StoreProductsPage() {
           setEditingProduct(null);
         }}
         onSave={() => refreshData()}
-        storeId={user?.id || ''}
-        sellerId={user?.id || ''}
+        storeId={seller?.id || user?.id || ''}
+        sellerId={seller?.id || user?.id || ''}
         t={t}
         isAr={isAr}
       />
