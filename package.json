@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "cp prisma/schema.mysql.prisma prisma/schema.prisma && prisma generate && next build && mkdir -p .next/standalone/.next && cp -r .next/static .next/standalone/.next/",
-    "start": "node .next/standalone/server.js",
+    "start": "node -e \"process.on('uncaughtException', err => { console.error('FATAL CRASH:', err); process.exit(1); }); require('./.next/standalone/server.js')\"",
     "lint": "eslint .",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
