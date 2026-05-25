@@ -17,6 +17,10 @@ import VerificationStatusPage from '@/components/onboarding/VerificationStatusPa
 import { StickyStatusBanner } from '@/components/onboarding/VerificationWidget';
 import AdminReviewQueue from '@/components/onboarding/AdminReviewQueue';
 import StoreDashboard from '@/components/dashboards/StoreDashboard';
+import StoreProductsPage from '@/components/dashboards/StoreProductsPage';
+import StoreOrdersPage from '@/components/dashboards/StoreOrdersPage';
+import StoreSettingsPage from '@/components/dashboards/StoreSettingsPage';
+import StoreStaffPage from '@/components/dashboards/StoreStaffPage';
 import SellerDashboard from '@/components/dashboards/SellerDashboard';
 import LogisticsDashboard from '@/components/dashboards/LogisticsDashboard';
 import BuyerDashboard from '@/components/dashboards/BuyerDashboard';
@@ -28,10 +32,10 @@ import { toast } from 'sonner';
 import type { PageType, UserRole } from '@/types';
 
 const DASHBOARD_MAP: Record<string, React.ComponentType> = {
-  'store-settings': StoreDashboard,
-  'store-products': SellerDashboard,
-  'store-orders': SellerDashboard,
-  'store-staff': StoreDashboard,
+  'store-settings': StoreSettingsPage,
+  'store-products': StoreProductsPage,
+  'store-orders': StoreOrdersPage,
+  'store-staff': StoreStaffPage,
   'store-analytics': StoreDashboard,
   store: StoreDashboard,
   'seller-products': SellerDashboard,
