@@ -121,6 +121,49 @@ export async function POST(request: Request) {
       },
     });
 
+    // Send notification to seller/store manager
+    try {
+      // Get the first product's seller or store info
+      const items = body.items as { productId: string; productName: string; productImage?: string; price: number; quantity: number; total: number }[];
+      const firstItem = items[0];
+      let notifyUserId: string | null = null;
+
+      const product = await db.product.findUnique({
+        where: { id: firstItem.productId },
+        select: { sellerId: true, storeId: true }
+      });
+
+      if (product?.storeId) {
+        const store = await db.store.findUnique({
+          where: { id: product.storeId },
+          select: { managerId: true }
+        });
+        notifyUserId = store?.managerId || null;
+      } else if (product?.sellerId) {
+        const sellerProfile = await db.sellerProfile.findUnique({
+          where: { id: product.sellerId },
+          select: { userId: true }
+        });
+        notifyUserId = sellerProfile?.userId || null;
+      }
+
+      if (notifyUserId) {
+        await db.notification.create({
+          data: {
+            title: 'طلب جديد! 🛍️',
+            titleEn: 'New Order! 🛍️',
+            body: `طلب جديد #${order.orderNumber} بقيمة ${order.total.toLocaleString()} دج`,
+            bodyEn: `New order #${order.orderNumber} worth ${order.total.toLocaleString()} DZD`,
+            type: 'new_order',
+            data: JSON.stringify({ orderId: order.id, orderNumber: order.orderNumber, total: order.total }),
+            userId: notifyUserId,
+          }
+        });
+      }
+    } catch (notifError) {
+      console.error('[notification]', notifError); // Don't fail the order
+    }
+
     return NextResponse.json(order, { status: 201 });
   } catch (error) {
     console.error('[POST /api/orders]', error);
