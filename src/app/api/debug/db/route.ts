@@ -30,6 +30,20 @@ export async function GET(request: Request) {
   const creds = parseMysqlUrl(originalUrl);
   const results: Record<string, unknown>[] = [];
 
+  // ── Action: inspect user / db ──
+  if (action === 'inspect') {
+    const phone = searchParams.get('phone');
+    return handleInspect(creds, phone);
+  }
+
+  // ── Action: fix user role and status ──
+  if (action === 'fix-user') {
+    const phone = searchParams.get('phone') || '';
+    const role = searchParams.get('role') || 'store_manager';
+    const status = searchParams.get('status') || 'active';
+    return handleFixUser(creds, phone, role, status);
+  }
+
   // ── Action: create tables (raw SQL fallback) ──
   if (action === 'create-tables') {
     return handleCreateTables(creds);
@@ -840,5 +854,158 @@ async function handleSyncSchema(creds: ReturnType<typeof parseMysqlUrl>) {
   await workingConn.end();
   results.push({ step: 'Result', applied, skipped, errors, total: applied + skipped + errors });
   return NextResponse.json({ action: 'sync-schema', results, success: errors === 0 });
+}
+
+// ============================================
+// Direct Database helpers for inspection & fixes
+// ============================================
+
+async function getDbConnection(creds: ReturnType<typeof parseMysqlUrl>) {
+  if (!creds) return null;
+  const socketPaths = ['/tmp/mysql.sock', '/var/run/mysqld/mysqld.sock', '/var/lib/mysql/mysql.sock'];
+  for (const socketPath of socketPaths) {
+    try {
+      const mysql = await import('mysql2/promise');
+      return await mysql.createConnection({
+        user: creds.user,
+        password: creds.pass,
+        database: creds.db,
+        socketPath,
+        connectTimeout: 5000,
+      });
+    } catch {
+      continue;
+    }
+  }
+  const tcpHosts = [
+    { host: '127.0.0.1' },
+    { host: creds.host },
+  ];
+  const seen = new Set<string>();
+  for (const { host } of tcpHosts) {
+    if (seen.has(host)) continue;
+    seen.add(host);
+    const url = `mysql://${encodeURIComponent(creds.user)}:${encodeURIComponent(creds.pass)}@${host}:${creds.port}/${creds.db}`;
+    try {
+      const mysql = await import('mysql2/promise');
+      return await mysql.createConnection({
+        uri: url,
+        connectTimeout: 5000,
+      });
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}
+
+async function handleInspect(creds: ReturnType<typeof parseMysqlUrl>, phone: string | null) {
+  const conn = await getDbConnection(creds);
+  if (!conn) {
+    return NextResponse.json({ error: 'Cannot connect to database' }, { status: 500 });
+  }
+
+  try {
+    const results: Record<string, any> = {};
+
+    // 1. Fetch user by phone if provided, otherwise fetch all users
+    if (phone) {
+      const [users] = await conn.execute('SELECT id, name, email, phone, role, accountStatus, isActive, isVerified FROM User WHERE phone = ?', [phone]);
+      results.user = (users as any[])[0] || null;
+
+      if (results.user) {
+        const userId = results.user.id;
+        // Fetch Store
+        const [stores] = await conn.execute('SELECT id, name, slug, isActive, managerId FROM Store WHERE managerId = ?', [userId]);
+        results.store = (stores as any[])[0] || null;
+
+        // Fetch SellerProfile
+        const [sellerProfiles] = await conn.execute('SELECT id, storeName, isVerified, userId FROM SellerProfile WHERE userId = ?', [userId]);
+        results.sellerProfile = (sellerProfiles as any[])[0] || null;
+      }
+    }
+
+    // 2. Fetch all stores in system to see what exists
+    const [allStores] = await conn.execute('SELECT id, name, slug, managerId FROM Store LIMIT 50');
+    results.allStores = allStores;
+
+    // 3. Fetch all users count and sample
+    const [userCount] = await conn.execute('SELECT COUNT(*) as count FROM User');
+    results.totalUsers = (userCount as any[])[0]?.count || 0;
+    const [recentUsers] = await conn.execute('SELECT id, name, phone, role, accountStatus FROM User ORDER BY createdAt DESC LIMIT 15');
+    results.recentUsers = recentUsers;
+
+    await conn.end();
+    return NextResponse.json({ success: true, action: 'inspect', results });
+  } catch (err: any) {
+    await conn.end();
+    return NextResponse.json({ success: false, error: err.message });
+  }
+}
+
+async function handleFixUser(creds: ReturnType<typeof parseMysqlUrl>, phone: string, role: string, status: string) {
+  if (!phone) {
+    return NextResponse.json({ error: 'phone parameter is required' }, { status: 400 });
+  }
+
+  const conn = await getDbConnection(creds);
+  if (!conn) {
+    return NextResponse.json({ error: 'Cannot connect to database' }, { status: 500 });
+  }
+
+  try {
+    const [users] = await conn.execute('SELECT id, name, role, accountStatus FROM User WHERE phone = ?', [phone]);
+    const user = (users as any[])[0];
+
+    if (!user) {
+      await conn.end();
+      return NextResponse.json({ success: false, error: `User with phone ${phone} not found` });
+    }
+
+    // Update user role and status
+    await conn.execute('UPDATE User SET role = ?, accountStatus = ?, isActive = 1, isVerified = 1, phoneVerified = 1 WHERE id = ?', [role, status, user.id]);
+
+    // Check if seller profile exists, if not create or update it
+    const [sellerProfiles] = await conn.execute('SELECT id FROM SellerProfile WHERE userId = ?', [user.id]);
+    let sellerProfileId = (sellerProfiles as any[])[0]?.id;
+    if (!sellerProfileId) {
+      const crypto = await import('crypto');
+      sellerProfileId = 'sel_' + crypto.randomBytes(8).toString('hex');
+      await conn.execute(
+        'INSERT INTO SellerProfile (id, storeName, isVerified, userId, createdAt, updatedAt) VALUES (?, ?, 1, ?, NOW(), NOW())',
+        [sellerProfileId, user.name + " Store", user.id]
+      );
+    } else {
+      await conn.execute('UPDATE SellerProfile SET isVerified = 1 WHERE id = ?', [sellerProfileId]);
+    }
+
+    // Check if store exists for this user
+    const [stores] = await conn.execute('SELECT id FROM Store WHERE managerId = ?', [user.id]);
+    let storeId = (stores as any[])[0]?.id;
+    if (!storeId) {
+      const crypto = await import('crypto');
+      storeId = 'st_' + crypto.randomBytes(8).toString('hex');
+      const slug = 'store-' + user.id.substring(0, 8);
+      await conn.execute(
+        'INSERT INTO Store (id, name, slug, isActive, managerId, createdAt, updatedAt) VALUES (?, ?, ?, 1, ?, NOW(), NOW())',
+        [storeId, user.name + " Store", slug, user.id]
+      );
+    } else {
+      await conn.execute('UPDATE Store SET isActive = 1 WHERE id = ?', [storeId]);
+    }
+
+    await conn.end();
+    return NextResponse.json({
+      success: true,
+      action: 'fix-user',
+      message: `Successfully set user ${user.name} (${phone}) to role ${role} and status ${status}, verified their seller profile and store.`,
+      userId: user.id,
+      storeId,
+      sellerProfileId
+    });
+  } catch (err: any) {
+    await conn.end();
+    return NextResponse.json({ success: false, error: err.message });
+  }
 }
 
