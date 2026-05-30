@@ -110,8 +110,8 @@ export default function SellerDashboard() {
             setEditingProduct(null);
           }}
           onSave={refreshData}
-          storeId={data?.seller?.id || user?.id || ''}
-          sellerId={data?.seller?.id || user?.id || ''}
+          storeId={user?.id || ''}
+          sellerId={user?.id || ''}
           t={t}
           isAr={isAr}
         />

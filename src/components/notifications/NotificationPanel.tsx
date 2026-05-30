@@ -201,15 +201,14 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
 
           {/* QUICK ACTION — Unified */}
           {(notification.actionPage || notification.actionUrl) && (
-            <QuickActionButton
-              labelAr={notification.actionLabelAr}
-              labelEn={notification.actionLabelEn}
-              variant={urgency.actionVariant}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleAction();
-              }}
-            />
+            <span onClick={(e) => e.stopPropagation()}>
+              <QuickActionButton
+                labelAr={notification.actionLabelAr}
+                labelEn={notification.actionLabelEn}
+                variant={urgency.actionVariant}
+                onClick={handleAction}
+              />
+            </span>
           )}
         </div>
       </div>

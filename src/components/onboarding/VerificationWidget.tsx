@@ -232,7 +232,7 @@ function VerificationItemRow({
           labelAr="أكمل الآن"
           labelEn="Complete Now"
           variant="primary"
-          onClick={onComplete}
+          onClick={onComplete || (() => {})}
           className="h-7"
         />
       )}
@@ -387,7 +387,7 @@ export default function VerificationWidget() {
       />
 
       {/* Verification Status Card */}
-      {(accountStatus === 'pending' || accountStatus === 'under_review' || accountStatus === 'rejected') && (
+      {(accountStatus === 'pending' || accountStatus === 'rejected') && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">

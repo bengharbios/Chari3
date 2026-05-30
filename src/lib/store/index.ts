@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { User, UserRole, Locale, Theme, PageType, Product, CartItem } from '@/types';
+import type { User, UserRole, Locale, Theme, PageType, Product } from '@/types';
 import { useOnboardingStore, getVerificationItemsForRole } from '@/lib/store/onboarding';
 
 // ============================================

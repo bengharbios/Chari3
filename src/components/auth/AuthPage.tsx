@@ -197,7 +197,7 @@ export default function AuthPage() {
 
         {/* Bottom branding — Fixed: 2025 + CharyDay */}
         <p className="text-center text-xs text-[var(--muted-foreground)] mt-4">
-          © 2025 {t('شاري داي', 'CharyDay')} — {t(locale, 'جميع الحقوق محفوظة', 'All rights reserved')}
+          © 2025 {t(locale, 'شاري داي', 'CharyDay')} — {t(locale, 'جميع الحقوق محفوظة', 'All rights reserved')}
         </p>
       </div>
     </div>

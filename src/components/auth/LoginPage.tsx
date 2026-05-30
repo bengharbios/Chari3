@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { UserRole } from '@/types';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
 
@@ -83,7 +84,7 @@ export default function LoginPage() {
         { id: 'manager_id', labelAr: 'هوية المدير', labelEn: 'Manager ID', status: 'rejected', rejectionReason: 'صورة غير واضحة' },
       ]);
     } else {
-      setAccountStatus('approved');
+      setAccountStatus('active');
       setVerificationItems([]);
     }
 

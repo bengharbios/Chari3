@@ -477,7 +477,7 @@ export const useOnboardingStore = create<OnboardingState>()(
   )
 );
 
-export { getVerificationItemsForRole, DEFAULT_PENDING_MERCHANTS };
+export { DEFAULT_PENDING_MERCHANTS };
 
 // ============================================
 // DRAFT RESTORE UTILITIES
@@ -547,7 +547,7 @@ export function calcResumeStep(role: string, data: Record<string, unknown>): num
     }
     case 'seller': {
       if (!data.nationalIdFront || !data.nationalIdBack) return 1;
-      if (!(data.livenessScore && data.livenessScore > 0)) return 1;
+      if (!(data.livenessScore && typeof data.livenessScore === 'number' && data.livenessScore > 0)) return 1;
       if (!data.iban) return 2;
       return 2;
     }

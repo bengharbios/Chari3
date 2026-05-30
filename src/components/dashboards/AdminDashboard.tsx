@@ -65,6 +65,7 @@ const getRoleLabel = (locale: Locale, role: UserRole): string => {
     admin: { ar: 'مدير النظام', en: 'Admin' },
     store_manager: { ar: 'مدير المتجر', en: 'Store Manager' },
     seller: { ar: 'بائع مستقل', en: 'Seller' },
+    supplier: { ar: 'مورد', en: 'Supplier' },
     logistics: { ar: 'مندوب توصيل', en: 'Courier' },
     buyer: { ar: 'مشتري', en: 'Buyer' },
   };
@@ -76,6 +77,7 @@ const getRoleColor = (role: UserRole): string => {
     admin: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
     store_manager: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
     seller: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+    supplier: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400',
     logistics: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400',
     buyer: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
   };
@@ -689,7 +691,9 @@ export default function AdminDashboard() {
                           {locale === 'ar' ? u.name : (u.nameEn || u.name)}
                         </p>
                         {u.isVerified && (
-                          <Award className="h-4 w-4 text-blue-500 shrink-0" title={t(locale, 'موثق', 'Verified')} />
+                          <span title={t(locale, 'موثق', 'Verified')}>
+                            <Award className="h-4 w-4 text-blue-500 shrink-0" />
+                          </span>
                         )}
                       </div>
                       <p className="text-[11px] text-muted-foreground truncate font-mono">{u.email}</p>

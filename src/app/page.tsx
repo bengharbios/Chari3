@@ -21,6 +21,7 @@ import StoreProductsPage from '@/components/dashboards/StoreProductsPage';
 import StoreOrdersPage from '@/components/dashboards/StoreOrdersPage';
 import StoreSettingsPage from '@/components/dashboards/StoreSettingsPage';
 import StoreStaffPage from '@/components/dashboards/StoreStaffPage';
+import StoreCouponsPage from '@/components/dashboards/StoreCouponsPage';
 import SellerDashboard from '@/components/dashboards/SellerDashboard';
 import LogisticsDashboard from '@/components/dashboards/LogisticsDashboard';
 import BuyerDashboard from '@/components/dashboards/BuyerDashboard';
@@ -35,12 +36,14 @@ const DASHBOARD_MAP: Record<string, React.ComponentType> = {
   'store-settings': StoreSettingsPage,
   'store-products': StoreProductsPage,
   'store-orders': StoreOrdersPage,
+  'store-coupons': StoreCouponsPage,
   'store-staff': StoreStaffPage,
   'store-analytics': StoreDashboard,
   store: StoreDashboard,
   'seller-products': SellerDashboard,
   'seller-orders': SellerDashboard,
   'seller-upgrade': SellerDashboard,
+  'seller-settings': StoreSettingsPage,
   seller: SellerDashboard,
   supplier: SellerDashboard,
   'supplier-products': SellerDashboard,

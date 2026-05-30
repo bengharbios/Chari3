@@ -75,6 +75,11 @@ model Store {
 
   products      Product[]
   staff         StoreStaff[]
+
+  shippingRates         String?   @db.LongText
+  shippingIntegrations  String?   @db.LongText
+  paymentDetails        String?   @db.LongText
+  themeSettings         String?   @db.LongText
 }
 
 model StoreStaff {
@@ -133,6 +138,11 @@ model SellerProfile {
   products            Product[]
   sellerReviews       SellerReview[]
   withdrawals         WithdrawalRequest[]
+
+  shippingRates         String?   @db.LongText
+  shippingIntegrations  String?   @db.LongText
+  paymentDetails        String?   @db.LongText
+  themeSettings         String?   @db.LongText
 }
 
 // ============================================
@@ -643,6 +653,9 @@ model Coupon {
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  storeId     String?
+  sellerId    String?
 }
 
 // ============================================

@@ -913,7 +913,7 @@ export default function RolesManagementPage() {
                 </TableHeader>
                 <TableBody>
                   {PERMISSION_CATEGORIES.map((cat) => (
-                    <categoryRows
+                    <CategoryRows
                       key={cat.key}
                       category={cat}
                       roles={roles}
@@ -1486,7 +1486,7 @@ export default function RolesManagementPage() {
 // MATRIX CATEGORY ROWS (sub-component)
 // ============================================
 
-function categoryRows({ category, roles, locale }: { category: PermissionCategory; roles: RoleRecord[]; locale: Locale }) {
+function CategoryRows({ category, roles, locale }: { category: PermissionCategory; roles: RoleRecord[]; locale: Locale }) {
   return (
     <>
       {/* Category header row */}

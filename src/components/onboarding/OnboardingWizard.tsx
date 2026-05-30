@@ -536,7 +536,7 @@ export default function OnboardingWizard() {
   const steps = getSteps(role);
   const totalSteps = steps.length;
   const isReviewStep = showReview;
-  const progress = getVerificationProgress(role);
+  const progress = getVerificationProgress();
   const financeConfig = getFinanceConfig(user?.phone);
   const ibanConfig = financeConfig.iban;
 

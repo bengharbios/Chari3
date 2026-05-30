@@ -16,11 +16,15 @@ const LEVEL_BADGE: Record<number, string> = {
   6: '💎', 7: '👑', 8: '🏆', 9: '🦅', 10: '🌠',
 };
 
-function StarRating({ rating }: { rating: number }) {
+function StarRating({ rating, color }: { rating: number; color?: string }) {
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((s) => (
-        <Star key={s} className={`size-4 ${s <= Math.round(rating) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+        <Star 
+          key={s} 
+          className={`size-4 ${s <= Math.round(rating) ? (color ? '' : 'fill-amber-400 text-amber-400') : 'text-gray-300'}`} 
+          style={s <= Math.round(rating) && color ? { fill: color, color } : {}}
+        />
       ))}
     </div>
   );
@@ -42,6 +46,7 @@ interface SellerData {
   responseRate: number;
   user: { name: string; nameEn?: string; avatar?: string; createdAt: string };
   _count: { products: number };
+  themeSettings?: { primaryColor: string; accentColor: string };
   products: {
     id: string; name: string; nameEn?: string; price: number; comparePrice?: number;
     images: string; rating: number; soldCount: number; reviewCount: number; isFeatured: boolean;
@@ -130,13 +135,16 @@ export default function SellerProfilePage() {
               {seller.isVerified && <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">✓ {t('تاجر موثق', 'Verified Seller')}</Badge>}
             </div>
             <div className="flex items-center gap-3 flex-wrap">
-              <StarRating rating={seller.rating ?? 0} />
+              <StarRating rating={seller.rating ?? 0} color={seller.themeSettings?.primaryColor} />
               <span className="font-bold">{(seller.rating ?? 0).toFixed(1)}</span>
               <span className="text-muted-foreground text-sm">•</span>
               <span className="text-sm text-muted-foreground">{t(`عضو منذ ${joinYear}`, `Member since ${joinYear}`)}</span>
             </div>
           </div>
-          <Button className="gap-2 shrink-0">
+          <Button 
+            className="gap-2 shrink-0 font-bold"
+            style={seller.themeSettings?.primaryColor ? { backgroundColor: seller.themeSettings.primaryColor, color: '#000' } : {}}
+          >
             <ShoppingCart className="size-4" />
             {t('تسوق من المتجر', 'Shop This Store')}
           </Button>
@@ -169,7 +177,8 @@ export default function SellerProfilePage() {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key as 'products' | 'about')}
-              className={`px-6 py-3 text-sm font-semibold border-b-2 transition-all -mb-px ${activeTab === tab.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+              className={`px-6 py-3 text-sm font-semibold border-b-2 transition-all -mb-px ${activeTab === tab.key ? (seller.themeSettings?.primaryColor ? '' : 'border-primary text-primary') : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+              style={activeTab === tab.key && seller.themeSettings?.primaryColor ? { borderBottomColor: seller.themeSettings.primaryColor, color: seller.themeSettings.primaryColor } : {}}
             >
               {tab.label}
               {tab.key === 'products' && <Badge className="ms-2 text-xs">{seller._count.products}</Badge>}
@@ -225,7 +234,7 @@ export default function SellerProfilePage() {
                       <span className="text-xs text-muted-foreground">({p.soldCount})</span>
                     </div>
                     <div>
-                      <p className="text-sm md:text-base font-bold text-primary">{fmt(p.price)}</p>
+                      <p className="text-sm md:text-base font-bold text-primary" style={seller.themeSettings?.primaryColor ? { color: seller.themeSettings.primaryColor } : {}}>{fmt(p.price)}</p>
                       {p.comparePrice && <p className="text-xs text-muted-foreground line-through">{fmt(p.comparePrice)}</p>}
                     </div>
                   </CardContent>

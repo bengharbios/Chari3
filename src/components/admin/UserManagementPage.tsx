@@ -119,8 +119,8 @@ interface UserRecord {
   avatar?: string;
   createdAt: string;
   wallet?: { balance: number };
-  store?: { name: string };
-  sellerProfile?: { rating: number };
+  store?: { name: string; rating?: number; level?: number; packageId?: string };
+  sellerProfile?: { rating: number; level?: number; packageId?: string };
   _count?: { orders: number };
 }
 

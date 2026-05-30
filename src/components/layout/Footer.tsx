@@ -2,7 +2,13 @@
 
 import { useAppStore } from '@/lib/store';
 
-const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
+const t = (localeOrAr: string, arOrEn: string, en?: string) => {
+  if (en !== undefined) {
+    return localeOrAr === 'ar' ? arOrEn : en;
+  }
+  const currentLocale = useAppStore.getState().locale;
+  return currentLocale === 'ar' ? localeOrAr : arOrEn;
+};
 
 // Professional SVG social media icons
 function FacebookIcon() {

@@ -9,7 +9,7 @@ import type { Locale } from '@/types';
 import {
   TrendingUp, TrendingDown, DollarSign, ShoppingBag, Users, Package,
   Star, Clock, ArrowUpRight, ArrowDownRight,
-  BarChart3,
+  BarChart3, Store,
 } from 'lucide-react';
 
 function t(locale: Locale, ar: string, en: string) { return locale === 'ar' ? ar : en; }
@@ -51,7 +51,7 @@ const TOP_STORES = [
 
 const RECENT_ACTIVITY = [
   { actionAr: 'طلب جديد #CD-2025-022', actionEn: 'New order #CD-2025-022', time: (l: Locale) => l === 'ar' ? 'منذ 5 دقائق' : '5 min ago', icon: ShoppingBag, color: 'text-blue-500' },
-  { actionAr: 'متجر جديد "عالمتنقل"', actionEn: 'New store "DZ Express"', time: (l: Locale) => l === 'ar' ? 'منذ 15 دقيقة' : '15 min ago', icon: 'Store' as typeof ShoppingBag, color: 'text-green-500' },
+  { actionAr: 'متجر جديد "عالمتنقل"', actionEn: 'New store "DZ Express"', time: (l: Locale) => l === 'ar' ? 'منذ 15 دقيقة' : '15 min ago', icon: Store, color: 'text-green-500' },
   { actionAr: 'تقييم 5 نجوم من سارة بلقاسم', actionEn: '5-star review from Sara', time: (l: Locale) => l === 'ar' ? 'منذ 30 دقيقة' : '30 min ago', icon: Star, color: 'text-amber-500' },
   { actionAr: 'إرجاع طلب #CD-2025-018', actionEn: 'Return request #CD-2025-018', time: (l: Locale) => l === 'ar' ? 'منذ ساعة' : '1 hour ago', icon: Package, color: 'text-orange-500' },
   { actionAr: 'مستخدم جديد مسجل: يوسف', actionEn: 'New user: Youcef', time: (l: Locale) => l === 'ar' ? 'منذ ساعتين' : '2 hours ago', icon: Users, color: 'text-purple-500' },

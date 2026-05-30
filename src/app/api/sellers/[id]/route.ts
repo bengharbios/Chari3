@@ -129,6 +129,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
       _count: {
         products: products.length,
       },
+      themeSettings: sellerProfile?.themeSettings ? JSON.parse(sellerProfile.themeSettings) : (store?.themeSettings ? JSON.parse(store.themeSettings) : null),
       products: products,
     };
 

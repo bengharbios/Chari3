@@ -7,7 +7,7 @@ import {
   Search, ShoppingCart, Moon, Sun, Globe,
   Menu, X, ChevronDown, User, LogOut, Settings,
   ClipboardCheck, Trash2, Plus, Minus, Loader2, CheckSquare,
-  ArrowLeft, ArrowRight, ShoppingBag, Truck
+  ArrowLeft, ArrowRight, ShoppingBag, Truck, Tag, AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -32,6 +32,44 @@ const rolePages: Record<string, PageType> = {
   buyer: 'buyer',
 };
 
+const ALGERIAN_WILAYAS = [
+  { id: '1', nameAr: 'أدرار', nameEn: 'Adrar', defaultPrice: 1200 },
+  { id: '2', nameAr: 'الشلف', nameEn: 'Chlef', defaultPrice: 600 },
+  { id: '3', nameAr: 'الأغواط', nameEn: 'Laghouat', defaultPrice: 800 },
+  { id: '4', nameAr: 'أم البواقي', nameEn: 'Oum El Bouaghi', defaultPrice: 700 },
+  { id: '5', nameAr: 'باتنة', nameEn: 'Batna', defaultPrice: 600 },
+  { id: '6', nameAr: 'بجاية', nameEn: 'Bejaia', defaultPrice: 500 },
+  { id: '7', nameAr: 'بسكرة', nameEn: 'Biskra', defaultPrice: 800 },
+  { id: '8', nameAr: 'بشار', nameEn: 'Bechar', defaultPrice: 1000 },
+  { id: '9', nameAr: 'البليدة', nameEn: 'Blida', defaultPrice: 400 },
+  { id: '10', nameAr: 'البويرة', nameEn: 'Bouira', defaultPrice: 500 },
+  { id: '11', nameAr: 'تمنراست', nameEn: 'Tamanrasset', defaultPrice: 1500 },
+  { id: '12', nameAr: 'تبسة', nameEn: 'Tebessa', defaultPrice: 700 },
+  { id: '13', nameAr: 'تلمسان', nameEn: 'Tlemcen', defaultPrice: 600 },
+  { id: '14', nameAr: 'تيارت', nameEn: 'Tiaret', defaultPrice: 600 },
+  { id: '15', nameAr: 'تيزي وزو', nameEn: 'Tizi Ouzou', defaultPrice: 500 },
+  { id: '16', nameAr: 'الجزائر العاصمة', nameEn: 'Algiers', defaultPrice: 300 },
+  { id: '17', nameAr: 'الجلفة', nameEn: 'Djelfa', defaultPrice: 700 },
+  { id: '18', nameAr: 'جيجل', nameEn: 'Jijel', defaultPrice: 600 },
+  { id: '19', nameAr: 'سطيف', nameEn: 'Setif', defaultPrice: 500 },
+  { id: '20', nameAr: 'سعيدة', nameEn: 'Saida', defaultPrice: 700 },
+  { id: '21', nameAr: 'سكيكدة', nameEn: 'Skikda', defaultPrice: 600 },
+  { id: '22', nameAr: 'سيدي بلعباس', nameEn: 'Sidi Bel Abbes', defaultPrice: 600 },
+  { id: '23', nameAr: 'عنابة', nameEn: 'Annaba', defaultPrice: 500 },
+  { id: '24', nameAr: 'قالمة', nameEn: 'Guelma', defaultPrice: 600 },
+  { id: '25', nameAr: 'قسنطينة', nameEn: 'Constantine', defaultPrice: 500 },
+  { id: '26', nameAr: 'المدية', nameEn: 'Medea', defaultPrice: 500 },
+  { id: '27', nameAr: 'مستغانم', nameEn: 'Mostaganem', defaultPrice: 600 },
+  { id: '28', nameAr: 'المسيلة', nameEn: 'M\'Sila', defaultPrice: 600 },
+  { id: '29', nameAr: 'معسكر', nameEn: 'Mascara', defaultPrice: 600 },
+  { id: '30', nameAr: 'ورقلة', nameEn: 'Ouargla', defaultPrice: 900 },
+  { id: '31', nameAr: 'وهران', nameEn: 'Oran', defaultPrice: 500 },
+  { id: '35', nameAr: 'بومرداس', nameEn: 'Boumerdes', defaultPrice: 400 },
+  { id: '39', nameAr: 'الوادي', nameEn: 'El Oued', defaultPrice: 800 },
+  { id: '42', nameAr: 'تيبازة', nameEn: 'Tipaza', defaultPrice: 400 },
+  { id: '47', nameAr: 'غرداية', nameEn: 'Ghardaia', defaultPrice: 900 }
+];
+
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
@@ -55,6 +93,97 @@ export default function Header() {
   const [checkoutSuccess, setCheckoutSuccess] = useState<string | null>(null);
   // Two-step cart: 'cart' = view items, 'checkout' = shipping form
   const [cartStep, setCartStep] = useState<'cart' | 'checkout'>('cart');
+  
+  const [sellerSettings, setSellerSettings] = useState<any>(null);
+
+  useEffect(() => {
+    if (items.length > 0 && cartStep === 'checkout') {
+      const p = items[0].product;
+      const pStoreId = p.store?.id || (p as any).storeId;
+      const pSellerId = p.seller?.id || (p as any).sellerId;
+      const targetParam = pStoreId ? `storeId=${pStoreId}` : pSellerId ? `sellerId=${pSellerId}` : '';
+      if (targetParam) {
+        fetch(`/api/seller/settings?${targetParam}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && data.settings) {
+              setSellerSettings(data.settings);
+            }
+          })
+          .catch(() => {});
+      }
+    }
+  }, [items, cartStep]);
+
+  const getShippingCost = () => {
+    const subtotal = getSubtotal();
+    if (!sellerSettings || !sellerSettings.shippingRates) {
+      return subtotal > 200 ? 0 : 25;
+    }
+    const rates = sellerSettings.shippingRates;
+    if (rates.enabled === false) return 0;
+
+    if (rates.freeThreshold && subtotal >= rates.freeThreshold) {
+      return 0;
+    }
+
+    if (city && rates.customWilayas && rates.customWilayas[city] !== undefined) {
+      return rates.customWilayas[city];
+    }
+
+    const matchedWilaya = ALGERIAN_WILAYAS.find(w => w.id === city);
+    if (matchedWilaya) {
+      return matchedWilaya.defaultPrice;
+    }
+
+    return rates.standardPrice !== undefined ? rates.standardPrice : 25;
+  };
+
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState('');
+
+  const getDiscountAmount = () => {
+    if (!appliedCoupon) return 0;
+    const subtotal = getSubtotal();
+    if (appliedCoupon.type === 'percentage') {
+      return (subtotal * appliedCoupon.value) / 100;
+    } else {
+      return Math.min(appliedCoupon.value, subtotal);
+    }
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim() || items.length === 0) return;
+    setIsApplyingCoupon(true);
+    setCouponError('');
+    try {
+      const p = items[0].product;
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code: couponCode.trim(),
+          subtotal: getSubtotal(),
+          storeId: p.store?.id || (p as any).storeId,
+          sellerId: p.seller?.id || (p as any).sellerId
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.coupon) {
+        setAppliedCoupon(data.coupon);
+        setCouponCode('');
+        toast.success(t('🎉 تم تطبيق كود الخصم بنجاح!', '🎉 Coupon applied successfully!'));
+      } else {
+        setCouponError(isRTL ? data.errorAr : data.errorEn);
+      }
+    } catch {
+      setCouponError(t('فشل التحقق من الكوبون', 'Failed to validate coupon'));
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
   // Guest checkout flag from admin settings
   
 
@@ -117,23 +246,28 @@ export default function Header() {
         total: item.product.price * item.quantity,
       }));
 
-      const shippingCost = getSubtotal() > 200 ? 0 : 25;
+      const shippingCost = getShippingCost();
+      const matchedWilaya = ALGERIAN_WILAYAS.find(w => w.id === city);
+      const cityName = matchedWilaya ? (isRTL ? matchedWilaya.nameAr : matchedWilaya.nameEn) : city;
+
+      const discount = getDiscountAmount();
 
       const payload: Record<string, unknown> = {
         paymentMethod: 'cod',
         subtotal: getSubtotal(),
         shippingCost,
         tax: 0,
-        discount: 0,
-        total: getTotal(),
+        discount,
+        total: getSubtotal() - discount + shippingCost,
         address: {
           fullName,
           phone,
           street: address,
-          city,
+          city: cityName,
           country: 'DZ',
         },
         shippingMethod: 'standard',
+        couponId: appliedCoupon ? appliedCoupon.id : null,
         items: orderItems,
       };
 
@@ -628,14 +762,20 @@ export default function Header() {
                 </div>
                 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground">{t('المدينة / الولاية *', 'City / Province *')}</label>
-                  <Input 
-                    placeholder={t('الجزائر العاصمة', 'Algiers')} 
+                  <label className="text-xs font-semibold text-muted-foreground">{t('الولاية *', 'State / Wilaya *')}</label>
+                  <select 
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     required
-                    className="h-10 rounded-xl"
-                  />
+                    className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">{t('-- اختر الولاية --', '-- Select State --')}</option>
+                    {ALGERIAN_WILAYAS.map((w) => (
+                      <option key={w.id} value={w.id}>
+                        {w.id} - {isRTL ? w.nameAr : w.nameEn}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="space-y-1">
@@ -656,19 +796,84 @@ export default function Header() {
       {/* Drawer Footer */}
       {!checkoutSuccess && items.length > 0 && (
         <div className="p-4 border-t border-border bg-muted/10 space-y-3 shrink-0">
+          
+          {/* Coupon Input Section */}
+          {cartStep === 'cart' && (
+            <div className="border-t border-border/10 pt-3 pb-1 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-muted-foreground flex items-center gap-1">
+                  <Tag className="h-3.5 w-3.5 text-primary" />
+                  {t('هل لديك كوبون خصم؟', 'Have a discount coupon?')}
+                </span>
+                {appliedCoupon && (
+                  <button 
+                    onClick={() => setAppliedCoupon(null)}
+                    className="text-[10px] text-destructive hover:underline font-bold"
+                  >
+                    {t('حذف الكوبون', 'Remove')}
+                  </button>
+                )}
+              </div>
+              
+              {!appliedCoupon ? (
+                <div className="flex gap-2">
+                  <Input 
+                    placeholder="e.g. EID2026"
+                    value={couponCode}
+                    onChange={(e) => {
+                      setCouponCode(e.target.value.toUpperCase());
+                      setCouponError('');
+                    }}
+                    className="h-9 rounded-xl font-mono uppercase tracking-widest text-center text-xs bg-background"
+                  />
+                  <Button
+                    onClick={handleApplyCoupon}
+                    disabled={isApplyingCoupon || !couponCode}
+                    size="sm"
+                    className="rounded-xl px-4 font-bold h-9 bg-primary text-primary-foreground text-xs"
+                  >
+                    {isApplyingCoupon ? <Loader2 className="h-3 w-3 animate-spin" /> : t('تطبيق', 'Apply')}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between p-2 rounded-xl bg-green-500/10 border border-green-500/20 text-xs text-green-500 font-bold">
+                  <span>
+                    {t('🎉 الكوبون فعال: ', '🎉 Coupon active: ')}
+                    <span className="font-mono">{appliedCoupon.code}</span>
+                  </span>
+                  <span>
+                    -{appliedCoupon.type === 'percentage' ? `${appliedCoupon.value}%` : `${appliedCoupon.value} DZD`}
+                  </span>
+                </div>
+              )}
+              {couponError && (
+                <p className="text-[10px] text-destructive font-semibold flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3 shrink-0" />
+                  {couponError}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Price summary — always visible */}
           <div className="space-y-1.5 text-sm">
             <div className="flex justify-between text-muted-foreground text-xs">
               <span>{t('المجموع الفرعي', 'Subtotal')}</span>
               <span>{getSubtotal().toLocaleString()} DZD</span>
             </div>
+            {appliedCoupon && (
+              <div className="flex justify-between text-green-500 text-xs font-bold">
+                <span>{t('قيمة الخصم', 'Discount Value')}</span>
+                <span>-{getDiscountAmount().toLocaleString()} DZD</span>
+              </div>
+            )}
             <div className="flex justify-between text-muted-foreground text-xs">
               <span>{t('تكلفة الشحن', 'Shipping Cost')}</span>
-              <span>{getSubtotal() > 200 ? t('مجاني 🎉', 'Free 🎉') : '25 DZD'}</span>
+              <span>{getShippingCost() === 0 ? t('مجاني 🎉', 'Free 🎉') : `${getShippingCost().toLocaleString()} DZD`}</span>
             </div>
             <div className="flex justify-between text-foreground font-black border-t border-border/60 pt-1.5">
               <span>{t('المجموع الإجمالي', 'Total')}</span>
-              <span className="text-primary">{getTotal().toLocaleString()} DZD</span>
+              <span className="text-primary">{(getSubtotal() - getDiscountAmount() + getShippingCost()).toLocaleString()} DZD</span>
             </div>
           </div>
 

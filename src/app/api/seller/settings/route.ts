@@ -1,0 +1,161 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/lib/db';
+
+export const dynamic = 'force-dynamic';
+
+// GET /api/seller/settings?userId=xxx&storeId=yyy&sellerId=zzz
+export async function GET(req: NextRequest) {
+  try {
+    const userId = req.nextUrl.searchParams.get('userId');
+    const storeId = req.nextUrl.searchParams.get('storeId');
+    const sellerId = req.nextUrl.searchParams.get('sellerId');
+
+    let store: any = null;
+    let seller: any = null;
+
+    if (userId) {
+      // 1. Try to find Store as StoreManager
+      store = await db.store.findFirst({
+        where: { managerId: userId }
+      });
+
+      if (!store) {
+        // 2. Try to find SellerProfile
+        seller = await db.sellerProfile.findUnique({
+          where: { userId }
+        });
+      }
+    } else if (storeId) {
+      store = await db.store.findUnique({
+        where: { id: storeId }
+      });
+    } else if (sellerId) {
+      seller = await db.sellerProfile.findUnique({
+        where: { id: sellerId }
+      });
+    } else {
+      return NextResponse.json({ success: false, error: 'userId, storeId, or sellerId required' }, { status: 400 });
+    }
+
+    if (store) {
+      return NextResponse.json({
+        success: true,
+        type: 'store',
+        settings: {
+          id: store.id,
+          name: store.name,
+          nameEn: store.nameEn,
+          description: store.description,
+          logo: store.logo,
+          coverImage: store.coverImage,
+          isActive: store.isActive,
+          shippingRates: store.shippingRates ? JSON.parse(store.shippingRates) : null,
+          shippingIntegrations: store.shippingIntegrations ? JSON.parse(store.shippingIntegrations) : null,
+          paymentDetails: store.paymentDetails ? JSON.parse(store.paymentDetails) : null,
+          themeSettings: store.themeSettings ? JSON.parse(store.themeSettings) : null,
+        }
+      });
+    }
+
+    if (seller) {
+      return NextResponse.json({
+        success: true,
+        type: 'seller',
+        settings: {
+          id: seller.id,
+          name: seller.storeName,
+          nameEn: seller.storeNameEn,
+          description: seller.bio,
+          logo: seller.logo,
+          coverImage: seller.coverImage,
+          isActive: seller.isVerified,
+          shippingRates: seller.shippingRates ? JSON.parse(seller.shippingRates) : null,
+          shippingIntegrations: seller.shippingIntegrations ? JSON.parse(seller.shippingIntegrations) : null,
+          paymentDetails: seller.paymentDetails ? JSON.parse(seller.paymentDetails) : null,
+          themeSettings: seller.themeSettings ? JSON.parse(seller.themeSettings) : null,
+        }
+      });
+    }
+
+    return NextResponse.json({ success: false, error: 'Store or Seller profile not found' }, { status: 404 });
+  } catch (error) {
+    console.error('[seller/settings GET]', error);
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
+  }
+}
+
+// POST /api/seller/settings
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { userId, type, settings } = body;
+
+    if (!userId) {
+      return NextResponse.json({ success: false, error: 'userId required' }, { status: 400 });
+    }
+    if (!settings) {
+      return NextResponse.json({ success: false, error: 'settings data required' }, { status: 400 });
+    }
+
+    const shippingRatesStr = settings.shippingRates ? JSON.stringify(settings.shippingRates) : null;
+    const shippingIntegrationsStr = settings.shippingIntegrations ? JSON.stringify(settings.shippingIntegrations) : null;
+    const paymentDetailsStr = settings.paymentDetails ? JSON.stringify(settings.paymentDetails) : null;
+    const themeSettingsStr = settings.themeSettings ? JSON.stringify(settings.themeSettings) : null;
+
+    if (type === 'store') {
+      const store = await db.store.findFirst({
+        where: { managerId: userId }
+      });
+
+      if (!store) {
+        return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
+      }
+
+      const updatedStore = await db.store.update({
+        where: { id: store.id },
+        data: {
+          name: settings.name ?? store.name,
+          nameEn: settings.nameEn ?? store.nameEn,
+          description: settings.description ?? store.description,
+          logo: settings.logo ?? store.logo,
+          coverImage: settings.coverImage ?? store.coverImage,
+          shippingRates: shippingRatesStr,
+          shippingIntegrations: shippingIntegrationsStr,
+          paymentDetails: paymentDetailsStr,
+          themeSettings: themeSettingsStr,
+        }
+      });
+
+      return NextResponse.json({ success: true, settings: updatedStore });
+    } else {
+      // Independent Seller Profile
+      const seller = await db.sellerProfile.findUnique({
+        where: { userId }
+      });
+
+      if (!seller) {
+        return NextResponse.json({ success: false, error: 'Seller profile not found' }, { status: 404 });
+      }
+
+      const updatedSeller = await db.sellerProfile.update({
+        where: { id: seller.id },
+        data: {
+          storeName: settings.name ?? seller.storeName,
+          storeNameEn: settings.nameEn ?? seller.storeNameEn,
+          bio: settings.description ?? seller.bio,
+          logo: settings.logo ?? seller.logo,
+          coverImage: settings.coverImage ?? seller.coverImage,
+          shippingRates: shippingRatesStr,
+          shippingIntegrations: shippingIntegrationsStr,
+          paymentDetails: paymentDetailsStr,
+          themeSettings: themeSettingsStr,
+        }
+      });
+
+      return NextResponse.json({ success: true, settings: updatedSeller });
+    }
+  } catch (error) {
+    console.error('[seller/settings POST]', error);
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
+  }
+}
