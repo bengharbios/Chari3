@@ -943,6 +943,15 @@ async function handleInspect(creds: ReturnType<typeof parseMysqlUrl>, phone: str
       // Fetch SellerProfile
       const [sellerProfiles] = await conn.execute('SELECT id, storeName, isVerified, userId FROM SellerProfile WHERE userId = ?', [foundUserId]);
       results.sellerProfile = (sellerProfiles as any[])[0] || null;
+
+      // Fetch Products
+      const storeId = results.store?.id || '';
+      const sellerId = results.sellerProfile?.id || '';
+      const [products] = await conn.execute(
+        'SELECT id, name, storeId, sellerId FROM Product WHERE storeId = ? OR sellerId = ?',
+        [storeId, sellerId]
+      );
+      results.products = products;
     }
 
     // 2. Fetch all stores in system to see what exists
