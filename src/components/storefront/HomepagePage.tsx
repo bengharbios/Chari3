@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Star, TrendingUp, Shield, Truck, ArrowLeft, ArrowRight, ShoppingBag, Award, Quote } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, TrendingUp, Shield, Truck, ArrowLeft, ArrowRight, ShoppingBag, Award, Quote, SlidersHorizontal, X, Search } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 const CURRENCY = { symbol: 'د.ج', code: 'DZD' };
 
@@ -66,17 +67,17 @@ interface HomepageData {
   featuredProducts: {
     id: string; name: string; nameEn?: string; price: number; comparePrice?: number;
     images: string; rating: number; soldCount: number;
-    seller?: { storeName?: string; rating: number; level: number; logo?: string } | null;
-    store?: { name: string; rating: number; level: number; logo?: string } | null;
+    seller?: { storeName?: string; rating: number; level: number; logo?: string; slug?: string } | null;
+    store?: { name: string; rating: number; level: number; logo?: string; slug?: string } | null;
     category: { name: string };
   }[];
   topSellers: {
-    id: string; storeName?: string; rating: number; level: number; totalSales: number; logo?: string;
+    id: string; storeName?: string; rating: number; level: number; totalSales: number; logo?: string; slug?: string;
     user: { name: string; avatar?: string };
     _count: { products: number };
   }[];
   topStores: {
-    id: string; name: string; nameEn?: string; rating: number; level: number; totalSales: number; logo?: string;
+    id: string; name: string; nameEn?: string; rating: number; level: number; totalSales: number; logo?: string; slug?: string;
     manager: { name: string; avatar?: string };
     _count: { products: number };
   }[];
@@ -126,13 +127,55 @@ export default function StorefrontHomepage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeMerchantTab, setActiveMerchantTab] = useState<'stores' | 'sellers'>('stores');
 
+  // Advanced filter state
+  const [filterSearch, setFilterSearch] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterSort, setFilterSort] = useState('newest');
+  const [filterMinPrice, setFilterMinPrice] = useState('');
+  const [filterMaxPrice, setFilterMaxPrice] = useState('');
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+  const [filteredProducts, setFilteredProducts] = useState<HomepageData['featuredProducts']>([]);
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
+
   useEffect(() => {
     fetch('/api/homepage')
       .then((r) => r.json())
-      .then((d) => { if (d.success) setData(d); })
+      .then((d) => { if (d.success) { setData(d); setFilteredProducts(d.featuredProducts || []); } })
       .catch(() => {})
       .finally(() => setIsLoading(false));
   }, []);
+
+  // Fetch filtered products whenever filters change
+  const fetchFilteredProducts = useCallback(async () => {
+    setIsFilterLoading(true);
+    try {
+      const params = new URLSearchParams({ status: 'active', limit: '20', sort: filterSort });
+      if (filterSearch) params.set('q', filterSearch);
+      if (filterCategory) params.set('categoryId', filterCategory);
+      if (filterMinPrice) params.set('minPrice', filterMinPrice);
+      if (filterMaxPrice) params.set('maxPrice', filterMaxPrice);
+      const res = await fetch(`/api/products?${params.toString()}`);
+      const d = await res.json();
+      if (d.products) setFilteredProducts(d.products);
+    } catch {}
+    setIsFilterLoading(false);
+  }, [filterSearch, filterCategory, filterSort, filterMinPrice, filterMaxPrice]);
+
+  // Debounce filter fetch
+  useEffect(() => {
+    const timer = setTimeout(fetchFilteredProducts, 500);
+    return () => clearTimeout(timer);
+  }, [fetchFilteredProducts]);
+
+  const hasActiveFilters = !!(filterSearch || filterCategory || filterMinPrice || filterMaxPrice || filterSort !== 'newest');
+
+  const clearFilters = () => {
+    setFilterSearch('');
+    setFilterCategory('');
+    setFilterSort('newest');
+    setFilterMinPrice('');
+    setFilterMaxPrice('');
+  };
 
   const rawSlides = data?.heroSlides ?? [];
   const validSlides = Array.isArray(rawSlides)
@@ -140,7 +183,6 @@ export default function StorefrontHomepage() {
     : [];
   const currentHeroSlides = validSlides.length > 0 ? validSlides : DEFAULT_HERO_SLIDES;
 
-  // Auto-advance hero
   useEffect(() => {
     if (!currentHeroSlides.length) return;
     const interval = setInterval(() => setHeroIndex((i) => (i + 1) % currentHeroSlides.length), 5000);
@@ -184,7 +226,6 @@ export default function StorefrontHomepage() {
                 </div>
               </div>
             </div>
-            {/* Slide indicators */}
             {currentHeroSlides.length > 1 && (
               <div className="absolute bottom-6 start-1/2 -translate-x-1/2 flex gap-2 z-10">
                 {currentHeroSlides.map((_, i) => (
@@ -193,7 +234,6 @@ export default function StorefrontHomepage() {
                 ))}
               </div>
             )}
-            {/* Nav arrows */}
             {currentHeroSlides.length > 1 && (
               <>
                 <button onClick={() => setHeroIndex((i) => (i - 1 + currentHeroSlides.length) % currentHeroSlides.length)}
@@ -259,20 +299,102 @@ export default function StorefrontHomepage() {
         );
 
       case 'featured_products':
+        const productsToShow = filteredProducts.length > 0 ? filteredProducts : (data?.featuredProducts ?? []);
         return (
           <section key="featured_products" className="container-platform py-6">
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-2xl font-bold">{t('منتجات مميزة', 'Featured Products')}</h2>
                 <p className="text-sm text-muted-foreground">{t('اختيارات حصرية من أفضل التجار', 'Exclusive picks from top sellers')}</p>
               </div>
+              <Button
+                variant={showFilterPanel ? 'default' : 'outline'}
+                size="sm"
+                className="gap-2 relative"
+                onClick={() => setShowFilterPanel(p => !p)}
+              >
+                <SlidersHorizontal className="size-4" />
+                {t('فلتر', 'Filter')}
+                {hasActiveFilters && (
+                  <span className="absolute -top-1 -end-1 w-2 h-2 rounded-full bg-amber-500" />
+                )}
+              </Button>
             </div>
+            {showFilterPanel && (
+              <div className="mb-5 p-4 rounded-2xl bg-card border border-border space-y-3 animate-in fade-in slide-in-from-top-2">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      value={filterSearch}
+                      onChange={e => setFilterSearch(e.target.value)}
+                      placeholder={t('ابحث عن منتج...', 'Search products...')}
+                      className="ps-9 h-9 text-sm rounded-xl"
+                    />
+                  </div>
+                  <select
+                    value={filterSort}
+                    onChange={e => setFilterSort(e.target.value)}
+                    className="h-9 rounded-xl border border-input bg-background px-3 text-sm min-w-[140px]"
+                  >
+                    <option value="newest">{t('الأحدث', 'Newest')}</option>
+                    <option value="price_asc">{t('السعر: الأقل', 'Price: Low to High')}</option>
+                    <option value="price_desc">{t('السعر: الأعلى', 'Price: High to Low')}</option>
+                    <option value="rating">{t('الأعلى تقييماً', 'Top Rated')}</option>
+                    <option value="popular">{t('الأكثر مبيعاً', 'Best Selling')}</option>
+                  </select>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <select
+                    value={filterCategory}
+                    onChange={e => setFilterCategory(e.target.value)}
+                    className="h-9 rounded-xl border border-input bg-background px-3 text-sm flex-1"
+                  >
+                    <option value="">{t('كل الفئات', 'All Categories')}</option>
+                    {(data?.categories || []).map(cat => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.icon || ''} {isAr ? cat.name : (cat.nameEn || cat.name)}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      value={filterMinPrice}
+                      onChange={e => setFilterMinPrice(e.target.value)}
+                      placeholder={t('سعر من', 'Min price')}
+                      className="h-9 rounded-xl text-sm w-28"
+                    />
+                    <span className="text-muted-foreground text-sm">—</span>
+                    <Input
+                      type="number"
+                      value={filterMaxPrice}
+                      onChange={e => setFilterMaxPrice(e.target.value)}
+                      placeholder={t('سعر إلى', 'Max price')}
+                      className="h-9 rounded-xl text-sm w-28"
+                    />
+                    <span className="text-xs text-muted-foreground">DZD</span>
+                  </div>
+                  {hasActiveFilters && (
+                    <Button size="sm" variant="ghost" onClick={clearFilters} className="h-9 gap-1 text-muted-foreground hover:text-destructive">
+                      <X className="size-3.5" />
+                      {t('مسح', 'Clear')}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+            {hasActiveFilters && (
+              <p className="text-xs text-muted-foreground mb-3">
+                {isFilterLoading ? t('جاري البحث...', 'Searching...') : `${filteredProducts.length} ${t('نتيجة', 'results')}`}
+              </p>
+            )}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-              {isLoading
+              {(isLoading || isFilterLoading)
                 ? Array.from({ length: 10 }).map((_, i) => (
                     <div key={i} className="rounded-2xl bg-muted animate-pulse h-64" />
                   ))
-                : (data?.featuredProducts ?? [])
+                : productsToShow
                     .filter((product) => product && product.id)
                     .map((product) => {
                       let images: string[] = [];
@@ -283,7 +405,6 @@ export default function StorefrontHomepage() {
                       }
                       if (!Array.isArray(images)) images = [];
 
-                      const seller = product.seller || product.store;
                       const sellerName = product.seller?.storeName || product.store?.name || '';
                       const sellerLevel = product.seller?.level || product.store?.level || 1;
                       const discount = product.comparePrice
@@ -312,7 +433,7 @@ export default function StorefrontHomepage() {
                           </div>
                           <CardContent className="p-2.5 md:p-3 flex flex-col grow">
                             <p className="text-[10px] md:text-xs text-muted-foreground mb-1 truncate">{product.category?.name || ''}</p>
-                            <p className="text-xs md:text-sm font-semibold line-clamp-2 mb-1.5">{product.name}</p>
+                            <p className="text-xs md:text-sm font-semibold line-clamp-2 mb-1.5">{isAr ? product.name : (product.nameEn || product.name)}</p>
                             <div className="flex items-center gap-1 mb-2">
                               <StarRating rating={product.rating} />
                               <span className="text-[10px] md:text-xs text-muted-foreground">({product.soldCount})</span>
@@ -329,7 +450,7 @@ export default function StorefrontHomepage() {
                               {sellerName && (
                                 <div className="flex items-center justify-between mt-2 pt-2 border-t border-border gap-1.5 text-[10px] md:text-xs text-muted-foreground">
                                   <div className="flex items-center gap-1 min-w-0">
-                                    <span className="text-sm shrink-0" title={`Level ${sellerLevel}`}>{LEVEL_BADGE[sellerLevel] || '🌱'}</span>
+                                    <span className="text-sm shrink-0">{LEVEL_BADGE[sellerLevel] || '🌱'}</span>
                                     <span className="font-medium text-foreground/80 truncate">{sellerName}</span>
                                   </div>
                                   {(product.seller?.rating || product.store?.rating) !== undefined && (
@@ -359,7 +480,6 @@ export default function StorefrontHomepage() {
               <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary rounded-full blur-[120px]" />
               <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-primary rounded-full blur-[120px]" />
             </div>
-
             <div className="container-platform relative z-10">
               <div className="text-center mb-10 px-4 max-w-2xl mx-auto">
                 <Badge className="mb-3.5 bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs px-3.5 py-1">
@@ -371,8 +491,6 @@ export default function StorefrontHomepage() {
                 <p className="text-xs md:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
                   {t('نوفر لك نخبة من كبرى المتاجر الجزائرية والتجار الأحرار الموثقين بشارات الجودة والمستويات الاحترافية.', 'We connect you with premier Algerian stores and verified independent merchants possessing professional badges.')}
                 </p>
-
-                {/* Tab Switcher */}
                 <div className="inline-flex p-1 bg-white/5 backdrop-blur-md rounded-xl border border-white/10 mt-8 gap-1.5 font-cairo">
                   <button
                     onClick={() => setActiveMerchantTab('stores')}
@@ -392,8 +510,6 @@ export default function StorefrontHomepage() {
                   </button>
                 </div>
               </div>
-
-              {/* Render Stores Tab */}
               {activeMerchantTab === 'stores' && (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 font-cairo">
                   {isLoading ? (
@@ -407,10 +523,7 @@ export default function StorefrontHomepage() {
                       <Card
                         key={store.id}
                         className="bg-white/5 border-white/10 hover:border-amber-500/50 hover:bg-white/10 transition-all cursor-pointer group text-white shadow-xl"
-                        onClick={() => {
-                          useAppStore.getState().setSelectedSellerId(store.id);
-                          router.push(`/sellers/${store.id}`);
-                        }}
+                        onClick={() => router.push(`/store/${store.slug || store.id}`)}
                       >
                         <CardContent className="p-5 text-center flex flex-col items-center h-full">
                           <div className="relative mb-4 w-16 h-16 shrink-0 group-hover:scale-105 transition-transform duration-300">
@@ -419,7 +532,7 @@ export default function StorefrontHomepage() {
                             ) : (
                               <div className="w-full h-full rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-2xl font-bold">🏪</div>
                             )}
-                            <span className="absolute -bottom-1 -end-1 text-lg" title={`Level ${store.level}`}>{LEVEL_BADGE[store.level] || '⭐'}</span>
+                            <span className="absolute -bottom-1 -end-1 text-lg">{LEVEL_BADGE[store.level] || '⭐'}</span>
                           </div>
                           <div className="grow min-w-0">
                             <h3 className="font-bold text-sm md:text-base truncate group-hover:text-amber-400 transition-colors">
