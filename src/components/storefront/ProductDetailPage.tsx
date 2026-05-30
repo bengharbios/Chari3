@@ -117,6 +117,14 @@ export default function ProductDetailPage() {
   const [wishlist, setWishlist] = useState(false);
   const isInCart = useCartStore((s) => s.items.some((i) => i.product.id === product?.id));
 
+  // Reviews state
+  const [reviews, setReviews] = useState<{
+    id: string; rating: number; comment?: string; title?: string;
+    createdAt: string; user?: { name?: string; nameEn?: string };
+  }[]>([]);
+  const [avgRating, setAvgRating] = useState(0);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
+
   // Variant States
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [selectedSize, setSelectedSize] = useState<string>('');
@@ -173,6 +181,17 @@ export default function ProductDetailPage() {
             }
             setSelectedSize(firstSize);
           }
+          
+          // Fetch reviews for this product
+          fetch(`/api/reviews?productId=${selectedProductId}`)
+            .then(r => r.json())
+            .then(rd => {
+              if (rd.success) {
+                setReviews(rd.reviews || []);
+                setAvgRating(rd.avgRating || 0);
+                setReviewsTotal(rd.total || 0);
+              }
+            }).catch(() => {});
         } else setCurrentPage('home');
       })
       .catch(() => setCurrentPage('home'))
@@ -705,6 +724,89 @@ export default function ProductDetailPage() {
             </div>
           )}
         </div>
+
+        {/* ── REVIEWS SECTION ── */}
+        {(reviews.length > 0 || reviewsTotal > 0) && (
+          <div className="mt-10 space-y-5">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Star className="size-5 fill-amber-400 text-amber-400" />
+                {t('آراء المشترين', 'Customer Reviews')}
+                <Badge variant="secondary" className="text-xs">{reviewsTotal} {t('تقييم', 'reviews')}</Badge>
+              </h2>
+              {avgRating > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl font-black text-amber-400">{avgRating.toFixed(1)}</span>
+                  <StarRating rating={avgRating} size="md" />
+                </div>
+              )}
+            </div>
+
+            {/* Star distribution bar */}
+            {reviews.length > 0 && (
+              <div className="p-4 bg-muted/30 rounded-2xl border border-border space-y-2">
+                {[5, 4, 3, 2, 1].map(star => {
+                  const count = reviews.filter(r => Math.round(r.rating) === star).length;
+                  const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                  return (
+                    <div key={star} className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground w-4">{star}</span>
+                      <Star className="size-3 fill-amber-400 text-amber-400 shrink-0" />
+                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-amber-400 rounded-full transition-all duration-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground w-6 text-end">{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Individual reviews */}
+            <div className="space-y-3">
+              {reviews.slice(0, 6).map(review => {
+                const reviewerName = isAr
+                  ? (review.user?.name || t('مشتري', 'Buyer'))
+                  : (review.user?.nameEn || review.user?.name || t('مشتري', 'Buyer'));
+                const timeAgo = (() => {
+                  const diff = Date.now() - new Date(review.createdAt).getTime();
+                  const days = Math.floor(diff / 86400000);
+                  if (days === 0) return t('اليوم', 'Today');
+                  if (days === 1) return t('أمس', 'Yesterday');
+                  if (days < 30) return isAr ? `منذ ${days} يوم` : `${days} days ago`;
+                  const months = Math.floor(days / 30);
+                  return isAr ? `منذ ${months} شهر` : `${months} months ago`;
+                })();
+
+                return (
+                  <div key={review.id} className="p-4 rounded-2xl bg-card border border-border space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-sm font-bold text-primary">
+                          {reviewerName.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold">{reviewerName}</p>
+                          <p className="text-xs text-muted-foreground">{timeAgo}</p>
+                        </div>
+                      </div>
+                      <StarRating rating={review.rating} size="sm" />
+                    </div>
+                    {review.title && (
+                      <p className="text-sm font-semibold text-foreground">{review.title}</p>
+                    )}
+                    {review.comment && (
+                      <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ── RELATED PRODUCTS ── */}
         {related.length > 0 && (
