@@ -35,6 +35,11 @@ export async function GET(request: Request) {
     return handleCreateTables(creds);
   }
 
+  // ── Action: sync schema columns ──
+  if (action === 'sync-schema') {
+    return handleSyncSchema(creds);
+  }
+
   // ── Default: lightweight diagnostic ──
   results.push({
     step: 'Info',
@@ -182,7 +187,7 @@ async function handleCreateTables(creds: ReturnType<typeof parseMysqlUrl>) {
   }
 
   // Try to establish a working connection
-  let workingConn: Awaited<ReturnType<typeof import('mysql2/promise').then>> | null = null;
+  let workingConn: any = null;
   let connMethod = '';
 
   // Phase 1: Try Unix socket
@@ -724,3 +729,114 @@ CREATE TABLE IF NOT EXISTS AuditLog (
 ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
   `;
 }
+
+// ============================================
+// Sync Columns via Raw SQL (for database migrations)
+// ============================================
+
+async function handleSyncSchema(creds: ReturnType<typeof parseMysqlUrl>) {
+  const results: Record<string, unknown>[] = [];
+
+  if (!creds) {
+    return NextResponse.json({ action: 'sync-schema', results: [{ step: 'Error', msg: 'Invalid DATABASE_URL' }], success: false });
+  }
+
+  let workingConn: any = null;
+  let connMethod = '';
+
+  // Phase 1: Try Unix socket
+  const socketPaths = ['/tmp/mysql.sock', '/var/run/mysqld/mysqld.sock', '/var/lib/mysql/mysql.sock'];
+
+  for (const socketPath of socketPaths) {
+    try {
+      const mysql = await import('mysql2/promise');
+      workingConn = await mysql.createConnection({
+        user: creds.user,
+        password: creds.pass,
+        database: creds.db,
+        socketPath,
+        connectTimeout: 5000,
+        multipleStatements: true,
+      });
+      connMethod = `Socket: ${socketPath}`;
+      break;
+    } catch {
+      continue;
+    }
+  }
+
+  // Phase 2: Try TCP
+  if (!workingConn) {
+    const tcpHosts = [
+      { host: '127.0.0.1', label: '127.0.0.1' },
+      { host: creds.host, label: creds.host },
+    ];
+    const seen = new Set<string>();
+
+    for (const { host, label } of tcpHosts) {
+      if (seen.has(host)) continue;
+      seen.add(host);
+      const url = `mysql://${encodeURIComponent(creds.user)}:${encodeURIComponent(creds.pass)}@${host}:${creds.port}/${creds.db}`;
+      try {
+        const mysql = await import('mysql2/promise');
+        workingConn = await mysql.createConnection({
+          uri: url,
+          connectTimeout: 5000,
+          multipleStatements: true,
+        });
+        connMethod = `TCP: ${label}`;
+        break;
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  if (!workingConn) {
+    return NextResponse.json({
+      action: 'sync-schema',
+      results: [{ step: 'Error', msg: 'Cannot connect to database. Run /api/debug/db?token=chari3-debug first to diagnose.' }],
+      success: false,
+    });
+  }
+
+  results.push({ step: 'Connection', status: '✅ OK', method: connMethod });
+
+  // Columns to add
+  const alterations = [
+    'ALTER TABLE Store ADD COLUMN shippingRates LONGTEXT NULL',
+    'ALTER TABLE Store ADD COLUMN shippingIntegrations LONGTEXT NULL',
+    'ALTER TABLE Store ADD COLUMN paymentDetails LONGTEXT NULL',
+    'ALTER TABLE Store ADD COLUMN themeSettings LONGTEXT NULL',
+    'ALTER TABLE SellerProfile ADD COLUMN shippingRates LONGTEXT NULL',
+    'ALTER TABLE SellerProfile ADD COLUMN shippingIntegrations LONGTEXT NULL',
+    'ALTER TABLE SellerProfile ADD COLUMN paymentDetails LONGTEXT NULL',
+    'ALTER TABLE SellerProfile ADD COLUMN themeSettings LONGTEXT NULL',
+  ];
+
+  let applied = 0;
+  let skipped = 0;
+  let errors = 0;
+
+  for (const sql of alterations) {
+    try {
+      await workingConn.execute(sql);
+      applied++;
+      results.push({ step: 'SQL Alteration', sql: sql.substring(0, 60), status: '✅ Success' });
+    } catch (err: any) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('Duplicate column name') || msg.includes('already exists') || msg.includes('ER_DUP_FIELDNAME') || err.errno === 1060) {
+        skipped++;
+        results.push({ step: 'SQL Alteration', sql: sql.substring(0, 60), status: 'ℹ️ Already Exists' });
+      } else {
+        errors++;
+        results.push({ step: 'SQL Error', sql: sql.substring(0, 60), error: msg });
+      }
+    }
+  }
+
+  await workingConn.end();
+  results.push({ step: 'Result', applied, skipped, errors, total: applied + skipped + errors });
+  return NextResponse.json({ action: 'sync-schema', results, success: errors === 0 });
+}
+
