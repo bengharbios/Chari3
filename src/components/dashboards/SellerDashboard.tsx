@@ -1238,6 +1238,11 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
   const [activeTab, setActiveTab] = useState<'core' | 'specs' | 'seo' | 'variants'>('core');
   const [isSaving, setIsSaving] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
+  const [showSuggestModal, setShowSuggestModal] = useState(false);
+  const [suggestNameAr, setSuggestNameAr] = useState('');
+  const [suggestNameEn, setSuggestNameEn] = useState('');
+  const [suggestDesc, setSuggestDesc] = useState('');
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
   // Core Form States
   const [name, setName] = useState(product?.name || '');
@@ -1422,6 +1427,41 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
       .catch(() => {});
   }, []);
 
+  const handleSuggestCategory = async () => {
+    if (!suggestNameAr.trim()) {
+      toast.error(isAr ? 'يرجى إدخال اسم التصنيف المقترح' : 'Please enter the suggested category name');
+      return;
+    }
+    setIsSuggesting(true);
+    try {
+      const res = await fetch('/api/categories/requests', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nameAr: suggestNameAr,
+          nameEn: suggestNameEn,
+          description: suggestDesc,
+          type: 'product',
+          userId: sellerId || storeId
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(isAr ? 'تم إرسال اقتراحك للإدارة! سيتم مراجعته قريباً.' : 'Your suggestion was sent to Admin for review!');
+        setShowSuggestModal(false);
+        setSuggestNameAr('');
+        setSuggestNameEn('');
+        setSuggestDesc('');
+      } else {
+        toast.error(data.error || isAr ? 'فشل الإرسال' : 'Submission failed');
+      }
+    } catch {
+      toast.error(isAr ? 'خطأ في الاتصال' : 'Connection error');
+    } finally {
+      setIsSuggesting(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!name) {
       toast.error(isAr ? 'الرجاء إدخال اسم المنتج' : 'Please enter product name');
@@ -1512,6 +1552,69 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
 
   return (
     <div className="space-y-6 pb-12 font-cairo">
+
+      {/* Suggest Category Modal */}
+      {showSuggestModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="bg-card border border-border rounded-2xl shadow-2xl p-6 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-base">{isAr ? 'اقتراح تصنيف جديد' : 'Suggest New Category'}</h3>
+              <button onClick={() => setShowSuggestModal(false)} className="text-muted-foreground hover:text-foreground"><X className="size-5" /></button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {isAr
+                ? 'سيتم إرسال اقتراحك إلى الإدارة للمراجعة والموافقة. بعد الموافقة يصبح التصنيف متاحاً لجميع التجار.'
+                : 'Your suggestion will be reviewed by Admin. Once approved, it becomes available to all sellers.'}
+            </p>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-bold">{isAr ? 'اسم التصنيف بالعربية *' : 'Category Name in Arabic *'}</label>
+                <input
+                  type="text"
+                  value={suggestNameAr}
+                  onChange={(e) => setSuggestNameAr(e.target.value)}
+                  placeholder={isAr ? 'مثال: الكترونيات المنزل' : 'Example: Home Electronics'}
+                  className="w-full mt-1 bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold">{isAr ? 'الاسم بالإنجليزية (اختياري)' : 'English Name (Optional)'}</label>
+                <input
+                  type="text"
+                  value={suggestNameEn}
+                  onChange={(e) => setSuggestNameEn(e.target.value)}
+                  placeholder="Home Electronics"
+                  className="w-full mt-1 bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold">{isAr ? 'سبب الاقتراح (اختياري)' : 'Reason (Optional)'}</label>
+                <textarea
+                  value={suggestDesc}
+                  onChange={(e) => setSuggestDesc(e.target.value)}
+                  rows={2}
+                  placeholder={isAr ? 'لماذا يحتاج المتجر لهذا التصنيف؟' : 'Why does the platform need this category?'}
+                  className="w-full mt-1 bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" className="flex-1" onClick={() => setShowSuggestModal(false)}>
+                {isAr ? 'إلغاء' : 'Cancel'}
+              </Button>
+              <Button
+                className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold gap-1"
+                onClick={handleSuggestCategory}
+                disabled={isSuggesting}
+              >
+                {isSuggesting ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+                {isAr ? 'إرسال الاقتراح' : 'Submit Suggestion'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between border-b pb-4 border-border">
         <div>
@@ -1595,6 +1698,14 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
                       <option key={c.id} value={c.id}>{isAr ? c.name : (c.nameEn || c.name)}</option>
                     ))}
                   </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowSuggestModal(true)}
+                    className="text-[10px] text-amber-500 hover:text-amber-600 font-bold flex items-center gap-1 mt-1 hover:underline"
+                  >
+                    <Plus className="size-3" />
+                    {isAr ? 'لا تجد تصنيفك؟ اقترح تصنيفاً جديداً' : "Can't find your category? Suggest one"}
+                  </button>
                 </div>
 
                 <div className="space-y-1.5">
