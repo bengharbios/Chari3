@@ -271,32 +271,67 @@ export default function StorefrontHomepage() {
         );
 
       case 'categories':
+        const catGradients = [
+          'from-blue-500/20 to-indigo-500/10','from-emerald-500/20 to-teal-500/10',
+          'from-amber-500/20 to-orange-500/10','from-rose-500/20 to-pink-500/10',
+          'from-purple-500/20 to-violet-500/10','from-cyan-500/20 to-sky-500/10',
+          'from-lime-500/20 to-green-500/10','from-red-500/20 to-rose-500/10',
+          'from-teal-500/20 to-emerald-500/10','from-orange-500/20 to-amber-500/10',
+          'from-indigo-500/20 to-blue-500/10','from-pink-500/20 to-fuchsia-500/10',
+        ];
+        const displayCats = (data?.categories ?? []).filter((c) => c && c.id).slice(0, 12);
         return (
           <section key="categories" className="container-platform py-10">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold">{t('تسوق حسب الفئة', 'Shop by Category')}</h2>
-              <Button variant="ghost" size="sm" className="text-primary">
-                {t('عرض الكل', 'View All')}
-                {isAr ? <ArrowLeft className="ms-1 size-4" /> : <ArrowRight className="ms-1 size-4" />}
-              </Button>
+              <div>
+                <h2 className="text-2xl font-bold">{t('تسوق حسب الفئة', 'Shop by Category')}</h2>
+                <p className="text-sm text-muted-foreground mt-1">{t('اكتشف آلاف المنتجات مرتبة بعناية', 'Discover thousands of curated products')}</p>
+              </div>
+              {filterCategory && (
+                <Button variant="ghost" size="sm" className="text-destructive gap-1 text-xs" onClick={() => setFilterCategory('')}>
+                  <X className="size-3" />
+                  {t('إلغاء الفلتر', 'Clear Filter')}
+                </Button>
+              )}
             </div>
-            <div className="flex gap-3 overflow-x-auto pb-3 no-scrollbar">
-              {isLoading
-                ? Array.from({ length: 8 }).map((_, i) => (
-                    <div key={i} className="shrink-0 w-24 h-24 rounded-2xl bg-muted animate-pulse" />
-                  ))
-                : (data?.categories ?? [])
-                    .filter((cat) => cat && cat.id)
-                    .map((cat) => (
-                      <button key={cat.id}
-                        className="shrink-0 flex flex-col items-center gap-2 p-4 w-24 rounded-2xl bg-card border border-border hover:border-primary hover:bg-primary/5 transition-all group">
-                        <span className="text-2xl">{cat.icon || '🛍️'}</span>
-                        <span className="text-xs font-medium text-center truncate w-full">{isAr ? cat.name : (cat.nameEn || cat.name)}</span>
-                      </button>
-                    ))}
-            </div>
+            {isLoading ? (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div key={i} className="h-24 rounded-2xl bg-muted animate-pulse" />
+                ))}
+              </div>
+            ) : displayCats.length === 0 ? (
+              <div className="text-center py-10 text-muted-foreground">
+                <ShoppingBag className="size-10 mx-auto mb-2 opacity-20" />
+                <p className="text-sm">{t('لا توجد تصنيفات متاحة حالياً', 'No categories available yet')}</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                {displayCats.map((cat, idx) => {
+                  const isActive = filterCategory === cat.id;
+                  const grad = catGradients[idx % catGradients.length];
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setFilterCategory(isActive ? '' : cat.id)}
+                      className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 bg-gradient-to-br ${grad} ${
+                        isActive
+                          ? 'border-primary shadow-lg shadow-primary/20 scale-105'
+                          : 'border-transparent hover:border-primary/40 hover:scale-105 hover:shadow-md'
+                      }`}
+                    >
+                      <span className="text-2xl sm:text-3xl drop-shadow-sm">{cat.icon || '📦'}</span>
+                      <span className="text-[10px] sm:text-xs font-semibold text-center leading-tight line-clamp-2">
+                        {isAr ? cat.name : (cat.nameEn || cat.name)}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </section>
         );
+
 
       case 'featured_products':
         const productsToShow = filteredProducts.length > 0 ? filteredProducts : (data?.featuredProducts ?? []);
