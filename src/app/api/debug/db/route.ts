@@ -52,6 +52,16 @@ export async function GET(request: Request) {
     return handleCreateTables(creds);
   }
 
+  // ── Action: create geo tables ──
+  if (action === 'create-geo-tables') {
+    return handleCreateGeoTables(creds);
+  }
+
+  // ── Action: seed geo data ──
+  if (action === 'seed-geo-data') {
+    return handleSeedGeoData(creds);
+  }
+
   // ── Action: sync schema columns ──
   if (action === 'sync-schema') {
     return handleSyncSchema(creds);
@@ -1067,4 +1077,213 @@ async function handleFixUser(creds: ReturnType<typeof parseMysqlUrl>, phone: str
     return NextResponse.json({ success: false, error: err.message });
   }
 }
+
+async function handleCreateGeoTables(creds: ReturnType<typeof parseMysqlUrl>) {
+  const results: Record<string, unknown>[] = [];
+
+  if (!creds) {
+    return NextResponse.json({ action: 'create-geo-tables', results: [{ step: 'Error', msg: 'Invalid DATABASE_URL' }], success: false });
+  }
+
+  const workingConn = await getDbConnection(creds);
+  if (!workingConn) {
+    return NextResponse.json({
+      action: 'create-geo-tables',
+      results: [{ step: 'Error', msg: 'Cannot connect to database.' }],
+      success: false,
+    });
+  }
+
+  results.push({ step: 'Connection', status: '✅ OK' });
+
+  try {
+    const queries = [
+      `CREATE TABLE IF NOT EXISTS Country (
+        id VARCHAR(191) PRIMARY KEY,
+        code VARCHAR(191) NOT NULL,
+        nameAr VARCHAR(191) NOT NULL,
+        nameEn VARCHAR(191) NOT NULL,
+        currency VARCHAR(191) DEFAULT 'DZD',
+        phonePrefix VARCHAR(191) DEFAULT '+213',
+        isActive BOOLEAN DEFAULT TRUE,
+        createdAt DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+        updatedAt DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+        UNIQUE INDEX Country_code_key (code)
+      ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`,
+
+      `CREATE TABLE IF NOT EXISTS State (
+        id VARCHAR(191) PRIMARY KEY,
+        code VARCHAR(191) NOT NULL,
+        nameAr VARCHAR(191) NOT NULL,
+        nameEn VARCHAR(191) NOT NULL,
+        defaultPrice FLOAT DEFAULT 500,
+        isActive BOOLEAN DEFAULT TRUE,
+        createdAt DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+        updatedAt DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+        countryId VARCHAR(191) NOT NULL,
+        INDEX State_countryId_idx (countryId)
+      ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`,
+
+      `CREATE TABLE IF NOT EXISTS City (
+        id VARCHAR(191) PRIMARY KEY,
+        nameAr VARCHAR(191) NOT NULL,
+        nameEn VARCHAR(191) NOT NULL,
+        isActive BOOLEAN DEFAULT TRUE,
+        createdAt DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+        updatedAt DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+        stateId VARCHAR(191) NOT NULL,
+        INDEX City_stateId_idx (stateId)
+      ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
+    ];
+
+    let created = 0;
+    let skipped = 0;
+    let errors = 0;
+    for (const stmt of queries) {
+      try {
+        await workingConn.execute(stmt);
+        created++;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes('already exists')) {
+          skipped++;
+        } else {
+          errors++;
+          results.push({ step: 'SQL Error', sql: stmt.substring(0, 80), error: msg.substring(0, 120) });
+        }
+      }
+    }
+
+    await workingConn.end();
+    results.push({ step: 'Result', created, skipped, errors, total: created + skipped + errors });
+    return NextResponse.json({ action: 'create-geo-tables', results, success: errors === 0 });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await workingConn.end().catch(() => {});
+    return NextResponse.json({ action: 'create-geo-tables', results: [{ step: 'Error', error: msg.substring(0, 300) }], success: false });
+  }
+}
+
+async function handleSeedGeoData(creds: ReturnType<typeof parseMysqlUrl>) {
+  const results: Record<string, unknown>[] = [];
+
+  if (!creds) {
+    return NextResponse.json({ action: 'seed-geo-data', results: [{ step: 'Error', msg: 'Invalid DATABASE_URL' }], success: false });
+  }
+
+  const workingConn = await getDbConnection(creds);
+  if (!workingConn) {
+    return NextResponse.json({
+      action: 'seed-geo-data',
+      results: [{ step: 'Error', msg: 'Cannot connect to database.' }],
+      success: false,
+    });
+  }
+
+  try {
+    // 1. Check if Country with code DZ exists
+    const [countries] = await workingConn.execute('SELECT id FROM Country WHERE code = ?', ['DZ']);
+    let countryId = '';
+    
+    if ((countries as any[]).length > 0) {
+      countryId = (countries as any[])[0].id;
+      results.push({ step: 'Country Check', status: 'Exists', countryId });
+    } else {
+      countryId = 'c_dz_' + Math.random().toString(36).substring(2, 10);
+      await workingConn.execute(
+        'INSERT INTO Country (id, code, nameAr, nameEn, currency, phonePrefix, isActive, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
+        [countryId, 'DZ', 'الجزائر', 'Algeria', 'DZD', '+213', 1]
+      );
+      results.push({ step: 'Country Created', countryId });
+    }
+
+    // 2. Seed the 58 Wilayas
+    const wilayas = [
+      { id: '1', nameAr: 'أدرار', nameEn: 'Adrar', defaultPrice: 1200 },
+      { id: '2', nameAr: 'الشلف', nameEn: 'Chlef', defaultPrice: 600 },
+      { id: '3', nameAr: 'الأغواط', nameEn: 'Laghouat', defaultPrice: 800 },
+      { id: '4', nameAr: 'أم البواقي', nameEn: 'Oum El Bouaghi', defaultPrice: 700 },
+      { id: '5', nameAr: 'باتنة', nameEn: 'Batna', defaultPrice: 600 },
+      { id: '6', nameAr: 'بجاية', nameEn: 'Bejaia', defaultPrice: 500 },
+      { id: '7', nameAr: 'بسكرة', nameEn: 'Biskra', defaultPrice: 800 },
+      { id: '8', nameAr: 'بشار', nameEn: 'Bechar', defaultPrice: 1000 },
+      { id: '9', nameAr: 'البليدة', nameEn: 'Blida', defaultPrice: 400 },
+      { id: '10', nameAr: 'البويرة', nameEn: 'Bouira', defaultPrice: 500 },
+      { id: '11', nameAr: 'تمنراست', nameEn: 'Tamanrasset', defaultPrice: 1500 },
+      { id: '12', nameAr: 'تبسة', nameEn: 'Tebessa', defaultPrice: 700 },
+      { id: '13', nameAr: 'تلمسان', nameEn: 'Tlemcen', defaultPrice: 600 },
+      { id: '14', nameAr: 'تيارت', nameEn: 'Tiaret', defaultPrice: 600 },
+      { id: '15', nameAr: 'تيزي وزو', nameEn: 'Tizi Ouzou', defaultPrice: 500 },
+      { id: '16', nameAr: 'الجزائر العاصمة', nameEn: 'Algiers', defaultPrice: 300 },
+      { id: '17', nameAr: 'الجلفة', nameEn: 'Djelfa', defaultPrice: 700 },
+      { id: '18', nameAr: 'جيجل', nameEn: 'Jijel', defaultPrice: 600 },
+      { id: '19', nameAr: 'سطيف', nameEn: 'Setif', defaultPrice: 500 },
+      { id: '20', nameAr: 'سعيدة', nameEn: 'Saida', defaultPrice: 700 },
+      { id: '21', nameAr: 'سكيكدة', nameEn: 'Skikda', defaultPrice: 600 },
+      { id: '22', nameAr: 'سيدي بلعباس', nameEn: 'Sidi Bel Abbes', defaultPrice: 600 },
+      { id: '23', nameAr: 'عنابة', nameEn: 'Annaba', defaultPrice: 500 },
+      { id: '24', nameAr: 'قالمة', nameEn: 'Guelma', defaultPrice: 600 },
+      { id: '25', nameAr: 'قسنطينة', nameEn: 'Constantine', defaultPrice: 500 },
+      { id: '26', nameAr: 'المدية', nameEn: 'Medea', defaultPrice: 500 },
+      { id: '27', nameAr: 'مستغانم', nameEn: 'Mostaganem', defaultPrice: 600 },
+      { id: '28', nameAr: 'المسيلة', nameEn: 'M\'Sila', defaultPrice: 600 },
+      { id: '29', nameAr: 'معسكر', nameEn: 'Mascara', defaultPrice: 600 },
+      { id: '30', nameAr: 'ورقلة', nameEn: 'Ouargla', defaultPrice: 900 },
+      { id: '31', nameAr: 'وهران', nameEn: 'Oran', defaultPrice: 500 },
+      { id: '32', nameAr: 'البيض', nameEn: 'El Bayadh', defaultPrice: 800 },
+      { id: '33', nameAr: 'إليزي', nameEn: 'Illizi', defaultPrice: 1500 },
+      { id: '34', nameAr: 'برج بوعريريج', nameEn: 'Bordj Bou Arreridj', defaultPrice: 500 },
+      { id: '35', nameAr: 'بومرداس', nameEn: 'Boumerdes', defaultPrice: 400 },
+      { id: '36', nameAr: 'الطارف', nameEn: 'El Tarf', defaultPrice: 600 },
+      { id: '37', nameAr: 'تيندوف', nameEn: 'Tindouf', defaultPrice: 1500 },
+      { id: '38', nameAr: 'تيسمسيلت', nameEn: 'Tissemsilt', defaultPrice: 600 },
+      { id: '39', nameAr: 'الوادي', nameEn: 'El Oued', defaultPrice: 800 },
+      { id: '40', nameAr: 'خنشلة', nameEn: 'Khenchela', defaultPrice: 700 },
+      { id: '41', nameAr: 'سوق أهراس', nameEn: 'Souk Ahras', defaultPrice: 700 },
+      { id: '42', nameAr: 'تيبازة', nameEn: 'Tipaza', defaultPrice: 400 },
+      { id: '43', nameAr: 'ميلة', nameEn: 'Mila', defaultPrice: 500 },
+      { id: '44', nameAr: 'عين الدفلى', nameEn: 'Ain Defla', defaultPrice: 500 },
+      { id: '45', nameAr: 'النعامة', nameEn: 'Naama', defaultPrice: 900 },
+      { id: '46', nameAr: 'عين تموشنت', nameEn: 'Ain Temouchent', defaultPrice: 600 },
+      { id: '47', nameAr: 'غرداية', nameEn: 'Ghardaia', defaultPrice: 900 },
+      { id: '48', nameAr: 'غليزان', nameEn: 'Relizane', defaultPrice: 600 },
+      { id: '49', nameAr: 'تيميمون', nameEn: 'Timimoun', defaultPrice: 1200 },
+      { id: '50', nameAr: 'برج باجي مختار', nameEn: 'Bordj Badji Mokhtar', defaultPrice: 1500 },
+      { id: '51', nameAr: 'أولاد جلال', nameEn: 'Ouled Djellal', defaultPrice: 800 },
+      { id: '52', nameAr: 'بني عباس', nameEn: 'Beni Abbes', defaultPrice: 1200 },
+      { id: '53', nameAr: 'عين صالح', nameEn: 'In Salah', defaultPrice: 1500 },
+      { id: '54', nameAr: 'عين قزام', nameEn: 'In Guezzam', defaultPrice: 1500 },
+      { id: '55', nameAr: 'تقرت', nameEn: 'Touggourt', defaultPrice: 900 },
+      { id: '56', nameAr: 'جانت', nameEn: 'Djanet', defaultPrice: 1500 },
+      { id: '57', nameAr: 'المغير', nameEn: 'El M\'Ghair', defaultPrice: 800 },
+      { id: '58', nameAr: 'المنيعة', nameEn: 'El Meniaa', defaultPrice: 900 }
+    ];
+
+    let statesCreated = 0;
+    let statesSkipped = 0;
+
+    for (const w of wilayas) {
+      const [existing] = await workingConn.execute('SELECT id FROM State WHERE countryId = ? AND code = ?', [countryId, w.id]);
+      if ((existing as any[]).length > 0) {
+        statesSkipped++;
+      } else {
+        const stateId = 's_' + w.id + '_' + Math.random().toString(36).substring(2, 8);
+        await workingConn.execute(
+          'INSERT INTO State (id, code, nameAr, nameEn, defaultPrice, isActive, countryId, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, 1, ?, NOW(), NOW())',
+          [stateId, w.id, w.nameAr, w.nameEn, w.defaultPrice, countryId]
+        );
+        statesCreated++;
+      }
+    }
+
+    await workingConn.end();
+    results.push({ step: 'States Seeding', created: statesCreated, skipped: statesSkipped });
+    return NextResponse.json({ action: 'seed-geo-data', results, success: true });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    await workingConn.end().catch(() => {});
+    return NextResponse.json({ action: 'seed-geo-data', results: [{ step: 'Error', error: msg.substring(0, 300) }], success: false });
+  }
+}
+
 

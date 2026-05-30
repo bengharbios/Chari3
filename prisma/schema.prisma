@@ -809,3 +809,54 @@ model AdminAuditLog {
   createdAt   DateTime @default(now())
 }
 
+// ============================================
+// GEOLOCATION / SHIPPING REGION MODELS
+// ============================================
+
+model Country {
+  id          String   @id @default(cuid())
+  code        String   @unique // e.g., "DZ", "SA", "EG"
+  nameAr      String
+  nameEn      String
+  currency    String   @default("DZD") // DZD, SAR, EGP
+  phonePrefix String   @default("+213")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  states      State[]
+}
+
+model State {
+  id           String   @id @default(cuid())
+  code         String   // e.g., "16", "01" (Wilaya code)
+  nameAr       String
+  nameEn       String
+  defaultPrice Float    @default(500)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  countryId    String
+  country      Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+
+  cities       City[]
+
+  @@index([countryId])
+}
+
+model City {
+  id        String   @id @default(cuid())
+  nameAr    String
+  nameEn    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stateId   String
+  state     State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
+
+  @@index([stateId])
+}
+
+

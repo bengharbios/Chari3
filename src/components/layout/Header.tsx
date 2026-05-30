@@ -117,6 +117,8 @@ export default function Header() {
   // Two-step cart: 'cart' = view items, 'checkout' = shipping form
   const [cartStep, setCartStep] = useState<'cart' | 'checkout'>('cart');
   
+  const [dynamicWilayas, setDynamicWilayas] = useState<any[]>(ALGERIAN_WILAYAS);
+  const [countryCurrency, setCountryCurrency] = useState<string>('DZD');
   const [sellerSettings, setSellerSettings] = useState<any>(null);
 
   useEffect(() => {
@@ -126,11 +128,21 @@ export default function Header() {
       const pSellerId = p.seller?.id || (p as any).sellerId;
       const targetParam = pStoreId ? `storeId=${pStoreId}` : pSellerId ? `sellerId=${pSellerId}` : '';
       if (targetParam) {
-        fetch(`/api/seller/settings?${targetParam}`)
+        fetch(`/api/regions/states?countryCode=DZ&${targetParam}`)
           .then(res => res.json())
           .then(data => {
-            if (data.success && data.settings) {
-              setSellerSettings(data.settings);
+            if (data.success) {
+              if (data.states && data.states.length > 0) {
+                setDynamicWilayas(data.states);
+              }
+              if (data.country?.currency) {
+                setCountryCurrency(data.country.currency);
+              }
+              if (data.shipping) {
+                setSellerSettings({
+                  shippingRates: data.shipping
+                });
+              }
             }
           })
           .catch(() => {});
@@ -139,24 +151,22 @@ export default function Header() {
   }, [items, cartStep]);
 
   const getShippingCost = () => {
+    if (!city) return 0;
     const subtotal = getSubtotal();
-    if (!sellerSettings || !sellerSettings.shippingRates) {
-      return subtotal > 200 ? 0 : 25;
+    
+    // Check if store/seller has shipping enabled
+    const rates = sellerSettings?.shippingRates;
+    if (!rates || rates.enabled === false) {
+      return 0;
     }
-    const rates = sellerSettings.shippingRates;
-    if (rates.enabled === false) return 0;
 
     if (rates.freeThreshold && subtotal >= rates.freeThreshold) {
       return 0;
     }
 
-    if (city && rates.customWilayas && rates.customWilayas[city] !== undefined) {
-      return rates.customWilayas[city];
-    }
-
-    const matchedWilaya = ALGERIAN_WILAYAS.find(w => w.id === city);
-    if (matchedWilaya) {
-      return matchedWilaya.defaultPrice;
+    const matchedState = dynamicWilayas.find(w => w.id === city);
+    if (matchedState) {
+      return matchedState.price !== undefined ? matchedState.price : matchedState.defaultPrice;
     }
 
     return rates.standardPrice !== undefined ? rates.standardPrice : 25;
@@ -270,7 +280,7 @@ export default function Header() {
       }));
 
       const shippingCost = getShippingCost();
-      const matchedWilaya = ALGERIAN_WILAYAS.find(w => w.id === city);
+      const matchedWilaya = dynamicWilayas.find(w => w.id === city);
       const cityName = matchedWilaya ? (isRTL ? matchedWilaya.nameAr : matchedWilaya.nameEn) : city;
 
       const discount = getDiscountAmount();
@@ -282,6 +292,7 @@ export default function Header() {
         tax: 0,
         discount,
         total: getSubtotal() - discount + shippingCost,
+        currency: countryCurrency,
         address: {
           fullName,
           phone,
@@ -672,7 +683,7 @@ export default function Header() {
                       {item.product.name}
                     </h4>
                     <span className="text-[10px] text-muted-foreground">
-                      {t('سعر الوحدة: ', 'Unit: ')}{item.product.price} DZD
+                      {t('سعر الوحدة: ', 'Unit: ')}{item.product.price} {countryCurrency}
                     </span>
                   </div>
                   
@@ -697,7 +708,7 @@ export default function Header() {
                     
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-black text-primary">
-                        {(item.product.price * item.quantity).toLocaleString()} DZD
+                        {(item.product.price * item.quantity).toLocaleString()} {countryCurrency}
                       </span>
                       <Button 
                         variant="ghost" 
@@ -793,7 +804,7 @@ export default function Header() {
                     className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     <option value="">{t('-- اختر الولاية --', '-- Select State --')}</option>
-                    {ALGERIAN_WILAYAS.map((w) => (
+                    {dynamicWilayas.map((w) => (
                       <option key={w.id} value={w.id}>
                         {w.id} - {isRTL ? w.nameAr : w.nameEn}
                       </option>
@@ -865,7 +876,7 @@ export default function Header() {
                     <span className="font-mono">{appliedCoupon.code}</span>
                   </span>
                   <span>
-                    -{appliedCoupon.type === 'percentage' ? `${appliedCoupon.value}%` : `${appliedCoupon.value} DZD`}
+                    -{appliedCoupon.type === 'percentage' ? `${appliedCoupon.value}%` : `${appliedCoupon.value} ${countryCurrency}`}
                   </span>
                 </div>
               )}
@@ -882,21 +893,21 @@ export default function Header() {
           <div className="space-y-1.5 text-sm">
             <div className="flex justify-between text-muted-foreground text-xs">
               <span>{t('المجموع الفرعي', 'Subtotal')}</span>
-              <span>{getSubtotal().toLocaleString()} DZD</span>
+              <span>{getSubtotal().toLocaleString()} {countryCurrency}</span>
             </div>
             {appliedCoupon && (
               <div className="flex justify-between text-green-500 text-xs font-bold">
                 <span>{t('قيمة الخصم', 'Discount Value')}</span>
-                <span>-{getDiscountAmount().toLocaleString()} DZD</span>
+                <span>-{getDiscountAmount().toLocaleString()} {countryCurrency}</span>
               </div>
             )}
             <div className="flex justify-between text-muted-foreground text-xs">
               <span>{t('تكلفة الشحن', 'Shipping Cost')}</span>
-              <span>{getShippingCost() === 0 ? t('مجاني 🎉', 'Free 🎉') : `${getShippingCost().toLocaleString()} DZD`}</span>
+              <span>{getShippingCost() === 0 ? t('مجاني 🎉', 'Free 🎉') : `${getShippingCost().toLocaleString()} ${countryCurrency}`}</span>
             </div>
             <div className="flex justify-between text-foreground font-black border-t border-border/60 pt-1.5">
               <span>{t('المجموع الإجمالي', 'Total')}</span>
-              <span className="text-primary">{(getSubtotal() - getDiscountAmount() + getShippingCost()).toLocaleString()} DZD</span>
+              <span className="text-primary">{(getSubtotal() - getDiscountAmount() + getShippingCost()).toLocaleString()} {countryCurrency}</span>
             </div>
           </div>
 

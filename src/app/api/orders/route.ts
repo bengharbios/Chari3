@@ -94,6 +94,7 @@ export async function POST(request: Request) {
         tax: body.tax || 0,
         discount: body.discount || 0,
         total: body.total,
+        currency: body.currency || 'DZD',
         buyerId: buyerId,
         address: JSON.stringify(body.address),
         shippingMethod: body.shippingMethod || 'standard',

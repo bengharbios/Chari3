@@ -126,6 +126,9 @@ export default function StoreSettingsPage() {
     customWilayas: {}, // stateId -> overridePrice
   });
 
+  const [statesList, setStatesList] = useState<any[]>(ALGERIAN_WILAYAS);
+  const [storeCurrency, setStoreCurrency] = useState<string>('DZD');
+
   const [shippingIntegrations, setShippingIntegrations] = useState<any>({
     yalidineEnabled: false,
     yalidineApiId: '',
@@ -158,6 +161,25 @@ export default function StoreSettingsPage() {
     if (!user?.id) return;
     setIsLoading(true);
     try {
+      // 1. Fetch dynamic states list first
+      try {
+        const geoRes = await fetch('/api/regions/states?countryCode=DZ');
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          if (geoData.success) {
+            if (geoData.states && geoData.states.length > 0) {
+              setStatesList(geoData.states);
+            }
+            if (geoData.country?.currency) {
+              setStoreCurrency(geoData.country.currency);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch dynamic states, using fallback', e);
+      }
+
+      // 2. Fetch seller settings
       const res = await fetch(`/api/seller/settings?userId=${user.id}`);
       if (!res.ok) throw new Error('Settings fetch failed');
       const data = await res.json();
@@ -251,7 +273,7 @@ export default function StoreSettingsPage() {
     }, 1500);
   };
 
-  const filteredWilayas = ALGERIAN_WILAYAS.filter(w => 
+  const filteredWilayas = statesList.filter(w => 
     w.nameAr.includes(searchWilaya) || w.nameEn.toLowerCase().includes(searchWilaya.toLowerCase())
   );
 
@@ -487,7 +509,7 @@ export default function StoreSettingsPage() {
                                   }}
                                   className="w-28 bg-muted/40 border-white/10 rounded-xl h-9 text-center font-bold"
                                 />
-                                <span className="text-xs text-muted-foreground font-bold">{t('د.ج', 'DZD')}</span>
+                                <span className="text-xs text-muted-foreground font-bold">{t('د.ج', storeCurrency)}</span>
                               </div>
                             </div>
                           );
