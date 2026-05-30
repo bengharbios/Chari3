@@ -812,6 +812,8 @@ async function handleSyncSchema(creds: ReturnType<typeof parseMysqlUrl>) {
     'ALTER TABLE SellerProfile ADD COLUMN shippingIntegrations LONGTEXT NULL',
     'ALTER TABLE SellerProfile ADD COLUMN paymentDetails LONGTEXT NULL',
     'ALTER TABLE SellerProfile ADD COLUMN themeSettings LONGTEXT NULL',
+    'ALTER TABLE Coupon ADD COLUMN storeId VARCHAR(191) NULL',
+    'ALTER TABLE Coupon ADD COLUMN sellerId VARCHAR(191) NULL',
   ];
 
   let applied = 0;
