@@ -33,7 +33,8 @@ export async function GET(request: Request) {
   // ── Action: inspect user / db ──
   if (action === 'inspect') {
     const phone = searchParams.get('phone');
-    return handleInspect(creds, phone);
+    const userId = searchParams.get('userId');
+    return handleInspect(creds, phone, userId);
   }
 
   // ── Action: fix user role and status ──
@@ -899,7 +900,7 @@ async function getDbConnection(creds: ReturnType<typeof parseMysqlUrl>) {
   return null;
 }
 
-async function handleInspect(creds: ReturnType<typeof parseMysqlUrl>, phone: string | null) {
+async function handleInspect(creds: ReturnType<typeof parseMysqlUrl>, phone: string | null, userId: string | null) {
   const conn = await getDbConnection(creds);
   if (!conn) {
     return NextResponse.json({ error: 'Cannot connect to database' }, { status: 500 });
@@ -908,28 +909,49 @@ async function handleInspect(creds: ReturnType<typeof parseMysqlUrl>, phone: str
   try {
     const results: Record<string, any> = {};
 
-    // 1. Fetch user by phone if provided, otherwise fetch all users
-    if (phone) {
-      const [users] = await conn.execute('SELECT id, name, email, phone, role, accountStatus, isActive, isVerified FROM User WHERE phone = ?', [phone]);
+    // 1. Fetch user by phone or userId
+    if (userId) {
+      const [users] = await conn.execute('SELECT id, name, email, phone, role, accountStatus, isActive, isVerified FROM User WHERE id = ?', [userId]);
       results.user = (users as any[])[0] || null;
-
-      if (results.user) {
-        const userId = results.user.id;
-        // Fetch Store
-        const [stores] = await conn.execute('SELECT id, name, slug, isActive, managerId FROM Store WHERE managerId = ?', [userId]);
-        results.store = (stores as any[])[0] || null;
-
-        // Fetch SellerProfile
-        const [sellerProfiles] = await conn.execute('SELECT id, storeName, isVerified, userId FROM SellerProfile WHERE userId = ?', [userId]);
-        results.sellerProfile = (sellerProfiles as any[])[0] || null;
+    } else if (phone) {
+      // Try exact match first
+      let [users] = await conn.execute('SELECT id, name, email, phone, role, accountStatus, isActive, isVerified FROM User WHERE phone = ?', [phone]);
+      
+      // If not found, try stripping leading zero
+      if ((users as any[]).length === 0 && phone.startsWith('0')) {
+        const stripped = phone.substring(1);
+        [users] = await conn.execute('SELECT id, name, email, phone, role, accountStatus, isActive, isVerified FROM User WHERE phone = ?', [stripped]);
       }
+      
+      // If still not found, try wildcard search
+      if ((users as any[]).length === 0) {
+        const cleanPhone = phone.replace(/[^0-9]/g, '');
+        [users] = await conn.execute('SELECT id, name, email, phone, role, accountStatus, isActive, isVerified FROM User WHERE phone LIKE ?', [`%${cleanPhone}%`]);
+      }
+
+      results.user = (users as any[])[0] || null;
+    }
+
+    if (results.user) {
+      const foundUserId = results.user.id;
+      // Fetch Store
+      const [stores] = await conn.execute('SELECT id, name, slug, isActive, managerId FROM Store WHERE managerId = ?', [foundUserId]);
+      results.store = (stores as any[])[0] || null;
+
+      // Fetch SellerProfile
+      const [sellerProfiles] = await conn.execute('SELECT id, storeName, isVerified, userId FROM SellerProfile WHERE userId = ?', [foundUserId]);
+      results.sellerProfile = (sellerProfiles as any[])[0] || null;
     }
 
     // 2. Fetch all stores in system to see what exists
     const [allStores] = await conn.execute('SELECT id, name, slug, managerId FROM Store LIMIT 50');
     results.allStores = allStores;
 
-    // 3. Fetch all users count and sample
+    // 3. Fetch details for manager of Abdelkader's store ("cmp5gtpgd000041hcn572i4t4") if it exists
+    const [managerUser] = await conn.execute('SELECT id, name, email, phone, role, accountStatus FROM User WHERE id = ?', ['cmp5gtpgd000041hcn572i4t4']);
+    results.storeManagerOfAbdelkader = (managerUser as any[])[0] || null;
+
+    // 4. Fetch all users count and sample
     const [userCount] = await conn.execute('SELECT COUNT(*) as count FROM User');
     results.totalUsers = (userCount as any[])[0]?.count || 0;
     const [recentUsers] = await conn.execute('SELECT id, name, phone, role, accountStatus FROM User ORDER BY createdAt DESC LIMIT 15');
@@ -938,7 +960,9 @@ async function handleInspect(creds: ReturnType<typeof parseMysqlUrl>, phone: str
     await conn.end();
     return NextResponse.json({ success: true, action: 'inspect', results });
   } catch (err: any) {
-    await conn.end();
+    if (conn) {
+      try { await conn.end(); } catch {}
+    }
     return NextResponse.json({ success: false, error: err.message });
   }
 }
@@ -954,8 +978,23 @@ async function handleFixUser(creds: ReturnType<typeof parseMysqlUrl>, phone: str
   }
 
   try {
-    const [users] = await conn.execute('SELECT id, name, role, accountStatus FROM User WHERE phone = ?', [phone]);
-    const user = (users as any[])[0];
+    // Try exact match first
+    let [users] = await conn.execute('SELECT id, name, role, accountStatus FROM User WHERE phone = ?', [phone]);
+    let user = (users as any[])[0];
+
+    // Try stripping leading zero
+    if (!user && phone.startsWith('0')) {
+      const stripped = phone.substring(1);
+      [users] = await conn.execute('SELECT id, name, role, accountStatus FROM User WHERE phone = ?', [stripped]);
+      user = (users as any[])[0];
+    }
+
+    // Try wildcard match if still not found
+    if (!user) {
+      const cleanPhone = phone.replace(/[^0-9]/g, '');
+      [users] = await conn.execute('SELECT id, name, role, accountStatus FROM User WHERE phone LIKE ?', [`%${cleanPhone}%`]);
+      user = (users as any[])[0];
+    }
 
     if (!user) {
       await conn.end();
