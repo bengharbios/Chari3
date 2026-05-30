@@ -35,7 +35,8 @@ export async function GET(request: Request) {
   if (action === 'inspect') {
     const phone = searchParams.get('phone');
     const userId = searchParams.get('userId');
-    return handleInspect(creds, phone, userId);
+    const couponCode = searchParams.get('coupon');
+    return handleInspect(creds, phone, userId, couponCode);
   }
 
   // ── Action: fix user role and status ──
@@ -901,7 +902,7 @@ async function getDbConnection(creds: ReturnType<typeof parseMysqlUrl>) {
   return null;
 }
 
-async function handleInspect(creds: ReturnType<typeof parseMysqlUrl>, phone: string | null, userId: string | null) {
+async function handleInspect(creds: ReturnType<typeof parseMysqlUrl>, phone: string | null, userId: string | null, couponCode: string | null) {
   const conn = await getDbConnection(creds);
   if (!conn) {
     return NextResponse.json({ error: 'Cannot connect to database' }, { status: 500 });
@@ -948,11 +949,20 @@ async function handleInspect(creds: ReturnType<typeof parseMysqlUrl>, phone: str
     const [allStores] = await conn.execute('SELECT id, name, slug, managerId FROM Store LIMIT 50');
     results.allStores = allStores;
 
-    // 3. Fetch details for manager of Abdelkader's store ("cmp5gtpgd000041hcn572i4t4") if it exists
+    // 3. Fetch Coupon if provided, otherwise fetch recent coupons
+    if (couponCode) {
+      const [coupons] = await conn.execute('SELECT * FROM Coupon WHERE code = ?', [couponCode.toUpperCase().trim()]);
+      results.coupon = (coupons as any[])[0] || null;
+    } else {
+      const [recentCoupons] = await conn.execute('SELECT id, code, type, value, storeId, sellerId, isActive FROM Coupon ORDER BY createdAt DESC LIMIT 15');
+      results.recentCoupons = recentCoupons;
+    }
+
+    // 4. Fetch details for manager of Abdelkader's store ("cmp5gtpgd000041hcn572i4t4") if it exists
     const [managerUser] = await conn.execute('SELECT id, name, email, phone, role, accountStatus FROM User WHERE id = ?', ['cmp5gtpgd000041hcn572i4t4']);
     results.storeManagerOfAbdelkader = (managerUser as any[])[0] || null;
 
-    // 4. Fetch all users count and sample
+    // 5. Fetch all users count and sample
     const [userCount] = await conn.execute('SELECT COUNT(*) as count FROM User');
     results.totalUsers = (userCount as any[])[0]?.count || 0;
     const [recentUsers] = await conn.execute('SELECT id, name, phone, role, accountStatus FROM User ORDER BY createdAt DESC LIMIT 15');
