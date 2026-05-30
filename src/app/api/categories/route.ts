@@ -7,9 +7,13 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const parentId = searchParams.get('parentId');
 
+  const type = searchParams.get('type') || 'product';
+
   const where: Record<string, unknown> = {
     isActive: true,
+    type,
   };
+  
   if (parentId === 'null' || !parentId) {
     where.parentId = null;
   } else {
@@ -20,7 +24,7 @@ export async function GET(request: Request) {
     where,
     orderBy: { sortOrder: 'asc' },
     include: {
-      _count: { select: { products: true } },
+      _count: { select: { products: true, stores: true, sellerProfiles: true } },
     },
   });
 
@@ -30,10 +34,13 @@ export async function GET(request: Request) {
       name: cat.name,
       nameEn: cat.nameEn,
       slug: cat.slug,
+      type: cat.type,
       icon: cat.icon,
       image: cat.image,
       sortOrder: cat.sortOrder,
       productCount: cat._count.products,
+      storeCount: (cat as any)._count?.stores,
+      sellerCount: (cat as any)._count?.sellerProfiles,
     }))
   );
 }

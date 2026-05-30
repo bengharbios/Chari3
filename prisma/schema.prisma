@@ -45,6 +45,7 @@ model User {
   supplierVerification  SupplierVerification?
   logisticsVerification LogisticsVerification?
   auditLogs          AuditLog[]
+  categoryRequests   CategoryRequest[]
 }
 
 model Store {
@@ -67,6 +68,9 @@ model Store {
 
   packageId     String?
   package       SellerPackage? @relation(fields: [packageId], references: [id])
+
+  categoryId    String?
+  category      Category? @relation(fields: [categoryId], references: [id])
 
   level         Int      @default(1)
   totalCustomers Int     @default(0)
@@ -122,9 +126,11 @@ model SellerProfile {
   levelUpdatedAt      DateTime?
   levelGraceUntil     DateTime? // Grace period before demotion
 
-  // Package
   packageId           String?
   package             SellerPackage? @relation(fields: [packageId], references: [id])
+
+  categoryId          String?
+  category            Category? @relation(fields: [categoryId], references: [id])
 
   isVerified          Boolean   @default(false)
   wantsUpgrade        Boolean   @default(false)
@@ -374,6 +380,7 @@ model Category {
   name        String
   nameEn      String?
   slug        String      @unique
+  type        String      @default("product") // product, store, supplier, logistics
   icon        String?
   image       String?
   parentId    String?
@@ -384,7 +391,28 @@ model Category {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  products    Product[]
+  products        Product[]
+  stores          Store[]
+  sellerProfiles  SellerProfile[]
+}
+
+// ============================================
+// CATEGORY REQUEST MODEL
+// ============================================
+
+model CategoryRequest {
+  id          String   @id @default(cuid())
+  nameAr      String
+  nameEn      String?
+  description String?
+  type        String   @default("product") // product, store, supplier, logistics
+  status      String   @default("pending") // pending, approved, rejected
+  adminNote   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model Product {
