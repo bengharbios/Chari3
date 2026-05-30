@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import * as mysqlModule from 'mysql2/promise';
 
 const DEBUG_TOKEN = 'chari3-debug';
 
@@ -84,7 +85,7 @@ export async function GET(request: Request) {
 
   for (const socketPath of socketPaths) {
     try {
-      const mysql = await import('mysql2/promise');
+      const mysql = await Promise.resolve(mysqlModule);
       const start = Date.now();
       const conn = await mysql.createConnection({
         user: creds.user,
@@ -105,7 +106,7 @@ export async function GET(request: Request) {
       workingMethod = { type: 'socket', path: socketPath };
 
       // Count existing tables
-      const conn2 = await (await import('mysql2/promise')).createConnection({
+      const conn2 = await (await Promise.resolve(mysqlModule)).createConnection({
         user: creds.user,
         password: creds.pass,
         database: creds.db,
@@ -143,7 +144,7 @@ export async function GET(request: Request) {
       seen.add(host);
       const url = `mysql://${encodeURIComponent(creds.user)}:${encodeURIComponent(creds.pass)}@${host}:${creds.port}/${creds.db}`;
       try {
-        const mysql = await import('mysql2/promise');
+        const mysql = await Promise.resolve(mysqlModule);
         const start = Date.now();
         const conn = await mysql.createConnection({ uri: url, connectTimeout: 5000, enableKeepAlive: false });
         const [rows] = await conn.execute('SELECT VERSION() as ver, DATABASE() as db');
@@ -157,7 +158,7 @@ export async function GET(request: Request) {
         workingMethod = { type: 'tcp', url, label };
 
         // Count existing tables
-        const conn2 = await (await import('mysql2/promise')).createConnection({
+        const conn2 = await (await Promise.resolve(mysqlModule)).createConnection({
           uri: url,
           connectTimeout: 5000,
           multipleStatements: true,
@@ -210,7 +211,7 @@ async function handleCreateTables(creds: ReturnType<typeof parseMysqlUrl>) {
 
   for (const socketPath of socketPaths) {
     try {
-      const mysql = await import('mysql2/promise');
+      const mysql = await Promise.resolve(mysqlModule);
       workingConn = await mysql.createConnection({
         user: creds.user,
         password: creds.pass,
@@ -239,7 +240,7 @@ async function handleCreateTables(creds: ReturnType<typeof parseMysqlUrl>) {
       seen.add(host);
       const url = `mysql://${encodeURIComponent(creds.user)}:${encodeURIComponent(creds.pass)}@${host}:${creds.port}/${creds.db}`;
       try {
-        const mysql = await import('mysql2/promise');
+        const mysql = await Promise.resolve(mysqlModule);
         workingConn = await mysql.createConnection({
           uri: url,
           connectTimeout: 5000,
@@ -764,7 +765,7 @@ async function handleSyncSchema(creds: ReturnType<typeof parseMysqlUrl>) {
 
   for (const socketPath of socketPaths) {
     try {
-      const mysql = await import('mysql2/promise');
+      const mysql = await Promise.resolve(mysqlModule);
       workingConn = await mysql.createConnection({
         user: creds.user,
         password: creds.pass,
@@ -793,7 +794,7 @@ async function handleSyncSchema(creds: ReturnType<typeof parseMysqlUrl>) {
       seen.add(host);
       const url = `mysql://${encodeURIComponent(creds.user)}:${encodeURIComponent(creds.pass)}@${host}:${creds.port}/${creds.db}`;
       try {
-        const mysql = await import('mysql2/promise');
+        const mysql = await Promise.resolve(mysqlModule);
         workingConn = await mysql.createConnection({
           uri: url,
           connectTimeout: 5000,
@@ -866,7 +867,7 @@ async function getDbConnection(creds: ReturnType<typeof parseMysqlUrl>) {
   const socketPaths = ['/tmp/mysql.sock', '/var/run/mysqld/mysqld.sock', '/var/lib/mysql/mysql.sock'];
   for (const socketPath of socketPaths) {
     try {
-      const mysql = await import('mysql2/promise');
+      const mysql = await Promise.resolve(mysqlModule);
       return await mysql.createConnection({
         user: creds.user,
         password: creds.pass,
@@ -888,7 +889,7 @@ async function getDbConnection(creds: ReturnType<typeof parseMysqlUrl>) {
     seen.add(host);
     const url = `mysql://${encodeURIComponent(creds.user)}:${encodeURIComponent(creds.pass)}@${host}:${creds.port}/${creds.db}`;
     try {
-      const mysql = await import('mysql2/promise');
+      const mysql = await Promise.resolve(mysqlModule);
       return await mysql.createConnection({
         uri: url,
         connectTimeout: 5000,
