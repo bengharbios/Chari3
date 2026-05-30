@@ -42,11 +42,47 @@ export async function POST(req: NextRequest) {
     const couponSellerId = coupon.sellerId;
 
     if (couponStoreId && storeId !== couponStoreId) {
-      return NextResponse.json({ success: false, errorAr: 'هذا الكوبون غير مخصص لمنتجات هذا المتجر', errorEn: 'This coupon is not valid for this store\'s products' }, { status: 400 });
+      // Check if storeId actually corresponds to the SellerProfile of the same store manager
+      const store = await db.store.findUnique({
+        where: { id: couponStoreId },
+        select: { managerId: true }
+      });
+      
+      let isVerifiedMatch = false;
+      if (store && storeId) {
+        const sellerProfile = await db.sellerProfile.findUnique({
+          where: { id: storeId }
+        });
+        if (sellerProfile && sellerProfile.userId === store.managerId) {
+          isVerifiedMatch = true;
+        }
+      }
+
+      if (!isVerifiedMatch) {
+        return NextResponse.json({ success: false, errorAr: 'هذا الكوبون غير مخصص لمنتجات هذا المتجر', errorEn: 'This coupon is not valid for this store\'s products' }, { status: 400 });
+      }
     }
 
     if (couponSellerId && sellerId !== couponSellerId) {
-      return NextResponse.json({ success: false, errorAr: 'هذا الكوبون غير مخصص لمنتجات هذا البائع', errorEn: 'This coupon is not valid for this seller\'s products' }, { status: 400 });
+      // Check if sellerId actually corresponds to the Store of the same seller/freelancer
+      const sellerProfile = await db.sellerProfile.findUnique({
+        where: { id: couponSellerId },
+        select: { userId: true }
+      });
+
+      let isVerifiedMatch = false;
+      if (sellerProfile && sellerId) {
+        const store = await db.store.findFirst({
+          where: { managerId: sellerProfile.userId }
+        });
+        if (store && store.id === sellerId) {
+          isVerifiedMatch = true;
+        }
+      }
+
+      if (!isVerifiedMatch) {
+        return NextResponse.json({ success: false, errorAr: 'هذا الكوبون غير مخصص لمنتجات هذا البائع', errorEn: 'This coupon is not valid for this seller\'s products' }, { status: 400 });
+      }
     }
 
     // 5. Check Minimum Order purchase threshold
