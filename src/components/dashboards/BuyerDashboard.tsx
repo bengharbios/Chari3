@@ -4,10 +4,6 @@ import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { useAppStore, useCartStore, useAuthStore } from '@/lib/store';
 import {
-  MOCK_PRODUCTS,
-  MOCK_ORDERS,
-  MOCK_ADDRESSES,
-  MOCK_WALLET,
   formatCurrency,
   getOrderStatusColor,
   getOrderStatusText,
@@ -91,22 +87,52 @@ export default function BuyerDashboard() {
   // Star rating state per order
   const [ratings, setRatings] = useState<Record<string, number>>({});
   const [hoverRatings, setHoverRatings] = useState<Record<string, number>>({});
+  const [submittedRatings, setSubmittedRatings] = useState<Set<string>>(new Set());
 
   // Live orders from DB
   const [liveOrders, setLiveOrders] = useState<Order[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
 
+  // Real stats from DB
+  const [stats, setStats] = useState({ totalOrders: 0, totalSpent: 0, walletBalance: 0, wishlistCount: 0 });
+
   useEffect(() => {
     if (!user?.id) { setIsLoadingOrders(false); return; }
     setIsLoadingOrders(true);
-    fetch(`/api/orders?buyerId=${user.id}&limit=20`)
-      .then(r => r.json())
-      .then(data => {
-        if (data.orders) setLiveOrders(data.orders as Order[]);
-      })
-      .catch(() => {})
+
+    // Fetch orders and stats in parallel
+    Promise.all([
+      fetch(`/api/orders?buyerId=${user.id}&limit=20`).then(r => r.json()),
+      fetch(`/api/buyer/stats?buyerId=${user.id}`).then(r => r.json()),
+    ]).then(([ordersData, statsData]) => {
+      if (ordersData.orders) setLiveOrders(ordersData.orders as Order[]);
+      if (statsData.success && statsData.stats) setStats(statsData.stats);
+    }).catch(() => {})
       .finally(() => setIsLoadingOrders(false));
   }, [user?.id]);
+
+  // Submit review to API
+  const handleSubmitRating = async (order: Order, star: number) => {
+    if (!user?.id) return;
+    const productId = order.items?.[0]?.productId;
+    if (!productId) return;
+    try {
+      await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          productId,
+          orderId: order.id,
+          rating: star,
+          comment: '',
+        }),
+      });
+      setSubmittedRatings(prev => new Set([...prev, order.id]));
+      setRatings(prev => ({ ...prev, [order.id]: star }));
+    } catch { /* silent */ }
+  };
+
 
   // Derived from live orders
   const activeOrders = liveOrders.filter((o) =>
@@ -170,30 +196,30 @@ export default function BuyerDashboard() {
       </Card>
 
       {/* ============================================ */}
-      {/* QUICK STATS                                  */}
+      {/* QUICK STATS (Real Data)                      */}
       {/* ============================================ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title={t(locale, 'إجمالي الطلبات', 'Total Orders')}
-          value={8}
+          value={isLoadingOrders ? '...' : stats.totalOrders}
           icon={<Package className="h-5 w-5" />}
           iconBg="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
         />
         <StatsCard
-          title={t(locale, 'عناصر المفضلة', 'Wishlist Items')}
-          value={3}
-          icon={<Heart className="h-5 w-5" />}
+          title={t(locale, 'إجمالي الإنفاق', 'Total Spent')}
+          value={isLoadingOrders ? '...' : `${stats.totalSpent.toLocaleString()} DZD`}
+          icon={<ShoppingBag className="h-5 w-5" />}
           iconBg="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
         />
         <StatsCard
           title={t(locale, 'رصيد المحفظة', 'Wallet Balance')}
-          value={t(locale, '٢٬٤٥٠ ر.س', '2,450 SAR')}
+          value={isLoadingOrders ? '...' : `${stats.walletBalance.toLocaleString()} DZD`}
           icon={<Wallet className="h-5 w-5" />}
           iconBg="bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
         />
         <StatsCard
-          title={t(locale, 'نقاط الولاء', 'Loyalty Points')}
-          value="1,250"
+          title={t(locale, 'المفضلة', 'Wishlist')}
+          value={isLoadingOrders ? '...' : stats.wishlistCount}
           icon={<Star className="h-5 w-5" />}
           iconBg="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
         />
@@ -288,6 +314,11 @@ export default function BuyerDashboard() {
                         {order.items.map((i) => `${i.productName} ×${i.quantity}`).join('، ')}
                       </p>
                     </div>
+                    {submittedRatings.has(order.id) ? (
+                      <span className="text-xs text-green-500 font-semibold flex items-center gap-1">
+                        ✅ {t(locale, 'شكراً على تقييمك!', 'Thanks for your review!')}
+                      </span>
+                    ) : (
                     <div className="flex items-center gap-2">
                       {[1, 2, 3, 4, 5].map((star) => {
                         const currentRating = hoverRatings[order.id] || ratings[order.id] || 0;
@@ -302,9 +333,7 @@ export default function BuyerDashboard() {
                             onMouseLeave={() =>
                               setHoverRatings((prev) => ({ ...prev, [order.id]: 0 }))
                             }
-                            onClick={() =>
-                              setRatings((prev) => ({ ...prev, [order.id]: star }))
-                            }
+                            onClick={() => handleSubmitRating(order as any, star)}
                           >
                             <Star
                               className={cn(
@@ -317,12 +346,8 @@ export default function BuyerDashboard() {
                           </button>
                         );
                       })}
-                      {ratings[order.id] > 0 && (
-                        <span className="text-xs text-muted-foreground ms-2">
-                          {ratings[order.id]}/5
-                        </span>
-                      )}
                     </div>
+                    )}
                   </div>
                 ))}
               </CardContent>

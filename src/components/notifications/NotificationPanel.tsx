@@ -231,9 +231,10 @@ export default function NotificationPanel() {
     markAllAsRead,
     clearAll,
     refreshForUser,
+    addNotification,
   } = useNotificationStore();
 
-  // Refresh notifications when user changes
+  // Refresh role-based notifications when user changes
   useEffect(() => {
     if (!isAuthenticated || !user) return;
     refreshForUser(
@@ -242,6 +243,66 @@ export default function NotificationPanel() {
       user.isVerified
     );
   }, [isAuthenticated, user?.id, user?.accountStatus, user?.isVerified, refreshForUser]);
+
+  // Poll DB notifications every 30 seconds and merge with local
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) return;
+
+    const fetchDbNotifications = async () => {
+      try {
+        const res = await fetch(`/api/notifications?userId=${user.id}&limit=20`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.success || !data.notifications) return;
+
+        // Map DB notifications to AppNotification format
+        data.notifications.forEach((dbNotif: {
+          id: string; title: string; titleEn?: string;
+          body: string; bodyEn?: string; type: string;
+          isRead: boolean; createdAt: string;
+        }) => {
+          const typeToCategory: Record<string, string> = {
+            new_order: 'order', shipment: 'shipment',
+            verification: 'verification', wallet: 'wallet',
+            promotion: 'promotion', alert: 'alert',
+          };
+          const cat = typeToCategory[dbNotif.type] || 'system';
+          const iconBgMap: Record<string, string> = {
+            order: 'bg-blue-100 dark:bg-blue-900/30',
+            shipment: 'bg-emerald-100 dark:bg-emerald-900/30',
+            verification: 'bg-amber-100 dark:bg-amber-900/30',
+            system: 'bg-gray-100 dark:bg-gray-800',
+            promotion: 'bg-rose-100 dark:bg-rose-900/30',
+            wallet: 'bg-violet-100 dark:bg-violet-900/30',
+            alert: 'bg-red-100 dark:bg-red-900/30',
+          };
+
+          addNotification({
+            id: `db-${dbNotif.id}`,
+            category: cat as any,
+            titleAr: dbNotif.title,
+            titleEn: dbNotif.titleEn || dbNotif.title,
+            bodyAr: dbNotif.body,
+            bodyEn: dbNotif.bodyEn || dbNotif.body,
+            isRead: dbNotif.isRead,
+            createdAt: dbNotif.createdAt,
+            actionLabelAr: 'عرض الطلبات',
+            actionLabelEn: 'View Orders',
+            actionPage: user.role === 'store_manager' ? 'store-orders' : 'seller-orders',
+            actionUrl: null,
+            iconBg: iconBgMap[cat] || iconBgMap.system,
+            urgency: dbNotif.type === 'new_order' ? 'high' : 'normal',
+          });
+        });
+      } catch {
+        // Silent fail — notifications are not critical
+      }
+    };
+
+    fetchDbNotifications(); // fetch immediately
+    const interval = setInterval(fetchDbNotifications, 30000); // every 30s
+    return () => clearInterval(interval);
+  }, [isAuthenticated, user?.id, addNotification]);
 
   // Sort: unread first → by urgency → newest first
   const sortedNotifications = useMemo(() => {
