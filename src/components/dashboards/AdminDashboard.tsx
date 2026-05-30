@@ -291,7 +291,7 @@ export default function AdminDashboard() {
     );
   }
 
-  const { analytics, stats, users } = dashboardData;
+  const { analytics, stats, users, stores = [], sellers = [] } = dashboardData;
   const {
     totalRevenue,
     totalOrders,
@@ -473,6 +473,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="users" className="gap-1.5 font-bold">
             <Users className="h-3.5 w-3.5" />
             {t(locale, 'إدارة حسابات المستخدمين', 'Interactive Users Directory')}
+          </TabsTrigger>
+          <TabsTrigger value="stores-sellers" className="gap-1.5 font-bold">
+            <Store className="h-3.5 w-3.5" />
+            {t(locale, 'المتاجر والتجار', 'Stores & Sellers')}
           </TabsTrigger>
         </TabsList>
 
@@ -769,6 +773,192 @@ export default function AdminDashboard() {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ---- STORES & SELLERS DIRECTORY TAB ---- */}
+        <TabsContent value="stores-sellers">
+          <Card className="card-surface">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base font-semibold">
+                {t(locale, 'دليل المتاجر والتجار المستقلين', 'Directory of Stores & Sellers')}
+              </CardTitle>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {t(locale, 'متابعة وإدارة صور، خصائص، ومبيعات المتاجر والتجار المستقلين', 'Monitor and manage images, features, and sales of stores and independent sellers')}
+              </p>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="stores-sub" className="w-full">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="stores-sub" className="gap-1.5">
+                    <Store className="h-3.5 w-3.5" />
+                    {t(locale, 'المتاجر الرسمية', 'Official Stores')}
+                    <Badge variant="secondary" className="ms-1.5 bg-brand/10 text-brand">
+                      {stores.length}
+                    </Badge>
+                  </TabsTrigger>
+                  <TabsTrigger value="sellers-sub" className="gap-1.5">
+                    <UserCog className="h-3.5 w-3.5" />
+                    {t(locale, 'التجار المستقلين', 'Independent Sellers')}
+                    <Badge variant="secondary" className="ms-1.5 bg-brand/10 text-brand">
+                      {sellers.length}
+                    </Badge>
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="stores-sub">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {stores.map((store: any) => (
+                      <div key={store.id} className="border rounded-xl overflow-hidden bg-surface/50 hover:bg-surface hover:shadow-sm transition-all">
+                        <div className="h-24 w-full bg-muted relative">
+                          {store.coverImage ? (
+                            <img src={store.coverImage} alt="Cover" className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-muted-foreground bg-gradient-to-tr from-brand/5 to-brand/10">
+                              <Store className="h-8 w-8 opacity-20" />
+                            </div>
+                          )}
+                          <div className="absolute -bottom-6 right-4 rtl:right-4 rtl:left-auto ltr:left-4 ltr:right-auto">
+                            <Avatar className="h-12 w-12 border-2 border-background bg-background shadow-sm">
+                              {store.logo ? (
+                                <img src={store.logo} alt="Logo" className="object-cover" />
+                              ) : (
+                                <AvatarFallback className="text-lg font-bold text-brand bg-brand/10">
+                                  {store.name.charAt(0)}
+                                </AvatarFallback>
+                              )}
+                            </Avatar>
+                          </div>
+                          <div className="absolute top-2 left-2 rtl:left-2 rtl:right-auto ltr:right-2 ltr:left-auto">
+                            <Badge variant={store.isActive ? 'default' : 'destructive'} className="text-[10px] bg-background/80 backdrop-blur-sm shadow-sm text-foreground hover:bg-background/90 border-0">
+                              <span className={`h-1.5 w-1.5 rounded-full ${store.isActive ? 'bg-green-500' : 'bg-red-500'} me-1.5`} />
+                              {store.isActive ? t(locale, 'نشط', 'Active') : t(locale, 'موقوف', 'Suspended')}
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="pt-8 pb-4 px-4">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                              <h4 className="font-bold text-base line-clamp-1">{locale === 'ar' ? store.name : (store.nameEn || store.name)}</h4>
+                              <p className="text-xs text-muted-foreground font-mono truncate">{store.slug}</p>
+                            </div>
+                            <div className="flex items-center gap-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-1.5 py-0.5 rounded text-xs font-bold">
+                              <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                              {store.rating.toFixed(1)}
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 mt-4 text-sm bg-background rounded-lg p-2 border">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground uppercase">{t(locale, 'المنتجات', 'Products')}</span>
+                              <span className="font-bold flex items-center gap-1">
+                                <Package className="h-3 w-3 text-brand" />
+                                {store._count?.products || 0}
+                              </span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground uppercase">{t(locale, 'المبيعات', 'Sales')}</span>
+                              <span className="font-bold flex items-center gap-1">
+                                <ShoppingCart className="h-3 w-3 text-green-500" />
+                                {store.totalSales || 0}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3 text-xs flex items-center gap-2 text-muted-foreground">
+                            <UserCog className="h-3.5 w-3.5 shrink-0" />
+                            <span className="truncate">{store.manager?.name} ({store.manager?.email})</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {stores.length === 0 && (
+                      <div className="col-span-full py-12 text-center text-muted-foreground font-semibold">
+                        {t(locale, 'لا توجد متاجر رسمية مسجلة.', 'No official stores registered.')}
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="sellers-sub">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {sellers.map((seller: any) => (
+                      <div key={seller.id} className="border rounded-xl overflow-hidden bg-surface/50 hover:bg-surface hover:shadow-sm transition-all">
+                        <div className="h-24 w-full bg-muted relative">
+                          {seller.coverImage ? (
+                            <img src={seller.coverImage} alt="Cover" className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-muted-foreground bg-gradient-to-tr from-amber-500/5 to-amber-500/10">
+                              <UserCog className="h-8 w-8 opacity-20" />
+                            </div>
+                          )}
+                          <div className="absolute -bottom-6 right-4 rtl:right-4 rtl:left-auto ltr:left-4 ltr:right-auto">
+                            <Avatar className="h-12 w-12 border-2 border-background bg-background shadow-sm">
+                              {seller.logo ? (
+                                <img src={seller.logo} alt="Logo" className="object-cover" />
+                              ) : (
+                                <AvatarFallback className="text-lg font-bold text-amber-500 bg-amber-500/10">
+                                  {(seller.storeName || seller.user?.name || '?').charAt(0)}
+                                </AvatarFallback>
+                              )}
+                            </Avatar>
+                          </div>
+                          <div className="absolute top-2 left-2 rtl:left-2 rtl:right-auto ltr:right-2 ltr:left-auto">
+                            {seller.isVerified && (
+                              <Badge variant="default" className="text-[10px] bg-blue-500/90 hover:bg-blue-500 text-white border-0 shadow-sm gap-1">
+                                <Award className="h-3 w-3" />
+                                {t(locale, 'موثق', 'Verified')}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="pt-8 pb-4 px-4">
+                          <div className="flex items-start justify-between gap-2 mb-2">
+                            <div>
+                              <h4 className="font-bold text-base line-clamp-1">{locale === 'ar' ? (seller.storeName || seller.user?.name) : (seller.storeNameEn || seller.user?.nameEn || seller.user?.name)}</h4>
+                              <p className="text-xs text-muted-foreground font-mono truncate">{seller.user?.email}</p>
+                            </div>
+                            <div className="flex items-center gap-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-1.5 py-0.5 rounded text-xs font-bold">
+                              <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                              {seller.rating.toFixed(1)}
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 mt-4 text-sm bg-background rounded-lg p-2 border">
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground uppercase">{t(locale, 'المنتجات', 'Products')}</span>
+                              <span className="font-bold flex items-center gap-1">
+                                <Package className="h-3 w-3 text-amber-500" />
+                                {seller._count?.products || 0}
+                              </span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-muted-foreground uppercase">{t(locale, 'المبيعات', 'Sales')}</span>
+                              <span className="font-bold flex items-center gap-1">
+                                <ShoppingCart className="h-3 w-3 text-green-500" />
+                                {seller.totalSales || 0}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3 text-xs flex items-center gap-2 text-muted-foreground">
+                            <Activity className="h-3.5 w-3.5 shrink-0" />
+                            <span className="truncate">
+                              {t(locale, 'مستوى الإكمال:', 'Completion Rate:')} <strong className="text-foreground">{seller.completionRate}%</strong>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {sellers.length === 0 && (
+                      <div className="col-span-full py-12 text-center text-muted-foreground font-semibold">
+                        {t(locale, 'لا يوجد تجار مستقلين مسجلين.', 'No independent sellers registered.')}
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </TabsContent>

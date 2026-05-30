@@ -192,6 +192,24 @@ export async function GET() {
       },
     });
 
+    // 10. Fetch all stores for admin management directory
+    const storesList = await db.store.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        manager: { select: { name: true, nameEn: true, email: true } },
+        _count: { select: { products: true } },
+      },
+    });
+
+    // 11. Fetch all sellers for admin management directory
+    const sellersList = await db.sellerProfile.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { name: true, nameEn: true, email: true } },
+        _count: { select: { products: true } },
+      },
+    });
+
     return NextResponse.json({
       success: true,
       analytics: {
@@ -218,6 +236,8 @@ export async function GET() {
         avgStoreRating: storesAgg._avg.rating || 5.0,
       },
       users,
+      stores: storesList,
+      sellers: sellersList,
     });
   } catch (error: any) {
     console.error('[GET /api/admin/dashboard]', error);

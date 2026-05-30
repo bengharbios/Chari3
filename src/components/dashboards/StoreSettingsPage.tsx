@@ -156,6 +156,57 @@ export default function StoreSettingsPage() {
     layoutType: 'grid',
   });
 
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isUploadingCover, setIsUploadingCover] = useState(false);
+
+  const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>, target: 'logo' | 'coverImage') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (2MB for logo, 5MB for cover)
+    const maxSize = target === 'logo' ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error(
+        target === 'logo'
+          ? t('حجم الشعار كبير جداً. الحد الأقصى 2 ميجابايت.', 'Logo is too large. Max is 2MB.')
+          : t('حجم الغلاف كبير جداً. الحد الأقصى 5 ميجابايت.', 'Cover is too large. Max is 5MB.')
+      );
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(t('صيغة الملف غير مدعومة. الرجاء رفع صورة بصيغة PNG أو JPG.', 'File format not supported. Please upload a PNG or JPG image.'));
+      return;
+    }
+
+    const setUploading = target === 'logo' ? setIsUploadingLogo : setIsUploadingCover;
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (data.success && data.url) {
+        setGeneralSettings(prev => ({ ...prev, [target]: data.url }));
+        toast.success(t('تم رفع الصورة بنجاح', 'Image uploaded successfully'));
+      } else {
+        toast.error(data.error || t('فشل رفع الصورة', 'Failed to upload image'));
+      }
+    } catch (err) {
+      toast.error(t('حدث خطأ أثناء رفع الصورة', 'An error occurred while uploading'));
+    } finally {
+      setUploading(false);
+    }
+  };
+
   // Load Settings from API
   const loadSettings = async () => {
     if (!user?.id) return;
@@ -832,21 +883,47 @@ export default function StoreSettingsPage() {
                   <CardContent className="space-y-6">
                     <div className="space-y-3">
                       <Label>{t('شعار المتجر (Logo)', 'Store Logo')}</Label>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-4 flex-wrap">
                         <div className="h-20 w-20 rounded-2xl bg-muted/50 border-2 border-dashed border-border/50 flex items-center justify-center relative overflow-hidden" style={{ borderColor: themeSettings.primaryColor }}>
-                          {generalSettings.logo ? (
+                          {isUploadingLogo ? (
+                            <Loader2 className="h-6 w-6 animate-spin text-primary" style={{ color: themeSettings.primaryColor }} />
+                          ) : generalSettings.logo ? (
                             <img src={generalSettings.logo} alt="Logo" className="object-cover w-full h-full" />
                           ) : (
                             <Store className="h-8 w-8 text-muted-foreground/50" />
                           )}
                         </div>
-                        <div className="space-y-2">
-                          <Input 
-                            placeholder={t('أدخل رابط الشعار...', 'Enter logo URL...')}
-                            value={generalSettings.logo}
-                            onChange={(e) => setGeneralSettings({ ...generalSettings, logo: e.target.value })}
-                            className="bg-muted/30 border-white/10 rounded-xl w-64 text-sm"
-                          />
+                        <div className="space-y-2 flex-1 min-w-[200px]">
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="file" 
+                              id="logo-upload-input" 
+                              className="hidden" 
+                              accept="image/png, image/jpeg, image/jpg" 
+                              onChange={(e) => handleUploadFile(e, 'logo')} 
+                            />
+                            <Button 
+                              type="button"
+                              variant="outline" 
+                              disabled={isUploadingLogo}
+                              className="border-white/10 rounded-xl text-xs font-bold"
+                              onClick={() => document.getElementById('logo-upload-input')?.click()}
+                            >
+                              {isUploadingLogo ? t('جاري الرفع...', 'Uploading...') : t('رفع شعار', 'Upload Logo')}
+                            </Button>
+                            <Input 
+                              placeholder={t('أدخل رابط الشعار...', 'Enter logo URL...')}
+                              value={generalSettings.logo}
+                              onChange={(e) => setGeneralSettings({ ...generalSettings, logo: e.target.value })}
+                              className="bg-muted/30 border-white/10 rounded-xl text-xs flex-1"
+                            />
+                          </div>
+                          <p className="text-[10px] text-muted-foreground leading-normal mt-1">
+                            ⚠️ {t(
+                              'الحد الأقصى للحجم: 2 ميجابايت. الأبعاد المفضلة: 500×500 بكسل (نسبة 1:1). الصيغ المدعومة: PNG, JPG, JPEG',
+                              'Max size: 2MB. Recommended dimensions: 500x500px (1:1 ratio). Supported formats: PNG, JPG, JPEG'
+                            )}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -854,22 +931,52 @@ export default function StoreSettingsPage() {
                     <div className="space-y-3">
                       <Label>{t('صورة الغلاف (Banner)', 'Cover Banner')}</Label>
                       <div className="space-y-3">
-                        <div className="h-32 w-full rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-muted/20 transition-all relative overflow-hidden" style={{ borderColor: themeSettings.primaryColor }}>
-                          {generalSettings.coverImage ? (
+                        <input 
+                          type="file" 
+                          id="cover-upload-input" 
+                          className="hidden" 
+                          accept="image/png, image/jpeg, image/jpg" 
+                          onChange={(e) => handleUploadFile(e, 'coverImage')} 
+                        />
+                        <div 
+                          className="h-32 w-full rounded-2xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-muted/20 transition-all relative overflow-hidden" 
+                          style={{ borderColor: themeSettings.primaryColor }}
+                          onClick={() => !isUploadingCover && document.getElementById('cover-upload-input')?.click()}
+                        >
+                          {isUploadingCover ? (
+                            <Loader2 className="h-8 w-8 animate-spin text-primary" style={{ color: themeSettings.primaryColor }} />
+                          ) : generalSettings.coverImage ? (
                             <img src={generalSettings.coverImage} alt="Banner" className="object-cover w-full h-full" />
                           ) : (
                             <>
                               <ImageIcon className="h-6 w-6 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground font-medium">{t('أدخل رابط الغلاف بالأسفل لمعاينته هنا', 'Enter Banner URL below to preview here')}</span>
+                              <span className="text-xs text-muted-foreground font-medium">{t('اضغط هنا لرفع صورة الغلاف مباشرة', 'Click here to upload cover image directly')}</span>
                             </>
                           )}
                         </div>
-                        <Input 
-                          placeholder={t('أدخل رابط صورة الغلاف المخصصة...', 'Enter cover image URL...')}
-                          value={generalSettings.coverImage}
-                          onChange={(e) => setGeneralSettings({ ...generalSettings, coverImage: e.target.value })}
-                          className="bg-muted/30 border-white/10 rounded-xl text-sm"
-                        />
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            type="button"
+                            variant="outline" 
+                            disabled={isUploadingCover}
+                            className="border-white/10 rounded-xl text-xs font-bold shrink-0"
+                            onClick={() => document.getElementById('cover-upload-input')?.click()}
+                          >
+                            {isUploadingCover ? t('جاري الرفع...', 'Uploading...') : t('رفع غلاف', 'Upload Cover')}
+                          </Button>
+                          <Input 
+                            placeholder={t('أدخل رابط صورة الغلاف المخصصة...', 'Enter cover image URL...')}
+                            value={generalSettings.coverImage}
+                            onChange={(e) => setGeneralSettings({ ...generalSettings, coverImage: e.target.value })}
+                            className="bg-muted/30 border-white/10 rounded-xl text-xs flex-1"
+                          />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground leading-normal">
+                          ⚠️ {t(
+                            'الحد الأقصى للحجم: 5 ميجابايت. الأبعاد المفضلة: 1200×480 بكسل (نسبة 16:9 أو أعرض). الصيغ المدعومة: PNG, JPG, JPEG',
+                            'Max size: 5MB. Recommended dimensions: 1200x480px (16:9 or wider ratio). Supported formats: PNG, JPG, JPEG'
+                          )}
+                        </p>
                       </div>
                     </div>
                   </CardContent>

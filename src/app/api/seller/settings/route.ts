@@ -1,7 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { unlink } from 'fs/promises';
+import path from 'path';
 
 export const dynamic = 'force-dynamic';
+
+function getUploadDir(): string {
+  const envDir = process.env.UPLOAD_DIR;
+  if (envDir && !envDir.includes('/USER/')) return envDir;
+  return path.join(process.cwd(), '..', 'ChariDay_uploads');
+}
+
+async function deleteOldFile(oldUrl: string | null | undefined) {
+  if (!oldUrl || !oldUrl.startsWith('/api/files/')) return;
+  try {
+    const filename = oldUrl.replace('/api/files/', '');
+    // Ensure filename is safe (alphanumeric and dots only)
+    if (!/^[a-zA-Z0-9._-]+$/.test(filename)) return;
+
+    const UPLOAD_DIR = getUploadDir();
+    const filePath = path.join(UPLOAD_DIR, filename);
+    await unlink(filePath);
+    console.log(`[settings] Deleted old upload file: ${filePath}`);
+  } catch (err) {
+    console.warn(`[settings] Failed to delete old upload: ${oldUrl}`, err);
+  }
+}
+
 
 // GET /api/seller/settings?userId=xxx&storeId=yyy&sellerId=zzz
 export async function GET(req: NextRequest) {
@@ -111,6 +136,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
       }
 
+      // Cleanup old files if new ones are uploaded
+      if (settings.logo && settings.logo !== store.logo) {
+        await deleteOldFile(store.logo);
+      }
+      if (settings.coverImage && settings.coverImage !== store.coverImage) {
+        await deleteOldFile(store.coverImage);
+      }
+
       const updatedStore = await db.store.update({
         where: { id: store.id },
         data: {
@@ -135,6 +168,14 @@ export async function POST(req: NextRequest) {
 
       if (!seller) {
         return NextResponse.json({ success: false, error: 'Seller profile not found' }, { status: 404 });
+      }
+
+      // Cleanup old files if new ones are uploaded
+      if (settings.logo && settings.logo !== seller.logo) {
+        await deleteOldFile(seller.logo);
+      }
+      if (settings.coverImage && settings.coverImage !== seller.coverImage) {
+        await deleteOldFile(seller.coverImage);
       }
 
       const updatedSeller = await db.sellerProfile.update({
