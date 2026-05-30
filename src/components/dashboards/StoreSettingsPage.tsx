@@ -158,18 +158,22 @@ export default function StoreSettingsPage() {
 
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
+  
+  const [systemLimits, setSystemLimits] = useState({
+    upload_max_size_mb: 5,
+    upload_recommended_width: 800,
+    upload_recommended_height: 800
+  });
 
   const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>, target: 'logo' | 'coverImage') => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate size (2MB for logo, 5MB for cover)
-    const maxSize = target === 'logo' ? 2 * 1024 * 1024 : 5 * 1024 * 1024;
+    // Validate size
+    const maxSize = systemLimits.upload_max_size_mb * 1024 * 1024;
     if (file.size > maxSize) {
       toast.error(
-        target === 'logo'
-          ? t('حجم الشعار كبير جداً. الحد الأقصى 2 ميجابايت.', 'Logo is too large. Max is 2MB.')
-          : t('حجم الغلاف كبير جداً. الحد الأقصى 5 ميجابايت.', 'Cover is too large. Max is 5MB.')
+        t(`حجم الصورة كبير جداً. الحد الأقصى ${systemLimits.upload_max_size_mb} ميجابايت.`, `Image is too large. Max is ${systemLimits.upload_max_size_mb}MB.`)
       );
       return;
     }
@@ -228,6 +232,23 @@ export default function StoreSettingsPage() {
         }
       } catch (e) {
         console.error('Failed to fetch dynamic states, using fallback', e);
+      }
+
+      // 1.5 Fetch system limits (upload max size, etc)
+      try {
+        const publicSettingsRes = await fetch('/api/settings/public');
+        if (publicSettingsRes.ok) {
+          const pbData = await publicSettingsRes.json();
+          if (pbData.success && pbData.settings) {
+            setSystemLimits({
+              upload_max_size_mb: parseInt(pbData.settings.upload_max_size_mb) || 5,
+              upload_recommended_width: parseInt(pbData.settings.upload_recommended_width) || 800,
+              upload_recommended_height: parseInt(pbData.settings.upload_recommended_height) || 800
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch public settings', e);
       }
 
       // 2. Fetch seller settings

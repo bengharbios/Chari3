@@ -115,24 +115,26 @@ export default function SellerProfilePage() {
         </div>
       </div>
 
-      <div className="container-platform">
+      <div className="container-platform relative z-10">
         {/* Seller Header */}
-        <div className="relative -mt-12 mb-6 flex flex-col sm:flex-row items-start sm:items-end gap-4">
-          <div className="relative shrink-0">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-end gap-4">
+          <div className="relative shrink-0 -mt-12 sm:-mt-16">
             {seller.logo ? (
-              <img src={seller.logo} alt={storeName || ''} className="size-24 md:size-28 rounded-2xl object-cover border-4 border-background shadow-xl" />
+              <img src={seller.logo} alt={storeName || ''} className="size-24 md:size-32 rounded-2xl object-cover border-4 border-background shadow-md bg-background" />
             ) : (
-              <div className="size-24 md:size-28 rounded-2xl bg-primary/10 border-4 border-background shadow-xl flex items-center justify-center text-4xl">🏪</div>
+              <div className="size-24 md:size-32 rounded-2xl bg-primary/10 border-4 border-background shadow-md flex items-center justify-center text-4xl bg-background">🏪</div>
             )}
             {seller.isVerified && (
-              <div className="absolute -bottom-1 -end-1 size-7 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm shadow-lg">✓</div>
+              <div className="absolute -bottom-2 -end-2 size-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm shadow-lg border-2 border-background">
+                <Shield className="size-4" />
+              </div>
             )}
           </div>
-          <div className="flex-1 pb-2">
+          <div className="flex-1 pb-2 pt-2 sm:pt-0">
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <h1 className="text-2xl md:text-3xl font-black">{storeName}</h1>
               <span className="text-2xl">{LEVEL_BADGE[seller.level] || '🌱'}</span>
-              {seller.isVerified && <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">✓ {t('تاجر موثق', 'Verified Seller')}</Badge>}
+              {seller.isVerified && <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 gap-1"><Shield className="size-3" /> {t('تاجر موثق', 'Verified Seller')}</Badge>}
             </div>
             <div className="flex items-center gap-3 flex-wrap">
               <StarRating rating={seller.rating ?? 0} color={seller.themeSettings?.primaryColor} />
@@ -141,13 +143,16 @@ export default function SellerProfilePage() {
               <span className="text-sm text-muted-foreground">{t(`عضو منذ ${joinYear}`, `Member since ${joinYear}`)}</span>
             </div>
           </div>
-          <Button 
-            className="gap-2 shrink-0 font-bold"
-            style={seller.themeSettings?.primaryColor ? { backgroundColor: seller.themeSettings.primaryColor, color: '#000' } : {}}
-          >
-            <ShoppingCart className="size-4" />
-            {t('تسوق من المتجر', 'Shop This Store')}
-          </Button>
+          <div className="pb-2">
+            <Button 
+              className="gap-2 font-bold w-full sm:w-auto"
+              style={seller.themeSettings?.primaryColor ? { backgroundColor: seller.themeSettings.primaryColor, color: '#000' } : {}}
+            >
+              <ShoppingCart className="size-4" />
+              {t('تسوق من المتجر', 'Shop This Store')}
+            </Button>
+          </div>
+        </div>
         </div>
 
         {/* Stats Grid */}

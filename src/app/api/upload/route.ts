@@ -3,7 +3,9 @@ import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+import { db } from '@/lib/db';
+
+const DEFAULT_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
 
 const MAGIC_BYTES: Record<string, number[]> = {
@@ -39,6 +41,21 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json({ success: false, error: 'No file provided.' }, { status: 400 });
+    }
+
+    let MAX_FILE_SIZE = DEFAULT_MAX_FILE_SIZE;
+    try {
+      const sizeSetting = await db.systemSetting.findUnique({
+        where: { key: 'upload_max_size_mb' }
+      });
+      if (sizeSetting && sizeSetting.value) {
+        const mb = parseInt(String(sizeSetting.value), 10);
+        if (!isNaN(mb) && mb > 0) {
+          MAX_FILE_SIZE = mb * 1024 * 1024;
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load dynamic max size', err);
     }
 
     if (file.size > MAX_FILE_SIZE) {

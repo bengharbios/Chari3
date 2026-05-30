@@ -46,9 +46,11 @@ import {
   ShieldCheck,
   ShieldAlert,
   UserX,
-  UserCheck
+  UserCheck,
+  Settings
 } from 'lucide-react';
 import type { Locale, UserRole } from '@/types';
+import Link from 'next/link';
 
 // ============================================
 // BILINGUAL HELPER
@@ -318,6 +320,12 @@ export default function AdminDashboard() {
         description={t(locale, 'نظرة شاملة على أداء المنصة والتحكم في الطلبات والمستخدمين في الوقت الفعلي', 'Platform-wide live overview, user control & real-time transaction updates')}
         actions={
           <div className="flex items-center gap-2">
+            <Link href="/admin-secure-internal/settings">
+              <Button variant="outline" size="sm" className="gap-2 font-bold hover:bg-brand/10 hover:text-brand border-brand/20">
+                <Settings className="h-4 w-4" />
+                {t(locale, 'إعدادات النظام', 'System Settings')}
+              </Button>
+            </Link>
             <Button variant="outline" size="sm" onClick={fetchAdminData} className="gap-2 font-bold">
               <Activity className="h-4 w-4" />
               {t(locale, 'تحديث البيانات', 'Refresh Portal')}
