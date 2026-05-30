@@ -97,10 +97,15 @@ export async function GET(req: NextRequest) {
             id: true,
             status: true,
             createdAt: true,
+            subtotal: true,
+            discount: true,
+            shippingCost: true,
             total: true,
             orderNumber: true,
             address: true,
             paymentMethod: true,
+            paymentStatus: true,
+            couponId: true,
             buyer: {
               select: {
                 id: true,
