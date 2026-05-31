@@ -330,7 +330,9 @@ export async function GET() {
       layout: ['hero', 'features', 'categories', 'featured_products', 'top_sellers', 'testimonials', 'cta'],
       heroSlides: [],
       isMaintenance: false,
-      isFallback: true
+      isFallback: true,
+      errorMessage: error.message || String(error),
+      errorStack: error.stack
     });
   }
 }
