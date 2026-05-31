@@ -1619,10 +1619,10 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
       <div className="flex items-center justify-between border-b pb-4 border-border">
         <div>
           <h1 className="text-xl font-black text-foreground">
-            {product?.id ? (isAr ? 'تعديل المنتج الاحترافي' : 'Edit Professional Product') : (isAr ? 'إضافة منتج بمعايير عالمية' : 'Add Professional Product')}
+            {product?.id ? (isAr ? 'تعديل المنتج' : 'Edit Product') : (isAr ? 'إضافة منتج جديد' : 'Add New Product')}
           </h1>
           <p className="text-muted-foreground text-xs mt-1">
-            {isAr ? 'هيكل النموذج متوافق مع معايير أمازون وشوبيفاي لزيادة المبيعات' : 'Form schema compliant with Amazon & Shopify conversions standards'}
+            {isAr ? 'قم بإدخال تفاصيل المنتج بدقة لزيادة المبيعات وتسهيل التصفح' : 'Enter product details accurately to boost sales and ease browsing'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -1665,12 +1665,12 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
           {activeTab === 'core' && (
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">{isAr ? 'اسم المنتج الاحترافي (معادلة أمازون)' : 'Professional Title (Amazon Formula)'}</label>
+                <label className="text-xs font-bold text-foreground">{isAr ? 'اسم المنتج' : 'Product Title'}</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="البراند + اسم المنتج + الميزة الأساسية + المقاس"
+                  placeholder={isAr ? "الماركة + اسم المنتج + الميزة الأساسية" : "Brand + Product Name + Main Feature"}
                   className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
                 />
               </div>
@@ -1724,7 +1724,7 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">{isAr ? 'سعر البيع الحالي (د.ج)' : 'Current Price (DZD)'}</label>
+                  <label className="text-xs font-bold text-foreground">{isAr ? 'سعر البيع الحالي' : 'Current Price'}</label>
                   <input
                     type="number"
                     value={price || ''}
@@ -1734,7 +1734,7 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">{isAr ? 'سعر المقارنة المشطوب (د.ج)' : 'Compare Price (DZD)'}</label>
+                  <label className="text-xs font-bold text-foreground">{isAr ? 'سعر المقارنة المشطوب' : 'Compare Price'}</label>
                   <input
                     type="number"
                     value={comparePrice || ''}
@@ -2105,7 +2105,7 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
 
                           {/* Price */}
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'سعر مخصص (د.ج)' : 'Custom Price (DZD)'}</label>
+                            <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'سعر مخصص' : 'Custom Price'}</label>
                             <input 
                               type="number" 
                               value={v.price}
@@ -2121,7 +2121,7 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
 
                           {/* Slashed Price */}
                           <div className="space-y-1">
-                            <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'سعر مشطوب مخصص (د.ج)' : 'Compare Price (DZD)'}</label>
+                            <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'سعر مشطوب مخصص' : 'Compare Price'}</label>
                             <input 
                               type="number" 
                               value={v.comparePrice}
