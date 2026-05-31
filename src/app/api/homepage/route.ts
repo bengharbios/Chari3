@@ -41,7 +41,7 @@ export async function GET() {
             },
           },
         },
-        take: 200,
+        take: 40,
       }),
 
       // Top sellers by rating and level
