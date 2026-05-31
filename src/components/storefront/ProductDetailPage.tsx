@@ -315,7 +315,8 @@ export default function ProductDetailPage() {
         .then(r => r.json())
         .then(d => {
           if (d.success && Array.isArray(d.states) && d.states.length > 0) {
-            const mapped = d.states.map((s: any) => {
+            const activeStates = d.states.filter((s: any) => !s.isHidden);
+            const mapped = activeStates.map((s: any) => {
               let daysMin = 2;
               let daysMax = 3;
               const price = s.defaultPrice || 500;
@@ -343,11 +344,13 @@ export default function ProductDetailPage() {
               };
             });
             setLoadedProvinces(mapped);
-            const algiersState = mapped.find((m: any) => m.key === '16');
-            if (algiersState) {
-              setSelectedProvince('16');
-            } else {
-              setSelectedProvince(mapped[0].key);
+            if (mapped.length > 0) {
+              const algiersState = mapped.find((m: any) => m.key === '16');
+              if (algiersState) {
+                setSelectedProvince('16');
+              } else {
+                setSelectedProvince(mapped[0].key);
+              }
             }
           }
         })

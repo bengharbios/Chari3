@@ -760,7 +760,6 @@ export default function Header() {
                 </Button>
               </div>
             ) : (
-              /* Checkout form — shown to authenticated users AND guests (if flag enabled) */
               <form onSubmit={handleCheckout} className="space-y-3 text-start">
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground">{t('الاسم الكامل *', 'Full Name *')}</label>
@@ -785,7 +784,7 @@ export default function Header() {
                 </div>
                 
                 <div className="space-y-1">
-                  <label className="text-xs font-semibold text-muted-foreground">{t('العنوان الكامل بالتفصيل *', 'Detailed Shipping Address *')}</label>
+                  <label className="text-xs font-semibold text-muted-foreground">{t('العنوان التفصيلي (الشارع والمنزل) *', 'Detailed Address (Street & House) *')}</label>
                   <Input 
                     placeholder={t('حي 20 مسكن، الطابق الثاني شقة 4', '20 Dwellings, 2nd floor apt 4')} 
                     value={address}
@@ -794,23 +793,74 @@ export default function Header() {
                     className="h-10 rounded-xl"
                   />
                 </div>
-                
+
+                {/* 1. Country Selection (Read-only DZ) */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-muted-foreground">{t('البلد', 'Country')}</label>
+                  <div className="flex h-10 w-full items-center justify-between rounded-xl border border-input bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+                    <span className="font-bold flex items-center gap-1.5">
+                      🇩🇿 {t('الجزائر', 'Algeria')}
+                    </span>
+                    <span className="text-xs font-mono">{t('رمز الهاتف: +213', 'Phone Prefix: +213')}</span>
+                  </div>
+                </div>
+
+                {/* 2. State (Wilaya) Selection */}
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground">{t('الولاية *', 'State / Wilaya *')}</label>
                   <select 
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
+                    value={selectedState}
+                    onChange={(e) => setSelectedState(e.target.value)}
                     required
-                    className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
-                    <option value="">{t('-- اختر الولاية --', '-- Select State --')}</option>
-                    {dynamicWilayas.map((w) => (
+                    <option value="">{t('-- اختر الولاية --', '-- Select Wilaya --')}</option>
+                    {dynamicWilayas.filter((w) => !w.isHidden).map((w) => (
                       <option key={w.id} value={w.id}>
                         {w.id} - {isRTL ? w.nameAr : w.nameEn}
                       </option>
                     ))}
                   </select>
                 </div>
+
+                {/* 3. Municipality (Baladiyah) Selection */}
+                {selectedState && (
+                  <div className="space-y-1 animate-fade-in">
+                    <label className="text-xs font-semibold text-muted-foreground">{t('البلدية / الدائرة *', 'Municipality / Baladiyah *')}</label>
+                    {isLoadingCities ? (
+                      <div className="flex h-10 items-center justify-center bg-muted/20 border border-input rounded-xl">
+                        <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      </div>
+                    ) : (
+                      <select 
+                        value={selectedCity}
+                        onChange={(e) => setSelectedCity(e.target.value)}
+                        required
+                        className="flex h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      >
+                        <option value="">{t('-- اختر البلدية --', '-- Select Municipality --')}</option>
+                        {customCities.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            🏙️ {isRTL ? c.nameAr : c.nameEn} {c.isStoreCustom ? `(${t('حي مخصص 📍', 'Store Zone 📍')})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                )}
+
+                {/* 4. Neighborhood / Custom Zone Selection (Optional) */}
+                {selectedState && (
+                  <div className="space-y-1 animate-fade-in">
+                    <label className="text-xs font-semibold text-muted-foreground">{t('الحي / الدوار (اختياري)', 'Neighborhood / Custom Zone (Optional)')}</label>
+                    <Input 
+                      placeholder={t('مثال: حي الكثبان، تجمع أولاد يعيش', 'e.g. Dunes neighborhood, Ouled Yaich')}
+                      value={selectedNeighborhood}
+                      onChange={(e) => setSelectedNeighborhood(e.target.value)}
+                      className="h-10 rounded-xl bg-background"
+                    />
+                  </div>
+                )}
 
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-muted-foreground">{t('ملاحظات إضافية (اختياري)', 'Additional Notes (Optional)')}</label>

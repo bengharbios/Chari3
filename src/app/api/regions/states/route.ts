@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
 
     // 3. If storeId or sellerId is provided, load the custom overridden rates
     let customRates: Record<string, number> = {};
+    let hiddenWilayas: string[] = [];
     let standardPrice = 500;
     let expressPrice = 800;
     let freeThreshold = 15000;
@@ -58,6 +59,7 @@ export async function GET(req: NextRequest) {
           if (rates.expressPrice !== undefined) expressPrice = rates.expressPrice;
           if (rates.freeThreshold !== undefined) freeThreshold = rates.freeThreshold;
           if (rates.customWilayas) customRates = rates.customWilayas;
+          if (rates.hiddenWilayas) hiddenWilayas = rates.hiddenWilayas;
         }
       } catch (e) {
         console.error('Error parsing shipping rates', e);
@@ -69,6 +71,7 @@ export async function GET(req: NextRequest) {
       // If the store has a custom rate for this state.code, use it. Otherwise use the defaultPrice.
       const hasCustom = customRates[state.code] !== undefined;
       const price = hasCustom ? customRates[state.code] : state.defaultPrice;
+      const isHidden = hiddenWilayas.includes(state.code);
       return {
         id: state.code, // Keep "id" matching the old static schema (which uses string codes like '16', '1' etc.)
         code: state.code,
@@ -77,6 +80,7 @@ export async function GET(req: NextRequest) {
         defaultPrice: state.defaultPrice,
         price,
         isCustomPrice: hasCustom,
+        isHidden,
       };
     });
 

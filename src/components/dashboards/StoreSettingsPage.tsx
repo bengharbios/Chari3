@@ -126,6 +126,7 @@ export default function StoreSettingsPage() {
     customWilayas: {}, // stateId -> overridePrice
     customCities: {}, // cityId -> overridePrice
     hiddenCities: [], // list of disabled cityId
+    hiddenWilayas: [], // list of disabled stateId (Wilaya)
     storeCities: [], // list of custom store-specific zones
   });
 
@@ -307,6 +308,7 @@ export default function StoreSettingsPage() {
             customWilayas: rates.customWilayas || {},
             customCities: rates.customCities || {},
             hiddenCities: rates.hiddenCities || [],
+            hiddenWilayas: rates.hiddenWilayas || [],
             storeCities: rates.storeCities || [],
           });
         }
@@ -595,35 +597,73 @@ export default function StoreSettingsPage() {
                     <CardContent>
                       <div className="overflow-y-auto max-h-[300px] border border-white/5 rounded-2xl p-2 space-y-2 bg-slate-950/20">
                         {filteredWilayas.map((wilaya) => {
-                          const customPrice = shippingRates.customWilayas[wilaya.id] !== undefined
-                            ? shippingRates.customWilayas[wilaya.id]
+                          const wId = wilaya.id || wilaya.code;
+                          const customPrice = shippingRates.customWilayas[wId] !== undefined
+                            ? shippingRates.customWilayas[wId]
                             : wilaya.defaultPrice;
-                          const isCustomized = shippingRates.customWilayas[wilaya.id] !== undefined;
+                          const isCustomized = shippingRates.customWilayas[wId] !== undefined;
+                          const isHidden = (shippingRates.hiddenWilayas || []).includes(wId);
 
                           return (
-                            <div key={wilaya.id} className="flex items-center justify-between p-3 rounded-xl bg-background/40 border border-white/5 hover:border-white/10 transition-all">
-                              <div>
-                                <span className="font-mono text-xs text-muted-foreground me-2 bg-white/5 px-2 py-0.5 rounded-md">{wilaya.id}</span>
-                                <span className="font-bold text-sm">{isAr ? wilaya.nameAr : wilaya.nameEn}</span>
+                            <div 
+                              key={wId} 
+                              className={`flex items-center justify-between p-3 rounded-xl border transition-all text-start ${
+                                isHidden ? 'bg-red-500/5 border-red-500/10 opacity-75' : 'bg-background/40 border-white/5 hover:border-white/10'
+                              }`}
+                            >
+                              <div className="space-y-1">
+                                <div className="flex items-center">
+                                  <span className="font-mono text-xs text-muted-foreground me-2 bg-white/5 px-2 py-0.5 rounded-md">{wId}</span>
+                                  <span className="font-bold text-sm">{isAr ? wilaya.nameAr : wilaya.nameEn}</span>
+                                  {isHidden && (
+                                    <span className="ms-2 text-[10px] bg-red-500/20 text-red-500 font-bold px-2 py-0.5 rounded-full">
+                                      {t('ملغية ❌', 'Disabled ❌')}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                               <div className="flex items-center gap-3">
-                                <Input 
-                                  type="number"
-                                  placeholder={String(wilaya.defaultPrice)}
-                                  value={isCustomized ? customPrice : ''}
-                                  onChange={(e) => {
-                                    const val = e.target.value === '' ? undefined : parseFloat(e.target.value) || 0;
-                                    const nextWilayas = { ...shippingRates.customWilayas };
-                                    if (val === undefined) {
-                                      delete nextWilayas[wilaya.id];
-                                    } else {
-                                      nextWilayas[wilaya.id] = val;
-                                    }
-                                    setShippingRates({ ...shippingRates, customWilayas: nextWilayas });
-                                  }}
-                                  className="w-28 bg-muted/40 border-white/10 rounded-xl h-9 text-center font-bold"
-                                />
-                                <span className="text-xs text-muted-foreground font-bold">{t('د.ج', storeCurrency)}</span>
+                                {/* Only show price override input if delivery is enabled for this wilaya */}
+                                {!isHidden && (
+                                  <div className="flex items-center gap-2">
+                                    <Input 
+                                      type="number"
+                                      placeholder={String(wilaya.defaultPrice)}
+                                      value={isCustomized ? customPrice : ''}
+                                      onChange={(e) => {
+                                        const val = e.target.value === '' ? undefined : parseFloat(e.target.value) || 0;
+                                        const nextWilayas = { ...shippingRates.customWilayas };
+                                        if (val === undefined) {
+                                          delete nextWilayas[wId];
+                                        } else {
+                                          nextWilayas[wId] = val;
+                                        }
+                                        setShippingRates({ ...shippingRates, customWilayas: nextWilayas });
+                                      }}
+                                      className="w-28 bg-muted/40 border-white/10 rounded-xl h-9 text-center font-bold"
+                                    />
+                                    <span className="text-xs text-muted-foreground font-bold">{t('د.ج', storeCurrency)}</span>
+                                  </div>
+                                )}
+
+                                {/* Delivery toggle Switch */}
+                                <div className="flex items-center gap-1.5 border-s border-white/10 ps-3">
+                                  <Label className="text-[10px] text-muted-foreground hidden sm:inline">{t('تفعيل التوصيل', 'Deliver')}</Label>
+                                  <Switch 
+                                    checked={!isHidden}
+                                    onCheckedChange={(checked) => {
+                                      let nextHidden = [...(shippingRates.hiddenWilayas || [])];
+                                      if (checked) {
+                                        // Enable it (remove from hiddenWilayas)
+                                        nextHidden = nextHidden.filter(id => id !== wId);
+                                      } else {
+                                        // Disable it (add to hiddenWilayas)
+                                        if (!nextHidden.includes(wId)) nextHidden.push(wId);
+                                      }
+                                      setShippingRates({ ...shippingRates, hiddenWilayas: nextHidden });
+                                    }}
+                                  />
+                                </div>
                               </div>
                             </div>
                           );
