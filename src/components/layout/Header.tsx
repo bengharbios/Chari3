@@ -121,6 +121,22 @@ export default function Header() {
   const [countryCurrency, setCountryCurrency] = useState<string>('DZD');
   const [sellerSettings, setSellerSettings] = useState<any>(null);
 
+  // Form states
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [note, setNote] = useState('');
+
+  // Hierarchical address states (Wilaya → Baladiyah → Neighborhood)
+  const [selectedState, setSelectedState] = useState(''); // wilaya code e.g. '16'
+  const [selectedCity, setSelectedCity] = useState(''); // city id from DB
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState('');
+  const [customCities, setCustomCities] = useState<any[]>([]);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
+
+  // Keep city in sync with selectedState for backward compat with shipping calc
+  const city = selectedState;
+
   useEffect(() => {
     if (items.length > 0 && cartStep === 'checkout') {
       const p = items[0].product;
@@ -243,23 +259,6 @@ export default function Header() {
     }
   };
   // Guest checkout flag from admin settings
-  
-
-  // Form states
-  const [fullName, setFullName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [note, setNote] = useState('');
-
-  // Hierarchical address states (Wilaya → Baladiyah → Neighborhood)
-  const [selectedState, setSelectedState] = useState(''); // wilaya code e.g. '16'
-  const [selectedCity, setSelectedCity] = useState(''); // city id from DB
-  const [selectedNeighborhood, setSelectedNeighborhood] = useState('');
-  const [customCities, setCustomCities] = useState<any[]>([]);
-  const [isLoadingCities, setIsLoadingCities] = useState(false);
-
-  // Keep city in sync with selectedState for backward compat with shipping calc
-  const city = selectedState;
 
   // Pre-fill form with user data on login
   useEffect(() => {
