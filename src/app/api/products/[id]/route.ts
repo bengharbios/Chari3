@@ -12,6 +12,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
       where: { id },
       include: {
         category: { select: { name: true, nameEn: true, slug: true } },
+        brand: { select: { id: true, name: true, nameEn: true, logo: true } },
         variants: { orderBy: { sortOrder: 'asc' } },
         seller: {
           select: {
@@ -103,6 +104,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         stock: body.stock || 0,
         status: body.status || 'draft',
         categoryId: body.categoryId,
+        brandId: body.brandId || null,
         images: JSON.stringify(body.images || []),
         specifications: JSON.stringify(body.specifications || {}),
       },

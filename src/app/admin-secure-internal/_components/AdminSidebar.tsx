@@ -10,7 +10,8 @@ import {
   ChevronRight, 
   ChevronLeft,
   Menu,
-  FolderTree
+  FolderTree,
+  Tag
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -32,7 +33,8 @@ export default function AdminSidebar() {
       collapse: "طي القائمة",
       expand: "توسيع",
       title: "الإدارة",
-      categories: "إدارة التصنيفات"
+      categories: "إدارة التصنيفات",
+      brands: "إدارة الماركات"
     },
     en: {
       dashboard: "Dashboard",
@@ -42,7 +44,8 @@ export default function AdminSidebar() {
       collapse: "Collapse",
       expand: "Expand",
       title: "Admin Panel",
-      categories: "Manage Categories"
+      categories: "Manage Categories",
+      brands: "Manage Brands"
     }
   };
 
@@ -71,6 +74,12 @@ export default function AdminSidebar() {
       label: t.categories, 
       path: 'categories', 
       color: 'text-purple-500' 
+    },
+    { 
+      icon: Tag, 
+      label: t.brands, 
+      path: 'brands', 
+      color: 'text-rose-500' 
     },
     { 
       icon: Settings, 

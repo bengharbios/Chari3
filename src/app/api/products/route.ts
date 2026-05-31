@@ -90,6 +90,7 @@ export async function POST(request: Request) {
         stock: body.stock || 0,
         status: body.status || 'draft',
         categoryId: body.categoryId,
+        brandId: body.brandId || null,
         storeId: body.storeId,
         sellerId: body.sellerId,
         images: JSON.stringify(body.images || []),

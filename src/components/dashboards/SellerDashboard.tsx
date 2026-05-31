@@ -1254,6 +1254,9 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
   const [sku, setSku] = useState(product?.sku || '');
   const [stock, setStock] = useState(product?.stock || 10);
   const [status, setStatus] = useState<'active' | 'draft' | 'inactive'>(product?.status || 'draft');
+  const [brandId, setBrandId] = useState(product?.brandId || '');
+  const [brands, setBrands] = useState<any[]>([]);
+  const [enableBrandSystem, setEnableBrandSystem] = useState(true);
 
   // Specifications
   let initialSpecs: any = {};
@@ -1414,7 +1417,7 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
     setIsUploading(false);
   };
 
-  // Fetch Categories
+  // Fetch Categories, System Settings (Brand Enable) & Active Brands
   useEffect(() => {
     fetch('/api/categories')
       .then((r) => r.json())
@@ -1422,6 +1425,27 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
         if (Array.isArray(d)) {
           setCategories(d);
           if (!categoryId && d.length > 0) setCategoryId(d[0].id);
+        }
+      })
+      .catch(() => {});
+
+    // Check system settings for brand toggle
+    fetch('/api/admin/settings')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && data.settings) {
+          const isBrandEnabled = data.settings.enable_brand_system !== 'false'; // default true
+          setEnableBrandSystem(isBrandEnabled);
+        }
+      })
+      .catch(() => {});
+
+    // Load active brands
+    fetch('/api/brands')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.brands)) {
+          setBrands(data.brands);
         }
       })
       .catch(() => {});
@@ -1498,6 +1522,7 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
       stock: Number(stock),
       status,
       categoryId,
+      brandId: enableBrandSystem ? (brandId || null) : null,
       storeId,
       sellerId,
       images: uploadedImages,
@@ -1721,6 +1746,25 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
                   </select>
                 </div>
               </div>
+
+              {enableBrandSystem && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">{isAr ? 'العلامة التجارية / الماركة' : 'Brand / Trademark'}</label>
+                  <select
+                    value={brandId}
+                    onChange={(e) => setBrandId(e.target.value)}
+                    className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                  >
+                    <option value="">{isAr ? 'بدون ماركة (Generic / ماركة عامة)' : 'Generic / No Brand'}</option>
+                    {brands.map((b) => (
+                      <option key={b.id} value={b.id}>{isAr ? b.name : (b.nameEn || b.name)}</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {isAr ? 'اختر الماركة الرسمية للمنتج للتمييز كمنتج أصلي وزيادة الثقة.' : 'Select the official brand to identify as authentic and boost trust.'}
+                  </p>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">

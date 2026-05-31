@@ -29,6 +29,7 @@ export default function AdminSettingsPage() {
     upload_max_size_mb: '5',
     upload_recommended_width: '800',
     upload_recommended_height: '800',
+    enable_brand_system: 'true',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -55,6 +56,9 @@ export default function AdminSettingsPage() {
             upload_max_size_mb: data.settings.upload_max_size_mb || '5',
             upload_recommended_width: data.settings.upload_recommended_width || '800',
             upload_recommended_height: data.settings.upload_recommended_height || '800',
+            enable_brand_system: data.settings.enable_brand_system !== undefined
+              ? String(data.settings.enable_brand_system)
+              : 'true',
           }));
         }
       } catch (err) {
@@ -173,6 +177,42 @@ export default function AdminSettingsPage() {
                 onClick={handleSave} 
                 disabled={isSaving}
                 className="w-full mt-4 font-bold gap-2"
+              >
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {t('حفظ التعديلات', 'Save Changes')}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="card-surface">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">{t('إعدادات ميزات المنصة', 'Platform Feature Toggles')}</CardTitle>
+              <CardDescription>
+                {t('قم بتفعيل أو تعطيل الأنظمة والوحدات الاختيارية في المنصة.', 'Enable or disable optional platform modules.')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="enable_brand_system">{t('نظام الماركات والعلامات التجارية', 'Brands & Trademarks System')}</Label>
+                <select
+                  id="enable_brand_system"
+                  name="enable_brand_system"
+                  value={settings.enable_brand_system}
+                  onChange={(e) => setSettings(prev => ({ ...prev, enable_brand_system: e.target.value }))}
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                >
+                  <option value="true">{t('مفعّل (يُعرض حقل الماركة في صفحة المنتج)', 'Enabled (Show brand selection on products)')}</option>
+                  <option value="false">{t('معطّل (إخفاء نظام الماركات بالكامل)', 'Disabled (Hide brand system completely)')}</option>
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('عند التعطيل، سيتم إخفاء حقل الماركة تماماً من لوحة تحكم التجار ولن يظهر للمشترين.', 'When disabled, the Brand selector will be hidden from the merchant dashboard and catalog.')}
+                </p>
+              </div>
+              
+              <Button 
+                onClick={handleSave} 
+                disabled={isSaving}
+                className="w-full mt-10 font-bold gap-2"
               >
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 {t('حفظ التعديلات', 'Save Changes')}

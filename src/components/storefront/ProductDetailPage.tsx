@@ -78,6 +78,12 @@ interface ProductDetail {
     isActive: boolean;
     _count?: { products: number };
   } | null;
+  brand?: {
+    id: string;
+    name: string;
+    nameEn?: string | null;
+    logo?: string | null;
+  } | null;
 }
 
 interface RelatedProduct {
@@ -416,7 +422,20 @@ export default function ProductDetailPage() {
           <div className="space-y-5">
             {/* Category & Title */}
             <div>
-              <p className="text-sm text-muted-foreground mb-1">{product.category?.name || ''}</p>
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span className="text-sm text-muted-foreground">{isAr ? product.category?.name : (product.category?.nameEn || product.category?.name)}</span>
+                {product.brand && (
+                  <>
+                    <span className="text-xs text-muted-foreground/60">•</span>
+                    <span className="text-xs font-bold text-brand bg-brand/10 dark:bg-brand/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                      {product.brand.logo && (
+                        <img src={product.brand.logo} alt={product.brand.name} className="h-3 w-3 object-cover rounded-full" />
+                      )}
+                      {isAr ? product.brand.name : (product.brand.nameEn || product.brand.name)}
+                    </span>
+                  </>
+                )}
+              </div>
               <h1 className="text-2xl md:text-3xl font-black leading-tight">{isAr ? product.name : (product.nameEn || product.name)}</h1>
             </div>
 

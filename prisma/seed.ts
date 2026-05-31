@@ -165,8 +165,39 @@ async function main() {
   await seedCategories(LOGISTICS_CATEGORIES, 'logistics');
   console.log('✅ Logistics categories seeded');
 
+  // 6. Brands
+  console.log('🏷️ Seeding default brands...');
+  const DEFAULT_BRANDS = [
+    { name: 'آبل', nameEn: 'Apple', logo: 'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?w=100&auto=format&fit=crop&q=60' },
+    { name: 'سامسونج', nameEn: 'Samsung', logo: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=100&auto=format&fit=crop&q=60' },
+    { name: 'شاومي', nameEn: 'Xiaomi', logo: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=100&auto=format&fit=crop&q=60' },
+    { name: 'نايكي', nameEn: 'Nike', logo: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100&auto=format&fit=crop&q=60' },
+    { name: 'أديداس', nameEn: 'Adidas', logo: 'https://images.unsplash.com/photo-1518002171953-a080ee81be25?w=100&auto=format&fit=crop&q=60' },
+    { name: 'سوني', nameEn: 'Sony', logo: 'https://images.unsplash.com/photo-1526512340740-9217d0159da9?w=100&auto=format&fit=crop&q=60' },
+    { name: 'لينوفو', nameEn: 'Lenovo', logo: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?w=100&auto=format&fit=crop&q=60' },
+    { name: 'اتش بي', nameEn: 'HP', logo: 'https://images.unsplash.com/photo-1589561084283-930aa7b1ce50?w=100&auto=format&fit=crop&q=60' },
+  ];
+
+  const existingBrands = await prisma.brand.findMany({ select: { name: true } });
+  const existingNames = new Set(existingBrands.map((b) => b.name));
+
+  for (const b of DEFAULT_BRANDS) {
+    if (!existingNames.has(b.name)) {
+      await prisma.brand.create({
+        data: {
+          name: b.name,
+          nameEn: b.nameEn,
+          logo: b.logo,
+          isActive: true,
+        },
+      });
+    }
+  }
+  console.log('✅ Brands seeded successfully');
+
   const totalCats = await prisma.category.count();
-  console.log(`\n🎉 Seed complete! Total categories: ${totalCats}`);
+  const totalBrands = await prisma.brand.count();
+  console.log(`\n🎉 Seed complete! Categories: ${totalCats}, Brands: ${totalBrands}`);
 }
 
 main()
