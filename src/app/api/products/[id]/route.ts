@@ -107,6 +107,8 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         brandId: body.brandId || null,
         images: JSON.stringify(body.images || []),
         specifications: JSON.stringify(body.specifications || {}),
+        volumeDiscounts: body.volumeDiscounts ? (typeof body.volumeDiscounts === 'string' ? body.volumeDiscounts : JSON.stringify(body.volumeDiscounts)) : null,
+        urgencySettings: body.urgencySettings ? (typeof body.urgencySettings === 'string' ? body.urgencySettings : JSON.stringify(body.urgencySettings)) : null,
       },
     });
 
@@ -127,6 +129,8 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
           comparePrice: v.comparePrice !== undefined && v.comparePrice !== null ? parseFloat(v.comparePrice) : null,
           stock: parseInt(v.stock || '0', 10),
           image: v.image || null,
+          swatchType: v.swatchType || null,
+          swatchValue: v.swatchValue || null,
           sortOrder: v.sortOrder !== undefined && v.sortOrder !== null ? parseInt(v.sortOrder, 10) : idx,
           isActive: v.isActive !== undefined ? !!v.isActive : true,
         })),

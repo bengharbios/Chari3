@@ -246,6 +246,8 @@ model ProductVariant {
   comparePrice Float?                           // Slashed price for variant
   stock       Int      @default(0)
   image       String?
+  swatchType  String?                           // "color", "image"
+  swatchValue String?                           // Hex color code or custom image URL
   sortOrder   Int      @default(0)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -442,6 +444,8 @@ model Product {
   viewCount       Int       @default(0)
   isFeatured      Boolean   @default(false)
   brandId         String?
+  volumeDiscounts String?   // JSON configuration for tier/bulk pricing
+  urgencySettings String?   // JSON configuration for urgency trigger simulation
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -886,4 +890,15 @@ model City {
   state     State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
 
   @@index([stateId])
+}
+
+model ProductQA {
+  id          String   @id @default(cuid())
+  productId   String
+  question    String
+  answer      String?
+  status      String   @default("pending") // pending, approved, rejected
+  userId      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

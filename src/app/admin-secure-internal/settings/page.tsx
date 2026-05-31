@@ -30,6 +30,10 @@ export default function AdminSettingsPage() {
     upload_recommended_width: '800',
     upload_recommended_height: '800',
     enable_brand_system: 'true',
+    enable_urgency_triggers: 'true',
+    enable_delivery_calculator: 'true',
+    enable_volume_discounts: 'true',
+    enable_product_qa: 'true',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -58,6 +62,18 @@ export default function AdminSettingsPage() {
             upload_recommended_height: data.settings.upload_recommended_height || '800',
             enable_brand_system: data.settings.enable_brand_system !== undefined
               ? String(data.settings.enable_brand_system)
+              : 'true',
+            enable_urgency_triggers: data.settings.enable_urgency_triggers !== undefined
+              ? String(data.settings.enable_urgency_triggers)
+              : 'true',
+            enable_delivery_calculator: data.settings.enable_delivery_calculator !== undefined
+              ? String(data.settings.enable_delivery_calculator)
+              : 'true',
+            enable_volume_discounts: data.settings.enable_volume_discounts !== undefined
+              ? String(data.settings.enable_volume_discounts)
+              : 'true',
+            enable_product_qa: data.settings.enable_product_qa !== undefined
+              ? String(data.settings.enable_product_qa)
               : 'true',
           }));
         }
@@ -207,6 +223,62 @@ export default function AdminSettingsPage() {
                 <p className="text-xs text-muted-foreground mt-1">
                   {t('عند التعطيل، سيتم إخفاء حقل الماركة تماماً من لوحة تحكم التجار ولن يظهر للمشترين.', 'When disabled, the Brand selector will be hidden from the merchant dashboard and catalog.')}
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="enable_urgency_triggers">{t('محفزات الاستعجال والإثبات الاجتماعي', 'Urgency & Social Proof Triggers')}</Label>
+                <select
+                  id="enable_urgency_triggers"
+                  name="enable_urgency_triggers"
+                  value={settings.enable_urgency_triggers}
+                  onChange={(e) => setSettings(prev => ({ ...prev, enable_urgency_triggers: e.target.value }))}
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                >
+                  <option value="true">{t('مفعّل (إظهار المشاهدات الفورية ومبيعات اليوم)', 'Enabled (Show live views and daily sales)')}</option>
+                  <option value="false">{t('معطّل (إخفاء محفزات الاستعجال)', 'Disabled (Hide urgency triggers)')}</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="enable_delivery_calculator">{t('حاسبة التوصيل المتوقع', 'Estimated Delivery Calculator')}</Label>
+                <select
+                  id="enable_delivery_calculator"
+                  name="enable_delivery_calculator"
+                  value={settings.enable_delivery_calculator}
+                  onChange={(e) => setSettings(prev => ({ ...prev, enable_delivery_calculator: e.target.value }))}
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                >
+                  <option value="true">{t('مفعّل (عرض كرت موعد الوصول المتوقع للمشتري)', 'Enabled (Show estimated delivery date to buyers)')}</option>
+                  <option value="false">{t('معطّل (إخفاء حاسبة التوصيل)', 'Disabled (Hide delivery calculator)')}</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="enable_volume_discounts">{t('نظام خصم الكميات وشراء الجملة', 'Volume Discounts & Wholesale System')}</Label>
+                <select
+                  id="enable_volume_discounts"
+                  name="enable_volume_discounts"
+                  value={settings.enable_volume_discounts}
+                  onChange={(e) => setSettings(prev => ({ ...prev, enable_volume_discounts: e.target.value }))}
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                >
+                  <option value="true">{t('مفعّل (إتاحة جدول خصومات الكمية في المنتجات)', 'Enabled (Allow quantity-based discount tables)')}</option>
+                  <option value="false">{t('معطّل (إيقاف نظام خصم الكمية)', 'Disabled (Disable volume discount system)')}</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="enable_product_qa">{t('نظام الأسئلة والأجوبة (Q&A)', 'Customer Q&A System')}</Label>
+                <select
+                  id="enable_product_qa"
+                  name="enable_product_qa"
+                  value={settings.enable_product_qa}
+                  onChange={(e) => setSettings(prev => ({ ...prev, enable_product_qa: e.target.value }))}
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                >
+                  <option value="true">{t('مفعّل (عرض تبويب الأسئلة والأجوبة بصفحة المنتج)', 'Enabled (Show customer Q&A tab on product page)')}</option>
+                  <option value="false">{t('معطّل (إخفاء نظام الأسئلة)', 'Disabled (Hide Q&A system)')}</option>
+                </select>
               </div>
               
               <Button 

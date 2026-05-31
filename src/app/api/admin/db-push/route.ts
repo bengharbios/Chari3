@@ -488,6 +488,62 @@ export async function GET(req: NextRequest) {
       results.push(`Error cleaning up CategoryRequest: ${e.message}`);
     }
 
+    // 21. Ensure Product volumeDiscounts and urgencySettings columns exist
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE Product ADD COLUMN volumeDiscounts TEXT NULL;`);
+      results.push('Added volumeDiscounts column to Product table');
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) {
+        results.push(`Error adding volumeDiscounts: ${e.message}`);
+      }
+    }
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE Product ADD COLUMN urgencySettings TEXT NULL;`);
+      results.push('Added urgencySettings column to Product table');
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) {
+        results.push(`Error adding urgencySettings: ${e.message}`);
+      }
+    }
+
+    // 22. Ensure ProductVariant swatchType and swatchValue columns exist
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE ProductVariant ADD COLUMN swatchType VARCHAR(191) NULL;`);
+      results.push('Added swatchType column to ProductVariant table');
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) {
+        results.push(`Error adding swatchType: ${e.message}`);
+      }
+    }
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE ProductVariant ADD COLUMN swatchValue VARCHAR(1000) NULL;`);
+      results.push('Added swatchValue column to ProductVariant table');
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) {
+        results.push(`Error adding swatchValue: ${e.message}`);
+      }
+    }
+
+    // 23. Create ProductQA table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS ProductQA (
+          id VARCHAR(191) NOT NULL,
+          productId VARCHAR(191) NOT NULL,
+          question TEXT NOT NULL,
+          answer TEXT NULL,
+          status VARCHAR(191) NOT NULL DEFAULT 'pending',
+          userId VARCHAR(191) NULL,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured ProductQA table exists');
+    } catch (e: any) {
+      results.push(`Error creating ProductQA table: ${e.message}`);
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: 'Database schema sync executed',

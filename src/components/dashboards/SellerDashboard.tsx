@@ -5,10 +5,11 @@ import {
   TrendingUp, Package, Star, ShieldCheck, ArrowLeft, ArrowRight,
   Wallet, AlertTriangle, ChevronUp, BarChart3, Clock, CheckCircle,
   XCircle, Eye, Plus, Edit, Trash2, Trophy, Target, Zap, Wrench, Loader2, Upload, X, Layers,
-  LayoutGrid, List, ClipboardCheck, Truck, CheckSquare
+  LayoutGrid, List, ClipboardCheck, Truck, CheckSquare, Check
 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -213,6 +214,52 @@ export default function SellerDashboard() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Conversion Rate & Product Traffic Analytics */}
+      {data?.products && data.products.length > 0 && (
+        <Card className="card-surface">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              📊 {isAr ? 'معدل التحويل وزيارات المنتجات' : 'Conversion Rate & Product Traffic'}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {isAr ? 'نسبة المشترين الفعليين مقارنة بعدد زوار منتجاتك.' : 'The percentage of actual buyers compared to product visitors.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {(() => {
+              const totalViews = data.products.reduce((sum, p: any) => sum + (p.viewCount || 0), 0);
+              const totalSold = data.products.reduce((sum, p: any) => sum + (p.soldCount || 0), 0);
+              const conversionRate = totalViews > 0 ? ((totalSold / totalViews) * 100).toFixed(1) : '0';
+              return (
+                <>
+                  <div className="grid grid-cols-3 gap-2 bg-slate-50 dark:bg-slate-900/10 p-3.5 rounded-2xl border border-border">
+                    <div className="text-center">
+                      <p className="text-[10px] text-muted-foreground">{isAr ? 'مشاهدات المنتجات' : 'Product Views'}</p>
+                      <p className="text-base sm:text-lg font-black text-amber-500 mt-0.5">{totalViews.toLocaleString()}</p>
+                    </div>
+                    <div className="text-center border-x border-border">
+                      <p className="text-[10px] text-muted-foreground">{isAr ? 'القطع المباعة' : 'Units Sold'}</p>
+                      <p className="text-base sm:text-lg font-black text-green-500 mt-0.5">{totalSold.toLocaleString()}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-[10px] text-muted-foreground">{isAr ? 'معدل التحويل' : 'Conversion'}</p>
+                      <p className="text-base sm:text-lg font-black text-blue-500 mt-0.5">{conversionRate}%</p>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground">
+                      <span>{isAr ? 'معدل التحويل المستهدف: 3.5%' : 'Target Conversion: 3.5%'}</span>
+                      <span>{conversionRate}% / 3.5%</span>
+                    </div>
+                    <Progress value={Math.min(100, (parseFloat(conversionRate) / 3.5) * 100)} className="h-2" />
+                  </div>
+                </>
+              );
+            })()}
           </CardContent>
         </Card>
       )}
@@ -773,6 +820,9 @@ function SellerProductsTab({
 
                     {/* Variants table */}
                     <ProductVariantsPreview variants={previewProduct.variants} isAr={isAr} t={t} />
+
+                    {/* Product QA moderation */}
+                    <ProductQAPreview productId={previewProduct.id} isAr={isAr} t={t} />
                   </div>
                 </div>
               ) : (
@@ -985,6 +1035,167 @@ function ProductVariantsPreview({ variants, isAr, t }: { variants: any; isAr: bo
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+// ── Product QA moderation ──────────────────────────────────────────────────────
+function ProductQAPreview({ productId, isAr, t }: { productId: string; isAr: boolean; t: any }) {
+  const [qas, setQas] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState<Record<string, boolean>>({});
+
+  const fetchQAs = () => {
+    setIsLoading(true);
+    fetch(`/api/products/qa?productId=${productId}&includePending=true`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.qas)) {
+          setQas(data.qas);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  };
+
+  useEffect(() => {
+    fetchQAs();
+  }, [productId]);
+
+  const handleSaveAnswer = async (id: string, currentStatus: string) => {
+    const text = replyText[id] || '';
+    if (!text.trim() && currentStatus === 'pending') {
+      toast.error(isAr ? 'يرجى كتابة إجابة أولاً' : 'Please write an answer first');
+      return;
+    }
+
+    setIsSubmitting((prev) => ({ ...prev, [id]: true }));
+    try {
+      const res = await fetch('/api/products/qa', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          answer: text,
+          status: 'approved',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(isAr ? 'تم حفظ الإجابة ونشر السؤال بنجاح' : 'Answer saved and question published successfully');
+        fetchQAs();
+      } else {
+        toast.error(data.error || (isAr ? 'فشل الحفظ' : 'Failed to save'));
+      }
+    } catch {
+      toast.error(isAr ? 'خطأ في الاتصال بالشبكة' : 'Network communication error');
+    } finally {
+      setIsSubmitting((prev) => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const handleReject = async (id: string) => {
+    if (!confirm(isAr ? 'هل تريد رفض وحذف هذا السؤال؟' : 'Do you want to reject and delete this question?')) return;
+    try {
+      const res = await fetch('/api/products/qa', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          status: 'rejected',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(isAr ? 'تم رفض السؤال بنجاح' : 'Question rejected successfully');
+        fetchQAs();
+      }
+    } catch {
+      toast.error(isAr ? 'خطأ في الاتصال بالشبكة' : 'Network communication error');
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center p-4">
+        <Loader2 className="size-5 animate-spin text-amber-500" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 pt-4 border-t border-border">
+      <h5 className="text-xs sm:text-sm font-bold text-foreground border-s-4 border-amber-500 ps-2">
+        💬 {isAr ? 'أسئلة وأجوبة العملاء' : 'Customer Questions & Answers'}
+      </h5>
+
+      {qas.length === 0 ? (
+        <p className="text-xs text-muted-foreground bg-muted/20 p-3 rounded-lg border border-dashed border-border text-center">
+          {isAr ? 'لا توجد أسئلة مطروحة على هذا المنتج حتى الآن.' : 'No customer questions asked on this product yet.'}
+        </p>
+      ) : (
+        <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+          {qas.map((qa) => (
+            <div key={qa.id} className="bg-muted/10 p-3 rounded-xl border border-border space-y-2 text-start">
+              <div className="flex items-start justify-between gap-2">
+                <div className="space-y-0.5">
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    ❓ {qa.question}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {new Date(qa.createdAt).toLocaleDateString(isAr ? 'ar-DZ' : 'en-US')}
+                  </p>
+                </div>
+                <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase shrink-0 ${
+                  qa.status === 'approved' 
+                    ? 'bg-green-100 text-green-700 dark:bg-green-950/20 dark:text-green-400' 
+                    : 'bg-amber-100 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400 animate-pulse'
+                }`}>
+                  {qa.status === 'approved' ? (isAr ? 'منشور' : 'Published') : (isAr ? 'معلّق' : 'Pending')}
+                </span>
+              </div>
+
+              {qa.answer ? (
+                <div className="bg-amber-500/5 p-2 rounded-lg border border-amber-500/10 text-xs mt-1 text-start">
+                  <span className="font-bold text-amber-600 block mb-0.5">💡 {isAr ? 'إجابتك:' : 'Your Answer:'}</span>
+                  <p className="text-muted-foreground">{qa.answer}</p>
+                </div>
+              ) : null}
+
+              {/* Action Form */}
+              <div className="flex gap-2 items-end pt-1">
+                <input
+                  type="text"
+                  placeholder={isAr ? 'اكتب إجابتك هنا...' : 'Write your reply...'}
+                  value={replyText[qa.id] ?? qa.answer ?? ''}
+                  onChange={(e) => setReplyText({ ...replyText, [qa.id]: e.target.value })}
+                  className="flex-1 bg-background border border-border px-2.5 py-1.5 rounded-lg text-xs"
+                />
+                <Button
+                  size="sm"
+                  disabled={isSubmitting[qa.id]}
+                  onClick={() => handleSaveAnswer(qa.id, qa.status)}
+                  className="h-[31px] text-xs font-bold px-3 gap-1 shrink-0 bg-amber-500 hover:bg-amber-600 text-slate-950"
+                >
+                  {isSubmitting[qa.id] ? <Loader2 className="size-3 animate-spin" /> : <Check className="size-3.5" />}
+                  {isAr ? 'حفظ ونشر' : 'Publish'}
+                </Button>
+                {qa.status === 'pending' && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleReject(qa.id)}
+                    className="h-[31px] text-xs font-bold text-destructive hover:bg-destructive/10 px-2 shrink-0 rounded-lg"
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -1318,6 +1529,15 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
   const [uploadedImages, setUploadedImages] = useState<string[]>(initialImages);
   const [isUploading, setIsUploading] = useState(false);
   const [variants, setVariants] = useState<any[]>([]);
+  const [volumeDiscounts, setVolumeDiscounts] = useState<any[]>([]);
+  const [urgencySettings, setUrgencySettings] = useState<any>({
+    showViews: true,
+    minViews: 10,
+    maxViews: 50,
+    showSoldToday: true,
+    minSold: 5,
+    maxSold: 20
+  });
 
   // Asynchronous full product fetch to load variants & actual specs when editing
   useEffect(() => {
@@ -1374,8 +1594,31 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
               comparePrice: v.comparePrice !== null && v.comparePrice !== undefined ? String(v.comparePrice) : '',
               stock: String(v.stock || '0'),
               image: v.image || '',
+              swatchType: v.swatchType || '',
+              swatchValue: v.swatchValue || '',
               isActive: v.isActive !== undefined ? v.isActive : true,
             })));
+          }
+          if (p.volumeDiscounts) {
+            try {
+              setVolumeDiscounts(typeof p.volumeDiscounts === 'string' ? JSON.parse(p.volumeDiscounts) : p.volumeDiscounts);
+            } catch {}
+          } else {
+            setVolumeDiscounts([]);
+          }
+          if (p.urgencySettings) {
+            try {
+              setUrgencySettings(typeof p.urgencySettings === 'string' ? JSON.parse(p.urgencySettings) : p.urgencySettings);
+            } catch {}
+          } else {
+            setUrgencySettings({
+              showViews: true,
+              minViews: 10,
+              maxViews: 50,
+              showSoldToday: true,
+              minSold: 5,
+              maxSold: 20
+            });
           }
         }
       })
@@ -1530,6 +1773,8 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
       specifications: specData,
       seoTitle: metaTitle,
       seoDescription: metaDesc,
+      volumeDiscounts: JSON.stringify(volumeDiscounts),
+      urgencySettings: JSON.stringify(urgencySettings),
       variants: variants.map(v => ({
         name: v.name,
         value: v.value,
@@ -1538,6 +1783,8 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
         comparePrice: v.comparePrice ? Number(v.comparePrice) : null,
         stock: Number(v.stock || 0),
         image: v.image || null,
+        swatchType: v.name === 'اللون' || v.name === 'Color' ? 'color' : null,
+        swatchValue: v.name === 'اللون' || v.name === 'Color' ? v.value : null,
         isActive: true
       }))
     };
@@ -1670,7 +1917,8 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
               { id: 'core', label: isAr ? 'البيانات الأساسية' : 'Core Info' },
               { id: 'specs', label: isAr ? 'المواصفات والاستخدام' : 'Specifications' },
               { id: 'seo', label: isAr ? 'الثقة والـ SEO' : 'Trust & SEO' },
-              { id: 'variants', label: isAr ? 'المتغيرات والترقيات' : 'Variants' }
+              { id: 'variants', label: isAr ? 'المتغيرات والترقيات' : 'Variants' },
+              { id: 'advanced', label: isAr ? 'الميزات المتقدمة' : 'Global Features' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -2234,6 +2482,176 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
                   })}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* TAB CONTENT: Advanced Features */}
+          {activeTab === 'advanced' && (
+            <div className="space-y-6">
+              {/* Section 1: Volume Discounts */}
+              <div className="space-y-4 border-b border-border pb-5">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    📦 {isAr ? 'خصومات الكمية وشراء الجملة' : 'Volume Discounts & Bulk Pricing'}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {isAr ? 'شجع التجار والعملاء على شراء كميات أكبر بإعطائهم خصماً متدرجاً.' : 'Encourage larger purchases by offering tier-based discounts.'}
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  {volumeDiscounts.length === 0 ? (
+                    <div className="text-center py-6 bg-slate-50 dark:bg-slate-900/25 border-2 border-dashed border-border rounded-xl">
+                      <p className="text-xs text-muted-foreground">{isAr ? 'لا توجد مستويات خصم مضافة حالياً' : 'No bulk discounts configured yet'}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {volumeDiscounts.map((discount, index) => (
+                        <div key={index} className="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/35 p-3 rounded-xl border border-border">
+                          <div className="flex-1 space-y-1">
+                            <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'الحد الأدنى للكمية (قطعة)' : 'Min Quantity (pcs)'}</label>
+                            <input 
+                              type="number"
+                              min="2"
+                              value={discount.minQty}
+                              onChange={(e) => {
+                                const updated = [...volumeDiscounts];
+                                updated[index].minQty = parseInt(e.target.value) || 2;
+                                setVolumeDiscounts(updated);
+                              }}
+                              className="w-full bg-background border border-border text-foreground px-2.5 py-1.5 rounded-lg text-xs"
+                            />
+                          </div>
+                          <div className="flex-1 space-y-1">
+                            <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'نسبة الخصم (%)' : 'Discount Percent (%)'}</label>
+                            <input 
+                              type="number"
+                              min="1"
+                              max="99"
+                              value={discount.discountPercent}
+                              onChange={(e) => {
+                                const updated = [...volumeDiscounts];
+                                updated[index].discountPercent = parseFloat(e.target.value) || 0;
+                                setVolumeDiscounts(updated);
+                              }}
+                              className="w-full bg-background border border-border text-foreground px-2.5 py-1.5 rounded-lg text-xs"
+                            />
+                          </div>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="size-8 text-destructive hover:bg-destructive/10 rounded-full shrink-0 mt-4"
+                            onClick={() => {
+                              setVolumeDiscounts(volumeDiscounts.filter((_, i) => i !== index));
+                            }}
+                          >
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full text-xs font-bold gap-1"
+                    onClick={() => {
+                      setVolumeDiscounts([...volumeDiscounts, { minQty: 2, discountPercent: 10 }]);
+                    }}
+                  >
+                    <Plus className="size-3.5" /> {isAr ? 'إضافة مستوى خصم جديد' : 'Add New Discount Tier'}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Section 2: Urgency Simulation */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                    🔥 {isAr ? 'محفزات الاستعجال والإثبات الاجتماعي' : 'Urgency & Social Proof Settings'}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {isAr ? 'تحكم في تنبيهات الشراء الفوري والمشاهدين الحيين لزيادة حماس المشترين.' : 'Control live viewer alerts and purchasing counters to drive conversions.'}
+                  </p>
+                </div>
+
+                <div className="space-y-4 bg-slate-50 dark:bg-slate-900/35 p-4 rounded-xl border border-border">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="showViews" className="text-xs font-bold">{isAr ? 'محاكاة عدد المشاهدين الحيين' : 'Simulate Live Viewers'}</Label>
+                      <p className="text-[10px] text-muted-foreground">{isAr ? 'إظهار مؤشر متحرك للمشاهدين الحاليين لصفحة المنتج' : 'Show animated counter of current product viewers'}</p>
+                    </div>
+                    <input 
+                      type="checkbox"
+                      id="showViews"
+                      checked={urgencySettings.showViews}
+                      onChange={(e) => setUrgencySettings({ ...urgencySettings, showViews: e.target.checked })}
+                      className="size-4 rounded border-border text-amber-500 focus:ring-amber-500 bg-background"
+                    />
+                  </div>
+
+                  {urgencySettings.showViews && (
+                    <div className="grid grid-cols-2 gap-3 pt-1 border-t border-border/50">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'الحد الأدنى للمشاهدين' : 'Min Viewers'}</label>
+                        <input 
+                          type="number"
+                          value={urgencySettings.minViews || 10}
+                          onChange={(e) => setUrgencySettings({ ...urgencySettings, minViews: parseInt(e.target.value) || 5 })}
+                          className="w-full bg-background border border-border text-foreground px-2.5 py-1.5 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'الحد الأقصى للمشاهدين' : 'Max Viewers'}</label>
+                        <input 
+                          type="number"
+                          value={urgencySettings.maxViews || 50}
+                          onChange={(e) => setUrgencySettings({ ...urgencySettings, maxViews: parseInt(e.target.value) || 50 })}
+                          className="w-full bg-background border border-border text-foreground px-2.5 py-1.5 rounded-lg text-xs"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="showSoldToday" className="text-xs font-bold">{isAr ? 'محاكاة عدد المبيعات اليومية' : 'Simulate Daily Sales'}</Label>
+                      <p className="text-[10px] text-muted-foreground">{isAr ? 'إظهار شارة مميزة بعدد القطع المباعة اليوم' : 'Show highlight badge of units sold today'}</p>
+                    </div>
+                    <input 
+                      type="checkbox"
+                      id="showSoldToday"
+                      checked={urgencySettings.showSoldToday}
+                      onChange={(e) => setUrgencySettings({ ...urgencySettings, showSoldToday: e.target.checked })}
+                      className="size-4 rounded border-border text-amber-500 focus:ring-amber-500 bg-background"
+                    />
+                  </div>
+
+                  {urgencySettings.showSoldToday && (
+                    <div className="grid grid-cols-2 gap-3 pt-1 border-t border-border/50">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'الحد الأدنى للمبيعات اليومية' : 'Min Daily Sales'}</label>
+                        <input 
+                          type="number"
+                          value={urgencySettings.minSold || 5}
+                          onChange={(e) => setUrgencySettings({ ...urgencySettings, minSold: parseInt(e.target.value) || 2 })}
+                          className="w-full bg-background border border-border text-foreground px-2.5 py-1.5 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-muted-foreground">{isAr ? 'الحد الأقصى للمبيعات اليومية' : 'Max Daily Sales'}</label>
+                        <input 
+                          type="number"
+                          value={urgencySettings.maxSold || 20}
+                          onChange={(e) => setUrgencySettings({ ...urgencySettings, maxSold: parseInt(e.target.value) || 20 })}
+                          className="w-full bg-background border border-border text-foreground px-2.5 py-1.5 rounded-lg text-xs"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>

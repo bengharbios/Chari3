@@ -31,6 +31,8 @@ interface ProductVariantItem {
   image?: string | null;
   sortOrder: number;
   isActive: boolean;
+  swatchType?: string | null;
+  swatchValue?: string | null;
 }
 
 interface ProductDetail {
@@ -48,7 +50,10 @@ interface ProductDetail {
   status: string;
   isFeatured: boolean;
   specifications?: string;
+  sku?: string | null;
   variants?: ProductVariantItem[];
+  volumeDiscounts?: string | null;
+  urgencySettings?: string | null;
   category: { name: string; nameEn?: string };
   seller?: {
     id: string;
@@ -96,6 +101,13 @@ interface RelatedProduct {
   soldCount: number;
 }
 
+const ALGERIAN_PROVINCES = [
+  { key: 'algiers', nameAr: 'الجزائر العاصمة', nameEn: 'Algiers', daysMin: 1, daysMax: 2, fee: 400 },
+  { key: 'oran', nameAr: 'وهران', nameEn: 'Oran', daysMin: 2, daysMax: 3, fee: 600 },
+  { key: 'constantine', nameAr: 'قسنطينة', nameEn: 'Constantine', daysMin: 2, daysMax: 3, fee: 600 },
+  { key: 'adrar', nameAr: 'أدرار', nameEn: 'Adrar', daysMin: 5, daysMax: 7, fee: 900 },
+];
+
 function StarRating({ rating, interactive = false, size = 'sm' }: { rating: number; interactive?: boolean; size?: 'sm' | 'md' | 'lg' }) {
   const sizes = { sm: 'size-3.5', md: 'size-4', lg: 'size-5' };
   return (
@@ -135,6 +147,26 @@ export default function ProductDetailPage() {
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [selectedSize, setSelectedSize] = useState<string>('');
 
+  // Platform and dynamic features states
+  const [platformSettings, setPlatformSettings] = useState({
+    enable_urgency_triggers: 'true',
+    enable_delivery_calculator: 'true',
+    enable_volume_discounts: 'true',
+    enable_product_qa: 'true',
+  });
+  const [qas, setQas] = useState<{
+    id: string; question: string; answer?: string | null;
+    status: string; createdAt: string;
+  }[]>([]);
+  const [newQuestion, setNewQuestion] = useState('');
+  const [isSubmittingQuestion, setIsSubmittingQuestion] = useState(false);
+  const [qaSuccessMessage, setQaSuccessMessage] = useState('');
+  const [qaErrorMessage, setQaErrorMessage] = useState('');
+  const [simulatedViews, setSimulatedViews] = useState(15);
+  const [simulatedOrders, setSimulatedOrders] = useState(8);
+  const [activeTab, setActiveTab] = useState<'reviews' | 'qa'>('reviews');
+  const [selectedProvince, setSelectedProvince] = useState('algiers');
+
   let images: string[] = [];
   if (product) {
     try {
@@ -151,6 +183,32 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!selectedProductId) { setCurrentPage('home'); return; }
     setIsLoading(true);
+
+    // Fetch platform feature settings toggles
+    fetch('/api/admin/settings')
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && d.settings) {
+          setPlatformSettings({
+            enable_urgency_triggers: d.settings.enable_urgency_triggers !== undefined ? String(d.settings.enable_urgency_triggers) : 'true',
+            enable_delivery_calculator: d.settings.enable_delivery_calculator !== undefined ? String(d.settings.enable_delivery_calculator) : 'true',
+            enable_volume_discounts: d.settings.enable_volume_discounts !== undefined ? String(d.settings.enable_volume_discounts) : 'true',
+            enable_product_qa: d.settings.enable_product_qa !== undefined ? String(d.settings.enable_product_qa) : 'true',
+          });
+        }
+      })
+      .catch(() => {});
+
+    // Fetch approved Q&As
+    fetch(`/api/products/qa?productId=${selectedProductId}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success) {
+          setQas(d.qas || []);
+        }
+      })
+      .catch(() => {});
+
     fetch(`/api/products/${selectedProductId}`)
       .then(r => r.json())
       .then(d => {
@@ -223,43 +281,41 @@ export default function ProductDetailPage() {
     }
   }, [product]);
 
-  const handleAddToCart = () => {
-    if (!product) return;
-    
-    
-    const variantName = [selectedColor, selectedSize].filter(Boolean).join(' / ');
-    const displayName = isAr ? product.name : (product.nameEn || product.name);
-    const cartProduct = {
-      ...product,
-      name: variantName ? `${displayName} (${variantName})` : displayName,
-      images: images.length > 0 ? images : ['/images/placeholder.jpg'],
-    };
-    
-    useCartStore.getState().addItem(cartProduct as any, qty);
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
-  };
+  // Setup Simulated Urgency stats
+  useEffect(() => {
+    if (product) {
+      if (product.urgencySettings) {
+        try {
+          const u = typeof product.urgencySettings === 'string'
+            ? JSON.parse(product.urgencySettings)
+            : product.urgencySettings;
+          const minV = parseInt(u.minViews || '5');
+          const maxV = parseInt(u.maxViews || '25');
+          setSimulatedViews(Math.floor(Math.random() * (maxV - minV + 1)) + minV);
 
-  const merchant = product?.seller || (product?.store ? {
-    id: product.store.id,
-    storeName: product.store.name,
-    storeNameEn: product.store.nameEn,
-    bio: product.store.description,
-    logo: product.store.logo,
-    coverImage: product.store.coverImage,
-    rating: product.store.rating,
-    level: product.store.level,
-    totalSales: product.store.totalSales,
-    totalCustomers: product.store.totalCustomers,
-    isVerified: product.store.isActive,
-    _count: product.store._count
-  } : null);
-
-  const goToSeller = () => {
-    if (merchant?.id) {
-      useAppStore.getState().setSelectedSellerId(merchant.id);
-      router.push(`/sellers/${merchant.id}`);
+          const minO = parseInt(u.minOrders || '2');
+          const maxO = parseInt(u.maxOrders || '10');
+          setSimulatedOrders(Math.floor(Math.random() * (maxO - minO + 1)) + minO);
+        } catch {}
+      } else {
+        setSimulatedViews(Math.floor(Math.random() * 20) + 10);
+        setSimulatedOrders(Math.floor(Math.random() * 8) + 3);
+      }
     }
+  }, [product]);
+
+  // Dynamic date ranges calculation for Delivery Estimator
+  const getDeliveryDateRange = (minDays: number, maxDays: number) => {
+    const options: Intl.DateTimeFormatOptions = { weekday: 'long', day: 'numeric', month: 'long' };
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + minDays);
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + maxDays);
+    
+    const minStr = minDate.toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'en-US', options);
+    const maxStr = maxDate.toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'en-US', options);
+    
+    return { minStr, maxStr };
   };
 
   // Find current matching variant
@@ -296,6 +352,70 @@ export default function ProductDetailPage() {
   const discount = displayComparePrice
     ? Math.round(((displayComparePrice - displayPrice) / displayComparePrice) * 100)
     : 0;
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    
+    // Parse volume discounts
+    let discounts: { minQty: number; discountPercent: number }[] = [];
+    if (product.volumeDiscounts) {
+      try {
+        const parsed = typeof product.volumeDiscounts === 'string'
+          ? JSON.parse(product.volumeDiscounts)
+          : product.volumeDiscounts;
+        if (Array.isArray(parsed)) {
+          discounts = parsed.sort((a, b) => a.minQty - b.minQty);
+        }
+      } catch {}
+    }
+
+    // Find if active volume discount tier matches qty
+    const matchingDiscount = [...discounts]
+      .reverse()
+      .find(d => qty >= d.minQty);
+    
+    let finalUnitPrice = displayPrice;
+    if (matchingDiscount && platformSettings.enable_volume_discounts === 'true') {
+      finalUnitPrice = displayPrice * (1 - matchingDiscount.discountPercent / 100);
+    }
+    
+    const variantName = [selectedColor, selectedSize].filter(Boolean).join(' / ');
+    const displayName = isAr ? product.name : (product.nameEn || product.name);
+    const cartProduct = {
+      ...product,
+      price: finalUnitPrice,
+      name: variantName ? `${displayName} (${variantName})` : displayName,
+      images: images.length > 0 ? images : ['/images/placeholder.jpg'],
+    };
+    
+    useCartStore.getState().addItem(cartProduct as any, qty);
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
+  };
+
+  const merchant = product?.seller || (product?.store ? {
+    id: product.store.id,
+    storeName: product.store.name,
+    storeNameEn: product.store.nameEn,
+    bio: product.store.description,
+    logo: product.store.logo,
+    coverImage: product.store.coverImage,
+    rating: product.store.rating,
+    level: product.store.level,
+    totalSales: product.store.totalSales,
+    totalCustomers: product.store.totalCustomers,
+    isVerified: product.store.isActive,
+    _count: product.store._count
+  } : null);
+
+  const goToSeller = () => {
+    if (merchant?.id) {
+      useAppStore.getState().setSelectedSellerId(merchant.id);
+      router.push(`/sellers/${merchant.id}`);
+    }
+  };
+
+
 
   useEffect(() => {
     if (activeVariant && activeVariant.image && images.length > 0) {
@@ -347,8 +467,43 @@ export default function ProductDetailPage() {
     }
   }
 
+  // Generate JSON-LD Rich Snippet for SEO
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    'name': isAr ? product.name : (product.nameEn || product.name),
+    'description': product.description || '',
+    'image': images,
+    'sku': product.sku || `sku-${product.id}`,
+    'offers': {
+      '@type': 'Offer',
+      'priceCurrency': 'DZD',
+      'price': displayPrice,
+      'priceValidUntil': new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      'availability': displayStock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      'itemCondition': 'https://schema.org/NewCondition',
+      'seller': {
+        '@type': 'Organization',
+        'name': isAr ? (merchant?.storeName || 'شاري داي') : (merchant?.storeNameEn || 'ChariDay'),
+      },
+    },
+    ...(reviewsTotal > 0 ? {
+      'aggregateRating': {
+        '@type': 'AggregateRating',
+        'ratingValue': avgRating || product.rating || 5,
+        'reviewCount': reviewsTotal,
+      }
+    } : {})
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      {/* Dynamic SEO Rich Snippet Metadata */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+
       {/* Breadcrumb */}
       <div className="bg-muted/30 border-b border-border">
         <div className="container-platform py-3">
@@ -436,7 +591,7 @@ export default function ProductDetailPage() {
                   </>
                 )}
               </div>
-              <h1 className="text-2xl md:text-3xl font-black leading-tight">{isAr ? product.name : (product.nameEn || product.name)}</h1>
+              <h1 className="text-2xl md:text-3xl font-black leading-tight text-foreground">{isAr ? product.name : (product.nameEn || product.name)}</h1>
             </div>
 
             {/* Rating */}
@@ -462,6 +617,22 @@ export default function ProductDetailPage() {
                 )}
               </div>
             </div>
+
+            {/* Social Proof & Urgency Triggers */}
+            {platformSettings.enable_urgency_triggers === 'true' && (
+              <div className="p-3 bg-red-500/5 dark:bg-red-500/10 border border-red-500/10 rounded-2xl flex items-center gap-3 text-red-600 dark:text-red-400">
+                <div className="relative flex h-2.5 w-2.5 shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                </div>
+                <p className="text-xs font-black font-cairo">
+                  {t(
+                    `🔥 يشاهد هذا المنتج الآن ${simulatedViews} عملاء! تم طلبه ${simulatedOrders} مرات اليوم في الساعات الماضية.`,
+                    `🔥 ${simulatedViews} customers are viewing this now! Ordered ${simulatedOrders} times today in recent hours.`
+                  )}
+                </p>
+              </div>
+            )}
 
             {/* Amazon-Style Bullet Points / High-Converting Features */}
             {specs.bullets && Array.isArray(specs.bullets) && specs.bullets.filter(Boolean).length > 0 && (
@@ -501,14 +672,15 @@ export default function ProductDetailPage() {
                   {product.variants
                     .filter((v: any) => v.name === 'اللون' || v.name === 'Color' || v.name === 'color')
                     .map((v: any) => {
-                      const isHex = v.value.startsWith('#');
+                      const isHex = v.value.startsWith('#') || (v.swatchType === 'color' && v.swatchValue);
+                      const colorVal = (v.swatchType === 'color' && v.swatchValue) ? v.swatchValue : v.value;
                       return (
                         <button
                           key={v.id}
                           onClick={() => setSelectedColor(v.value)}
                           className={`relative size-8 rounded-full border-2 transition-all flex items-center justify-center ${
                             selectedColor === v.value
-                              ? 'border-amber-500 scale-110 shadow'
+                              ? 'border-primary scale-110 shadow-md'
                               : 'border-border hover:border-muted-foreground'
                           }`}
                           title={v.value}
@@ -516,13 +688,13 @@ export default function ProductDetailPage() {
                           {isHex ? (
                             <span 
                               className="size-full rounded-full border border-black/10" 
-                              style={{ backgroundColor: v.value }} 
+                              style={{ backgroundColor: colorVal }} 
                             />
                           ) : (
                             <span className="text-[10px] font-bold px-2 truncate max-w-full">{v.value}</span>
                           )}
                           {selectedColor === v.value && (
-                            <span className="absolute size-2 bg-white rounded-full shadow" />
+                            <span className="absolute size-2.5 bg-white rounded-full shadow" />
                           )}
                         </button>
                       );
@@ -534,19 +706,33 @@ export default function ProductDetailPage() {
                 <div className="space-y-2">
                   <span className="text-sm font-medium">{t('اللون:', 'Color:')} <span className="font-bold text-foreground">{selectedColor}</span></span>
                   <div className="flex gap-2">
-                    {[color1Str, color2Str].filter(Boolean).map((col: string) => (
-                      <button
-                        key={col}
-                        onClick={() => setSelectedColor(col)}
-                        className={`text-xs px-3.5 py-2 rounded-xl border transition-all font-bold ${
-                          selectedColor === col
-                            ? 'border-amber-500 bg-amber-500/10 text-amber-500'
-                            : 'border-border bg-transparent text-muted-foreground hover:border-border/80'
-                        }`}
-                      >
-                        {col}
-                      </button>
-                    ))}
+                    {[color1Str, color2Str].filter(Boolean).map((col: string) => {
+                      const isHex = col.startsWith('#');
+                      return (
+                        <button
+                          key={col}
+                          onClick={() => setSelectedColor(col)}
+                          className={`relative size-8 rounded-full border-2 transition-all flex items-center justify-center ${
+                            selectedColor === col
+                              ? 'border-primary scale-110 shadow-md'
+                              : 'border-border hover:border-muted-foreground'
+                          }`}
+                          title={col}
+                        >
+                          {isHex ? (
+                            <span 
+                              className="size-full rounded-full border border-black/10" 
+                              style={{ backgroundColor: col }} 
+                            />
+                          ) : (
+                            <span className="text-xs font-bold px-2 truncate max-w-full">{col}</span>
+                          )}
+                          {selectedColor === col && (
+                            <span className="absolute size-2.5 bg-white rounded-full shadow" />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )
@@ -595,6 +781,74 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
               )
+            )}
+
+            {/* Volume Tier Pricing savings card */}
+            {platformSettings.enable_volume_discounts === 'true' && (
+              (() => {
+                let discounts: { minQty: number; discountPercent: number }[] = [];
+                if (product.volumeDiscounts) {
+                  try {
+                    const parsed = typeof product.volumeDiscounts === 'string'
+                      ? JSON.parse(product.volumeDiscounts)
+                      : product.volumeDiscounts;
+                    if (Array.isArray(parsed)) {
+                      discounts = parsed.sort((a, b) => a.minQty - b.minQty);
+                    }
+                  } catch {}
+                }
+                
+                if (discounts.length === 0) return null;
+
+                return (
+                  <div className="p-4 bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 rounded-2xl space-y-2">
+                    <p className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1.5 font-cairo">
+                      <span>🏷️ {t('عروض الشراء بالجملة والتوفير:', 'Volume Tier Pricing & Savings:')}</span>
+                    </p>
+                    <div className="grid grid-cols-3 gap-2.5 text-center mt-2">
+                      <div className="p-2 bg-background rounded-xl border border-border flex flex-col justify-center">
+                        <span className="text-xs font-bold text-muted-foreground">{t('قطعة واحدة', '1 Unit')}</span>
+                        <span className="text-sm font-black text-foreground mt-1">{fmt(displayPrice)}</span>
+                        <span className="text-[10px] text-muted-foreground mt-0.5">{t('السعر الأساسي', 'Base Price')}</span>
+                      </div>
+                      {discounts.map((d, i) => {
+                        const unitPrice = displayPrice * (1 - d.discountPercent / 100);
+                        return (
+                          <div 
+                            key={i} 
+                            className={`p-2 rounded-xl border flex flex-col justify-center transition-all ${
+                              qty >= d.minQty 
+                                ? 'bg-amber-500/10 border-amber-500/30 scale-105 shadow-sm' 
+                                : 'bg-background border-border'
+                            }`}
+                          >
+                            <span className="text-xs font-bold text-amber-600 dark:text-amber-400">{d.minQty}+ {t('قطع', 'Units')}</span>
+                            <span className="text-sm font-black text-foreground mt-1">{fmt(unitPrice)}</span>
+                            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                              {t(`خصم ${d.discountPercent}%`, `Save ${d.discountPercent}%`)}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Real-time discount notification state based on qty */}
+                    {(() => {
+                      const matchingDiscount = [...discounts]
+                        .reverse()
+                        .find(d => qty >= d.minQty);
+                      if (matchingDiscount) {
+                        const savedAmount = displayPrice * (matchingDiscount.discountPercent / 100) * qty;
+                        return (
+                          <div className="mt-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 p-2 rounded-lg flex items-center justify-center gap-1">
+                            <span>🎉 {t(`تهانينا! تم تطبيق خصم الكميات. وفرت ${fmt(savedAmount)}!`, `Congratulations! Bulk discount applied. You saved ${fmt(savedAmount)}!`)}</span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+                );
+              })()
             )}
 
             {/* Quantity + Actions */}
@@ -646,6 +900,58 @@ export default function ProductDetailPage() {
               </Button>
             </div>
 
+            {/* Interactive Estimated Delivery Calculator */}
+            {platformSettings.enable_delivery_calculator === 'true' && (
+              <Card className="border border-border/80 rounded-2xl shadow-sm overflow-hidden bg-slate-50/50 dark:bg-slate-900/10">
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Truck className="size-5 text-primary" />
+                      <span className="text-sm font-bold text-foreground font-cairo">{t('حساب موعد وتكلفة التوصيل:', 'Delivery Estimate & Cost:')}</span>
+                    </div>
+                    {/* Province selector dropdown */}
+                    <select
+                      value={selectedProvince}
+                      onChange={(e) => setSelectedProvince(e.target.value)}
+                      className="text-xs font-semibold bg-background border border-border rounded-lg px-2 py-1 focus:ring-1 focus:ring-primary focus:outline-none"
+                    >
+                      <option value="algiers">📍 {t('الجزائر العاصمة', 'Algiers')}</option>
+                      <option value="oran">📍 {t('وهران', 'Oran')}</option>
+                      <option value="constantine">📍 {t('قسنطينة', 'Constantine')}</option>
+                      <option value="adrar">📍 {t('أدرار', 'Adrar')}</option>
+                    </select>
+                  </div>
+
+                  {/* Dynamic delivery dates and fee calculation */}
+                  {(() => {
+                    const prov = ALGERIAN_PROVINCES.find(p => p.key === selectedProvince) || ALGERIAN_PROVINCES[0];
+                    const { minStr, maxStr } = getDeliveryDateRange(prov.daysMin, prov.daysMax);
+                    return (
+                      <div className="space-y-2 text-start font-cairo">
+                        <div className="flex items-start gap-2.5">
+                          <div className="size-2 rounded-full bg-emerald-500 mt-1.5 shrink-0 animate-ping" />
+                          <div>
+                            <p className="text-xs text-muted-foreground">{t('توصيل متوقع خلال:', 'Estimated Delivery Date:')}</p>
+                            <p className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                              {t(`${minStr} - ${maxStr}`, `${minStr} - ${maxStr}`)}
+                              <span className="text-xs text-muted-foreground font-normal block md:inline md:ms-2">
+                                ({t(`من ${prov.daysMin} إلى ${prov.daysMax} أيام عمل`, `${prov.daysMin}-${prov.daysMax} business days`)})
+                              </span>
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-center pt-2 border-t border-border/60 text-xs">
+                          <span className="text-muted-foreground">{t('تكلفة الشحن لهذه الولاية:', 'Shipping Fee to this province:')}</span>
+                          <span className="font-black text-primary">{fmt(prov.fee)}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            )}
+
             {/* Trust badges */}
             <div className="grid grid-cols-3 gap-3 pt-2">
               {[
@@ -681,7 +987,7 @@ export default function ProductDetailPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-bold text-lg">{isAr ? merchant.storeName : (merchant.storeNameEn || merchant.storeName)}</h3>
+                    <h3 className="font-bold text-lg text-foreground">{isAr ? merchant.storeName : (merchant.storeNameEn || merchant.storeName)}</h3>
                     <span className="text-xl" title={`Level ${merchant.level}`}>{LEVEL_BADGE[merchant.level] || '🌱'}</span>
                     {merchant.isVerified && <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs">✓ {t('موثق', 'Verified')}</Badge>}
                   </div>
@@ -695,7 +1001,7 @@ export default function ProductDetailPage() {
                     {merchant._count && <span className="text-xs text-muted-foreground">{merchant._count.products} {t('منتج', 'products')}</span>}
                   </div>
                 </div>
-                <Button onClick={goToSeller} variant="outline" className="shrink-0 gap-2">
+                <Button onClick={goToSeller} variant="outline" className="shrink-0 gap-2 font-bold">
                   {t('زيارة المتجر', 'Visit Store')}
                   {isAr ? <ArrowLeft className="size-4" /> : <ArrowRight className="size-4" />}
                 </Button>
@@ -708,7 +1014,7 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10">
           {product.description && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">{t('وصف المنتج التفصيلي', 'Detailed Product Description')}</h2>
+              <h2 className="text-xl font-bold text-foreground">{t('وصف المنتج التفصيلي', 'Detailed Product Description')}</h2>
               <div className="prose dark:prose-invert max-w-none p-5 bg-muted/30 rounded-2xl border border-border min-h-[220px]">
                 <p className="text-muted-foreground leading-relaxed whitespace-pre-line text-sm">{product.description}</p>
               </div>
@@ -718,7 +1024,7 @@ export default function ProductDetailPage() {
           {/* Dynamic Technical Specifications Table */}
           {Object.keys(specs).some(k => ['weight', 'dimensions', 'material', 'origin', 'warranty'].includes(k)) && (
             <div className="space-y-4">
-              <h2 className="text-xl font-bold">{t('المواصفات الفنية المعتمدة', 'Approved Technical Specifications')}</h2>
+              <h2 className="text-xl font-bold text-foreground">{t('المواصفات الفنية المعتمدة', 'Approved Technical Specifications')}</h2>
               <div className="p-5 bg-muted/30 rounded-2xl border border-border min-h-[220px] flex flex-col justify-center">
                 <table className="w-full text-sm divide-y divide-border">
                   <tbody>
@@ -744,93 +1050,257 @@ export default function ProductDetailPage() {
           )}
         </div>
 
-        {/* ── REVIEWS SECTION ── */}
-        {(reviews.length > 0 || reviewsTotal > 0) && (
-          <div className="mt-10 space-y-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Star className="size-5 fill-amber-400 text-amber-400" />
-                {t('آراء المشترين', 'Customer Reviews')}
-                <Badge variant="secondary" className="text-xs">{reviewsTotal} {t('تقييم', 'reviews')}</Badge>
-              </h2>
-              {avgRating > 0 && (
-                <div className="flex items-center gap-2">
-                  <span className="text-3xl font-black text-amber-400">{avgRating.toFixed(1)}</span>
-                  <StarRating rating={avgRating} size="md" />
+        {/* ── TABS: REVIEWS & CUSTOMER Q&A ── */}
+        <div className="mt-12 border-t border-border pt-10">
+          <div className="flex gap-4 border-b border-border pb-3 mb-6">
+            <button
+              onClick={() => setActiveTab('reviews')}
+              className={`pb-3 text-lg font-black font-cairo transition-all relative ${
+                activeTab === 'reviews' 
+                  ? 'text-primary' 
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {t('⭐️ آراء وتقييمات العملاء', '⭐️ Customer Reviews')}
+              {reviewsTotal > 0 && (
+                <span className="ms-1.5 text-xs bg-muted text-foreground px-2 py-0.5 rounded-full">
+                  {reviewsTotal}
+                </span>
+              )}
+              {activeTab === 'reviews' && (
+                <div className="absolute bottom-0 start-0 end-0 h-0.5 bg-primary rounded-full" />
+              )}
+            </button>
+
+            {platformSettings.enable_product_qa === 'true' && (
+              <button
+                onClick={() => setActiveTab('qa')}
+                className={`pb-3 text-lg font-black font-cairo transition-all relative ${
+                  activeTab === 'qa' 
+                    ? 'text-primary' 
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {t('❓ الأسئلة والأجوبة', '❓ Questions & Answers')}
+                {qas.length > 0 && (
+                  <span className="ms-1.5 text-xs bg-muted text-foreground px-2 py-0.5 rounded-full">
+                    {qas.length}
+                  </span>
+                )}
+                {activeTab === 'qa' && (
+                  <div className="absolute bottom-0 start-0 end-0 h-0.5 bg-primary rounded-full" />
+                )}
+              </button>
+            )}
+          </div>
+
+          {/* TAB CONTENT: REVIEWS */}
+          {activeTab === 'reviews' && (
+            <div className="space-y-6">
+              {reviews.length > 0 ? (
+                <div className="space-y-5">
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                      {t('خلاصة آراء المشترين', 'Buyer Review Summary')}
+                    </h2>
+                    {avgRating > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-3xl font-black text-amber-500">{avgRating.toFixed(1)}</span>
+                        <StarRating rating={avgRating} size="md" />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Star distribution bar */}
+                  <div className="p-4 bg-muted/30 rounded-2xl border border-border space-y-2">
+                    {[5, 4, 3, 2, 1].map(star => {
+                      const count = reviews.filter(r => Math.round(r.rating) === star).length;
+                      const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
+                      return (
+                        <div key={star} className="flex items-center gap-3">
+                          <span className="text-xs text-muted-foreground w-4">{star}</span>
+                          <Star className="size-3 fill-amber-400 text-amber-400 shrink-0" />
+                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-amber-400 rounded-full transition-all duration-500"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-muted-foreground w-6 text-end">{count}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Individual reviews */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {reviews.slice(0, 6).map(review => {
+                      const reviewerName = isAr
+                        ? (review.user?.name || t('مشتري', 'Buyer'))
+                        : (review.user?.nameEn || review.user?.name || t('مشتري', 'Buyer'));
+                      const timeAgo = (() => {
+                        const diff = Date.now() - new Date(review.createdAt).getTime();
+                        const days = Math.floor(diff / 86400000);
+                        if (days === 0) return t('اليوم', 'Today');
+                        if (days === 1) return t('أمس', 'Yesterday');
+                        if (days < 30) return isAr ? `منذ ${days} يوم` : `${days} days ago`;
+                        const months = Math.floor(days / 30);
+                        return isAr ? `منذ ${months} شهر` : `${months} months ago`;
+                      })();
+
+                      return (
+                        <div key={review.id} className="p-4 rounded-2xl bg-card border border-border space-y-2 flex flex-col justify-between text-start">
+                          <div className="space-y-2">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-sm font-bold text-primary">
+                                  {reviewerName.charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                  <p className="text-sm font-semibold">{reviewerName}</p>
+                                  <p className="text-xs text-muted-foreground">{timeAgo}</p>
+                                </div>
+                              </div>
+                              <StarRating rating={review.rating} size="sm" />
+                            </div>
+                            {review.title && (
+                              <p className="text-sm font-semibold text-foreground">{review.title}</p>
+                            )}
+                            {review.comment && (
+                              <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-8 text-center bg-muted/20 border border-dashed border-border rounded-2xl">
+                  <p className="text-muted-foreground">{t('لا توجد تقييمات لهذا المنتج بعد.', 'No reviews for this product yet.')}</p>
                 </div>
               )}
             </div>
+          )}
 
-            {/* Star distribution bar */}
-            {reviews.length > 0 && (
-              <div className="p-4 bg-muted/30 rounded-2xl border border-border space-y-2">
-                {[5, 4, 3, 2, 1].map(star => {
-                  const count = reviews.filter(r => Math.round(r.rating) === star).length;
-                  const pct = reviews.length > 0 ? (count / reviews.length) * 100 : 0;
-                  return (
-                    <div key={star} className="flex items-center gap-3">
-                      <span className="text-xs text-muted-foreground w-4">{star}</span>
-                      <Star className="size-3 fill-amber-400 text-amber-400 shrink-0" />
-                      <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-amber-400 rounded-full transition-all duration-500"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      <span className="text-xs text-muted-foreground w-6 text-end">{count}</span>
-                    </div>
-                  );
-                })}
+          {/* TAB CONTENT: Q&A */}
+          {activeTab === 'qa' && platformSettings.enable_product_qa === 'true' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-bold text-foreground font-cairo">{t('الأسئلة الشائعة من العملاء', 'Frequently Asked Questions')}</h3>
               </div>
-            )}
 
-            {/* Individual reviews */}
-            <div className="space-y-3">
-              {reviews.slice(0, 6).map(review => {
-                const reviewerName = isAr
-                  ? (review.user?.name || t('مشتري', 'Buyer'))
-                  : (review.user?.nameEn || review.user?.name || t('مشتري', 'Buyer'));
-                const timeAgo = (() => {
-                  const diff = Date.now() - new Date(review.createdAt).getTime();
-                  const days = Math.floor(diff / 86400000);
-                  if (days === 0) return t('اليوم', 'Today');
-                  if (days === 1) return t('أمس', 'Yesterday');
-                  if (days < 30) return isAr ? `منذ ${days} يوم` : `${days} days ago`;
-                  const months = Math.floor(days / 30);
-                  return isAr ? `منذ ${months} شهر` : `${months} months ago`;
-                })();
-
-                return (
-                  <div key={review.id} className="p-4 rounded-2xl bg-card border border-border space-y-2">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0 text-sm font-bold text-primary">
-                          {reviewerName.charAt(0).toUpperCase()}
-                        </div>
+              {/* QA List */}
+              {qas.length > 0 ? (
+                <div className="space-y-4">
+                  {qas.map((qa) => (
+                    <div key={qa.id} className="p-5 rounded-2xl bg-card border border-border space-y-3 text-start">
+                      <div className="flex items-start gap-2.5">
+                        <span className="text-sm font-black text-amber-500 bg-amber-500/10 size-6 rounded-lg flex items-center justify-center shrink-0">❓</span>
                         <div>
-                          <p className="text-sm font-semibold">{reviewerName}</p>
-                          <p className="text-xs text-muted-foreground">{timeAgo}</p>
+                          <p className="text-sm font-bold text-foreground leading-relaxed font-cairo">{qa.question}</p>
+                          <span className="text-[10px] text-muted-foreground mt-0.5 block">
+                            {new Date(qa.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          </span>
                         </div>
                       </div>
-                      <StarRating rating={review.rating} size="sm" />
+                      
+                      {qa.answer ? (
+                        <div className="ps-8 border-s-2 border-primary/20 space-y-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md font-cairo">🏪 {t('رد المتجر', 'Seller Reply')}</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground leading-relaxed font-cairo">{qa.answer}</p>
+                        </div>
+                      ) : (
+                        <div className="ps-8 border-s-2 border-dashed border-muted/50">
+                          <p className="text-xs italic text-muted-foreground font-cairo">{t('بانتظار رد التاجر قريباً...', 'Pending merchant reply soon...')}</p>
+                        </div>
+                      )}
                     </div>
-                    {review.title && (
-                      <p className="text-sm font-semibold text-foreground">{review.title}</p>
-                    )}
-                    {review.comment && (
-                      <p className="text-sm text-muted-foreground leading-relaxed">{review.comment}</p>
-                    )}
+                  ))}
+                </div>
+              ) : (
+                <div className="p-8 text-center bg-muted/20 border border-dashed border-border rounded-2xl">
+                  <p className="text-muted-foreground font-cairo">{t('لا توجد أسئلة سابقة لهذا المنتج. كن أول من يسأل!', 'No previous questions for this product. Be the first to ask!')}</p>
+                </div>
+              )}
+
+              {/* Submit Question Form */}
+              <div className="p-5 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-border space-y-4 text-start font-cairo">
+                <h4 className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <span>💬 {t('لديك سؤال أو استفسار؟ اطرحه الآن وسيجيبك التاجر فوراً:', 'Have a question? Ask now and the merchant will answer you:')}</span>
+                </h4>
+                
+                <div className="space-y-3">
+                  <textarea
+                    value={newQuestion}
+                    onChange={(e) => setNewQuestion(e.target.value)}
+                    placeholder={t('اكتب سؤالك هنا بوضوح (مثال: هل يتوفر مقاس أكبر؟)...', 'Type your question here clearly (e.g. Does it have a warranty?)...')}
+                    rows={3}
+                    className="w-full text-sm p-3 bg-background border border-border rounded-xl focus:ring-1 focus:ring-primary focus:outline-none placeholder:text-muted-foreground/60 text-foreground"
+                  />
+
+                  {qaSuccessMessage && (
+                    <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 p-2.5 rounded-lg text-center font-cairo">
+                      {qaSuccessMessage}
+                    </p>
+                  )}
+
+                  {qaErrorMessage && (
+                    <p className="text-xs font-bold text-red-600 dark:text-red-400 bg-red-500/10 p-2.5 rounded-lg text-center font-cairo">
+                      {qaErrorMessage}
+                    </p>
+                  )}
+
+                  <div className="flex justify-end">
+                    <Button
+                      disabled={isSubmittingQuestion || !newQuestion.trim()}
+                      onClick={async () => {
+                        setIsSubmittingQuestion(true);
+                        setQaSuccessMessage('');
+                        setQaErrorMessage('');
+                        try {
+                          const res = await fetch('/api/products/qa', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              productId: product.id,
+                              question: newQuestion,
+                              userId: useAuthStore.getState().user?.id || null
+                            })
+                          });
+                          const data = await res.json();
+                          if (data.success) {
+                            setQaSuccessMessage(t(
+                              '🎉 تم إرسال سؤالك للإدارة! سيتم مراجعته والرد عليه من قبل التاجر قريباً.',
+                              '🎉 Your question has been submitted! It will be reviewed and answered by the merchant soon.'
+                            ));
+                            setNewQuestion('');
+                          } else {
+                            throw new Error(data.error);
+                          }
+                        } catch (err: any) {
+                          setQaErrorMessage(t('❌ فشل إرسال السؤال. يرجى المحاولة لاحقاً.', '❌ Failed to submit question. Please try again.'));
+                        } finally {
+                          setIsSubmittingQuestion(false);
+                        }
+                      }}
+                      className="font-bold gap-2 text-xs"
+                    >
+                      {isSubmittingQuestion ? t('جاري الإرسال...', 'Sending...') : t('إرسال السؤال', 'Submit Question')}
+                    </Button>
                   </div>
-                );
-              })}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* ── RELATED PRODUCTS ── */}
         {related.length > 0 && (
           <div className="mt-12">
-            <h2 className="text-2xl font-bold mb-6">{t('منتجات مشابهة', 'Related Products')}</h2>
+            <h2 className="text-2xl font-bold mb-6 text-foreground">{t('منتجات مشابهة', 'Related Products')}</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {related.map((p) => {
                 let imgs: string[] = [];
@@ -858,10 +1328,10 @@ export default function ProductDetailPage() {
                       ) : (
                         <Package className="size-10 text-muted-foreground/30 m-auto mt-8" />
                       )}
-                      {disc > 0 && <Badge className="absolute top-2 start-2 bg-red-500 text-white text-xs">-{disc}%</Badge>}
+                      {disc > 0 && <Badge className="absolute top-2 start-2 bg-red-500 text-white text-xs font-bold">-{disc}%</Badge>}
                     </div>
-                    <CardContent className="p-3">
-                      <p className="text-xs font-semibold line-clamp-2 mb-1">{p.name}</p>
+                    <CardContent className="p-3 text-start">
+                      <p className="text-xs font-semibold line-clamp-2 mb-1 text-foreground">{p.name}</p>
                       <div className="flex items-center gap-1 mb-1">
                         <StarRating rating={p.rating} size="sm" />
                         <span className="text-xs text-muted-foreground">({p.soldCount})</span>
