@@ -386,7 +386,7 @@ export default function ProductDetailPage() {
               let daysMax = 3;
               if (effectivePrice <= 400) { daysMin = 1; daysMax = 2; }
               else if (effectivePrice <= 600) { daysMin = 2; daysMax = 3; }
-              else if (effectivePrice <= 900) { daysMin = 3; daysMax: 5; }
+              else if (effectivePrice <= 900) { daysMin = 3; daysMax = 5; }
               else { daysMin = 5; daysMax = 7; }
 
               return {
