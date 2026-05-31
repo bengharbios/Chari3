@@ -103,11 +103,66 @@ interface RelatedProduct {
   soldCount: number;
 }
 
+// All 58 Algerian wilayas — used as fallback when API states are not yet loaded
 const ALGERIAN_PROVINCES = [
-  { key: '16', nameAr: 'الجزائر العاصمة', nameEn: 'Algiers', daysMin: 1, daysMax: 2, fee: 400 },
-  { key: '31', nameAr: 'وهران', nameEn: 'Oran', daysMin: 2, daysMax: 3, fee: 600 },
-  { key: '25', nameAr: 'قسنطينة', nameEn: 'Constantine', daysMin: 2, daysMax: 3, fee: 600 },
-  { key: '1', nameAr: 'أدرار', nameEn: 'Adrar', daysMin: 5, daysMax: 7, fee: 900 },
+  { key: '1',  nameAr: 'أدرار',               nameEn: 'Adrar',               daysMin: 5, daysMax: 7, fee: 1200 },
+  { key: '2',  nameAr: 'الشلف',               nameEn: 'Chlef',               daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '3',  nameAr: 'الأغواط',             nameEn: 'Laghouat',            daysMin: 3, daysMax: 5, fee: 800 },
+  { key: '4',  nameAr: 'أم البواقي',          nameEn: 'Oum El Bouaghi',      daysMin: 3, daysMax: 4, fee: 700 },
+  { key: '5',  nameAr: 'باتنة',               nameEn: 'Batna',               daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '6',  nameAr: 'بجاية',               nameEn: 'Bejaia',              daysMin: 2, daysMax: 3, fee: 500 },
+  { key: '7',  nameAr: 'بسكرة',               nameEn: 'Biskra',              daysMin: 3, daysMax: 4, fee: 800 },
+  { key: '8',  nameAr: 'بشار',                nameEn: 'Bechar',              daysMin: 4, daysMax: 6, fee: 1000 },
+  { key: '9',  nameAr: 'البليدة',             nameEn: 'Blida',               daysMin: 1, daysMax: 2, fee: 400 },
+  { key: '10', nameAr: 'البويرة',             nameEn: 'Bouira',              daysMin: 2, daysMax: 3, fee: 500 },
+  { key: '11', nameAr: 'تمنراست',             nameEn: 'Tamanrasset',         daysMin: 5, daysMax: 7, fee: 1500 },
+  { key: '12', nameAr: 'تبسة',                nameEn: 'Tebessa',             daysMin: 3, daysMax: 4, fee: 700 },
+  { key: '13', nameAr: 'تلمسان',              nameEn: 'Tlemcen',             daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '14', nameAr: 'تيارت',               nameEn: 'Tiaret',              daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '15', nameAr: 'تيزي وزو',            nameEn: 'Tizi Ouzou',          daysMin: 2, daysMax: 3, fee: 500 },
+  { key: '16', nameAr: 'الجزائر العاصمة',     nameEn: 'Algiers',             daysMin: 1, daysMax: 2, fee: 300 },
+  { key: '17', nameAr: 'الجلفة',              nameEn: 'Djelfa',              daysMin: 3, daysMax: 4, fee: 700 },
+  { key: '18', nameAr: 'جيجل',                nameEn: 'Jijel',               daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '19', nameAr: 'سطيف',                nameEn: 'Setif',               daysMin: 2, daysMax: 3, fee: 500 },
+  { key: '20', nameAr: 'سعيدة',               nameEn: 'Saida',               daysMin: 3, daysMax: 4, fee: 700 },
+  { key: '21', nameAr: 'سكيكدة',              nameEn: 'Skikda',              daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '22', nameAr: 'سيدي بلعباس',         nameEn: 'Sidi Bel Abbes',      daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '23', nameAr: 'عنابة',               nameEn: 'Annaba',              daysMin: 2, daysMax: 3, fee: 500 },
+  { key: '24', nameAr: 'قالمة',               nameEn: 'Guelma',              daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '25', nameAr: 'قسنطينة',             nameEn: 'Constantine',         daysMin: 2, daysMax: 3, fee: 500 },
+  { key: '26', nameAr: 'المدية',              nameEn: 'Medea',               daysMin: 2, daysMax: 3, fee: 500 },
+  { key: '27', nameAr: 'مستغانم',             nameEn: 'Mostaganem',          daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '28', nameAr: 'المسيلة',             nameEn: "M'Sila",              daysMin: 3, daysMax: 4, fee: 600 },
+  { key: '29', nameAr: 'معسكر',               nameEn: 'Mascara',             daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '30', nameAr: 'ورقلة',               nameEn: 'Ouargla',             daysMin: 4, daysMax: 5, fee: 900 },
+  { key: '31', nameAr: 'وهران',               nameEn: 'Oran',                daysMin: 2, daysMax: 3, fee: 500 },
+  { key: '32', nameAr: 'البيض',               nameEn: 'El Bayadh',           daysMin: 4, daysMax: 5, fee: 800 },
+  { key: '33', nameAr: 'إليزي',               nameEn: 'Illizi',              daysMin: 5, daysMax: 7, fee: 1500 },
+  { key: '34', nameAr: 'برج بوعريريج',        nameEn: 'Bordj Bou Arreridj',  daysMin: 2, daysMax: 3, fee: 500 },
+  { key: '35', nameAr: 'بومرداس',             nameEn: 'Boumerdes',           daysMin: 1, daysMax: 2, fee: 400 },
+  { key: '36', nameAr: 'الطارف',              nameEn: 'El Tarf',             daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '37', nameAr: 'تيندوف',              nameEn: 'Tindouf',             daysMin: 5, daysMax: 7, fee: 1500 },
+  { key: '38', nameAr: 'تيسمسيلت',            nameEn: 'Tissemsilt',          daysMin: 3, daysMax: 4, fee: 600 },
+  { key: '39', nameAr: 'الوادي',              nameEn: 'El Oued',             daysMin: 4, daysMax: 5, fee: 800 },
+  { key: '40', nameAr: 'خنشلة',               nameEn: 'Khenchela',           daysMin: 3, daysMax: 4, fee: 700 },
+  { key: '41', nameAr: 'سوق أهراس',           nameEn: 'Souk Ahras',          daysMin: 3, daysMax: 4, fee: 700 },
+  { key: '42', nameAr: 'تيبازة',              nameEn: 'Tipaza',              daysMin: 1, daysMax: 2, fee: 400 },
+  { key: '43', nameAr: 'ميلة',                nameEn: 'Mila',                daysMin: 2, daysMax: 3, fee: 500 },
+  { key: '44', nameAr: 'عين الدفلى',          nameEn: 'Ain Defla',           daysMin: 2, daysMax: 3, fee: 500 },
+  { key: '45', nameAr: 'النعامة',             nameEn: 'Naama',               daysMin: 4, daysMax: 5, fee: 900 },
+  { key: '46', nameAr: 'عين تموشنت',          nameEn: 'Ain Temouchent',      daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '47', nameAr: 'غرداية',              nameEn: 'Ghardaia',            daysMin: 4, daysMax: 5, fee: 900 },
+  { key: '48', nameAr: 'غليزان',              nameEn: 'Relizane',            daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '49', nameAr: 'تيميمون',             nameEn: 'Timimoun',            daysMin: 5, daysMax: 7, fee: 1200 },
+  { key: '50', nameAr: 'برج باجي مختار',      nameEn: 'Bordj Badji Mokhtar', daysMin: 5, daysMax: 7, fee: 1500 },
+  { key: '51', nameAr: 'أولاد جلال',          nameEn: 'Ouled Djellal',       daysMin: 4, daysMax: 5, fee: 800 },
+  { key: '52', nameAr: 'بني عباس',            nameEn: 'Beni Abbes',          daysMin: 5, daysMax: 7, fee: 1200 },
+  { key: '53', nameAr: 'عين صالح',            nameEn: 'In Salah',            daysMin: 5, daysMax: 7, fee: 1500 },
+  { key: '54', nameAr: 'عين قزام',            nameEn: 'In Guezzam',          daysMin: 5, daysMax: 7, fee: 1500 },
+  { key: '55', nameAr: 'تقرت',                nameEn: 'Touggourt',           daysMin: 4, daysMax: 5, fee: 900 },
+  { key: '56', nameAr: 'جانت',                nameEn: 'Djanet',              daysMin: 5, daysMax: 7, fee: 1500 },
+  { key: '57', nameAr: 'المغير',              nameEn: "El M'Ghair",          daysMin: 4, daysMax: 5, fee: 800 },
+  { key: '58', nameAr: 'المنيعة',             nameEn: 'El Meniaa',           daysMin: 5, daysMax: 7, fee: 900 },
 ];
 
 function StarRating({ rating, interactive = false, size = 'sm' }: { rating: number; interactive?: boolean; size?: 'sm' | 'md' | 'lg' }) {
@@ -308,53 +363,56 @@ export default function ProductDetailPage() {
         setSimulatedOrders(Math.floor(Math.random() * 8) + 3);
       }
 
-      // Fetch dynamic states list & overridden merchant custom rates
+      // Fetch dynamic states list & merchant-specific overridden rates
+      // Logic: API returns all 58 wilayas (from DB or fallback static data)
+      // Each wilaya has: s.price = merchant custom price (if set), s.defaultPrice = global default
+      // s.isHidden = true means this merchant has disabled shipping to that wilaya
       const storeParam = product.storeId ? `&storeId=${product.storeId}` : '';
       const sellerParam = product.sellerId ? `&sellerId=${product.sellerId}` : '';
       fetch(`/api/regions/states?countryCode=DZ${storeParam}${sellerParam}`)
         .then(r => r.json())
         .then(d => {
           if (d.success && Array.isArray(d.states) && d.states.length > 0) {
+            // Filter out wilayas that the merchant has hidden/disabled
             const activeStates = d.states.filter((s: any) => !s.isHidden);
             const mapped = activeStates.map((s: any) => {
+              // Priority: merchant custom price > DB default price > static fallback
+              const effectivePrice = s.price !== undefined && s.price !== null
+                ? s.price
+                : (s.defaultPrice || 500);
+
+              // Estimate delivery time based on price (proxy for distance)
               let daysMin = 2;
               let daysMax = 3;
-              const price = s.defaultPrice || 500;
-              if (price <= 400) {
-                daysMin = 1;
-                daysMax = 2;
-              } else if (price <= 600) {
-                daysMin = 2;
-                daysMax = 3;
-              } else if (price <= 800) {
-                daysMin = 3;
-                daysMax = 4;
-              } else {
-                daysMin = 5;
-                daysMax = 7;
-              }
+              if (effectivePrice <= 400) { daysMin = 1; daysMax = 2; }
+              else if (effectivePrice <= 600) { daysMin = 2; daysMax = 3; }
+              else if (effectivePrice <= 900) { daysMin = 3; daysMax: 5; }
+              else { daysMin = 5; daysMax = 7; }
 
               return {
-                key: s.code,
+                key: s.code || s.id,
                 nameAr: s.nameAr,
                 nameEn: s.nameEn || s.nameAr,
                 daysMin,
                 daysMax,
-                fee: s.price !== undefined ? s.price : price
+                fee: effectivePrice,
+                isCustomPrice: s.isCustomPrice || false,
               };
             });
-            setLoadedProvinces(mapped);
+
             if (mapped.length > 0) {
-              const algiersState = mapped.find((m: any) => m.key === '16');
-              if (algiersState) {
-                setSelectedProvince('16');
-              } else {
-                setSelectedProvince(mapped[0].key);
-              }
+              setLoadedProvinces(mapped);
+              // Default to Algiers if available, otherwise first wilaya
+              const algiers = mapped.find((m: any) => m.key === '16');
+              setSelectedProvince(algiers ? '16' : mapped[0].key);
             }
+            // If mapped is empty (merchant hides all), keep fallback
           }
+          // If API call fails or returns no states, loadedProvinces stays as ALGERIAN_PROVINCES (all 58)
         })
-        .catch(() => {});
+        .catch(() => {
+          // On error, loadedProvinces already has all 58 wilayas from ALGERIAN_PROVINCES
+        });
     }
   }, [product]);
 

@@ -150,6 +150,31 @@ export default function Header() {
     }
   }, [items, cartStep]);
 
+  // Load cities when wilaya changes
+  useEffect(() => {
+    if (!selectedState) { setCustomCities([]); setSelectedCity(''); return; }
+    setIsLoadingCities(true);
+    const p = items[0]?.product;
+    const pStoreId = p?.store?.id || (p as any)?.storeId;
+    const pSellerId = p?.seller?.id || (p as any)?.sellerId;
+    const storeParam = pStoreId ? `&storeId=${pStoreId}` : '';
+    const sellerParam = pSellerId ? `&sellerId=${pSellerId}` : '';
+    fetch(`/api/regions/cities?stateCode=${selectedState}${storeParam}${sellerParam}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && Array.isArray(d.cities)) {
+          setCustomCities(d.cities.filter((c: any) => !c.isHidden));
+          if (d.cities.length > 0) setSelectedCity(d.cities[0].id);
+          else setSelectedCity('');
+        } else {
+          setCustomCities([]);
+          setSelectedCity('');
+        }
+      })
+      .catch(() => { setCustomCities([]); })
+      .finally(() => setIsLoadingCities(false));
+  }, [selectedState]);
+
   const getShippingCost = () => {
     if (!city) return 0;
     const subtotal = getSubtotal();
@@ -224,8 +249,17 @@ export default function Header() {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
-  const [city, setCity] = useState('');
   const [note, setNote] = useState('');
+
+  // Hierarchical address states (Wilaya → Baladiyah → Neighborhood)
+  const [selectedState, setSelectedState] = useState(''); // wilaya code e.g. '16'
+  const [selectedCity, setSelectedCity] = useState(''); // city id from DB
+  const [selectedNeighborhood, setSelectedNeighborhood] = useState('');
+  const [customCities, setCustomCities] = useState<any[]>([]);
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
+
+  // Keep city in sync with selectedState for backward compat with shipping calc
+  const city = selectedState;
 
   // Pre-fill form with user data on login
   useEffect(() => {
@@ -263,7 +297,7 @@ export default function Header() {
       return;
     }
 
-    if (!fullName || !phone || !address || !city) {
+    if (!fullName || !phone || !address || !selectedState) {
       toast.error(t('الرجاء ملء جميع الحقول المطلوبة', 'Please fill all required fields'));
       return;
     }
@@ -280,8 +314,10 @@ export default function Header() {
       }));
 
       const shippingCost = getShippingCost();
-      const matchedWilaya = dynamicWilayas.find(w => w.id === city);
-      const cityName = matchedWilaya ? (isRTL ? matchedWilaya.nameAr : matchedWilaya.nameEn) : city;
+      const matchedWilaya = dynamicWilayas.find(w => w.id === selectedState);
+      const wilayaName = matchedWilaya ? (isRTL ? matchedWilaya.nameAr : matchedWilaya.nameEn) : selectedState;
+      const matchedCity = customCities.find(c => c.id === selectedCity);
+      const cityName = matchedCity ? (isRTL ? matchedCity.nameAr : matchedCity.nameEn) : '';
 
       const discount = getDiscountAmount();
 
@@ -297,7 +333,11 @@ export default function Header() {
           fullName,
           phone,
           street: address,
-          city: cityName,
+          wilaya: wilayaName,
+          wilayaCode: selectedState,
+          city: cityName || wilayaName,
+          municipality: cityName,
+          neighborhood: selectedNeighborhood,
           country: 'DZ',
         },
         shippingMethod: 'standard',
