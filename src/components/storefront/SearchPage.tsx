@@ -25,7 +25,7 @@ export default function SearchPage() {
       
       setLoading(true);
       try {
-        const res = await fetch(`/api/products/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`/api/products?q=${encodeURIComponent(query)}&limit=50&status=active`);
         const data = await res.json();
         if (data.products) {
           setResults(data.products);

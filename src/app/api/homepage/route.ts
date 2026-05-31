@@ -41,7 +41,7 @@ export async function GET() {
             },
           },
         },
-        take: 100,
+        take: 200,
       }),
 
       // Top sellers by rating and level
@@ -149,7 +149,7 @@ export async function GET() {
     
     // Sort in-memory
     rankedProducts.sort((a, b) => b.score - a.score);
-    const featuredProducts = rankedProducts.slice(0, 20);
+    const featuredProducts = rankedProducts.slice(0, 50);
 
     // Track impressions for ads (fire and forget)
     if (advertisements.length > 0) {

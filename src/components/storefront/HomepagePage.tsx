@@ -136,6 +136,7 @@ export default function StorefrontHomepage() {
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [filteredProducts, setFilteredProducts] = useState<HomepageData['featuredProducts']>([]);
   const [isFilterLoading, setIsFilterLoading] = useState(false);
+  const [displayCount, setDisplayCount] = useState(20);
 
   useEffect(() => {
     fetch('/api/homepage')
@@ -166,6 +167,11 @@ export default function StorefrontHomepage() {
     const timer = setTimeout(fetchFilteredProducts, 500);
     return () => clearTimeout(timer);
   }, [fetchFilteredProducts]);
+
+  // Reset display count when filtered products change
+  useEffect(() => {
+    setDisplayCount(20);
+  }, [filteredProducts]);
 
   const hasActiveFilters = !!(filterSearch || filterCategory || filterMinPrice || filterMaxPrice || filterSort !== 'newest');
 
@@ -431,6 +437,7 @@ export default function StorefrontHomepage() {
                   ))
                 : productsToShow
                     .filter((product) => product && product.id)
+                    .slice(0, displayCount)
                     .map((product) => {
                       let images: string[] = [];
                       if (Array.isArray(product.images)) {
@@ -502,6 +509,22 @@ export default function StorefrontHomepage() {
                       );
                     })}
             </div>
+            {productsToShow.filter(p => p && p.id).length > displayCount && (
+              <div className="flex justify-center mt-8">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="gap-2 min-w-[200px] border-primary/30 hover:border-primary hover:bg-primary/5"
+                  onClick={() => setDisplayCount(prev => prev + 20)}
+                >
+                  <ShoppingBag className="size-4" />
+                  {t('عرض المزيد', 'Load More')}
+                  <Badge variant="secondary" className="ms-1">
+                    +{Math.min(20, productsToShow.filter(p => p && p.id).length - displayCount)}
+                  </Badge>
+                </Button>
+              </div>
+            )}
           </section>
         );
 
@@ -638,6 +661,15 @@ export default function StorefrontHomepage() {
                   )}
                 </div>
               )}
+              <div className="flex justify-center mt-8">
+                <Button
+                  variant="outline"
+                  className="border-white/30 text-white hover:bg-white/10 gap-2"
+                  onClick={() => setActiveMerchantTab(activeMerchantTab === 'stores' ? 'sellers' : 'stores')}
+                >
+                  {t('عرض جميع التجار', 'View All Merchants')}
+                </Button>
+              </div>
             </div>
           </section>
         );
