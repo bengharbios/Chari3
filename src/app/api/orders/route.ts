@@ -199,6 +199,38 @@ export async function PATCH(request: Request) {
           note: note || `Order status updated to: ${status}`,
         },
       });
+
+      // Notify buyer of status change
+      try {
+        const orderWithBuyer = await db.order.findUnique({
+          where: { id },
+          select: { buyerId: true, orderNumber: true, total: true }
+        });
+        if (orderWithBuyer?.buyerId) {
+          const statusLabels: Record<string, { ar: string; en: string }> = {
+            confirmed: { ar: 'تم تأكيد طلبك', en: 'Your order has been confirmed' },
+            shipped: { ar: 'تم شحن طلبك', en: 'Your order has been shipped' },
+            delivered: { ar: 'تم تسليم طلبك', en: 'Your order has been delivered' },
+            cancelled: { ar: 'تم إلغاء طلبك', en: 'Your order has been cancelled' },
+          };
+          const label = statusLabels[status];
+          if (label) {
+            await db.notification.create({
+              data: {
+                title: `${label.ar} 📦`,
+                titleEn: `${label.en} 📦`,
+                body: `طلبك رقم #${orderWithBuyer.orderNumber} - ${label.ar}`,
+                bodyEn: `Order #${orderWithBuyer.orderNumber} - ${label.en}`,
+                type: 'shipment',
+                data: JSON.stringify({ orderId: id, orderNumber: orderWithBuyer.orderNumber }),
+                userId: orderWithBuyer.buyerId,
+              }
+            });
+          }
+        }
+      } catch (notifError) {
+        console.error('[buyer-notification]', notifError);
+      }
     }
 
     return NextResponse.json({ success: true, order: updatedOrder });
