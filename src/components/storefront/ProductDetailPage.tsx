@@ -50,6 +50,8 @@ interface ProductDetail {
   status: string;
   isFeatured: boolean;
   specifications?: string;
+  sellerId?: string | null;
+  storeId?: string | null;
   sku?: string | null;
   variants?: ProductVariantItem[];
   volumeDiscounts?: string | null;
@@ -102,10 +104,10 @@ interface RelatedProduct {
 }
 
 const ALGERIAN_PROVINCES = [
-  { key: 'algiers', nameAr: 'الجزائر العاصمة', nameEn: 'Algiers', daysMin: 1, daysMax: 2, fee: 400 },
-  { key: 'oran', nameAr: 'وهران', nameEn: 'Oran', daysMin: 2, daysMax: 3, fee: 600 },
-  { key: 'constantine', nameAr: 'قسنطينة', nameEn: 'Constantine', daysMin: 2, daysMax: 3, fee: 600 },
-  { key: 'adrar', nameAr: 'أدرار', nameEn: 'Adrar', daysMin: 5, daysMax: 7, fee: 900 },
+  { key: '16', nameAr: 'الجزائر العاصمة', nameEn: 'Algiers', daysMin: 1, daysMax: 2, fee: 400 },
+  { key: '31', nameAr: 'وهران', nameEn: 'Oran', daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '25', nameAr: 'قسنطينة', nameEn: 'Constantine', daysMin: 2, daysMax: 3, fee: 600 },
+  { key: '1', nameAr: 'أدرار', nameEn: 'Adrar', daysMin: 5, daysMax: 7, fee: 900 },
 ];
 
 function StarRating({ rating, interactive = false, size = 'sm' }: { rating: number; interactive?: boolean; size?: 'sm' | 'md' | 'lg' }) {
@@ -165,7 +167,8 @@ export default function ProductDetailPage() {
   const [simulatedViews, setSimulatedViews] = useState(15);
   const [simulatedOrders, setSimulatedOrders] = useState(8);
   const [activeTab, setActiveTab] = useState<'reviews' | 'qa'>('reviews');
-  const [selectedProvince, setSelectedProvince] = useState('algiers');
+  const [selectedProvince, setSelectedProvince] = useState('16');
+  const [loadedProvinces, setLoadedProvinces] = useState<any[]>(ALGERIAN_PROVINCES);
 
   let images: string[] = [];
   if (product) {
@@ -281,7 +284,7 @@ export default function ProductDetailPage() {
     }
   }, [product]);
 
-  // Setup Simulated Urgency stats
+  // Setup Simulated Urgency stats & Load Dynamic Wilayas / Shipping Rates
   useEffect(() => {
     if (product) {
       if (product.urgencySettings) {
@@ -301,6 +304,51 @@ export default function ProductDetailPage() {
         setSimulatedViews(Math.floor(Math.random() * 20) + 10);
         setSimulatedOrders(Math.floor(Math.random() * 8) + 3);
       }
+
+      // Fetch dynamic states list & overridden merchant custom rates
+      const storeParam = product.storeId ? `&storeId=${product.storeId}` : '';
+      const sellerParam = product.sellerId ? `&sellerId=${product.sellerId}` : '';
+      fetch(`/api/regions/states?countryCode=DZ${storeParam}${sellerParam}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.success && Array.isArray(d.states) && d.states.length > 0) {
+            const mapped = d.states.map((s: any) => {
+              let daysMin = 2;
+              let daysMax = 3;
+              const price = s.defaultPrice || 500;
+              if (price <= 400) {
+                daysMin = 1;
+                daysMax = 2;
+              } else if (price <= 600) {
+                daysMin = 2;
+                daysMax = 3;
+              } else if (price <= 800) {
+                daysMin = 3;
+                daysMax = 4;
+              } else {
+                daysMin = 5;
+                daysMax = 7;
+              }
+
+              return {
+                key: s.code,
+                nameAr: s.nameAr,
+                nameEn: s.nameEn || s.nameAr,
+                daysMin,
+                daysMax,
+                fee: s.price !== undefined ? s.price : price
+              };
+            });
+            setLoadedProvinces(mapped);
+            const algiersState = mapped.find((m: any) => m.key === '16');
+            if (algiersState) {
+              setSelectedProvince('16');
+            } else {
+              setSelectedProvince(mapped[0].key);
+            }
+          }
+        })
+        .catch(() => {});
     }
   }, [product]);
 
@@ -913,18 +961,19 @@ export default function ProductDetailPage() {
                     <select
                       value={selectedProvince}
                       onChange={(e) => setSelectedProvince(e.target.value)}
-                      className="text-xs font-semibold bg-background border border-border rounded-lg px-2 py-1 focus:ring-1 focus:ring-primary focus:outline-none"
+                      className="text-xs font-semibold bg-background border border-border rounded-lg px-2 py-1 focus:ring-1 focus:ring-primary focus:outline-none max-w-[170px]"
                     >
-                      <option value="algiers">📍 {t('الجزائر العاصمة', 'Algiers')}</option>
-                      <option value="oran">📍 {t('وهران', 'Oran')}</option>
-                      <option value="constantine">📍 {t('قسنطينة', 'Constantine')}</option>
-                      <option value="adrar">📍 {t('أدرار', 'Adrar')}</option>
+                      {loadedProvinces.map((prov) => (
+                        <option key={prov.key} value={prov.key}>
+                          📍 {locale === 'ar' ? prov.nameAr : prov.nameEn}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
                   {/* Dynamic delivery dates and fee calculation */}
                   {(() => {
-                    const prov = ALGERIAN_PROVINCES.find(p => p.key === selectedProvince) || ALGERIAN_PROVINCES[0];
+                    const prov = loadedProvinces.find(p => p.key === selectedProvince) || loadedProvinces[0];
                     const { minStr, maxStr } = getDeliveryDateRange(prov.daysMin, prov.daysMax);
                     return (
                       <div className="space-y-2 text-start font-cairo">
