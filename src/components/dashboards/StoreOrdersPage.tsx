@@ -124,6 +124,26 @@ export default function StoreOrdersPage() {
     fetchOrders();
   }, [user?.id]);
 
+  const handleUpdateStatus = async (status: string) => {
+    if (!selectedOrder) return;
+    try {
+      const res = await fetch(`/api/orders`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: selectedOrder.id, status }),
+      });
+      if (!res.ok) throw new Error('Failed to update status');
+      
+      const updatedOrder = { ...selectedOrder, status };
+      setSelectedOrder(updatedOrder);
+      setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+      toast.success(t('تم تحديث حالة الطلب بنجاح', 'Order status updated successfully'));
+    } catch (error) {
+      console.error(error);
+      toast.error(t('حدث خطأ أثناء تحديث الحالة', 'Error updating status'));
+    }
+  };
+
   // Handle Export CSV
   const handleExportCSV = () => {
     if (orders.length === 0) {
@@ -590,12 +610,23 @@ export default function StoreOrdersPage() {
 
                 {/* Print and Actions */}
                 <div className="flex gap-3 pt-2">
+                  <select 
+                    className="flex-1 bg-background border border-white/10 text-foreground rounded-xl px-3 h-11 focus:ring-primary focus:border-primary text-sm font-bold appearance-none cursor-pointer"
+                    value={selectedOrder.status}
+                    onChange={(e) => handleUpdateStatus(e.target.value)}
+                  >
+                    <option value="pending">{t('معلق', 'Pending')}</option>
+                    <option value="confirmed">{t('قيد التجهيز', 'Processing')}</option>
+                    <option value="shipped">{t('تم الشحن', 'Shipped')}</option>
+                    <option value="delivered">{t('تم التوصيل', 'Delivered')}</option>
+                    <option value="cancelled">{t('ملغي', 'Cancelled')}</option>
+                  </select>
                   <Button
                     onClick={handlePrintInvoice}
                     className="flex-1 rounded-xl font-bold bg-white/5 hover:bg-white/10 text-foreground border border-white/10 h-11"
                   >
                     <Printer className="h-4 w-4 me-2 text-primary" />
-                    {t('طباعة الفاتورة الورقية A4', 'Print Invoice')}
+                    {t('طباعة الفاتورة', 'Print Invoice')}
                   </Button>
                 </div>
               </div>
