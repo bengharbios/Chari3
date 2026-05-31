@@ -403,7 +403,7 @@ export async function GET(req: NextRequest) {
           adminNote VARCHAR(191) NULL,
           createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
           updatedAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
-          userId VARCHAR(191) NOT NULL,
+          userId VARCHAR(191) NULL,
           PRIMARY KEY (id)
         ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
       `);
@@ -470,6 +470,22 @@ export async function GET(req: NextRequest) {
       results.push('Ensured City table exists');
     } catch (e: any) {
       results.push(`Error creating City table: ${e.message}`);
+    }
+
+    // 19. Ensure CategoryRequest userId is nullable
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE CategoryRequest MODIFY COLUMN userId VARCHAR(191) NULL;`);
+      results.push('Modified CategoryRequest userId column to be nullable');
+    } catch (e: any) {
+      results.push(`Error modifying CategoryRequest userId: ${e.message}`);
+    }
+
+    // 20. Clean up orphaned CategoryRequest records
+    try {
+      await db.$executeRawUnsafe(`DELETE FROM CategoryRequest WHERE userId NOT IN (SELECT id FROM User) OR userId IS NULL OR userId = '';`);
+      results.push('Cleaned up orphaned CategoryRequest records');
+    } catch (e: any) {
+      results.push(`Error cleaning up CategoryRequest: ${e.message}`);
     }
 
     return NextResponse.json({ 
