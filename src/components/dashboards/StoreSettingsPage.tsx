@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import {
-  Settings, Store, Image as ImageIcon, MapPin, Truck, CreditCard, Bell, Save, Globe, Loader2, Play, CheckCircle
+  Settings, Store, Image as ImageIcon, MapPin, Truck, CreditCard, Bell, Save, Globe, Loader2, Play, CheckCircle, Trash2
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
@@ -124,7 +124,37 @@ export default function StoreSettingsPage() {
     expressPrice: 800,
     freeThreshold: 10000,
     customWilayas: {}, // stateId -> overridePrice
+    customCities: {}, // cityId -> overridePrice
+    hiddenCities: [], // list of disabled cityId
+    storeCities: [], // list of custom store-specific zones
   });
+
+  const [selectedSettingsWilayaCode, setSelectedSettingsWilayaCode] = useState('16');
+  const [settingsCities, setSettingsCities] = useState<any[]>([]);
+  const [isLoadingSettingsCities, setIsLoadingSettingsCities] = useState(false);
+  const [newStoreZone, setNewStoreZone] = useState({ nameAr: '', nameEn: '', price: 300 });
+  const [isAddingStoreZone, setIsAddingStoreZone] = useState(false);
+
+  const fetchSettingsCities = async (stateCode: string) => {
+    setIsLoadingSettingsCities(true);
+    try {
+      const res = await fetch(`/api/regions/cities?stateCode=${stateCode}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.cities)) {
+        setSettingsCities(data.cities);
+      }
+    } catch (e) {
+      console.error('Failed to load cities for settings', e);
+    } finally {
+      setIsLoadingSettingsCities(false);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedSettingsWilayaCode) {
+      fetchSettingsCities(selectedSettingsWilayaCode);
+    }
+  }, [selectedSettingsWilayaCode]);
 
   const [statesList, setStatesList] = useState<any[]>(ALGERIAN_WILAYAS);
   const [storeCurrency, setStoreCurrency] = useState<string>('DZD');
@@ -267,7 +297,19 @@ export default function StoreSettingsPage() {
           isActive: s.isActive !== false,
         });
 
-        if (s.shippingRates) setShippingRates(s.shippingRates);
+        if (s.shippingRates) {
+          const rates = typeof s.shippingRates === 'string' ? JSON.parse(s.shippingRates) : s.shippingRates;
+          setShippingRates({
+            enabled: rates.enabled !== false,
+            standardPrice: rates.standardPrice !== undefined ? rates.standardPrice : 400,
+            expressPrice: rates.expressPrice !== undefined ? rates.expressPrice : 800,
+            freeThreshold: rates.freeThreshold !== undefined ? rates.freeThreshold : 10000,
+            customWilayas: rates.customWilayas || {},
+            customCities: rates.customCities || {},
+            hiddenCities: rates.hiddenCities || [],
+            storeCities: rates.storeCities || [],
+          });
+        }
         if (s.shippingIntegrations) setShippingIntegrations(s.shippingIntegrations);
         if (s.paymentDetails) setPaymentDetails(s.paymentDetails);
         if (s.themeSettings) setThemeSettings(s.themeSettings);
@@ -587,6 +629,243 @@ export default function StoreSettingsPage() {
                           );
                         })}
                       </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Municipality-by-Municipality Overrides & Exclusions */}
+                {shippingRates.enabled && (
+                  <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
+                    <CardHeader>
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                          <CardTitle className="text-lg flex items-center gap-2">
+                            <span>🗺️ {t('إدارة شحن البلديات والدواوير المخصصة', 'Municipality Delivery & Rates')}</span>
+                          </CardTitle>
+                          <CardDescription>
+                            {t('اختر الولاية لتفصيل أسعار بلدياتها، حجب بلديات محددة من التوصيل، أو إضافة مناطق شحن مخصصة.', 'Select a state to customize municipality prices, hide specific municipalities, or add custom delivery zones.')}
+                          </CardDescription>
+                        </div>
+
+                        {/* State selector dropdown */}
+                        <div className="flex items-center gap-2">
+                          <Label className="text-xs text-muted-foreground shrink-0">{t('الولاية النشطة:', 'Active Wilaya:')}</Label>
+                          <select
+                            value={selectedSettingsWilayaCode}
+                            onChange={(e) => setSelectedSettingsWilayaCode(e.target.value)}
+                            className="text-xs font-bold bg-background border border-border rounded-xl px-3 py-2 focus:ring-1 focus:ring-primary focus:outline-none min-w-[140px]"
+                          >
+                            {statesList.map((st) => (
+                              <option key={st.id} value={st.code}>
+                                📍 {isAr ? st.nameAr : st.nameEn}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Local zone adding button/form */}
+                      <div className="flex justify-between items-center bg-white/5 p-3 rounded-2xl border border-white/5">
+                        <div>
+                          <h4 className="text-xs font-bold text-foreground">{t('هل تخدم دواوير أو مناطق محلية خاصة؟', 'Do you serve local custom zones?')}</h4>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{t('أضف مناطق توصيل خاصة بمحاذاة متجرك بأسعار مميزة.', 'Add hyper-local custom neighborhoods with customized fees.')}</p>
+                        </div>
+                        <Button 
+                          onClick={() => setIsAddingStoreZone(!isAddingStoreZone)} 
+                          variant="outline" 
+                          size="sm" 
+                          className="rounded-xl text-xs font-bold border-white/10"
+                        >
+                          {isAddingStoreZone ? t('إغلاق', 'Close') : t('➕ إضافة منطقة خاصة', '➕ Add Custom Zone')}
+                        </Button>
+                      </div>
+
+                      {isAddingStoreZone && (
+                        <div className="p-4 bg-muted/40 rounded-2xl border border-white/5 space-y-3 animate-fade-in">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-[10px]">{t('المنطقة بالعربية', 'Zone in Arabic')}</Label>
+                              <Input 
+                                value={newStoreZone.nameAr}
+                                onChange={(e) => setNewStoreZone({ ...newStoreZone, nameAr: e.target.value })}
+                                placeholder="مثال: حي السلام وسط"
+                                className="bg-background rounded-lg h-9 text-xs"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px]">{t('المنطقة بالإنجليزية', 'Zone in English')}</Label>
+                              <Input 
+                                value={newStoreZone.nameEn}
+                                onChange={(e) => setNewStoreZone({ ...newStoreZone, nameEn: e.target.value })}
+                                placeholder="e.g. Hai Salam Center"
+                                className="bg-background rounded-lg h-9 text-xs"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px]">{t('سعر التوصيل (د.ج)', 'Courier Fee (DZD)')}</Label>
+                              <Input 
+                                type="number"
+                                value={newStoreZone.price}
+                                onChange={(e) => setNewStoreZone({ ...newStoreZone, price: parseFloat(e.target.value) || 0 })}
+                                className="bg-background rounded-lg h-9 text-xs font-bold text-center"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex justify-end pt-1">
+                            <Button 
+                              size="sm" 
+                              onClick={() => {
+                                if (!newStoreZone.nameAr.trim()) {
+                                  toast.error(t('يرجى كتابة اسم المنطقة بالعربية!', 'Please enter Arabic zone name!'));
+                                  return;
+                                }
+                                const customZone = {
+                                  id: `store_city_${Math.random().toString(36).substring(2, 9)}`,
+                                  nameAr: newStoreZone.nameAr,
+                                  nameEn: newStoreZone.nameEn || newStoreZone.nameAr,
+                                  price: newStoreZone.price,
+                                  stateCode: selectedSettingsWilayaCode,
+                                };
+                                const updatedStoreCities = [...(shippingRates.storeCities || []), customZone];
+                                setShippingRates({ ...shippingRates, storeCities: updatedStoreCities });
+                                setNewStoreZone({ nameAr: '', nameEn: '', price: 300 });
+                                setIsAddingStoreZone(false);
+                                toast.success(t('تم إضافة منطقة التوصيل الخاصة بك بنجاح!', 'Custom delivery zone successfully added!'));
+                              }} 
+                              className="font-bold text-xs"
+                            >
+                              {t('حفظ المنطقة المخصصة', 'Save Custom Zone')}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Municipalities List */}
+                      {isLoadingSettingsCities ? (
+                        <div className="flex justify-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                        </div>
+                      ) : (
+                        <div className="overflow-y-auto max-h-[300px] border border-white/5 rounded-2xl p-2 space-y-2 bg-slate-950/20">
+                          {/* 1. Global municipalities with overridden rates */}
+                          {settingsCities.map((city) => {
+                            const isHidden = (shippingRates.hiddenCities || []).includes(city.id);
+                            const customPrice = shippingRates.customCities[city.id] !== undefined
+                              ? shippingRates.customCities[city.id]
+                              : '';
+                            const isCustomized = shippingRates.customCities[city.id] !== undefined;
+
+                            return (
+                              <div 
+                                key={city.id} 
+                                className={`flex items-center justify-between p-3 rounded-xl border transition-all text-start ${
+                                  isHidden ? 'bg-red-500/5 border-red-500/10 opacity-70' : 'bg-background/40 border-white/5'
+                                }`}
+                              >
+                                <div className="space-y-1">
+                                  <span className="font-bold text-sm text-foreground">{isAr ? city.nameAr : city.nameEn}</span>
+                                  {isHidden && (
+                                    <span className="ms-2 text-[10px] bg-red-500/20 text-red-500 font-bold px-2 py-0.5 rounded-full">
+                                      {t('محجوبة من الشحن ❌', 'Shipping Disabled ❌')}
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                  {/* Override price input (hidden if shipping is disabled) */}
+                                  {!isHidden && (
+                                    <div className="flex items-center gap-1.5">
+                                      <Input 
+                                        type="number"
+                                        placeholder={String(city.defaultPrice || 500)}
+                                        value={customPrice}
+                                        onChange={(e) => {
+                                          const val = e.target.value === '' ? undefined : parseFloat(e.target.value) || 0;
+                                          const nextCities = { ...shippingRates.customCities };
+                                          if (val === undefined) {
+                                            delete nextCities[city.id];
+                                          } else {
+                                            nextCities[city.id] = val;
+                                          }
+                                          setShippingRates({ ...shippingRates, customCities: nextCities });
+                                        }}
+                                        className="w-24 bg-muted/40 border-white/10 rounded-xl h-8 text-center font-bold text-xs"
+                                      />
+                                      <span className="text-[10px] text-muted-foreground font-bold">{t('د.ج', storeCurrency)}</span>
+                                    </div>
+                                  )}
+
+                                  {/* Hiding Toggle Switch */}
+                                  <div className="flex items-center gap-1">
+                                    <Label className="text-[10px] text-muted-foreground hidden sm:inline">{t('تفعيل التوصيل', 'Enable Delivery')}</Label>
+                                    <Switch 
+                                      checked={!isHidden}
+                                      onCheckedChange={(checked) => {
+                                        let nextHidden = [...(shippingRates.hiddenCities || [])];
+                                        if (checked) {
+                                          // Enable it (remove from hiddenCities)
+                                          nextHidden = nextHidden.filter(id => id !== city.id);
+                                        } else {
+                                          // Disable it (add to hiddenCities)
+                                          if (!nextHidden.includes(city.id)) nextHidden.push(city.id);
+                                        }
+                                        setShippingRates({ ...shippingRates, hiddenCities: nextHidden });
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {/* 2. Store-specific custom municipalities */}
+                          {(shippingRates.storeCities || [])
+                            .filter((sc: any) => sc.stateCode === selectedSettingsWilayaCode)
+                            .map((sc: any) => (
+                              <div key={sc.id} className="flex items-center justify-between p-3 rounded-xl bg-brand/5 border border-brand/20 text-start">
+                                <div className="space-y-0.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-sm text-foreground">{isAr ? sc.nameAr : sc.nameEn}</span>
+                                    <span className="text-[9px] bg-brand/20 text-brand font-bold px-1.5 py-0.5 rounded-full">{t('منطقتك الخاصة 📍', 'Store Zone 📍')}</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-1">
+                                    <Input 
+                                      type="number"
+                                      value={sc.price}
+                                      onChange={(e) => {
+                                        const updatedCities = (shippingRates.storeCities || []).map((c: any) => {
+                                          if (c.id === sc.id) {
+                                            return { ...c, price: parseFloat(e.target.value) || 0 };
+                                          }
+                                          return c;
+                                        });
+                                        setShippingRates({ ...shippingRates, storeCities: updatedCities });
+                                      }}
+                                      className="w-24 bg-muted/40 border-white/10 rounded-xl h-8 text-center font-bold text-xs"
+                                    />
+                                    <span className="text-[10px] text-muted-foreground font-bold">{t('د.ج', storeCurrency)}</span>
+                                  </div>
+
+                                  <Button 
+                                    size="icon" 
+                                    variant="ghost" 
+                                    onClick={() => {
+                                      const updatedCities = (shippingRates.storeCities || []).filter((c: any) => c.id !== sc.id);
+                                      setShippingRates({ ...shippingRates, storeCities: updatedCities });
+                                      toast.success(t('تم إزالة منطقة التوصيل الخاصة بك.', 'Custom delivery zone removed.'));
+                                    }} 
+                                    className="h-8 w-8 text-red-500 hover:bg-red-500/10 rounded-lg"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 )}

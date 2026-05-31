@@ -169,6 +169,9 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState<'reviews' | 'qa'>('reviews');
   const [selectedProvince, setSelectedProvince] = useState('16');
   const [loadedProvinces, setLoadedProvinces] = useState<any[]>(ALGERIAN_PROVINCES);
+  const [loadedCities, setLoadedCities] = useState<any[]>([]);
+  const [selectedCityId, setSelectedCityId] = useState<string>('');
+  const [isLoadingCities, setIsLoadingCities] = useState(false);
 
   let images: string[] = [];
   if (product) {
@@ -351,6 +354,30 @@ export default function ProductDetailPage() {
         .catch(() => {});
     }
   }, [product]);
+
+  // Dynamic Cities Fetcher based on Selected Province
+  useEffect(() => {
+    if (selectedProvince && product) {
+      setIsLoadingCities(true);
+      const storeParam = product.storeId ? `&storeId=${product.storeId}` : '';
+      const sellerParam = product.sellerId ? `&sellerId=${product.sellerId}` : '';
+      fetch(`/api/regions/cities?stateCode=${selectedProvince}${storeParam}${sellerParam}`)
+        .then(r => r.json())
+        .then(d => {
+          if (d.success && Array.isArray(d.cities)) {
+            const activeCities = d.cities.filter((c: any) => !c.isHidden);
+            setLoadedCities(activeCities);
+            if (activeCities.length > 0) {
+              setSelectedCityId(activeCities[0].id);
+            } else {
+              setSelectedCityId('');
+            }
+          }
+        })
+        .catch(() => {})
+        .finally(() => setIsLoadingCities(false));
+    }
+  }, [selectedProvince, product]);
 
   // Dynamic date ranges calculation for Delivery Estimator
   const getDeliveryDateRange = (minDays: number, maxDays: number) => {
@@ -957,24 +984,43 @@ export default function ProductDetailPage() {
                       <Truck className="size-5 text-primary" />
                       <span className="text-sm font-bold text-foreground font-cairo">{t('حساب موعد وتكلفة التوصيل:', 'Delivery Estimate & Cost:')}</span>
                     </div>
-                    {/* Province selector dropdown */}
-                    <select
-                      value={selectedProvince}
-                      onChange={(e) => setSelectedProvince(e.target.value)}
-                      className="text-xs font-semibold bg-background border border-border rounded-lg px-2 py-1 focus:ring-1 focus:ring-primary focus:outline-none max-w-[170px]"
-                    >
-                      {loadedProvinces.map((prov) => (
-                        <option key={prov.key} value={prov.key}>
-                          📍 {locale === 'ar' ? prov.nameAr : prov.nameEn}
-                        </option>
-                      ))}
-                    </select>
+                    {/* Province & Municipality selector dropdowns */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <select
+                        value={selectedProvince}
+                        onChange={(e) => setSelectedProvince(e.target.value)}
+                        className="text-xs font-semibold bg-background border border-border rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-primary focus:outline-none max-w-[130px]"
+                      >
+                        {loadedProvinces.map((prov) => (
+                          <option key={prov.key} value={prov.key}>
+                            📍 {locale === 'ar' ? prov.nameAr : prov.nameEn}
+                          </option>
+                        ))}
+                      </select>
+
+                      {loadedCities.length > 0 && (
+                        <select
+                          value={selectedCityId}
+                          onChange={(e) => setSelectedCityId(e.target.value)}
+                          className="text-xs font-semibold bg-background border border-border rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-primary focus:outline-none max-w-[130px]"
+                        >
+                          {loadedCities.map((city) => (
+                            <option key={city.id} value={city.id}>
+                              🏙️ {locale === 'ar' ? city.nameAr : city.nameEn}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
                   </div>
 
                   {/* Dynamic delivery dates and fee calculation */}
                   {(() => {
                     const prov = loadedProvinces.find(p => p.key === selectedProvince) || loadedProvinces[0];
-                    const { minStr, maxStr } = getDeliveryDateRange(prov.daysMin, prov.daysMax);
+                    const activeCity = loadedCities.find(c => c.id === selectedCityId) || loadedCities[0];
+                    const { minStr, maxStr } = getDeliveryDateRange(prov ? prov.daysMin : 2, prov ? prov.daysMax : 3);
+                    const finalFee = activeCity ? activeCity.price : (prov ? prov.fee : 500);
+
                     return (
                       <div className="space-y-2 text-start font-cairo">
                         <div className="flex items-start gap-2.5">
@@ -984,15 +1030,15 @@ export default function ProductDetailPage() {
                             <p className="text-sm font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
                               {t(`${minStr} - ${maxStr}`, `${minStr} - ${maxStr}`)}
                               <span className="text-xs text-muted-foreground font-normal block md:inline md:ms-2">
-                                ({t(`من ${prov.daysMin} إلى ${prov.daysMax} أيام عمل`, `${prov.daysMin}-${prov.daysMax} business days`)})
+                                ({t(`من ${prov ? prov.daysMin : 2} إلى ${prov ? prov.daysMax : 3} أيام عمل`, `${prov ? prov.daysMin : 2}-${prov ? prov.daysMax : 3} business days`)})
                               </span>
                             </p>
                           </div>
                         </div>
 
                         <div className="flex justify-between items-center pt-2 border-t border-border/60 text-xs">
-                          <span className="text-muted-foreground">{t('تكلفة الشحن لهذه الولاية:', 'Shipping Fee to this province:')}</span>
-                          <span className="font-black text-primary">{fmt(prov.fee)}</span>
+                          <span className="text-muted-foreground">{t('تكلفة التوصيل لهذه المنطقة:', 'Courier Fee for this area:')}</span>
+                          <span className="font-black text-primary">{fmt(finalFee)}</span>
                         </div>
                       </div>
                     );
