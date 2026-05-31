@@ -15,6 +15,14 @@ export default function AdminSettingsPage() {
   const { isAdminAuthenticated, adminUser } = useAdminAuthStore();
   const { locale } = useAppStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
+  
+  const getAdminPath = (subPath: string = '') => {
+    if (typeof window === 'undefined') return '/super-admin';
+    const segments = window.location.pathname.split('/');
+    const baseSlug = segments[1] || 'super-admin';
+    return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
+  };
+
   const [isMounted, setIsMounted] = useState(false);
   
   const [settings, setSettings] = useState({
@@ -96,7 +104,7 @@ export default function AdminSettingsPage() {
   return (
     <div dir={dir} className="max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6 text-start">
       <div className="flex items-center gap-4 mb-6">
-        <Link href="/admin-secure-internal">
+        <Link href={getAdminPath('')}>
           <Button variant="outline" size="icon" className="rounded-full">
             <ArrowRight className={`h-5 w-5 ${locale === 'ar' ? '' : 'rotate-180'}`} />
           </Button>

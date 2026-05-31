@@ -38,6 +38,13 @@ export default function AdminCategoriesPage() {
   const dir = isAr ? 'rtl' : 'ltr';
   const t = (ar: string, en: string) => isAr ? ar : en;
 
+  const getAdminPath = (subPath: string = '') => {
+    if (typeof window === 'undefined') return '/super-admin';
+    const segments = window.location.pathname.split('/');
+    const baseSlug = segments[1] || 'super-admin';
+    return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
+  };
+
   const [isMounted, setIsMounted] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [requests, setRequests] = useState<any[]>([]);
@@ -59,7 +66,7 @@ export default function AdminCategoriesPage() {
 
   useEffect(() => {
     if (isMounted && !isAdminAuthenticated) {
-      window.location.href = '/admin-secure-internal/login';
+      window.location.href = getAdminPath('login');
     }
   }, [isMounted, isAdminAuthenticated]);
 
@@ -289,7 +296,7 @@ export default function AdminCategoriesPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/admin-secure-internal">
+          <Link href={getAdminPath('')}>
             <Button variant="outline" size="icon" className="rounded-full">
               <ArrowRight className={`h-5 w-5 ${isAr ? '' : 'rotate-180'}`} />
             </Button>

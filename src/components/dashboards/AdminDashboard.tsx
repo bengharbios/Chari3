@@ -125,6 +125,13 @@ export default function AdminDashboard() {
   const { locale } = useAppStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
+  const getAdminPath = (subPath: string = '') => {
+    if (typeof window === 'undefined') return '/super-admin';
+    const segments = window.location.pathname.split('/');
+    const baseSlug = segments[1] || 'super-admin';
+    return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
+  };
+
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -321,13 +328,13 @@ export default function AdminDashboard() {
         description={t(locale, 'نظرة شاملة على أداء المنصة والتحكم في الطلبات والمستخدمين في الوقت الفعلي', 'Platform-wide live overview, user control & real-time transaction updates')}
         actions={
           <div className="flex items-center gap-2">
-            <Link href="/admin-secure-internal/categories">
+            <Link href={getAdminPath('categories')}>
               <Button variant="outline" size="sm" className="gap-2 font-bold hover:bg-brand/10 hover:text-brand border-brand/20">
                 <FolderTree className="h-4 w-4" />
                 {t(locale, 'إدارة التصنيفات', 'Manage Categories')}
               </Button>
             </Link>
-            <Link href="/admin-secure-internal/settings">
+            <Link href={getAdminPath('settings')}>
               <Button variant="outline" size="sm" className="gap-2 font-bold hover:bg-brand/10 hover:text-brand border-brand/20">
                 <Settings className="h-4 w-4" />
                 {t(locale, 'إعدادات النظام', 'System Settings')}

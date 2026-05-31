@@ -9,7 +9,8 @@ import {
   ToggleRight, 
   ChevronRight, 
   ChevronLeft,
-  Menu
+  Menu,
+  FolderTree
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -30,7 +31,8 @@ export default function AdminSidebar() {
       flags: "مفاتيح الميزات",
       collapse: "طي القائمة",
       expand: "توسيع",
-      title: "الإدارة"
+      title: "الإدارة",
+      categories: "إدارة التصنيفات"
     },
     en: {
       dashboard: "Dashboard",
@@ -39,7 +41,8 @@ export default function AdminSidebar() {
       flags: "Feature Flags",
       collapse: "Collapse",
       expand: "Expand",
-      title: "Admin Panel"
+      title: "Admin Panel",
+      categories: "Manage Categories"
     }
   };
 
@@ -48,11 +51,12 @@ export default function AdminSidebar() {
   // Base path for admin
   // This helps us keep active states working regardless of the secret slug!
   const getIsActive = (path: string) => {
-    // If it's the root admin page
-    if (path === '' && (pathname.endsWith('admin-secure-internal') || !pathname.includes('/settings'))) {
-      return true;
+    if (path === '') {
+      // Dashboard is active if pathname ends with the base slug (no subpages)
+      const segments = pathname.split('/').filter(Boolean);
+      return segments.length === 1;
     }
-    return pathname.includes(path) && path !== '';
+    return pathname.includes(path);
   };
 
   const navItems = [
@@ -61,6 +65,12 @@ export default function AdminSidebar() {
       label: t.dashboard, 
       path: '', 
       color: 'text-blue-500' 
+    },
+    { 
+      icon: FolderTree, 
+      label: t.categories, 
+      path: 'categories', 
+      color: 'text-purple-500' 
     },
     { 
       icon: Settings, 
