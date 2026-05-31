@@ -325,6 +325,153 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // 13. Ensure categoryId column exists in Store and SellerProfile
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE Store ADD COLUMN categoryId VARCHAR(191) NULL;`);
+      results.push('Added categoryId column to Store table');
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) {
+        results.push(`Error adding categoryId to Store: ${e.message}`);
+      }
+    }
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE SellerProfile ADD COLUMN categoryId VARCHAR(191) NULL;`);
+      results.push('Added categoryId column to SellerProfile table');
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) {
+        results.push(`Error adding categoryId to SellerProfile: ${e.message}`);
+      }
+    }
+
+    // 14. Ensure Category parentId and type columns exist
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE Category ADD COLUMN type VARCHAR(191) NOT NULL DEFAULT 'product';`);
+      results.push('Added type column to Category table');
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) {
+        results.push(`Error adding type to Category: ${e.message}`);
+      }
+    }
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE Category ADD COLUMN parentId VARCHAR(191) NULL;`);
+      results.push('Added parentId column to Category table');
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) {
+        results.push(`Error adding parentId to Category: ${e.message}`);
+      }
+    }
+
+    // 15. Ensure Product brandId column exists
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE Product ADD COLUMN brandId VARCHAR(191) NULL;`);
+      results.push('Added brandId column to Product table');
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) {
+        results.push(`Error adding brandId to Product: ${e.message}`);
+      }
+    }
+
+    // 16. Create Brand table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS Brand (
+          id VARCHAR(191) NOT NULL,
+          name VARCHAR(191) NOT NULL,
+          nameEn VARCHAR(191) NULL,
+          logo VARCHAR(191) NULL,
+          isActive BOOLEAN NOT NULL DEFAULT true,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured Brand table exists');
+    } catch (e: any) {
+      results.push(`Error creating Brand table: ${e.message}`);
+    }
+
+    // 17. Create CategoryRequest table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS CategoryRequest (
+          id VARCHAR(191) NOT NULL,
+          nameAr VARCHAR(191) NOT NULL,
+          nameEn VARCHAR(191) NULL,
+          description VARCHAR(191) NULL,
+          type VARCHAR(191) NOT NULL DEFAULT 'product',
+          status VARCHAR(191) NOT NULL DEFAULT 'pending',
+          adminNote VARCHAR(191) NULL,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+          userId VARCHAR(191) NOT NULL,
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured CategoryRequest table exists');
+    } catch (e: any) {
+      results.push(`Error creating CategoryRequest table: ${e.message}`);
+    }
+
+    // 18. Create Geolocation tables: Country, State, City
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS Country (
+          id VARCHAR(191) NOT NULL,
+          code VARCHAR(191) NOT NULL,
+          nameAr VARCHAR(191) NOT NULL,
+          nameEn VARCHAR(191) NOT NULL,
+          currency VARCHAR(191) NOT NULL DEFAULT 'DZD',
+          phonePrefix VARCHAR(191) NOT NULL DEFAULT '+213',
+          isActive BOOLEAN NOT NULL DEFAULT true,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+          PRIMARY KEY (id),
+          UNIQUE KEY Country_code_key (code)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured Country table exists');
+    } catch (e: any) {
+      results.push(`Error creating Country table: ${e.message}`);
+    }
+
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS State (
+          id VARCHAR(191) NOT NULL,
+          code VARCHAR(191) NOT NULL,
+          nameAr VARCHAR(191) NOT NULL,
+          nameEn VARCHAR(191) NOT NULL,
+          defaultPrice DOUBLE NOT NULL DEFAULT 500,
+          isActive BOOLEAN NOT NULL DEFAULT true,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+          countryId VARCHAR(191) NOT NULL,
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured State table exists');
+    } catch (e: any) {
+      results.push(`Error creating State table: ${e.message}`);
+    }
+
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS City (
+          id VARCHAR(191) NOT NULL,
+          nameAr VARCHAR(191) NOT NULL,
+          nameEn VARCHAR(191) NOT NULL,
+          isActive BOOLEAN NOT NULL DEFAULT true,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+          stateId VARCHAR(191) NOT NULL,
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured City table exists');
+    } catch (e: any) {
+      results.push(`Error creating City table: ${e.message}`);
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: 'Database schema sync executed',

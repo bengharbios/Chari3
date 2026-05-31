@@ -46,6 +46,7 @@ model User {
   supplierVerification  SupplierVerification?
   logisticsVerification LogisticsVerification?
   auditLogs          AuditLog[]
+  categoryRequests   CategoryRequest[]
 }
 
 model Store {
@@ -68,6 +69,9 @@ model Store {
 
   packageId     String?
   package       SellerPackage? @relation(fields: [packageId], references: [id])
+
+  categoryId    String?
+  category      Category? @relation(fields: [categoryId], references: [id])
 
   level         Int      @default(1)
   totalCustomers Int     @default(0)
@@ -123,9 +127,11 @@ model SellerProfile {
   levelUpdatedAt      DateTime?
   levelGraceUntil     DateTime? // Grace period before demotion
 
-  // Package
   packageId           String?
   package             SellerPackage? @relation(fields: [packageId], references: [id])
+
+  categoryId          String?
+  category            Category? @relation(fields: [categoryId], references: [id])
 
   isVerified          Boolean   @default(false)
   wantsUpgrade        Boolean   @default(false)
@@ -361,7 +367,7 @@ model BuyerProfile {
   updatedAt     DateTime  @updatedAt
 
   userId        String    @unique
-  user          User      @relation(fields: [userId], references: [id])
+  user            User      @relation(fields: [userId], references: [id])
 
   wishlist      WishlistItem[]
 }
@@ -375,6 +381,7 @@ model Category {
   name        String
   nameEn      String?
   slug        String      @unique
+  type        String      @default("product") // product, store, supplier, logistics
   icon        String?
   image       String?
   parentId    String?
@@ -385,7 +392,28 @@ model Category {
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  products    Product[]
+  products        Product[]
+  stores          Store[]
+  sellerProfiles  SellerProfile[]
+}
+
+// ============================================
+// CATEGORY REQUEST MODEL
+// ============================================
+
+model CategoryRequest {
+  id          String   @id @default(cuid())
+  nameAr      String
+  nameEn      String?
+  description String?
+  type        String   @default("product") // product, store, supplier, logistics
+  status      String   @default("pending") // pending, approved, rejected
+  adminNote   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model Product {
@@ -810,3 +838,52 @@ model AdminAuditLog {
   createdAt   DateTime @default(now())
 }
 
+// ============================================
+// GEOLOCATION / SHIPPING REGION MODELS
+// ============================================
+
+model Country {
+  id          String   @id @default(cuid())
+  code        String   @unique // e.g., "DZ", "SA", "EG"
+  nameAr      String
+  nameEn      String
+  currency    String   @default("DZD") // DZD, SAR, EGP
+  phonePrefix String   @default("+213")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  states      State[]
+}
+
+model State {
+  id           String   @id @default(cuid())
+  code         String   // e.g., "16", "01" (Wilaya code)
+  nameAr       String
+  nameEn       String
+  defaultPrice Float    @default(500)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  countryId    String
+  country      Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+
+  cities       City[]
+
+  @@index([countryId])
+}
+
+model City {
+  id        String   @id @default(cuid())
+  nameAr    String
+  nameEn    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stateId   String
+  state     State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
+
+  @@index([stateId])
+}
