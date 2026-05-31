@@ -46,6 +46,51 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    // Send in-app notification to the seller or store manager
+    try {
+      const product = await db.product.findUnique({
+        where: { id: productId },
+        select: {
+          name: true,
+          sellerId: true,
+          storeId: true,
+        }
+      });
+
+      if (product) {
+        let notifyUserId: string | null = null;
+        if (product.storeId) {
+          const store = await db.store.findUnique({
+            where: { id: product.storeId },
+            select: { managerId: true }
+          });
+          notifyUserId = store?.managerId || null;
+        } else if (product.sellerId) {
+          const sellerProfile = await db.sellerProfile.findUnique({
+            where: { id: product.sellerId },
+            select: { userId: true }
+          });
+          notifyUserId = sellerProfile?.userId || null;
+        }
+
+        if (notifyUserId) {
+          await db.notification.create({
+            data: {
+              title: 'سؤال جديد معلق! ❓',
+              titleEn: 'New Pending Question! ❓',
+              body: `لديك سؤال جديد معلق على منتجك "${product.name}" بانتظار إجابتك.`,
+              bodyEn: `You have a new pending question on your product "${product.name}" waiting for your answer.`,
+              type: 'new_qa',
+              data: JSON.stringify({ productId, qaId: qa.id }),
+              userId: notifyUserId,
+            }
+          });
+        }
+      }
+    } catch (notifErr) {
+      console.error('[qa-notification-error]', notifErr);
+    }
+
     return NextResponse.json({ success: true, qa });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });

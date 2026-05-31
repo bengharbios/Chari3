@@ -1097,6 +1097,34 @@ export default function ProductDetailPage() {
           {/* TAB CONTENT: REVIEWS */}
           {activeTab === 'reviews' && (
             <div className="space-y-6">
+              {/* Noon/Amazon-Style Interactive Trust & Review Guide */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 p-5 bg-gradient-to-br from-amber-500/5 via-primary/5 to-transparent rounded-2xl border border-primary/10 font-cairo">
+                <div className="space-y-2 text-start">
+                  <div className="flex items-center gap-2 text-primary font-bold text-sm">
+                    <Shield className="size-5 text-primary shrink-0" />
+                    <h4>{t('من أين تأتي التقييمات؟', 'Where do reviews come from?')}</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {t(
+                      'التقييمات تأتي فقط وحصرياً من عملاء حقيقيين اشتروا المنتج وقدموا تقييمهم بعد استلام الطلب بنجاح. هذا يضمن مصداقية الآراء وخلوها من التزييف.',
+                      'Ratings come exclusively from real customers who purchased the product and submitted their reviews after successfully receiving their order. This guarantees absolute trust and zero fake reviews.'
+                    )}
+                  </p>
+                </div>
+                <div className="space-y-2 text-start border-t md:border-t-0 md:border-s border-border/80 pt-4 md:pt-0 md:ps-6">
+                  <div className="flex items-center gap-2 text-amber-500 font-bold text-sm">
+                    <MessageCircle className="size-5 text-amber-500 shrink-0" />
+                    <h4>{t('كيف أقيّم هذا المنتج؟', 'How do I rate this product?')}</h4>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {t(
+                      'إذا اشتريت منتجاً من ChariDay، يمكنك الانتقال إلى صفحة "طلباتي" في لوحة حسابك، والضغط على زر "تقديم التقييم" لمشاركة تجربتك وتقييم المنتج بكل سهولة.',
+                      'If you purchased a product on ChariDay, you can go to your "My Orders" page in your account dashboard, and click the "Write a Review" button to easily rate the product and share your feedback.'
+                    )}
+                  </p>
+                </div>
+              </div>
+
               {reviews.length > 0 ? (
                 <div className="space-y-5">
                   <div className="flex items-center justify-between flex-wrap gap-4">
