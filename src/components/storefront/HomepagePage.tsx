@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Star, TrendingUp, Shield, Truck, ArrowLeft, ArrowRight, ShoppingBag, Award, Quote, SlidersHorizontal, X, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, TrendingUp, Shield, Truck, ArrowLeft, ArrowRight, ShoppingBag, Award, Quote, SlidersHorizontal, X, Search, Tag } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -85,6 +85,7 @@ interface HomepageData {
   testimonials: { name: string; text: string; rating: number; city: string }[];
   layout?: string[];
   heroSlides?: any[];
+  globalCouponCampaigns?: { coupon: any; products: any[] }[];
 }
 
 function AdBanner({ ads, className = '' }: { ads?: { id: string; title: string; imageUrl: string; linkUrl?: string }[]; className?: string }) {
@@ -724,14 +725,75 @@ export default function StorefrontHomepage() {
           </section>
         );
 
+      case 'global_campaigns':
+        const campaigns = data?.globalCouponCampaigns || [];
+        if (campaigns.length === 0) return null;
+
+        return (
+          <section key="global_campaigns" className="container-platform py-6">
+            {campaigns.map((campaign, idx) => (
+              <div key={idx} className="mb-10">
+                <div className="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-6 text-white flex flex-col md:flex-row items-center justify-between mb-6 shadow-xl relative overflow-hidden">
+                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                   <div className="relative z-10">
+                     <Badge className="bg-white/20 text-white mb-2">{t('حملة خصم كبرى', 'Major Discount Campaign')}</Badge>
+                     <h2 className="text-2xl font-black mb-1 flex items-center gap-2">
+                       <Tag className="w-6 h-6" />
+                       استخدم الكود: {campaign.coupon.code}
+                     </h2>
+                     <p className="text-white/80">
+                       {t('واحصل على خصم', 'And get a discount of')} <span className="font-bold text-xl">{campaign.coupon.type === 'percentage' ? `${campaign.coupon.value}%` : `${campaign.coupon.value} د.ج`}</span>
+                     </p>
+                   </div>
+                   <div className="mt-4 md:mt-0 relative z-10 text-center md:text-right">
+                     {campaign.coupon.expiresAt && (
+                        <p className="text-sm bg-white/10 px-3 py-1.5 rounded-lg backdrop-blur-md">
+                          {t('ينتهي في: ', 'Expires at: ')} <span className="font-bold">{new Date(campaign.coupon.expiresAt).toLocaleDateString()}</span>
+                        </p>
+                     )}
+                   </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+                  {campaign.products.slice(0, 5).map((product: any) => {
+                     let images: string[] = [];
+                     if (Array.isArray(product.images)) images = product.images;
+                     else if (typeof product.images === 'string') { try { images = JSON.parse(product.images); } catch {} }
+
+                     const discount = product.comparePrice ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100) : 0;
+
+                     return (
+                       <Card key={product.id} className="overflow-hidden flex flex-col group hover:shadow-lg transition-all duration-300 cursor-pointer border-border hover:border-amber-500/30" onClick={() => { useAppStore.getState().setSelectedProductId(product.id); router.push(`/products/${product.id}`); }}>
+                         <div className="relative aspect-square bg-muted overflow-hidden shrink-0">
+                           {images[0] ? <img src={images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" /> : <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-primary/10 to-primary/5"><ShoppingBag className="size-10 text-primary/30" /></div>}
+                           {discount > 0 && <Badge className="absolute top-2 start-2 bg-red-500 text-white text-xs">-{discount}%</Badge>}
+                         </div>
+                         <CardContent className="p-2.5 md:p-3 flex flex-col grow">
+                           <p className="text-[10px] md:text-xs text-muted-foreground mb-1 truncate">{product.category?.name || ''}</p>
+                           <p className="text-xs md:text-sm font-semibold line-clamp-2 mb-1.5">{isAr ? product.name : (product.nameEn || product.name)}</p>
+                           <div className="mt-auto">
+                             <div className="flex items-end justify-between w-full">
+                               <p className="text-sm md:text-base font-bold text-amber-600 truncate">{fmt(product.price)}</p>
+                             </div>
+                           </div>
+                         </CardContent>
+                       </Card>
+                     );
+                  })}
+                </div>
+              </div>
+            ))}
+          </section>
+        );
+
       default:
         return null;
     }
   };
 
-  const defaultLayout = ['hero', 'features', 'categories', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
+  const defaultLayout = ['hero', 'features', 'categories', 'global_campaigns', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
   const activeLayout = Array.isArray(data?.layout) && data.layout.length > 0
-    ? data.layout
+    ? data.layout.includes('global_campaigns') ? data.layout : ['global_campaigns', ...data.layout]
     : defaultLayout;
 
   return (

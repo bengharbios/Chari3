@@ -34,7 +34,8 @@ export default function AdminSidebar() {
       expand: "توسيع",
       title: "الإدارة",
       categories: "إدارة التصنيفات",
-      brands: "إدارة الماركات"
+      brands: "إدارة الماركات",
+      coupons: "الكوبونات العامة"
     },
     en: {
       dashboard: "Dashboard",
@@ -45,7 +46,8 @@ export default function AdminSidebar() {
       expand: "Expand",
       title: "Admin Panel",
       categories: "Manage Categories",
-      brands: "Manage Brands"
+      brands: "Manage Brands",
+      coupons: "Global Coupons"
     }
   };
 
@@ -80,6 +82,12 @@ export default function AdminSidebar() {
       label: t.brands, 
       path: 'brands', 
       color: 'text-rose-500' 
+    },
+    { 
+      icon: Tag, 
+      label: t.coupons, 
+      path: 'coupons', 
+      color: 'text-yellow-500' 
     },
     { 
       icon: Settings, 

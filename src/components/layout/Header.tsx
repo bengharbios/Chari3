@@ -220,11 +220,19 @@ export default function Header() {
 
   const getDiscountAmount = () => {
     if (!appliedCoupon) return 0;
-    const subtotal = getSubtotal();
+    
+    // Only calculate subtotal for applicable items if `applicableProductIds` is provided
+    let applicableSubtotal = getSubtotal();
+    if (appliedCoupon.applicableProductIds && Array.isArray(appliedCoupon.applicableProductIds)) {
+      applicableSubtotal = items
+        .filter(i => appliedCoupon.applicableProductIds.includes(i.product.id))
+        .reduce((sum, i) => sum + (i.product.price * i.quantity), 0);
+    }
+
     if (appliedCoupon.type === 'percentage') {
-      return (subtotal * appliedCoupon.value) / 100;
+      return (applicableSubtotal * appliedCoupon.value) / 100;
     } else {
-      return Math.min(appliedCoupon.value, subtotal);
+      return Math.min(appliedCoupon.value, applicableSubtotal);
     }
   };
 
