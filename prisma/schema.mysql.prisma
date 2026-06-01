@@ -84,6 +84,8 @@ model Store {
   shippingIntegrations  String?   @db.LongText
   paymentDetails        String?   @db.LongText
   themeSettings         String?   @db.LongText
+
+  globalCoupons         Coupon[]  @relation("GlobalCouponOptInStores")
 }
 
 model StoreStaff {
@@ -149,6 +151,8 @@ model SellerProfile {
   shippingIntegrations  String?   @db.LongText
   paymentDetails        String?   @db.LongText
   themeSettings         String?   @db.LongText
+
+  globalCoupons         Coupon[]  @relation("GlobalCouponOptInSellers")
 }
 
 // ============================================
@@ -396,6 +400,8 @@ model Category {
   products        Product[]
   stores          Store[]
   sellerProfiles  SellerProfile[]
+
+  coupons         Coupon[]  @relation("CouponCategories")
 }
 
 // ============================================
@@ -461,6 +467,8 @@ model Product {
   reviews         Review[]
   wishlistItems   WishlistItem[]
   variants        ProductVariant[]
+
+  coupons         Coupon[]  @relation("CouponProducts")
 }
 
 model Brand {
@@ -688,6 +696,19 @@ model Coupon {
 
   storeId     String?
   sellerId    String?
+
+  // Extended features
+  isGlobal       Boolean   @default(false)
+  applicableTo   String    @default("all") // "all", "categories", "products"
+  maxStoresLimit Int?      // Limit number of opted-in stores/merchants
+
+  // Explicit Targets
+  products       Product[] @relation("CouponProducts")
+  categories     Category[] @relation("CouponCategories")
+
+  // Global Opt-ins
+  optInStores    Store[]   @relation("GlobalCouponOptInStores")
+  optInSellers   SellerProfile[] @relation("GlobalCouponOptInSellers")
 }
 
 // ============================================
@@ -917,3 +938,4 @@ model OrderStatusType {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+

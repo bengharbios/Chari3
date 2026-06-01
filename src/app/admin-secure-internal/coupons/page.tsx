@@ -9,8 +9,8 @@ export const dynamic = 'force-dynamic';
 export default async function AdminCouponsRoute() {
   const session = await getServerSession(authOptions);
 
-  if (!session?.user || session.user.role !== 'admin') {
-    redirect('/auth/login');
+  if (!session || session.user.role !== 'admin') {
+    redirect('/admin-secure-internal/login');
   }
 
   return <CouponsPage />;
