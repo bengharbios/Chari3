@@ -80,7 +80,7 @@ interface SidebarProps {
 
 export default function Sidebar({ className }: SidebarProps) {
   const { locale, currentPage, setCurrentPage, isSidebarOpen, setSidebarOpen } = useAppStore();
-  const { user, logout } = useAuthStore();
+  const { user, logout, isBuyerMode } = useAuthStore();
   const isRTL = locale === 'ar';
 
   // Automatically collapse sidebar when window is resized below 1024px (tablet/mobile)
@@ -96,7 +96,7 @@ export default function Sidebar({ className }: SidebarProps) {
 
   if (!user) return null;
 
-  const navItems = NAV_ITEMS[user.role];
+  const navItems = isBuyerMode ? BUYER_NAV : NAV_ITEMS[user.role];
   const CloseIcon = isRTL ? ChevronRight : ChevronLeft;
 
   return (
@@ -132,8 +132,8 @@ export default function Sidebar({ className }: SidebarProps) {
               <p className="text-sm font-semibold truncate">{user.name}</p>
               <Badge variant="secondary" className="text-[10px] mt-0.5 bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-border">
                 {t(locale,
-                  { admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', supplier: 'مورد', logistics: 'مندوب شحن', buyer: 'مشتري' }[user.role],
-                  { admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', supplier: 'Supplier', logistics: 'Courier', buyer: 'Buyer' }[user.role]
+                  isBuyerMode ? 'مشتري' : { admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', supplier: 'مورد', logistics: 'مندوب شحن', buyer: 'مشتري' }[user.role] || 'مشتري',
+                  isBuyerMode ? 'Buyer' : { admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', supplier: 'Supplier', logistics: 'Courier', buyer: 'Buyer' }[user.role] || 'Buyer'
                 )}
               </Badge>
             </div>
