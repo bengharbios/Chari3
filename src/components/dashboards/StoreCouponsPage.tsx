@@ -83,8 +83,8 @@ export default function StoreCouponsPage() {
   const fetchCategoriesAndProducts = async () => {
     try {
       const [catRes, prodRes] = await Promise.all([
-        fetch('/api/categories'),
-        fetch(`/api/seller/products?userId=${user?.id}`)
+        fetch('/api/categories?limit=1000'),
+        fetch(`/api/products?sellerId=${user?.id}&limit=1000`)
       ]);
       const catData = await catRes.json();
       const prodData = await prodRes.json();
