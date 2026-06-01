@@ -7,6 +7,9 @@ import {
   formatCurrency,
   getOrderStatusColor,
   getOrderStatusText,
+  MOCK_PRODUCTS,
+  MOCK_WALLET,
+  MOCK_ADDRESSES
 } from '@/lib/mock-data';
 import { StatsCard, PageHeader } from '@/components/shared/StatsCard';
 import {
