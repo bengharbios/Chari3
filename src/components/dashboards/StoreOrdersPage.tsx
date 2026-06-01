@@ -91,7 +91,7 @@ export default function StoreOrdersPage() {
             orderNumber: o.orderNumber || 'N/A',
             buyerName: parsedAddress.fullName || o.buyer?.name || t('زبون ضيف', 'Guest Buyer'),
             buyerPhone: parsedAddress.phone || o.buyer?.phone || '',
-            date: new Date(o.createdAt).toLocaleDateString(isAr ? 'ar-EG' : 'en-US'),
+            date: new Date(o.createdAt).toLocaleDateString('en-GB'),
             status: o.status,
             paymentMethod: o.paymentMethod || 'cod',
             paymentStatus: o.paymentStatus || 'pending',
@@ -141,6 +141,19 @@ export default function StoreOrdersPage() {
     }
   };
 
+  const handleExport = () => {
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
+      + "رقم الطلب,العميل,الهاتف,التاريخ,الحالة,المجموع\n"
+      + orders.map(o => `${o.orderNumber},${o.buyerName},${o.buyerPhone},${o.date},${getStatusConfig(o.status).label},${o.total}`).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `orders_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // HTML5 Drag and Drop handlers
   const handleDragStart = (e: React.DragEvent, orderId: string) => {
     e.dataTransfer.setData('orderId', orderId);
@@ -166,6 +179,10 @@ export default function StoreOrdersPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <PageHeader title={t('إدارة الطلبات المتطورة', 'Advanced Order Management')} description={t('تتبع المبيعات الحية، مع فلترة دقيقة وعرض مرن.', 'Track live sales, precise filtering, and flexible views.')} />
         <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="rounded-xl border-white/10 shadow-sm" onClick={handleExport}>
+            <Download className="h-4 w-4 mr-2" />
+            {t('تصدير', 'Export')}
+          </Button>
           <div className="bg-background/50 backdrop-blur-md rounded-xl p-1 flex items-center border border-white/10 shrink-0">
             <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('list')} className="rounded-lg"><List className="h-4 w-4" /></Button>
             <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('table')} className="rounded-lg"><TableIcon className="h-4 w-4" /></Button>
@@ -182,13 +199,17 @@ export default function StoreOrdersPage() {
           <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-auto rounded-xl" />
           <Button onClick={() => { setPage(1); fetchOrders(); }} size="sm" className="rounded-xl">{t('بحث', 'Search')}</Button>
         </div>
-        <div className="flex items-center gap-2 w-full lg:w-auto overflow-x-auto hide-scrollbar">
-          <button onClick={() => setStatusFilter('all')} className={`px-4 py-2 rounded-xl text-xs font-bold border ${statusFilter === 'all' ? 'bg-primary text-primary-foreground border-primary' : 'bg-background/40 border-white/10 text-muted-foreground'}`}>{t('الكل', 'All')}</button>
-          {statuses.map((s) => (
-            <button key={s.key} onClick={() => setStatusFilter(s.key)} className={`px-4 py-2 rounded-xl text-xs font-bold border ${statusFilter === s.key ? 'bg-primary text-primary-foreground border-primary' : 'bg-background/40 border-white/10 text-muted-foreground'}`}>
-              {isAr ? s.nameAr : (s.nameEn || s.nameAr)}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+          <select 
+            value={statusFilter} 
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="bg-background border border-white/10 rounded-xl px-4 h-10 text-sm font-bold cursor-pointer outline-none focus:border-primary w-full sm:w-auto"
+          >
+            <option value="all">{t('جميع الحالات', 'All Statuses')}</option>
+            {statuses.map((s) => (
+              <option key={s.key} value={s.key}>{isAr ? s.nameAr : (s.nameEn || s.nameAr)}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -315,6 +336,10 @@ export default function StoreOrdersPage() {
             <div className="space-y-6 pt-4">
               <div className="flex justify-between items-center border-b border-white/10 pb-4">
                 <DialogTitle className="text-lg font-black">{t('تفاصيل الطلب', 'Order Details')} #{selectedOrder.orderNumber}</DialogTitle>
+                <Button variant="outline" size="sm" onClick={() => window.print()} className="rounded-lg h-8 print:hidden">
+                  <Printer className="h-4 w-4 mr-2" />
+                  {t('طباعة', 'Print')}
+                </Button>
               </div>
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div><p className="text-muted-foreground">{t('العميل', 'Customer')}</p><p className="font-bold">{selectedOrder.buyerName}</p></div>
