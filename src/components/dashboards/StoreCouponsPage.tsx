@@ -47,6 +47,8 @@ export default function StoreCouponsPage() {
   const [expiresAt, setExpiresAt] = useState('');
   const [applicableTo, setApplicableTo] = useState('all'); // all, categories, products
   const [targetIds, setTargetIds] = useState<string[]>([]);
+  const [catSearch, setCatSearch] = useState('');
+  const [prodSearch, setProdSearch] = useState('');
 
   useEffect(() => {
     if (user?.id) {
@@ -175,7 +177,7 @@ export default function StoreCouponsPage() {
   };
 
   return (
-    <motion.div className="space-y-6 p-4 md:p-6 text-start" variants={STAGGER_CONTAINER} initial="hidden" animate="visible">
+    <motion.div dir={isAr ? 'rtl' : 'ltr'} className="space-y-6 p-4 md:p-6 text-start" variants={STAGGER_CONTAINER} initial="hidden" animate="visible">
       <motion.div variants={FADE_UP} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <PageHeader
           title={t('الكوبونات وعروض الخصم', 'Store Coupons')}
@@ -253,27 +255,33 @@ export default function StoreCouponsPage() {
                       </div>
 
                       {applicableTo === 'categories' && (
-                        <div className="p-4 border border-white/10 rounded-xl bg-background/50 grid grid-cols-2 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto">
-                          {categories.map(c => (
-                            <label key={c.id} className="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors">
-                              <input type="checkbox" checked={targetIds.includes(c.id)} onChange={() => toggleTargetId(c.id)} className="rounded border-primary" />
-                              <span className="text-sm">{isAr ? c.name : c.nameEn}</span>
-                            </label>
-                          ))}
+                        <div className="space-y-2 border border-white/10 rounded-xl p-3 bg-background/50">
+                          <Input placeholder={t('ابحث عن قسم...', 'Search category...')} value={catSearch} onChange={e => setCatSearch(e.target.value)} className="bg-muted/50 rounded-lg h-9" />
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto pt-2">
+                            {categories.filter(c => (isAr ? c.name : c.nameEn)?.toLowerCase().includes(catSearch.toLowerCase())).map(c => (
+                              <label key={c.id} className="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors">
+                                <input type="checkbox" checked={targetIds.includes(c.id)} onChange={() => toggleTargetId(c.id)} className="rounded border-primary" />
+                                <span className="text-sm">{isAr ? c.name : c.nameEn}</span>
+                              </label>
+                            ))}
+                          </div>
                         </div>
                       )}
 
                       {applicableTo === 'products' && (
-                        <div className="p-4 border border-white/10 rounded-xl bg-background/50 grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                          {products.map(p => (
-                            <label key={p.id} className="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors">
-                              <input type="checkbox" checked={targetIds.includes(p.id)} onChange={() => toggleTargetId(p.id)} className="rounded border-primary" />
-                              <div className="flex flex-col">
-                                <span className="text-sm font-medium line-clamp-1">{isAr ? p.name : p.nameEn}</span>
-                                <span className="text-xs text-muted-foreground">{p.price} د.ج</span>
-                              </div>
-                            </label>
-                          ))}
+                        <div className="space-y-2 border border-white/10 rounded-xl p-3 bg-background/50">
+                          <Input placeholder={t('ابحث عن منتج...', 'Search product...')} value={prodSearch} onChange={e => setProdSearch(e.target.value)} className="bg-muted/50 rounded-lg h-9" />
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto pt-2">
+                            {products.filter(p => (isAr ? p.name : p.nameEn)?.toLowerCase().includes(prodSearch.toLowerCase())).map(p => (
+                              <label key={p.id} className="flex items-center gap-2 cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors">
+                                <input type="checkbox" checked={targetIds.includes(p.id)} onChange={() => toggleTargetId(p.id)} className="rounded border-primary" />
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-medium line-clamp-1">{isAr ? p.name : p.nameEn}</span>
+                                  <span className="text-xs text-muted-foreground">{p.price} د.ج</span>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
                         </div>
                       )}
 

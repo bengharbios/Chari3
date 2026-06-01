@@ -452,7 +452,9 @@ interface CartState {
   setCartOpen: (open: boolean) => void;
 }
 
-export const useCartStore = create<CartState>()((set, get) => ({
+export const useCartStore = create<CartState>()(
+  persist(
+    (set, get) => ({
   items: [],
   itemCount: 0,
   isCartOpen: false,
@@ -496,4 +498,10 @@ export const useCartStore = create<CartState>()((set, get) => ({
   },
 
   setCartOpen: (isCartOpen) => set({ isCartOpen }),
-}));
+    }),
+    {
+      name: 'chari-cart-store',
+      partialize: (state) => ({ items: state.items, itemCount: state.itemCount }),
+    }
+  )
+);

@@ -14,90 +14,129 @@ export async function POST(req: NextRequest) {
     }
 
     const coupon = await db.coupon.findUnique({
-      where: { code: code.toUpperCase().trim() }
+      where: { code: code.toUpperCase().trim() },
+      include: {
+        categories: { select: { id: true } },
+        products: { select: { id: true } },
+        optInStores: { select: { id: true } },
+        optInSellers: { select: { id: true } },
+      }
     });
 
     if (!coupon) {
       return NextResponse.json({ success: false, errorAr: 'كوبون الخصم غير موجود أو منتهي الصلاحية', errorEn: 'Invalid coupon code or expired' }, { status: 404 });
     }
 
-    // 1. Check if active
     if (!coupon.isActive) {
       return NextResponse.json({ success: false, errorAr: 'هذا الكوبون غير نشط حالياً', errorEn: 'This coupon is currently inactive' }, { status: 400 });
     }
 
-    // 2. Check Expiry
     if (coupon.expiresAt && new Date(coupon.expiresAt) < new Date()) {
       return NextResponse.json({ success: false, errorAr: 'عذراً، هذا الكوبون منتهي الصلاحية', errorEn: 'Sorry, this coupon has expired' }, { status: 400 });
     }
 
-    // 3. Check Usage Limits
     if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
       return NextResponse.json({ success: false, errorAr: 'عذراً، تم استهلاك هذا الكوبون بالكامل', errorEn: 'Sorry, this coupon has reached its usage limit' }, { status: 400 });
     }
 
-    // 4. Check Store Scope
-    // To ensure store-specific coupon control:
-    const couponStoreId = coupon.storeId;
-    const couponSellerId = coupon.sellerId;
+    let productIds: string[] = [];
+    if (body.items && Array.isArray(body.items)) {
+      productIds = body.items.map((i: any) => i.productId);
+    } else if (body.productId) {
+      productIds = [body.productId];
+    }
 
-    if (couponStoreId || couponSellerId) {
-      // Find at least one product in the cart that belongs to this store/seller
-      let productIds: string[] = [];
-      if (body.items && Array.isArray(body.items)) {
-        productIds = body.items.map((i: any) => i.productId);
-      } else if (body.productId) {
-        productIds = [body.productId];
+    let cartProducts: any[] = [];
+    if (productIds.length > 0) {
+      cartProducts = await db.product.findMany({
+        where: { id: { in: productIds } },
+        select: { id: true, storeId: true, sellerId: true, categoryId: true, price: true }
+      });
+    }
+
+    let applicableProductIds: string[] = [];
+
+    if (coupon.isGlobal) {
+      const optedInStoreIds = coupon.optInStores.map(s => s.id);
+      const optedInSellerIds = coupon.optInSellers.map(s => s.id);
+      
+      const allowedProducts = cartProducts.filter(p => 
+        (p.storeId && optedInStoreIds.includes(p.storeId)) || 
+        (p.sellerId && optedInSellerIds.includes(p.sellerId))
+      );
+
+      if (allowedProducts.length === 0) {
+        return NextResponse.json({ 
+          success: false, 
+          errorAr: 'هذا الكوبون غير متاح للمتاجر التي تتسوق منها حالياً', 
+          errorEn: 'This coupon is not available for the stores you are shopping from' 
+        }, { status: 400 });
       }
 
-      if (productIds.length > 0) {
-        const matchingProducts = await db.product.findMany({
-          where: {
-            id: { in: productIds },
-            OR: [
-              ...(couponStoreId ? [{ storeId: couponStoreId }] : []),
-              ...(couponSellerId ? [{ sellerId: couponSellerId }] : [])
-            ]
-          }
+      applicableProductIds = allowedProducts.map(p => p.id);
+    } else {
+      const couponStoreId = coupon.storeId;
+      const couponSellerId = coupon.sellerId;
+
+      if (couponStoreId || couponSellerId) {
+        // Fetch store/seller to check managerId/userId in case products were created with user.id instead of store.id
+        const store = couponStoreId ? await db.store.findUnique({ where: { id: couponStoreId } }) : null;
+        const seller = couponSellerId ? await db.sellerProfile.findUnique({ where: { id: couponSellerId } }) : null;
+
+        const allowedProducts = cartProducts.filter(p => {
+          const matchesStore = couponStoreId && (p.storeId === couponStoreId || (store && p.storeId === store.managerId));
+          const matchesSeller = couponSellerId && (p.sellerId === couponSellerId || (seller && p.sellerId === seller.userId));
+          return matchesStore || matchesSeller;
         });
 
-        if (matchingProducts.length === 0) {
+        if (allowedProducts.length === 0) {
           return NextResponse.json({ 
             success: false, 
             errorAr: couponStoreId ? 'هذا الكوبون غير مخصص لمنتجات هذا المتجر' : 'هذا الكوبون غير مخصص لمنتجات هذا البائع', 
             errorEn: 'This coupon is not valid for these products' 
           }, { status: 400 });
         }
+        applicableProductIds = allowedProducts.map(p => p.id);
       } else {
-        // Fallback for old requests
-        const passedStoreId = body.storeId;
-        const passedSellerId = body.sellerId;
-        if (couponStoreId && passedStoreId !== couponStoreId) {
-          return NextResponse.json({ success: false, errorAr: 'هذا الكوبون غير مخصص لمنتجات هذا المتجر', errorEn: 'This coupon is not valid for this store\'s products' }, { status: 400 });
-        }
-        if (couponSellerId && passedSellerId !== couponSellerId) {
-          return NextResponse.json({ success: false, errorAr: 'هذا الكوبون غير مخصص لمنتجات هذا البائع', errorEn: 'This coupon is not valid for this seller\'s products' }, { status: 400 });
-        }
+        applicableProductIds = cartProducts.map(p => p.id);
       }
     }
 
-    // 5. Check Minimum Order purchase threshold
+    if (coupon.applicableTo === 'categories' && coupon.categories.length > 0) {
+      const categoryIds = coupon.categories.map(c => c.id);
+      applicableProductIds = applicableProductIds.filter(id => {
+        const p = cartProducts.find(cp => cp.id === id);
+        return p && categoryIds.includes(p.categoryId);
+      });
+      if (applicableProductIds.length === 0) {
+         return NextResponse.json({ success: false, errorAr: 'هذا الكوبون لا يشمل هذه الأقسام', errorEn: 'Coupon does not apply to these categories' }, { status: 400 });
+      }
+    }
+
+    if (coupon.applicableTo === 'products' && coupon.products.length > 0) {
+      const specificProductIds = coupon.products.map(p => p.id);
+      applicableProductIds = applicableProductIds.filter(id => specificProductIds.includes(id));
+      if (applicableProductIds.length === 0) {
+         return NextResponse.json({ success: false, errorAr: 'هذا الكوبون لا يشمل هذه المنتجات', errorEn: 'Coupon does not apply to these products' }, { status: 400 });
+      }
+    }
+
     if (coupon.minOrder && subtotal < coupon.minOrder) {
       return NextResponse.json({
         success: false,
-        errorAr: `الحد الأدنى لتفعيل الكوبون هو شراء بقيمة ${coupon.minOrder.toLocaleString()} د.ج / ريال`,
+        errorAr: `الحد الأدنى لتفعيل الكوبون هو شراء بقيمة ${coupon.minOrder.toLocaleString()} د.ج`,
         errorEn: `Minimum order value to activate this coupon is ${coupon.minOrder.toLocaleString()} DZD`
       }, { status: 400 });
     }
 
-    // Coupon is valid!
     return NextResponse.json({
       success: true,
       coupon: {
         id: coupon.id,
         code: coupon.code,
         type: coupon.type,
-        value: coupon.value
+        value: coupon.value,
+        applicableProductIds
       }
     });
 
