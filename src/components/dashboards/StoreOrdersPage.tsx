@@ -227,29 +227,19 @@ export default function StoreOrdersPage() {
           </table>
 
           <table class="totals-table">
-            ${(() => {
-              const itemsTotal = selectedOrder.items.reduce((sum: number, i: any) => sum + (i.total || i.price * i.quantity), 0);
-              const printSubtotal = (selectedOrder.subtotal > 0 ? selectedOrder.subtotal : itemsTotal);
-              const printDiscount = selectedOrder.discount > 0 ? selectedOrder.discount : 
-                (printSubtotal + (selectedOrder.shippingCost || 0) - selectedOrder.total > 0 ? 
-                  printSubtotal + (selectedOrder.shippingCost || 0) - selectedOrder.total : 0);
-              
-              return `
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 8px 0; text-align: start;">${isArOrder ? 'المجموع الفرعي:' : 'Subtotal:'}</td>
-                <td style="padding: 8px 0; text-align: end;">${printSubtotal.toLocaleString()} DZD</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #e2e8f0;">
-                <td style="padding: 8px 0; text-align: start;">${isArOrder ? 'تكلفة الشحن:' : 'Shipping:'}</td>
-                <td style="padding: 8px 0; text-align: end;">${(selectedOrder.shippingCost || 0).toLocaleString()} DZD</td>
-              </tr>
-              ${printDiscount > 0 ? `
-              <tr style="border-bottom: 1px solid #e2e8f0; color: #ef4444;">
-                <td style="padding: 8px 0; text-align: start;">${isArOrder ? 'الخصم:' : 'Discount:'}</td>
-                <td style="padding: 8px 0; text-align: end;">-${printDiscount.toLocaleString()} DZD</td>
-              </tr>` : ''}
-              `;
-            })()}
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+              <td style="padding: 8px 0; text-align: start;">${isArOrder ? 'المجموع الفرعي:' : 'Subtotal:'}</td>
+              <td style="padding: 8px 0; text-align: end;">${selectedOrder.subtotal.toLocaleString()} DZD</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+              <td style="padding: 8px 0; text-align: start;">${isArOrder ? 'تكلفة الشحن:' : 'Shipping:'}</td>
+              <td style="padding: 8px 0; text-align: end;">${(selectedOrder.shippingCost || 0).toLocaleString()} DZD</td>
+            </tr>
+            ${selectedOrder.discount > 0 ? `
+            <tr style="border-bottom: 1px solid #e2e8f0; color: #ef4444;">
+              <td style="padding: 8px 0; text-align: start;">${isArOrder ? 'الخصم:' : 'Discount:'}</td>
+              <td style="padding: 8px 0; text-align: end;">-${selectedOrder.discount.toLocaleString()} DZD</td>
+            </tr>` : ''}
             <tr style="font-weight: bold; font-size: 16px;">
               <td style="padding: 8px 0; text-align: start; color: #fbbf24;">${isArOrder ? 'المجموع الإجمالي:' : 'Total:'}</td>
               <td style="padding: 8px 0; text-align: end; color: #fbbf24;">${selectedOrder.total.toLocaleString()} DZD</td>
@@ -470,7 +460,12 @@ export default function StoreOrdersPage() {
                 ))}
               </div>
               <div className="p-4 bg-muted/20 rounded-2xl space-y-2 text-xs">
-                <div className="flex justify-between font-black text-sm"><span className="text-foreground">{t('المجموع', 'Total')}</span><span className="text-primary">{selectedOrder.total.toLocaleString()} DZD</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t('المجموع الفرعي', 'Subtotal')}</span><span className="font-bold">{selectedOrder.subtotal.toLocaleString()} DZD</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t('تكلفة الشحن', 'Shipping')}</span><span className="font-bold">{(selectedOrder.shippingCost || 0).toLocaleString()} DZD</span></div>
+                {selectedOrder.discount > 0 && (
+                  <div className="flex justify-between text-red-500"><span className="font-bold">{t('الخصم', 'Discount')}</span><span className="font-bold">-{selectedOrder.discount.toLocaleString()} DZD</span></div>
+                )}
+                <div className="border-t border-white/5 pt-2 flex justify-between font-black text-sm"><span className="text-foreground">{t('المجموع النهائي', 'Total')}</span><span className="text-primary">{selectedOrder.total.toLocaleString()} DZD</span></div>
               </div>
               <div className="flex gap-3">
                 <select className="flex-1 bg-background border border-white/10 rounded-xl px-3 h-11 text-sm font-bold cursor-pointer" value={selectedOrder.status} onChange={(e) => handleUpdateStatus(e.target.value)}>
