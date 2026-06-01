@@ -160,10 +160,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
     if (isAuthenticated && user) {
       // If user is in Buyer Mode, they can access any buyer-centric pages implicitly (home, search, checkout)
       if (isBuyerMode) {
-        const targetPage = ROLE_TO_PAGE[user.role as UserRole];
-        // Only force redirect back to dashboard if they actively try to visit a restricted admin page?
-        // Actually, just let them be. The Navbar handles hiding/showing things.
-        const isBuyerAllowed = ['home', 'search', 'product-detail', 'seller-profile', 'cart'].includes(currentPage);
+        const isBuyerAllowed = ['home', 'search', 'product-detail', 'seller-profile', 'cart', 'buyer', 'buyer-orders', 'buyer-wishlist', 'buyer-addresses', 'buyer-wallet', 'buyer-reviews'].includes(currentPage);
         if (isBuyerAllowed) return;
       }
 

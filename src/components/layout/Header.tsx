@@ -531,7 +531,7 @@ export default function Header() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigateToDashboard(rolePages[user.role] || 'buyer')}>
+                  <DropdownMenuItem onClick={() => navigateToDashboard(isBuyerMode ? 'buyer' : (rolePages[user.role] || 'buyer'))}>
                     <User className="h-4 w-4" />
                     {t('لوحة التحكم', 'Dashboard')}
                   </DropdownMenuItem>
@@ -539,7 +539,15 @@ export default function Header() {
                     <DropdownMenuItem 
                       onClick={() => {
                         const { setBuyerMode, isBuyerMode } = useAuthStore.getState();
-                        setBuyerMode(!isBuyerMode);
+                        const newMode = !isBuyerMode;
+                        setBuyerMode(newMode);
+                        if (newMode) {
+                          // Switching to Buyer: Go to Home to shop
+                          navigateToDashboard('home');
+                        } else {
+                          // Switching back: Go to Seller Dashboard
+                          navigateToDashboard(rolePages[user.role] || 'seller');
+                        }
                       }}
                       className={useAuthStore.getState().isBuyerMode ? "bg-brand/10 text-brand" : ""}
                     >
