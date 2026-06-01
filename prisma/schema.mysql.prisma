@@ -1,6 +1,5 @@
 generator client {
-  provider   = "prisma-client-js"
-  engineType = "library"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -369,7 +368,7 @@ model BuyerProfile {
   updatedAt     DateTime  @updatedAt
 
   userId        String    @unique
-  user            User      @relation(fields: [userId], references: [id])
+  user          User      @relation(fields: [userId], references: [id])
 
   wishlist      WishlistItem[]
 }
@@ -899,6 +898,22 @@ model ProductQA {
   answer      String?
   status      String   @default("pending") // pending, approved, rejected
   userId      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// ORDER STATUS SETTINGS (Admin-controlled)
+// ============================================
+
+model OrderStatusType {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  nameAr      String
+  nameEn      String?
+  color       String   @default("#6B7280")
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

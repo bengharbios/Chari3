@@ -52,6 +52,7 @@ import {
 } from 'lucide-react';
 import type { Locale, UserRole } from '@/types';
 import Link from 'next/link';
+import AdminOrderStatuses from './AdminOrderStatuses';
 
 // ============================================
 // BILINGUAL HELPER
@@ -499,6 +500,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="stores-sellers" className="gap-1.5 font-bold">
             <Store className="h-3.5 w-3.5" />
             {t(locale, 'المتاجر والتجار', 'Stores & Sellers')}
+          </TabsTrigger>
+          <TabsTrigger value="order-statuses" className="gap-1.5 font-bold">
+            <Settings className="h-3.5 w-3.5" />
+            {t(locale, 'إعدادات الحالات', 'Order Statuses')}
           </TabsTrigger>
         </TabsList>
 
@@ -983,6 +988,10 @@ export default function AdminDashboard() {
               </Tabs>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="order-statuses">
+          <AdminOrderStatuses />
         </TabsContent>
       </Tabs>
 

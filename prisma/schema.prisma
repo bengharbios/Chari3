@@ -902,4 +902,18 @@ model ProductQA {
   updatedAt   DateTime @updatedAt
 }
 
+// ============================================
+// ORDER STATUS SETTINGS (Admin-controlled)
+// ============================================
 
+model OrderStatusType {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  nameAr      String
+  nameEn      String?
+  color       String   @default("#6B7280")
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
