@@ -41,47 +41,43 @@ export async function POST(req: NextRequest) {
     const couponStoreId = coupon.storeId;
     const couponSellerId = coupon.sellerId;
 
-    if (couponStoreId && storeId !== couponStoreId) {
-      // Check if storeId actually corresponds to the SellerProfile of the same store manager
-      const store = await db.store.findUnique({
-        where: { id: couponStoreId },
-        select: { managerId: true }
-      });
-      
-      let isVerifiedMatch = false;
-      if (store && storeId) {
-        const sellerProfile = await db.sellerProfile.findUnique({
-          where: { id: storeId }
+    if (couponStoreId || couponSellerId) {
+      // Find at least one product in the cart that belongs to this store/seller
+      let productIds: string[] = [];
+      if (body.items && Array.isArray(body.items)) {
+        productIds = body.items.map((i: any) => i.productId);
+      } else if (body.productId) {
+        productIds = [body.productId];
+      }
+
+      if (productIds.length > 0) {
+        const matchingProducts = await db.product.findMany({
+          where: {
+            id: { in: productIds },
+            OR: [
+              ...(couponStoreId ? [{ storeId: couponStoreId }] : []),
+              ...(couponSellerId ? [{ sellerId: couponSellerId }] : [])
+            ]
+          }
         });
-        if (sellerProfile && sellerProfile.userId === store.managerId) {
-          isVerifiedMatch = true;
+
+        if (matchingProducts.length === 0) {
+          return NextResponse.json({ 
+            success: false, 
+            errorAr: couponStoreId ? 'هذا الكوبون غير مخصص لمنتجات هذا المتجر' : 'هذا الكوبون غير مخصص لمنتجات هذا البائع', 
+            errorEn: 'This coupon is not valid for these products' 
+          }, { status: 400 });
         }
-      }
-
-      if (!isVerifiedMatch) {
-        return NextResponse.json({ success: false, errorAr: 'هذا الكوبون غير مخصص لمنتجات هذا المتجر', errorEn: 'This coupon is not valid for this store\'s products' }, { status: 400 });
-      }
-    }
-
-    if (couponSellerId && sellerId !== couponSellerId) {
-      // Check if sellerId actually corresponds to the Store of the same seller/freelancer
-      const sellerProfile = await db.sellerProfile.findUnique({
-        where: { id: couponSellerId },
-        select: { userId: true }
-      });
-
-      let isVerifiedMatch = false;
-      if (sellerProfile && sellerId) {
-        const store = await db.store.findFirst({
-          where: { managerId: sellerProfile.userId }
-        });
-        if (store && store.id === sellerId) {
-          isVerifiedMatch = true;
+      } else {
+        // Fallback for old requests
+        const passedStoreId = body.storeId;
+        const passedSellerId = body.sellerId;
+        if (couponStoreId && passedStoreId !== couponStoreId) {
+          return NextResponse.json({ success: false, errorAr: 'هذا الكوبون غير مخصص لمنتجات هذا المتجر', errorEn: 'This coupon is not valid for this store\'s products' }, { status: 400 });
         }
-      }
-
-      if (!isVerifiedMatch) {
-        return NextResponse.json({ success: false, errorAr: 'هذا الكوبون غير مخصص لمنتجات هذا البائع', errorEn: 'This coupon is not valid for this seller\'s products' }, { status: 400 });
+        if (couponSellerId && passedSellerId !== couponSellerId) {
+          return NextResponse.json({ success: false, errorAr: 'هذا الكوبون غير مخصص لمنتجات هذا البائع', errorEn: 'This coupon is not valid for this seller\'s products' }, { status: 400 });
+        }
       }
     }
 

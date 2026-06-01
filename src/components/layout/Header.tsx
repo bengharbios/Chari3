@@ -240,6 +240,7 @@ export default function Header() {
         body: JSON.stringify({
           code: couponCode.trim(),
           subtotal: getSubtotal(),
+          items: items.map(i => ({ productId: i.product.id })),
           storeId: p.store?.id || (p as any).storeId,
           sellerId: p.seller?.id || (p as any).sellerId
         })
