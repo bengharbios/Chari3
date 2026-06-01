@@ -86,10 +86,21 @@ export async function GET(req: NextRequest) {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
+    // Month orders for KPIs
     const monthOrders = await db.orderItem.findMany({
       where: {
         productId: { in: products.map((p) => p.id) },
         order: { createdAt: { gte: startOfMonth } },
+      },
+      include: {
+        order: { select: { id: true, total: true } },
+      },
+    });
+
+    // Recent orders for the table display (last 50 orders overall)
+    const recentOrders = await db.orderItem.findMany({
+      where: {
+        productId: { in: products.map((p) => p.id) },
       },
       include: {
         order: {
@@ -119,6 +130,8 @@ export async function GET(req: NextRequest) {
         },
         product: { select: { name: true, price: true } },
       },
+      orderBy: { order: { createdAt: 'desc' } },
+      take: 50,
     });
 
     // Wallet balance
@@ -160,7 +173,7 @@ export async function GET(req: NextRequest) {
     });
 
     // KPIs
-    const monthRevenue = monthOrders.reduce((s, i) => s + i.total, 0);
+    const monthRevenue = monthOrders.reduce((s: number, i: any) => s + (i.order?.total || 0), 0);
     const monthCommission = monthRevenue * ((seller.package?.commissionRate ?? 10) / 100);
     const monthNetEarnings = monthRevenue - monthCommission;
 
@@ -181,7 +194,7 @@ export async function GET(req: NextRequest) {
         walletBalance: wallet?.balance ?? 0,
       },
       products,
-      recentOrders: monthOrders.slice(0, 50),
+      recentOrders,
       reviews,
       challenges,
       sellerLevel,
