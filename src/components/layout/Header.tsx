@@ -408,6 +408,24 @@ export default function Header() {
           : 'bg-background border-b border-transparent'
       }`}
     >
+      {isBuyerMode && (
+        <div className="bg-gradient-to-r from-brand to-amber-300 text-navy py-1.5 px-4 text-center text-xs font-bold flex flex-wrap items-center justify-center gap-2 w-full border-b border-navy/10 shadow-sm relative">
+          <ShoppingBag className="h-3.5 w-3.5 shrink-0" />
+          <span>
+            {t('أنت الآن تتصفح المنصة كمشتري.', 'You are currently browsing the platform as a buyer.')}
+          </span>
+          <button 
+            onClick={() => {
+              const { setBuyerMode } = useAuthStore.getState();
+              setBuyerMode(false);
+              navigateToDashboard(rolePages[user?.role || 'buyer'] || 'seller');
+            }}
+            className="ms-2 underline decoration-navy/50 hover:decoration-navy transition-colors bg-white/40 px-2 py-0.5 rounded-full whitespace-nowrap"
+          >
+            {t('العودة للوحة التحكم', 'Return to Dashboard')}
+          </button>
+        </div>
+      )}
       {/* Main Header — Single clean row: Logo | Search | Actions */}
       <div className="container-platform">
         <div className="flex items-center justify-between h-[var(--header-height)] gap-4">
