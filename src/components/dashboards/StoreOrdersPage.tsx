@@ -33,6 +33,19 @@ export default function StoreOrdersPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  // Load saved view mode on mount
+  useEffect(() => {
+    const savedMode = localStorage.getItem('chari3_order_view_mode') as 'list' | 'kanban' | 'table';
+    if (savedMode && ['list', 'kanban', 'table'].includes(savedMode)) {
+      setViewMode(savedMode);
+    }
+  }, []);
+
+  const handleViewModeChange = (mode: 'list' | 'kanban' | 'table') => {
+    setViewMode(mode);
+    localStorage.setItem('chari3_order_view_mode', mode);
+  };
+
   const fetchStatuses = async () => {
     try {
       const res = await fetch('/api/order-statuses');
@@ -289,9 +302,9 @@ export default function StoreOrdersPage() {
             {t('تصدير', 'Export')}
           </Button>
           <div className="bg-background/50 backdrop-blur-md rounded-xl p-1 flex items-center border border-white/10 shrink-0">
-            <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('list')} className="rounded-lg"><List className="h-4 w-4" /></Button>
-            <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('table')} className="rounded-lg"><TableIcon className="h-4 w-4" /></Button>
-            <Button variant={viewMode === 'kanban' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('kanban')} className="rounded-lg"><LayoutGrid className="h-4 w-4" /></Button>
+            <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => handleViewModeChange('list')} className="rounded-lg"><List className="h-4 w-4" /></Button>
+            <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" onClick={() => handleViewModeChange('table')} className="rounded-lg"><TableIcon className="h-4 w-4" /></Button>
+            <Button variant={viewMode === 'kanban' ? 'default' : 'ghost'} size="sm" onClick={() => handleViewModeChange('kanban')} className="rounded-lg"><LayoutGrid className="h-4 w-4" /></Button>
           </div>
         </div>
       </div>
