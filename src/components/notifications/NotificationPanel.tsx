@@ -119,26 +119,54 @@ function TimeAgo({ dateStr }: { dateStr: string }) {
 // NOTIFICATION ITEM
 // ============================================
 
+import { useRouter, usePathname } from 'next/navigation';
+
 function NotificationItem({ notification }: { notification: AppNotification }) {
   const isAr = useAppStore((s) => s.locale === 'ar');
-  const { markAsRead, clearNotification } = useNotificationStore();
+  const { markAsRead, clearNotification, setOpen } = useNotificationStore();
   const { setCurrentPage } = useAppStore();
+  const { user } = useAuthStore();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const Icon = categoryIcons[notification.category] || Bell;
   const iconColor = categoryIconColors[notification.category] || 'text-gray-600';
   const urgency = urgencyConfig[notification.urgency] || urgencyConfig.normal;
 
-  const handleAction = () => {
+  const handleMarkAsRead = async () => {
+    if (notification.isRead) return;
     markAsRead(notification.id);
+    if (user?.id && notification.id.startsWith('db-')) {
+      const dbId = notification.id.replace('db-', '');
+      try {
+        await fetch('/api/notifications', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, notificationId: dbId })
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  };
+
+  const handleAction = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await handleMarkAsRead();
+    setOpen(false);
     if (notification.actionPage) {
-      setCurrentPage(notification.actionPage);
+      if (pathname !== '/') {
+        router.push(`/?view=${notification.actionPage}`);
+      } else {
+        setCurrentPage(notification.actionPage);
+      }
+    } else if (notification.actionUrl) {
+      window.open(notification.actionUrl, '_blank');
     }
   };
 
   const handleClick = () => {
-    if (!notification.isRead) {
-      markAsRead(notification.id);
-    }
+    handleMarkAsRead();
   };
 
   return (
@@ -368,7 +396,16 @@ export default function NotificationPanel() {
                     variant="ghost"
                     size="sm"
                     className="h-7 text-xs text-primary hover:text-primary hover:bg-primary/10 gap-1"
-                    onClick={markAllAsRead}
+                    onClick={() => {
+                      markAllAsRead();
+                      if (user?.id) {
+                        fetch('/api/notifications', {
+                          method: 'PATCH',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ userId: user.id, markAllRead: true })
+                        }).catch(console.error);
+                      }
+                    }}
                   >
                     <CheckCheck className="size-3.5" />
                     <span>{isAr ? 'قراءة الكل' : 'Read all'}</span>
@@ -390,13 +427,13 @@ export default function NotificationPanel() {
 
             {/* Notifications List */}
             {sortedNotifications.length > 0 ? (
-              <ScrollArea className="max-h-[400px]" dir={isAr ? 'rtl' : 'ltr'}>
-                <div className="divide-y divide-border/50 p-2" dir={isAr ? 'rtl' : 'ltr'}>
+              <div className="max-h-[400px] overflow-y-auto overflow-x-hidden" dir={isAr ? 'rtl' : 'ltr'}>
+                <div className="divide-y divide-border/50 p-2">
                   {sortedNotifications.map((notification) => (
                     <NotificationItem key={notification.id} notification={notification} />
                   ))}
                 </div>
-              </ScrollArea>
+              </div>
             ) : (
               <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                 <div className="p-3 rounded-full bg-muted mb-3">
