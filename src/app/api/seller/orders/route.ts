@@ -17,8 +17,8 @@ export async function GET(req: NextRequest) {
     if (!userId) return NextResponse.json({ success: false, error: 'userId required' }, { status: 400 });
 
     // Determine if the user is an independent seller or store manager
-    let storeId = null;
-    let sellerId = null;
+    let storeId: string | null = null;
+    let sellerId: string | null = null;
 
     const seller = await db.sellerProfile.findUnique({ where: { userId } });
     if (seller) {
