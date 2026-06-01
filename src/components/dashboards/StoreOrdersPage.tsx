@@ -154,6 +154,121 @@ export default function StoreOrdersPage() {
     document.body.removeChild(link);
   };
 
+  const handlePrintInvoice = () => {
+    if (!selectedOrder) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const itemsRows = selectedOrder.items.map((item: any) => `
+      <tr style="border-bottom: 1px solid #e2e8f0;">
+        <td style="padding: 12px; text-align: start;">${item.productName}</td>
+        <td style="padding: 12px; text-align: center;">${item.price.toLocaleString()} DZD</td>
+        <td style="padding: 12px; text-align: center;">${item.quantity}</td>
+        <td style="padding: 12px; text-align: end; font-weight: bold;">${item.total.toLocaleString()} DZD</td>
+      </tr>
+    `).join('');
+
+    const isArOrder = locale === 'ar';
+
+    printWindow.document.write(`
+      <html dir="${isArOrder ? 'rtl' : 'ltr'}">
+        <head>
+          <title>Invoice #${selectedOrder.orderNumber}</title>
+          <style>
+            body { font-family: 'Cairo', Arial, sans-serif; margin: 40px; color: #1e293b; background-color: #fff; }
+            .header-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+            .brand-name { font-size: 28px; font-weight: 900; color: #fbbf24; }
+            .title { font-size: 20px; font-weight: bold; text-align: end; }
+            .details-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+            .details-td { width: 50%; vertical-align: top; font-size: 14px; line-height: 1.6; }
+            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+            .items-th { background-color: #f8fafc; padding: 12px; font-weight: bold; border-bottom: 2px solid #e2e8f0; font-size: 14px; }
+            .totals-table { width: 40%; margin-${isArOrder ? 'right' : 'left'}: auto; border-collapse: collapse; font-size: 14px; }
+            .footer { text-align: center; margin-top: 60px; font-size: 12px; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <table class="header-table">
+            <tr>
+              <td class="brand-name">ChariDay</td>
+              <td class="title">${isArOrder ? 'فاتورة مبيعات' : 'Sales Invoice'}</td>
+            </tr>
+          </table>
+
+          <table class="details-table">
+            <tr>
+              <td class="details-td">
+                <strong>${isArOrder ? 'تفاصيل العميل:' : 'Bill To:'}</strong><br />
+                ${selectedOrder.buyerName}<br />
+                <span dir="ltr">${selectedOrder.buyerPhone}</span><br />
+                ${selectedOrder.address?.street || ''}, ${selectedOrder.address?.city || ''}
+              </td>
+              <td class="details-td" style="text-align: ${isArOrder ? 'left' : 'right'};">
+                <strong>${isArOrder ? 'معلومات الفاتورة:' : 'Invoice Details:'}</strong><br />
+                ${isArOrder ? 'رقم الطلب:' : 'Order ID:'} #${selectedOrder.orderNumber}<br />
+                ${isArOrder ? 'تاريخ الفاتورة:' : 'Date:'} ${selectedOrder.date}<br />
+                ${isArOrder ? 'طريقة الدفع:' : 'Payment:'} ${selectedOrder.paymentMethod.toUpperCase()} (${selectedOrder.paymentStatus.toUpperCase()})
+              </td>
+            </tr>
+          </table>
+
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th class="items-th" style="text-align: start;">${isArOrder ? 'المنتج' : 'Product'}</th>
+                <th class="items-th" style="text-align: center;">${isArOrder ? 'سعر الوحدة' : 'Price'}</th>
+                <th class="items-th" style="text-align: center;">${isArOrder ? 'الكمية' : 'Quantity'}</th>
+                <th class="items-th" style="text-align: end;">${isArOrder ? 'الإجمالي' : 'Total'}</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsRows}
+            </tbody>
+          </table>
+
+          <table class="totals-table">
+            ${(() => {
+              const itemsTotal = selectedOrder.items.reduce((sum: number, i: any) => sum + (i.total || i.price * i.quantity), 0);
+              const printSubtotal = (selectedOrder.subtotal > 0 ? selectedOrder.subtotal : itemsTotal);
+              const printDiscount = selectedOrder.discount > 0 ? selectedOrder.discount : 
+                (printSubtotal + (selectedOrder.shippingCost || 0) - selectedOrder.total > 0 ? 
+                  printSubtotal + (selectedOrder.shippingCost || 0) - selectedOrder.total : 0);
+              
+              return `
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 8px 0; text-align: start;">${isArOrder ? 'المجموع الفرعي:' : 'Subtotal:'}</td>
+                <td style="padding: 8px 0; text-align: end;">${printSubtotal.toLocaleString()} DZD</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e2e8f0;">
+                <td style="padding: 8px 0; text-align: start;">${isArOrder ? 'تكلفة الشحن:' : 'Shipping:'}</td>
+                <td style="padding: 8px 0; text-align: end;">${(selectedOrder.shippingCost || 0).toLocaleString()} DZD</td>
+              </tr>
+              ${printDiscount > 0 ? `
+              <tr style="border-bottom: 1px solid #e2e8f0; color: #ef4444;">
+                <td style="padding: 8px 0; text-align: start;">${isArOrder ? 'الخصم:' : 'Discount:'}</td>
+                <td style="padding: 8px 0; text-align: end;">-${printDiscount.toLocaleString()} DZD</td>
+              </tr>` : ''}
+              `;
+            })()}
+            <tr style="font-weight: bold; font-size: 16px;">
+              <td style="padding: 8px 0; text-align: start; color: #fbbf24;">${isArOrder ? 'المجموع الإجمالي:' : 'Total:'}</td>
+              <td style="padding: 8px 0; text-align: end; color: #fbbf24;">${selectedOrder.total.toLocaleString()} DZD</td>
+            </tr>
+          </table>
+
+          <div class="footer">
+            ${isArOrder ? 'نشكركم على تسوقكم من متجرنا عبر منصة ChariDay!' : 'Thank you for shopping with us via ChariDay platform!'}
+          </div>
+          
+          <script>
+            window.onload = function() { window.print(); }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
   // HTML5 Drag and Drop handlers
   const handleDragStart = (e: React.DragEvent, orderId: string) => {
     e.dataTransfer.setData('orderId', orderId);
@@ -336,7 +451,7 @@ export default function StoreOrdersPage() {
             <div className="space-y-6 pt-4">
               <div className="flex justify-between items-center border-b border-white/10 pb-4">
                 <DialogTitle className="text-lg font-black">{t('تفاصيل الطلب', 'Order Details')} #{selectedOrder.orderNumber}</DialogTitle>
-                <Button variant="outline" size="sm" onClick={() => window.print()} className="rounded-lg h-8 print:hidden">
+                <Button variant="outline" size="sm" onClick={handlePrintInvoice} className="rounded-lg h-8 print:hidden">
                   <Printer className="h-4 w-4 mr-2" />
                   {t('طباعة', 'Print')}
                 </Button>
