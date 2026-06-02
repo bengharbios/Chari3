@@ -33,17 +33,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Package not found' }, { status: 404 });
     }
 
-    // Fetch platform billing settings
+    // Fetch platform billing settings from SystemSetting
     const settingKeys = [
+      'billing_enable_subscriptions',
       'billing_enable_trial',
       'billing_trial_days',
     ];
-    const settingsRows = await prisma.setting.findMany({
+    const settingsRows = await prisma.systemSetting.findMany({
       where: { key: { in: settingKeys } },
     });
-    const settingsMap: Record<string, string> = {};
+    const settingsMap: Record<string, any> = {};
     for (const row of settingsRows) {
       settingsMap[row.key] = row.value;
+    }
+
+    const subscriptionsEnabled = settingsMap['billing_enable_subscriptions'] === 'true' || settingsMap['billing_enable_subscriptions'] === true;
+    if (!subscriptionsEnabled) {
+      return NextResponse.json(
+        { success: false, error: 'Subscription billing is disabled globally' },
+        { status: 400 }
+      );
     }
 
     const trialEnabled = settingsMap['billing_enable_trial'] === 'true' || settingsMap['billing_enable_trial'] === '1';

@@ -60,6 +60,13 @@ export async function checkAndEnforceDebtLimit(userId: string, currentBalance: n
  */
 export async function chargeOrderCommission(orderId: string) {
   try {
+    // Check if commission system is enabled in SystemSetting
+    const enableCommissionsSetting = await db.systemSetting.findUnique({
+      where: { key: 'billing_enable_commissions' }
+    });
+    const enableCommissions = enableCommissionsSetting ? (enableCommissionsSetting.value === 'true' || enableCommissionsSetting.value === true) : true;
+    if (!enableCommissions) return;
+
     const order = await db.order.findUnique({
       where: { id: orderId },
       include: { items: true },
@@ -154,6 +161,13 @@ export async function chargeOrderCommission(orderId: string) {
  */
 export async function reverseOrderCommission(orderId: string) {
   try {
+    // Check if commission system is enabled in SystemSetting
+    const enableCommissionsSetting = await db.systemSetting.findUnique({
+      where: { key: 'billing_enable_commissions' }
+    });
+    const enableCommissions = enableCommissionsSetting ? (enableCommissionsSetting.value === 'true' || enableCommissionsSetting.value === true) : true;
+    if (!enableCommissions) return;
+
     const order = await db.order.findUnique({
       where: { id: orderId },
     });

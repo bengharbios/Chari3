@@ -29,6 +29,14 @@ export async function GET(req: NextRequest) {
       return acc;
     }, {} as Record<string, any>);
 
+    const enableSubscriptions = settingsObject.billing_enable_subscriptions === 'true' || settingsObject.billing_enable_subscriptions === true;
+    if (!enableSubscriptions) {
+      return NextResponse.json({
+        success: true,
+        message: 'Subscription system is disabled globally. No fees charged.'
+      });
+    }
+
     const priceMobileApp = parseFloat(settingsObject.price_addon_mobile_app || '2000');
     const priceWhatsApp = parseFloat(settingsObject.price_addon_whatsapp || '2500');
     const priceCRM = parseFloat(settingsObject.price_addon_crm || '1500');
