@@ -192,6 +192,7 @@ export default function AdminSidebar() {
 
   return (
     <div 
+      dir={isRTL ? 'rtl' : 'ltr'}
       className={`relative h-screen bg-navy text-white transition-all duration-300 ease-in-out flex flex-col z-20 ${
         isCollapsed ? 'w-20' : 'w-64'
       } hidden lg:flex`}
@@ -233,6 +234,7 @@ export default function AdminSidebar() {
                 <Link 
                   key={item.path} 
                   href={getAdminPath(item.path)}
+                  dir={isRTL ? 'rtl' : 'ltr'}
                   className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all group ${
                     isActive 
                       ? 'bg-brand text-navy font-bold shadow-md' 

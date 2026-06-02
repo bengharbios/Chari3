@@ -112,6 +112,7 @@ export default function Sidebar({ className }: SidebarProps) {
       )}
 
       <aside
+        dir={isRTL ? 'rtl' : 'ltr'}
         className={cn(
           'fixed top-[var(--header-height-mobile)] bottom-0 z-[var(--z-overlay)] lg:z-auto',
           'w-[var(--sidebar-width)] bg-sidebar text-sidebar-foreground flex flex-col',
@@ -159,6 +160,7 @@ export default function Sidebar({ className }: SidebarProps) {
               return (
                 <button
                   key={item.id + item.labelAr}
+                  dir={isRTL ? 'rtl' : 'ltr'}
                   onClick={() => {
                     setCurrentPage(item.id as PageType);
                     if (window.innerWidth < 1024) setSidebarOpen(false);
@@ -187,6 +189,7 @@ export default function Sidebar({ className }: SidebarProps) {
         <div className="p-3 border-t border-sidebar-border">
           <button
             onClick={logout}
+            dir={isRTL ? 'rtl' : 'ltr'}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
           >
             <LogOut className="h-5 w-5 shrink-0" />
