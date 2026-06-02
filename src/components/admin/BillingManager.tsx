@@ -37,6 +37,14 @@ export default function BillingManager() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [globalDebtLimit, setGlobalDebtLimit] = useState('-5000');
+  const [ccpAccountName, setCcpAccountName] = useState('شاري داي إكسبريس');
+  const [ccpAccountRip, setCcpAccountRip] = useState('007999990023456789 45');
+  const [priceAddonMobileApp, setPriceAddonMobileApp] = useState('2000');
+  const [priceAddonWhatsapp, setPriceAddonWhatsapp] = useState('2500');
+  const [priceAddonCrm, setPriceAddonCrm] = useState('1500');
+  const [priceAddonPos, setPriceAddonPos] = useState('1500');
+  const [priceAddonExtraPos, setPriceAddonExtraPos] = useState('500');
+
   const [pendingReceipts, setPendingReceipts] = useState<any[]>([]);
   const [packages, setPackages] = useState<any[]>([]);
   const [isSavingLimit, setIsSavingLimit] = useState(false);
@@ -57,8 +65,15 @@ export default function BillingManager() {
       // 1. Fetch system settings
       const settingsRes = await fetch('/api/admin/settings');
       const settingsData = await settingsRes.json();
-      if (settingsData.success && settingsData.settings?.global_debt_limit) {
-        setGlobalDebtLimit(settingsData.settings.global_debt_limit);
+      if (settingsData.success) {
+        if (settingsData.settings?.global_debt_limit) setGlobalDebtLimit(settingsData.settings.global_debt_limit);
+        if (settingsData.settings?.ccp_account_name) setCcpAccountName(settingsData.settings.ccp_account_name);
+        if (settingsData.settings?.ccp_account_rip) setCcpAccountRip(settingsData.settings.ccp_account_rip);
+        if (settingsData.settings?.price_addon_mobile_app) setPriceAddonMobileApp(settingsData.settings.price_addon_mobile_app);
+        if (settingsData.settings?.price_addon_whatsapp) setPriceAddonWhatsapp(settingsData.settings.price_addon_whatsapp);
+        if (settingsData.settings?.price_addon_crm) setPriceAddonCrm(settingsData.settings.price_addon_crm);
+        if (settingsData.settings?.price_addon_pos) setPriceAddonPos(settingsData.settings.price_addon_pos);
+        if (settingsData.settings?.price_addon_extra_pos) setPriceAddonExtraPos(settingsData.settings.price_addon_extra_pos);
       }
 
       // 2. Fetch pending receipts
@@ -85,8 +100,8 @@ export default function BillingManager() {
     fetchAdminBillingData();
   }, []);
 
-  // Save Debt Limit
-  const handleSaveDebtLimit = async (e: React.FormEvent) => {
+  // Save Settings
+  const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSavingLimit(true);
     try {
@@ -96,12 +111,19 @@ export default function BillingManager() {
         body: JSON.stringify({
           settings: {
             global_debt_limit: globalDebtLimit,
+            ccp_account_name: ccpAccountName,
+            ccp_account_rip: ccpAccountRip,
+            price_addon_mobile_app: priceAddonMobileApp,
+            price_addon_whatsapp: priceAddonWhatsapp,
+            price_addon_crm: priceAddonCrm,
+            price_addon_pos: priceAddonPos,
+            price_addon_extra_pos: priceAddonExtraPos,
           },
         }),
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(t(locale, 'تم حفظ حد المديونية الأقصى بنجاح', 'Global debt limit saved successfully'));
+        toast.success(t(locale, 'تم حفظ إعدادات الفوترة بنجاح', 'Billing settings saved successfully'));
         fetchAdminBillingData();
       } else {
         throw new Error(data.error);
@@ -185,48 +207,127 @@ export default function BillingManager() {
     <div dir={dir} className="space-y-6 text-start p-1 sm:p-2">
       {/* Settings row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-1 border-border bg-card">
+        <Card className="md:col-span-2 border-border bg-card">
           <CardHeader className="pb-4">
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <Settings className="h-5 w-5 text-brand" />
-              {t(locale, 'إعدادات المديونية العامة', 'Outstanding Debt Rules')}
+              {t(locale, 'إعدادات الفوترة والتحصيل المالي للتحويلات', 'Billing & Collection Settings')}
             </CardTitle>
             <CardDescription>
-              {t(locale, 'تحكم في سقف المديونية السلبي المسموح به للتجار والمتاجر.', 'Configure maximum negative balance tolerance threshold.')}
+              {t(locale, 'تحكم في حدود المديونيات، معلومات الحساب البريدي (CCP)، وأسعار الخدمات الإضافية للتجار والمتاجر.', 'Manage outstanding debt limits, Algeria CCP postal accounts, and pricing parameters for add-ons.')}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSaveDebtLimit} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="debtLimit" className="text-xs font-semibold">{t(locale, 'حد المديونية الأقصى بالدينار (سالب)', 'Global Debt Limit DZD (Negative value)')}</Label>
-                <Input
-                  id="debtLimit"
-                  placeholder="-5000"
-                  value={globalDebtLimit}
-                  onChange={(e) => setGlobalDebtLimit(e.target.value)}
-                  className="font-mono rounded-xl h-9 font-bold"
-                />
-                <p className="text-[10px] text-muted-foreground">
-                  {t(locale, 'عندما يتجاوز ميزان التاجر هذا المبلغ (مثال: -6000 دج) سيتم وقف حسابه فوراً حتى السداد.', 'Accounts with balances dropping below this threshold will automatically suspend.')}
-                </p>
+            <form onSubmit={handleSaveSettings} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Global Debt Limit */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="debtLimit" className="text-xs font-semibold">{t(locale, 'سقف المديونية الأقصى (سالب)', 'Max Debt Limit (Negative)')}</Label>
+                  <Input
+                    id="debtLimit"
+                    value={globalDebtLimit}
+                    onChange={(e) => setGlobalDebtLimit(e.target.value)}
+                    className="font-mono rounded-xl h-9 font-bold"
+                  />
+                </div>
+                {/* CCP Account Name */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="ccpName" className="text-xs font-semibold">{t(locale, 'اسم صاحب حساب CCP', 'CCP Account Owner Name')}</Label>
+                  <Input
+                    id="ccpName"
+                    value={ccpAccountName}
+                    onChange={(e) => setCcpAccountName(e.target.value)}
+                    className="rounded-xl h-9 text-xs"
+                  />
+                </div>
+                {/* CCP Account RIP */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="ccpRip" className="text-xs font-semibold">{t(locale, 'رقم حساب الـ RIP', 'CCP RIP Number')}</Label>
+                  <Input
+                    id="ccpRip"
+                    value={ccpAccountRip}
+                    onChange={(e) => setCcpAccountRip(e.target.value)}
+                    className="font-mono rounded-xl h-9 text-xs"
+                  />
+                </div>
               </div>
-              <Button type="submit" size="sm" className="w-full gap-2 rounded-xl" disabled={isSavingLimit}>
-                {isSavingLimit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                {t(locale, 'حفظ التعديلات', 'Save Limits')}
-              </Button>
+
+              {/* Pricing section for addons */}
+              <div className="border-t pt-4 space-y-3">
+                <Label className="text-xs font-bold text-indigo-500">{t(locale, 'أسعار الخدمات الاختيارية الإضافية (دج / شهرياً)', 'Add-on Services Pricing (DZD / monthly)')}</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  {/* Price Mobile App */}
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-semibold">{t(locale, 'تطبيق الهاتف للبائع', 'Mobile Seller App')}</Label>
+                    <Input
+                      type="number"
+                      value={priceAddonMobileApp}
+                      onChange={(e) => setPriceAddonMobileApp(e.target.value)}
+                      className="font-mono rounded-xl h-9 text-center text-xs"
+                    />
+                  </div>
+                  {/* Price WhatsApp */}
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-semibold">{t(locale, 'دعم واتساب مخصص', 'WhatsApp Support')}</Label>
+                    <Input
+                      type="number"
+                      value={priceAddonWhatsapp}
+                      onChange={(e) => setPriceAddonWhatsapp(e.target.value)}
+                      className="font-mono rounded-xl h-9 text-center text-xs"
+                    />
+                  </div>
+                  {/* Price CRM */}
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-semibold">{t(locale, 'نظام CRM متطور', 'Advanced CRM')}</Label>
+                    <Input
+                      type="number"
+                      value={priceAddonCrm}
+                      onChange={(e) => setPriceAddonCrm(e.target.value)}
+                      className="font-mono rounded-xl h-9 text-center text-xs"
+                    />
+                  </div>
+                  {/* Price POS */}
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-semibold">{t(locale, 'برنامج Chari POS', 'Chari POS App')}</Label>
+                    <Input
+                      type="number"
+                      value={priceAddonPos}
+                      onChange={(e) => setPriceAddonPos(e.target.value)}
+                      className="font-mono rounded-xl h-9 text-center text-xs"
+                    />
+                  </div>
+                  {/* Price Extra POS */}
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-semibold">{t(locale, 'جهاز POS إضافي', 'Extra POS Device')}</Label>
+                    <Input
+                      type="number"
+                      value={priceAddonExtraPos}
+                      onChange={(e) => setPriceAddonExtraPos(e.target.value)}
+                      className="font-mono rounded-xl h-9 text-center text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <Button type="submit" size="sm" className="px-6 gap-2 rounded-xl bg-brand hover:bg-brand/90" disabled={isSavingLimit}>
+                  {isSavingLimit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  {t(locale, 'حفظ إعدادات الفوترة الحالية', 'Save Billing Settings')}
+                </Button>
+              </div>
             </form>
           </CardContent>
         </Card>
 
         {/* Quick analytics card for debt metrics */}
-        <Card className="md:col-span-2 border-border bg-card">
+        <Card className="md:col-span-1 border-border bg-card">
           <CardHeader className="pb-4">
             <CardTitle className="text-base font-bold flex items-center gap-2">
               <Wallet className="h-5 w-5 text-indigo-500" />
               {t(locale, 'حالة التحصيل المالي للمنصة', 'Platform Collections Overview')}
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-1">
+          <CardContent className="grid grid-cols-2 gap-4 pt-1">
             <div className="p-3 border rounded-xl bg-muted/20">
               <p className="text-xs text-muted-foreground">{t(locale, 'إيصالات معلقة', 'Pending Slips')}</p>
               <h3 className="text-xl font-bold font-mono text-amber-500 mt-1">{pendingReceipts.length}</h3>

@@ -22,6 +22,19 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    // Fetch system settings for addon prices
+    const settings = await db.systemSetting.findMany();
+    const settingsObject = settings.reduce((acc, setting) => {
+      acc[setting.key] = setting.value;
+      return acc;
+    }, {} as Record<string, any>);
+
+    const priceMobileApp = parseFloat(settingsObject.price_addon_mobile_app || '2000');
+    const priceWhatsApp = parseFloat(settingsObject.price_addon_whatsapp || '2500');
+    const priceCRM = parseFloat(settingsObject.price_addon_crm || '1500');
+    const pricePOS = parseFloat(settingsObject.price_addon_pos || '1500');
+    const priceExtraPOS = parseFloat(settingsObject.price_addon_extra_pos || '500');
+
     const results: any[] = [];
 
     for (const user of users) {
@@ -57,25 +70,27 @@ export async function GET(req: NextRequest) {
       let addonsTotal = 0;
       const activeAddons: string[] = [];
 
+      const currencySymbol = user.wallet?.currency || 'DZD';
+
       if (addonMobileApp) {
-        addonsTotal += 2000;
-        activeAddons.push('App Mobile (2000 DZD)');
+        addonsTotal += priceMobileApp;
+        activeAddons.push(`App Mobile (${priceMobileApp} ${currencySymbol})`);
       }
       if (addonWhatsAppSupport) {
-        addonsTotal += 2500;
-        activeAddons.push('WhatsApp Support (2500 DZD)');
+        addonsTotal += priceWhatsApp;
+        activeAddons.push(`WhatsApp Support (${priceWhatsApp} ${currencySymbol})`);
       }
       if (addonAdvancedCRM) {
-        addonsTotal += 1500;
-        activeAddons.push('CRM (1500 DZD)');
+        addonsTotal += priceCRM;
+        activeAddons.push(`CRM (${priceCRM} ${currencySymbol})`);
       }
       if (addonEchangoPOS) {
-        addonsTotal += 1500;
-        activeAddons.push('Chari POS (1500 DZD)');
+        addonsTotal += pricePOS;
+        activeAddons.push(`Chari POS (${pricePOS} ${currencySymbol})`);
       }
       if (addonExtraPOSDevices > 0) {
-        addonsTotal += addonExtraPOSDevices * 500;
-        activeAddons.push(`Extra POS Devices x${addonExtraPOSDevices} (${addonExtraPOSDevices * 500} DZD)`);
+        addonsTotal += addonExtraPOSDevices * priceExtraPOS;
+        activeAddons.push(`Extra POS Devices x${addonExtraPOSDevices} (${addonExtraPOSDevices * priceExtraPOS} ${currencySymbol})`);
       }
 
       const totalFee = packagePrice + addonsTotal;

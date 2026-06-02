@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
         totalOrders,
         totalSpent: totalSpent._sum.total || 0,
         walletBalance: wallet?.balance || 0,
+        walletCurrency: wallet?.currency || 'DZD',
         wishlistCount,
       }
     });

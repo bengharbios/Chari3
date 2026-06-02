@@ -19,7 +19,6 @@ import {
 import { toast } from 'sonner';
 
 const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
-const fmt = (n: number) => `${n.toLocaleString('ar-DZ')} د.ج`;
 
 export default function BillingPage() {
   const { locale } = useAppStore();
@@ -33,6 +32,20 @@ export default function BillingPage() {
   const [packageInfo, setPackageInfo] = useState<any>(null);
   const [globalDebtLimit, setGlobalDebtLimit] = useState<number>(-5000);
   const [merchantProfile, setMerchantProfile] = useState<any>(null);
+  const [settings, setSettings] = useState<any>({});
+
+  // Dynamic currency formatting helper
+  const fmt = (amount: number) => {
+    const code = wallet?.currency || 'DZD';
+    const symbolMap: Record<string, string> = {
+      DZD: locale === 'ar' ? 'د.ج' : 'DZD',
+      SAR: locale === 'ar' ? 'ر.س' : 'SAR',
+      USD: '$',
+      EUR: '€',
+    };
+    const symbol = symbolMap[code] || code;
+    return `${amount.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')} ${symbol}`;
+  };
 
   // Addon states
   const [addonMobileApp, setAddonMobileApp] = useState(false);
@@ -74,6 +87,7 @@ export default function BillingPage() {
       if (currentUserData) {
         setWallet({
           balance: currentUserData.wallet?.balance ?? 0,
+          currency: currentUserData.wallet?.currency ?? walletData.stats?.walletCurrency ?? 'DZD',
         });
         const profile = user.role === 'store_manager' ? currentUserData.store : currentUserData.sellerProfile;
         setMerchantProfile(profile);
@@ -94,11 +108,14 @@ export default function BillingPage() {
         setReceipts(receiptsData.receipts || []);
       }
 
-      // Fetch global debt limit setting
+      // Fetch global settings
       const limitRes = await fetch('/api/admin/settings');
       const limitData = await limitRes.json();
-      if (limitData.success && limitData.settings?.global_debt_limit) {
-        setGlobalDebtLimit(parseFloat(limitData.settings.global_debt_limit));
+      if (limitData.success) {
+        setSettings(limitData.settings || {});
+        if (limitData.settings?.global_debt_limit) {
+          setGlobalDebtLimit(parseFloat(limitData.settings.global_debt_limit));
+        }
       }
 
       // Fetch transactions ledger from real API
@@ -259,31 +276,37 @@ export default function BillingPage() {
   const isSuspended = balance < globalDebtLimit;
   const debtLimitRemaining = globalDebtLimit - balance;
 
-  // Add-on cost breakdown (live preview based on UI states)
+  // Add-on cost breakdown (live preview based on UI states and settings)
   const packagePrice = packageInfo?.price ?? 0;
   const activeAddons: { name: string; cost: number }[] = [];
   let addonsCost = 0;
 
+  const priceMobileApp = parseFloat(settings.price_addon_mobile_app || '2000');
+  const priceWhatsApp = parseFloat(settings.price_addon_whatsapp || '2500');
+  const priceCRM = parseFloat(settings.price_addon_crm || '1500');
+  const pricePOS = parseFloat(settings.price_addon_pos || '1500');
+  const priceExtraPOS = parseFloat(settings.price_addon_extra_pos || '500');
+
   if (addonMobileApp) {
-    activeAddons.push({ name: t(locale, 'تطبيق الهاتف للتاجر', 'Merchant Mobile App'), cost: 2000 });
-    addonsCost += 2000;
+    activeAddons.push({ name: t(locale, 'تطبيق الهاتف للتاجر', 'Merchant Mobile App'), cost: priceMobileApp });
+    addonsCost += priceMobileApp;
   }
   if (addonWhatsAppSupport) {
-    activeAddons.push({ name: t(locale, 'دعم مخصص / واتساب', 'WhatsApp Dedicated Support'), cost: 2500 });
-    addonsCost += 2500;
+    activeAddons.push({ name: t(locale, 'دعم مخصص / واتساب', 'WhatsApp Dedicated Support'), cost: priceWhatsApp });
+    addonsCost += priceWhatsApp;
   }
   if (addonAdvancedCRM) {
-    activeAddons.push({ name: t(locale, 'نظام CRM متقدم', 'Advanced CRM Module'), cost: 1500 });
-    addonsCost += 1500;
+    activeAddons.push({ name: t(locale, 'نظام CRM متقدم', 'Advanced CRM Module'), cost: priceCRM });
+    addonsCost += priceCRM;
   }
   if (addonEchangoPOS) {
-    activeAddons.push({ name: t(locale, 'برنامج كاشير Chari POS', 'Chari POS Software'), cost: 1500 });
-    addonsCost += 1500;
+    activeAddons.push({ name: t(locale, 'برنامج كاشير Chari POS', 'Chari POS Software'), cost: pricePOS });
+    addonsCost += pricePOS;
   }
   if (addonExtraPOSDevices > 0) {
     const devices = addonExtraPOSDevices;
-    activeAddons.push({ name: `${t(locale, 'أجهزة POS إضافية', 'Additional POS Devices')} (x${devices})`, cost: devices * 500 });
-    addonsCost += devices * 500;
+    activeAddons.push({ name: `${t(locale, 'أجهزة POS إضافية', 'Additional POS Devices')} (x${devices})`, cost: devices * priceExtraPOS });
+    addonsCost += devices * priceExtraPOS;
   }
 
   const totalMonthlyBilling = packagePrice + addonsCost;
@@ -429,8 +452,8 @@ export default function BillingPage() {
                 <form onSubmit={handleReceiptUpload} className="space-y-3">
                   <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-xs border border-amber-200 dark:border-amber-900 space-y-1.5 leading-relaxed">
                     <p className="font-bold">🏦 {t(locale, 'معلومات الحساب البريدي الجاري CCP:', 'Postal CCP Account details:')}</p>
-                    <p>• {t(locale, 'اسم الحساب: شاري داي إكسبريس', 'Account Name: ChariDay Express')}</p>
-                    <p>• RIP: <strong className="font-mono text-sm">007999990023456789 45</strong></p>
+                    <p>• {t(locale, 'اسم الحساب: ', 'Account Name: ')} <strong>{settings.ccp_account_name || 'شاري داي إكسبريس'}</strong></p>
+                    <p>• RIP: <strong className="font-mono text-sm">{settings.ccp_account_rip || '007999990023456789 45'}</strong></p>
                     <p>• {t(locale, 'قم بالتحويل ثم أرفق وصل الدفع بالأسفل للموافقة.', 'Transfer funds and attach the payment receipt screenshot.')}</p>
                   </div>
 
@@ -651,7 +674,7 @@ export default function BillingPage() {
                         <div className="flex items-center gap-2">
                           <Smartphone className="h-4 w-4 text-brand" />
                           <h4 className="text-sm font-bold">{t(locale, 'تطبيق الهاتف للبائع (App mobile vendeur)', 'Seller Mobile App')}</h4>
-                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-brand/10 text-brand border-none">+2,000 د.ج / {t(locale, 'شهري', 'mo')}</Badge>
+                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-brand/10 text-brand border-none">+{fmt(priceMobileApp)} / {t(locale, 'شهري', 'mo')}</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {t(locale, 'تطبيق موبايل مخصص للبائع لإدارة المتجر، تلقي الإشعارات الفورية بمبيعاتك، وإدارة المخزون من هاتفك.', 'Dedicated mobile app to manage your shop (orders, products, push notifications, push updates).')}
@@ -669,7 +692,7 @@ export default function BillingPage() {
                         <div className="flex items-center gap-2">
                           <MessageSquare className="h-4 w-4 text-emerald-500" />
                           <h4 className="text-sm font-bold">{t(locale, 'الدعم المخصص عبر واتساب (WhatsApp Support)', 'Dedicated WhatsApp Support')}</h4>
-                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none">+2,500 د.ج / {t(locale, 'شهري', 'mo')}</Badge>
+                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none">+{fmt(priceWhatsApp)} / {t(locale, 'شهري', 'mo')}</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {t(locale, 'قناة واتساب مباشرة وفورية لحل مشاكلك الفنية، مدة الاستجابة أقل من ساعتين، ومساعدة مخصصة لإدارة تجارتك.', 'Direct WhatsApp channel, guaranteed response time under 2h, and personalized expert business assistance.')}
@@ -687,7 +710,7 @@ export default function BillingPage() {
                         <div className="flex items-center gap-2">
                           <Users className="h-4 w-4 text-indigo-500" />
                           <h4 className="text-sm font-bold">{t(locale, 'نظام إدارة العملاء المتقدم (CRM avancé)', 'Advanced CRM System')}</h4>
-                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-none">+1,500 د.ج / {t(locale, 'شهري', 'mo')}</Badge>
+                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-none">+{fmt(priceCRM)} / {t(locale, 'شهري', 'mo')}</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {t(locale, 'تقسيم العملاء المتقدم (RFM)، تقييم ومؤشر موثوقية COD لمنع الطلبات الوهمية، سجل الشراء المفصل، والتصنيف التلقائي.', 'Customer segmentation (RFM), COD validation scoring, detailed shopping history, and automatic tracking tags.')}
@@ -705,7 +728,7 @@ export default function BillingPage() {
                         <div className="flex items-center gap-2">
                           <Building className="h-4 w-4 text-amber-500" />
                           <h4 className="text-sm font-bold">{t(locale, 'برنامج كاشير ونقاط البيع Chari POS', 'Chari POS Cash Register')}</h4>
-                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border-none">+1,500 د.ج / {t(locale, 'شهري', 'mo')}</Badge>
+                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border-none">+{fmt(pricePOS)} / {t(locale, 'شهري', 'mo')}</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {t(locale, 'تطبيق كاشير مخصص للأجهزة اللوحية والهواتف لبيع المنتجات في متجرك الفعلي ومزامنة الكتالوج والمبيعات فوراً.', 'Mobile/Tablet cash register app with real-time sales, catalog, and inventory sync to your online store.')}
@@ -726,7 +749,7 @@ export default function BillingPage() {
                         <div className="flex items-center gap-2">
                           <Plus className="h-4 w-4 text-purple-500" />
                           <h4 className="text-sm font-bold">{t(locale, 'كاشير / أجهزة POS إضافية (Caisse POS supplémentaire)', 'Additional POS Registers')}</h4>
-                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border-none">+500 د.ج / {t(locale, 'شهري لكل جهاز', 'mo per register')}</Badge>
+                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border-none">+{fmt(priceExtraPOS)} / {t(locale, 'شهري لكل جهاز', 'mo per register')}</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
                           {t(locale, 'أضف أجهزة كاشير إضافية نشطة تابعة لنفس الاشتراك في Chari POS. كل اشتراك نشط = جهاز كاشير إضافي.', 'Adds active POS devices to your Chari POS subscription. Each active device adds 1 additional checkout register.')}
