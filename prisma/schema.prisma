@@ -47,6 +47,8 @@ model User {
   auditLogs          AuditLog[]
   categoryRequests   CategoryRequest[]
   debtReceipts       DebtPaymentReceipt[]
+  subscriptions      Subscription[]
+  invoices           Invoice[]
 }
 
 model Store {
@@ -210,6 +212,7 @@ model SellerPackage {
 
   sellers               SellerProfile[]
   stores                Store[]
+  subscriptions         Subscription[]
 }
 
 // ============================================
@@ -984,6 +987,90 @@ model DebtPaymentReceipt {
   userId        String
   user          User     @relation(fields: [userId], references: [id])
 
+  invoiceId     String?  // Optional link to the invoice this receipt pays
+
   @@index([userId])
 }
 
+// ============================================
+// SUBSCRIPTION MODEL
+// ============================================
+
+model Subscription {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+
+  packageId       String?
+  package         SellerPackage? @relation(fields: [packageId], references: [id])
+
+  // Status lifecycle: TRIAL → PENDING_PAYMENT → ACTIVE → EXPIRED → SUSPENDED → CANCELLED
+  status          String   @default("TRIAL")  // TRIAL | PENDING_PAYMENT | ACTIVE | EXPIRED | SUSPENDED | CANCELLED
+  billingCycle    String   @default("MONTHLY") // MONTHLY | ANNUAL
+
+  startDate       DateTime @default(now())
+  endDate         DateTime?   // Subscription expiry date
+  trialEndsAt     DateTime?   // Trial period end
+  renewedAt       DateTime?   // Last renewal date
+
+  // Add-on flags (mirrors Store/SellerProfile for fast read)
+  addons          String   @default("{}")  // JSON: { mobileApp, whatsapp, crm, pos, extraPos }
+  addonsTotal     Float    @default(0)     // Monthly cost of add-ons
+  totalMonthly    Float    @default(0)     // packagePrice + addonsTotal
+
+  // Admin override fields
+  freeCommission  Boolean  @default(false) // Exempt from commissions
+  overrideNote    String?                  // Admin note for manual overrides
+  overriddenBy    String?                  // Admin userId who made override
+
+  autoRenew       Boolean  @default(true)
+  cancelledAt     DateTime?
+  cancelReason    String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  invoices        Invoice[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([endDate])
+}
+
+// ============================================
+// INVOICE MODEL
+// ============================================
+
+model Invoice {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+
+  subscriptionId  String?
+  subscription    Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  // SUBSCRIPTION | COMMISSION_BATCH | ADDON | MANUAL
+  type            String   @default("SUBSCRIPTION")
+  status          String   @default("PENDING") // PENDING | PAID | OVERDUE | WAIVED | PARTIALLY_PAID
+
+  amount          Float
+  amountPaid      Float    @default(0)
+  currency        String   @default("DZD")
+
+  // Billing period this invoice covers
+  periodStart     DateTime?
+  periodEnd       DateTime?
+  dueDate         DateTime?
+  paidAt          DateTime?
+
+  // Line items: JSON array of { label, amount }
+  items           String   @default("[]")  // JSON
+
+  adminNote       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([subscriptionId])
+  @@index([status])
+}

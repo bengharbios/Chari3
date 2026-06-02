@@ -11,154 +11,188 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
+import { Progress } from '@/components/ui/progress';
 import {
   Wallet, ShieldAlert, CreditCard, Send, CheckCircle2, AlertCircle, FileText,
-  Loader2, Sparkles, Building, User, Clock, Check, X, Smartphone, HelpCircle,
-  MessageSquare, Users, Plus, Minus
+  Loader2, Sparkles, Clock, Check, X, Smartphone, MessageSquare, Users, Plus,
+  Minus, RefreshCw, Package, Star, Zap, Crown, TrendingUp, CalendarDays,
+  Receipt, ArrowRight, Info, Building2, ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
 
+// ─── Status Badge Helper ──────────────────────────────────────────────────────
+function StatusBadge({ status, locale }: { status: string; locale: string }) {
+  const map: Record<string, { label: string; labelEn: string; color: string }> = {
+    TRIAL:           { label: 'تجريبي',          labelEn: 'Trial',         color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
+    PENDING_PAYMENT: { label: 'في انتظار الدفع', labelEn: 'Pending',       color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
+    ACTIVE:          { label: 'نشط',             labelEn: 'Active',        color: 'bg-green-500/10 text-green-500 border-green-500/20' },
+    EXPIRED:         { label: 'منتهي',           labelEn: 'Expired',       color: 'bg-orange-500/10 text-orange-500 border-orange-500/20' },
+    SUSPENDED:       { label: 'معلق',            labelEn: 'Suspended',     color: 'bg-red-500/10 text-red-500 border-red-500/20' },
+    CANCELLED:       { label: 'ملغي',            labelEn: 'Cancelled',     color: 'bg-gray-500/10 text-gray-400 border-gray-500/20' },
+  };
+  const s = map[status] || { label: status, labelEn: status, color: 'bg-muted text-muted-foreground border-border' };
+  return (
+    <Badge className={`border text-xs font-bold px-2 py-0.5 rounded-full ${s.color}`}>
+      {locale === 'ar' ? s.label : s.labelEn}
+    </Badge>
+  );
+}
+
+// ─── Addon Config ─────────────────────────────────────────────────────────────
+const ADDON_LIST = [
+  { key: 'mobileApp',   iconEl: <Smartphone className="h-4 w-4" />, labelAr: 'تطبيق الهاتف للتاجر',     labelEn: 'Merchant Mobile App',        settingKey: 'price_addon_mobile_app',   defaultPrice: 2000 },
+  { key: 'whatsapp',    iconEl: <MessageSquare className="h-4 w-4" />, labelAr: 'دعم مخصص / واتساب',   labelEn: 'WhatsApp Dedicated Support', settingKey: 'price_addon_whatsapp',     defaultPrice: 2500 },
+  { key: 'crm',         iconEl: <TrendingUp className="h-4 w-4" />, labelAr: 'نظام CRM متقدم',          labelEn: 'Advanced CRM System',        settingKey: 'price_addon_crm',          defaultPrice: 1500 },
+  { key: 'pos',         iconEl: <Building2 className="h-4 w-4" />, labelAr: 'برنامج كاشير Chari POS',  labelEn: 'Chari POS Software',         settingKey: 'price_addon_pos',          defaultPrice: 1500 },
+  { key: 'extraPos',    iconEl: <Plus className="h-4 w-4" />, labelAr: 'أجهزة POS إضافية',             labelEn: 'Extra POS Devices',          settingKey: 'price_addon_extra_pos',    defaultPrice: 500, isCounter: true },
+];
+
+const PLAN_ICONS: Record<string, React.ReactNode> = {
+  0: <Package className="h-5 w-5" />,
+  1: <Star className="h-5 w-5" />,
+  2: <Zap className="h-5 w-5" />,
+  3: <Crown className="h-5 w-5" />,
+};
+
 export default function BillingPage() {
   const { locale } = useAppStore();
   const { user } = useAuthStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
+  const isRTL = locale === 'ar';
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [wallet, setWallet] = useState<any>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [receipts, setReceipts] = useState<any[]>([]);
-  const [packageInfo, setPackageInfo] = useState<any>(null);
-  const [globalDebtLimit, setGlobalDebtLimit] = useState<number>(-5000);
-  const [merchantProfile, setMerchantProfile] = useState<any>(null);
-  const [settings, setSettings] = useState<any>({});
+  // ─── State ────────────────────────────────────────────────────────────────
+  const [isLoading, setIsLoading]         = useState(true);
+  const [subscription, setSubscription]   = useState<any>(null);
+  const [packages, setPackages]           = useState<any[]>([]);
+  const [invoices, setInvoices]           = useState<any[]>([]);
+  const [receipts, setReceipts]           = useState<any[]>([]);
+  const [settings, setSettings]           = useState<Record<string, string>>({});
+  const [wallet, setWallet]               = useState<any>(null);
 
+  // Plan selector
+  const [selectedPackageId, setSelectedPackageId] = useState('');
+  const [billingCycle, setBillingCycle]           = useState<'MONTHLY' | 'ANNUAL'>('MONTHLY');
+  const [addonState, setAddonState]               = useState<Record<string, boolean | number>>({
+    mobileApp: false, whatsapp: false, crm: false, pos: false, extraPos: 0,
+  });
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
+  // Payment form (CCP)
+  const [payAmount, setPayAmount]       = useState('');
+  const [payNote, setPayNote]           = useState('');
+  const [payReceipt, setPayReceipt]     = useState('');
+  const [isUploading, setIsUploading]   = useState(false);
+
+  // Card mock
+  const [cardNum, setCardNum]     = useState('');
+  const [cardExp, setCardExp]     = useState('');
+  const [cardCvv, setCardCvv]     = useState('');
+  const [cardAmt, setCardAmt]     = useState('');
+  const [isCardPay, setIsCardPay] = useState(false);
+
+  // ─── Currency ─────────────────────────────────────────────────────────────
   const currencyCode = wallet?.currency || 'DZD';
-  const getCurrencyName = () => {
-    if (locale === 'ar') {
-      if (currencyCode === 'DZD') return 'بالدينار';
-      if (currencyCode === 'SAR') return 'بالريال';
-      return `بـ ${currencyCode}`;
-    } else {
-      return `in ${currencyCode}`;
-    }
+  const fmt = (n: number) => {
+    const sym: Record<string, string> = { DZD: isRTL ? 'د.ج' : 'DZD', SAR: isRTL ? 'ر.س' : 'SAR', USD: '$', EUR: '€' };
+    return `${n.toLocaleString(isRTL ? 'ar-SA' : 'en-US')} ${sym[currencyCode] || currencyCode}`;
   };
 
-  // Dynamic currency formatting helper
-  const fmt = (amount: number) => {
-    const code = wallet?.currency || 'DZD';
-    const symbolMap: Record<string, string> = {
-      DZD: locale === 'ar' ? 'د.ج' : 'DZD',
-      SAR: locale === 'ar' ? 'ر.س' : 'SAR',
-      USD: '$',
-      EUR: '€',
-    };
-    const symbol = symbolMap[code] || code;
-    return `${amount.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')} ${symbol}`;
+  // ─── Addon Prices from Settings ───────────────────────────────────────────
+  const addonPrice = (key: string, def: number) => parseFloat(settings[key] || String(def));
+
+  const computeAddonsTotal = (state: typeof addonState) => {
+    let total = 0;
+    if (state.mobileApp) total += addonPrice('price_addon_mobile_app', 2000);
+    if (state.whatsapp)  total += addonPrice('price_addon_whatsapp', 2500);
+    if (state.crm)       total += addonPrice('price_addon_crm', 1500);
+    if (state.pos)       total += addonPrice('price_addon_pos', 1500);
+    const extra = Number(state.extraPos || 0);
+    if (extra > 0)       total += extra * addonPrice('price_addon_extra_pos', 500);
+    return total;
   };
 
-  // Addon states
-  const [addonMobileApp, setAddonMobileApp] = useState(false);
-  const [addonWhatsAppSupport, setAddonWhatsAppSupport] = useState(false);
-  const [addonAdvancedCRM, setAddonAdvancedCRM] = useState(false);
-  const [addonEchangoPOS, setAddonEchangoPOS] = useState(false);
-  const [addonExtraPOSDevices, setAddonExtraPOSDevices] = useState(0);
-  const [isUpdatingAddons, setIsUpdatingAddons] = useState(false);
+  const selectedPackage = packages.find(p => p.id === selectedPackageId);
+  const addonsTotal     = computeAddonsTotal(addonState);
+  const basePrice       = selectedPackage?.price ?? 0;
+  const annualDiscount  = billingCycle === 'ANNUAL' ? 0.2 : 0;
+  const totalMonthly    = (basePrice + addonsTotal) * (1 - annualDiscount);
+  const totalBilled     = billingCycle === 'ANNUAL' ? totalMonthly * 12 : totalMonthly;
 
-  // Form states
-  const [amount, setAmount] = useState('');
-  const [merchantNote, setMerchantNote] = useState('');
-  const [receiptImage, setReceiptImage] = useState('');
-  const [isUploading, setIsUploading] = useState(false);
-
-  // Mock Card states
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [cardAmount, setCardAmount] = useState('');
-  const [isPayingCard, setIsPayingCard] = useState(false);
-
-  const fetchBillingData = async () => {
+  // ─── Fetch Data ───────────────────────────────────────────────────────────
+  const fetchData = async () => {
     if (!user) return;
     setIsLoading(true);
     try {
-      // 1. Fetch wallet & transactions
-      const walletRes = await fetch(`/api/buyer/stats?buyerId=${user.id}`);
-      const walletData = await walletRes.json();
-      
-      const statsRes = await fetch(`/api/onboarding/status?userId=${user.id}`);
-      const statsData = await statsRes.json();
-      
-      // Fetch the actual wallet transaction history
-      const historyRes = await fetch(`/api/admin/users`);
-      const historyData = await historyRes.json();
-      const currentUserData = historyData.users?.find((u: any) => u.id === user.id);
-      
-      if (currentUserData) {
-        setWallet({
-          balance: currentUserData.wallet?.balance ?? 0,
-          currency: currentUserData.wallet?.currency ?? walletData.stats?.walletCurrency ?? 'DZD',
-        });
-        const profile = user.role === 'store_manager' ? currentUserData.store : currentUserData.sellerProfile;
-        setMerchantProfile(profile);
-        setPackageInfo(profile?.package);
+      const [subRes, pkgRes, invRes, recRes, setRes, walRes] = await Promise.all([
+        fetch(`/api/billing/subscription?userId=${user.id}`),
+        fetch('/api/admin/packages'),
+        fetch(`/api/billing/invoices?userId=${user.id}`),
+        fetch(`/api/billing/receipts?userId=${user.id}`),
+        fetch('/api/admin/settings'),
+        fetch(`/api/admin/users`),
+      ]);
 
-        // Initialize addon states from database
-        setAddonMobileApp(profile?.addonMobileApp ?? false);
-        setAddonWhatsAppSupport(profile?.addonWhatsAppSupport ?? false);
-        setAddonAdvancedCRM(profile?.addonAdvancedCRM ?? false);
-        setAddonEchangoPOS(profile?.addonEchangoPOS ?? false);
-        setAddonExtraPOSDevices(profile?.addonExtraPOSDevices ?? 0);
-      }
+      const [subData, pkgData, invData, recData, setData, walData] = await Promise.all([
+        subRes.json(), pkgRes.json(), invRes.json(), recRes.json(), setRes.json(), walRes.json(),
+      ]);
 
-      // Fetch outstanding transfer receipts
-      const receiptsRes = await fetch(`/api/billing/receipts?userId=${user.id}`);
-      const receiptsData = await receiptsRes.json();
-      if (receiptsData.success) {
-        setReceipts(receiptsData.receipts || []);
+      if (subData.subscription) {
+        setSubscription(subData.subscription);
+        // Pre-fill addon state from existing subscription
+        const addons = subData.subscription.addons ? JSON.parse(subData.subscription.addons) : {};
+        setAddonState({ mobileApp: addons.mobileApp || false, whatsapp: addons.whatsapp || false, crm: addons.crm || false, pos: addons.pos || false, extraPos: addons.extraPos || 0 });
+        setSelectedPackageId(subData.subscription.packageId || '');
       }
+      if (pkgData.success) setPackages(pkgData.packages || []);
+      if (invData.success) setInvoices(invData.invoices || []);
+      if (recData.success) setReceipts(recData.receipts || []);
+      if (setData.success) setSettings(setData.settings || {});
 
-      // Fetch global settings
-      const limitRes = await fetch('/api/admin/settings');
-      const limitData = await limitRes.json();
-      if (limitData.success) {
-        setSettings(limitData.settings || {});
-        if (limitData.settings?.global_debt_limit) {
-          setGlobalDebtLimit(parseFloat(limitData.settings.global_debt_limit));
-        }
-      }
-
-      // Fetch transactions ledger from real API
-      const txRes = await fetch(`/api/billing/transactions?userId=${user.id}`);
-      const txData = await txRes.json();
-      if (txData.success && txData.transactions?.length > 0) {
-        setTransactions(txData.transactions);
-      } else {
-        // Fallback simulated ledger transactions
-        setTransactions([
-          { id: 'tx-1', type: 'SUBSCRIPTION_FEE', amount: -1500, balance: -1500, createdAt: new Date(Date.now() - 5 * 24 * 3600000).toISOString(), description: t(locale, 'رسوم الاشتراك الشهري: باقة أساسي', 'Monthly base package subscription fee') },
-          { id: 'tx-2', type: 'COMMISSION_DEBT', amount: -450, balance: -1950, createdAt: new Date(Date.now() - 3 * 24 * 3600000).toISOString(), description: t(locale, 'عمولة مبيعات الطلب #CHARI-1789234 (10%)', 'Sales commission on order #CHARI-1789234 (10%)') },
-          { id: 'tx-3', type: 'COMMISSION_DEBT', amount: -600, balance: -2550, createdAt: new Date(Date.now() - 1 * 24 * 3600000).toISOString(), description: t(locale, 'عمولة مبيعات الطلب #CHARI-1789851 (10%)', 'Sales commission on order #CHARI-1789851 (10%)') },
-        ]);
-      }
+      // Wallet
+      const currentUser = walData.users?.find((u: any) => u.id === user.id);
+      if (currentUser?.wallet) setWallet(currentUser.wallet);
 
     } catch (err) {
-      console.error('Error loading billing data', err);
+      console.error('BillingPage fetch error', err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchBillingData();
-  }, [user]);
+  useEffect(() => { fetchData(); }, [user]);
 
-  // Handle Receipt Upload
-  const handleReceiptUpload = async (e: React.FormEvent) => {
+  // ─── Subscribe / Upgrade ──────────────────────────────────────────────────
+  const handleSubscribe = async () => {
+    if (!selectedPackageId) {
+      toast.error(t(locale, 'يرجى اختيار باقة أولاً', 'Please select a package first'));
+      return;
+    }
+    setIsSubscribing(true);
+    try {
+      const res = await fetch('/api/billing/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user?.id, packageId: selectedPackageId, billingCycle, addons: addonState }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(t(locale, 'تم إرسال طلب الاشتراك بنجاح! 🎉', 'Subscription request submitted! 🎉'));
+        fetchData();
+      } else throw new Error(data.error);
+    } catch (err: any) {
+      toast.error(err.message || t(locale, 'فشل إرسال طلب الاشتراك', 'Failed to submit subscription'));
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
+
+  // ─── Pay via CCP Receipt ──────────────────────────────────────────────────
+  const handleCCPPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !receiptImage) {
-      toast.error(t(locale, 'يرجى ملء جميع الحقول المطلوبة', 'Please fill in all required fields'));
+    if (!payAmount || !payReceipt) {
+      toast.error(t(locale, 'يرجى إدخال المبلغ وصورة الوصل', 'Please enter amount and receipt image'));
       return;
     }
     setIsUploading(true);
@@ -166,736 +200,664 @@ export default function BillingPage() {
       const res = await fetch('/api/billing/receipts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user?.id,
-          amount: parseFloat(amount),
-          receiptImage,
-          merchantNote,
-        }),
+        body: JSON.stringify({ userId: user?.id, amount: parseFloat(payAmount), receiptImage: payReceipt, merchantNote: payNote }),
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(t(locale, 'تم إرسال إيصال الدفع بنجاح! سيقوم المشرف بمراجعته.', 'Payment receipt submitted successfully! Admin will review it.'));
-        setAmount('');
-        setMerchantNote('');
-        setReceiptImage('');
-        fetchBillingData();
-      } else {
-        throw new Error(data.error);
-      }
+        toast.success(t(locale, 'تم إرسال الوصل بنجاح! سيراجعه الفريق قريباً.', 'Receipt submitted! Our team will review it shortly.'));
+        setPayAmount(''); setPayNote(''); setPayReceipt('');
+        fetchData();
+      } else throw new Error(data.error);
     } catch (err: any) {
-      toast.error(err.message || t(locale, 'فشل إرسال الإيصال', 'Failed to submit receipt'));
+      toast.error(err.message || t(locale, 'فشل إرسال الوصل', 'Failed to submit receipt'));
     } finally {
       setIsUploading(false);
     }
   };
 
-  // Mock Credit Card Payment Simulation
+  // ─── Pay via Card (simulated) ─────────────────────────────────────────────
   const handleCardPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!cardNumber || !expiry || !cvv || !cardAmount) {
-      toast.error(t(locale, 'يرجى إدخال معلومات بطاقة الدفع والملغ', 'Please fill in card details and amount'));
+    if (!cardNum || !cardExp || !cardCvv || !cardAmt) {
+      toast.error(t(locale, 'يرجى إكمال معلومات البطاقة', 'Please complete card information'));
       return;
     }
-    setIsPayingCard(true);
+    setIsCardPay(true);
     try {
-      // Simulate API call to process payment instantly
-      // We will create a direct deposit transaction using our receipts endpoint
-      // Mock gateway: auto approve payment
       const uploadRes = await fetch('/api/billing/receipts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user?.id,
-          amount: parseFloat(cardAmount),
-          receiptImage: 'MOCK_CARD_GATEWAY_SUCCESS',
-          merchantNote: `تسديد فوري عبر بوابة الدفع الآلية (بطاقة رقم ****${cardNumber.slice(-4)})`,
-        }),
+        body: JSON.stringify({ userId: user?.id, amount: parseFloat(cardAmt), receiptImage: 'MOCK_CARD_GATEWAY_SUCCESS', merchantNote: `دفع فوري عبر البطاقة (****${cardNum.slice(-4)})` }),
       });
       const uploadData = await uploadRes.json();
       if (uploadData.success) {
-        // Auto-approve by PATCH api to clear debt instantly
         const approveRes = await fetch('/api/billing/receipts', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            receiptId: uploadData.receipt.id,
-            status: 'approved',
-            adminNote: 'تم الدفع وتأكيد المعاملة تلقائياً عبر بوابة الدفع الإلكتروني',
-          }),
+          body: JSON.stringify({ receiptId: uploadData.receipt.id, status: 'approved', adminNote: 'تأكيد تلقائي عبر بوابة الدفع' }),
         });
         const approveData = await approveRes.json();
         if (approveData.success) {
-          toast.success(t(locale, 'تم تسديد مديونيتك وتفعيل حسابك فورياً! 🎉', 'Your debt is cleared and your account is active instantly! 🎉'));
-          setCardNumber('');
-          setExpiry('');
-          setCvv('');
-          setCardAmount('');
-          fetchBillingData();
-        } else {
-          throw new Error(approveData.error);
-        }
-      } else {
-        throw new Error(uploadData.error);
-      }
+          toast.success(t(locale, 'تم الدفع وتفعيل حسابك فورياً! 🎉', 'Payment successful and account activated instantly! 🎉'));
+          setCardNum(''); setCardExp(''); setCardCvv(''); setCardAmt('');
+          fetchData();
+        } else throw new Error(approveData.error);
+      } else throw new Error(uploadData.error);
     } catch (err: any) {
-      toast.error(err.message || t(locale, 'فشلت عملية الدفع الإلكتروني', 'Electronic payment failed'));
+      toast.error(err.message || t(locale, 'فشل الدفع الإلكتروني', 'Card payment failed'));
     } finally {
-      setIsPayingCard(false);
+      setIsCardPay(false);
     }
   };
 
-  const handleUpdateAddons = async () => {
-    if (!user) return;
-    setIsUpdatingAddons(true);
-    try {
-      const res = await fetch('/api/billing/addons', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          addonMobileApp,
-          addonWhatsAppSupport,
-          addonAdvancedCRM,
-          addonEchangoPOS,
-          addonExtraPOSDevices,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(t(locale, 'تم تحديث الميزات الإضافية بنجاح!', 'Additional features updated successfully!'));
-        fetchBillingData();
-      } else {
-        throw new Error(data.error);
-      }
-    } catch (err: any) {
-      toast.error(err.message || t(locale, 'فشل تحديث الميزات الإضافية', 'Failed to update additional features'));
-    } finally {
-      setIsUpdatingAddons(false);
-    }
-  };
-
+  // ─── Loading ──────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-12 min-h-[50vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-brand" />
+      <div className="flex items-center justify-center p-12 min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-10 w-10 animate-spin text-brand" />
+          <p className="text-sm text-muted-foreground">{t(locale, 'جاري تحميل بيانات الاشتراك...', 'Loading subscription data...')}</p>
+        </div>
       </div>
     );
   }
 
-  const balance = wallet?.balance ?? 0;
-  const isSuspended = balance < globalDebtLimit;
-  const debtLimitRemaining = globalDebtLimit - balance;
+  // ─── Derived Values ───────────────────────────────────────────────────────
+  const sub = subscription;
+  const now = new Date();
+  const endDate = sub?.endDate ? new Date(sub.endDate) : null;
+  const trialEnd = sub?.trialEndsAt ? new Date(sub.trialEndsAt) : null;
+  const daysRemaining = endDate ? Math.max(0, Math.ceil((endDate.getTime() - now.getTime()) / 86400000)) : null;
+  const trialDaysLeft = trialEnd ? Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / 86400000)) : null;
+  const isSuspended  = sub?.status === 'SUSPENDED';
+  const isExpired    = sub?.status === 'EXPIRED';
+  const isTrial      = sub?.status === 'TRIAL';
+  const isActive     = sub?.status === 'ACTIVE';
+  const isPending    = sub?.status === 'PENDING_PAYMENT';
+  const hasNoSub     = !sub;
 
-  // Add-on cost breakdown (live preview based on UI states and settings)
-  const packagePrice = packageInfo?.price ?? 0;
-  const activeAddons: { name: string; cost: number }[] = [];
-  let addonsCost = 0;
+  const ccpName = settings.ccp_account_name || 'شاري داي';
+  const ccpRip  = settings.ccp_account_rip  || '007999990023456789 45';
 
-  const priceMobileApp = parseFloat(settings.price_addon_mobile_app || '2000');
-  const priceWhatsApp = parseFloat(settings.price_addon_whatsapp || '2500');
-  const priceCRM = parseFloat(settings.price_addon_crm || '1500');
-  const pricePOS = parseFloat(settings.price_addon_pos || '1500');
-  const priceExtraPOS = parseFloat(settings.price_addon_extra_pos || '500');
-
-  if (addonMobileApp) {
-    activeAddons.push({ name: t(locale, 'تطبيق الهاتف للتاجر', 'Merchant Mobile App'), cost: priceMobileApp });
-    addonsCost += priceMobileApp;
-  }
-  if (addonWhatsAppSupport) {
-    activeAddons.push({ name: t(locale, 'دعم مخصص / واتساب', 'WhatsApp Dedicated Support'), cost: priceWhatsApp });
-    addonsCost += priceWhatsApp;
-  }
-  if (addonAdvancedCRM) {
-    activeAddons.push({ name: t(locale, 'نظام CRM متقدم', 'Advanced CRM Module'), cost: priceCRM });
-    addonsCost += priceCRM;
-  }
-  if (addonEchangoPOS) {
-    activeAddons.push({ name: t(locale, 'برنامج كاشير Chari POS', 'Chari POS Software'), cost: pricePOS });
-    addonsCost += pricePOS;
-  }
-  if (addonExtraPOSDevices > 0) {
-    const devices = addonExtraPOSDevices;
-    activeAddons.push({ name: `${t(locale, 'أجهزة POS إضافية', 'Additional POS Devices')} (x${devices})`, cost: devices * priceExtraPOS });
-    addonsCost += devices * priceExtraPOS;
-  }
-
-  const totalMonthlyBilling = packagePrice + addonsCost;
-
-  return (
-    <div dir={dir} className="space-y-6 text-start p-2 sm:p-4">
-      {/* Upper overview widgets */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Wallet Status Card */}
-        <Card className={`relative overflow-hidden border-2 bg-slate-900 text-white ${isSuspended ? 'border-red-500/50 shadow-lg shadow-red-500/10' : 'border-slate-800'}`}>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-brand/5 rounded-full blur-3xl pointer-events-none" />
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-400 flex items-center gap-2">
-              <Wallet className="h-4 w-4 text-brand" />
-              {t(locale, 'رصيد المحفظة والمديونية', 'Wallet Balance & Debt')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h2 className={`text-3xl font-black font-mono tracking-tight ${balance < 0 ? 'text-red-400' : 'text-green-400'}`}>
-                {fmt(balance)}
-              </h2>
-              <p className="text-xs text-slate-400 mt-1">
-                {balance < 0 
-                  ? t(locale, 'مديونية مستحقة للمنصة', 'Outstanding debt owed to platform')
-                  : t(locale, 'رصيد دائن متاح للاستخدام', 'Positive credit balance available')}
-              </p>
-            </div>
-
-            <div className="pt-3 border-t border-slate-800 space-y-2 text-xs">
-              <div className="flex items-center justify-between text-slate-400">
-                <span>{t(locale, 'حد المديونية الأقصى المسموح:', 'Max allowed debt limit:')}</span>
-                <span className="font-bold font-mono text-slate-200">{fmt(globalDebtLimit)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>{t(locale, 'حالة المتجر الحالية:', 'Current Store status:')}</span>
-                <Badge variant={isSuspended ? 'destructive' : 'default'} className="font-bold">
-                  {isSuspended 
-                    ? t(locale, '⚠️ موقوف بسبب الديون', '⚠️ Suspended (Debt Limit)') 
-                    : t(locale, 'نشط', 'Active')}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Current Plan Card */}
-        <Card className="border-slate-800 bg-slate-900 text-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-400 flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-amber-500" />
-              {t(locale, 'باقة الاشتراك الحالية', 'Current Subscription Plan')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <h3 className="text-xl font-bold text-amber-400">
-                {packageInfo ? (locale === 'ar' ? packageInfo.name : (packageInfo.nameEn || packageInfo.name)) : t(locale, 'بدون باقة (مجانية)', 'No Package (Free)')}
-              </h3>
-              <p className="text-xs text-slate-400 mt-1">
-                {t(locale, 'تكلفة الاشتراك الشهري الأساسي:', 'Monthly base package cost:')} <span className="font-bold font-mono text-white">{fmt(packagePrice)}</span>
-              </p>
-            </div>
-
-            <div className="pt-2 border-t border-slate-800 space-y-1.5 text-xs text-slate-400">
-              <div className="flex items-center justify-between">
-                <span>{t(locale, 'نسبة عمولة المبيعات:', 'Sales commission rate:')}</span>
-                <strong className="text-white font-mono">{packageInfo?.commissionRate ?? 10}%</strong>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>{t(locale, 'أعضاء الفريق المسموحين:', 'Allowed team members:')}</span>
-                <strong className="text-white font-mono">{packageInfo?.maxTeamMembers ?? 1}</strong>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>{t(locale, 'حد المنتجات المرفوعة:', 'Product upload limit:')}</span>
-                <strong className="text-white font-mono">
-                  {packageInfo?.maxProducts === -1 ? t(locale, 'غير محدود', 'Unlimited') : (packageInfo?.maxProducts ?? 5)}
-                </strong>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Billing Breakdown Card */}
-        <Card className="border-slate-800 bg-slate-900 text-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-400 flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-indigo-400" />
-              {t(locale, 'تفاصيل التكلفة والخيارات', 'Billing & Add-ons Summary')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <h3 className="text-lg font-bold text-indigo-400 flex items-center gap-1.5">
-                {fmt(totalMonthlyBilling)} <span className="text-xs text-slate-400 font-normal">/ {t(locale, 'شهرياً', 'month')}</span>
-              </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {t(locale, 'إجمالي التكاليف الثابتة المفصلة أدناه', 'Total monthly fixed fee breakdown:')}
-              </p>
-            </div>
-
-            <div className="pt-2 border-t border-slate-800 space-y-1.5 text-[10px] sm:text-xs text-slate-400 max-h-[85px] overflow-y-auto pr-1">
-              <div className="flex items-center justify-between gap-2 text-slate-300">
-                <span className="truncate">{t(locale, 'الاشتراك الأساسي:', 'Base subscription:')}</span>
-                <span className="font-mono text-white whitespace-nowrap">{fmt(packagePrice)}</span>
-              </div>
-              {activeAddons.map((add, idx) => (
-                <div key={idx} className="flex items-center justify-between gap-2 text-slate-300">
-                  <span className="truncate">{add.name}:</span>
-                  <span className="font-mono text-white whitespace-nowrap">+{fmt(add.cost)}</span>
-                </div>
-              ))}
-              {activeAddons.length === 0 && (
-                <p className="text-slate-500 italic text-[11px] text-center">{t(locale, 'لا توجد خيارات مضافة نشطة', 'No active add-ons purchased')}</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+  // ─── Status Banner ────────────────────────────────────────────────────────
+  const renderBanner = () => {
+    if (hasNoSub) return (
+      <div className="rounded-2xl border-2 border-dashed border-brand/30 bg-brand/5 p-5 flex flex-col sm:flex-row items-center gap-4">
+        <div className="p-3 rounded-xl bg-brand/10"><Sparkles className="h-6 w-6 text-brand" /></div>
+        <div className="flex-1 text-center sm:text-start">
+          <h3 className="font-bold text-base">{t(locale, 'لا يوجد اشتراك نشط', 'No active subscription')}</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'اختر الباقة المناسبة لبدء رحلتك مع شاري داي', 'Choose the right plan to start your ChariDay journey')}</p>
+        </div>
+        <Button size="sm" className="gap-2 rounded-xl bg-brand hover:bg-brand/90 text-navy font-bold shrink-0" onClick={() => document.getElementById('plans-tab')?.click()}>
+          <Package className="h-4 w-4" />
+          {t(locale, 'اختر باقة', 'Choose a Plan')}
+        </Button>
       </div>
+    );
 
-      {/* Pay Debt & Transcripts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-2">
-        {/* Pay / Clear Debt panel */}
-        <Card className="lg:col-span-1 border-border bg-card">
-          <CardHeader>
-            <CardTitle className="text-base font-bold flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-brand" />
-              {t(locale, 'تسديد المديونيات المستحقة', 'Pay & Clear Outstanding Debt')}
-            </CardTitle>
-            <CardDescription>
-              {t(locale, 'اختر طريقة الدفع التي تناسبك لتسوية رصيدك وتجنب تعليق متجرك.', 'Settle your outstanding balance to avoid or lift storefront suspensions.')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs dir={dir} defaultValue="ccp" className="space-y-4">
-              <TabsList className="grid grid-cols-2 w-full">
-                <TabsTrigger value="ccp" className="text-xs font-bold">🧾 CCP / بريدي موب</TabsTrigger>
-                <TabsTrigger value="card" className="text-xs font-bold">💳 بطاقة دفع (آلي)</TabsTrigger>
-              </TabsList>
+    if (isSuspended) return (
+      <div className="rounded-2xl border-2 border-red-500/40 bg-red-500/5 p-5 flex flex-col sm:flex-row items-center gap-4">
+        <div className="p-3 rounded-xl bg-red-500/10"><ShieldAlert className="h-6 w-6 text-red-500" /></div>
+        <div className="flex-1 text-center sm:text-start">
+          <h3 className="font-bold text-base text-red-500">{t(locale, '⛔ متجرك معلق حالياً', '⛔ Your store is currently suspended')}</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'يرجى تسديد الاشتراك المستحق لإعادة تفعيل متجرك فوراً', 'Please pay your outstanding subscription to reactivate your store')}</p>
+        </div>
+        <Button size="sm" className="gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold shrink-0" onClick={() => document.getElementById('pay-tab')?.click()}>
+          <CreditCard className="h-4 w-4" />
+          {t(locale, 'ادفع الآن', 'Pay Now')}
+        </Button>
+      </div>
+    );
 
-              {/* CCP / BaridiMob manual receipt upload */}
-              <TabsContent value="ccp">
-                <form onSubmit={handleReceiptUpload} className="space-y-3">
-                  <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-xs border border-amber-200 dark:border-amber-900 space-y-1.5 leading-relaxed">
-                    <p className="font-bold">🏦 {t(locale, 'معلومات الحساب البريدي الجاري CCP:', 'Postal CCP Account details:')}</p>
-                    <ul className="space-y-2 text-start">
-                      <li className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-amber-600 dark:text-amber-400">●</span>
-                        <span>{t(locale, 'اسم الحساب: ', 'Account Name: ')}</span>
-                        <strong className="font-bold">{settings.ccp_account_name || 'شاري داي إكسبريس'}</strong>
-                      </li>
-                      <li className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-amber-600 dark:text-amber-400">●</span>
-                        <span>{t(locale, 'رقم الحساب الجاري (RIP): ', 'RIP: ')}</span>
-                        <strong className="font-mono text-sm select-all bg-amber-100 dark:bg-amber-900/40 px-1.5 py-0.5 rounded" dir="ltr">
-                          {settings.ccp_account_rip || '007999990023456789 45'}
-                        </strong>
-                      </li>
-                      <li className="flex items-start gap-1.5">
-                        <span className="text-amber-600 dark:text-amber-400 mt-1">●</span>
-                        <span>
-                          {t(locale, 'قم بالتحويل ثم أرفق وصل الدفع بالأسفل للموافقة.', 'Transfer funds and attach the payment receipt screenshot.')}
-                        </span>
-                      </li>
-                    </ul>
+    if (isExpired) return (
+      <div className="rounded-2xl border-2 border-orange-500/40 bg-orange-500/5 p-5 flex flex-col sm:flex-row items-center gap-4">
+        <div className="p-3 rounded-xl bg-orange-500/10"><AlertCircle className="h-6 w-6 text-orange-500" /></div>
+        <div className="flex-1 text-center sm:text-start">
+          <h3 className="font-bold text-base text-orange-500">{t(locale, '⚠️ انتهت صلاحية اشتراكك', '⚠️ Your subscription has expired')}</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'قم بالتجديد الآن لتجنب تعليق متجرك', 'Renew now to avoid your store being suspended')}</p>
+        </div>
+        <Button size="sm" className="gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shrink-0" onClick={() => document.getElementById('pay-tab')?.click()}>
+          <RefreshCw className="h-4 w-4" />
+          {t(locale, 'جدد الاشتراك', 'Renew Now')}
+        </Button>
+      </div>
+    );
+
+    if (isPending) return (
+      <div className="rounded-2xl border-2 border-amber-500/40 bg-amber-500/5 p-5 flex flex-col sm:flex-row items-center gap-4">
+        <div className="p-3 rounded-xl bg-amber-500/10"><Clock className="h-6 w-6 text-amber-500" /></div>
+        <div className="flex-1 text-center sm:text-start">
+          <h3 className="font-bold text-base text-amber-600">{t(locale, '⏳ في انتظار تأكيد دفعتك', '⏳ Waiting for your payment confirmation')}</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'أرسل وصل الدفع وسيقوم فريقنا بمراجعته وتفعيل حسابك خلال 24 ساعة', 'Submit your payment receipt and our team will review and activate within 24h')}</p>
+        </div>
+        <Button size="sm" className="gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold shrink-0" onClick={() => document.getElementById('pay-tab')?.click()}>
+          <Send className="h-4 w-4" />
+          {t(locale, 'إرسال الوصل', 'Submit Receipt')}
+        </Button>
+      </div>
+    );
+
+    if (isTrial) return (
+      <div className="rounded-2xl border-2 border-blue-500/40 bg-blue-500/5 p-5 flex flex-col sm:flex-row items-center gap-4">
+        <div className="p-3 rounded-xl bg-blue-500/10"><Sparkles className="h-6 w-6 text-blue-500" /></div>
+        <div className="flex-1 text-center sm:text-start">
+          <h3 className="font-bold text-base text-blue-500">
+            {t(locale, `🎉 أنت في الفترة التجريبية — ${trialDaysLeft} يوم متبقٍ`, `🎉 Trial period — ${trialDaysLeft} days remaining`)}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'استمتع بجميع ميزات الباقة مجاناً. يمكنك الدفع في أي وقت.', 'Enjoy all plan features for free. You can pay anytime before it ends.')}</p>
+        </div>
+        <Button size="sm" variant="outline" className="gap-2 rounded-xl font-bold shrink-0 border-blue-500/40 text-blue-500" onClick={() => document.getElementById('pay-tab')?.click()}>
+          <CreditCard className="h-4 w-4" />
+          {t(locale, 'ادفع مسبقاً', 'Pay Early')}
+        </Button>
+      </div>
+    );
+
+    // ACTIVE
+    return (
+      <div className="rounded-2xl border-2 border-green-500/40 bg-green-500/5 p-5 flex flex-col sm:flex-row items-center gap-4">
+        <div className="p-3 rounded-xl bg-green-500/10"><CheckCircle2 className="h-6 w-6 text-green-500" /></div>
+        <div className="flex-1 text-center sm:text-start">
+          <h3 className="font-bold text-base text-green-600">
+            {t(locale, `✅ اشتراكك نشط — ${daysRemaining} يوم متبقٍ`, `✅ Active subscription — ${daysRemaining} days remaining`)}
+          </h3>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {t(locale, `ينتهي في ${endDate?.toLocaleDateString('ar-SA')}`, `Expires on ${endDate?.toLocaleDateString('en-US')}`)}
+          </p>
+        </div>
+        {daysRemaining !== null && daysRemaining <= 10 && (
+          <Button size="sm" className="gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold shrink-0" onClick={() => document.getElementById('pay-tab')?.click()}>
+            <RefreshCw className="h-4 w-4" />
+            {t(locale, 'جدد مبكراً', 'Renew Early')}
+          </Button>
+        )}
+      </div>
+    );
+  };
+
+  // ─── Render ───────────────────────────────────────────────────────────────
+  return (
+    <div dir={dir} className="space-y-6 text-start">
+
+      {/* Status Banner */}
+      {renderBanner()}
+
+      {/* Overview Cards Row */}
+      {sub && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="border-border bg-card">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">{t(locale, 'الباقة الحالية', 'Current Plan')}</p>
+              <p className="font-black text-lg mt-1 text-foreground">
+                {locale === 'ar' ? sub.package?.name : (sub.package?.nameEn || sub.package?.name || t(locale, 'غير محدد', 'Unassigned'))}
+              </p>
+              <StatusBadge status={sub.status} locale={locale} />
+            </CardContent>
+          </Card>
+          <Card className="border-border bg-card">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">{t(locale, 'إجمالي الفاتورة الشهرية', 'Monthly Total')}</p>
+              <p className="font-black text-lg mt-1 text-brand">{fmt(sub.totalMonthly || 0)}</p>
+              <p className="text-[10px] text-muted-foreground">{t(locale, 'الباقة + الإضافات', 'Plan + Add-ons')}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-border bg-card">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">{t(locale, 'رصيد المحفظة', 'Wallet Balance')}</p>
+              <p className={`font-black text-lg mt-1 ${(wallet?.balance ?? 0) < 0 ? 'text-red-500' : 'text-green-500'}`}>{fmt(wallet?.balance ?? 0)}</p>
+              <p className="text-[10px] text-muted-foreground">{(wallet?.balance ?? 0) < 0 ? t(locale, 'مديونية مستحقة', 'Outstanding debt') : t(locale, 'رصيد متاح', 'Available credit')}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-border bg-card">
+            <CardContent className="p-4">
+              <p className="text-xs text-muted-foreground">{t(locale, 'دورة الفوترة', 'Billing Cycle')}</p>
+              <p className="font-black text-lg mt-1 text-foreground">
+                {sub.billingCycle === 'ANNUAL' ? t(locale, 'سنوي', 'Annual') : t(locale, 'شهري', 'Monthly')}
+              </p>
+              <p className="text-[10px] text-muted-foreground">{daysRemaining !== null ? t(locale, `${daysRemaining} يوم متبقٍ`, `${daysRemaining} days left`) : '—'}</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Main Tabs */}
+      <Tabs defaultValue={hasNoSub || isPending ? 'plans' : 'invoice'}>
+        <div className="overflow-x-auto pb-1">
+          <TabsList className="gap-1 h-auto flex-wrap min-w-max" dir={dir}>
+            <TabsTrigger id="invoice-tab" value="invoice" className="gap-1.5 text-xs font-bold rounded-xl" disabled={hasNoSub}>
+              <Receipt className="h-4 w-4" />
+              {t(locale, 'فاتورتي الحالية', 'Current Invoice')}
+            </TabsTrigger>
+            <TabsTrigger id="plans-tab" value="plans" className="gap-1.5 text-xs font-bold rounded-xl">
+              <Package className="h-4 w-4" />
+              {sub ? t(locale, 'تغيير الباقة', 'Change Plan') : t(locale, 'اختر باقة', 'Choose Plan')}
+            </TabsTrigger>
+            <TabsTrigger id="addons-tab" value="addons" className="gap-1.5 text-xs font-bold rounded-xl" disabled={hasNoSub}>
+              <Sparkles className="h-4 w-4" />
+              {t(locale, 'الميزات الإضافية', 'Add-ons')}
+            </TabsTrigger>
+            <TabsTrigger id="pay-tab" value="pay" className="gap-1.5 text-xs font-bold rounded-xl">
+              <CreditCard className="h-4 w-4" />
+              {t(locale, 'الدفع والتسديد', 'Payment')}
+            </TabsTrigger>
+            <TabsTrigger value="history" className="gap-1.5 text-xs font-bold rounded-xl">
+              <FileText className="h-4 w-4" />
+              {t(locale, 'سجل الفواتير', 'Invoice History')}
+            </TabsTrigger>
+          </TabsList>
+        </div>
+
+        {/* ── TAB 1: Current Invoice ── */}
+        <TabsContent value="invoice" className="mt-4">
+          {invoices.length === 0 ? (
+            <Card className="border-border bg-card">
+              <CardContent className="py-16 text-center flex flex-col items-center gap-2 text-muted-foreground">
+                <Receipt className="h-10 w-10 opacity-30" />
+                <p className="font-bold text-sm">{t(locale, 'لا توجد فواتير حتى الآن', 'No invoices yet')}</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {invoices.slice(0, 1).map((inv: any) => (
+                <Card key={inv.id} className="border-border bg-card overflow-hidden">
+                  <CardHeader className="pb-3 bg-muted/20 border-b border-border">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <CardTitle className="text-base font-bold flex items-center gap-2">
+                        <Receipt className="h-5 w-5 text-brand" />
+                        {t(locale, 'الفاتورة الحالية', 'Current Invoice')} #{inv.id.slice(-6).toUpperCase()}
+                      </CardTitle>
+                      <Badge className={`border text-xs font-bold px-2 ${inv.status === 'PAID' ? 'bg-green-500/10 text-green-500 border-green-500/20' : inv.status === 'OVERDUE' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                        {inv.status === 'PAID' ? t(locale, 'مدفوعة', 'Paid') : inv.status === 'OVERDUE' ? t(locale, 'متأخرة', 'Overdue') : t(locale, 'معلقة', 'Pending')}
+                      </Badge>
+                    </div>
+                    {inv.periodStart && (
+                      <p className="text-xs text-muted-foreground">
+                        {t(locale, 'الفترة:', 'Period:')} {new Date(inv.periodStart).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')} — {inv.periodEnd ? new Date(inv.periodEnd).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US') : '—'}
+                      </p>
+                    )}
+                  </CardHeader>
+                  <CardContent className="p-4 space-y-3">
+                    {/* Line items */}
+                    {JSON.parse(inv.items || '[]').map((item: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between text-sm py-1 border-b border-border/50 last:border-0">
+                        <span className="text-muted-foreground">{item.label}</span>
+                        <span className="font-bold font-mono">{fmt(item.amount)}</span>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between pt-2 border-t border-border">
+                      <span className="font-bold">{t(locale, 'الإجمالي المستحق', 'Total Due')}</span>
+                      <span className="font-black text-xl text-brand font-mono">{fmt(inv.amount)}</span>
+                    </div>
+                    {inv.dueDate && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        {t(locale, 'تاريخ الاستحقاق:', 'Due date:')} {new Date(inv.dueDate).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                      </div>
+                    )}
+                    {inv.status !== 'PAID' && (
+                      <Button className="w-full rounded-xl gap-2 bg-brand hover:bg-brand/90 text-navy font-bold" onClick={() => document.getElementById('pay-tab')?.click()}>
+                        <CreditCard className="h-4 w-4" />
+                        {t(locale, 'ادفع هذه الفاتورة', 'Pay This Invoice')}
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* ── TAB 2: Choose / Change Plan ── */}
+        <TabsContent value="plans" className="mt-4 space-y-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <p className="text-sm font-bold text-muted-foreground">{t(locale, 'مدة الاشتراك:', 'Billing cycle:')}</p>
+            <div className="flex gap-2">
+              <Button size="sm" variant={billingCycle === 'MONTHLY' ? 'default' : 'outline'} className="rounded-xl text-xs font-bold" onClick={() => setBillingCycle('MONTHLY')}>
+                {t(locale, 'شهري', 'Monthly')}
+              </Button>
+              <Button size="sm" variant={billingCycle === 'ANNUAL' ? 'default' : 'outline'} className="rounded-xl text-xs font-bold gap-1" onClick={() => setBillingCycle('ANNUAL')}>
+                {t(locale, 'سنوي', 'Annual')}
+                <Badge className="bg-green-500/10 text-green-500 border-green-500/20 border text-[10px]">-20%</Badge>
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            {packages.map((pkg: any, idx: number) => {
+              const isSelected = selectedPackageId === pkg.id;
+              const isCurrent  = sub?.packageId === pkg.id;
+              const price = billingCycle === 'ANNUAL' ? pkg.price * 0.8 : pkg.price;
+              return (
+                <div
+                  key={pkg.id}
+                  onClick={() => setSelectedPackageId(pkg.id)}
+                  className={`relative rounded-2xl border-2 p-4 cursor-pointer transition-all hover:shadow-md ${isSelected ? 'border-brand shadow-lg shadow-brand/10 bg-brand/5' : 'border-border hover:border-brand/40 bg-card'}`}
+                >
+                  {isCurrent && (
+                    <div className="absolute -top-2.5 start-3">
+                      <Badge className="bg-green-500 text-white border-0 text-[10px] font-bold">{t(locale, 'باقتك الحالية', 'Current Plan')}</Badge>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="p-2 rounded-xl" style={{ backgroundColor: `${pkg.color}20`, color: pkg.color }}>
+                      {PLAN_ICONS[idx] || <Package className="h-5 w-5" />}
+                    </div>
+                    <div>
+                      <h3 className="font-black text-sm" style={{ color: pkg.color }}>{locale === 'ar' ? pkg.name : (pkg.nameEn || pkg.name)}</h3>
+                      <p className="text-[10px] text-muted-foreground">{t(locale, `عمولة ${pkg.commissionRate}%`, `${pkg.commissionRate}% commission`)}</p>
+                    </div>
                   </div>
+                  <div className="mb-3">
+                    <span className="font-black text-2xl">{fmt(price)}</span>
+                    <span className="text-xs text-muted-foreground">/{t(locale, 'شهر', 'mo')}</span>
+                    {billingCycle === 'ANNUAL' && <p className="text-[10px] text-green-500 font-bold mt-0.5">{t(locale, `وفّر ${fmt(pkg.price * 12 * 0.2)} سنوياً`, `Save ${fmt(pkg.price * 12 * 0.2)}/year`)}</p>}
+                  </div>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{pkg.maxProducts === -1 ? t(locale, 'منتجات غير محدودة', 'Unlimited products') : t(locale, `${pkg.maxProducts} منتج`, `${pkg.maxProducts} products`)}</span></div>
+                    <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{pkg.maxMonthlyOrders === -1 ? t(locale, 'طلبات غير محدودة', 'Unlimited orders') : t(locale, `${pkg.maxMonthlyOrders} طلب/شهر`, `${pkg.maxMonthlyOrders} orders/mo`)}</span></div>
+                    {pkg.hasAnalytics && <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{t(locale, 'تحليلات متقدمة', 'Advanced analytics')}</span></div>}
+                    {pkg.hasCoupons && <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{t(locale, 'الكوبونات والخصومات', 'Coupons & discounts')}</span></div>}
+                    {pkg.hasCustomDomain && <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{t(locale, 'نطاق مخصص', 'Custom domain')}</span></div>}
+                    {!pkg.hasAnalytics && <div className="flex items-center gap-1.5"><X className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" /><span className="text-muted-foreground/50">{t(locale, 'تحليلات متقدمة', 'Advanced analytics')}</span></div>}
+                  </div>
+                  {isSelected && <div className="mt-3 flex items-center gap-1.5 text-brand text-xs font-bold"><CheckCircle2 className="h-4 w-4" />{t(locale, 'تم الاختيار', 'Selected')}</div>}
+                </div>
+              );
+            })}
+          </div>
 
+          {selectedPackageId && (
+            <Card className="border-brand/30 bg-brand/5">
+              <CardContent className="p-4">
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="flex-1 space-y-1">
+                    <p className="font-bold text-sm">{t(locale, 'ملخص الطلب', 'Order Summary')}</p>
+                    <div className="text-xs text-muted-foreground space-y-0.5">
+                      <p>{locale === 'ar' ? selectedPackage?.name : (selectedPackage?.nameEn || selectedPackage?.name)} — {billingCycle === 'ANNUAL' ? t(locale, 'سنوي', 'Annual') : t(locale, 'شهري', 'Monthly')}</p>
+                      <p className="text-brand font-black text-lg">{fmt(billingCycle === 'ANNUAL' ? totalMonthly * 12 : totalMonthly)}</p>
+                      {billingCycle === 'ANNUAL' && <p className="text-green-500">{t(locale, `يُدفع سنوياً (${fmt(totalMonthly)}/شهر)`, `Billed annually (${fmt(totalMonthly)}/mo)`)}</p>}
+                    </div>
+                  </div>
+                  <Button
+                    className="gap-2 rounded-xl bg-brand hover:bg-brand/90 text-navy font-bold w-full sm:w-auto shrink-0"
+                    disabled={isSubscribing}
+                    onClick={handleSubscribe}
+                  >
+                    {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                    {sub ? t(locale, 'تغيير الباقة', 'Change Plan') : t(locale, 'اشترك الآن', 'Subscribe Now')}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* ── TAB 3: Add-ons ── */}
+        <TabsContent value="addons" className="mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-3">
+              {ADDON_LIST.map((addon) => {
+                const price = addonPrice(addon.settingKey, addon.defaultPrice);
+                const isOn = addon.isCounter ? Number(addonState[addon.key] || 0) > 0 : Boolean(addonState[addon.key]);
+                const count = Number(addonState.extraPos || 0);
+                return (
+                  <Card key={addon.key} className={`border-2 transition-all ${isOn ? 'border-brand/40 bg-brand/5' : 'border-border bg-card'}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2.5 rounded-xl ${isOn ? 'bg-brand/20 text-brand' : 'bg-muted text-muted-foreground'}`}>
+                          {addon.iconEl}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-sm">{locale === 'ar' ? addon.labelAr : addon.labelEn}</p>
+                          <p className="text-xs text-muted-foreground">{fmt(price)}/{t(locale, 'شهر', 'mo')}</p>
+                        </div>
+                        {addon.isCounter ? (
+                          <div className="flex items-center gap-2">
+                            <Button size="icon" variant="outline" className="h-7 w-7 rounded-lg" onClick={() => setAddonState(s => ({ ...s, extraPos: Math.max(0, count - 1) }))} disabled={!addonState.pos}>
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className="font-bold text-sm w-5 text-center">{count}</span>
+                            <Button size="icon" variant="outline" className="h-7 w-7 rounded-lg" onClick={() => setAddonState(s => ({ ...s, extraPos: count + 1 }))} disabled={!addonState.pos}>
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Switch
+                            checked={Boolean(addonState[addon.key])}
+                            onCheckedChange={(v) => setAddonState(s => ({ ...s, [addon.key]: v, ...(addon.key === 'pos' && !v ? { extraPos: 0 } : {}) }))}
+                          />
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+
+              <Button
+                className="w-full rounded-xl gap-2 bg-brand hover:bg-brand/90 text-navy font-bold"
+                disabled={isSubscribing}
+                onClick={async () => {
+                  setIsSubscribing(true);
+                  try {
+                    const res = await fetch('/api/billing/addons', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ userId: user?.id, ...addonState }),
+                    });
+                    const data = await res.json();
+                    if (data.success) { toast.success(t(locale, 'تم تحديث الإضافات بنجاح!', 'Add-ons updated!')); fetchData(); }
+                    else throw new Error(data.error);
+                  } catch (err: any) { toast.error(err.message); }
+                  finally { setIsSubscribing(false); }
+                }}
+              >
+                {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                {t(locale, 'حفظ الميزات الإضافية', 'Save Add-ons')}
+              </Button>
+            </div>
+
+            {/* Add-ons live preview */}
+            <Card className="border-border bg-card h-fit">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-bold">{t(locale, 'ملخص الفاتورة الشهرية', 'Monthly Billing Summary')}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{locale === 'ar' ? sub?.package?.name : (sub?.package?.nameEn || t(locale, 'الباقة', 'Plan'))}</span>
+                  <span className="font-mono font-bold">{fmt(sub?.package?.price ?? 0)}</span>
+                </div>
+                {ADDON_LIST.map((addon) => {
+                  const isOn = addon.isCounter ? Number(addonState[addon.key] || 0) > 0 : Boolean(addonState[addon.key]);
+                  if (!isOn) return null;
+                  const price = addon.isCounter
+                    ? Number(addonState.extraPos) * addonPrice(addon.settingKey, addon.defaultPrice)
+                    : addonPrice(addon.settingKey, addon.defaultPrice);
+                  return (
+                    <div key={addon.key} className="flex justify-between">
+                      <span className="text-muted-foreground text-xs">{locale === 'ar' ? addon.labelAr : addon.labelEn}{addon.isCounter ? ` ×${addonState.extraPos}` : ''}</span>
+                      <span className="font-mono font-bold text-xs">{fmt(price)}</span>
+                    </div>
+                  );
+                })}
+                <div className="border-t border-border pt-2 flex justify-between">
+                  <span className="font-bold">{t(locale, 'الإجمالي / شهر', 'Total / month')}</span>
+                  <span className="font-black text-brand font-mono">{fmt((sub?.package?.price ?? 0) + addonsTotal)}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* ── TAB 4: Payment ── */}
+        <TabsContent value="pay" className="mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* CCP Payment */}
+            <Card className="border-border bg-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  🏦 {t(locale, 'الدفع عبر بريدي / CCP', 'Pay via CCP / BaridiMob')}
+                </CardTitle>
+                <CardDescription className="text-xs">{t(locale, 'قم بالتحويل على الحساب أدناه ثم أرفق صورة الوصل', 'Transfer to the account below then attach the receipt')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Account Info */}
+                <div className="rounded-xl bg-muted/40 border border-border p-3 space-y-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground w-24 shrink-0">{t(locale, 'اسم الحساب:', 'Account Name:')}</span>
+                    <span className="font-bold">{ccpName}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-muted-foreground w-24 shrink-0">RIP:</span>
+                    <span className="font-mono font-bold bg-muted px-2 py-0.5 rounded-lg select-all break-all">{ccpRip}</span>
+                  </div>
+                </div>
+
+                <form onSubmit={handleCCPPayment} className="space-y-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="amount" className="text-xs font-semibold">{t(locale, `مبلغ التحويل ${getCurrencyName()}`, `Amount ${getCurrencyName()}`)} <span className="text-red-500">*</span></Label>
+                    <Label className="text-xs font-bold">{t(locale, 'المبلغ المدفوع', 'Amount Paid')}</Label>
                     <Input
-                      id="amount"
                       type="number"
-                      placeholder={t(locale, 'مثال: 5000', 'e.g. 5000')}
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      required
-                      className="rounded-xl h-9"
-                      dir={dir}
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="receiptImage" className="text-xs font-semibold">{t(locale, 'صورة وصل الدفع (Base64 أو رابط)', 'Receipt Screenshot URL / Data')} <span className="text-red-500">*</span></Label>
-                    <Input
-                      id="receiptImage"
-                      placeholder={t(locale, 'ألصق رابط الصورة أو بيانات base64 هنا', 'Paste image link or base64 data')}
-                      value={receiptImage}
-                      onChange={(e) => setReceiptImage(e.target.value)}
-                      required
+                      placeholder={`e.g. 5000`}
+                      value={payAmount}
+                      onChange={e => setPayAmount(e.target.value)}
                       className="rounded-xl h-9 font-mono"
-                      dir="ltr"
                     />
                   </div>
-
                   <div className="space-y-1.5">
-                    <Label htmlFor="merchantNote" className="text-xs font-semibold">{t(locale, 'ملاحظاتك', 'Your Notes')}</Label>
-                    <Textarea
-                      id="merchantNote"
-                      placeholder={t(locale, 'مثال: تم إرسال المبلغ عبر بريدي موب برقم معاملة...', 'e.g. Sent via BaridiMob, txn ref...')}
-                      value={merchantNote}
-                      onChange={(e) => setMerchantNote(e.target.value)}
-                      className="rounded-xl min-h-[60px] text-xs"
-                      dir={dir}
+                    <Label className="text-xs font-bold">{t(locale, 'صورة الوصل (رابط أو base64)', 'Receipt Image (URL or base64)')}</Label>
+                    <Input
+                      placeholder={t(locale, 'الصق رابط صورة الوصل هنا...', 'Paste receipt image link here...')}
+                      value={payReceipt}
+                      onChange={e => setPayReceipt(e.target.value)}
+                      className="rounded-xl h-9"
                     />
                   </div>
-
-                  <Button type="submit" className="w-full h-10 font-bold gap-2 mt-2" disabled={isUploading}>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold">{t(locale, 'ملاحظة (اختياري)', 'Note (optional)')}</Label>
+                    <Textarea
+                      placeholder={t(locale, 'مثال: تم الدفع عبر بريدي موب برقم عملية...', 'e.g. Paid via BaridiMob transaction #...')}
+                      value={payNote}
+                      onChange={e => setPayNote(e.target.value)}
+                      className="rounded-xl text-xs h-16 resize-none"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full rounded-xl gap-2 font-bold" disabled={isUploading}>
                     {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    {t(locale, 'إرسال الوصل للمراجعة', 'Submit Slip for Approval')}
+                    {t(locale, 'إرسال الوصل للمراجعة', 'Submit Receipt for Review')}
                   </Button>
                 </form>
-              </TabsContent>
+              </CardContent>
+            </Card>
 
-              {/* Instant Electronic Card payment simulation */}
-              <TabsContent value="card">
+            {/* Card Payment */}
+            <Card className="border-border bg-card">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  💳 {t(locale, 'الدفع ببطاقة آلي (فوري)', 'Pay by Card (Instant)')}
+                </CardTitle>
+                <CardDescription className="text-xs">{t(locale, 'تسديد فوري وتفعيل حسابك مباشرة دون انتظار', 'Instant payment and immediate account activation')}</CardDescription>
+              </CardHeader>
+              <CardContent>
                 <form onSubmit={handleCardPayment} className="space-y-3">
-                  <div className="p-3 bg-indigo-50 dark:bg-indigo-950/20 text-indigo-800 dark:text-indigo-300 text-xs border border-indigo-200 dark:border-indigo-900 rounded-2xl flex gap-2">
-                    <Sparkles className="h-4 w-4 shrink-0 text-indigo-500 mt-0.5" />
-                    <p>{t(locale, 'بوابة الدفع محاكاة إلكترونية حقيقية، سيتم تصفير مديونيتك وتفعيل المتجر فوراً عند نجاح العملية.', 'Mock automated payment gateway. Clears debt instantly upon transaction success.')}</p>
-                  </div>
-
                   <div className="space-y-1.5">
-                    <Label htmlFor="cardNumber" className="text-xs font-semibold">{t(locale, 'رقم البطاقة (16 خانة)', 'Card Number (16 digits)')}</Label>
-                    <Input
-                      id="cardNumber"
-                      placeholder="4000 1234 5678 9010"
-                      maxLength={19}
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value.replace(/\s?/g, '').replace(/(\d{4})/g, '$1 ').trim())}
-                      className="rounded-xl h-9 font-mono"
-                      dir="ltr"
-                    />
+                    <Label className="text-xs font-bold">{t(locale, 'رقم البطاقة', 'Card Number')}</Label>
+                    <Input placeholder="1234 5678 9012 3456" value={cardNum} onChange={e => setCardNum(e.target.value)} className="rounded-xl h-9 font-mono" maxLength={19} />
                   </div>
-
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="expiry" className="text-xs font-semibold">{t(locale, 'تاريخ الانتهاء', 'Expiry Date')}</Label>
-                      <Input
-                        id="expiry"
-                        placeholder={t(locale, 'الشهر/السنة', 'MM/YY')}
-                        maxLength={5}
-                        value={expiry}
-                        onChange={(e) => setExpiry(e.target.value)}
-                        className="rounded-xl h-9 text-center font-mono"
-                        dir="ltr"
-                      />
+                      <Label className="text-xs font-bold">{t(locale, 'تاريخ الانتهاء', 'Expiry')}</Label>
+                      <Input placeholder="MM/YY" value={cardExp} onChange={e => setCardExp(e.target.value)} className="rounded-xl h-9 font-mono" maxLength={5} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="cvv" className="text-xs font-semibold">CVV</Label>
-                      <Input
-                        id="cvv"
-                        type="password"
-                        placeholder="***"
-                        maxLength={3}
-                        value={cvv}
-                        onChange={(e) => setCvv(e.target.value)}
-                        className="rounded-xl h-9 text-center font-mono"
-                        dir="ltr"
-                      />
+                      <Label className="text-xs font-bold">CVV</Label>
+                      <Input placeholder="123" value={cardCvv} onChange={e => setCardCvv(e.target.value)} className="rounded-xl h-9 font-mono" maxLength={4} type="password" />
                     </div>
                   </div>
-
                   <div className="space-y-1.5">
-                    <Label htmlFor="cardAmount" className="text-xs font-semibold">{t(locale, `المبلغ المراد سداده ${getCurrencyName()}`, `Payment Amount (${currencyCode})`)}</Label>
-                    <Input
-                      id="cardAmount"
-                      type="number"
-                      placeholder={balance < 0 ? String(Math.abs(balance)) : t(locale, `المبلغ المراد سداده ${getCurrencyName()}`, `Payment Amount (${currencyCode})`)}
-                      value={cardAmount}
-                      onChange={(e) => setCardAmount(e.target.value)}
-                      className="rounded-xl h-9 font-mono"
-                      dir={dir}
-                    />
+                    <Label className="text-xs font-bold">{t(locale, 'المبلغ المراد دفعه', 'Amount to Pay')}</Label>
+                    <Input type="number" placeholder="e.g. 1500" value={cardAmt} onChange={e => setCardAmt(e.target.value)} className="rounded-xl h-9 font-mono" />
                   </div>
-
-                  <Button type="submit" className="w-full h-10 bg-indigo-600 hover:bg-indigo-700 text-white font-bold gap-2 mt-2" disabled={isPayingCard}>
-                    {isPayingCard ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                    {t(locale, 'دفع فوري الآن', 'Pay Instantly')}
+                  <div className="flex items-start gap-2 text-[10px] text-muted-foreground p-2 rounded-xl bg-muted/30">
+                    <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    {t(locale, 'هذه بيئة تجريبية. لا يتم تحصيل مبالغ حقيقية.', 'This is a test environment. No real charges are made.')}
+                  </div>
+                  <Button type="submit" className="w-full rounded-xl gap-2 bg-green-600 hover:bg-green-700 text-white font-bold" disabled={isCardPay}>
+                    {isCardPay ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                    {t(locale, 'ادفع وفعّل فوراً', 'Pay & Activate Instantly')}
                   </Button>
                 </form>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
 
-        {/* Transactions Ledger and Receipts history */}
-        <div className="lg:col-span-2 space-y-6">
-          <Tabs dir={dir} defaultValue="ledger" className="space-y-4">
-            <div className="w-full overflow-x-auto hide-scrollbar">
-              <TabsList className="flex w-max min-w-full justify-start border-b border-border bg-transparent p-0 h-auto gap-2">
-                <TabsTrigger value="ledger" className="gap-1.5 font-bold data-[state=active]:border-b-2 data-[state=active]:border-brand rounded-none bg-transparent py-2.5 px-4">
-                  <FileText className="h-4 w-4" />
-                  {t(locale, 'كشف الحساب والعمليات', 'Transaction Ledger')}
-                </TabsTrigger>
-                <TabsTrigger value="addons" className="gap-1.5 font-bold data-[state=active]:border-b-2 data-[state=active]:border-brand rounded-none bg-transparent py-2.5 px-4">
-                  <Sparkles className="h-4 w-4" />
-                  {t(locale, 'الميزات والخيارات الإضافية', 'Custom Add-ons')}
-                </TabsTrigger>
-                <TabsTrigger value="receipts-list" className="gap-1.5 font-bold data-[state=active]:border-b-2 data-[state=active]:border-brand rounded-none bg-transparent py-2.5 px-4">
-                  <Clock className="h-4 w-4" />
-                  {t(locale, 'إيصالات الدفع المقدمة', 'Submitted Transfers')}
-                </TabsTrigger>
-              </TabsList>
-            </div>
+                {/* Receipts History mini-list */}
+                {receipts.length > 0 && (
+                  <div className="mt-4 border-t border-border pt-4">
+                    <p className="text-xs font-bold mb-2">{t(locale, 'آخر الإيصالات المرسلة', 'Recent Submitted Receipts')}</p>
+                    <div className="space-y-2">
+                      {receipts.slice(0, 3).map((r: any) => (
+                        <div key={r.id} className="flex items-center justify-between text-xs p-2 rounded-xl bg-muted/30">
+                          <div className="flex items-center gap-2">
+                            <div className={`h-2 w-2 rounded-full ${r.status === 'approved' ? 'bg-green-500' : r.status === 'rejected' ? 'bg-red-500' : 'bg-amber-500'}`} />
+                            <span className="font-mono">{fmt(r.amount)}</span>
+                          </div>
+                          <span className="text-muted-foreground">{new Date(r.createdAt).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-            {/* Wallet Ledger */}
-            <TabsContent value="ledger" className="space-y-3">
-              <Card className="border-border bg-card">
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-start ps-4">{t(locale, 'العملية والتفاصيل', 'Description')}</TableHead>
-                          <TableHead className="text-start">{t(locale, 'نوع القيد', 'Type')}</TableHead>
-                          <TableHead className="text-start">{t(locale, 'القيمة', 'Amount')}</TableHead>
-                          <TableHead className="text-start">{t(locale, 'الرصيد بعدها', 'Balance')}</TableHead>
-                          <TableHead className="text-start pe-4">{t(locale, 'التاريخ', 'Date')}</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {transactions.map((tx) => (
-                          <TableRow key={tx.id}>
-                            <TableCell className="ps-4 font-medium text-xs max-w-[240px] truncate" title={tx.description}>
-                              {tx.description}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="text-[10px] py-0 px-2 font-bold font-cairo">
-                                {tx.type === 'COMMISSION_DEBT' ? 'عمولة منصة' :
-                                 tx.type === 'SUBSCRIPTION_FEE' ? 'اشتراك شهري' :
-                                 tx.type === 'COMMISSION_REVERSAL' ? 'إرجاع عمولة' :
-                                 tx.type === 'DEBT_CLEARANCE' ? 'دفع مديونية' : tx.type}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className={`font-bold font-mono text-xs ${tx.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                              {tx.amount < 0 ? '' : '+'}{fmt(tx.amount)}
-                            </TableCell>
-                            <TableCell className="font-semibold font-mono text-xs text-slate-500 dark:text-slate-400">
-                              {fmt(tx.balance)}
-                            </TableCell>
-                            <TableCell className="pe-4 text-xs text-muted-foreground font-mono">
-                              {new Date(tx.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+        {/* ── TAB 5: Invoice History ── */}
+        <TabsContent value="history" className="mt-4">
+          <Card className="border-border bg-card">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="ps-4 text-start">{t(locale, 'رقم الفاتورة', 'Invoice #')}</TableHead>
+                      <TableHead className="text-start">{t(locale, 'النوع', 'Type')}</TableHead>
+                      <TableHead className="text-start">{t(locale, 'المبلغ', 'Amount')}</TableHead>
+                      <TableHead className="text-start">{t(locale, 'الحالة', 'Status')}</TableHead>
+                      <TableHead className="text-start pe-4">{t(locale, 'التاريخ', 'Date')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoices.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-12 text-muted-foreground">
+                          {t(locale, 'لا توجد فواتير بعد', 'No invoices yet')}
+                        </TableCell>
+                      </TableRow>
+                    ) : invoices.map((inv: any) => (
+                      <TableRow key={inv.id}>
+                        <TableCell className="ps-4 font-mono text-xs">#{inv.id.slice(-6).toUpperCase()}</TableCell>
+                        <TableCell className="text-xs">
+                          {inv.type === 'SUBSCRIPTION' ? t(locale, '📦 اشتراك', '📦 Subscription') :
+                           inv.type === 'COMMISSION_BATCH' ? t(locale, '💰 عمولات', '💰 Commissions') :
+                           inv.type === 'ADDON' ? t(locale, '✨ إضافات', '✨ Add-ons') : inv.type}
+                        </TableCell>
+                        <TableCell className="font-mono font-bold text-sm">{fmt(inv.amount)}</TableCell>
+                        <TableCell>
+                          <Badge className={`border text-[10px] font-bold ${inv.status === 'PAID' ? 'bg-green-500/10 text-green-500 border-green-500/20' : inv.status === 'OVERDUE' ? 'bg-red-500/10 text-red-500 border-red-500/20' : inv.status === 'WAIVED' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                            {inv.status === 'PAID' ? t(locale, 'مدفوعة', 'Paid') : inv.status === 'OVERDUE' ? t(locale, 'متأخرة', 'Overdue') : inv.status === 'WAIVED' ? t(locale, 'معفية', 'Waived') : t(locale, 'معلقة', 'Pending')}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground pe-4">
+                          {new Date(inv.createdAt).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Custom Addons tab */}
-            <TabsContent value="addons" className="space-y-4">
-              <Card className="border-border bg-card">
-                <CardHeader>
-                  <CardTitle className="text-base font-bold flex items-center gap-2">
-                    <Sparkles className="h-5 w-5 text-indigo-500" />
-                    {t(locale, 'خيارات وميزات إضافية للمتجر', 'Custom Subscription Add-ons')}
-                  </CardTitle>
-                  <CardDescription>
-                    {t(locale, 'أضف ميزات متقدمة لترقية باقتك الحالية وتطوير أعمالك التجارية.', 'Activate extra capabilities to enhance your plan and grow your sales channels.')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Differentiate between Independent Seller & Store */}
-                  <div className={`p-4 rounded-2xl border text-xs leading-relaxed ${
-                    user?.role === 'store_manager'
-                      ? 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900 text-blue-800 dark:text-blue-300'
-                      : 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-300'
-                  }`}>
-                    <div className="flex items-center gap-2 font-bold mb-1">
-                      {user?.role === 'store_manager' ? <Building className="h-4 w-4" /> : <User className="h-4 w-4" />}
-                      <span>
-                        {user?.role === 'store_manager'
-                          ? t(locale, 'نوع الحساب: متجر تجاري (شركة)', 'Account Type: Commercial Store (Company)')
-                          : t(locale, 'نوع الحساب: تاجر مستقل (فردي)', 'Account Type: Independent Seller (Individual)')}
-                      </span>
-                    </div>
-                    <p>
-                      {user?.role === 'store_manager'
-                        ? t(locale, 'تنبيه: حساب المتجر يتيح الربط المتعدد للأجهزة، إدارة فريق العمل المتكامل، ومزامنة الفروع ومستودعات الكاشير.', 'Notice: Store accounts allow multi-device sync, staff team management, and synchronization of branches & register warehouses.')
-                        : t(locale, 'تنبيه: حساب تاجر مستقل مخصص للأنشطة الفردية. يمكنك تشغيل الكاشير POS وتطبيق المبيعات لدعم نشاطك الفردي دون الحاجة للتسجيل كشركة.', 'Notice: Independent seller profiles are tailored for individuals. You can activate POS registers and mobile apps to handle your retail sales without full company credentials.')}
-                    </p>
-                  </div>
-
-                  <div className="space-y-4 divide-y divide-border pt-2">
-                    {/* 1. Mobile App Vendeur */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4">
-                      <div className="space-y-1 text-start">
-                        <div className="flex items-center gap-2">
-                          <Smartphone className="h-4 w-4 text-brand" />
-                          <h4 className="text-sm font-bold">{t(locale, 'تطبيق الهاتف للبائع (App mobile vendeur)', 'Seller Mobile App')}</h4>
-                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-brand/10 text-brand border-none">+{fmt(priceMobileApp)} / {t(locale, 'شهري', 'mo')}</Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {t(locale, 'تطبيق موبايل مخصص للبائع لإدارة المتجر، تلقي الإشعارات الفورية بمبيعاتك، وإدارة المخزون من هاتفك.', 'Dedicated mobile app to manage your shop (orders, products, push notifications, push updates).')}
-                        </p>
-                      </div>
-                      <Switch
-                        checked={addonMobileApp}
-                        onCheckedChange={setAddonMobileApp}
-                      />
-                    </div>
-
-                    {/* 2. WhatsApp Support */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4">
-                      <div className="space-y-1 text-start">
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="h-4 w-4 text-emerald-500" />
-                          <h4 className="text-sm font-bold">{t(locale, 'الدعم المخصص عبر واتساب (WhatsApp Support)', 'Dedicated WhatsApp Support')}</h4>
-                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-none">+{fmt(priceWhatsApp)} / {t(locale, 'شهري', 'mo')}</Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {t(locale, 'قناة واتساب مباشرة وفورية لحل مشاكلك الفنية، مدة الاستجابة أقل من ساعتين، ومساعدة مخصصة لإدارة تجارتك.', 'Direct WhatsApp channel, guaranteed response time under 2h, and personalized expert business assistance.')}
-                        </p>
-                      </div>
-                      <Switch
-                        checked={addonWhatsAppSupport}
-                        onCheckedChange={setAddonWhatsAppSupport}
-                      />
-                    </div>
-
-                    {/* 3. Advanced CRM */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4">
-                      <div className="space-y-1 text-start">
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-indigo-500" />
-                          <h4 className="text-sm font-bold">{t(locale, 'نظام إدارة العملاء المتقدم (CRM avancé)', 'Advanced CRM System')}</h4>
-                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-none">+{fmt(priceCRM)} / {t(locale, 'شهري', 'mo')}</Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {t(locale, 'تقسيم العملاء المتقدم (RFM)، تقييم ومؤشر موثوقية COD لمنع الطلبات الوهمية، سجل الشراء المفصل، والتصنيف التلقائي.', 'Customer segmentation (RFM), COD validation scoring, detailed shopping history, and automatic tracking tags.')}
-                        </p>
-                      </div>
-                      <Switch
-                        checked={addonAdvancedCRM}
-                        onCheckedChange={setAddonAdvancedCRM}
-                      />
-                    </div>
-
-                    {/* 4. Chari POS */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4">
-                      <div className="space-y-1 text-start">
-                        <div className="flex items-center gap-2">
-                          <Building className="h-4 w-4 text-amber-500" />
-                          <h4 className="text-sm font-bold">{t(locale, 'برنامج كاشير ونقاط البيع Chari POS', 'Chari POS Cash Register')}</h4>
-                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border-none">+{fmt(pricePOS)} / {t(locale, 'شهري', 'mo')}</Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {t(locale, 'تطبيق كاشير مخصص للأجهزة اللوحية والهواتف لبيع المنتجات في متجرك الفعلي ومزامنة الكتالوج والمبيعات فوراً.', 'Mobile/Tablet cash register app with real-time sales, catalog, and inventory sync to your online store.')}
-                        </p>
-                      </div>
-                      <Switch
-                        checked={addonEchangoPOS}
-                        onCheckedChange={(val) => {
-                          setAddonEchangoPOS(val);
-                          if (!val) setAddonExtraPOSDevices(0); // reset extra devices if POS is disabled
-                        }}
-                      />
-                    </div>
-
-                    {/* 5. Additional POS Registers */}
-                    <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4 transition-opacity duration-300 ${!addonEchangoPOS ? 'opacity-40' : 'opacity-100'}`}>
-                      <div className="space-y-1 text-start">
-                        <div className="flex items-center gap-2">
-                          <Plus className="h-4 w-4 text-purple-500" />
-                          <h4 className="text-sm font-bold">{t(locale, 'كاشير / أجهزة POS إضافية (Caisse POS supplémentaire)', 'Additional POS Registers')}</h4>
-                          <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border-none">+{fmt(priceExtraPOS)} / {t(locale, 'شهري لكل جهاز', 'mo per register')}</Badge>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {t(locale, 'أضف أجهزة كاشير إضافية نشطة تابعة لنفس الاشتراك في Chari POS. كل اشتراك نشط = جهاز كاشير إضافي.', 'Adds active POS devices to your Chari POS subscription. Each active device adds 1 additional checkout register.')}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 select-none">
-                        <Button
-                          variant="outline"
-                          type="button"
-                          size="icon"
-                          className="h-8 w-8 rounded-full border-indigo-200 dark:border-indigo-900"
-                          disabled={!addonEchangoPOS || addonExtraPOSDevices === 0}
-                          onClick={() => setAddonExtraPOSDevices(prev => Math.max(0, prev - 1))}
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="w-8 text-center font-bold font-mono text-sm">{addonExtraPOSDevices}</span>
-                        <Button
-                          variant="outline"
-                          type="button"
-                          size="icon"
-                          className="h-8 w-8 rounded-full border-indigo-200 dark:border-indigo-900"
-                          disabled={!addonEchangoPOS}
-                          onClick={() => setAddonExtraPOSDevices(prev => prev + 1)}
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="text-start">
-                      <p className="text-xs text-muted-foreground">{t(locale, 'تكلفة الخيارات الإضافية الجديدة:', 'Monthly cost of new options:')}</p>
-                      <p className="text-lg font-black text-indigo-600 dark:text-indigo-400 font-mono">+{fmt(addonsCost)} / {t(locale, 'شهرياً', 'month')}</p>
-                    </div>
-                    <Button
-                      onClick={handleUpdateAddons}
-                      disabled={isUpdatingAddons}
-                      className="rounded-xl px-6 h-10 font-bold bg-indigo-600 hover:bg-indigo-700 text-white gap-2"
-                    >
-                      {isUpdatingAddons && <Loader2 className="h-4 w-4 animate-spin" />}
-                      {t(locale, 'حفظ وتفعيل الخيارات الإضافية', 'Save & Activate Add-ons')}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Submitted receipts lists */}
-            <TabsContent value="receipts-list">
-              <Card className="border-border bg-card">
-                <CardContent className="p-0">
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="text-start ps-4">{t(locale, 'المبلغ', 'Amount')}</TableHead>
-                          <TableHead className="text-start">{t(locale, 'الحالة', 'Status')}</TableHead>
-                          <TableHead className="text-start">{t(locale, 'ملاحظات التاجر', 'Merchant Notes')}</TableHead>
-                          <TableHead className="text-start">{t(locale, 'رد الإدارة', 'Admin Response')}</TableHead>
-                          <TableHead className="text-start pe-4">{t(locale, 'التاريخ', 'Date')}</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {receipts.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center py-10 text-muted-foreground text-xs font-bold">
-                              {t(locale, 'لم تقم برفع أي وصل مسبقاً.', 'No bank slips uploaded yet.')}
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          receipts.map((rec) => (
-                            <TableRow key={rec.id}>
-                              <TableCell className="ps-4 font-bold font-mono text-xs text-brand">
-                                {fmt(rec.amount)}
-                              </TableCell>
-                              <TableCell>
-                                <Badge className={`text-[10px] font-bold ${
-                                  rec.status === 'approved' ? 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400' :
-                                  rec.status === 'rejected' ? 'bg-red-100 text-red-700 dark:bg-red-950/30 dark:text-red-400' :
-                                  'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
-                                }`}>
-                                  {rec.status === 'approved' ? t(locale, 'مقبول', 'Approved') :
-                                   rec.status === 'rejected' ? t(locale, 'مرفوض', 'Rejected') :
-                                   t(locale, 'قيد المراجعة', 'Pending Review')}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-xs text-muted-foreground max-w-[150px] truncate" title={rec.merchantNote}>
-                                {rec.merchantNote || '-'}
-                              </TableCell>
-                              <TableCell className="text-xs text-red-600 dark:text-red-400 max-w-[150px] truncate font-medium" title={rec.adminNote}>
-                                {rec.adminNote || '-'}
-                              </TableCell>
-                              <TableCell className="pe-4 text-xs font-mono text-muted-foreground">
-                                {new Date(rec.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
