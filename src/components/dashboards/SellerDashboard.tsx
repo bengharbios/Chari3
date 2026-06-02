@@ -64,7 +64,9 @@ interface DashboardData {
     completionRate: number;
     responseRate: number;
     walletBalance: number;
+    walletCurrency?: string;
   };
+  currency?: string;
   products: { id: string; name: string; price: number; comparePrice?: number; stock: number; status: string; soldCount: number; rating: number; images?: any; category?: any }[];
   recentOrders: { order: { orderNumber: string; status: string; total: number; createdAt: string }; product: { name: string; price: number }; quantity: number; total: number }[];
   reviews: { id: string; rating: number; comment?: string; sellerReply?: string; createdAt: string }[];
@@ -82,6 +84,16 @@ export default function SellerDashboard() {
   const t = (ar: string, en: string) => isAr ? ar : en;
 
   const [data, setData] = useState<DashboardData | null>(null);
+  
+  const walletCurrency = data?.kpis?.walletCurrency || 'DZD';
+  const DZD = (n: number) => {
+    const formattedAmount = n.toLocaleString(isAr ? 'ar-DZ' : 'en-US');
+    if (isAr) {
+      return walletCurrency === 'DZD' ? `${formattedAmount} د.ج` : `${formattedAmount} ${walletCurrency}`;
+    }
+    return `${walletCurrency} ${formattedAmount}`;
+  };
+
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
@@ -407,6 +419,14 @@ function SellerProductsTab({
   onDeleteSuccess: () => void;
 }) {
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const walletCurrency = data?.kpis?.walletCurrency || 'DZD';
+  const fmtProd = (n: number) => {
+    const formattedAmount = n.toLocaleString(isAr ? 'ar-DZ' : 'en-US');
+    if (isAr) {
+      return walletCurrency === 'DZD' ? `${formattedAmount} د.ج` : `${formattedAmount} ${walletCurrency}`;
+    }
+    return `${walletCurrency} ${formattedAmount}`;
+  };
   const [previewProductId, setPreviewProductId] = useState<string | null>(null);
   const [previewProduct, setPreviewProduct] = useState<any | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
@@ -543,10 +563,10 @@ function SellerProductsTab({
                           {isAr ? p.category?.name : (p.category?.nameEn || p.category?.name)}
                         </td>
                         <td className="py-3 px-4 text-sm font-bold text-amber-600">
-                          {p.price.toLocaleString('ar-DZ')} د.ج
+                          {fmtProd(p.price)}
                           {p.comparePrice && p.comparePrice > p.price && (
                             <span className="block text-[10px] line-through text-muted-foreground font-normal">
-                              {p.comparePrice.toLocaleString('ar-DZ')} د.ج
+                              {fmtProd(p.comparePrice)}
                             </span>
                           )}
                         </td>
@@ -658,11 +678,11 @@ function SellerProductsTab({
                       <div>
                         <div className="flex items-baseline justify-between gap-1 flex-wrap">
                           <span className="text-sm font-black text-amber-600">
-                            {p.price.toLocaleString('ar-DZ')} د.ج
+                            {fmtProd(p.price)}
                           </span>
                           {p.comparePrice && p.comparePrice > p.price && (
                             <span className="text-[10px] line-through text-muted-foreground">
-                              {p.comparePrice.toLocaleString('ar-DZ')} د.ج
+                              {fmtProd(p.comparePrice)}
                             </span>
                           )}
                         </div>
@@ -772,12 +792,12 @@ function SellerProductsTab({
                       <div>
                         <p className="text-xs text-muted-foreground mb-1">{t('سعر البيع الحالي', 'Current Sale Price')}</p>
                         <p className="text-base sm:text-lg font-black text-amber-600">
-                          {previewProduct.price.toLocaleString('ar-DZ')} د.ج
+                          {fmtProd(previewProduct.price)}
                         </p>
                         {previewProduct.comparePrice && previewProduct.comparePrice > previewProduct.price && (
                           <div className="flex items-center gap-1.5 mt-1">
                             <span className="text-xs line-through text-muted-foreground">
-                              {previewProduct.comparePrice.toLocaleString('ar-DZ')} د.ج
+                              {fmtProd(previewProduct.comparePrice)}
                             </span>
                             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400">
                               {Math.round(((previewProduct.comparePrice - previewProduct.price) / previewProduct.comparePrice) * 100)}%-
@@ -1202,7 +1222,14 @@ function ProductQAPreview({ productId, isAr, t }: { productId: string; isAr: boo
 
 // ── Orders sub-page ────────────────────────────────────────────────────────────
 function SellerOrdersTab({ data, isLoading, t, isAr, onRefresh }: { data: DashboardData | null; isLoading: boolean; t: (a: string, e: string) => string; isAr: boolean; onRefresh: () => void }) {
-  const DZD2 = (n: number) => `${n.toLocaleString('ar-DZ')} د.ج`;
+  const walletCurrency = data?.kpis?.walletCurrency || 'DZD';
+  const DZD2 = (n: number) => {
+    const formattedAmount = n.toLocaleString(isAr ? 'ar-DZ' : 'en-US');
+    if (isAr) {
+      return walletCurrency === 'DZD' ? `${formattedAmount} د.ج` : `${formattedAmount} ${walletCurrency}`;
+    }
+    return `${walletCurrency} ${formattedAmount}`;
+  };
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   
   const handleStatusChange = async (orderId: string, status: string) => {

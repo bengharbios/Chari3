@@ -198,7 +198,7 @@ export default function AdminCategoriesPage() {
   if (!isMounted || !isAdminAuthenticated) return null;
 
   return (
-    <div dir={dir} className="max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6 text-start">
+    <div dir={dir} className="max-w-[1750px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6 text-start">
 
       {/* Create/Edit Modal */}
       {showModal && (

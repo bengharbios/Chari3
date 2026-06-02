@@ -205,7 +205,7 @@ export default function AdminLayoutWrapper({
 
         {/* Dynamic Children Content */}
         <main className="flex-1 overflow-auto p-6">
-          <div className="max-w-[1400px] mx-auto">
+          <div className="max-w-[1750px] mx-auto">
             {children}
           </div>
         </main>

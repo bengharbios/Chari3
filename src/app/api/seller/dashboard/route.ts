@@ -180,6 +180,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       seller,
+      currency: wallet?.currency ?? 'DZD',
       kpis: {
         monthRevenue,
         monthCommission,
@@ -192,6 +193,7 @@ export async function GET(req: NextRequest) {
         completionRate: seller.completionRate,
         responseRate: seller.responseRate,
         walletBalance: wallet?.balance ?? 0,
+        walletCurrency: wallet?.currency ?? 'DZD',
       },
       products,
       recentOrders,

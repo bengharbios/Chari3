@@ -452,9 +452,19 @@ export default function BillingPage() {
                 <form onSubmit={handleReceiptUpload} className="space-y-3">
                   <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-xs border border-amber-200 dark:border-amber-900 space-y-1.5 leading-relaxed">
                     <p className="font-bold">🏦 {t(locale, 'معلومات الحساب البريدي الجاري CCP:', 'Postal CCP Account details:')}</p>
-                    <p>• {t(locale, 'اسم الحساب: ', 'Account Name: ')} <strong>{settings.ccp_account_name || 'شاري داي إكسبريس'}</strong></p>
-                    <p>• RIP: <strong className="font-mono text-sm">{settings.ccp_account_rip || '007999990023456789 45'}</strong></p>
-                    <p>• {t(locale, 'قم بالتحويل ثم أرفق وصل الدفع بالأسفل للموافقة.', 'Transfer funds and attach the payment receipt screenshot.')}</p>
+                    <ul className="list-disc ps-4 space-y-1 text-start">
+                      <li>
+                        <span>{t(locale, 'اسم الحساب: ', 'Account Name: ')}</span>
+                        <strong>{settings.ccp_account_name || 'شاري داي إكسبريس'}</strong>
+                      </li>
+                      <li dir="ltr" className="text-start">
+                        <span className="font-sans">RIP: </span>
+                        <strong className="font-mono text-sm">{settings.ccp_account_rip || '007999990023456789 45'}</strong>
+                      </li>
+                      <li>
+                        {t(locale, 'قم بالتحويل ثم أرفق وصل الدفع بالأسفل للموافقة.', 'Transfer funds and attach the payment receipt screenshot.')}
+                      </li>
+                    </ul>
                   </div>
 
                   <div className="space-y-1.5">
@@ -462,11 +472,12 @@ export default function BillingPage() {
                     <Input
                       id="amount"
                       type="number"
-                      placeholder="e.g. 5000"
+                      placeholder={t(locale, 'مثال: 5000', 'e.g. 5000')}
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       required
                       className="rounded-xl h-9"
+                      dir={dir}
                     />
                   </div>
 
@@ -474,11 +485,12 @@ export default function BillingPage() {
                     <Label htmlFor="receiptImage" className="text-xs font-semibold">{t(locale, 'صورة وصل الدفع (Base64 أو رابط)', 'Receipt Screenshot URL / Data')} <span className="text-red-500">*</span></Label>
                     <Input
                       id="receiptImage"
-                      placeholder="Paste image link or base64 data"
+                      placeholder={t(locale, 'ألصق رابط الصورة أو بيانات base64 هنا', 'Paste image link or base64 data')}
                       value={receiptImage}
                       onChange={(e) => setReceiptImage(e.target.value)}
                       required
                       className="rounded-xl h-9 font-mono"
+                      dir="ltr"
                     />
                   </div>
 
@@ -490,6 +502,7 @@ export default function BillingPage() {
                       value={merchantNote}
                       onChange={(e) => setMerchantNote(e.target.value)}
                       className="rounded-xl min-h-[60px] text-xs"
+                      dir={dir}
                     />
                   </div>
 
@@ -517,6 +530,7 @@ export default function BillingPage() {
                       value={cardNumber}
                       onChange={(e) => setCardNumber(e.target.value.replace(/\s?/g, '').replace(/(\d{4})/g, '$1 ').trim())}
                       className="rounded-xl h-9 font-mono"
+                      dir="ltr"
                     />
                   </div>
 
@@ -525,11 +539,12 @@ export default function BillingPage() {
                       <Label htmlFor="expiry" className="text-xs font-semibold">{t(locale, 'تاريخ الانتهاء', 'Expiry Date')}</Label>
                       <Input
                         id="expiry"
-                        placeholder="MM/YY"
+                        placeholder={t(locale, 'الشهر/السنة', 'MM/YY')}
                         maxLength={5}
                         value={expiry}
                         onChange={(e) => setExpiry(e.target.value)}
                         className="rounded-xl h-9 text-center font-mono"
+                        dir="ltr"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -542,6 +557,7 @@ export default function BillingPage() {
                         value={cvv}
                         onChange={(e) => setCvv(e.target.value)}
                         className="rounded-xl h-9 text-center font-mono"
+                        dir="ltr"
                       />
                     </div>
                   </div>
@@ -551,10 +567,11 @@ export default function BillingPage() {
                     <Input
                       id="cardAmount"
                       type="number"
-                      placeholder={balance < 0 ? String(Math.abs(balance)) : '1000'}
+                      placeholder={balance < 0 ? String(Math.abs(balance)) : t(locale, 'المبلغ المراد سداده', 'Payment Amount DZD')}
                       value={cardAmount}
                       onChange={(e) => setCardAmount(e.target.value)}
                       className="rounded-xl h-9 font-mono"
+                      dir={dir}
                     />
                   </div>
 
@@ -571,20 +588,22 @@ export default function BillingPage() {
         {/* Transactions Ledger and Receipts history */}
         <div className="lg:col-span-2 space-y-6">
           <Tabs defaultValue="ledger" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="ledger" className="gap-1.5 font-bold">
-                <FileText className="h-4 w-4" />
-                {t(locale, 'كشف الحساب والعمليات', 'Transaction Ledger')}
-              </TabsTrigger>
-              <TabsTrigger value="addons" className="gap-1.5 font-bold">
-                <Sparkles className="h-4 w-4" />
-                {t(locale, 'الميزات والخيارات الإضافية', 'Custom Add-ons')}
-              </TabsTrigger>
-              <TabsTrigger value="receipts-list" className="gap-1.5 font-bold">
-                <Clock className="h-4 w-4" />
-                {t(locale, 'إيصالات الدفع المقدمة', 'Submitted Transfers')}
-              </TabsTrigger>
-            </TabsList>
+            <div className="w-full overflow-x-auto hide-scrollbar">
+              <TabsList className="flex w-max min-w-full justify-start border-b border-border bg-transparent p-0 h-auto space-x-2">
+                <TabsTrigger value="ledger" className="gap-1.5 font-bold data-[state=active]:border-b-2 data-[state=active]:border-brand rounded-none bg-transparent py-2.5 px-4">
+                  <FileText className="h-4 w-4" />
+                  {t(locale, 'كشف الحساب والعمليات', 'Transaction Ledger')}
+                </TabsTrigger>
+                <TabsTrigger value="addons" className="gap-1.5 font-bold data-[state=active]:border-b-2 data-[state=active]:border-brand rounded-none bg-transparent py-2.5 px-4">
+                  <Sparkles className="h-4 w-4" />
+                  {t(locale, 'الميزات والخيارات الإضافية', 'Custom Add-ons')}
+                </TabsTrigger>
+                <TabsTrigger value="receipts-list" className="gap-1.5 font-bold data-[state=active]:border-b-2 data-[state=active]:border-brand rounded-none bg-transparent py-2.5 px-4">
+                  <Clock className="h-4 w-4" />
+                  {t(locale, 'إيصالات الدفع المقدمة', 'Submitted Transfers')}
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Wallet Ledger */}
             <TabsContent value="ledger" className="space-y-3">

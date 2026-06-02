@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <main
           className={`flex-1 min-w-0 transition-all duration-300 ${isSidebarOpen ? 'lg:ms-0' : 'lg:ms-0'}`}
         >
-          <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-[1400px] mx-auto">
+          <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-[1750px] mx-auto">
             {children}
           </div>
         </main>

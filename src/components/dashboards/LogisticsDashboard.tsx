@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
 import { MOCK_SHIPMENTS, formatCurrency, getShipmentStatusColor, getShipmentStatusText } from '@/lib/mock-data';
 import { StatsCard, PageHeader } from '@/components/shared/StatsCard';
@@ -74,6 +74,26 @@ const MOCK_DELIVERY_HISTORY = [
 export default function LogisticsDashboard() {
   const { locale } = useAppStore();
   const [isOnline, setIsOnline] = useState(true);
+  const [systemCurrency, setSystemCurrency] = useState('DZD');
+
+  useEffect(() => {
+    fetch('/api/settings/public')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.settings?.currency) {
+          setSystemCurrency(data.settings.currency);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const formatLogisticsCurrency = (amount: number) => {
+    const formattedAmount = amount.toLocaleString(locale === 'ar' ? 'ar-DZ' : 'en-US');
+    if (locale === 'ar') {
+      return systemCurrency === 'DZD' ? `${formattedAmount} د.ج` : `${formattedAmount} ${systemCurrency}`;
+    }
+    return `${systemCurrency} ${formattedAmount}`;
+  };
 
   const isRTL = locale === 'ar';
   const activeShipments = MOCK_SHIPMENTS.filter((s) => s.status !== 'delivered');
@@ -161,7 +181,7 @@ export default function LogisticsDashboard() {
         />
         <StatsCard
           title={t(locale, 'أرباح الشهر', 'Monthly Earnings')}
-          value={formatCurrency(4560)}
+          value={formatLogisticsCurrency(4560)}
           change={22}
           icon={<Wallet className="h-5 w-5 text-purple-600" />}
           iconBg="bg-purple-100 dark:bg-purple-900/30"
@@ -357,7 +377,7 @@ export default function LogisticsDashboard() {
               <div className="gradient-brand p-6 text-navy text-center">
                 <Wallet className="h-8 w-8 mx-auto mb-2" />
                 <p className="text-sm font-medium opacity-80">{t(locale, 'إجمالي الأرباح', 'Total Earnings')}</p>
-                <p className="text-3xl font-bold mt-1">{formatCurrency(4560)}</p>
+                <p className="text-3xl font-bold mt-1">{formatLogisticsCurrency(4560)}</p>
                 <p className="text-xs mt-1 opacity-70">{t(locale, 'هذا الشهر', 'This Month')}</p>
               </div>
             </CardContent>
@@ -368,7 +388,7 @@ export default function LogisticsDashboard() {
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">{t(locale, 'أرباح الأسبوع', 'This Week')}</p>
-                  <p className="text-lg font-bold">{formatCurrency(1240)}</p>
+                  <p className="text-lg font-bold">{formatLogisticsCurrency(1240)}</p>
                 </div>
                 <TrendingUp className="h-5 w-5 text-green-600" />
               </CardContent>
@@ -377,7 +397,7 @@ export default function LogisticsDashboard() {
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <p className="text-xs text-muted-foreground">{t(locale, 'متوسط الأرباح لكل توصيلة', 'Avg. per Delivery')}</p>
-                  <p className="text-lg font-bold">{formatCurrency(42)}</p>
+                  <p className="text-lg font-bold">{formatLogisticsCurrency(42)}</p>
                 </div>
                 <Star className="h-5 w-5 text-yellow-500" />
               </CardContent>
@@ -418,7 +438,7 @@ export default function LogisticsDashboard() {
               <span className="text-muted-foreground">
                 {t(locale, 'إجمالي الأسبوع', 'Weekly Total')}
               </span>
-              <span className="font-bold">{formatCurrency(4560)}</span>
+              <span className="font-bold">{formatLogisticsCurrency(4560)}</span>
             </div>
           </CardContent>
         </Card>
@@ -471,7 +491,7 @@ export default function LogisticsDashboard() {
                     </TableCell>
                     <TableCell className="text-end">
                       <span className="text-sm font-semibold text-green-600 dark:text-green-400">
-                        {formatCurrency(delivery.earnings)}
+                        {formatLogisticsCurrency(delivery.earnings)}
                       </span>
                     </TableCell>
                   </TableRow>

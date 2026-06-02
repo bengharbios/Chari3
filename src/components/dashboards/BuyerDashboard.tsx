@@ -97,7 +97,16 @@ export default function BuyerDashboard() {
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
 
   // Real stats from DB
-  const [stats, setStats] = useState({ totalOrders: 0, totalSpent: 0, walletBalance: 0, wishlistCount: 0 });
+  const [stats, setStats] = useState({ totalOrders: 0, totalSpent: 0, walletBalance: 0, wishlistCount: 0, walletCurrency: 'DZD' });
+
+  const formatBuyerCurrency = (amount: number, forceCurrency?: string) => {
+    const currency = forceCurrency || stats.walletCurrency || 'DZD';
+    const formattedAmount = amount.toLocaleString(locale === 'ar' ? 'ar-DZ' : 'en-US');
+    if (locale === 'ar') {
+      return currency === 'DZD' ? `${formattedAmount} د.ج` : `${formattedAmount} ${currency}`;
+    }
+    return `${currency} ${formattedAmount}`;
+  };
 
   useEffect(() => {
     if (!user?.id) { setIsLoadingOrders(false); return; }
@@ -210,13 +219,13 @@ export default function BuyerDashboard() {
         />
         <StatsCard
           title={t(locale, 'إجمالي الإنفاق', 'Total Spent')}
-          value={isLoadingOrders ? '...' : `${stats.totalSpent.toLocaleString()} DZD`}
+          value={isLoadingOrders ? '...' : formatBuyerCurrency(stats.totalSpent)}
           icon={<ShoppingBag className="h-5 w-5" />}
           iconBg="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
         />
         <StatsCard
           title={t(locale, 'رصيد المحفظة', 'Wallet Balance')}
-          value={isLoadingOrders ? '...' : `${stats.walletBalance.toLocaleString()} DZD`}
+          value={isLoadingOrders ? '...' : formatBuyerCurrency(stats.walletBalance)}
           icon={<Wallet className="h-5 w-5" />}
           iconBg="bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
         />
@@ -382,11 +391,11 @@ export default function BuyerDashboard() {
                       </h3>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-base font-bold text-primary">
-                          {formatCurrency(product.price)}
+                          {formatBuyerCurrency(product.price)}
                         </span>
                         {product.comparePrice && (
                           <span className="text-xs text-muted-foreground line-through">
-                            {formatCurrency(product.comparePrice)}
+                            {formatBuyerCurrency(product.comparePrice)}
                           </span>
                         )}
                       </div>
@@ -421,15 +430,15 @@ export default function BuyerDashboard() {
               <div className="gradient-brand p-6 text-white">
                 <p className="text-sm text-white/80">{t(locale, 'رصيدك الحالي', 'Your Current Balance')}</p>
                 <p className="text-3xl md:text-4xl font-bold mt-2">
-                  {formatCurrency(MOCK_WALLET.balance)}
+                  {formatBuyerCurrency(stats.walletBalance)}
                 </p>
                 <div className="flex items-center gap-6 mt-4 text-sm text-white/80">
                   <div>
-                    {t(locale, 'مُضاف', 'Earned')}: {formatCurrency(MOCK_WALLET.totalEarned)}
+                    {t(locale, 'مُضاف', 'Earned')}: {formatBuyerCurrency(MOCK_WALLET.totalEarned)}
                   </div>
                   <Separator orientation="vertical" className="h-4 bg-white/30" />
                   <div>
-                    {t(locale, 'مُصروف', 'Spent')}: {formatCurrency(MOCK_WALLET.totalSpent)}
+                    {t(locale, 'مُصروف', 'Spent')}: {formatBuyerCurrency(stats.totalSpent)}
                   </div>
                 </div>
               </div>
@@ -473,7 +482,7 @@ export default function BuyerDashboard() {
                             )}
                           >
                             {tx.type === 'credit' || tx.type === 'refund' ? '+' : '-'}
-                            {formatCurrency(tx.amount)}
+                            {formatBuyerCurrency(tx.amount)}
                           </span>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
@@ -484,7 +493,7 @@ export default function BuyerDashboard() {
                           })}
                         </TableCell>
                         <TableCell className="text-sm font-medium">
-                          {formatCurrency(tx.balance)}
+                          {formatBuyerCurrency(tx.balance)}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -624,6 +633,15 @@ function OrderCard({ order, locale }: { order: Order; locale: Locale }) {
   const isActive = ['pending', 'confirmed', 'processing', 'shipped'].includes(order.status);
   const statusText = locale === 'ar' ? getOrderStatusText(order.status) : order.status;
 
+  const formatOrderCurrency = (amount: number, currencyCode?: string) => {
+    const currency = currencyCode || 'DZD';
+    const formattedAmount = amount.toLocaleString(locale === 'ar' ? 'ar-DZ' : 'en-US');
+    if (locale === 'ar') {
+      return currency === 'DZD' ? `${formattedAmount} د.ج` : `${formattedAmount} ${currency}`;
+    }
+    return `${currency} ${formattedAmount}`;
+  };
+
   return (
     <div
       className={cn(
@@ -655,7 +673,7 @@ function OrderCard({ order, locale }: { order: Order; locale: Locale }) {
             {statusText}
           </Badge>
           <span className="text-sm font-bold">
-            {formatCurrency(order.total)}
+            {formatOrderCurrency(order.total, order.currency)}
           </span>
         </div>
       </div>

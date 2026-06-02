@@ -145,6 +145,18 @@ export default function AdminDashboard() {
     return `${amount.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')} ${symbol}`;
   };
 
+  const formatOrderCurrency = (amount: number, orderCurrency?: string) => {
+    const code = orderCurrency || dashboardData?.currency || 'DZD';
+    const symbolMap: Record<string, string> = {
+      DZD: locale === 'ar' ? 'د.ج' : 'DZD',
+      SAR: locale === 'ar' ? 'ر.س' : 'SAR',
+      USD: '$',
+      EUR: '€',
+    };
+    const symbol = symbolMap[code] || code;
+    return `${amount.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')} ${symbol}`;
+  };
+
   const getAdminPath = (subPath: string = '') => {
     if (typeof window === 'undefined') return '/super-admin';
     const segments = window.location.pathname.split('/');
@@ -688,7 +700,7 @@ export default function AdminDashboard() {
                               />
                             </TableCell>
                             <TableCell className="font-bold">
-                              {formatAdminCurrency(order.total)}
+                              {formatOrderCurrency(order.total, order.currency)}
                             </TableCell>
                             <TableCell>
                               {updatingOrderId === order.id ? (

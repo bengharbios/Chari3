@@ -190,7 +190,7 @@ export default function AdminShippingPage() {
   const t = (ar: string, en: string) => (locale === 'ar' ? ar : en);
 
   return (
-    <div dir={dir} className="max-w-[1400px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6 text-start">
+    <div dir={dir} className="max-w-[1750px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6 text-start">
       <div className="flex items-center gap-4 mb-6">
         <Link href={getAdminPath('')}>
           <Button variant="outline" size="icon" className="rounded-full">

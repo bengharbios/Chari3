@@ -134,6 +134,16 @@ export default function StoreDashboard() {
 
   const { kpis, products, recentOrders } = dashboardData;
 
+  const storeCurrency = dashboardData?.currency || 'DZD';
+  const formatStoreCurrency = (amount: number) => {
+    const formattedAmount = amount.toLocaleString(locale === 'ar' ? 'ar-DZ' : 'en-US');
+    if (locale === 'ar') {
+      return storeCurrency === 'DZD' ? `${formattedAmount} د.ج` : `${formattedAmount} ${storeCurrency}`;
+    }
+    return `${storeCurrency} ${formattedAmount}`;
+  };
+
+
   // Chart Data Preparation
   const chartData = [
     { name: getMonthLabel(0, locale), sales: 320, visitors: 1500 },
@@ -166,7 +176,7 @@ export default function StoreDashboard() {
       {/* KPI Stats Cards - Glassmorphism */}
       <motion.div variants={FADE_IN_VARIANTS} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { title: t(locale, 'الإيرادات', 'Revenue'), value: formatCurrency(kpis.monthRevenue ?? 0), icon: DollarSign, color: 'from-emerald-500 to-teal-400', shadow: 'shadow-emerald-500/20' },
+          { title: t(locale, 'الإيرادات', 'Revenue'), value: formatStoreCurrency(kpis.monthRevenue ?? 0), icon: DollarSign, color: 'from-emerald-500 to-teal-400', shadow: 'shadow-emerald-500/20' },
           { title: t(locale, 'المبيعات', 'Sales'), value: formatNumber(kpis.totalSales ?? 0), icon: ShoppingCart, color: 'from-blue-500 to-indigo-400', shadow: 'shadow-blue-500/20' },
           { title: t(locale, 'المنتجات', 'Products'), value: products.length, icon: Package, color: 'from-purple-500 to-pink-400', shadow: 'shadow-purple-500/20' },
           { title: t(locale, 'الزوار', 'Visitors'), value: '12,450', icon: Users, color: 'from-orange-500 to-amber-400', shadow: 'shadow-orange-500/20' },
@@ -283,7 +293,7 @@ export default function StoreDashboard() {
                         </div>
                       </div>
                       <div className="text-end">
-                        <p className="font-bold text-sm text-primary">{formatCurrency(item.total)}</p>
+                        <p className="font-bold text-sm text-primary">{formatStoreCurrency(item.total)}</p>
                         <Badge variant="outline" className={`text-[10px] mt-1 border ${st.color}`}>
                           {st.label}
                         </Badge>

@@ -39,7 +39,7 @@ export default function AdminRootPage() {
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto">
+    <div className="max-w-[1750px] mx-auto">
       <Suspense fallback={
         <div className="h-[80vh] w-full flex flex-col items-center justify-center space-y-4">
           <Loader2 className="h-10 w-10 animate-spin text-brand" />
