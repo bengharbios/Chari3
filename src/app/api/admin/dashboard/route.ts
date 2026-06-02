@@ -5,6 +5,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    // 0. Fetch system currency
+    const currencySetting = await db.systemSetting.findUnique({ where: { key: 'currency' } });
+    const currency = currencySetting?.value || 'DZD';
+
     // 1. Basic Stats Counts
     const [
       totalOrders,
@@ -212,6 +216,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
+      currency,
       analytics: {
         totalRevenue,
         totalOrders,

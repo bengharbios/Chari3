@@ -29,11 +29,25 @@ import {
 } from '@/components/ui/alert-dialog';
 
 const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
-const fmt = (n: number) => `${n.toLocaleString('ar-DZ')} د.ج`;
 
-export default function BillingManager() {
+interface BillingManagerProps {
+  currency?: string;
+}
+
+export default function BillingManager({ currency = 'DZD' }: BillingManagerProps) {
   const { locale } = useAppStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
+
+  const fmt = (n: number) => {
+    const symbolMap: Record<string, string> = {
+      DZD: locale === 'ar' ? 'د.ج' : 'DZD',
+      SAR: locale === 'ar' ? 'ر.س' : 'SAR',
+      USD: '$',
+      EUR: '€',
+    };
+    const symbol = symbolMap[currency] || currency;
+    return `${n.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')} ${symbol}`;
+  };
 
   const [isLoading, setIsLoading] = useState(true);
   const [globalDebtLimit, setGlobalDebtLimit] = useState('-5000');

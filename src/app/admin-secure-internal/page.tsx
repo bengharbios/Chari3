@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import AdminDashboard from '@/components/dashboards/AdminDashboard';
 import { Loader2 } from 'lucide-react';
@@ -40,7 +40,14 @@ export default function AdminRootPage() {
 
   return (
     <div className="max-w-[1400px] mx-auto">
-      <AdminDashboard />
+      <Suspense fallback={
+        <div className="h-[80vh] w-full flex flex-col items-center justify-center space-y-4">
+          <Loader2 className="h-10 w-10 animate-spin text-brand" />
+          <p className="text-sm font-bold text-muted-foreground">جاري تحميل لوحة التحكم...</p>
+        </div>
+      }>
+        <AdminDashboard />
+      </Suspense>
     </div>
   );
 }

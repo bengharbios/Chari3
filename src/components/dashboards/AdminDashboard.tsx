@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { toast } from 'sonner';
 import {
@@ -127,6 +128,22 @@ const getStatusBarTrack = (status: string): string => {
 export default function AdminDashboard() {
   const { locale } = useAppStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'overview';
+
+  // Dynamic currency formatting based on system settings
+  const formatAdminCurrency = (amount: number) => {
+    const code = dashboardData?.currency || 'DZD';
+    const symbolMap: Record<string, string> = {
+      DZD: locale === 'ar' ? 'د.ج' : 'DZD',
+      SAR: locale === 'ar' ? 'ر.س' : 'SAR',
+      USD: '$',
+      EUR: '€',
+    };
+    const symbol = symbolMap[code] || code;
+    return `${amount.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')} ${symbol}`;
+  };
 
   const getAdminPath = (subPath: string = '') => {
     if (typeof window === 'undefined') return '/super-admin';
@@ -325,208 +342,296 @@ export default function AdminDashboard() {
 
   return (
     <div dir={dir} className="space-y-6 text-start">
-      {/* Page Header */}
-      <PageHeader
-        title={t(locale, 'لوحة تحكم المدير العام', 'General Admin Dashboard')}
-        description={t(locale, 'نظرة شاملة على أداء المنصة والتحكم في الطلبات والمستخدمين في الوقت الفعلي', 'Platform-wide live overview, user control & real-time transaction updates')}
-        actions={
-          <div className="flex items-center gap-2">
-            <Link href={getAdminPath('categories')}>
-              <Button variant="outline" size="sm" className="gap-2 font-bold hover:bg-brand/10 hover:text-brand border-brand/20">
-                <FolderTree className="h-4 w-4" />
-                {t(locale, 'إدارة التصنيفات', 'Manage Categories')}
-              </Button>
-            </Link>
-            <Link href={getAdminPath('settings')}>
-              <Button variant="outline" size="sm" className="gap-2 font-bold hover:bg-brand/10 hover:text-brand border-brand/20">
-                <Settings className="h-4 w-4" />
-                {t(locale, 'إعدادات النظام', 'System Settings')}
-              </Button>
-            </Link>
-            <Button variant="outline" size="sm" onClick={fetchAdminData} className="gap-2 font-bold">
-              <Activity className="h-4 w-4" />
-              {t(locale, 'تحديث البيانات', 'Refresh Portal')}
-            </Button>
+      {/* ============================================ */}
+      {/* 1. OVERVIEW DASHBOARD VIEW                  */}
+      {/* ============================================ */}
+      {currentTab === 'overview' && (
+        <>
+          {/* Page Header */}
+          <PageHeader
+            title={t(locale, 'لوحة تحكم المدير العام', 'General Admin Dashboard')}
+            description={t(locale, 'نظرة شاملة على أداء المنصة والتحكم في الطلبات والمستخدمين في الوقت الفعلي', 'Platform-wide live overview, user control & real-time transaction updates')}
+            actions={
+              <div className="flex items-center gap-2">
+                <Link href={getAdminPath('categories')}>
+                  <Button variant="outline" size="sm" className="gap-2 font-bold hover:bg-brand/10 hover:text-brand border-brand/20">
+                    <FolderTree className="h-4 w-4" />
+                    {t(locale, 'إدارة التصنيفات', 'Manage Categories')}
+                  </Button>
+                </Link>
+                <Link href={getAdminPath('settings')}>
+                  <Button variant="outline" size="sm" className="gap-2 font-bold hover:bg-brand/10 hover:text-brand border-brand/20">
+                    <Settings className="h-4 w-4" />
+                    {t(locale, 'إعدادات النظام', 'System Settings')}
+                  </Button>
+                </Link>
+                <Button variant="outline" size="sm" onClick={fetchAdminData} className="gap-2 font-bold">
+                  <Activity className="h-4 w-4" />
+                  {t(locale, 'تحديث البيانات', 'Refresh Portal')}
+                </Button>
+              </div>
+            }
+          />
+
+          {/* Overview Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatsCard
+              title={t(locale, 'إجمالي الإيرادات', 'Total Revenue')}
+              value={formatAdminCurrency(totalRevenue)}
+              change={revenueChange}
+              icon={<DollarSign className="h-5 w-5 md:h-6 md:w-6" />}
+              iconBg="bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+              subtitle={t(locale, 'مقارنة بالشهر السابق', 'vs last month')}
+            />
+            <StatsCard
+              title={t(locale, 'إجمالي الطلبات', 'Total Orders')}
+              value={formatNumber(totalOrders)}
+              change={ordersChange}
+              icon={<ShoppingCart className="h-5 w-5 md:h-6 md:w-6" />}
+              iconBg="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+              subtitle={t(locale, 'مقارنة بالشهر السابق', 'vs last month')}
+            />
+            <StatsCard
+              title={t(locale, 'إجمالي المنتجات', 'Total Products')}
+              value={formatNumber(totalProducts)}
+              change={productsChange}
+              icon={<Package className="h-5 w-5 md:h-6 md:w-6" />}
+              iconBg="bg-brand/10 text-brand"
+              subtitle={t(locale, 'مقارنة بالشهر السابق', 'vs last month')}
+            />
+            <StatsCard
+              title={t(locale, 'إجمالي المستخدمين', 'Total Users')}
+              value={formatNumber(totalUsers)}
+              change={usersChange}
+              icon={<Users className="h-5 w-5 md:h-6 md:w-6" />}
+              iconBg="bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
+              subtitle={t(locale, 'مقارنة بالشهر السابق', 'vs last month')}
+            />
           </div>
-        }
-      />
 
-      {/* ============================================ */}
-      {/* OVERVIEW STATS                              */}
-      {/* ============================================ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title={t(locale, 'إجمالي الإيرادات', 'Total Revenue')}
-          value={formatCurrency(totalRevenue)}
-          change={revenueChange}
-          icon={<DollarSign className="h-5 w-5 md:h-6 md:w-6" />}
-          iconBg="bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
-          subtitle={t(locale, 'مقارنة بالشهر السابق', 'vs last month')}
-        />
-        <StatsCard
-          title={t(locale, 'إجمالي الطلبات', 'Total Orders')}
-          value={formatNumber(totalOrders)}
-          change={ordersChange}
-          icon={<ShoppingCart className="h-5 w-5 md:h-6 md:w-6" />}
-          iconBg="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-          subtitle={t(locale, 'مقارنة بالشهر السابق', 'vs last month')}
-        />
-        <StatsCard
-          title={t(locale, 'إجمالي المنتجات', 'Total Products')}
-          value={formatNumber(totalProducts)}
-          change={productsChange}
-          icon={<Package className="h-5 w-5 md:h-6 md:w-6" />}
-          iconBg="bg-brand/10 text-brand"
-          subtitle={t(locale, 'مقارنة بالشهر السابق', 'vs last month')}
-        />
-        <StatsCard
-          title={t(locale, 'إجمالي المستخدمين', 'Total Users')}
-          value={formatNumber(totalUsers)}
-          change={usersChange}
-          icon={<Users className="h-5 w-5 md:h-6 md:w-6" />}
-          iconBg="bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
-          subtitle={t(locale, 'مقارنة بالشهر السابق', 'vs last month')}
-        />
-      </div>
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Revenue Chart */}
+            <Card className="card-surface lg:col-span-2">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-semibold flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-brand" />
+                    {t(locale, 'الإيرادات الشهرية الحقيقية', 'Dynamic Monthly Revenue')}
+                  </CardTitle>
+                  <Badge variant="secondary" className="text-xs">
+                    {t(locale, 'آخر 12 شهر', 'Last 12 months')}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-end gap-1.5 sm:gap-2 h-48">
+                  {revenueByMonth.map((item: any, index: number) => {
+                    const height = (item.revenue / maxRevenue) * 100;
+                    const isHighest = item.revenue === maxRevenue && maxRevenue > 0;
+                    return (
+                      <div key={index} className="flex-1 flex flex-col items-center gap-1.5 min-w-0">
+                        <span className="text-[10px] text-muted-foreground font-medium truncate w-full text-center hidden sm:block">
+                          {formatNumber(item.revenue)}
+                        </span>
+                        <div className="w-full relative group">
+                          <div
+                            className={`w-full rounded-t-sm transition-all duration-500 cursor-pointer ${
+                              isHighest
+                                ? 'bg-brand'
+                                : 'bg-brand/60 hover:bg-brand/80'
+                            }`}
+                            style={{ height: `${Math.max(4, height * 1.3)}px` }}
+                          />
+                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
+                            {formatAdminCurrency(item.revenue)}
+                          </div>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground truncate w-full text-center">
+                          {locale === 'ar' ? item.month : item.monthEn}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
 
-      {/* ============================================ */}
-      {/* CHARTS ROW                                  */}
-      {/* ============================================ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Revenue Chart */}
-        <Card className="card-surface lg:col-span-2">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-brand" />
-                {t(locale, 'الإيرادات الشهرية الحقيقية', 'Dynamic Monthly Revenue')}
-              </CardTitle>
-              <Badge variant="secondary" className="text-xs">
-                {t(locale, 'آخر 12 شهر', 'Last 12 months')}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-end gap-1.5 sm:gap-2 h-48">
-              {revenueByMonth.map((item: any, index: number) => {
-                const height = (item.revenue / maxRevenue) * 100;
-                const isHighest = item.revenue === maxRevenue && maxRevenue > 0;
-                return (
-                  <div key={index} className="flex-1 flex flex-col items-center gap-1.5 min-w-0">
-                    <span className="text-[10px] text-muted-foreground font-medium truncate w-full text-center hidden sm:block">
-                      {formatNumber(item.revenue)}
-                    </span>
-                    <div className="w-full relative group">
-                      <div
-                        className={`w-full rounded-t-sm transition-all duration-500 cursor-pointer ${
-                          isHighest
-                            ? 'bg-brand'
-                            : 'bg-brand/60 hover:bg-brand/80'
-                        }`}
-                        style={{ height: `${Math.max(4, height * 1.3)}px` }}
-                      />
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-foreground text-background text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
-                        {formatCurrency(item.revenue)}
+            {/* Orders by Status */}
+            <Card className="card-surface">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <ShoppingCart className="h-4 w-4 text-blue-500" />
+                  {t(locale, 'الطلبات حسب الحالة', 'Orders by Status')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {ordersByStatus.map((item: any) => {
+                  const percentage = totalStatusOrders > 0 ? Math.round((item.count / totalStatusOrders) * 100) : 0;
+                  return (
+                    <div key={item.status} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground font-bold">
+                          {locale === 'ar'
+                            ? getOrderStatusText(item.status as any)
+                            : item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-foreground">{item.count}</span>
+                          <span className="text-xs text-muted-foreground">({percentage}%)</span>
+                        </div>
+                      </div>
+                      <div className={`h-2 rounded-full ${getStatusBarTrack(item.status)}`}>
+                        <div
+                          className={`h-full rounded-full ${getStatusBarColor(item.status)} transition-all duration-700`}
+                          style={{ width: `${percentage}%` }}
+                        />
                       </div>
                     </div>
-                    <span className="text-[10px] text-muted-foreground truncate w-full text-center">
-                      {locale === 'ar' ? item.month : item.monthEn}
-                    </span>
+                  );
+                })}
+                <div className="pt-3 border-t mt-3">
+                  <div className="flex items-center justify-between text-sm font-medium">
+                    <span>{t(locale, 'إجمالي الطلبات الفعلي', 'Real-Time Orders count')}</span>
+                    <span className="font-bold">{totalStatusOrders.toLocaleString()}</span>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-        {/* Orders by Status */}
-        <Card className="card-surface">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <ShoppingCart className="h-4 w-4 text-blue-500" />
-              {t(locale, 'الطلبات حسب الحالة', 'Orders by Status')}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {ordersByStatus.map((item: any) => {
-              const percentage = totalStatusOrders > 0 ? Math.round((item.count / totalStatusOrders) * 100) : 0;
-              return (
-                <div key={item.status} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground font-bold">
-                      {locale === 'ar'
-                        ? getOrderStatusText(item.status as any)
-                        : item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-foreground">{item.count}</span>
-                      <span className="text-xs text-muted-foreground">({percentage}%)</span>
+          {/* Platform Stats Aggregates */}
+          <div>
+            <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              {t(locale, 'إحصائيات المنصة الإجمالية الحقيقية', 'Dynamic Platform Aggregates')}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Stores Count */}
+              <Card className="card-surface">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3 text-start">
+                    <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                      <Store className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{stats.totalStores}</p>
+                      <p className="text-xs text-muted-foreground font-semibold">
+                        {t(locale, 'المتاجر النشطة', 'Registered Stores')}
+                      </p>
                     </div>
                   </div>
-                  <div className={`h-2 rounded-full ${getStatusBarTrack(item.status)}`}>
-                    <div
-                      className={`h-full rounded-full ${getStatusBarColor(item.status)} transition-all duration-700`}
-                      style={{ width: `${percentage}%` }}
-                    />
+                  <div className="mt-3 pt-3 border-t">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
+                      <span>{t(locale, 'مبيعات المتاجر الفعلي', 'Live Sales Count')}</span>
+                      <span className="font-bold text-foreground">
+                        {stats.totalSalesSum.toLocaleString()}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-            <div className="pt-3 border-t mt-3">
-              <div className="flex items-center justify-between text-sm font-medium">
-                <span>{t(locale, 'إجمالي الطلبات الفعلي', 'Real-Time Orders count')}</span>
-                <span className="font-bold">{totalStatusOrders.toLocaleString()}</span>
-              </div>
+                </CardContent>
+              </Card>
+
+              {/* Sellers Count */}
+              <Card className="card-surface">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3 text-start">
+                    <div className="h-10 w-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                      <UserCog className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{stats.totalSellers}</p>
+                      <p className="text-xs text-muted-foreground font-semibold">
+                        {t(locale, 'البائعين المستقلين', 'Independent Merchants')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
+                      <span>{t(locale, 'طلبات توثيق بانتظار المراجعة', 'Pending Verifications')}</span>
+                      <span className="font-bold text-yellow-600 dark:text-yellow-400">
+                        {stats.wantsUpgradeCount}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Active Couriers */}
+              <Card className="card-surface">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3 text-start">
+                    <div className="h-10 w-10 rounded-xl bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
+                      <Truck className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">{stats.activeCouriers}</p>
+                      <p className="text-xs text-muted-foreground font-semibold">
+                        {t(locale, 'المندوبين النشطين', 'Active Couriers')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
+                      <span>{t(locale, 'إجمالي المندوبين بالمنصة', 'Total Registered Couriers')}</span>
+                      <span className="font-bold text-foreground">
+                        {stats.totalCouriers}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Avg Rating */}
+              <Card className="card-surface">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3 text-start">
+                    <div className="h-10 w-10 rounded-xl bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 flex items-center justify-center">
+                      <Star className="h-5 w-5 fill-yellow-500" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold">
+                        {stats.avgStoreRating ? Number(stats.avgStoreRating).toFixed(1) : '5.0'}
+                      </p>
+                      <p className="text-xs text-muted-foreground font-semibold">
+                        {t(locale, 'متوسط تقييم المتاجر', 'Avg Store Rating')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
+                      <span>{t(locale, 'إجمالي المعروض بالمنصة', 'Total Platform Products')}</span>
+                      <span className="font-bold text-foreground">
+                        {totalProducts.toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </>
+      )}
 
       {/* ============================================ */}
-      {/* TABS: ORDERS / PRODUCTS / USERS             */}
+      {/* 2. LIVE RECENT ORDERS SUBPAGE               */}
       {/* ============================================ */}
-      <Tabs defaultValue="orders" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="orders" className="gap-1.5 font-bold">
-            <ShoppingCart className="h-3.5 w-3.5" />
-            {t(locale, 'الطلبات المعالجة والتحكم الفوري', 'Platform Orders & Control')}
-          </TabsTrigger>
-          <TabsTrigger value="products" className="gap-1.5 font-bold">
-            <Star className="h-3.5 w-3.5" />
-            {t(locale, 'المنتجات الأكثر مبيعاً في النظام', 'Platform Top Selling')}
-          </TabsTrigger>
-          <TabsTrigger value="users" className="gap-1.5 font-bold">
-            <Users className="h-3.5 w-3.5" />
-            {t(locale, 'إدارة حسابات المستخدمين', 'Interactive Users Directory')}
-          </TabsTrigger>
-          <TabsTrigger value="stores-sellers" className="gap-1.5 font-bold">
-            <Store className="h-3.5 w-3.5" />
-            {t(locale, 'المتاجر والتجار', 'Stores & Sellers')}
-          </TabsTrigger>
-          <TabsTrigger value="order-statuses" className="gap-1.5 font-bold">
-            <Settings className="h-3.5 w-3.5" />
-            {t(locale, 'إعدادات الحالات', 'Order Statuses')}
-          </TabsTrigger>
-          <TabsTrigger value="billing" className="gap-1.5 font-bold">
-            <Wallet className="h-3.5 w-3.5" />
-            {t(locale, 'الاشتراكات والمديونية', 'Billing & Subscriptions')}
-          </TabsTrigger>
-        </TabsList>
-
-        {/* ---- LIVE RECENT ORDERS TAB ---- */}
-        <TabsContent value="orders">
+      {currentTab === 'orders' && (
+        <div className="space-y-6">
+          <PageHeader
+            title={t(locale, 'إدارة وتحديث الطلبات المنفذة', 'Manage Fulfilled Orders')}
+            description={t(locale, 'لوحة تحكم المدير تملك حق التجاوز المباشر (Override) لتحديث أي حالة دفع أو توصيل في النظام', 'Admin overrides orders and triggers immediate transaction updates globally')}
+            actions={
+              <Button variant="outline" size="sm" onClick={() => router.push(getAdminPath(''))} className="font-bold">
+                {t(locale, 'العودة للوحة التحكم', 'Back to Overview')}
+              </Button>
+            }
+          />
           <Card className="card-surface">
             <CardHeader className="pb-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div>
-                  <CardTitle className="text-base font-semibold">
-                    {t(locale, 'إدارة وتحديث الطلبات المنفذة', 'Manage & Dispatch Platform Orders')}
-                  </CardTitle>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    {t(locale, 'لوحة تحكم المدير تملك حق التجاوز المباشر (Override) لتحديث أي حالة دفع أو توصيل', 'Admin overrides orders and triggers immediate transaction updates globally')}
-                  </p>
-                </div>
-              </div>
+              <CardTitle className="text-base font-semibold">
+                {t(locale, 'الطلبات المعالجة والتحكم الفوري', 'Processed Orders & Control')}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto -mx-1">
@@ -583,7 +688,7 @@ export default function AdminDashboard() {
                               />
                             </TableCell>
                             <TableCell className="font-bold">
-                              {formatCurrency(order.total)}
+                              {formatAdminCurrency(order.total)}
                             </TableCell>
                             <TableCell>
                               {updatingOrderId === order.id ? (
@@ -620,94 +725,115 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* ---- REAL TOP PRODUCTS TAB ---- */}
-        <TabsContent value="products">
+      {/* ============================================ */}
+      {/* 3. TOP SELLING PRODUCTS SUBPAGE             */}
+      {/* ============================================ */}
+      {currentTab === 'products' && (
+        <div className="space-y-6">
+          <PageHeader
+            title={t(locale, 'المنتجات الأكثر مبيعاً في النظام', 'Best Selling Products')}
+            description={t(locale, 'ترتيب وإحصائيات المنتجات الأكثر طلباً ومبيعاً على المنصة بالكامل', 'Ranking and sales statistics of the most popular products on the platform')}
+            actions={
+              <Button variant="outline" size="sm" onClick={() => router.push(getAdminPath(''))} className="font-bold">
+                {t(locale, 'العودة للوحة التحكم', 'Back to Overview')}
+              </Button>
+            }
+          />
           <Card className="card-surface">
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-semibold">
-                {t(locale, 'المنتجات الأكثر طلباً ومبيعاً', 'Real Top Selling Products')}
+                {t(locale, 'قائمة أفضل المبيعات', 'Top Selling List')}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[420px]">
-                <div className="space-y-3">
-                  {topProducts.length === 0 ? (
-                    <p className="text-center py-12 text-muted-foreground font-bold">
-                      {t(locale, 'لا توجد مبيعات مسجلة في المنتجات بعد.', 'No sales statistics captured for products yet.')}
-                    </p>
-                  ) : (
-                    topProducts.map((item: any, index: number) => (
+              <div className="space-y-3">
+                {topProducts.length === 0 ? (
+                  <p className="text-center py-12 text-muted-foreground font-bold">
+                    {t(locale, 'لا توجد مبيعات مسجلة في المنتجات بعد.', 'No sales statistics captured for products yet.')}
+                  </p>
+                ) : (
+                  topProducts.map((item: any, index: number) => (
+                    <div
+                      key={item.product.id}
+                      className="flex items-center gap-3 p-3 rounded-xl border bg-surface/50 hover:bg-surface transition-colors hover:scale-[1.005]"
+                    >
                       <div
-                        key={item.product.id}
-                        className="flex items-center gap-3 p-3 rounded-xl border bg-surface/50 hover:bg-surface transition-colors hover:scale-[1.005]"
+                        className={`h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
+                          index === 0
+                            ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
+                            : index === 1
+                              ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                              : index === 2
+                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                                : 'bg-surface text-muted-foreground'
+                        }`}
                       >
-                        <div
-                          className={`h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold shrink-0 ${
-                            index === 0
-                              ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-                              : index === 1
-                                ? 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                                : index === 2
-                                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
-                                  : 'bg-surface text-muted-foreground'
-                          }`}
-                        >
-                          {index + 1}
-                        </div>
+                        {index + 1}
+                      </div>
 
-                        <div className="h-12 w-12 rounded-lg bg-surface overflow-hidden shrink-0 border">
-                          <img
-                            src={item.product.images[0] || 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=120'}
-                            alt={locale === 'ar' ? item.product.name : (item.product.nameEn || item.product.name)}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
+                      <div className="h-12 w-12 rounded-lg bg-surface overflow-hidden shrink-0 border">
+                        <img
+                          src={item.product.images[0] || 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=120'}
+                          alt={locale === 'ar' ? item.product.name : (item.product.nameEn || item.product.name)}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
 
-                        <div className="flex-1 min-w-0 text-start">
-                          <p className="text-sm font-bold truncate text-foreground">
-                            {locale === 'ar' ? item.product.name : (item.product.nameEn || item.product.name)}
-                          </p>
-                          <div className="flex items-center gap-3 mt-1">
-                            <span className="text-xs text-muted-foreground flex items-center gap-1 font-semibold">
-                              <Package className="h-3 w-3" />
-                              {item.soldCount.toLocaleString()} {t(locale, 'مباع فعلياً', 'sold units')}
-                            </span>
-                            <span className="text-xs flex items-center gap-0.5 text-yellow-500 font-bold">
-                              <Star className="h-3 w-3 fill-yellow-500" />
-                              {item.product.rating}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="text-end shrink-0">
-                          <p className="text-sm font-black text-brand">
-                            {formatCurrency(item.revenue)}
-                          </p>
-                          <p className="text-xs text-muted-foreground font-semibold">
-                            {formatCurrency(item.product.price)} / {t(locale, 'قطعة', 'unit')}
-                          </p>
+                      <div className="flex-1 min-w-0 text-start">
+                        <p className="text-sm font-bold truncate text-foreground">
+                          {locale === 'ar' ? item.product.name : (item.product.nameEn || item.product.name)}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1">
+                          <span className="text-xs text-muted-foreground flex items-center gap-1 font-semibold">
+                            <Package className="h-3 w-3" />
+                            {item.soldCount.toLocaleString()} {t(locale, 'مباع فعلياً', 'sold units')}
+                          </span>
+                          <span className="text-xs flex items-center gap-0.5 text-yellow-500 font-bold">
+                            <Star className="h-3 w-3 fill-yellow-500" />
+                            {item.product.rating}
+                          </span>
                         </div>
                       </div>
-                    ))
-                  )}
-                </div>
-              </ScrollArea>
+
+                      <div className="text-end shrink-0">
+                        <p className="text-sm font-black text-brand">
+                          {formatAdminCurrency(item.revenue)}
+                        </p>
+                        <p className="text-xs text-muted-foreground font-semibold">
+                          {formatAdminCurrency(item.product.price)} / {t(locale, 'قطعة', 'unit')}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* ---- REAL INTERACTIVE USER MANAGEMENT TAB ---- */}
-        <TabsContent value="users">
+      {/* ============================================ */}
+      {/* 4. INTERACTIVE USER MANAGEMENT SUBPAGE       */}
+      {/* ============================================ */}
+      {currentTab === 'users' && (
+        <div className="space-y-6">
+          <PageHeader
+            title={t(locale, 'إدارة حسابات المستخدمين', 'User Accounts Directory')}
+            description={t(locale, 'البحث وتعديل خصائص الأعضاء، البائعين والمندوبين وحظر أو توثيق الحسابات', 'Directory of members, sellers, and couriers; verify, suspend or modify statuses instantly')}
+            actions={
+              <Button variant="outline" size="sm" onClick={() => router.push(getAdminPath(''))} className="font-bold">
+                {t(locale, 'العودة للوحة التحكم', 'Back to Overview')}
+              </Button>
+            }
+          />
           <Card className="card-surface">
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-semibold">
-                {t(locale, 'دليل حسابات المستخدمين النشطين والتوثيق', 'Live Directory of Users & Merchant Approvals')}
+                {t(locale, 'دليل حسابات المستخدمين والتوثيق', 'Interactive Users Directory')}
               </CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {t(locale, 'يمكنك مراجعة وتعديل مستويات توثيق البائعين والتحكم في قفل أو تفعيل الحسابات المنتهكة فورياً', 'Review, toggle verification levels, suspend or reactivate violator merchant profiles instantly')}
-              </p>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -744,7 +870,6 @@ export default function AdminDashboard() {
                       />
                       
                       <div className="flex items-center gap-1">
-                        {/* Suspension Toggle */}
                         {togglingUserId === u.id ? (
                           <Loader2 className="h-3 w-3 animate-spin text-brand" />
                         ) : (
@@ -808,30 +933,40 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
+      )}
 
-        {/* ---- STORES & SELLERS DIRECTORY TAB ---- */}
-        <TabsContent value="stores-sellers">
+      {/* ============================================ */}
+      {/* 5. STORES & SELLERS SUBPAGE                  */}
+      {/* ============================================ */}
+      {currentTab === 'stores-sellers' && (
+        <div className="space-y-6">
+          <PageHeader
+            title={t(locale, 'المتاجر والتجار', 'Stores & Sellers')}
+            description={t(locale, 'متابعة وإدارة صور، خصائص، ومبيعات المتاجر والتجار المستقلين على المنصة', 'Monitor and manage logo, cover images, features, and sales parameters for official stores and independent merchants')}
+            actions={
+              <Button variant="outline" size="sm" onClick={() => router.push(getAdminPath(''))} className="font-bold">
+                {t(locale, 'العودة للوحة التحكم', 'Back to Overview')}
+              </Button>
+            }
+          />
           <Card className="card-surface">
             <CardHeader className="pb-4">
               <CardTitle className="text-base font-semibold">
                 {t(locale, 'دليل المتاجر والتجار المستقلين', 'Directory of Stores & Sellers')}
               </CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {t(locale, 'متابعة وإدارة صور، خصائص، ومبيعات المتاجر والتجار المستقلين', 'Monitor and manage images, features, and sales of stores and independent sellers')}
-              </p>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="stores-sub" className="w-full">
                 <TabsList className="mb-4">
-                  <TabsTrigger value="stores-sub" className="gap-1.5">
+                  <TabsTrigger value="stores-sub" className="gap-1.5 font-bold">
                     <Store className="h-3.5 w-3.5" />
                     {t(locale, 'المتاجر الرسمية', 'Official Stores')}
                     <Badge variant="secondary" className="ms-1.5 bg-brand/10 text-brand">
                       {stores.length}
                     </Badge>
                   </TabsTrigger>
-                  <TabsTrigger value="sellers-sub" className="gap-1.5">
+                  <TabsTrigger value="sellers-sub" className="gap-1.5 font-bold">
                     <UserCog className="h-3.5 w-3.5" />
                     {t(locale, 'التجار المستقلين', 'Independent Sellers')}
                     <Badge variant="secondary" className="ms-1.5 bg-brand/10 text-brand">
@@ -900,8 +1035,8 @@ export default function AdminDashboard() {
                           </div>
                           
                           <div className="mt-3 text-xs flex items-center gap-2 text-muted-foreground">
-                            <UserCog className="h-3.5 w-3.5 shrink-0" />
-                            <span className="truncate">{store.manager?.name} ({store.manager?.email})</span>
+                             <UserCog className="h-3.5 w-3.5 shrink-0" />
+                             <span className="truncate">{store.manager?.name} ({store.manager?.email})</span>
                           </div>
                         </div>
                       </div>
@@ -977,7 +1112,7 @@ export default function AdminDashboard() {
                           
                           <div className="mt-3 text-xs flex items-center gap-2 text-muted-foreground">
                             <Activity className="h-3.5 w-3.5 shrink-0" />
-                            <span className="truncate">
+                            <span>
                               {t(locale, 'مستوى الإكمال:', 'Completion Rate:')} <strong className="text-foreground">{seller.completionRate}%</strong>
                             </span>
                           </div>
@@ -994,128 +1129,44 @@ export default function AdminDashboard() {
               </Tabs>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="order-statuses">
-          <AdminOrderStatuses />
-        </TabsContent>
-        <TabsContent value="billing">
-          <BillingManager />
-        </TabsContent>
-      </Tabs>
-
-      {/* ============================================ */}
-      {/* PLATFORM STATS                              */}
-      {/* ============================================ */}
-      <div>
-        <h2 className="text-base font-semibold mb-4 flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-muted-foreground" />
-          {t(locale, 'إحصائيات المنصة الإجمالية الحقيقية', 'Dynamic Platform Aggregates')}
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Stores Count */}
-          <Card className="card-surface">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 text-start">
-                <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <Store className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.totalStores}</p>
-                  <p className="text-xs text-muted-foreground font-semibold">
-                    {t(locale, 'المتاجر النشطة', 'Registered Stores')}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-3 pt-3 border-t">
-                <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
-                  <span>{t(locale, 'مبيعات المتاجر الفعلي', 'Live Sales Count')}</span>
-                  <span className="font-bold text-foreground">
-                    {stats.totalSalesSum.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Sellers Count */}
-          <Card className="card-surface">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 text-start">
-                <div className="h-10 w-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                  <UserCog className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.totalSellers}</p>
-                  <p className="text-xs text-muted-foreground font-semibold">
-                    {t(locale, 'البائعين المستقلين', 'Independent Merchants')}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-3 pt-3 border-t">
-                <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
-                  <span>{t(locale, 'طلبات توثيق بانتظار المراجعة', 'Pending Verifications')}</span>
-                  <span className="font-bold text-yellow-600 dark:text-yellow-400">
-                    {stats.wantsUpgradeCount}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Active Couriers */}
-          <Card className="card-surface">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 text-start">
-                <div className="h-10 w-10 rounded-xl bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
-                  <Truck className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{stats.activeCouriers}</p>
-                  <p className="text-xs text-muted-foreground font-semibold">
-                    {t(locale, 'المندوبين النشطين', 'Active Couriers')}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-3 pt-3 border-t">
-                <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
-                  <span>{t(locale, 'إجمالي المندوبين بالمنصة', 'Total Registered Couriers')}</span>
-                  <span className="font-bold text-foreground">
-                    {stats.totalCouriers}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Avg Rating */}
-          <Card className="card-surface">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3 text-start">
-                <div className="h-10 w-10 rounded-xl bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 flex items-center justify-center">
-                  <Star className="h-5 w-5 fill-yellow-500" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">
-                    {stats.avgStoreRating ? Number(stats.avgStoreRating).toFixed(1) : '5.0'}
-                  </p>
-                  <p className="text-xs text-muted-foreground font-semibold">
-                    {t(locale, 'متوسط تقييم المتاجر', 'Avg Store Rating')}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-3 pt-3 border-t">
-                <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
-                  <span>{t(locale, 'إجمالي المعروض بالمنصة', 'Total Platform Products')}</span>
-                  <span className="font-bold text-foreground">
-                    {totalProducts.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
-      </div>
+      )}
+
+      {/* ============================================ */}
+      {/* 6. ORDER STATUSES SETTINGS SUBPAGE           */}
+      {/* ============================================ */}
+      {currentTab === 'order-statuses' && (
+        <div className="space-y-6 animate-fade-in">
+          <PageHeader
+            title={t(locale, 'إعدادات الحالات', 'Order Statuses Settings')}
+            description={t(locale, 'التحكم وتعديل خيارات الحالات وسير العمليات في النظام لتحديثات طلبات الشراء', 'Control and edit status options and workflows in the system')}
+            actions={
+              <Button variant="outline" size="sm" onClick={() => router.push(getAdminPath(''))} className="font-bold">
+                {t(locale, 'العودة للوحة التحكم', 'Back to Overview')}
+              </Button>
+            }
+          />
+          <AdminOrderStatuses />
+        </div>
+      )}
+
+      {/* ============================================ */}
+      {/* 7. BILLING & SUBSCRIPTIONS SUBPAGE           */}
+      {/* ============================================ */}
+      {currentTab === 'billing' && (
+        <div className="space-y-6 animate-fade-in">
+          <PageHeader
+            title={t(locale, 'الاشتراكات والمديونية', 'Billing & Subscriptions Manager')}
+            description={t(locale, 'مراجعة وتعديل عمولات المبيعات للتاجر، مديونية الحسابات، وقبول أو رفض كشوفات الدفع CCP', 'Review and approve merchant outstanding debt bank receipts, set package details, and view ledgers')}
+            actions={
+              <Button variant="outline" size="sm" onClick={() => router.push(getAdminPath(''))} className="font-bold">
+                {t(locale, 'العودة للوحة التحكم', 'Back to Overview')}
+              </Button>
+            }
+          />
+          <BillingManager currency={dashboardData?.currency || 'DZD'} />
+        </div>
+      )}
     </div>
   );
 }

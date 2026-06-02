@@ -11,6 +11,7 @@ export async function GET() {
       'upload_max_size_mb',
       'upload_recommended_width',
       'upload_recommended_height',
+      'currency',
     ];
 
     const settings = await db.systemSetting.findMany({
@@ -29,6 +30,7 @@ export async function GET() {
         upload_max_size_mb: settingsMap.upload_max_size_mb || '5',
         upload_recommended_width: settingsMap.upload_recommended_width || '800',
         upload_recommended_height: settingsMap.upload_recommended_height || '800',
+        currency: settingsMap.currency || 'DZD',
       }
     });
   } catch (error) {
