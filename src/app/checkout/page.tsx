@@ -17,8 +17,8 @@ import { Badge } from '@/components/ui/badge';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { locale, theme } = useAppStore();
-  const { user, isAuthenticated, allowGuestCheckout } = useAuthStore();
+  const { locale, theme, allowGuestCheckout } = useAppStore();
+  const { user, isAuthenticated } = useAuthStore();
   const {
     items,
     itemCount,
