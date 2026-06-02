@@ -34,6 +34,17 @@ export default function BillingPage() {
   const [merchantProfile, setMerchantProfile] = useState<any>(null);
   const [settings, setSettings] = useState<any>({});
 
+  const currencyCode = wallet?.currency || 'DZD';
+  const getCurrencyName = () => {
+    if (locale === 'ar') {
+      if (currencyCode === 'DZD') return 'بالدينار';
+      if (currencyCode === 'SAR') return 'بالريال';
+      return `بـ ${currencyCode}`;
+    } else {
+      return `in ${currencyCode}`;
+    }
+  };
+
   // Dynamic currency formatting helper
   const fmt = (amount: number) => {
     const code = wallet?.currency || 'DZD';
@@ -126,9 +137,9 @@ export default function BillingPage() {
       } else {
         // Fallback simulated ledger transactions
         setTransactions([
-          { id: 'tx-1', type: 'SUBSCRIPTION_FEE', amount: -1500, balance: -1500, createdAt: new Date(Date.now() - 5 * 24 * 3600000).toISOString(), description: 'رسوم الاشتراك الشهري: باقة أساسي' },
-          { id: 'tx-2', type: 'COMMISSION_DEBT', amount: -450, balance: -1950, createdAt: new Date(Date.now() - 3 * 24 * 3600000).toISOString(), description: 'عمولة مبيعات الطلب #CHARI-1789234 (10%)' },
-          { id: 'tx-3', type: 'COMMISSION_DEBT', amount: -600, balance: -2550, createdAt: new Date(Date.now() - 1 * 24 * 3600000).toISOString(), description: 'عمولة مبيعات الطلب #CHARI-1789851 (10%)' },
+          { id: 'tx-1', type: 'SUBSCRIPTION_FEE', amount: -1500, balance: -1500, createdAt: new Date(Date.now() - 5 * 24 * 3600000).toISOString(), description: t(locale, 'رسوم الاشتراك الشهري: باقة أساسي', 'Monthly base package subscription fee') },
+          { id: 'tx-2', type: 'COMMISSION_DEBT', amount: -450, balance: -1950, createdAt: new Date(Date.now() - 3 * 24 * 3600000).toISOString(), description: t(locale, 'عمولة مبيعات الطلب #CHARI-1789234 (10%)', 'Sales commission on order #CHARI-1789234 (10%)') },
+          { id: 'tx-3', type: 'COMMISSION_DEBT', amount: -600, balance: -2550, createdAt: new Date(Date.now() - 1 * 24 * 3600000).toISOString(), description: t(locale, 'عمولة مبيعات الطلب #CHARI-1789851 (10%)', 'Sales commission on order #CHARI-1789851 (10%)') },
         ]);
       }
 
@@ -408,15 +419,15 @@ export default function BillingPage() {
               </p>
             </div>
 
-            <div className="pt-2 border-t border-slate-800 space-y-1.5 text-[10px] sm:text-xs text-slate-400 max-h-[85px] overflow-y-auto">
-              <div className="flex items-center justify-between text-slate-300">
-                <span>{t(locale, 'الاشتراك الأساسي:', 'Base subscription:')}</span>
-                <span className="font-mono text-white">{fmt(packagePrice)}</span>
+            <div className="pt-2 border-t border-slate-800 space-y-1.5 text-[10px] sm:text-xs text-slate-400 max-h-[85px] overflow-y-auto pr-1">
+              <div className="flex items-center justify-between gap-2 text-slate-300">
+                <span className="truncate">{t(locale, 'الاشتراك الأساسي:', 'Base subscription:')}</span>
+                <span className="font-mono text-white whitespace-nowrap">{fmt(packagePrice)}</span>
               </div>
               {activeAddons.map((add, idx) => (
-                <div key={idx} className="flex items-center justify-between text-slate-300">
-                  <span>{add.name}:</span>
-                  <span className="font-mono text-white">+{fmt(add.cost)}</span>
+                <div key={idx} className="flex items-center justify-between gap-2 text-slate-300">
+                  <span className="truncate">{add.name}:</span>
+                  <span className="font-mono text-white whitespace-nowrap">+{fmt(add.cost)}</span>
                 </div>
               ))}
               {activeAddons.length === 0 && (
@@ -441,7 +452,7 @@ export default function BillingPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="ccp" className="space-y-4">
+            <Tabs dir={dir} defaultValue="ccp" className="space-y-4">
               <TabsList className="grid grid-cols-2 w-full">
                 <TabsTrigger value="ccp" className="text-xs font-bold">🧾 CCP / بريدي موب</TabsTrigger>
                 <TabsTrigger value="card" className="text-xs font-bold">💳 بطاقة دفع (آلي)</TabsTrigger>
@@ -452,23 +463,30 @@ export default function BillingPage() {
                 <form onSubmit={handleReceiptUpload} className="space-y-3">
                   <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 text-xs border border-amber-200 dark:border-amber-900 space-y-1.5 leading-relaxed">
                     <p className="font-bold">🏦 {t(locale, 'معلومات الحساب البريدي الجاري CCP:', 'Postal CCP Account details:')}</p>
-                    <ul className="list-disc ps-4 space-y-1 text-start">
-                      <li>
+                    <ul className="space-y-2 text-start">
+                      <li className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-amber-600 dark:text-amber-400">●</span>
                         <span>{t(locale, 'اسم الحساب: ', 'Account Name: ')}</span>
-                        <strong>{settings.ccp_account_name || 'شاري داي إكسبريس'}</strong>
+                        <strong className="font-bold">{settings.ccp_account_name || 'شاري داي إكسبريس'}</strong>
                       </li>
-                      <li dir="ltr" className="text-start">
-                        <span className="font-sans">RIP: </span>
-                        <strong className="font-mono text-sm">{settings.ccp_account_rip || '007999990023456789 45'}</strong>
+                      <li className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-amber-600 dark:text-amber-400">●</span>
+                        <span>{t(locale, 'رقم الحساب الجاري (RIP): ', 'RIP: ')}</span>
+                        <strong className="font-mono text-sm select-all bg-amber-100 dark:bg-amber-900/40 px-1.5 py-0.5 rounded" dir="ltr">
+                          {settings.ccp_account_rip || '007999990023456789 45'}
+                        </strong>
                       </li>
-                      <li>
-                        {t(locale, 'قم بالتحويل ثم أرفق وصل الدفع بالأسفل للموافقة.', 'Transfer funds and attach the payment receipt screenshot.')}
+                      <li className="flex items-start gap-1.5">
+                        <span className="text-amber-600 dark:text-amber-400 mt-1">●</span>
+                        <span>
+                          {t(locale, 'قم بالتحويل ثم أرفق وصل الدفع بالأسفل للموافقة.', 'Transfer funds and attach the payment receipt screenshot.')}
+                        </span>
                       </li>
                     </ul>
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="amount" className="text-xs font-semibold">{t(locale, 'مبلغ التحويل بالدينار', 'Amount in DZD')} <span className="text-red-500">*</span></Label>
+                    <Label htmlFor="amount" className="text-xs font-semibold">{t(locale, `مبلغ التحويل ${getCurrencyName()}`, `Amount ${getCurrencyName()}`)} <span className="text-red-500">*</span></Label>
                     <Input
                       id="amount"
                       type="number"
@@ -563,11 +581,11 @@ export default function BillingPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="cardAmount" className="text-xs font-semibold">{t(locale, 'المبلغ المراد سداده', 'Payment Amount DZD')}</Label>
+                    <Label htmlFor="cardAmount" className="text-xs font-semibold">{t(locale, `المبلغ المراد سداده ${getCurrencyName()}`, `Payment Amount (${currencyCode})`)}</Label>
                     <Input
                       id="cardAmount"
                       type="number"
-                      placeholder={balance < 0 ? String(Math.abs(balance)) : t(locale, 'المبلغ المراد سداده', 'Payment Amount DZD')}
+                      placeholder={balance < 0 ? String(Math.abs(balance)) : t(locale, `المبلغ المراد سداده ${getCurrencyName()}`, `Payment Amount (${currencyCode})`)}
                       value={cardAmount}
                       onChange={(e) => setCardAmount(e.target.value)}
                       className="rounded-xl h-9 font-mono"
@@ -587,9 +605,9 @@ export default function BillingPage() {
 
         {/* Transactions Ledger and Receipts history */}
         <div className="lg:col-span-2 space-y-6">
-          <Tabs defaultValue="ledger" className="space-y-4">
+          <Tabs dir={dir} defaultValue="ledger" className="space-y-4">
             <div className="w-full overflow-x-auto hide-scrollbar">
-              <TabsList className="flex w-max min-w-full justify-start border-b border-border bg-transparent p-0 h-auto space-x-2">
+              <TabsList className="flex w-max min-w-full justify-start border-b border-border bg-transparent p-0 h-auto gap-2">
                 <TabsTrigger value="ledger" className="gap-1.5 font-bold data-[state=active]:border-b-2 data-[state=active]:border-brand rounded-none bg-transparent py-2.5 px-4">
                   <FileText className="h-4 w-4" />
                   {t(locale, 'كشف الحساب والعمليات', 'Transaction Ledger')}
@@ -635,10 +653,10 @@ export default function BillingPage() {
                               </Badge>
                             </TableCell>
                             <TableCell className={`font-bold font-mono text-xs ${tx.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
-                              {tx.amount < 0 ? '' : '+'}{tx.amount.toLocaleString()} د.ج
+                              {tx.amount < 0 ? '' : '+'}{fmt(tx.amount)}
                             </TableCell>
                             <TableCell className="font-semibold font-mono text-xs text-slate-500 dark:text-slate-400">
-                              {tx.balance.toLocaleString()} د.ج
+                              {fmt(tx.balance)}
                             </TableCell>
                             <TableCell className="pe-4 text-xs text-muted-foreground font-mono">
                               {new Date(tx.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
