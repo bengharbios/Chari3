@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
       }
       if (addonEchangoPOS) {
         addonsTotal += 1500;
-        activeAddons.push('Echango POS (1500 DZD)');
+        activeAddons.push('Chari POS (1500 DZD)');
       }
       if (addonExtraPOSDevices > 0) {
         addonsTotal += addonExtraPOSDevices * 500;

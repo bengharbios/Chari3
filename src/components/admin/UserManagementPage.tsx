@@ -1979,11 +1979,11 @@ export default function UserManagementPage() {
                       />
                     </div>
 
-                    {/* Echango POS */}
+                    {/* Chari POS */}
                     <div className="flex items-center justify-between p-2.5 rounded-xl border bg-muted/20">
                       <div className="space-y-0.5">
                         <Label className="text-xs font-semibold flex items-center gap-1.5">
-                          🏪 {t(locale, 'برنامج كاشير Echango POS', 'Echango POS Software')}
+                          🏪 {t(locale, 'برنامج كاشير Chari POS', 'Chari POS Software')}
                         </Label>
                         <p className="text-[10px] text-muted-foreground">
                           {t(locale, 'برنامج الكاشير ونقاط البيع المتكاملة (+1,500 دج/شهر)', 'Register app - real-time sync (+1,500 DZD/mo)')}
@@ -2010,7 +2010,7 @@ export default function UserManagementPage() {
                           </span>
                         </div>
                         <p className="text-[10px] text-muted-foreground">
-                          {t(locale, 'عدد الأجهزة النشطة الإضافية المسموح بربطها بالبرنامج.', 'Number of extra POS devices linked to the Echango POS account.')}
+                          {t(locale, 'عدد الأجهزة النشطة الإضافية المسموح بربطها بالبرنامج.', 'Number of extra POS devices linked to the Chari POS account.')}
                         </p>
                         <div className="flex items-center gap-2 max-w-[120px] pt-1">
                           <Input

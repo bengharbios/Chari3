@@ -277,7 +277,7 @@ export default function BillingPage() {
     addonsCost += 1500;
   }
   if (addonEchangoPOS) {
-    activeAddons.push({ name: t(locale, 'برنامج كاشير Echango POS', 'Echango POS Software'), cost: 1500 });
+    activeAddons.push({ name: t(locale, 'برنامج كاشير Chari POS', 'Chari POS Software'), cost: 1500 });
     addonsCost += 1500;
   }
   if (addonExtraPOSDevices > 0) {
@@ -699,12 +699,12 @@ export default function BillingPage() {
                       />
                     </div>
 
-                    {/* 4. Echango POS */}
+                    {/* 4. Chari POS */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4">
                       <div className="space-y-1 text-start">
                         <div className="flex items-center gap-2">
                           <Building className="h-4 w-4 text-amber-500" />
-                          <h4 className="text-sm font-bold">{t(locale, 'برنامج كاشير ونقاط البيع Echango POS', 'Echango POS Cash Register')}</h4>
+                          <h4 className="text-sm font-bold">{t(locale, 'برنامج كاشير ونقاط البيع Chari POS', 'Chari POS Cash Register')}</h4>
                           <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border-none">+1,500 د.ج / {t(locale, 'شهري', 'mo')}</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
@@ -729,7 +729,7 @@ export default function BillingPage() {
                           <Badge variant="secondary" className="text-[10px] font-mono font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border-none">+500 د.ج / {t(locale, 'شهري لكل جهاز', 'mo per register')}</Badge>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {t(locale, 'أضف أجهزة كاشير إضافية نشطة تابعة لنفس الاشتراك في Echango POS. كل اشتراك نشط = جهاز كاشير إضافي.', 'Adds active POS devices to your Echango POS subscription. Each active device adds 1 additional checkout register.')}
+                          {t(locale, 'أضف أجهزة كاشير إضافية نشطة تابعة لنفس الاشتراك في Chari POS. كل اشتراك نشط = جهاز كاشير إضافي.', 'Adds active POS devices to your Chari POS subscription. Each active device adds 1 additional checkout register.')}
                         </p>
                       </div>
                       <div className="flex items-center gap-2 select-none">
