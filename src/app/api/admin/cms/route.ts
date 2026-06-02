@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     await ensureDbConnection();
     const { layout, heroSlides, testimonials } = await req.json();
 
-    const updates = [];
+    const updates: Promise<any>[] = [];
 
     if (layout) {
       updates.push(

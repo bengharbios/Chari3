@@ -367,8 +367,8 @@ export async function GET() {
       heroSlides: [],
       isMaintenance: false,
       isFallback: true,
-      errorMessage: error.message || String(error),
-      errorStack: error.stack
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined
     });
   }
 }

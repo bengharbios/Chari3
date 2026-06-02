@@ -35,7 +35,7 @@ export async function GET(
         ]
       },
       include: {
-        user: { select: { name: true, nameEn: true } },
+        user: { select: { name: true, nameEn: true, isActive: true } },
       },
     });
 
@@ -57,7 +57,7 @@ export async function GET(
       if (!sellerProfile) {
         sellerProfile = await db.sellerProfile.findUnique({
           where: { userId },
-          include: { user: { select: { name: true, nameEn: true } } },
+          include: { user: { select: { name: true, nameEn: true, isActive: true } } },
         });
       }
     }
@@ -96,7 +96,7 @@ export async function GET(
       });
     }
 
-    let themeSettingsParsed = null;
+    let themeSettingsParsed: any = null;
     try {
       if (sellerProfile?.themeSettings) {
         themeSettingsParsed = JSON.parse(sellerProfile.themeSettings);
@@ -120,7 +120,7 @@ export async function GET(
         rating: sellerProfile?.rating ?? store?.rating ?? 0,
         totalSales: sellerProfile?.totalSales ?? store?.totalSales ?? 0,
         themeColor: themeSettingsParsed?.primaryColor || '#fbbf24',
-        isActive: sellerProfile?.isActive ?? store?.isActive ?? true,
+        isActive: sellerProfile?.user?.isActive ?? store?.isActive ?? true,
         ownerName: store?.manager?.name || sellerProfile?.user?.name || '',
       },
       products,

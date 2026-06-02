@@ -89,7 +89,7 @@ export async function POST(
 // -------------------------------------------
 
 async function approveUser(
-  user: Awaited<ReturnType<typeof db.user.findUnique>>,
+  user: any,
   adminId: string
 ) {
   if (!user) throw new Error('User not found');
@@ -214,7 +214,7 @@ async function approveUser(
 // -------------------------------------------
 
 async function rejectUser(
-  user: Awaited<ReturnType<typeof db.user.findUnique>>,
+  user: any,
   adminId: string,
   reason?: string
 ) {
@@ -317,7 +317,7 @@ async function rejectUser(
 // -------------------------------------------
 
 async function requestEditUser(
-  user: Awaited<ReturnType<typeof db.user.findUnique>>,
+  user: any,
   adminId: string,
   reason?: string,
   editItems?: string[]

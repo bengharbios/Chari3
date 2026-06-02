@@ -29,6 +29,7 @@ const STORE_NAV: NavItem[] = [
   { id: 'store-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 12 },
   { id: 'store-coupons', labelAr: 'الكوبونات والخصومات', labelEn: 'Coupons', icon: 'CreditCard' },
   { id: 'store-staff', labelAr: 'الفريق', labelEn: 'Team', icon: 'Users' },
+  { id: 'store-billing', labelAr: 'الاشتراكات والمديونية', labelEn: 'Billing & Subscriptions', icon: 'Wallet' },
   { id: 'store-analytics', labelAr: 'التحليلات', labelEn: 'Analytics', icon: 'BarChart3' },
   { id: 'store-settings', labelAr: 'إعدادات المتجر', labelEn: 'Store Settings', icon: 'Settings' },
 ];
@@ -37,6 +38,7 @@ const SELLER_NAV: NavItem[] = [
   { id: 'seller', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
   { id: 'seller-products', labelAr: 'منتجاتي', labelEn: 'My Products', icon: 'Boxes' },
   { id: 'seller-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 4 },
+  { id: 'seller-billing', labelAr: 'الاشتراكات والمديونية', labelEn: 'Billing & Subscriptions', icon: 'Wallet' },
   { id: 'seller-settings', labelAr: 'الإعدادات', labelEn: 'Settings', icon: 'Settings' },
   { id: 'seller-upgrade', labelAr: 'ترقية لمتجر', labelEn: 'Upgrade to Store', icon: 'TrendingUp' },
 ];

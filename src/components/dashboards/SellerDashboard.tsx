@@ -1446,7 +1446,7 @@ export interface ProductFormProps {
 }
 
 export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t, isAr }: ProductFormProps) {
-  const [activeTab, setActiveTab] = useState<'core' | 'specs' | 'seo' | 'variants'>('core');
+  const [activeTab, setActiveTab] = useState<'core' | 'specs' | 'seo' | 'variants' | 'advanced'>('core');
   const [isSaving, setIsSaving] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [showSuggestModal, setShowSuggestModal] = useState(false);

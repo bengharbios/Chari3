@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { chargeOrderCommission, reverseOrderCommission } from '@/lib/billing';
 
 export const dynamic = 'force-dynamic';
 
@@ -199,6 +200,13 @@ export async function PATCH(request: Request) {
           note: note || `Order status updated to: ${status}`,
         },
       });
+
+      // Trigger billing and commission actions
+      if (status === 'delivered') {
+        await chargeOrderCommission(id);
+      } else if (status === 'cancelled' || status === 'returned') {
+        await reverseOrderCommission(id);
+      }
 
       // Notify buyer of status change
       try {

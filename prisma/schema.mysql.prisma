@@ -46,6 +46,7 @@ model User {
   logisticsVerification LogisticsVerification?
   auditLogs          AuditLog[]
   categoryRequests   CategoryRequest[]
+  debtReceipts       DebtPaymentReceipt[]
 }
 
 model Store {
@@ -84,6 +85,12 @@ model Store {
   shippingIntegrations  String?   @db.LongText
   paymentDetails        String?   @db.LongText
   themeSettings         String?   @db.LongText
+
+  addonMobileApp        Boolean  @default(false)
+  addonWhatsAppSupport  Boolean  @default(false)
+  addonAdvancedCRM      Boolean  @default(false)
+  addonEchangoPOS       Boolean  @default(false)
+  addonExtraPOSDevices  Int      @default(0)
 
   globalCoupons         Coupon[]  @relation("GlobalCouponOptInStores")
 }
@@ -152,6 +159,12 @@ model SellerProfile {
   paymentDetails        String?   @db.LongText
   themeSettings         String?   @db.LongText
 
+  addonMobileApp        Boolean  @default(false)
+  addonWhatsAppSupport  Boolean  @default(false)
+  addonAdvancedCRM      Boolean  @default(false)
+  addonEchangoPOS       Boolean  @default(false)
+  addonExtraPOSDevices  Int      @default(0)
+
   globalCoupons         Coupon[]  @relation("GlobalCouponOptInSellers")
 }
 
@@ -175,6 +188,20 @@ model SellerPackage {
   hasCoupons            Boolean  @default(false)
   hasApiAccess          Boolean  @default(false)
   hasPrioritySupport    Boolean  @default(false)
+
+  // Advanced features
+  maxTeamMembers        Int      @default(1)
+  hasCustomDomain       Boolean  @default(false)
+  hasPixels             Boolean  @default(false)
+  hasMultiCurrency      Boolean  @default(false)
+  hasDataExport         Boolean  @default(false)
+  maxLandingPages       Int      @default(0)
+
+  // Newly requested package features:
+  hasEmailSupport       Boolean  @default(false)
+  hasBusinessIntelligence Boolean @default(false)
+  hasGA4                Boolean  @default(false)
+
   color                 String   @default("#6B7280")
   icon                  String   @default("Package")
   isActive              Boolean  @default(true)
@@ -937,5 +964,27 @@ model OrderStatusType {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// DEBT PAYMENT RECEIPT MODEL
+// ============================================
+
+model DebtPaymentReceipt {
+  id            String   @id @default(cuid())
+  amount        Float
+  status        String   @default("pending")    // pending, approved, rejected
+  receiptImage  String   @db.LongText           // Base64 or image URL
+  adminNote     String?
+  merchantNote  String?
+  reviewedAt    DateTime?
+  reviewedBy    String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 

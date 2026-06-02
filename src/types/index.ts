@@ -75,7 +75,9 @@ export type PageType =
   | 'admin-sellers'
   | 'admin-shipping'
   | 'admin-analytics'
-  | 'admin-settings';
+  | 'admin-settings'
+  | 'store-billing'
+  | 'seller-billing';
 
 export interface NavItem {
   id: PageType;

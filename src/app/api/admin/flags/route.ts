@@ -42,7 +42,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Invalid flags data' }, { status: 400 });
     }
 
-    const updates = [];
+    const updates: Promise<any>[] = [];
     for (const [key, value] of Object.entries(flags)) {
       updates.push(
         db.setting.upsert({

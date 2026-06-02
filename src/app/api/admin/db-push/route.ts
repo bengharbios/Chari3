@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const results = [];
+    const results: string[] = [];
 
     // 1. Add coverImage and logo to SellerProfile if they don't exist
     try {

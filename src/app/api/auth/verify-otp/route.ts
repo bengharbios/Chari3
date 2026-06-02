@@ -10,7 +10,7 @@ const DB_TIMEOUT = Symbol('DB_TIMEOUT');
 const DB_TIMEOUT_MS = 15000;
 
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | typeof DB_TIMEOUT> {
-  let timer: ReturnType<typeof setTimeout>;
+  let timer: ReturnType<typeof setTimeout> | undefined = undefined;
   try {
     return await Promise.race([
       promise,
@@ -22,7 +22,7 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | type
     console.error(`[verify-otp] DB failed:`, err);
     return DB_TIMEOUT;
   } finally {
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
   }
 }
 

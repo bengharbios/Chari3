@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const results = [];
+    const results: any[] = [];
 
     // Loop through the object keys and upsert each setting
     for (const [key, value] of Object.entries(settings)) {

@@ -75,8 +75,8 @@ export async function GET(request: Request) {
           createdAt: true,
           _count: { select: { orders: true } },
           wallet: { select: { balance: true } },
-          store: { select: { id: true, name: true, isActive: true, rating: true, level: true, packageId: true } },
-          sellerProfile: { select: { id: true, rating: true, level: true, packageId: true } },
+          store: { select: { id: true, name: true, isActive: true, rating: true, level: true, packageId: true, addonMobileApp: true, addonWhatsAppSupport: true, addonAdvancedCRM: true, addonEchangoPOS: true, addonExtraPOSDevices: true } },
+          sellerProfile: { select: { id: true, rating: true, level: true, packageId: true, addonMobileApp: true, addonWhatsAppSupport: true, addonAdvancedCRM: true, addonEchangoPOS: true, addonExtraPOSDevices: true } },
           logisticsProfile: { select: { totalDeliveries: true } },
         },
       }),
@@ -355,6 +355,11 @@ export async function PATCH(request: Request) {
         if (typeof body.level === 'number') sellerUpdate.level = body.level;
         if (typeof body.rating === 'number') sellerUpdate.rating = body.rating;
         if (body.packageId !== undefined) sellerUpdate.packageId = body.packageId || null;
+        if (typeof body.addonMobileApp === 'boolean') sellerUpdate.addonMobileApp = body.addonMobileApp;
+        if (typeof body.addonWhatsAppSupport === 'boolean') sellerUpdate.addonWhatsAppSupport = body.addonWhatsAppSupport;
+        if (typeof body.addonAdvancedCRM === 'boolean') sellerUpdate.addonAdvancedCRM = body.addonAdvancedCRM;
+        if (typeof body.addonEchangoPOS === 'boolean') sellerUpdate.addonEchangoPOS = body.addonEchangoPOS;
+        if (typeof body.addonExtraPOSDevices === 'number') sellerUpdate.addonExtraPOSDevices = body.addonExtraPOSDevices;
 
         if (Object.keys(sellerUpdate).length > 0) {
           await db.sellerProfile.upsert({
@@ -377,6 +382,11 @@ export async function PATCH(request: Request) {
         if (typeof body.level === 'number') storeUpdate.level = body.level;
         if (typeof body.rating === 'number') storeUpdate.rating = body.rating;
         if (body.packageId !== undefined) storeUpdate.packageId = body.packageId || null;
+        if (typeof body.addonMobileApp === 'boolean') storeUpdate.addonMobileApp = body.addonMobileApp;
+        if (typeof body.addonWhatsAppSupport === 'boolean') storeUpdate.addonWhatsAppSupport = body.addonWhatsAppSupport;
+        if (typeof body.addonAdvancedCRM === 'boolean') storeUpdate.addonAdvancedCRM = body.addonAdvancedCRM;
+        if (typeof body.addonEchangoPOS === 'boolean') storeUpdate.addonEchangoPOS = body.addonEchangoPOS;
+        if (typeof body.addonExtraPOSDevices === 'number') storeUpdate.addonExtraPOSDevices = body.addonExtraPOSDevices;
 
         if (Object.keys(storeUpdate).length > 0) {
           await db.store.update({
@@ -395,7 +405,7 @@ export async function PATCH(request: Request) {
         );
       }
 
-      let user = null;
+      let user: any = null;
       if (Object.keys(updateData).length > 0) {
         user = await db.user.update({
           where: { id },

@@ -150,8 +150,8 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
     }
   };
 
-  const handleAction = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleAction = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     await handleMarkAsRead();
     setOpen(false);
     if (notification.actionPage) {
@@ -234,7 +234,7 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
                 labelAr={notification.actionLabelAr}
                 labelEn={notification.actionLabelEn}
                 variant={urgency.actionVariant}
-                onClick={handleAction}
+                onClick={() => handleAction()}
               />
             </span>
           )}

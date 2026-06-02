@@ -29,10 +29,13 @@ import HomepagePage from '@/components/storefront/HomepagePage';
 import ProductDetailPage from '@/components/storefront/ProductDetailPage';
 import SellerProfilePage from '@/components/storefront/SellerProfilePage';
 import SearchPage from '@/components/storefront/SearchPage';
+import BillingPage from '@/components/seller/BillingPage';
 import { toast } from 'sonner';
 import type { PageType, UserRole } from '@/types';
 
 const DASHBOARD_MAP: Record<string, React.ComponentType> = {
+  'store-billing': BillingPage,
+  'seller-billing': BillingPage,
   'store-settings': StoreSettingsPage,
   'store-products': StoreProductsPage,
   'store-orders': StoreOrdersPage,

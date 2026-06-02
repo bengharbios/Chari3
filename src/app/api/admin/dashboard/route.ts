@@ -79,7 +79,7 @@ export async function GET() {
     const usersChange = getChange(usersThisMonth, usersLastMonth);
 
     // 4. Monthly Revenue (Past 12 Months)
-    const revenueByMonth = [];
+    const revenueByMonth: any[] = [];
     for (let i = 11; i >= 0; i--) {
       const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
@@ -144,7 +144,7 @@ export async function GET() {
     });
 
     const topProducts = dbTopProducts.map((p) => {
-      let parsedImages = [];
+      let parsedImages: any[] = [];
       try {
         parsedImages = typeof p.images === 'string' ? JSON.parse(p.images) : p.images;
       } catch (e) {

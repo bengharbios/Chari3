@@ -15,6 +15,7 @@ export default function AdminShippingPage() {
   const { isAdminAuthenticated } = useAdminAuthStore();
   const { locale } = useAppStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
+  const isAr = locale === 'ar';
 
   const getAdminPath = (subPath: string = '') => {
     if (typeof window === 'undefined') return '/super-admin';

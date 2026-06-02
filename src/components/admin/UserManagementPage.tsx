@@ -365,6 +365,11 @@ export default function UserManagementPage() {
   const [overrideLevel, setOverrideLevel] = useState<number>(1);
   const [overrideRating, setOverrideRating] = useState<string>('0.0');
   const [overridePackageId, setOverridePackageId] = useState<string>('');
+  const [addonMobileApp, setAddonMobileApp] = useState<boolean>(false);
+  const [addonWhatsAppSupport, setAddonWhatsAppSupport] = useState<boolean>(false);
+  const [addonAdvancedCRM, setAddonAdvancedCRM] = useState<boolean>(false);
+  const [addonEchangoPOS, setAddonEchangoPOS] = useState<boolean>(false);
+  const [addonExtraPOSDevices, setAddonExtraPOSDevices] = useState<number>(0);
   const [packages, setPackages] = useState<any[]>([]);
   const [isSavingOverride, setIsSavingOverride] = useState(false);
 
@@ -1378,10 +1383,18 @@ export default function UserManagementPage() {
                       const packageId = selectedUser.role === 'store_manager'
                         ? selectedUser.store?.packageId ?? ''
                         : selectedUser.sellerProfile?.packageId ?? '';
+                      const profile = (selectedUser.role === 'store_manager'
+                        ? selectedUser.store
+                        : selectedUser.sellerProfile) as any;
 
                       setOverrideLevel(level);
                       setOverrideRating(String(rating));
                       setOverridePackageId(packageId || 'none');
+                      setAddonMobileApp(profile?.addonMobileApp ?? false);
+                      setAddonWhatsAppSupport(profile?.addonWhatsAppSupport ?? false);
+                      setAddonAdvancedCRM(profile?.addonAdvancedCRM ?? false);
+                      setAddonEchangoPOS(profile?.addonEchangoPOS ?? false);
+                      setAddonExtraPOSDevices(profile?.addonExtraPOSDevices ?? 0);
                       setOverrideOpen(true);
                     }}
                   >
@@ -1907,6 +1920,111 @@ export default function UserManagementPage() {
                     {t(locale, 'تزيد الباقات المدفوعة من نقاط ترتيب المنتجات في نتائج البحث والصفحة الرئيسية.', 'Paid packages increase product score weight on the homepage and search.')}
                   </p>
                 </div>
+
+                {/* Custom Options (Addons) */}
+                <div className="space-y-3 pt-3 border-t">
+                  <Label className="text-sm font-bold text-brand">
+                    {t(locale, 'خيارات وميزات إضافية', 'Additional Addons & Features')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t(locale, 'تفعيل ميزات مخصصة إضافية لهذا التاجر/المتجر بشكل مستقل عن باقة اشتراكه.', 'Enable specific custom add-ons for this merchant independently of their subscription package.')}
+                  </p>
+
+                  <div className="space-y-3 mt-2">
+                    {/* App mobile vendeur */}
+                    <div className="flex items-center justify-between p-2.5 rounded-xl border bg-muted/20">
+                      <div className="space-y-0.5">
+                        <Label className="text-xs font-semibold flex items-center gap-1.5">
+                          📱 {t(locale, 'تطبيق الهاتف للتاجر', 'Merchant Mobile App')}
+                        </Label>
+                        <p className="text-[10px] text-muted-foreground">
+                          {t(locale, 'تطبيق خاص لإدارة الطلبات والمنتجات والاشعارات (+2,000 دج/شهر)', 'Dedicated app to manage orders, products & push (+2,000 DZD/mo)')}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={addonMobileApp}
+                        onCheckedChange={(checked) => setAddonMobileApp(checked)}
+                      />
+                    </div>
+
+                    {/* Support dédié / WhatsApp */}
+                    <div className="flex items-center justify-between p-2.5 rounded-xl border bg-muted/20">
+                      <div className="space-y-0.5">
+                        <Label className="text-xs font-semibold flex items-center gap-1.5">
+                          💬 {t(locale, 'دعم مخصص / واتساب', 'Dedicated Support / WhatsApp')}
+                        </Label>
+                        <p className="text-[10px] text-muted-foreground">
+                          {t(locale, 'دعم مباشر < 2 ساعة ومرافقة شخصية (+2,500 دج/شهر)', 'Direct channel, response < 2h, guidance (+2,500 DZD/mo)')}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={addonWhatsAppSupport}
+                        onCheckedChange={(checked) => setAddonWhatsAppSupport(checked)}
+                      />
+                    </div>
+
+                    {/* CRM Advanced */}
+                    <div className="flex items-center justify-between p-2.5 rounded-xl border bg-muted/20">
+                      <div className="space-y-0.5">
+                        <Label className="text-xs font-semibold flex items-center gap-1.5">
+                          📊 {t(locale, 'نظام CRM متقدم', 'Advanced CRM System')}
+                        </Label>
+                        <p className="text-[10px] text-muted-foreground">
+                          {t(locale, 'تصنيف العملاء، تتبع COD وتوسيم تلقائي (+1,500 دج/شهر)', 'RFM segmentation, COD scoring, tags (+1,500 DZD/mo)')}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={addonAdvancedCRM}
+                        onCheckedChange={(checked) => setAddonAdvancedCRM(checked)}
+                      />
+                    </div>
+
+                    {/* Echango POS */}
+                    <div className="flex items-center justify-between p-2.5 rounded-xl border bg-muted/20">
+                      <div className="space-y-0.5">
+                        <Label className="text-xs font-semibold flex items-center gap-1.5">
+                          🏪 {t(locale, 'برنامج كاشير Echango POS', 'Echango POS Software')}
+                        </Label>
+                        <p className="text-[10px] text-muted-foreground">
+                          {t(locale, 'برنامج الكاشير ونقاط البيع المتكاملة (+1,500 دج/شهر)', 'Register app - real-time sync (+1,500 DZD/mo)')}
+                        </p>
+                      </div>
+                      <Switch
+                        checked={addonEchangoPOS}
+                        onCheckedChange={(checked) => {
+                          setAddonEchangoPOS(checked);
+                          if (!checked) setAddonExtraPOSDevices(0);
+                        }}
+                      />
+                    </div>
+
+                    {/* Caisse POS supplémentaire */}
+                    {addonEchangoPOS && (
+                      <div className="p-3 rounded-xl border bg-brand/5 border-brand/20 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-xs font-semibold flex items-center gap-1.5">
+                            ➕ {t(locale, 'أجهزة كاشير إضافية', 'Additional POS Devices')}
+                          </Label>
+                          <span className="text-[10px] bg-brand/10 text-brand px-2 py-0.5 rounded-full font-bold">
+                            +500 DZD/device/mo
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">
+                          {t(locale, 'عدد الأجهزة النشطة الإضافية المسموح بربطها بالبرنامج.', 'Number of extra POS devices linked to the Echango POS account.')}
+                        </p>
+                        <div className="flex items-center gap-2 max-w-[120px] pt-1">
+                          <Input
+                            type="number"
+                            min="0"
+                            value={addonExtraPOSDevices}
+                            onChange={(e) => setAddonExtraPOSDevices(Math.max(0, parseInt(e.target.value) || 0))}
+                            className="h-8 text-center text-xs font-bold"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -1929,6 +2047,11 @@ export default function UserManagementPage() {
                       level: overrideLevel,
                       rating: ratingNum,
                       packageId: overridePackageId === 'none' ? null : overridePackageId,
+                      addonMobileApp,
+                      addonWhatsAppSupport,
+                      addonAdvancedCRM,
+                      addonEchangoPOS,
+                      addonExtraPOSDevices,
                     }),
                   });
                   const data = await res.json();

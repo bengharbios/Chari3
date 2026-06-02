@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 const DB_TIMEOUT = Symbol('DB_TIMEOUT');
 
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | typeof DB_TIMEOUT> {
-  let timer: ReturnType<typeof setTimeout>;
+  let timer: ReturnType<typeof setTimeout> | undefined = undefined;
   try {
     return await Promise.race([
       promise,
@@ -18,7 +18,7 @@ async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | type
     console.error(`[draft] Query failed:`, err);
     return DB_TIMEOUT;
   } finally {
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
   }
 }
 
@@ -355,7 +355,7 @@ function inferStep(
     case 'seller': {
       // Steps: 0=optional(freelance doc), 1=identity(id+selfie), 2=financial(iban)
       if (v.iban) return 2;
-      if (v.nationalIdFront && v.nationalIdBack && (v.livenessScore ?? 0) > 0) return 2;
+      if (v.nationalIdFront && v.nationalIdBack && typeof v.livenessScore === 'number' && v.livenessScore > 0) return 2;
       if (v.nationalIdFront && v.nationalIdBack) return 1;
       if (v.freelanceDocFile) return 1;
       return 0;

@@ -48,11 +48,13 @@ import {
   UserX,
   UserCheck,
   Settings,
-  FolderTree
+  FolderTree,
+  Wallet
 } from 'lucide-react';
 import type { Locale, UserRole } from '@/types';
 import Link from 'next/link';
 import AdminOrderStatuses from './AdminOrderStatuses';
+import BillingManager from '@/components/admin/BillingManager';
 
 // ============================================
 // BILINGUAL HELPER
@@ -504,6 +506,10 @@ export default function AdminDashboard() {
           <TabsTrigger value="order-statuses" className="gap-1.5 font-bold">
             <Settings className="h-3.5 w-3.5" />
             {t(locale, 'إعدادات الحالات', 'Order Statuses')}
+          </TabsTrigger>
+          <TabsTrigger value="billing" className="gap-1.5 font-bold">
+            <Wallet className="h-3.5 w-3.5" />
+            {t(locale, 'الاشتراكات والمديونية', 'Billing & Subscriptions')}
           </TabsTrigger>
         </TabsList>
 
@@ -992,6 +998,9 @@ export default function AdminDashboard() {
 
         <TabsContent value="order-statuses">
           <AdminOrderStatuses />
+        </TabsContent>
+        <TabsContent value="billing">
+          <BillingManager />
         </TabsContent>
       </Tabs>
 
