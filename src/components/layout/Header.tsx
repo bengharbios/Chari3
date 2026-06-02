@@ -427,7 +427,7 @@ export default function Header() {
         </div>
       )}
       {/* Main Header — Single clean row: Logo | Search | Actions */}
-      <div className="container-platform">
+      <div className="w-full px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between h-[var(--header-height)] gap-4">
           {/* Logo */}
           <div className="flex items-center gap-3 shrink-0">
@@ -435,7 +435,7 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="md:hidden"
+                className="lg:hidden"
                 onClick={() => setSidebarOpen(true)}
               >
                 <Menu className="h-5 w-5" />

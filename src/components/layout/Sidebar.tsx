@@ -114,10 +114,10 @@ export default function Sidebar({ className }: SidebarProps) {
       <aside
         dir={isRTL ? 'rtl' : 'ltr'}
         className={cn(
-          'fixed top-[var(--header-height-mobile)] bottom-0 z-[var(--z-overlay)] lg:z-auto',
+        'fixed top-[var(--header-height)] bottom-0 z-[var(--z-overlay)] lg:z-auto',
           'w-[var(--sidebar-width)] bg-sidebar text-sidebar-foreground flex flex-col',
           'transition-all duration-300 ease-in-out',
-          'lg:sticky lg:top-[var(--header-total-height)] lg:h-[calc(100dvh-var(--header-total-height))]',
+          'lg:sticky lg:top-[var(--header-height)] lg:h-[calc(100dvh-var(--header-height))]',
           isSidebarOpen ? 'start-0' : '-start-[280px]',
           'lg:start-0',
           className
