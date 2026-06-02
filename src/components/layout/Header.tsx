@@ -1040,7 +1040,10 @@ export default function Header() {
             <div className="flex flex-col gap-2">
               <Button
                 className="w-full gradient-brand text-navy font-bold h-11 rounded-xl shadow-lg shadow-brand/10 hover:scale-[1.01] active:scale-[0.99] transition-all flex items-center justify-center gap-2"
-                onClick={() => setCartStep('checkout')}
+                onClick={() => {
+                  setCartOpen(false);
+                  router.push('/checkout');
+                }}
               >
                 <CheckSquare className="h-4 w-4 shrink-0" />
                 <span>{t('الذهاب للدفع', 'Proceed to Checkout')}</span>

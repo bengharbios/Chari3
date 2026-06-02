@@ -7,7 +7,7 @@ export async function GET() {
   try {
     await ensureDbConnection();
     // Fetch data for the homepage in parallel
-    const [categories, rawProducts, topSellers, topStores, advertisements, testimonials, layoutSetting, heroSlidesSetting, maintenanceSetting, allowGuestCheckoutSetting] = await Promise.all([
+    const [categories, rawProducts, topSellers, topStores, advertisements, testimonials, layoutSetting, heroSlidesSetting, maintenanceSetting, allowGuestCheckoutSetting, globalCoupons] = await Promise.all([
       // Active categories with product counts
       db.category.findMany({
         where: { isActive: true, parentId: null },
@@ -108,6 +108,22 @@ export async function GET() {
 
       // Guest checkout flag
       db.setting.findUnique({ where: { key: 'allow_guest_checkout' } }),
+
+      // Global Active Coupons
+      db.coupon.findMany({
+        where: { 
+          isGlobal: true, 
+          isActive: true,
+          OR: [
+            { expiresAt: null },
+            { expiresAt: { gte: new Date() } }
+          ]
+        },
+        include: {
+          optInStores: { select: { id: true } },
+          optInSellers: { select: { id: true } },
+        }
+      })
     ]);
 
     // Rank products dynamically in memory
@@ -197,6 +213,25 @@ export async function GET() {
       }
     } catch {}
 
+    // Process Global Coupons to extract participating products
+    let globalCouponCampaigns: any[] = [];
+    if (globalCoupons && globalCoupons.length > 0) {
+      for (const coupon of globalCoupons) {
+        const optedInStoreIds = coupon.optInStores.map((s: any) => s.id);
+        const optedInSellerIds = coupon.optInSellers.map((s: any) => s.id);
+        const participatingProducts = featuredProducts.filter((p: any) => 
+          (p.storeId && optedInStoreIds.includes(p.storeId)) ||
+          (p.sellerId && optedInSellerIds.includes(p.sellerId))
+        );
+        if (participatingProducts.length > 0) {
+          globalCouponCampaigns.push({
+            coupon,
+            products: participatingProducts
+          });
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       categories,
@@ -207,6 +242,7 @@ export async function GET() {
       testimonials: parsedTestimonials,
       layout: parsedLayout,
       heroSlides: parsedHeroSlides,
+      globalCouponCampaigns,
       isMaintenance: maintenanceSetting?.value === 'true',
       allowGuestCheckout: allowGuestCheckoutSetting?.value === 'true',
     });
