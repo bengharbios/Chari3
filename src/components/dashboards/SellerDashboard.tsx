@@ -5,7 +5,8 @@ import {
   TrendingUp, Package, Star, ShieldCheck, ArrowLeft, ArrowRight,
   Wallet, AlertTriangle, ChevronUp, BarChart3, Clock, CheckCircle,
   XCircle, Eye, Plus, Edit, Trash2, Trophy, Target, Zap, Wrench, Loader2, Upload, X, Layers,
-  LayoutGrid, List, ClipboardCheck, Truck, CheckSquare, Check
+  LayoutGrid, List, ClipboardCheck, Truck, CheckSquare, Check,
+  ShieldAlert, Ban, Lock, Info
 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -67,6 +68,16 @@ interface DashboardData {
     walletCurrency?: string;
   };
   currency?: string;
+  storeStatus?: {
+    isActive: boolean;
+    isSuspended: boolean;
+    suspensionReason: string | null;
+    subscriptionStatus: string | null;
+    subscriptionEndDate: string | null;
+    trialEndsAt: string | null;
+    cancelReason: string | null;
+    overrideNote: string | null;
+  };
   products: { id: string; name: string; price: number; comparePrice?: number; stock: number; status: string; soldCount: number; rating: number; images?: any; category?: any }[];
   recentOrders: { order: { orderNumber: string; status: string; total: number; createdAt: string }; product: { name: string; price: number }; quantity: number; total: number }[];
   reviews: { id: string; rating: number; comment?: string; sellerReply?: string; createdAt: string }[];
@@ -74,6 +85,153 @@ interface DashboardData {
   sellerLevel?: { level: number; nameAr: string; maxProducts: number; commissionDiscount: number };
   nextLevel?: { level: number; nameAr: string; minCustomers: number; minRating: number; minCompletionRate: number };
   pendingWithdrawals: { id: string; amount: number; method: string; createdAt: string }[];
+}
+
+// ── Suspension Banner Component ─────────────────────────────────────────────────
+function SuspensionBanner({ storeStatus, t, isAr }: {
+  storeStatus: NonNullable<DashboardData['storeStatus']>;
+  t: (ar: string, en: string) => string;
+  isAr: boolean;
+}) {
+  const reasonConfig: Record<string, {
+    icon: React.ElementType;
+    titleAr: string;
+    titleEn: string;
+    descAr: string;
+    descEn: string;
+    gradient: string;
+    iconColor: string;
+    borderColor: string;
+  }> = {
+    EXPIRED: {
+      icon: Clock,
+      titleAr: '⏰ انتهى اشتراكك',
+      titleEn: '⏰ Your Subscription Has Expired',
+      descAr: 'انتهت صلاحية اشتراكك. متجرك غير مرئي للمشترين حالياً. يرجى تجديد اشتراكك لإعادة تفعيل متجرك.',
+      descEn: 'Your subscription has expired. Your store is currently invisible to buyers. Please renew your subscription to reactivate your store.',
+      gradient: 'from-amber-500/15 via-orange-500/10 to-amber-500/5',
+      iconColor: 'text-amber-500',
+      borderColor: 'border-amber-500/30',
+    },
+    SUSPENDED: {
+      icon: Ban,
+      titleAr: '🚫 تم تعليق متجرك',
+      titleEn: '🚫 Your Store Has Been Suspended',
+      descAr: 'تم تعليق متجرك من قبل إدارة المنصة. متجرك غير مرئي للمشترين ولا يمكنك إجراء أي تغييرات. تواصل مع الدعم لمعرفة السبب.',
+      descEn: 'Your store has been suspended by platform administration. Your store is invisible to buyers and you cannot make any changes. Contact support for details.',
+      gradient: 'from-red-500/15 via-rose-500/10 to-red-500/5',
+      iconColor: 'text-red-500',
+      borderColor: 'border-red-500/30',
+    },
+    CANCELLED: {
+      icon: XCircle,
+      titleAr: '❌ تم إلغاء اشتراكك',
+      titleEn: '❌ Your Subscription Was Cancelled',
+      descAr: 'تم إلغاء اشتراكك. متجرك غير مرئي للمشترين. يمكنك إعادة الاشتراك لتفعيل متجرك من جديد.',
+      descEn: 'Your subscription has been cancelled. Your store is invisible to buyers. You can resubscribe to reactivate your store.',
+      gradient: 'from-gray-500/15 via-slate-500/10 to-gray-500/5',
+      iconColor: 'text-gray-500',
+      borderColor: 'border-gray-500/30',
+    },
+    ADMIN_DISABLED: {
+      icon: ShieldAlert,
+      titleAr: '🛑 متجرك غير نشط',
+      titleEn: '🛑 Your Store Is Inactive',
+      descAr: 'تم إيقاف متجرك من قبل إدارة المنصة. لا يمكنك إجراء أي تغييرات حتى يتم إعادة تفعيله. تواصل مع الدعم للمساعدة.',
+      descEn: 'Your store has been deactivated by platform administration. You cannot make any changes until it is reactivated. Contact support for assistance.',
+      gradient: 'from-red-500/15 via-rose-500/10 to-red-500/5',
+      iconColor: 'text-red-600',
+      borderColor: 'border-red-500/30',
+    },
+  };
+
+  const reason = storeStatus.suspensionReason || 'ADMIN_DISABLED';
+  const config = reasonConfig[reason] || reasonConfig.ADMIN_DISABLED;
+  const ReasonIcon = config.icon;
+
+  return (
+    <div className={`relative overflow-hidden rounded-2xl border-2 ${config.borderColor} bg-gradient-to-r ${config.gradient} p-0`}>
+      {/* Animated background pattern */}
+      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'repeating-linear-gradient(45deg, currentColor 0, currentColor 1px, transparent 0, transparent 50%)', backgroundSize: '20px 20px' }} />
+      
+      <div className="relative p-5 sm:p-6">
+        {/* Top row: Icon + Title */}
+        <div className="flex items-start gap-4">
+          <div className={`shrink-0 p-3 rounded-2xl bg-background/80 backdrop-blur-sm border ${config.borderColor} shadow-sm`}>
+            <ReasonIcon className={`size-7 sm:size-8 ${config.iconColor}`} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg sm:text-xl font-black text-foreground leading-tight">
+              {isAr ? config.titleAr : config.titleEn}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
+              {isAr ? config.descAr : config.descEn}
+            </p>
+
+            {/* Admin note if available */}
+            {storeStatus.overrideNote && (
+              <div className="mt-3 p-3 rounded-xl bg-background/60 border border-border/50 text-sm">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground mb-1">
+                  <Info className="size-3.5" />
+                  {t('ملاحظة الإدارة:', 'Admin Note:')}
+                </div>
+                <p className="text-foreground/80">{storeStatus.overrideNote}</p>
+              </div>
+            )}
+
+            {/* Cancel reason if available */}
+            {storeStatus.cancelReason && reason === 'CANCELLED' && (
+              <div className="mt-3 p-3 rounded-xl bg-background/60 border border-border/50 text-sm">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground mb-1">
+                  <Info className="size-3.5" />
+                  {t('سبب الإلغاء:', 'Cancellation Reason:')}
+                </div>
+                <p className="text-foreground/80">{storeStatus.cancelReason}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex flex-wrap gap-2 mt-5 ps-0 sm:ps-16">
+          {(reason === 'EXPIRED' || reason === 'CANCELLED') && (
+            <Button
+              size="sm"
+              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
+              onClick={() => {
+                // Navigate to subscription/upgrade page
+                useAppStore.getState().setCurrentPage('seller-upgrade' as any);
+              }}
+            >
+              <Zap className="size-4" />
+              {t('تجديد الاشتراك', 'Renew Subscription')}
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-2"
+            onClick={() => {
+              // Open support / contact page
+              window.open('mailto:support@chariday.com', '_blank');
+            }}
+          >
+            <AlertTriangle className="size-4" />
+            {t('تواصل مع الدعم', 'Contact Support')}
+          </Button>
+        </div>
+      </div>
+
+      {/* Persistent warning strip at bottom */}
+      <div className={`flex items-center gap-2 px-5 py-2.5 text-xs font-bold ${config.iconColor} bg-background/40 border-t ${config.borderColor}`}>
+        <Lock className="size-3.5" />
+        {t(
+          'لوحة التحكم في وضع القراءة فقط — لا يمكنك إضافة أو تعديل أو حذف أي شيء',
+          'Dashboard is in read-only mode — you cannot add, edit, or delete anything'
+        )}
+      </div>
+    </div>
+  );
 }
 
 export default function SellerDashboard() {
@@ -112,9 +270,13 @@ export default function SellerDashboard() {
     refreshData();
   }, [user?.id]);
 
+  // Store suspension check
+  const isSuspended = data?.storeStatus?.isSuspended === true;
+
   // Show different sub-pages
   if (currentPage === 'seller-products' || currentPage === 'supplier-products' || currentPage === 'store-products') {
-    if (showAddForm) {
+    // Block add/edit when suspended
+    if (showAddForm && !isSuspended) {
       return (
         <ProductFormTab
           product={editingProduct}
@@ -131,24 +293,44 @@ export default function SellerDashboard() {
       );
     }
     return (
-      <SellerProductsTab
-        data={data}
-        isLoading={isLoading}
-        t={t}
-        isAr={isAr}
-        onAddClick={() => {
-          setEditingProduct(null);
-          setShowAddForm(true);
-        }}
-        onEditClick={(prod) => {
-          setEditingProduct(prod);
-          setShowAddForm(true);
-        }}
-        onDeleteSuccess={refreshData}
-      />
+      <div className="space-y-4">
+        {isSuspended && data?.storeStatus && (
+          <SuspensionBanner storeStatus={data.storeStatus} t={t} isAr={isAr} />
+        )}
+        <SellerProductsTab
+          data={data}
+          isLoading={isLoading}
+          t={t}
+          isAr={isAr}
+          onAddClick={() => {
+            if (isSuspended) {
+              toast.error(isAr ? 'لا يمكنك إضافة منتجات — متجرك غير نشط' : 'Cannot add products — your store is inactive');
+              return;
+            }
+            setEditingProduct(null);
+            setShowAddForm(true);
+          }}
+          onEditClick={(prod) => {
+            if (isSuspended) {
+              toast.error(isAr ? 'لا يمكنك تعديل المنتجات — متجرك غير نشط' : 'Cannot edit products — your store is inactive');
+              return;
+            }
+            setEditingProduct(prod);
+            setShowAddForm(true);
+          }}
+          onDeleteSuccess={refreshData}
+        />
+      </div>
     );
   }
-  if (currentPage === 'seller-orders' || currentPage === 'supplier-orders' || currentPage === 'store-orders') return <SellerOrdersTab data={data} isLoading={isLoading} t={t} isAr={isAr} onRefresh={refreshData} />;
+  if (currentPage === 'seller-orders' || currentPage === 'supplier-orders' || currentPage === 'store-orders') return (
+    <div className="space-y-4">
+      {isSuspended && data?.storeStatus && (
+        <SuspensionBanner storeStatus={data.storeStatus} t={t} isAr={isAr} />
+      )}
+      <SellerOrdersTab data={data} isLoading={isLoading} t={t} isAr={isAr} onRefresh={refreshData} />
+    </div>
+  );
 
   if (isLoading) return (
     <div className="space-y-4 animate-pulse">
@@ -163,6 +345,11 @@ export default function SellerDashboard() {
 
   return (
     <div className="space-y-6 pb-12">
+      {/* Suspension Banner - always at top, cannot be dismissed */}
+      {isSuspended && data?.storeStatus && (
+        <SuspensionBanner storeStatus={data.storeStatus} t={t} isAr={isAr} />
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

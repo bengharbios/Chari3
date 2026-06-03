@@ -177,10 +177,48 @@ export async function GET(req: NextRequest) {
     const monthCommission = monthRevenue * ((seller.package?.commissionRate ?? 10) / 100);
     const monthNetEarnings = monthRevenue - monthCommission;
 
+    // Subscription status for suspension banner
+    let subscription: any = null;
+    try {
+      subscription = await db.subscription.findFirst({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          status: true,
+          endDate: true,
+          trialEndsAt: true,
+          cancelReason: true,
+          overrideNote: true,
+          package: { select: { name: true, nameEn: true } },
+        },
+      });
+    } catch {}
+
+    // Determine suspension reason
+    let suspensionReason: string | null = null;
+    const isStoreSuspended = seller.isActive === false;
+    if (isStoreSuspended) {
+      if (subscription?.status === 'SUSPENDED') suspensionReason = 'SUSPENDED';
+      else if (subscription?.status === 'EXPIRED') suspensionReason = 'EXPIRED';
+      else if (subscription?.status === 'CANCELLED') suspensionReason = 'CANCELLED';
+      else suspensionReason = 'ADMIN_DISABLED';
+    }
+
     return NextResponse.json({
       success: true,
       seller,
       currency: wallet?.currency ?? 'DZD',
+      storeStatus: {
+        isActive: seller.isActive !== false,
+        isSuspended: isStoreSuspended,
+        suspensionReason,
+        subscriptionStatus: subscription?.status || null,
+        subscriptionEndDate: subscription?.endDate || null,
+        trialEndsAt: subscription?.trialEndsAt || null,
+        cancelReason: subscription?.cancelReason || null,
+        overrideNote: subscription?.overrideNote || null,
+      },
       kpis: {
         monthRevenue,
         monthCommission,
