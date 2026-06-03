@@ -178,7 +178,7 @@ export default function BillingMerchantsPage() {
   const handleSaveSubscription = async (id: string) => {
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/admin/billing/subscriptions`, {
+      const res = await fetch(`/api/admin/subscriptions/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, ...editForm }),
@@ -202,7 +202,7 @@ export default function BillingMerchantsPage() {
     if (!confirm(t(locale, 'هل أنت متأكد من حذف هذا الاشتراك تماماً؟ لا يمكن التراجع عن هذا.', 'Are you sure you want to delete this subscription? This cannot be undone.'))) return;
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/admin/billing/subscriptions?id=${id}`, {
+      const res = await fetch(`/api/admin/subscriptions/${id}`, {
         method: 'DELETE',
       });
       const data = await res.json();

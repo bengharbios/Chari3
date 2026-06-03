@@ -155,3 +155,31 @@ export async function GET(
     return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
   }
 }
+
+// DELETE /api/admin/subscriptions/[id]
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const { id } = params;
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Subscription ID is required' }, { status: 400 });
+    }
+
+    const subscription = await prisma.subscription.findUnique({ where: { id } });
+    if (!subscription) {
+      return NextResponse.json({ success: false, error: 'Subscription not found' }, { status: 404 });
+    }
+
+    await prisma.subscription.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error('[admin/subscriptions/[id] DELETE]', err);
+    return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
+  }
+}
+
