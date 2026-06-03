@@ -33,10 +33,23 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, amount, receiptImage, merchantNote } = body;
+    const { userId, amount, receiptImage, merchantNote, invoiceId } = body;
 
     if (!userId || !amount || !receiptImage) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Prevent sending another receipt if one is already pending
+    const pendingReceipt = await db.debtPaymentReceipt.findFirst({
+      where: { userId, status: 'pending' },
+    });
+
+    if (pendingReceipt) {
+      return NextResponse.json({
+        success: false,
+        error: 'لديك وصل قيد المراجعة حالياً، يرجى انتظار الرد عليه قبل إرسال وصل آخر.',
+        errorEn: 'You already have a pending receipt. Please wait for its approval.'
+      }, { status: 400 });
     }
 
     const receipt = await db.debtPaymentReceipt.create({
@@ -46,6 +59,7 @@ export async function POST(req: NextRequest) {
         receiptImage,
         merchantNote: merchantNote || '',
         status: 'pending',
+        invoiceId: invoiceId || null,
       },
     });
 
@@ -112,51 +126,115 @@ export async function PATCH(req: NextRequest) {
     });
 
     if (status === 'approved') {
-      // Credit wallet
       let wallet = await db.wallet.findUnique({
         where: { userId: receipt.userId },
       });
       if (!wallet) {
         wallet = await db.wallet.create({
-          data: { userId: receipt.userId, balance: 0 },
+          data: { userId: receipt.userId, balance: 0, debt: 0 },
         });
       }
 
-      const newBalance = wallet.balance + receipt.amount;
+      const receiptAmount = receipt.amount;
+      let newDebt = wallet.debt;
+      let newBalance = wallet.balance;
 
-      // Create ledger transaction
+      // 1. Pay off debt first
+      if (newDebt > 0) {
+        if (receiptAmount >= newDebt) {
+          const remaining = receiptAmount - newDebt;
+          newDebt = 0;
+          newBalance += remaining;
+        } else {
+          newDebt -= receiptAmount;
+        }
+      } else {
+        newBalance += receiptAmount;
+      }
+
+      // 2. Create ledger transaction
       await db.walletTransaction.create({
         data: {
           walletId: wallet.id,
-          type: 'DEBT_CLEARANCE',
+          type: receipt.invoiceId ? 'SUBSCRIPTION_PAYMENT_RECEIPT' : 'DEBT_CLEARANCE',
           amount: receipt.amount,
           balance: newBalance,
-          description: `تأكيد تسديد المديونية يدوياً (CCP/BaridiMob) - إيصال رقم #${receiptId}`,
+          description: `تأكيد وصل دفع יدوياً - إيصال رقم #${receiptId}`,
           referenceId: receiptId,
         },
       });
 
-      // Update wallet balance
+      // 3. Update wallet balance and debt
       await db.wallet.update({
         where: { id: wallet.id },
         data: {
           balance: newBalance,
+          debt: newDebt,
           totalEarned: wallet.totalEarned + receipt.amount,
         },
       });
 
-      // Re-evaluate debt limits (reactivates merchant if they rise above limit)
-      await checkAndEnforceDebtLimit(receipt.userId, newBalance);
+      // 4. Activate Subscription if invoice is attached
+      let subscriptionActivated = false;
+      if (receipt.invoiceId) {
+        const invoice = await db.invoice.findUnique({
+          where: { id: receipt.invoiceId },
+          include: { subscription: true }
+        });
+
+        if (invoice && invoice.status !== 'PAID') {
+          await db.invoice.update({
+            where: { id: invoice.id },
+            data: { status: 'PAID', amountPaid: receipt.amount, paidAt: new Date() }
+          });
+          
+          if (invoice.subscriptionId && invoice.subscription?.status === 'PENDING_APPROVAL') {
+            await db.subscription.update({
+              where: { id: invoice.subscriptionId },
+              data: { status: 'ACTIVE' }
+            });
+            subscriptionActivated = true;
+            // Charge the wallet for the subscription amount since we credited it from the receipt
+            if (newBalance >= invoice.amount) {
+              newBalance -= invoice.amount;
+            } else {
+              newDebt += (invoice.amount - newBalance);
+              newBalance = 0;
+            }
+            await db.wallet.update({
+              where: { id: wallet.id },
+              data: { balance: newBalance, debt: newDebt, totalSpent: wallet.totalSpent + invoice.amount }
+            });
+            await db.walletTransaction.create({
+              data: {
+                walletId: wallet.id,
+                type: 'SUBSCRIPTION_DEDUCTION',
+                amount: -invoice.amount,
+                balance: newBalance,
+                description: `خصم قيمة الاشتراك من الإيصال - فاتورة #${invoice.id}`,
+                referenceId: invoice.id,
+              },
+            });
+          }
+        }
+      }
+
+      // Re-evaluate debt limits
+      await checkAndEnforceDebtLimit(receipt.userId, newBalance, newDebt);
 
       // Notify merchant of approval
       try {
         await db.notification.create({
           data: {
             userId: receipt.userId,
-            title: 'تم تأكيد وصل الدفع بنجاح! 🎉',
-            titleEn: 'Payment Receipt Approved! 🎉',
-            body: `تم إيداع ${receipt.amount.toLocaleString()} دج في حسابك لتسديد مديونيتك. تم تفعيل متجرك/حسابك.`,
-            bodyEn: `Deposited ${receipt.amount.toLocaleString()} DZD into your wallet. Your store is now active.`,
+            title: subscriptionActivated ? 'تم تفعيل اشتراكك بنجاح! 🎉' : 'تم تأكيد وصل الدفع بنجاح! 🎉',
+            titleEn: subscriptionActivated ? 'Subscription Activated! 🎉' : 'Payment Receipt Approved! 🎉',
+            body: subscriptionActivated 
+              ? `تم مراجعة إيصالك وتفعيل اشتراكك بنجاح في المنصة.` 
+              : `تم إيداع ${receipt.amount.toLocaleString()} دج في حسابك / تسديد مديونيتك.`,
+            bodyEn: subscriptionActivated 
+              ? `Your receipt was approved and your subscription is active.` 
+              : `Deposited ${receipt.amount.toLocaleString()} DZD / cleared your debt.`,
             type: 'billing',
             data: JSON.stringify({ receiptId: receipt.id, status: 'approved' }),
           },

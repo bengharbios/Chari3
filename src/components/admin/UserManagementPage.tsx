@@ -118,7 +118,7 @@ interface UserRecord {
   isVerified: boolean;
   avatar?: string;
   createdAt: string;
-  wallet?: { balance: number };
+  wallet?: { balance: number; debt?: number; currency?: string };
   store?: { name: string; rating?: number; level?: number; packageId?: string };
   sellerProfile?: { rating: number; level?: number; packageId?: string };
   _count?: { orders: number };
@@ -263,7 +263,7 @@ function getMockUsers(): { users: UserRecord[]; pagination: PaginationData; stat
     accountStatus: u.isActive
       ? 'active' as AccountStatus
       : (i === MOCK_USERS.length - 1 ? 'suspended' : 'pending') as AccountStatus,
-    wallet: { balance: Math.floor(Math.random() * 50000) },
+    wallet: { balance: Math.floor(Math.random() * 50000), debt: Math.floor(Math.random() * 1000) },
     store: u.role === 'store_manager' ? { name: u.name } : undefined,
     sellerProfile: u.role === 'seller' ? { rating: +(3.5 + Math.random() * 1.5).toFixed(1) } : undefined,
     _count: { orders: Math.floor(Math.random() * 50) },
@@ -1318,13 +1318,21 @@ export default function UserManagementPage() {
                       </div>
                       <p className="text-lg font-bold">{selectedUser._count?.orders ?? 0}</p>
                     </div>
-                    {/* Wallet */}
+                    {/* Wallet Balance */}
                     <div className="p-3 rounded-xl border bg-surface/50">
                       <div className="flex items-center gap-2 mb-1">
                         <Wallet className="h-4 w-4 text-green-500" />
-                        <span className="text-xs text-muted-foreground">{t(locale, 'المحفظة', 'Wallet')}</span>
+                        <span className="text-xs text-muted-foreground">{t(locale, 'الرصيد', 'Balance')}</span>
                       </div>
-                      <p className="text-lg font-bold">{formatBalance(selectedUser.wallet?.balance ?? 0)}</p>
+                      <p className="text-lg font-bold text-green-600">{formatBalance(selectedUser.wallet?.balance ?? 0)}</p>
+                    </div>
+                    {/* Debt */}
+                    <div className="p-3 rounded-xl border bg-surface/50">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Wallet className="h-4 w-4 text-red-500" />
+                        <span className="text-xs text-muted-foreground">{t(locale, 'المديونية', 'Debt')}</span>
+                      </div>
+                      <p className="text-lg font-bold text-red-600">{formatBalance(selectedUser.wallet?.debt ?? 0)}</p>
                     </div>
                     {/* Rating (sellers/suppliers only) */}
                     {(selectedUser.role === 'seller' || selectedUser.role === 'supplier') && selectedUser.sellerProfile && (

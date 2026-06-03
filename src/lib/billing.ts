@@ -5,15 +5,16 @@ import { db } from './db';
  * Suspends the store/user and hides products if debt limit is exceeded.
  * Restores them if the debt is cleared.
  */
-export async function checkAndEnforceDebtLimit(userId: string, currentBalance: number) {
+export async function checkAndEnforceDebtLimit(userId: string, currentBalance: number, currentDebt: number = 0) {
   try {
-    // Retrieve global debt limit setting (default to -5000 DZD)
+    // Retrieve global debt limit setting (default to 5000 DZD max debt)
     const limitSetting = await db.systemSetting.findUnique({
       where: { key: 'global_debt_limit' },
     });
-    const debtLimit = limitSetting ? parseFloat(String(limitSetting.value)) : -5000;
+    // the setting might be stored as negative (e.g. -5000) or positive
+    let debtLimit = limitSetting ? Math.abs(parseFloat(String(limitSetting.value))) : 5000;
 
-    const isSuspended = currentBalance < debtLimit;
+    const isSuspended = currentDebt > debtLimit;
 
     const user = await db.user.findUnique({
       where: { id: userId },
@@ -128,11 +129,20 @@ export async function chargeOrderCommission(orderId: string) {
     });
     if (!wallet) {
       wallet = await db.wallet.create({
-        data: { userId: ownerUserId, balance: 0 },
+        data: { userId: ownerUserId, balance: 0, debt: 0 },
       });
     }
 
-    const newBalance = wallet.balance - commissionAmount;
+    let newBalance = wallet.balance;
+    let newDebt = wallet.debt;
+
+    // Deduct commission from balance first, put rest in debt
+    if (newBalance >= commissionAmount) {
+      newBalance -= commissionAmount;
+    } else {
+      newDebt += (commissionAmount - newBalance);
+      newBalance = 0;
+    }
 
     const commPercentage = activeSub?.package 
       ? activeSub.package.commissionRate 
@@ -146,23 +156,24 @@ export async function chargeOrderCommission(orderId: string) {
         walletId: wallet.id,
         type: 'COMMISSION_DEBT',
         amount: -commissionAmount,
-        balance: newBalance,
+        balance: newBalance, // we can just store the remaining balance here
         description: `عمولة مبيعات الطلب #${order.orderNumber} (${rateDesc})`,
         referenceId: order.id,
       },
     });
 
-    // Update wallet balance
+    // Update wallet balance and debt
     await db.wallet.update({
       where: { id: wallet.id },
       data: {
         balance: newBalance,
+        debt: newDebt,
         totalSpent: wallet.totalSpent + commissionAmount,
       },
     });
 
-    // Enforce outstanding debt limits
-    await checkAndEnforceDebtLimit(ownerUserId, newBalance);
+    // Re-evaluate debt limits
+    await checkAndEnforceDebtLimit(ownerUserId, newBalance, newDebt);
   } catch (err) {
     console.error('[chargeOrderCommission] error:', err);
   }

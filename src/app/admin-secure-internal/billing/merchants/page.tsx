@@ -174,30 +174,46 @@ export default function BillingMerchantsPage() {
     }
   };
 
-  const handleSaveSubscription = async (subId: string) => {
+  const handleSaveSubscription = async (id: string) => {
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/admin/subscriptions/${subId}`, {
+      const res = await fetch(`/api/admin/billing/subscriptions`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: editForm.status || undefined,
-          packageId: editForm.packageId || undefined,
-          addDays: editForm.addDays ? parseInt(editForm.addDays, 10) : undefined,
-          freeCommission: editForm.freeCommission,
-          overrideNote: editForm.overrideNote || undefined,
-        })
+        body: JSON.stringify({ id, ...editForm }),
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(t(locale, 'تم تحديث اشتراك التاجر وتزامن الحالة بنجاح ✅', 'Merchant subscription updated & store state synchronized ✅'));
+        toast.success(t(locale, 'تم حفظ التحديثات', 'Saved successfully'));
         setSelectedSub(null);
         fetchSubscriptions();
       } else {
         throw new Error(data.error);
       }
     } catch (err: any) {
-      toast.error(err.message || t(locale, 'فشل حفظ التعديلات', 'Failed to save changes'));
+      toast.error(err.message || 'Error saving');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteSubscription = async (id: string) => {
+    if (!confirm(t(locale, 'هل أنت متأكد من حذف هذا الاشتراك تماماً؟ لا يمكن التراجع عن هذا.', 'Are you sure you want to delete this subscription? This cannot be undone.'))) return;
+    setIsSaving(true);
+    try {
+      const res = await fetch(`/api/admin/billing/subscriptions?id=${id}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(t(locale, 'تم حذف الاشتراك بنجاح', 'Subscription deleted'));
+        setSelectedSub(null);
+        fetchSubscriptions();
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Error deleting');
     } finally {
       setIsSaving(false);
     }
@@ -477,6 +493,14 @@ export default function BillingMerchantsPage() {
                               </div>
 
                               <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+                                <Button variant="outline" size="sm" className="rounded-xl font-bold" asChild>
+                                  <Link href={getAdminPath('billing/receipts')}>
+                                    {t(locale, 'عرض إيصالات التاجر', 'View Receipts')}
+                                  </Link>
+                                </Button>
+                                <Button variant="destructive" size="sm" className="rounded-xl font-bold bg-red-100 text-red-600 hover:bg-red-200 border-0" onClick={() => handleDeleteSubscription(sub.id)}>
+                                  {t(locale, 'حذف', 'Delete')}
+                                </Button>
                                 <Button variant="outline" size="sm" className="rounded-xl font-bold" onClick={() => setSelectedSub(null)}>
                                   {t(locale, 'إلغاء', 'Cancel')}
                                 </Button>

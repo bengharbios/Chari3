@@ -626,6 +626,7 @@ model Address {
 model Wallet {
   id          String   @id @default(cuid())
   balance     Float    @default(0)
+  debt        Float    @default(0)
   totalEarned Float    @default(0)
   totalSpent  Float    @default(0)
   currency    String   @default("SAR")

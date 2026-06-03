@@ -178,6 +178,12 @@ export default function BillingReceiptsPage() {
             </SelectContent>
           </Select>
 
+          <Button variant="outline" size="sm" className="h-9 rounded-xl font-bold" asChild>
+            <Link href={getAdminPath('billing/merchants')}>
+              {t(locale, 'اشتراكات التجار', 'Merchants')}
+            </Link>
+          </Button>
+
           <Button variant="outline" size="icon" className="h-9 w-9 rounded-xl" onClick={fetchReceipts}>
             <RefreshCw className="h-4 w-4" />
           </Button>

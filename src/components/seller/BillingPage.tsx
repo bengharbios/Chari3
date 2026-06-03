@@ -87,6 +87,7 @@ export default function BillingPage() {
   const [payAmount, setPayAmount]       = useState('');
   const [payNote, setPayNote]           = useState('');
   const [payReceipt, setPayReceipt]     = useState('');
+  const [pendingInvoiceId, setPendingInvoiceId] = useState<string | null>(null);
   const [isUploading, setIsUploading]   = useState(false);
 
   // Card mock
@@ -191,6 +192,9 @@ export default function BillingPage() {
           // Switch to pay tab so they can upload the receipt
           setActiveTab('pay');
           setPayAmount(String(data.invoiceAmount));
+          if (data.invoice && data.invoice.id) {
+            setPendingInvoiceId(data.invoice.id);
+          }
         }
         fetchData();
       } else {
@@ -215,12 +219,12 @@ export default function BillingPage() {
       const res = await fetch('/api/billing/receipts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id, amount: parseFloat(payAmount), receiptImage: payReceipt, merchantNote: payNote }),
+        body: JSON.stringify({ userId: user?.id, amount: parseFloat(payAmount), receiptImage: payReceipt, merchantNote: payNote, invoiceId: pendingInvoiceId }),
       });
       const data = await res.json();
       if (data.success) {
         toast.success(t(locale, 'تم إرسال الوصل بنجاح! سيراجعه الفريق قريباً.', 'Receipt submitted! Our team will review it shortly.'));
-        setPayAmount(''); setPayNote(''); setPayReceipt('');
+        setPayAmount(''); setPayNote(''); setPayReceipt(''); setPendingInvoiceId(null);
         fetchData();
       } else throw new Error(data.error);
     } catch (err: any) {
@@ -242,7 +246,7 @@ export default function BillingPage() {
       const uploadRes = await fetch('/api/billing/receipts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id, amount: parseFloat(cardAmt), receiptImage: 'MOCK_CARD_GATEWAY_SUCCESS', merchantNote: `دفع فوري عبر البطاقة (****${cardNum.slice(-4)})` }),
+        body: JSON.stringify({ userId: user?.id, amount: parseFloat(cardAmt), receiptImage: 'MOCK_CARD_GATEWAY_SUCCESS', merchantNote: `دفع فوري عبر البطاقة (****${cardNum.slice(-4)})`, invoiceId: pendingInvoiceId }),
       });
       const uploadData = await uploadRes.json();
       if (uploadData.success) {
