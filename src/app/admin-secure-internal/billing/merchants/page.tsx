@@ -60,10 +60,11 @@ export default function BillingMerchantsPage() {
     return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
   };
 
+  const [currency, setCurrency] = useState('DZD');
+
   const fmt = useCallback((n: number) => {
-    const symbol = locale === 'ar' ? 'د.ج' : 'DZD';
-    return `${n.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')} ${symbol}`;
-  }, [locale]);
+    return `${n.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')} ${currency}`;
+  }, [locale, currency]);
 
   const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,6 +93,15 @@ export default function BillingMerchantsPage() {
 
   useEffect(() => {
     setIsMounted(true);
+    // Fetch public currency setting
+    fetch('/api/settings/public')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.settings?.currency) {
+          setCurrency(data.settings.currency);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {

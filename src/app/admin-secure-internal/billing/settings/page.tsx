@@ -60,10 +60,11 @@ export default function BillingSettingsPage() {
     return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
   };
 
+  const [currency, setCurrency] = useState('DZD');
+
   const fmt = useCallback((n: number) => {
-    const symbol = locale === 'ar' ? 'د.ج' : 'DZD';
-    return `${n.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')} ${symbol}`;
-  }, [locale]);
+    return `${n.toLocaleString(locale === 'ar' ? 'ar-SA' : 'en-US')} ${currency}`;
+  }, [locale, currency]);
 
   const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -82,6 +83,11 @@ export default function BillingSettingsPage() {
   const [defaultCommType, setDefaultCommType] = useState('percentage');
   const [defaultCommValue, setDefaultCommValue] = useState('10');
   const [globalDebtLimit, setGlobalDebtLimit] = useState('-5000');
+
+  // Registration Default Plan States
+  const [defaultPackageId, setDefaultPackageId] = useState('none');
+  const [trialOnRegistration, setTrialOnRegistration] = useState(true);
+  const [availablePackages, setAvailablePackages] = useState<any[]>([]);
 
   const [ccpName, setCcpName] = useState('');
   const [ccpRip, setCcpRip] = useState('');
@@ -116,9 +122,10 @@ export default function BillingSettingsPage() {
     if (!isAdminAuthenticated) return;
     setIsLoading(true);
     try {
-      const [settingsRes, addonsRes] = await Promise.all([
+      const [settingsRes, addonsRes, packagesRes] = await Promise.all([
         fetch('/api/admin/settings'),
-        fetch('/api/admin/addons')
+        fetch('/api/admin/addons'),
+        fetch('/api/admin/packages')
       ]);
 
       const settingsData = await settingsRes.json();
@@ -136,11 +143,19 @@ export default function BillingSettingsPage() {
         if (s.billing_global_debt_limit) setGlobalDebtLimit(s.billing_global_debt_limit);
         if (s.ccp_account_name) setCcpName(s.ccp_account_name);
         if (s.ccp_account_rip) setCcpRip(s.ccp_account_rip);
+        if (s.billing_default_package_id) setDefaultPackageId(s.billing_default_package_id);
+        if (s.billing_trial_on_registration !== undefined) setTrialOnRegistration(s.billing_trial_on_registration === 'true' || s.billing_trial_on_registration === true);
+        if (s.currency) setCurrency(s.currency);
       }
 
       const addonsData = await addonsRes.json();
       if (addonsData.success) {
         setAddons(addonsData.addons || []);
+      }
+
+      const packagesData = await packagesRes.json();
+      if (packagesData.success) {
+        setAvailablePackages(packagesData.packages || []);
       }
     } catch (err) {
       console.error('Error fetching settings data:', err);
@@ -178,6 +193,8 @@ export default function BillingSettingsPage() {
             billing_global_debt_limit: globalDebtLimit,
             ccp_account_name: ccpName,
             ccp_account_rip: ccpRip,
+            billing_default_package_id: defaultPackageId,
+            billing_trial_on_registration: trialOnRegistration,
           }
         })
       });
@@ -379,6 +396,46 @@ export default function BillingSettingsPage() {
                         onChange={e => setSuspendGraceDays(e.target.value)}
                         className="h-9 rounded-xl font-mono font-bold"
                       />
+                    </div>
+                  </div>
+
+                  {/* Default Plan On Onboarding */}
+                  <div className="border-t pt-4 space-y-4">
+                    <h4 className="text-xs font-bold text-indigo-600 uppercase tracking-widest">
+                      {t(locale, 'الباقة التلقائية للمسجلين الجدد', 'Default Plan on Registration')}
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="defaultPackageId" className="text-xs font-semibold">
+                          {t(locale, 'الباقة الافتراضية عند تفعيل الحساب', 'Auto-assigned Package')}
+                        </Label>
+                        <Select value={defaultPackageId} onValueChange={setDefaultPackageId}>
+                          <SelectTrigger className="h-9 rounded-xl text-xs font-bold">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="text-xs">
+                            <SelectItem value="none">
+                              {t(locale, 'لا يوجد (يجب الاشتراك يدوياً)', 'None (must subscribe manually)')}
+                            </SelectItem>
+                            {availablePackages.map(pkg => (
+                              <SelectItem key={pkg.id} value={pkg.id}>
+                                {locale === 'ar' ? pkg.name : (pkg.nameEn || pkg.name)} ({pkg.price} دج)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {defaultPackageId !== 'none' && (
+                        <div className="flex flex-col justify-end">
+                          <SwitchRow
+                            id="trial_on_registration"
+                            checked={trialOnRegistration}
+                            onCheckedChange={setTrialOnRegistration}
+                            label={t(locale, 'تفعيل الفترة التجريبية للباقة الافتراضية', 'Start default plan in TRIAL mode')}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

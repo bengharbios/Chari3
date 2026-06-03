@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { syncStoreStatusWithSubscription } from '@/lib/billing';
 
 // ============================================
 // Item keys per role — used for full rejection
@@ -106,6 +107,27 @@ async function approveUser(
     },
   });
 
+  // Fetch system settings for default package assignment
+  const settings = await db.systemSetting.findMany();
+  const s = settings.reduce((acc, row) => {
+    acc[row.key] = row.value;
+    return acc;
+  }, {} as Record<string, any>);
+
+  const defaultPackageId = s.billing_default_package_id || 'none';
+  const trialOnRegistration = s.billing_trial_on_registration === 'true' || s.billing_trial_on_registration === true;
+  const trialDays = parseInt(s.billing_trial_days || '14');
+
+  let assignedPackageId: string | null = null;
+  if (defaultPackageId !== 'none') {
+    const pkgExists = await db.sellerPackage.findUnique({
+      where: { id: defaultPackageId }
+    });
+    if (pkgExists) {
+      assignedPackageId = defaultPackageId;
+    }
+  }
+
   // Update verification table
   if (role === 'store' || role === 'store_manager') {
     if (user.storeVerification) {
@@ -127,7 +149,13 @@ async function approveUser(
           nameEn: user.nameEn || user.name,
           slug: `store-${user.id}`,
           managerId: user.id,
+          packageId: assignedPackageId,
         },
+      });
+    } else if (assignedPackageId) {
+      await db.store.update({
+        where: { id: user.store.id },
+        data: { packageId: assignedPackageId },
       });
     }
   }
@@ -147,12 +175,16 @@ async function approveUser(
     // Sync isVerified flag to SellerProfile (upsert to guarantee record exists)
     await db.sellerProfile.upsert({
       where: { userId: user.id },
-      update: { isVerified: true },
+      update: { 
+        isVerified: true,
+        packageId: assignedPackageId,
+      },
       create: {
         userId: user.id,
         isVerified: true,
         storeName: user.name,
         storeNameEn: user.nameEn || user.name,
+        packageId: assignedPackageId,
       },
     });
   }
@@ -189,6 +221,46 @@ async function approveUser(
           userId: user.id,
         },
       });
+    }
+  }
+
+  // Create Subscription if default package is assigned
+  if (assignedPackageId) {
+    const now = new Date();
+    let subscriptionStatus = 'ACTIVE';
+    let trialEndsAt: Date | null = null;
+    let endDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days default
+
+    if (trialOnRegistration) {
+      subscriptionStatus = 'TRIAL';
+      trialEndsAt = new Date(now.getTime() + trialDays * 24 * 60 * 60 * 1000);
+      endDate = trialEndsAt;
+    }
+
+    const pkg = await db.sellerPackage.findUnique({ where: { id: assignedPackageId } });
+    const totalMonthly = pkg ? pkg.price : 0;
+
+    // Check if subscription already exists to avoid duplicate
+    const existingSub = await db.subscription.findFirst({
+      where: { userId: user.id, packageId: assignedPackageId },
+    });
+
+    if (!existingSub) {
+      await db.subscription.create({
+        data: {
+          userId: user.id,
+          packageId: assignedPackageId,
+          status: subscriptionStatus,
+          billingCycle: 'MONTHLY',
+          startDate: now,
+          endDate,
+          trialEndsAt,
+          totalMonthly,
+        },
+      });
+
+      // Synchronize store status immediately with subscription
+      await syncStoreStatusWithSubscription(user.id, subscriptionStatus);
     }
   }
 
