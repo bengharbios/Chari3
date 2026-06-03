@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch the package
-    const pkg = await prisma.sellerPackage.findUnique({ where: { id: packageId } });
+    const pkg = await db.sellerPackage.findUnique({ where: { id: packageId } });
     if (!pkg) {
       return NextResponse.json({ success: false, error: 'Package not found' }, { status: 404 });
     }
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       'billing_enable_trial',
       'billing_trial_days',
     ];
-    const settingsRows = await prisma.systemSetting.findMany({
+    const settingsRows = await db.systemSetting.findMany({
       where: { key: { in: settingKeys } },
     });
     const settingsMap: Record<string, any> = {};
@@ -91,18 +91,10 @@ export async function POST(req: NextRequest) {
     // Compute trial end date
     let trialEndsAt: Date | undefined;
     let status: string;
-    if (totalMonthly === 0) {
-      status = 'ACTIVE';
-    } else if (trialEnabled) {
-      trialEndsAt = new Date(now);
-      trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
-      status = 'TRIAL';
-    } else {
-      status = 'PENDING_PAYMENT';
-    }
+    status = 'PENDING_APPROVAL';
 
     // Create subscription
-    const subscription = await prisma.subscription.create({
+    const subscription = await db.subscription.create({
       data: {
         userId,
         packageId,
@@ -123,14 +115,14 @@ export async function POST(req: NextRequest) {
 
     const invoiceAmount = billingCycle === 'ANNUAL' ? totalMonthly * 12 : totalMonthly;
 
-    const invoice = await prisma.invoice.create({
+    const invoice = await db.invoice.create({
       data: {
         userId,
         subscriptionId: subscription.id,
         type: 'SUBSCRIPTION',
-        status: totalMonthly === 0 ? 'PAID' : 'PENDING',
+        status: 'PENDING',
         amount: invoiceAmount,
-        amountPaid: totalMonthly === 0 ? invoiceAmount : 0,
+        amountPaid: 0,
         currency: 'DZD',
         periodStart: now,
         periodEnd: endDate,

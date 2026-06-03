@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'userId is required' }, { status: 400 });
     }
 
-    const invoices = await prisma.invoice.findMany({
+    const invoices = await db.invoice.findMany({
       where: { userId },
       orderBy: { createdAt: 'desc' },
       include: {

@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -61,6 +61,8 @@ export default function BillingPage() {
   const { user } = useAuthStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const isRTL = locale === 'ar';
+  const { currentPage, setCurrentPage } = useAppStore();
+  const activeTab = currentPage.includes('plans') ? 'plans' : currentPage.includes('addons') ? 'addons' : currentPage.includes('pay') ? 'pay' : currentPage.includes('history') ? 'history' : 'invoice';
 
   // ─── State ────────────────────────────────────────────────────────────────
   const [isLoading, setIsLoading]         = useState(true);
@@ -288,7 +290,7 @@ export default function BillingPage() {
           <h3 className="font-bold text-base">{t(locale, 'لا يوجد اشتراك نشط', 'No active subscription')}</h3>
           <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'اختر الباقة المناسبة لبدء رحلتك مع شاري داي', 'Choose the right plan to start your ChariDay journey')}</p>
         </div>
-        <Button size="sm" className="gap-2 rounded-xl bg-brand hover:bg-brand/90 text-navy font-bold shrink-0" onClick={() => document.getElementById('plans-tab')?.click()}>
+        <Button size="sm" className="gap-2 rounded-xl bg-brand hover:bg-brand/90 text-navy font-bold shrink-0" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-plans' : 'seller-billing-plans')}>
           <Package className="h-4 w-4" />
           {t(locale, 'اختر باقة', 'Choose a Plan')}
         </Button>
@@ -302,7 +304,7 @@ export default function BillingPage() {
           <h3 className="font-bold text-base text-red-500">{t(locale, '⛔ متجرك معلق حالياً', '⛔ Your store is currently suspended')}</h3>
           <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'يرجى تسديد الاشتراك المستحق لإعادة تفعيل متجرك فوراً', 'Please pay your outstanding subscription to reactivate your store')}</p>
         </div>
-        <Button size="sm" className="gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold shrink-0" onClick={() => document.getElementById('pay-tab')?.click()}>
+        <Button size="sm" className="gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold shrink-0" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
           <CreditCard className="h-4 w-4" />
           {t(locale, 'ادفع الآن', 'Pay Now')}
         </Button>
@@ -316,7 +318,7 @@ export default function BillingPage() {
           <h3 className="font-bold text-base text-orange-500">{t(locale, '⚠️ انتهت صلاحية اشتراكك', '⚠️ Your subscription has expired')}</h3>
           <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'قم بالتجديد الآن لتجنب تعليق متجرك', 'Renew now to avoid your store being suspended')}</p>
         </div>
-        <Button size="sm" className="gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shrink-0" onClick={() => document.getElementById('pay-tab')?.click()}>
+        <Button size="sm" className="gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shrink-0" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
           <RefreshCw className="h-4 w-4" />
           {t(locale, 'جدد الاشتراك', 'Renew Now')}
         </Button>
@@ -330,7 +332,7 @@ export default function BillingPage() {
           <h3 className="font-bold text-base text-amber-600">{t(locale, '⏳ في انتظار تأكيد دفعتك', '⏳ Waiting for your payment confirmation')}</h3>
           <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'أرسل وصل الدفع وسيقوم فريقنا بمراجعته وتفعيل حسابك خلال 24 ساعة', 'Submit your payment receipt and our team will review and activate within 24h')}</p>
         </div>
-        <Button size="sm" className="gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold shrink-0" onClick={() => document.getElementById('pay-tab')?.click()}>
+        <Button size="sm" className="gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold shrink-0" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
           <Send className="h-4 w-4" />
           {t(locale, 'إرسال الوصل', 'Submit Receipt')}
         </Button>
@@ -346,7 +348,7 @@ export default function BillingPage() {
           </h3>
           <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'استمتع بجميع ميزات الباقة مجاناً. يمكنك الدفع في أي وقت.', 'Enjoy all plan features for free. You can pay anytime before it ends.')}</p>
         </div>
-        <Button size="sm" variant="outline" className="gap-2 rounded-xl font-bold shrink-0 border-blue-500/40 text-blue-500" onClick={() => document.getElementById('pay-tab')?.click()}>
+        <Button size="sm" variant="outline" className="gap-2 rounded-xl font-bold shrink-0 border-blue-500/40 text-blue-500" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
           <CreditCard className="h-4 w-4" />
           {t(locale, 'ادفع مسبقاً', 'Pay Early')}
         </Button>
@@ -366,7 +368,7 @@ export default function BillingPage() {
           </p>
         </div>
         {daysRemaining !== null && daysRemaining <= 10 && (
-          <Button size="sm" className="gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold shrink-0" onClick={() => document.getElementById('pay-tab')?.click()}>
+          <Button size="sm" className="gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold shrink-0" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
             <RefreshCw className="h-4 w-4" />
             {t(locale, 'جدد مبكراً', 'Renew Early')}
           </Button>
@@ -432,34 +434,13 @@ export default function BillingPage() {
       )}
 
       {/* Main Tabs */}
-      <Tabs defaultValue={hasNoSub || isPending ? 'plans' : 'invoice'}>
+      
         <div className="overflow-x-auto pb-1">
-          <TabsList className="gap-1 h-auto flex-wrap min-w-max" dir={dir}>
-            <TabsTrigger id="invoice-tab" value="invoice" className="gap-1.5 text-xs font-bold rounded-xl" disabled={hasNoSub}>
-              <Receipt className="h-4 w-4" />
-              {t(locale, 'فاتورتي الحالية', 'Current Invoice')}
-            </TabsTrigger>
-            <TabsTrigger id="plans-tab" value="plans" className="gap-1.5 text-xs font-bold rounded-xl">
-              <Package className="h-4 w-4" />
-              {sub ? t(locale, 'تغيير الباقة', 'Change Plan') : t(locale, 'اختر باقة', 'Choose Plan')}
-            </TabsTrigger>
-            <TabsTrigger id="addons-tab" value="addons" className="gap-1.5 text-xs font-bold rounded-xl" disabled={hasNoSub}>
-              <Sparkles className="h-4 w-4" />
-              {t(locale, 'الميزات الإضافية', 'Add-ons')}
-            </TabsTrigger>
-            <TabsTrigger id="pay-tab" value="pay" className="gap-1.5 text-xs font-bold rounded-xl">
-              <CreditCard className="h-4 w-4" />
-              {t(locale, 'الدفع والتسديد', 'Payment')}
-            </TabsTrigger>
-            <TabsTrigger value="history" className="gap-1.5 text-xs font-bold rounded-xl">
-              <FileText className="h-4 w-4" />
-              {t(locale, 'سجل الفواتير', 'Invoice History')}
-            </TabsTrigger>
-          </TabsList>
+          
         </div>
 
         {/* ── TAB 1: Current Invoice ── */}
-        <TabsContent value="invoice" className="mt-4">
+        {activeTab === "invoice" && (<div className="mt-4">
           {invoices.length === 0 ? (
             <Card className="border-border bg-card">
               <CardContent className="py-16 text-center flex flex-col items-center gap-2 text-muted-foreground">
@@ -506,7 +487,7 @@ export default function BillingPage() {
                       </div>
                     )}
                     {inv.status !== 'PAID' && (
-                      <Button className="w-full rounded-xl gap-2 bg-brand hover:bg-brand/90 text-navy font-bold" onClick={() => document.getElementById('pay-tab')?.click()}>
+                      <Button className="w-full rounded-xl gap-2 bg-brand hover:bg-brand/90 text-navy font-bold" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
                         <CreditCard className="h-4 w-4" />
                         {t(locale, 'ادفع هذه الفاتورة', 'Pay This Invoice')}
                         <ChevronRight className="h-4 w-4" />
@@ -517,10 +498,10 @@ export default function BillingPage() {
               ))}
             </div>
           )}
-        </TabsContent>
+        </div>)}
 
         {/* ── TAB 2: Choose / Change Plan ── */}
-        <TabsContent value="plans" className="mt-4 space-y-4">
+        {activeTab === "plans" && (<div className="mt-4 space-y-4">
           <div className="flex items-center gap-3 flex-wrap">
             <p className="text-sm font-bold text-muted-foreground">{t(locale, 'مدة الاشتراك:', 'Billing cycle:')}</p>
             <div className="flex gap-2">
@@ -602,10 +583,10 @@ export default function BillingPage() {
               </CardContent>
             </Card>
           )}
-        </TabsContent>
+        </div>)}
 
         {/* ── TAB 3: Add-ons ── */}
-        <TabsContent value="addons" className="mt-4">
+        {activeTab === "addons" && (<div className="mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-3">
               {ADDON_LIST.map((addon) => {
@@ -698,10 +679,10 @@ export default function BillingPage() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
+        </div>)}
 
         {/* ── TAB 4: Payment ── */}
-        <TabsContent value="pay" className="mt-4">
+        {activeTab === "pay" && (<div className="mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* CCP Payment */}
             <Card className="border-border bg-card">
@@ -819,10 +800,10 @@ export default function BillingPage() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
+        </div>)}
 
         {/* ── TAB 5: Invoice History ── */}
-        <TabsContent value="history" className="mt-4">
+        {activeTab === "history" && (<div className="mt-4">
           <Card className="border-border bg-card">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -867,8 +848,8 @@ export default function BillingPage() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+        </div>)}
+      
     </div>
   );
 }

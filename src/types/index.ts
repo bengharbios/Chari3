@@ -77,15 +77,24 @@ export type PageType =
   | 'admin-analytics'
   | 'admin-settings'
   | 'store-billing'
-  | 'seller-billing';
+  | 'store-billing-plans'
+  | 'store-billing-addons'
+  | 'store-billing-pay'
+  | 'store-billing-history'
+  | 'seller-billing'
+  | 'seller-billing-plans'
+  | 'seller-billing-addons'
+  | 'seller-billing-pay'
+  | 'seller-billing-history';
 
 export interface NavItem {
-  id: PageType;
+  id: PageType | string;
   labelAr: string;
   labelEn: string;
-  icon: string;
+  icon?: string;
   badge?: number;
   children?: NavItem[];
+  isSection?: boolean;
 }
 
 // ============================================

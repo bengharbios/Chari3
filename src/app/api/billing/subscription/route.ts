@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 import { checkAndUpdateExpiredSubscriptions } from '@/lib/billing';
 
 export const dynamic = 'force-dynamic';
@@ -17,10 +17,10 @@ export async function GET(req: NextRequest) {
 
 
     // Fetch the most recent active/trial subscription
-    const subscription = await prisma.subscription.findFirst({
+    const subscription = await db.subscription.findFirst({
       where: {
         userId,
-        status: { in: ['ACTIVE', 'TRIAL', 'PENDING_PAYMENT', 'SUSPENDED'] },
+        status: { in: ['ACTIVE', 'TRIAL', 'PENDING_PAYMENT', 'PENDING_APPROVAL', 'SUSPENDED'] },
       },
       orderBy: { createdAt: 'desc' },
       include: {
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch the last 3 invoices
-    const invoices = await prisma.invoice.findMany({
+    const invoices = await db.invoice.findMany({
       where: { userId, subscriptionId: subscription.id },
       orderBy: { createdAt: 'desc' },
       take: 3,

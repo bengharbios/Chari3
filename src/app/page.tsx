@@ -35,7 +35,15 @@ import type { PageType, UserRole } from '@/types';
 
 const DASHBOARD_MAP: Record<string, React.ComponentType> = {
   'store-billing': BillingPage,
+  'store-billing-plans': BillingPage,
+  'store-billing-addons': BillingPage,
+  'store-billing-pay': BillingPage,
+  'store-billing-history': BillingPage,
   'seller-billing': BillingPage,
+  'seller-billing-plans': BillingPage,
+  'seller-billing-addons': BillingPage,
+  'seller-billing-pay': BillingPage,
+  'seller-billing-history': BillingPage,
   'store-settings': StoreSettingsPage,
   'store-products': StoreProductsPage,
   'store-orders': StoreOrdersPage,

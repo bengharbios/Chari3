@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Fetch the existing subscription
-    const existing = await prisma.subscription.findUnique({
+    const existing = await db.subscription.findUnique({
       where: { id: subscriptionId },
       include: { package: true },
     });
@@ -48,10 +48,10 @@ export async function POST(req: NextRequest) {
     const invoiceAmount = cycle === 'ANNUAL' ? totalMonthly * 12 : totalMonthly;
 
     // Update subscription: mark ACTIVE if free, else PENDING_PAYMENT
-    const updated = await prisma.subscription.update({
+    const updated = await db.subscription.update({
       where: { id: subscriptionId },
       data: {
-        status: totalMonthly === 0 ? 'ACTIVE' : 'PENDING_PAYMENT',
+        status: 'PENDING_APPROVAL',
         billingCycle: cycle,
         endDate: newEndDate,
         renewedAt: now,
@@ -61,14 +61,14 @@ export async function POST(req: NextRequest) {
     const dueDate = new Date(now);
     dueDate.setDate(dueDate.getDate() + 7);
 
-    const invoice = await prisma.invoice.create({
+    const invoice = await db.invoice.create({
       data: {
         userId,
         subscriptionId,
         type: 'SUBSCRIPTION',
-        status: totalMonthly === 0 ? 'PAID' : 'PENDING',
+        status: 'PENDING',
         amount: invoiceAmount,
-        amountPaid: totalMonthly === 0 ? invoiceAmount : 0,
+        amountPaid: 0,
         currency: 'DZD',
         periodStart: baseDate,
         periodEnd: newEndDate,

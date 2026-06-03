@@ -10,7 +10,8 @@ import {
   LayoutDashboard, Users, Package, ShoppingCart, BarChart3, Settings,
   Store, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
   Wallet, Heart, Star, Bell, ChevronLeft, ChevronRight, LogOut,
-  TrendingUp, CreditCard, Boxes, ChevronUp, ArrowLeftRight, Layers
+  TrendingUp, CreditCard, Boxes, ChevronUp, ArrowLeftRight, Layers,
+  Receipt, Sparkles
 } from 'lucide-react';
 
 const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
@@ -19,26 +20,40 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, Users, Package, ShoppingCart, BarChart3, Settings,
   Store, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
   Wallet, Heart, Star, Bell, LogOut, TrendingUp, CreditCard, Boxes,
-  ChevronUp, ArrowLeftRight, Layers,
+  ChevronUp, ArrowLeftRight, Layers, Receipt, Sparkles,
 };
 
 
 const STORE_NAV: NavItem[] = [
+  { id: 'section-store', labelAr: 'المتجر', labelEn: 'Store', isSection: true },
   { id: 'store', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
   { id: 'store-products', labelAr: 'المنتجات', labelEn: 'Products', icon: 'Boxes', badge: 5 },
   { id: 'store-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 12 },
   { id: 'store-coupons', labelAr: 'الكوبونات والخصومات', labelEn: 'Coupons', icon: 'CreditCard' },
   { id: 'store-staff', labelAr: 'الفريق', labelEn: 'Team', icon: 'Users' },
-  { id: 'store-billing', labelAr: 'الاشتراكات والمديونية', labelEn: 'Billing & Subscriptions', icon: 'Wallet' },
   { id: 'store-analytics', labelAr: 'التحليلات', labelEn: 'Analytics', icon: 'BarChart3' },
+  { id: 'section-billing', labelAr: 'المالية والاشتراكات', labelEn: 'Billing & Subscriptions', isSection: true },
+  { id: 'store-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice', icon: 'Receipt' },
+  { id: 'store-billing-plans', labelAr: 'اختر باقة', labelEn: 'Choose Plan', icon: 'Package' },
+  { id: 'store-billing-addons', labelAr: 'الميزات الإضافية', labelEn: 'Add-ons', icon: 'Sparkles' },
+  { id: 'store-billing-pay', labelAr: 'الدفع والتسديد', labelEn: 'Payment', icon: 'CreditCard' },
+  { id: 'store-billing-history', labelAr: 'سجل الفواتير', labelEn: 'Invoice History', icon: 'FileText' },
+  { id: 'section-settings', labelAr: 'الإعدادات', labelEn: 'Settings', isSection: true },
   { id: 'store-settings', labelAr: 'إعدادات المتجر', labelEn: 'Store Settings', icon: 'Settings' },
 ];
 
 const SELLER_NAV: NavItem[] = [
+  { id: 'section-seller', labelAr: 'التاجر', labelEn: 'Seller', isSection: true },
   { id: 'seller', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
   { id: 'seller-products', labelAr: 'منتجاتي', labelEn: 'My Products', icon: 'Boxes' },
   { id: 'seller-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 4 },
-  { id: 'seller-billing', labelAr: 'الاشتراكات والمديونية', labelEn: 'Billing & Subscriptions', icon: 'Wallet' },
+  { id: 'section-billing', labelAr: 'المالية والاشتراكات', labelEn: 'Billing & Subscriptions', isSection: true },
+  { id: 'seller-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice', icon: 'Receipt' },
+  { id: 'seller-billing-plans', labelAr: 'اختر باقة', labelEn: 'Choose Plan', icon: 'Package' },
+  { id: 'seller-billing-addons', labelAr: 'الميزات الإضافية', labelEn: 'Add-ons', icon: 'Sparkles' },
+  { id: 'seller-billing-pay', labelAr: 'الدفع والتسديد', labelEn: 'Payment', icon: 'CreditCard' },
+  { id: 'seller-billing-history', labelAr: 'سجل الفواتير', labelEn: 'Invoice History', icon: 'FileText' },
+  { id: 'section-settings', labelAr: 'الإعدادات', labelEn: 'Settings', isSection: true },
   { id: 'seller-settings', labelAr: 'الإعدادات', labelEn: 'Settings', icon: 'Settings' },
   { id: 'seller-upgrade', labelAr: 'ترقية لمتجر', labelEn: 'Upgrade to Store', icon: 'TrendingUp' },
 ];
@@ -153,8 +168,18 @@ export default function Sidebar({ className }: SidebarProps) {
         {/* Navigation */}
         <div className="flex-1 py-2 overflow-y-auto">
           <div className="space-y-1 px-3">
-            {navItems.map((item) => {
-              const Icon = iconMap[item.icon] || LayoutDashboard;
+            {navItems.map((item, index) => {
+              if (item.isSection) {
+                return (
+                  <div key={`section-${item.id}-${index}`} className="px-4 py-2 mt-4 first:mt-0">
+                    <p className="text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-wider">
+                      {t(locale, item.labelAr, item.labelEn)}
+                    </p>
+                  </div>
+                );
+              }
+
+              const Icon = iconMap[item.icon || 'LayoutDashboard'] || LayoutDashboard;
               const isActive = currentPage === item.id;
 
               return (
