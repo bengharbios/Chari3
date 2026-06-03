@@ -544,6 +544,91 @@ export async function GET(req: NextRequest) {
       results.push(`Error creating ProductQA table: ${e.message}`);
     }
 
+    // 24. Create Subscription table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS Subscription (
+          id VARCHAR(191) NOT NULL,
+          userId VARCHAR(191) NOT NULL,
+          packageId VARCHAR(191) NULL,
+          status VARCHAR(191) NOT NULL DEFAULT 'TRIAL',
+          billingCycle VARCHAR(191) NOT NULL DEFAULT 'MONTHLY',
+          startDate DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          endDate DATETIME(3) NULL,
+          trialEndsAt DATETIME(3) NULL,
+          renewedAt DATETIME(3) NULL,
+          addons TEXT NOT NULL,
+          addonsTotal DOUBLE NOT NULL DEFAULT 0,
+          totalMonthly DOUBLE NOT NULL DEFAULT 0,
+          freeCommission BOOLEAN NOT NULL DEFAULT false,
+          overrideNote VARCHAR(1000) NULL,
+          overriddenBy VARCHAR(191) NULL,
+          autoRenew BOOLEAN NOT NULL DEFAULT true,
+          cancelledAt DATETIME(3) NULL,
+          cancelReason VARCHAR(1000) NULL,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL,
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured Subscription table exists');
+    } catch (e: any) {
+      results.push(`Error creating Subscription table: ${e.message}`);
+    }
+
+    // 25. Create Invoice table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS Invoice (
+          id VARCHAR(191) NOT NULL,
+          userId VARCHAR(191) NOT NULL,
+          subscriptionId VARCHAR(191) NULL,
+          type VARCHAR(191) NOT NULL DEFAULT 'SUBSCRIPTION',
+          status VARCHAR(191) NOT NULL DEFAULT 'PENDING',
+          amount DOUBLE NOT NULL,
+          amountPaid DOUBLE NOT NULL DEFAULT 0,
+          currency VARCHAR(191) NOT NULL DEFAULT 'DZD',
+          periodStart DATETIME(3) NULL,
+          periodEnd DATETIME(3) NULL,
+          dueDate DATETIME(3) NULL,
+          paidAt DATETIME(3) NULL,
+          items TEXT NOT NULL,
+          adminNote VARCHAR(1000) NULL,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL,
+          PRIMARY KEY (id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured Invoice table exists');
+    } catch (e: any) {
+      results.push(`Error creating Invoice table: ${e.message}`);
+    }
+
+    // 26. Create BillingAddon table if it doesn't exist
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS BillingAddon (
+          id VARCHAR(191) NOT NULL,
+          \`key\` VARCHAR(191) NOT NULL,
+          nameAr VARCHAR(191) NOT NULL,
+          nameEn VARCHAR(191) NOT NULL,
+          descriptionAr LONGTEXT NULL,
+          descriptionEn LONGTEXT NULL,
+          price DOUBLE NOT NULL DEFAULT 0,
+          isCounter BOOLEAN NOT NULL DEFAULT false,
+          isActive BOOLEAN NOT NULL DEFAULT true,
+          sortOrder INTEGER NOT NULL DEFAULT 0,
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL,
+          PRIMARY KEY (id),
+          UNIQUE KEY BillingAddon_key_key (\`key\`)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured BillingAddon table exists');
+    } catch (e: any) {
+      results.push(`Error creating BillingAddon table: ${e.message}`);
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: 'Database schema sync executed',
