@@ -410,8 +410,8 @@ export default function StoreSettingsPage() {
         console.error('Failed to fetch dynamic states', e);
       }
     };
-    if (isMounted) fetchStates();
-  }, [generalSettings.country, isMounted, shippingRates.storeStates]);
+    fetchStates();
+  }, [generalSettings.country, shippingRates.storeStates]);
 
   // Save Settings to API
   const handleSave = async () => {
