@@ -7,10 +7,10 @@ export const dynamic = 'force-dynamic';
 // PATCH /api/admin/subscriptions/[id]
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     if (!id) {
       return NextResponse.json({ success: false, error: 'Subscription ID is required' }, { status: 400 });
     }
@@ -111,10 +111,10 @@ export async function PATCH(
 // GET /api/admin/subscriptions/[id]
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     if (!id) {
       return NextResponse.json({ success: false, error: 'Subscription ID is required' }, { status: 400 });
     }
@@ -159,10 +159,10 @@ export async function GET(
 // DELETE /api/admin/subscriptions/[id]
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     if (!id) {
       return NextResponse.json({ success: false, error: 'Subscription ID is required' }, { status: 400 });
     }
