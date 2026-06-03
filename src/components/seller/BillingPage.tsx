@@ -27,6 +27,7 @@ function StatusBadge({ status, locale }: { status: string; locale: string }) {
   const map: Record<string, { label: string; labelEn: string; color: string }> = {
     TRIAL:           { label: 'تجريبي',          labelEn: 'Trial',         color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
     PENDING_PAYMENT: { label: 'في انتظار الدفع', labelEn: 'Pending',       color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
+    PENDING_APPROVAL: { label: 'قيد المراجعة', labelEn: 'Under Review',    color: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' },
     ACTIVE:          { label: 'نشط',             labelEn: 'Active',        color: 'bg-green-500/10 text-green-500 border-green-500/20' },
     EXPIRED:         { label: 'منتهي',           labelEn: 'Expired',       color: 'bg-orange-500/10 text-orange-500 border-orange-500/20' },
     SUSPENDED:       { label: 'معلق',            labelEn: 'Suspended',     color: 'bg-red-500/10 text-red-500 border-red-500/20' },
@@ -80,6 +81,7 @@ export default function BillingPage() {
     mobileApp: false, whatsapp: false, crm: false, pos: false, extraPos: 0,
   });
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'receipt' | 'wallet'>('receipt');
 
   // Payment form (CCP)
   const [payAmount, setPayAmount]       = useState('');
@@ -143,7 +145,8 @@ export default function BillingPage() {
       if (subData.subscription) {
         setSubscription(subData.subscription);
         // Pre-fill addon state from existing subscription
-        const addons = subData.subscription.addons ? JSON.parse(subData.subscription.addons) : {};
+        const rawAddons = subData.subscription.addons;
+        const addons = typeof rawAddons === 'string' ? JSON.parse(rawAddons) : (rawAddons || {});
         setAddonState({ mobileApp: addons.mobileApp || false, whatsapp: addons.whatsapp || false, crm: addons.crm || false, pos: addons.pos || false, extraPos: addons.extraPos || 0 });
         setSelectedPackageId(subData.subscription.packageId || '');
       }
@@ -176,13 +179,23 @@ export default function BillingPage() {
       const res = await fetch('/api/billing/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id, packageId: selectedPackageId, billingCycle, addons: addonState }),
+        body: JSON.stringify({ userId: user?.id, packageId: selectedPackageId, billingCycle, addons: addonState, paymentMethod }),
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(t(locale, 'تم إرسال طلب الاشتراك بنجاح! 🎉', 'Subscription request submitted! 🎉'));
+        toast.success(data.actionType === 'upgrade' 
+          ? t(locale, 'تم ترقية الباقة بنجاح! 🎉', 'Package upgraded successfully! 🎉') 
+          : t(locale, 'تم إرسال طلب الاشتراك بنجاح! 🎉', 'Subscription request submitted! 🎉'));
+        
+        if (paymentMethod === 'receipt' && data.invoiceAmount > 0) {
+          // Switch to pay tab so they can upload the receipt
+          setActiveTab('pay');
+          setPayAmount(String(data.invoiceAmount));
+        }
         fetchData();
-      } else throw new Error(data.error);
+      } else {
+        toast.error(locale === 'ar' ? (data.error || 'فشل إرسال طلب الاشتراك') : (data.errorEn || data.error));
+      }
     } catch (err: any) {
       toast.error(err.message || t(locale, 'فشل إرسال طلب الاشتراك', 'Failed to submit subscription'));
     } finally {
@@ -275,8 +288,12 @@ export default function BillingPage() {
   const isExpired    = sub?.status === 'EXPIRED';
   const isTrial      = sub?.status === 'TRIAL';
   const isActive     = sub?.status === 'ACTIVE';
-  const isPending    = sub?.status === 'PENDING_PAYMENT';
+  const isPending    = sub?.status === 'PENDING_PAYMENT' || sub?.status === 'PENDING_APPROVAL';
   const hasNoSub     = !sub;
+
+  const pkgName = locale === 'ar' ? sub?.package?.name : (sub?.package?.nameEn || sub?.package?.name);
+  const cycleName = sub?.billingCycle === 'ANNUAL' ? t(locale, 'سنوي', 'Annual') : t(locale, 'شهري', 'Monthly');
+  const planInfo = pkgName ? `(${pkgName} — ${cycleName})` : '';
 
   const ccpName = settings.ccp_account_name || 'شاري داي';
   const ccpRip  = settings.ccp_account_rip  || '007999990023456789 45';
@@ -301,7 +318,9 @@ export default function BillingPage() {
       <div className="rounded-2xl border-2 border-red-500/40 bg-red-500/5 p-5 flex flex-col sm:flex-row items-center gap-4">
         <div className="p-3 rounded-xl bg-red-500/10"><ShieldAlert className="h-6 w-6 text-red-500" /></div>
         <div className="flex-1 text-center sm:text-start">
-          <h3 className="font-bold text-base text-red-500">{t(locale, '⛔ متجرك معلق حالياً', '⛔ Your store is currently suspended')}</h3>
+          <h3 className="font-bold text-base text-red-500">
+            {t(locale, '⛔ متجرك معلق حالياً', '⛔ Your store is currently suspended')} <span className="font-normal opacity-80 text-sm ml-1">{planInfo}</span>
+          </h3>
           <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'يرجى تسديد الاشتراك المستحق لإعادة تفعيل متجرك فوراً', 'Please pay your outstanding subscription to reactivate your store')}</p>
         </div>
         <Button size="sm" className="gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold shrink-0" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
@@ -315,7 +334,9 @@ export default function BillingPage() {
       <div className="rounded-2xl border-2 border-orange-500/40 bg-orange-500/5 p-5 flex flex-col sm:flex-row items-center gap-4">
         <div className="p-3 rounded-xl bg-orange-500/10"><AlertCircle className="h-6 w-6 text-orange-500" /></div>
         <div className="flex-1 text-center sm:text-start">
-          <h3 className="font-bold text-base text-orange-500">{t(locale, '⚠️ انتهت صلاحية اشتراكك', '⚠️ Your subscription has expired')}</h3>
+          <h3 className="font-bold text-base text-orange-500">
+            {t(locale, '⚠️ انتهت صلاحية اشتراكك', '⚠️ Your subscription has expired')} <span className="font-normal opacity-80 text-sm ml-1">{planInfo}</span>
+          </h3>
           <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'قم بالتجديد الآن لتجنب تعليق متجرك', 'Renew now to avoid your store being suspended')}</p>
         </div>
         <Button size="sm" className="gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shrink-0" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
@@ -329,8 +350,10 @@ export default function BillingPage() {
       <div className="rounded-2xl border-2 border-amber-500/40 bg-amber-500/5 p-5 flex flex-col sm:flex-row items-center gap-4">
         <div className="p-3 rounded-xl bg-amber-500/10"><Clock className="h-6 w-6 text-amber-500" /></div>
         <div className="flex-1 text-center sm:text-start">
-          <h3 className="font-bold text-base text-amber-600">{t(locale, '⏳ في انتظار تأكيد دفعتك', '⏳ Waiting for your payment confirmation')}</h3>
-          <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'أرسل وصل الدفع وسيقوم فريقنا بمراجعته وتفعيل حسابك خلال 24 ساعة', 'Submit your payment receipt and our team will review and activate within 24h')}</p>
+          <h3 className="font-bold text-base text-amber-600">
+            {t(locale, '⏳ في انتظار المراجعة أو الدفع', '⏳ Pending Review or Payment')} <span className="font-normal opacity-80 text-sm ml-1">{planInfo}</span>
+          </h3>
+          <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'يرجى انتظار موافقة الإدارة أو تأكيد دفعتك. حسابك سيكون مفعلاً قريباً.', 'Please wait for admin approval or payment confirmation. Your account will be active soon.')}</p>
         </div>
         <Button size="sm" className="gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold shrink-0" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
           <Send className="h-4 w-4" />
@@ -344,7 +367,7 @@ export default function BillingPage() {
         <div className="p-3 rounded-xl bg-blue-500/10"><Sparkles className="h-6 w-6 text-blue-500" /></div>
         <div className="flex-1 text-center sm:text-start">
           <h3 className="font-bold text-base text-blue-500">
-            {t(locale, `🎉 أنت في الفترة التجريبية — ${trialDaysLeft} يوم متبقٍ`, `🎉 Trial period — ${trialDaysLeft} days remaining`)}
+            {t(locale, `🎉 أنت في الفترة التجريبية — ${trialDaysLeft} يوم متبقٍ`, `🎉 Trial period — ${trialDaysLeft} days remaining`)} <span className="font-normal opacity-80 text-sm ml-1">{planInfo}</span>
           </h3>
           <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'استمتع بجميع ميزات الباقة مجاناً. يمكنك الدفع في أي وقت.', 'Enjoy all plan features for free. You can pay anytime before it ends.')}</p>
         </div>
@@ -361,7 +384,7 @@ export default function BillingPage() {
         <div className="p-3 rounded-xl bg-green-500/10"><CheckCircle2 className="h-6 w-6 text-green-500" /></div>
         <div className="flex-1 text-center sm:text-start">
           <h3 className="font-bold text-base text-green-600">
-            {t(locale, `✅ اشتراكك نشط — ${daysRemaining} يوم متبقٍ`, `✅ Active subscription — ${daysRemaining} days remaining`)}
+            {t(locale, `✅ اشتراكك نشط — ${daysRemaining} يوم متبقٍ`, `✅ Active subscription — ${daysRemaining} days remaining`)} <span className="font-normal opacity-80 text-sm ml-1">{planInfo}</span>
           </h3>
           <p className="text-sm text-muted-foreground mt-0.5">
             {t(locale, `ينتهي في ${endDate?.toLocaleDateString('ar-SA')}`, `Expires on ${endDate?.toLocaleDateString('en-US')}`)}
@@ -562,24 +585,69 @@ export default function BillingPage() {
           {selectedPackageId && (
             <Card className="border-brand/30 bg-brand/5">
               <CardContent className="p-4">
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  <div className="flex-1 space-y-1">
-                    <p className="font-bold text-sm">{t(locale, 'ملخص الطلب', 'Order Summary')}</p>
-                    <div className="text-xs text-muted-foreground space-y-0.5">
-                      <p>{locale === 'ar' ? selectedPackage?.name : (selectedPackage?.nameEn || selectedPackage?.name)} — {billingCycle === 'ANNUAL' ? t(locale, 'سنوي', 'Annual') : t(locale, 'شهري', 'Monthly')}</p>
-                      <p className="text-brand font-black text-lg">{fmt(billingCycle === 'ANNUAL' ? totalMonthly * 12 : totalMonthly)}</p>
-                      {billingCycle === 'ANNUAL' && <p className="text-green-500">{t(locale, `يُدفع سنوياً (${fmt(totalMonthly)}/شهر)`, `Billed annually (${fmt(totalMonthly)}/mo)`)}</p>}
+                  {isPending ? (
+                    <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl text-center">
+                      <p className="text-amber-600 font-bold text-sm flex items-center justify-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        {t(locale, 'لديك طلب سابق قيد المراجعة. يرجى الانتظار.', 'You have a pending request. Please wait.')}
+                      </p>
                     </div>
-                  </div>
-                  <Button
-                    className="gap-2 rounded-xl bg-brand hover:bg-brand/90 text-navy font-bold w-full sm:w-auto shrink-0"
-                    disabled={isSubscribing}
-                    onClick={handleSubscribe}
-                  >
-                    {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                    {sub ? t(locale, 'تغيير الباقة', 'Change Plan') : t(locale, 'اشترك الآن', 'Subscribe Now')}
-                  </Button>
-                </div>
+                  ) : (
+                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                      <div className="flex-1 space-y-1">
+                        <p className="font-bold text-sm">{t(locale, 'ملخص الطلب', 'Order Summary')}</p>
+                        <div className="text-xs text-muted-foreground space-y-0.5">
+                          <p>{locale === 'ar' ? selectedPackage?.name : (selectedPackage?.nameEn || selectedPackage?.name)} — {billingCycle === 'ANNUAL' ? t(locale, 'سنوي', 'Annual') : t(locale, 'شهري', 'Monthly')}</p>
+                          <p className="text-brand font-black text-lg">{fmt(totalBilled)}</p>
+                          {billingCycle === 'ANNUAL' && <p className="text-green-500">{t(locale, `يُدفع سنوياً (${fmt(totalMonthly)}/شهر)`, `Billed annually (${fmt(totalMonthly)}/mo)`)}</p>}
+                          {sub && sub.packageId !== selectedPackageId && selectedPackage?.price > 0 && (
+                            <p className="text-indigo-500 font-bold mt-1">
+                              {t(locale, 'سيتم حساب الترقية وإرجاع رصيد الأيام المتبقية تلقائياً.', 'Pro-rata will be calculated automatically.')}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Payment Method Selector */}
+                        {selectedPackage?.price > 0 && (
+                          <div className="mt-3 space-y-2">
+                            <p className="text-xs font-bold text-muted-foreground">{t(locale, 'طريقة الدفع', 'Payment Method')}</p>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant={paymentMethod === 'receipt' ? 'default' : 'outline'} 
+                                size="sm" 
+                                className="flex-1 text-xs h-8"
+                                onClick={() => setPaymentMethod('receipt')}
+                              >
+                                {t(locale, 'إرسال إيصال (CCP)', 'Bank Transfer')}
+                              </Button>
+                              <Button 
+                                variant={paymentMethod === 'wallet' ? 'default' : 'outline'} 
+                                size="sm" 
+                                className="flex-1 text-xs h-8"
+                                onClick={() => setPaymentMethod('wallet')}
+                              >
+                                {t(locale, 'المحفظة', 'Wallet')}
+                              </Button>
+                            </div>
+                            {paymentMethod === 'wallet' && wallet && (
+                              <p className={`text-[10px] ${wallet.balance < totalBilled ? 'text-red-500' : 'text-green-500'}`}>
+                                {t(locale, 'رصيد المحفظة:', 'Wallet balance:')} {fmt(wallet.balance)}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <Button
+                        className="gap-2 rounded-xl bg-brand hover:bg-brand/90 text-navy font-bold w-full sm:w-auto shrink-0"
+                        disabled={isSubscribing || isPending || (paymentMethod === 'wallet' && selectedPackage?.price > 0 && wallet?.balance < totalBilled)}
+                        onClick={handleSubscribe}
+                      >
+                        {isSubscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                        {sub?.packageId === selectedPackageId ? t(locale, 'تجديد الباقة', 'Renew Plan') : (sub ? t(locale, 'ترقية الباقة', 'Upgrade Plan') : t(locale, 'اشترك الآن', 'Subscribe Now'))}
+                      </Button>
+                    </div>
+                  )}
               </CardContent>
             </Card>
           )}

@@ -11,8 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import {
-  Settings, Store, Image as ImageIcon, MapPin, Truck, CreditCard, Bell, Save, Globe, Loader2, Play, CheckCircle, Trash2
+  Settings, Store, Image as ImageIcon, MapPin, Truck, CreditCard, Bell, Save, Globe, Loader2, Play, CheckCircle, Trash2,
+  ShoppingCart, FileText, Share2, Search, Mail, Phone, Clock, DollarSign
 } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
@@ -116,6 +118,51 @@ export default function StoreSettingsPage() {
     logo: '',
     coverImage: '',
     isActive: true,
+    country: 'DZ',
+    timezone: 'UTC+1',
+    businessEmail: '',
+    businessPhone: '',
+    address: '',
+  });
+
+  const [orderSettings, setOrderSettings] = useState({
+    minOrderAmount: 0,
+    autoAcceptOrders: true,
+    lowStockThreshold: 5,
+    hideOutOfStock: false,
+    maxQuantityPerOrder: 10,
+  });
+
+  const [policiesSettings, setPoliciesSettings] = useState({
+    returnPolicy: '',
+    privacyPolicy: '',
+    termsOfService: '',
+    shippingPolicy: '',
+  });
+
+  const [socialSettings, setSocialSettings] = useState({
+    facebook: '',
+    instagram: '',
+    tiktok: '',
+    whatsapp: '',
+    twitter: '',
+    youtube: '',
+    website: '',
+  });
+
+  const [seoSettings, setSeoSettings] = useState({
+    seoTitle: '',
+    seoDescription: '',
+    seoKeywords: '',
+    ogImage: '',
+  });
+
+  const [notificationSettings, setNotificationSettings] = useState({
+    newOrderNotif: true,
+    newReviewNotif: true,
+    lowStockNotif: true,
+    dailySummary: false,
+    notifSound: true,
   });
 
   const [shippingRates, setShippingRates] = useState<any>({
@@ -289,14 +336,15 @@ export default function StoreSettingsPage() {
       if (data.success && data.settings) {
         setAccountType(data.type);
         const s = data.settings;
-        setGeneralSettings({
+        setGeneralSettings(prev => ({
+          ...prev,
           name: s.name || '',
           nameEn: s.nameEn || '',
           description: s.description || '',
           logo: s.logo || '',
           coverImage: s.coverImage || '',
           isActive: s.isActive !== false,
-        });
+        }));
 
         if (s.shippingRates) {
           const rates = typeof s.shippingRates === 'string' ? JSON.parse(s.shippingRates) : s.shippingRates;
@@ -315,6 +363,22 @@ export default function StoreSettingsPage() {
         if (s.shippingIntegrations) setShippingIntegrations(s.shippingIntegrations);
         if (s.paymentDetails) setPaymentDetails(s.paymentDetails);
         if (s.themeSettings) setThemeSettings(s.themeSettings);
+
+        // Load storeConfig from API
+        if (s.storeConfig) {
+          const config = typeof s.storeConfig === 'string' ? JSON.parse(s.storeConfig) : s.storeConfig;
+          if (config.currency) setStoreCurrency(config.currency);
+          if (config.country) setGeneralSettings(prev => ({ ...prev, country: config.country }));
+          if (config.timezone) setGeneralSettings(prev => ({ ...prev, timezone: config.timezone }));
+          if (config.businessEmail) setGeneralSettings(prev => ({ ...prev, businessEmail: config.businessEmail }));
+          if (config.businessPhone) setGeneralSettings(prev => ({ ...prev, businessPhone: config.businessPhone }));
+          if (config.address) setGeneralSettings(prev => ({ ...prev, address: config.address }));
+          if (config.orderSettings) setOrderSettings(prev => ({ ...prev, ...config.orderSettings }));
+          if (config.policiesSettings) setPoliciesSettings(prev => ({ ...prev, ...config.policiesSettings }));
+          if (config.socialSettings) setSocialSettings(prev => ({ ...prev, ...config.socialSettings }));
+          if (config.seoSettings) setSeoSettings(prev => ({ ...prev, ...config.seoSettings }));
+          if (config.notificationSettings) setNotificationSettings(prev => ({ ...prev, ...config.notificationSettings }));
+        }
       }
     } catch (err) {
       console.error(err);
@@ -333,6 +397,20 @@ export default function StoreSettingsPage() {
     if (!user?.id) return;
     setIsSaving(true);
     try {
+      const storeConfig = {
+        currency: storeCurrency,
+        country: generalSettings.country,
+        timezone: generalSettings.timezone,
+        businessEmail: generalSettings.businessEmail,
+        businessPhone: generalSettings.businessPhone,
+        address: generalSettings.address,
+        orderSettings,
+        policiesSettings,
+        socialSettings,
+        seoSettings,
+        notificationSettings,
+      };
+
       const res = await fetch('/api/seller/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -345,6 +423,7 @@ export default function StoreSettingsPage() {
             shippingIntegrations,
             paymentDetails,
             themeSettings,
+            storeConfig,
           }
         })
       });
@@ -452,6 +531,21 @@ export default function StoreSettingsPage() {
               <TabsTrigger value="branding" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
                 <ImageIcon className="h-4 w-4" /> {t('الهوية البصرية والسمات', 'Visual Branding')}
               </TabsTrigger>
+              <TabsTrigger value="orders" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
+                <ShoppingCart className="h-4 w-4" /> {t('الطلبات والمخزون', 'Orders & Inventory')}
+              </TabsTrigger>
+              <TabsTrigger value="policies" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
+                <FileText className="h-4 w-4" /> {t('السياسات والقوانين', 'Policies')}
+              </TabsTrigger>
+              <TabsTrigger value="social" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
+                <Share2 className="h-4 w-4" /> {t('التواصل الاجتماعي', 'Social & Contact')}
+              </TabsTrigger>
+              <TabsTrigger value="seo" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
+                <Search className="h-4 w-4" /> {t('SEO', 'SEO')}
+              </TabsTrigger>
+              <TabsTrigger value="notifications" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
+                <Bell className="h-4 w-4" /> {t('الإشعارات', 'Notifications')}
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -489,6 +583,101 @@ export default function StoreSettingsPage() {
                         rows={4} 
                         value={generalSettings.description}
                         onChange={(e) => setGeneralSettings({ ...generalSettings, description: e.target.value })}
+                        className="bg-muted/30 border-white/10 rounded-xl resize-none"
+                      />
+                    </div>
+
+                    {/* Currency, Country, Timezone */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5 text-primary" />{t('العملة', 'Currency')}</Label>
+                        <Select value={storeCurrency} onValueChange={(val) => setStoreCurrency(val)}>
+                          <SelectTrigger className="bg-muted/30 border-white/10 rounded-xl w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="DZD">DZD - {t('دينار جزائري', 'Algerian Dinar')}</SelectItem>
+                            <SelectItem value="SAR">SAR - {t('ريال سعودي', 'Saudi Riyal')}</SelectItem>
+                            <SelectItem value="USD">USD - {t('دولار أمريكي', 'US Dollar')}</SelectItem>
+                            <SelectItem value="EUR">EUR - {t('يورو', 'Euro')}</SelectItem>
+                            <SelectItem value="MAD">MAD - {t('درهم مغربي', 'Moroccan Dirham')}</SelectItem>
+                            <SelectItem value="TND">TND - {t('دينار تونسي', 'Tunisian Dinar')}</SelectItem>
+                            <SelectItem value="EGP">EGP - {t('جنيه مصري', 'Egyptian Pound')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-primary" />{t('الدولة', 'Country')}</Label>
+                        <Select value={generalSettings.country} onValueChange={(val) => setGeneralSettings({ ...generalSettings, country: val })}>
+                          <SelectTrigger className="bg-muted/30 border-white/10 rounded-xl w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="DZ">{t('🇩🇿 الجزائر', '🇩🇿 Algeria')}</SelectItem>
+                            <SelectItem value="SA">{t('🇸🇦 السعودية', '🇸🇦 Saudi Arabia')}</SelectItem>
+                            <SelectItem value="MA">{t('🇲🇦 المغرب', '🇲🇦 Morocco')}</SelectItem>
+                            <SelectItem value="TN">{t('🇹🇳 تونس', '🇹🇳 Tunisia')}</SelectItem>
+                            <SelectItem value="EG">{t('🇪🇬 مصر', '🇪🇬 Egypt')}</SelectItem>
+                            <SelectItem value="LY">{t('🇱🇾 ليبيا', '🇱🇾 Libya')}</SelectItem>
+                            <SelectItem value="AE">{t('🇦🇪 الإمارات', '🇦🇪 UAE')}</SelectItem>
+                            <SelectItem value="JO">{t('🇯🇴 الأردن', '🇯🇴 Jordan')}</SelectItem>
+                            <SelectItem value="IQ">{t('🇮🇶 العراق', '🇮🇶 Iraq')}</SelectItem>
+                            <SelectItem value="SD">{t('🇸🇩 السودان', '🇸🇩 Sudan')}</SelectItem>
+                            <SelectItem value="MR">{t('🇲🇷 موريتانيا', '🇲🇷 Mauritania')}</SelectItem>
+                            <SelectItem value="NG">{t('🇳🇬 نيجيريا', '🇳🇬 Nigeria')}</SelectItem>
+                            <SelectItem value="SN">{t('🇸🇳 السنغال', '🇸🇳 Senegal')}</SelectItem>
+                            <SelectItem value="TR">{t('🇹🇷 تركيا', '🇹🇷 Turkey')}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-primary" />{t('المنطقة الزمنية', 'Timezone')}</Label>
+                        <Select value={generalSettings.timezone} onValueChange={(val) => setGeneralSettings({ ...generalSettings, timezone: val })}>
+                          <SelectTrigger className="bg-muted/30 border-white/10 rounded-xl w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="UTC+0">UTC+0 (GMT)</SelectItem>
+                            <SelectItem value="UTC+1">UTC+1 ({t('الجزائر، تونس', 'Algeria, Tunisia')})</SelectItem>
+                            <SelectItem value="UTC+2">UTC+2 ({t('مصر، ليبيا', 'Egypt, Libya')})</SelectItem>
+                            <SelectItem value="UTC+3">UTC+3 ({t('السعودية، العراق', 'Saudi Arabia, Iraq')})</SelectItem>
+                            <SelectItem value="UTC+4">UTC+4 ({t('الإمارات، عُمان', 'UAE, Oman')})</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Business Contact Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-primary" />{t('البريد الإلكتروني التجاري', 'Business Email')}</Label>
+                        <Input 
+                          type="email"
+                          value={generalSettings.businessEmail}
+                          onChange={(e) => setGeneralSettings({ ...generalSettings, businessEmail: e.target.value })}
+                          placeholder={t('contact@store.com', 'contact@store.com')}
+                          className="bg-muted/30 border-white/10 rounded-xl" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-1.5"><Phone className="h-3.5 w-3.5 text-primary" />{t('رقم الهاتف التجاري', 'Business Phone')}</Label>
+                        <Input 
+                          type="tel"
+                          value={generalSettings.businessPhone}
+                          onChange={(e) => setGeneralSettings({ ...generalSettings, businessPhone: e.target.value })}
+                          placeholder="+213 XX XXX XXXX"
+                          className="bg-muted/30 border-white/10 rounded-xl" 
+                          dir="ltr"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-primary" />{t('العنوان الفعلي للمتجر', 'Physical Address')}</Label>
+                      <Textarea 
+                        rows={2}
+                        value={generalSettings.address}
+                        onChange={(e) => setGeneralSettings({ ...generalSettings, address: e.target.value })}
+                        placeholder={t('شارع، مدينة، ولاية...', 'Street, city, state...')}
                         className="bg-muted/30 border-white/10 rounded-xl resize-none"
                       />
                     </div>
@@ -1323,6 +1512,340 @@ export default function StoreSettingsPage() {
                 </Card>
               </div>
             </div>
+          </TabsContent>
+
+          {/* 5. Orders & Inventory Tab */}
+          <TabsContent value="orders" className="mt-0 outline-none">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2"><ShoppingCart className="h-5 w-5 text-primary" />{t('إعدادات الطلبات', 'Order Settings')}</CardTitle>
+                  <CardDescription>{t('تحكم بالحد الأدنى للطلبات والقبول التلقائي.', 'Control minimum order amount and auto-accept settings.')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>{t('الحد الأدنى للطلب (بالعملة)', 'Minimum Order Amount')}</Label>
+                    <Input 
+                      type="number"
+                      value={orderSettings.minOrderAmount}
+                      onChange={(e) => setOrderSettings({ ...orderSettings, minOrderAmount: parseFloat(e.target.value) || 0 })}
+                      className="bg-muted/30 border-white/10 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>{t('أقصى كمية لكل منتج بالطلب', 'Max Quantity Per Product Per Order')}</Label>
+                    <Input 
+                      type="number"
+                      value={orderSettings.maxQuantityPerOrder}
+                      onChange={(e) => setOrderSettings({ ...orderSettings, maxQuantityPerOrder: parseInt(e.target.value) || 1 })}
+                      className="bg-muted/30 border-white/10 rounded-xl"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-background/40 rounded-2xl border border-white/5">
+                    <div>
+                      <p className="font-bold text-sm">{t('القبول التلقائي للطلبات', 'Auto-Accept Orders')}</p>
+                      <p className="text-xs text-muted-foreground">{t('قبول الطلبات الجديدة تلقائياً بدون تأكيد يدوي', 'Automatically accept new orders without manual confirmation')}</p>
+                    </div>
+                    <Switch 
+                      checked={orderSettings.autoAcceptOrders}
+                      onCheckedChange={(checked) => setOrderSettings({ ...orderSettings, autoAcceptOrders: checked })}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2"><Settings className="h-5 w-5 text-primary" />{t('إعدادات المخزون', 'Inventory Settings')}</CardTitle>
+                  <CardDescription>{t('تنبيهات المخزون المنخفض وإخفاء المنتجات غير المتوفرة.', 'Low stock alerts and hide out-of-stock products.')}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>{t('حد تنبيه المخزون المنخفض', 'Low Stock Alert Threshold')}</Label>
+                    <Input 
+                      type="number"
+                      value={orderSettings.lowStockThreshold}
+                      onChange={(e) => setOrderSettings({ ...orderSettings, lowStockThreshold: parseInt(e.target.value) || 1 })}
+                      className="bg-muted/30 border-white/10 rounded-xl"
+                    />
+                    <p className="text-[10px] text-muted-foreground">{t('سيتم تنبيهك عندما ينخفض المخزون عن هذا العدد', 'You will be alerted when stock falls below this number')}</p>
+                  </div>
+                  <div className="flex items-center justify-between p-4 bg-background/40 rounded-2xl border border-white/5">
+                    <div>
+                      <p className="font-bold text-sm">{t('إخفاء المنتجات غير المتوفرة', 'Hide Out-of-Stock Products')}</p>
+                      <p className="text-xs text-muted-foreground">{t('إخفاء المنتجات التي نفذ مخزونها من واجهة المتجر', 'Hide products with zero stock from the storefront')}</p>
+                    </div>
+                    <Switch 
+                      checked={orderSettings.hideOutOfStock}
+                      onCheckedChange={(checked) => setOrderSettings({ ...orderSettings, hideOutOfStock: checked })}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* 6. Policies Tab */}
+          <TabsContent value="policies" className="mt-0 outline-none">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2"><FileText className="h-5 w-5 text-primary" />{t('سياسة الإرجاع والاسترداد', 'Return & Refund Policy')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Textarea 
+                    rows={6}
+                    value={policiesSettings.returnPolicy}
+                    onChange={(e) => setPoliciesSettings({ ...policiesSettings, returnPolicy: e.target.value })}
+                    placeholder={t('اكتب سياسة الإرجاع والاسترداد الخاصة بمتجرك هنا...', 'Write your return and refund policy here...')}
+                    className="bg-muted/30 border-white/10 rounded-xl resize-none"
+                  />
+                </CardContent>
+              </Card>
+              <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2"><FileText className="h-5 w-5 text-primary" />{t('سياسة الخصوصية', 'Privacy Policy')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Textarea 
+                    rows={6}
+                    value={policiesSettings.privacyPolicy}
+                    onChange={(e) => setPoliciesSettings({ ...policiesSettings, privacyPolicy: e.target.value })}
+                    placeholder={t('اكتب سياسة الخصوصية الخاصة بمتجرك هنا...', 'Write your privacy policy here...')}
+                    className="bg-muted/30 border-white/10 rounded-xl resize-none"
+                  />
+                </CardContent>
+              </Card>
+              <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2"><FileText className="h-5 w-5 text-primary" />{t('شروط الخدمة والاستخدام', 'Terms of Service')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Textarea 
+                    rows={6}
+                    value={policiesSettings.termsOfService}
+                    onChange={(e) => setPoliciesSettings({ ...policiesSettings, termsOfService: e.target.value })}
+                    placeholder={t('اكتب شروط الخدمة والاستخدام هنا...', 'Write your terms of service here...')}
+                    className="bg-muted/30 border-white/10 rounded-xl resize-none"
+                  />
+                </CardContent>
+              </Card>
+              <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2"><Truck className="h-5 w-5 text-primary" />{t('سياسة الشحن', 'Shipping Policy')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Textarea 
+                    rows={6}
+                    value={policiesSettings.shippingPolicy}
+                    onChange={(e) => setPoliciesSettings({ ...policiesSettings, shippingPolicy: e.target.value })}
+                    placeholder={t('اكتب سياسة الشحن والتوصيل هنا...', 'Write your shipping policy here...')}
+                    className="bg-muted/30 border-white/10 rounded-xl resize-none"
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* 7. Social & Contact Tab */}
+          <TabsContent value="social" className="mt-0 outline-none">
+            <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2"><Share2 className="h-5 w-5 text-primary" />{t('روابط التواصل الاجتماعي', 'Social Media Links')}</CardTitle>
+                <CardDescription>{t('أضف روابط حساباتك على شبكات التواصل لزيادة التفاعل والمصداقية.', 'Add your social media links to increase engagement and credibility.')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Facebook</Label>
+                    <Input 
+                      value={socialSettings.facebook}
+                      onChange={(e) => setSocialSettings({ ...socialSettings, facebook: e.target.value })}
+                      placeholder="https://facebook.com/..."
+                      className="bg-muted/30 border-white/10 rounded-xl" dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Instagram</Label>
+                    <Input 
+                      value={socialSettings.instagram}
+                      onChange={(e) => setSocialSettings({ ...socialSettings, instagram: e.target.value })}
+                      placeholder="https://instagram.com/..."
+                      className="bg-muted/30 border-white/10 rounded-xl" dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>TikTok</Label>
+                    <Input 
+                      value={socialSettings.tiktok}
+                      onChange={(e) => setSocialSettings({ ...socialSettings, tiktok: e.target.value })}
+                      placeholder="https://tiktok.com/@..."
+                      className="bg-muted/30 border-white/10 rounded-xl" dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>WhatsApp</Label>
+                    <Input 
+                      value={socialSettings.whatsapp}
+                      onChange={(e) => setSocialSettings({ ...socialSettings, whatsapp: e.target.value })}
+                      placeholder="+213 XX XXX XXXX"
+                      className="bg-muted/30 border-white/10 rounded-xl" dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Twitter / X</Label>
+                    <Input 
+                      value={socialSettings.twitter}
+                      onChange={(e) => setSocialSettings({ ...socialSettings, twitter: e.target.value })}
+                      placeholder="https://x.com/..."
+                      className="bg-muted/30 border-white/10 rounded-xl" dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>YouTube</Label>
+                    <Input 
+                      value={socialSettings.youtube}
+                      onChange={(e) => setSocialSettings({ ...socialSettings, youtube: e.target.value })}
+                      placeholder="https://youtube.com/@..."
+                      className="bg-muted/30 border-white/10 rounded-xl" dir="ltr"
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-primary" />{t('موقع الويب الرسمي', 'Official Website')}</Label>
+                    <Input 
+                      value={socialSettings.website}
+                      onChange={(e) => setSocialSettings({ ...socialSettings, website: e.target.value })}
+                      placeholder="https://yourstore.com"
+                      className="bg-muted/30 border-white/10 rounded-xl" dir="ltr"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* 8. SEO Tab */}
+          <TabsContent value="seo" className="mt-0 outline-none">
+            <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2"><Search className="h-5 w-5 text-primary" />{t('تحسين محركات البحث (SEO)', 'Search Engine Optimization (SEO)')}</CardTitle>
+                <CardDescription>{t('حسّن ظهور متجرك في نتائج بحث Google ومحركات البحث الأخرى.', 'Improve your store visibility in Google and other search engines.')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>{t('عنوان SEO (Meta Title)', 'SEO Title (Meta Title)')}</Label>
+                  <Input 
+                    value={seoSettings.seoTitle}
+                    onChange={(e) => setSeoSettings({ ...seoSettings, seoTitle: e.target.value })}
+                    placeholder={t('عنوان يظهر في نتائج البحث (60 حرف كحد أقصى)', 'Title shown in search results (max 60 characters)')}
+                    className="bg-muted/30 border-white/10 rounded-xl"
+                  />
+                  <p className="text-[10px] text-muted-foreground">{seoSettings.seoTitle.length}/60 {t('حرف', 'characters')}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('وصف SEO (Meta Description)', 'SEO Description (Meta Description)')}</Label>
+                  <Textarea 
+                    rows={3}
+                    value={seoSettings.seoDescription}
+                    onChange={(e) => setSeoSettings({ ...seoSettings, seoDescription: e.target.value })}
+                    placeholder={t('وصف قصير يظهر تحت العنوان في نتائج البحث (160 حرف كحد أقصى)', 'Short description shown below the title in search results (max 160 characters)')}
+                    className="bg-muted/30 border-white/10 rounded-xl resize-none"
+                  />
+                  <p className="text-[10px] text-muted-foreground">{seoSettings.seoDescription.length}/160 {t('حرف', 'characters')}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('الكلمات المفتاحية (مفصولة بفواصل)', 'Keywords (comma-separated)')}</Label>
+                  <Input 
+                    value={seoSettings.seoKeywords}
+                    onChange={(e) => setSeoSettings({ ...seoSettings, seoKeywords: e.target.value })}
+                    placeholder={t('متجر، تسوق، منتجات، عروض', 'store, shopping, products, deals')}
+                    className="bg-muted/30 border-white/10 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('صورة OG للمشاركة الاجتماعية (Open Graph Image)', 'OG Image for Social Sharing')}</Label>
+                  <Input 
+                    value={seoSettings.ogImage}
+                    onChange={(e) => setSeoSettings({ ...seoSettings, ogImage: e.target.value })}
+                    placeholder={t('رابط صورة 1200×630 بكسل', 'Image URL 1200×630 pixels')}
+                    className="bg-muted/30 border-white/10 rounded-xl" dir="ltr"
+                  />
+                  <p className="text-[10px] text-muted-foreground">{t('الأبعاد المفضلة: 1200×630 بكسل. تظهر عند مشاركة رابط المتجر على فيسبوك وتويتر.', 'Recommended: 1200×630px. Shown when sharing the store link on Facebook and Twitter.')}</p>
+                </div>
+
+                {/* SEO Preview */}
+                {(seoSettings.seoTitle || seoSettings.seoDescription) && (
+                  <div className="p-4 bg-white/5 rounded-2xl border border-white/10 space-y-1">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('معاينة نتيجة البحث', 'Search Result Preview')}</p>
+                    <p className="text-blue-400 font-bold text-sm truncate">{seoSettings.seoTitle || generalSettings.name || t('عنوان المتجر', 'Store Title')}</p>
+                    <p className="text-green-500 text-xs dir-ltr">yourstore.chariday.com</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{seoSettings.seoDescription || generalSettings.description || t('وصف المتجر', 'Store description')}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* 9. Notifications Tab */}
+          <TabsContent value="notifications" className="mt-0 outline-none">
+            <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2"><Bell className="h-5 w-5 text-primary" />{t('إعدادات الإشعارات', 'Notification Settings')}</CardTitle>
+                <CardDescription>{t('تحكم بأنواع الإشعارات التي تتلقاها لإدارة متجرك بفعالية.', 'Control which notifications you receive to manage your store effectively.')}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between p-4 bg-background/40 rounded-2xl border border-white/5">
+                  <div>
+                    <p className="font-bold text-sm">{t('إشعار طلب جديد', 'New Order Notification')}</p>
+                    <p className="text-xs text-muted-foreground">{t('تنبيه فوري عند ورود طلب جديد', 'Instant alert when a new order arrives')}</p>
+                  </div>
+                  <Switch 
+                    checked={notificationSettings.newOrderNotif}
+                    onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, newOrderNotif: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-4 bg-background/40 rounded-2xl border border-white/5">
+                  <div>
+                    <p className="font-bold text-sm">{t('إشعار تقييم جديد', 'New Review Notification')}</p>
+                    <p className="text-xs text-muted-foreground">{t('تنبيه عند ترك تقييم جديد على منتجاتك', 'Alert when a customer leaves a new review')}</p>
+                  </div>
+                  <Switch 
+                    checked={notificationSettings.newReviewNotif}
+                    onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, newReviewNotif: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-4 bg-background/40 rounded-2xl border border-white/5">
+                  <div>
+                    <p className="font-bold text-sm">{t('تنبيه المخزون المنخفض', 'Low Stock Alert')}</p>
+                    <p className="text-xs text-muted-foreground">{t('تنبيه عندما ينخفض مخزون أي منتج عن الحد المحدد', 'Alert when any product stock falls below the threshold')}</p>
+                  </div>
+                  <Switch 
+                    checked={notificationSettings.lowStockNotif}
+                    onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, lowStockNotif: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-4 bg-background/40 rounded-2xl border border-white/5">
+                  <div>
+                    <p className="font-bold text-sm">{t('ملخص يومي', 'Daily Summary')}</p>
+                    <p className="text-xs text-muted-foreground">{t('ملخص يومي بالطلبات والإيرادات والإحصائيات', 'Daily summary of orders, revenue and statistics')}</p>
+                  </div>
+                  <Switch 
+                    checked={notificationSettings.dailySummary}
+                    onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, dailySummary: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-4 bg-background/40 rounded-2xl border border-white/5">
+                  <div>
+                    <p className="font-bold text-sm">{t('صوت الإشعارات', 'Notification Sound')}</p>
+                    <p className="text-xs text-muted-foreground">{t('تشغيل صوت عند ورود إشعار جديد', 'Play a sound when a new notification arrives')}</p>
+                  </div>
+                  <Switch 
+                    checked={notificationSettings.notifSound}
+                    onCheckedChange={(checked) => setNotificationSettings({ ...notificationSettings, notifSound: checked })}
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </motion.div>

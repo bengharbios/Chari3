@@ -62,7 +62,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'userId, storeId, or sellerId required' }, { status: 400 });
     }
 
+    let currency = 'DZD';
+    if (userId) {
+      const wallet = await db.wallet.findUnique({ where: { userId } });
+      if (wallet?.currency) currency = wallet.currency;
+    }
+
     if (store) {
+      const themeParsed = store.themeSettings ? JSON.parse(store.themeSettings) : null;
       return NextResponse.json({
         success: true,
         type: 'store',
@@ -77,12 +84,15 @@ export async function GET(req: NextRequest) {
           shippingRates: store.shippingRates ? JSON.parse(store.shippingRates) : null,
           shippingIntegrations: store.shippingIntegrations ? JSON.parse(store.shippingIntegrations) : null,
           paymentDetails: store.paymentDetails ? JSON.parse(store.paymentDetails) : null,
-          themeSettings: store.themeSettings ? JSON.parse(store.themeSettings) : null,
+          themeSettings: themeParsed,
+          storeConfig: themeParsed?.storeConfig || null,
+          currency,
         }
       });
     }
 
     if (seller) {
+      const themeParsed = seller.themeSettings ? JSON.parse(seller.themeSettings) : null;
       return NextResponse.json({
         success: true,
         type: 'seller',
@@ -97,7 +107,9 @@ export async function GET(req: NextRequest) {
           shippingRates: seller.shippingRates ? JSON.parse(seller.shippingRates) : null,
           shippingIntegrations: seller.shippingIntegrations ? JSON.parse(seller.shippingIntegrations) : null,
           paymentDetails: seller.paymentDetails ? JSON.parse(seller.paymentDetails) : null,
-          themeSettings: seller.themeSettings ? JSON.parse(seller.themeSettings) : null,
+          themeSettings: themeParsed,
+          storeConfig: themeParsed?.storeConfig || null,
+          currency,
         }
       });
     }
@@ -125,7 +137,22 @@ export async function POST(req: NextRequest) {
     const shippingRatesStr = settings.shippingRates ? JSON.stringify(settings.shippingRates) : null;
     const shippingIntegrationsStr = settings.shippingIntegrations ? JSON.stringify(settings.shippingIntegrations) : null;
     const paymentDetailsStr = settings.paymentDetails ? JSON.stringify(settings.paymentDetails) : null;
-    const themeSettingsStr = settings.themeSettings ? JSON.stringify(settings.themeSettings) : null;
+    
+    // Merge storeConfig into themeSettings since storeConfig doesn't have its own column
+    let finalThemeSettings = settings.themeSettings || {};
+    if (settings.storeConfig) {
+      finalThemeSettings.storeConfig = settings.storeConfig;
+    }
+    const themeSettingsStr = Object.keys(finalThemeSettings).length > 0 ? JSON.stringify(finalThemeSettings) : null;
+
+    const currencyToSave = settings.storeConfig?.currency || settings.currency;
+    if (currencyToSave) {
+      await db.wallet.upsert({
+        where: { userId },
+        update: { currency: currencyToSave },
+        create: { userId, currency: currencyToSave },
+      });
+    }
 
     if (type === 'store') {
       const store = await db.store.findFirst({
