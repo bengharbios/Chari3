@@ -129,9 +129,25 @@ export default function AdminLayoutWrapper({
                     <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold px-3 py-1">
                       {isRTL ? "المالية والاشتراكات" : "Finance & Subscriptions"}
                     </p>
-                    <Link href={getAdminPath('?tab=billing')} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-800 text-white text-sm">
-                      <Wallet className="h-4.5 w-4.5 text-rose-500" />
-                      <span>{isRTL ? 'الاشتراكات والمديونية' : 'Subscriptions & Debt'}</span>
+                    <Link href={getAdminPath('billing/settings')} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-800 text-white text-sm">
+                      <Settings className="h-4.5 w-4.5 text-rose-500" />
+                      <span>{isRTL ? 'إعدادات المنصة والعمولة' : 'Platform & Commission Settings'}</span>
+                    </Link>
+                    <Link href={getAdminPath('billing/packages')} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-800 text-white text-sm">
+                      <Tag className="h-4.5 w-4.5 text-amber-500" />
+                      <span>{isRTL ? 'باقات الاشتراك' : 'Subscription Packages'}</span>
+                    </Link>
+                    <Link href={getAdminPath('billing/merchants')} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-800 text-white text-sm">
+                      <Users className="h-4.5 w-4.5 text-emerald-500" />
+                      <span>{isRTL ? 'التجار والاشتراكات' : 'Merchants & Subscriptions'}</span>
+                    </Link>
+                    <Link href={getAdminPath('billing/receipts')} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-800 text-white text-sm">
+                      <Sliders className="h-4.5 w-4.5 text-blue-500" />
+                      <span>{isRTL ? 'مراجعة الإيصالات' : 'Review Payment Receipts'}</span>
+                    </Link>
+                    <Link href={getAdminPath('billing/revenue')} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-800 text-white text-sm">
+                      <TrendingUp className="h-4.5 w-4.5 text-yellow-500" />
+                      <span>{isRTL ? 'تقرير الإيرادات' : 'Revenue Reports'}</span>
                     </Link>
                   </div>
 

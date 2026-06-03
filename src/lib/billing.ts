@@ -89,32 +89,50 @@ export async function chargeOrderCommission(orderId: string) {
     });
 
     let ownerUserId: string | null = null;
-    let commissionRate = 10; // Default 10%
 
     if (product?.storeId) {
       const store = await db.store.findUnique({
         where: { id: product.storeId },
-        include: { package: true },
       });
-      if (store) {
-        ownerUserId = store.managerId;
-        commissionRate = store.package?.commissionRate ?? store.commission ?? 10;
-      }
+      if (store) ownerUserId = store.managerId;
     } else if (product?.sellerId) {
       const seller = await db.sellerProfile.findUnique({
         where: { id: product.sellerId },
-        include: { package: true },
       });
-      if (seller) {
-        ownerUserId = seller.userId;
-        commissionRate = seller.package?.commissionRate ?? 10;
-      }
+      if (seller) ownerUserId = seller.userId;
     }
 
     if (!ownerUserId) return;
 
-    // Calculate commission amount
-    const commissionAmount = (order.subtotal * commissionRate) / 100;
+    // Fetch the active/trial subscription to check freeCommission and package details
+    const activeSub = await db.subscription.findFirst({
+      where: { userId: ownerUserId, status: { in: ['ACTIVE', 'TRIAL'] } },
+      include: { package: true }
+    });
+
+    // If merchant is exempted from commissions, charge nothing
+    if (activeSub?.freeCommission) return;
+
+    // Load dynamic platform default settings
+    const defaultCommTypeSetting = await db.systemSetting.findUnique({ where: { key: 'billing_default_commission_type' } });
+    const defaultCommValueSetting = await db.systemSetting.findUnique({ where: { key: 'billing_default_commission_value' } });
+    
+    const defaultCommType = defaultCommTypeSetting ? String(defaultCommTypeSetting.value) : 'percentage';
+    const defaultCommValue = defaultCommValueSetting ? parseFloat(String(defaultCommValueSetting.value)) : 10;
+
+    let commissionAmount = 0;
+
+    if (activeSub?.package) {
+      // Package commission is always a percentage of order subtotal
+      commissionAmount = (order.subtotal * activeSub.package.commissionRate) / 100;
+    } else {
+      // Use platform default setting
+      if (defaultCommType === 'fixed') {
+        commissionAmount = defaultCommValue;
+      } else {
+        commissionAmount = (order.subtotal * defaultCommValue) / 100;
+      }
+    }
 
     // Retrieve or initialize wallet
     let wallet = await db.wallet.findUnique({
@@ -128,6 +146,12 @@ export async function chargeOrderCommission(orderId: string) {
 
     const newBalance = wallet.balance - commissionAmount;
 
+    const commPercentage = activeSub?.package 
+      ? activeSub.package.commissionRate 
+      : (defaultCommType === 'percentage' ? defaultCommValue : null);
+    
+    const rateDesc = commPercentage !== null ? `${commPercentage}%` : `${defaultCommValue} د.ج`;
+
     // Record commission transaction
     await db.walletTransaction.create({
       data: {
@@ -135,7 +159,7 @@ export async function chargeOrderCommission(orderId: string) {
         type: 'COMMISSION_DEBT',
         amount: -commissionAmount,
         balance: newBalance,
-        description: `عمولة مبيعات الطلب #${order.orderNumber} (${commissionRate}%)`,
+        description: `عمولة مبيعات الطلب #${order.orderNumber} (${rateDesc})`,
         referenceId: order.id,
       },
     });
@@ -219,5 +243,66 @@ export async function reverseOrderCommission(orderId: string) {
     await checkAndEnforceDebtLimit(wallet.userId, newBalance);
   } catch (err) {
     console.error('[reverseOrderCommission] error:', err);
+  }
+}
+
+/**
+ * Synchronizes store and product activation states based on subscription status.
+ * TRIAL, ACTIVE -> Store is active, products are active (restored from draft)
+ * PENDING_PAYMENT, EXPIRED, SUSPENDED, CANCELLED -> Store is inactive, products are draft (hidden)
+ */
+export async function syncStoreStatusWithSubscription(userId: string, subscriptionStatus: string) {
+  try {
+    const isActive = ['ACTIVE', 'TRIAL'].includes(subscriptionStatus);
+
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      include: { store: true, sellerProfile: true },
+    });
+
+    if (!user) return;
+
+    if (user.role === 'store_manager' && user.store) {
+      // Toggle store status
+      await db.store.update({
+        where: { id: user.store.id },
+        data: { isActive },
+      });
+
+      // Update products: 
+      // If subscription goes inactive: change all 'active' products to 'draft'
+      // If subscription goes active: change all 'draft' products to 'active'
+      await db.product.updateMany({
+        where: { 
+          storeId: user.store.id, 
+          status: isActive ? 'draft' : 'active' 
+        },
+        data: { 
+          status: isActive ? 'active' : 'draft' 
+        },
+      });
+    } else if (user.role === 'seller' && user.sellerProfile) {
+      // Toggle user account status
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          isActive,
+          accountStatus: isActive ? 'active' : 'suspended',
+        },
+      });
+
+      // Hide or show products
+      await db.product.updateMany({
+        where: { 
+          sellerId: user.sellerProfile.id, 
+          status: isActive ? 'draft' : 'active' 
+        },
+        data: { 
+          status: isActive ? 'active' : 'draft' 
+        },
+      });
+    }
+  } catch (err) {
+    console.error('[syncStoreStatusWithSubscription] error:', err);
   }
 }

@@ -1074,3 +1074,21 @@ model Invoice {
   @@index([subscriptionId])
   @@index([status])
 }
+
+// ============================================
+// BILLING ADD-ON MODEL
+// ============================================
+model BillingAddon {
+  id            String   @id @default(cuid())
+  key           String   @unique
+  nameAr        String
+  nameEn        String
+  descriptionAr String?  @db.LongText
+  descriptionEn String?  @db.LongText
+  price         Float    @default(0)
+  isCounter     Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

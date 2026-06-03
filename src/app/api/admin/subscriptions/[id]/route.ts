@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { syncStoreStatusWithSubscription } from '@/lib/billing';
 
 export const dynamic = 'force-dynamic';
 
@@ -85,11 +86,20 @@ export async function PATCH(
             phone: true,
             avatar: true,
             role: true,
+            wallet: {
+              select: {
+                balance: true
+              }
+            }
           },
         },
         package: true,
       },
     });
+
+    if (status !== undefined) {
+      await syncStoreStatusWithSubscription(subscription.userId, subscription.status);
+    }
 
     return NextResponse.json({ success: true, subscription });
   } catch (err) {
@@ -121,6 +131,11 @@ export async function GET(
             avatar: true,
             role: true,
             accountStatus: true,
+            wallet: {
+              select: {
+                balance: true
+              }
+            }
           },
         },
         package: true,

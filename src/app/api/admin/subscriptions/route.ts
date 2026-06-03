@@ -46,6 +46,11 @@ export async function GET(req: NextRequest) {
               avatar: true,
               role: true,
               accountStatus: true,
+              wallet: {
+                select: {
+                  balance: true,
+                }
+              }
             },
           },
           package: true,

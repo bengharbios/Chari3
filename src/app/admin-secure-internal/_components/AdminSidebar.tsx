@@ -125,11 +125,39 @@ export default function AdminSidebar() {
       titleEn: "Finance & Subscriptions",
       items: [
         { 
-          icon: Wallet, 
-          labelAr: "الاشتراكات والمديونية", 
-          labelEn: "Subscriptions & Debt", 
-          path: '?tab=billing', 
+          icon: Settings, 
+          labelAr: "إعدادات المنصة والعمولة", 
+          labelEn: "Platform & Commission Settings", 
+          path: 'billing/settings', 
           color: 'text-rose-400' 
+        },
+        { 
+          icon: Tag, 
+          labelAr: "باقات الاشتراك", 
+          labelEn: "Subscription Packages", 
+          path: 'billing/packages', 
+          color: 'text-amber-400' 
+        },
+        { 
+          icon: Users, 
+          labelAr: "التجار والاشتراكات", 
+          labelEn: "Merchants & Subscriptions", 
+          path: 'billing/merchants', 
+          color: 'text-emerald-400' 
+        },
+        { 
+          icon: Sliders, 
+          labelAr: "مراجعة الإيصالات", 
+          labelEn: "Review Payment Receipts", 
+          path: 'billing/receipts', 
+          color: 'text-blue-400' 
+        },
+        { 
+          icon: TrendingUp, 
+          labelAr: "تقرير الإيرادات", 
+          labelEn: "Revenue Reports", 
+          path: 'billing/revenue', 
+          color: 'text-yellow-400' 
         },
       ]
     },
