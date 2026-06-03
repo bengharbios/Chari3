@@ -77,6 +77,7 @@ export default function BillingSettingsPage() {
   const [trialDays, setTrialDays] = useState('14');
   const [autoSuspend, setAutoSuspend] = useState(true);
   const [suspendGraceDays, setSuspendGraceDays] = useState('7');
+  const [expiryAction, setExpiryAction] = useState('suspend');
 
   const [enableCommissions, setEnableCommissions] = useState(true);
   const [enableDebt, setEnableDebt] = useState(true);
@@ -145,6 +146,7 @@ export default function BillingSettingsPage() {
         if (s.ccp_account_rip) setCcpRip(s.ccp_account_rip);
         if (s.billing_default_package_id) setDefaultPackageId(s.billing_default_package_id);
         if (s.billing_trial_on_registration !== undefined) setTrialOnRegistration(s.billing_trial_on_registration === 'true' || s.billing_trial_on_registration === true);
+        if (s.billing_expiry_action) setExpiryAction(s.billing_expiry_action);
         if (s.currency) setCurrency(s.currency);
       }
 
@@ -195,6 +197,7 @@ export default function BillingSettingsPage() {
             ccp_account_rip: ccpRip,
             billing_default_package_id: defaultPackageId,
             billing_trial_on_registration: trialOnRegistration,
+            billing_expiry_action: expiryAction,
           }
         })
       });
@@ -360,13 +363,29 @@ export default function BillingSettingsPage() {
                       onCheckedChange={setEnableTrial}
                       label={t(locale, 'تفعيل الفترة التجريبية للمشتركين الجدد', 'Enable Trial Period')}
                     />
-                    <div className="sm:col-span-2">
-                      <SwitchRow
-                        id="auto_suspend"
-                        checked={autoSuspend}
-                        onCheckedChange={setAutoSuspend}
-                        label={t(locale, 'تعليق حساب التاجر تلقائياً فور انتهاء صلاحية الباقة', 'Auto-suspend on Subscription Expiry')}
-                      />
+                    <div className="sm:col-span-2 space-y-1.5 pt-1">
+                      <Label htmlFor="expiryAction" className="text-xs font-semibold">
+                        {t(locale, 'الإجراء المتخذ عند انتهاء صلاحية الاشتراك', 'Action on Subscription Expiry')}
+                      </Label>
+                      <Select value={expiryAction} onValueChange={setExpiryAction}>
+                        <SelectTrigger className="h-9 rounded-xl text-xs font-bold bg-muted/20 border">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="text-xs">
+                          <SelectItem value="suspend">
+                            {t(locale, '⛔ تعليق حساب المتجر وحظر لوحة التحكم والمنتجات', '⛔ Suspend store account, dashboard and products')}
+                          </SelectItem>
+                          <SelectItem value="downgrade">
+                            {t(locale, '⬇️ تحويل التاجر تلقائياً وبشكل مجاني للباقة الافتراضية', '⬇️ Automatically downgrade merchant to default plan')}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {expiryAction === 'downgrade' && defaultPackageId === 'none' && (
+                        <p className="text-[10px] text-red-500 font-bold mt-1 flex items-center gap-1">
+                          <AlertTriangle className="h-3.5 w-3.5" />
+                          {t(locale, 'تنبيه: يجب اختيار باقة افتراضية أدناه لتتمكن من تنزيل اشتراكات التجار إليها!', 'Warning: You must choose a default package below to downgrade expired subscriptions to!')}
+                        </p>
+                      )}
                     </div>
                   </div>
 

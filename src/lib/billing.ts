@@ -273,7 +273,7 @@ export async function syncStoreStatusWithSubscription(userId: string, subscripti
 
 /**
  * Automatically checks and expires the subscription if the endDate or trialEndsAt has passed.
- * Syncs the store status accordingly.
+ * Syncs the store status accordingly (either suspends or downgrades to default plan).
  */
 export async function checkAndUpdateExpiredSubscriptions(userId: string) {
   try {
@@ -297,11 +297,108 @@ export async function checkAndUpdateExpiredSubscriptions(userId: string) {
     }
 
     if (isExpired) {
+      // Load platform default settings
+      const expiryActionSetting = await db.systemSetting.findUnique({
+        where: { key: 'billing_expiry_action' },
+      });
+      const defaultPackageSetting = await db.systemSetting.findUnique({
+        where: { key: 'billing_default_package_id' },
+      });
+      const currencySetting = await db.systemSetting.findUnique({
+        where: { key: 'currency' },
+      });
+
+      const expiryAction = expiryActionSetting ? String(expiryActionSetting.value) : 'suspend';
+      const defaultPackageId = defaultPackageSetting ? String(defaultPackageSetting.value) : 'none';
+      const currency = currencySetting ? String(currencySetting.value) : 'DZD';
+
+      if (expiryAction === 'downgrade' && defaultPackageId !== 'none') {
+        const defaultPackage = await db.sellerPackage.findUnique({
+          where: { id: defaultPackageId },
+        });
+
+        if (defaultPackage) {
+          // 1. Expire the current subscription
+          await db.subscription.update({
+            where: { id: activeSub.id },
+            data: { status: 'EXPIRED' },
+          });
+
+          // 2. Create new default package subscription (lifetime subscription)
+          const newSub = await db.subscription.create({
+            data: {
+              userId,
+              packageId: defaultPackageId,
+              status: 'ACTIVE',
+              billingCycle: 'MONTHLY',
+              startDate: now,
+              endDate: null,
+              totalMonthly: defaultPackage.price,
+            },
+          });
+
+          // 3. Create a paid 0 DZD invoice for it
+          const invoiceItems = [{
+            label: `اشتراك الباقة الافتراضية (${defaultPackage.name})`,
+            amount: defaultPackage.price,
+          }];
+          await db.invoice.create({
+            data: {
+              userId,
+              subscriptionId: newSub.id,
+              type: 'SUBSCRIPTION',
+              status: 'PAID',
+              amount: defaultPackage.price,
+              amountPaid: defaultPackage.price,
+              currency,
+              periodStart: now,
+              periodEnd: null,
+              dueDate: now,
+              items: JSON.stringify(invoiceItems),
+            },
+          });
+
+          // 4. Ensure store remains active
+          await syncStoreStatusWithSubscription(userId, 'ACTIVE');
+
+          // 5. Send notification to the merchant
+          await db.notification.create({
+            data: {
+              title: 'تنزيل الاشتراك للباقة الافتراضية ⚠️',
+              titleEn: 'Subscription Downgraded Automatically ⚠️',
+              body: `انتهت صلاحية باقتك السابقة. تم نقل حسابك تلقائياً إلى الباقة الافتراضية (${defaultPackage.name}) للاستمرار في العمل دون توقف.`,
+              bodyEn: `Your previous subscription has expired. Your account has been automatically downgraded to the default plan (${defaultPackage.nameEn || defaultPackage.name}) to continue selling without interruption.`,
+              type: 'billing_downgrade',
+              data: JSON.stringify({ oldPackageId: activeSub.packageId, newPackageId: defaultPackage.id }),
+              userId,
+            },
+          });
+
+          console.log(`[checkAndUpdateExpiredSubscriptions] Subscription ${activeSub.id} for user ${userId} expired. Downgraded to default package ${defaultPackage.id}.`);
+          return;
+        }
+      }
+
+      // Default behavior: Suspend the store
       await db.subscription.update({
         where: { id: activeSub.id },
         data: { status: 'EXPIRED' },
       });
       await syncStoreStatusWithSubscription(userId, 'EXPIRED');
+
+      // Send deactivation notification
+      await db.notification.create({
+        data: {
+          title: 'انتهى اشتراكك وتم تعليق حسابك ⚠️',
+          titleEn: 'Subscription Expired & Account Suspended ⚠️',
+          body: 'انتهت صلاحية باقتك الحالية وتم تعليق حسابك مؤقتاً. يرجى تجديد الاشتراك لاستئناف البيع.',
+          bodyEn: 'Your plan has expired and your account has been temporarily suspended. Please renew your subscription to resume selling.',
+          type: 'billing_expiry',
+          data: JSON.stringify({ packageId: activeSub.packageId }),
+          userId,
+        },
+      });
+
       console.log(`[checkAndUpdateExpiredSubscriptions] Subscription ${activeSub.id} for user ${userId} expired and store synced to inactive.`);
     }
   } catch (err) {

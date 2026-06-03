@@ -392,6 +392,17 @@ export default function BillingPage() {
                 {locale === 'ar' ? sub.package?.name : (sub.package?.nameEn || sub.package?.name || t(locale, 'غير محدد', 'Unassigned'))}
               </p>
               <StatusBadge status={sub.status} locale={locale} />
+              <div className="mt-2 pt-2 border-t border-border/40 text-[11px] font-bold">
+                {sub.freeCommission ? (
+                  <span className="text-green-500 bg-green-500/10 px-2 py-0.5 rounded-lg">
+                    {t(locale, '🎉 معفى من عمولة المبيعات', '🎉 Exempt from sales commission')}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">
+                    {t(locale, `عمولة المبيعات: ${sub.package?.commissionRate ?? 10}%`, `Sales commission: ${sub.package?.commissionRate ?? 10}%`)}
+                  </span>
+                )}
+              </div>
             </CardContent>
           </Card>
           <Card className="border-border bg-card">
