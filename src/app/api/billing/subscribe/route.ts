@@ -69,16 +69,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Compute trial end date
-    let trialEndsAt: Date | undefined;
-    let status: string;
-    if (trialEnabled) {
-      trialEndsAt = new Date(now);
-      trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
-      status = 'TRIAL';
-    } else {
-      status = 'PENDING_PAYMENT';
-    }
-
     // Compute addons total (hardcoded pricing; adjust as needed)
     const ADDON_PRICES: Record<string, number> = {
       mobileApp: 500,
@@ -97,6 +87,19 @@ export async function POST(req: NextRequest) {
     if (addonsObj.extraPos && addonsObj.extraPos > 0) addonsTotal += addonsObj.extraPos * POS_EXTRA_PRICE;
 
     const totalMonthly = pkg.price + addonsTotal;
+
+    // Compute trial end date
+    let trialEndsAt: Date | undefined;
+    let status: string;
+    if (totalMonthly === 0) {
+      status = 'ACTIVE';
+    } else if (trialEnabled) {
+      trialEndsAt = new Date(now);
+      trialEndsAt.setDate(trialEndsAt.getDate() + trialDays);
+      status = 'TRIAL';
+    } else {
+      status = 'PENDING_PAYMENT';
+    }
 
     // Create subscription
     const subscription = await prisma.subscription.create({
@@ -125,9 +128,9 @@ export async function POST(req: NextRequest) {
         userId,
         subscriptionId: subscription.id,
         type: 'SUBSCRIPTION',
-        status: 'PENDING',
+        status: totalMonthly === 0 ? 'PAID' : 'PENDING',
         amount: invoiceAmount,
-        amountPaid: 0,
+        amountPaid: totalMonthly === 0 ? invoiceAmount : 0,
         currency: 'DZD',
         periodStart: now,
         periodEnd: endDate,

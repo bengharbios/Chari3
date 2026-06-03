@@ -42,21 +42,21 @@ export async function POST(req: NextRequest) {
       newEndDate.setDate(newEndDate.getDate() + 30);
     }
 
-    // Update subscription: mark PENDING_PAYMENT, update cycle and endDate
+    // Create a renewal invoice
+    const pkg = existing.package;
+    const totalMonthly = existing.totalMonthly;
+    const invoiceAmount = cycle === 'ANNUAL' ? totalMonthly * 12 : totalMonthly;
+
+    // Update subscription: mark ACTIVE if free, else PENDING_PAYMENT
     const updated = await prisma.subscription.update({
       where: { id: subscriptionId },
       data: {
-        status: 'PENDING_PAYMENT',
+        status: totalMonthly === 0 ? 'ACTIVE' : 'PENDING_PAYMENT',
         billingCycle: cycle,
         endDate: newEndDate,
         renewedAt: now,
       },
     });
-
-    // Create a renewal invoice
-    const pkg = existing.package;
-    const totalMonthly = existing.totalMonthly;
-    const invoiceAmount = cycle === 'ANNUAL' ? totalMonthly * 12 : totalMonthly;
 
     const dueDate = new Date(now);
     dueDate.setDate(dueDate.getDate() + 7);
@@ -66,9 +66,9 @@ export async function POST(req: NextRequest) {
         userId,
         subscriptionId,
         type: 'SUBSCRIPTION',
-        status: 'PENDING',
+        status: totalMonthly === 0 ? 'PAID' : 'PENDING',
         amount: invoiceAmount,
-        amountPaid: 0,
+        amountPaid: totalMonthly === 0 ? invoiceAmount : 0,
         currency: 'DZD',
         periodStart: baseDate,
         periodEnd: newEndDate,
