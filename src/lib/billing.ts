@@ -28,12 +28,6 @@ export async function checkAndEnforceDebtLimit(userId: string, currentBalance: n
         where: { id: user.store.id },
         data: { isActive: !isSuspended },
       });
-
-      // Update product statuses: hide them if suspended, activate if not
-      await db.product.updateMany({
-        where: { storeId: user.store.id, status: isSuspended ? 'active' : 'draft' },
-        data: { status: isSuspended ? 'draft' : 'active' },
-      });
     } else if (user.role === 'seller' && user.sellerProfile) {
       // Toggle user account status
       await db.user.update({
@@ -42,12 +36,6 @@ export async function checkAndEnforceDebtLimit(userId: string, currentBalance: n
           isActive: !isSuspended,
           accountStatus: isSuspended ? 'suspended' : 'active',
         },
-      });
-
-      // Hide or show products
-      await db.product.updateMany({
-        where: { sellerId: user.sellerProfile.id, status: isSuspended ? 'active' : 'draft' },
-        data: { status: isSuspended ? 'draft' : 'active' },
       });
     }
   } catch (err) {
@@ -268,19 +256,6 @@ export async function syncStoreStatusWithSubscription(userId: string, subscripti
         where: { id: user.store.id },
         data: { isActive },
       });
-
-      // Update products: 
-      // If subscription goes inactive: change all 'active' products to 'draft'
-      // If subscription goes active: change all 'draft' products to 'active'
-      await db.product.updateMany({
-        where: { 
-          storeId: user.store.id, 
-          status: isActive ? 'draft' : 'active' 
-        },
-        data: { 
-          status: isActive ? 'active' : 'draft' 
-        },
-      });
     } else if (user.role === 'seller' && user.sellerProfile) {
       // Toggle user account status
       await db.user.update({
@@ -288,17 +263,6 @@ export async function syncStoreStatusWithSubscription(userId: string, subscripti
         data: {
           isActive,
           accountStatus: isActive ? 'active' : 'suspended',
-        },
-      });
-
-      // Hide or show products
-      await db.product.updateMany({
-        where: { 
-          sellerId: user.sellerProfile.id, 
-          status: isActive ? 'draft' : 'active' 
-        },
-        data: { 
-          status: isActive ? 'active' : 'draft' 
         },
       });
     }

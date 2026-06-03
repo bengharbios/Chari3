@@ -17,7 +17,14 @@ export async function GET() {
 
       // Featured and recent products (fetching up to 100 for dynamic scoring)
       db.product.findMany({
-        where: { status: 'active' },
+        where: { 
+          status: 'active',
+          OR: [
+            { store: { isActive: true } },
+            { seller: { user: { isActive: true } } },
+            { storeId: null, sellerId: null }
+          ]
+        },
         include: {
           category: { select: { name: true, nameEn: true } },
           seller: {

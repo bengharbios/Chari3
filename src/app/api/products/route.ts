@@ -17,11 +17,24 @@ export async function GET(request: Request) {
   const sellerId = searchParams.get('sellerId');
   const minRating = searchParams.get('minRating');
 
-  const where: Record<string, unknown> = {};
+  const where: Record<string, any> = {};
   if (category) where.categoryId = category;
   if (status) where.status = status;
   if (storeId) where.storeId = storeId;
   if (sellerId) where.sellerId = sellerId;
+
+  // Ensure products are only listed for active stores/sellers in the storefront
+  if (status === 'active') {
+    where.AND = [
+      {
+        OR: [
+          { store: { isActive: true } },
+          { seller: { user: { isActive: true } } },
+          { storeId: null, sellerId: null }
+        ]
+      }
+    ];
+  }
 
   // Search across name and nameEn
   if (search) {

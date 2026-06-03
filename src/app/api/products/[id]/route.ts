@@ -27,6 +27,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
             totalSales: true,
             totalCustomers: true,
             isVerified: true,
+            user: { select: { isActive: true } },
             _count: { select: { products: true } },
           },
         },
@@ -51,6 +52,13 @@ export async function GET(req: NextRequest, context: { params: Promise<{ id: str
 
     if (!product) {
       return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
+    }
+
+    // Check if store or seller is suspended/inactive
+    const isStoreInactive = product.store && !product.store.isActive;
+    const isSellerInactive = product.seller && product.seller.user && !product.seller.user.isActive;
+    if (isStoreInactive || isSellerInactive) {
+      return NextResponse.json({ success: false, error: 'Product is currently unavailable' }, { status: 403 });
     }
 
     // Fetch related products from same category
