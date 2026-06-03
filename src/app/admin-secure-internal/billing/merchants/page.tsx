@@ -33,6 +33,7 @@ const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en
 const STATUS_LABELS: Record<string, { ar: string; en: string; color: string }> = {
   TRIAL:           { ar: 'تجريبي',         en: 'Trial',           color: 'bg-blue-500/10 text-blue-600 border-blue-200'      },
   PENDING_PAYMENT: { ar: 'في انتظار الدفع', en: 'Pending Payment', color: 'bg-amber-500/10 text-amber-600 border-amber-200'    },
+  PENDING_APPROVAL: { ar: 'بانتظار الموافقة', en: 'Pending Approval', color: 'bg-amber-500/10 text-amber-600 border-amber-200'  },
   ACTIVE:          { ar: 'نشط',            en: 'Active',          color: 'bg-green-500/10 text-green-600 border-green-200'    },
   EXPIRED:         { ar: 'منتهي',          en: 'Expired',         color: 'bg-gray-500/10 text-gray-500 border-gray-200'       },
   SUSPENDED:       { ar: 'موقوف',          en: 'Suspended',       color: 'bg-red-500/10 text-red-600 border-red-200'          },

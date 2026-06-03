@@ -140,6 +140,10 @@ export default function StoreSettingsPage() {
     shippingPolicy: '',
   });
 
+  const [domainSettings, setDomainSettings] = useState({
+    customDomain: '',
+  });
+
   const [socialSettings, setSocialSettings] = useState({
     facebook: '',
     instagram: '',
@@ -175,6 +179,7 @@ export default function StoreSettingsPage() {
     hiddenCities: [], // list of disabled cityId
     hiddenWilayas: [], // list of disabled stateId (Wilaya)
     storeCities: [], // list of custom store-specific zones
+    storeStates: [], // list of custom store-specific states
   });
 
   const [selectedSettingsWilayaCode, setSelectedSettingsWilayaCode] = useState('16');
@@ -182,6 +187,8 @@ export default function StoreSettingsPage() {
   const [isLoadingSettingsCities, setIsLoadingSettingsCities] = useState(false);
   const [newStoreZone, setNewStoreZone] = useState({ nameAr: '', nameEn: '', price: 300 });
   const [isAddingStoreZone, setIsAddingStoreZone] = useState(false);
+  const [newStoreState, setNewStoreState] = useState({ nameAr: '', nameEn: '', defaultPrice: 400 });
+  const [isAddingStoreState, setIsAddingStoreState] = useState(false);
 
   const fetchSettingsCities = async (stateCode: string) => {
     setIsLoadingSettingsCities(true);
@@ -294,23 +301,7 @@ export default function StoreSettingsPage() {
     if (!user?.id) return;
     setIsLoading(true);
     try {
-      // 1. Fetch dynamic states list first
-      try {
-        const geoRes = await fetch('/api/regions/states?countryCode=DZ');
-        if (geoRes.ok) {
-          const geoData = await geoRes.json();
-          if (geoData.success) {
-            if (geoData.states && geoData.states.length > 0) {
-              setStatesList(geoData.states);
-            }
-            if (geoData.country?.currency) {
-              setStoreCurrency(geoData.country.currency);
-            }
-          }
-        }
-      } catch (e) {
-        console.error('Failed to fetch dynamic states, using fallback', e);
-      }
+      // Dynamic states will be fetched by the useEffect when generalSettings.country changes
 
       // 1.5 Fetch system limits (upload max size, etc)
       try {
@@ -358,6 +349,7 @@ export default function StoreSettingsPage() {
             hiddenCities: rates.hiddenCities || [],
             hiddenWilayas: rates.hiddenWilayas || [],
             storeCities: rates.storeCities || [],
+            storeStates: rates.storeStates || [],
           });
         }
         if (s.shippingIntegrations) setShippingIntegrations(s.shippingIntegrations);
@@ -376,6 +368,7 @@ export default function StoreSettingsPage() {
           if (config.orderSettings) setOrderSettings(prev => ({ ...prev, ...config.orderSettings }));
           if (config.policiesSettings) setPoliciesSettings(prev => ({ ...prev, ...config.policiesSettings }));
           if (config.socialSettings) setSocialSettings(prev => ({ ...prev, ...config.socialSettings }));
+          if (config.domainSettings) setDomainSettings(prev => ({ ...prev, ...config.domainSettings }));
           if (config.seoSettings) setSeoSettings(prev => ({ ...prev, ...config.seoSettings }));
           if (config.notificationSettings) setNotificationSettings(prev => ({ ...prev, ...config.notificationSettings }));
         }
@@ -392,6 +385,34 @@ export default function StoreSettingsPage() {
     loadSettings();
   }, [user?.id]);
 
+  // Fetch dynamic states when country changes
+  useEffect(() => {
+    const fetchStates = async () => {
+      const countryCode = generalSettings.country || 'DZ';
+      try {
+        const geoRes = await fetch(`/api/regions/states?countryCode=${countryCode}`);
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          if (geoData.success) {
+            let combinedStates = geoData.states || [];
+            if (shippingRates.storeStates && shippingRates.storeStates.length > 0) {
+              combinedStates = [...combinedStates, ...shippingRates.storeStates];
+            }
+            if (combinedStates.length > 0) {
+              setStatesList(combinedStates);
+            }
+            if (geoData.country?.currency) {
+              setStoreCurrency(geoData.country.currency);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to fetch dynamic states', e);
+      }
+    };
+    if (isMounted) fetchStates();
+  }, [generalSettings.country, isMounted, shippingRates.storeStates]);
+
   // Save Settings to API
   const handleSave = async () => {
     if (!user?.id) return;
@@ -404,6 +425,7 @@ export default function StoreSettingsPage() {
         businessEmail: generalSettings.businessEmail,
         businessPhone: generalSettings.businessPhone,
         address: generalSettings.address,
+        domainSettings,
         orderSettings,
         policiesSettings,
         socialSettings,
@@ -485,6 +507,7 @@ export default function StoreSettingsPage() {
 
   return (
     <motion.div 
+      dir={isAr ? 'rtl' : 'ltr'}
       className="space-y-6 p-4 md:p-6 text-start"
       variants={STAGGER_CONTAINER}
       initial="hidden"
@@ -542,6 +565,9 @@ export default function StoreSettingsPage() {
               </TabsTrigger>
               <TabsTrigger value="seo" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
                 <Search className="h-4 w-4" /> {t('SEO', 'SEO')}
+              </TabsTrigger>
+              <TabsTrigger value="domains" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
+                <Globe className="h-4 w-4" /> {t('النطاق والدومين', 'Domains & Links')}
               </TabsTrigger>
               <TabsTrigger value="notifications" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
                 <Bell className="h-4 w-4" /> {t('الإشعارات', 'Notifications')}
@@ -735,7 +761,7 @@ export default function StoreSettingsPage() {
                         <CardContent className="space-y-4 pt-2">
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div className="space-y-2">
-                              <Label>{t('التوصيل العادي (د.ج / ريال)', 'Standard Courier Price')}</Label>
+                              <Label>{t(`التوصيل العادي (${storeCurrency})`, `Standard Courier Price (${storeCurrency})`)}</Label>
                               <Input 
                                 type="number"
                                 value={shippingRates.standardPrice}
@@ -744,7 +770,7 @@ export default function StoreSettingsPage() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label>{t('التوصيل السريع (د.ج / ريال)', 'Express Courier Price')}</Label>
+                              <Label>{t(`التوصيل السريع (${storeCurrency})`, `Express Courier Price (${storeCurrency})`)}</Label>
                               <Input 
                                 type="number"
                                 value={shippingRates.expressPrice}
@@ -753,7 +779,7 @@ export default function StoreSettingsPage() {
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label>{t('حد الشحن المجاني (د.ج / ريال)', 'Free Delivery Limit')}</Label>
+                              <Label>{t(`حد الشحن المجاني (${storeCurrency})`, `Free Delivery Limit (${storeCurrency})`)}</Label>
                               <Input 
                                 type="number"
                                 value={shippingRates.freeThreshold}
@@ -783,7 +809,84 @@ export default function StoreSettingsPage() {
                         />
                       </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
+                      {/* Add Custom State Form */}
+                      <div className="flex justify-between items-center bg-white/5 p-3 rounded-2xl border border-white/5">
+                        <div>
+                          <h4 className="text-xs font-bold text-foreground">{t('ولايتك/محافظتك غير موجودة بالأسفل؟', 'Your state/province missing below?')}</h4>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">{t('أضف ولاية أو محافظة جديدة يدوياً للتحكم بسعر الشحن الخاص بها.', 'Add a custom state/province manually.')}</p>
+                        </div>
+                        <Button 
+                          onClick={() => setIsAddingStoreState(!isAddingStoreState)} 
+                          variant="outline" 
+                          size="sm" 
+                          className="rounded-xl text-xs font-bold border-white/10"
+                        >
+                          {isAddingStoreState ? t('إغلاق', 'Close') : t('➕ إضافة محافظة', '➕ Add Province')}
+                        </Button>
+                      </div>
+
+                      {isAddingStoreState && (
+                        <div className="p-4 bg-muted/40 rounded-2xl border border-white/5 space-y-3 animate-fade-in">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="space-y-1">
+                              <Label className="text-[10px]">{t('اسم الولاية/المحافظة', 'State Name')}</Label>
+                              <Input 
+                                value={newStoreState.nameAr}
+                                onChange={(e) => setNewStoreState({ ...newStoreState, nameAr: e.target.value })}
+                                placeholder="مثال: الرياض"
+                                className="bg-background rounded-lg h-9 text-xs"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px]">{t('الاسم بالإنجليزية (اختياري)', 'English Name')}</Label>
+                              <Input 
+                                value={newStoreState.nameEn}
+                                onChange={(e) => setNewStoreState({ ...newStoreState, nameEn: e.target.value })}
+                                placeholder="e.g. Riyadh"
+                                className="bg-background rounded-lg h-9 text-xs"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px]">{t('سعر التوصيل', 'Courier Fee')}</Label>
+                              <Input 
+                                type="number"
+                                value={newStoreState.defaultPrice}
+                                onChange={(e) => setNewStoreState({ ...newStoreState, defaultPrice: parseFloat(e.target.value) || 0 })}
+                                className="bg-background rounded-lg h-9 text-xs font-bold text-center"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex justify-end pt-1">
+                            <Button 
+                              size="sm" 
+                              onClick={() => {
+                                if (!newStoreState.nameAr.trim()) {
+                                  toast.error(t('يرجى كتابة اسم المحافظة!', 'Please enter state name!'));
+                                  return;
+                                }
+                                const customState = {
+                                  id: `custom_state_${Math.random().toString(36).substring(2, 9)}`,
+                                  code: `custom_${Math.random().toString(36).substring(2, 9)}`,
+                                  nameAr: newStoreState.nameAr,
+                                  nameEn: newStoreState.nameEn || newStoreState.nameAr,
+                                  defaultPrice: newStoreState.defaultPrice,
+                                };
+                                const newStoreStates = [...(shippingRates.storeStates || []), customState];
+                                setShippingRates({ ...shippingRates, storeStates: newStoreStates });
+                                setStatesList([...statesList, customState]);
+                                setNewStoreState({ nameAr: '', nameEn: '', defaultPrice: 400 });
+                                setIsAddingStoreState(false);
+                                toast.success(t('تمت إضافة المحافظة المخصصة بنجاح', 'Custom state added successfully'));
+                              }}
+                              className="h-8 text-xs font-bold rounded-lg px-4"
+                            >
+                              {t('حفظ', 'Save')}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="overflow-y-auto max-h-[300px] border border-white/5 rounded-2xl p-2 space-y-2 bg-slate-950/20">
                         {filteredWilayas.map((wilaya) => {
                           const wId = wilaya.id || wilaya.code;
@@ -831,7 +934,7 @@ export default function StoreSettingsPage() {
                                       }}
                                       className="w-28 bg-muted/40 border-white/10 rounded-xl h-9 text-center font-bold"
                                     />
-                                    <span className="text-xs text-muted-foreground font-bold">{t('د.ج', storeCurrency)}</span>
+                                    <span className="text-xs text-muted-foreground font-bold">{storeCurrency}</span>
                                   </div>
                                 )}
 
@@ -932,7 +1035,7 @@ export default function StoreSettingsPage() {
                               />
                             </div>
                             <div className="space-y-1">
-                              <Label className="text-[10px]">{t('سعر التوصيل (د.ج)', 'Courier Fee (DZD)')}</Label>
+                              <Label className="text-[10px]">{t(`سعر التوصيل (${storeCurrency})`, `Courier Fee (${storeCurrency})`)}</Label>
                               <Input 
                                 type="number"
                                 value={newStoreZone.price}
@@ -1021,7 +1124,7 @@ export default function StoreSettingsPage() {
                                         }}
                                         className="w-24 bg-muted/40 border-white/10 rounded-xl h-8 text-center font-bold text-xs"
                                       />
-                                      <span className="text-[10px] text-muted-foreground font-bold">{t('د.ج', storeCurrency)}</span>
+                                      <span className="text-[10px] text-muted-foreground font-bold">{storeCurrency}</span>
                                     </div>
                                   )}
 
@@ -1075,7 +1178,7 @@ export default function StoreSettingsPage() {
                                       }}
                                       className="w-24 bg-muted/40 border-white/10 rounded-xl h-8 text-center font-bold text-xs"
                                     />
-                                    <span className="text-[10px] text-muted-foreground font-bold">{t('د.ج', storeCurrency)}</span>
+                                    <span className="text-[10px] text-muted-foreground font-bold">{storeCurrency}</span>
                                   </div>
 
                                   <Button 
@@ -1847,6 +1950,53 @@ export default function StoreSettingsPage() {
               </CardContent>
             </Card>
           </TabsContent>
+          {/* Domains Tab */}
+          <TabsContent value="domains" className="mt-0 outline-none">
+            <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl mb-6">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-primary" />
+                  {t('إعدادات النطاق المخصص', 'Custom Domain Settings')}
+                </CardTitle>
+                <CardDescription>
+                  {t('اربط متجرك بنطاق مخصص خاص بك (مثل: www.mystore.com) بدلاً من النطاق الافتراضي.', 'Link your store to your own custom domain (e.g. www.mystore.com) instead of the default subdomain.')}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>{t('النطاق الافتراضي الحالي', 'Current Default Link')}</Label>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      readOnly 
+                      value={`chariday.com/store/${generalSettings.nameEn.toLowerCase().replace(/\s+/g, '-') || user?.id}`}
+                      className="bg-muted/30 border-white/10 rounded-xl font-mono text-muted-foreground" 
+                      dir="ltr"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('هذا هو رابط متجرك الافتراضي على منصتنا.', 'This is your default store link on our platform.')}
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>{t('النطاق المخصص (Custom Domain)', 'Custom Domain')}</Label>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      placeholder="e.g. mystore.com"
+                      value={domainSettings.customDomain}
+                      onChange={(e) => setDomainSettings({ ...domainSettings, customDomain: e.target.value })}
+                      className="bg-muted/30 border-primary/30 focus-visible:ring-primary rounded-xl font-mono" 
+                      dir="ltr"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('أدخل اسم النطاق الخاص بك بدون http:// (مثال: mystore.com). يجب توجيه النطاق إلى خوادمنا أولاً.', 'Enter your domain name without http:// (e.g. mystore.com). You must point your domain to our servers first.')}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
         </Tabs>
       </motion.div>
     </motion.div>
