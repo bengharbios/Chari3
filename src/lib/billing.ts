@@ -270,3 +270,42 @@ export async function syncStoreStatusWithSubscription(userId: string, subscripti
     console.error('[syncStoreStatusWithSubscription] error:', err);
   }
 }
+
+/**
+ * Automatically checks and expires the subscription if the endDate or trialEndsAt has passed.
+ * Syncs the store status accordingly.
+ */
+export async function checkAndUpdateExpiredSubscriptions(userId: string) {
+  try {
+    const activeSub = await db.subscription.findFirst({
+      where: {
+        userId,
+        status: { in: ['ACTIVE', 'TRIAL'] },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!activeSub) return;
+
+    const now = new Date();
+    let isExpired = false;
+
+    if (activeSub.status === 'TRIAL' && activeSub.trialEndsAt && now > activeSub.trialEndsAt) {
+      isExpired = true;
+    } else if (activeSub.status === 'ACTIVE' && activeSub.endDate && now > activeSub.endDate) {
+      isExpired = true;
+    }
+
+    if (isExpired) {
+      await db.subscription.update({
+        where: { id: activeSub.id },
+        data: { status: 'EXPIRED' },
+      });
+      await syncStoreStatusWithSubscription(userId, 'EXPIRED');
+      console.log(`[checkAndUpdateExpiredSubscriptions] Subscription ${activeSub.id} for user ${userId} expired and store synced to inactive.`);
+    }
+  } catch (err) {
+    console.error('[checkAndUpdateExpiredSubscriptions] error:', err);
+  }
+}
+

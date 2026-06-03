@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { checkAndUpdateExpiredSubscriptions } from '@/lib/billing';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +9,10 @@ export async function GET(req: NextRequest) {
   try {
     const userId = req.nextUrl.searchParams.get('userId');
     if (!userId) return NextResponse.json({ success: false, error: 'userId required' }, { status: 400 });
+
+    // Run dynamic subscription status check/expiration
+    await checkAndUpdateExpiredSubscriptions(userId);
+
 
     let seller: any = await db.sellerProfile.findUnique({
       where: { userId },

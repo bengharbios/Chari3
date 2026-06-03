@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { checkAndUpdateExpiredSubscriptions } from '@/lib/billing';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,10 @@ export async function GET(req: NextRequest) {
     if (!userId) {
       return NextResponse.json({ success: false, error: 'userId is required' }, { status: 400 });
     }
+
+    // Run dynamic subscription status check/expiration
+    await checkAndUpdateExpiredSubscriptions(userId);
+
 
     // Fetch the most recent active/trial subscription
     const subscription = await prisma.subscription.findFirst({
