@@ -242,6 +242,20 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // ─── 9.5 Create receipt if provided ───────────────────────────────────
+    if (paymentMethod === 'receipt' && receiptImage && invoiceAmount > 0) {
+      await db.debtPaymentReceipt.create({
+        data: {
+          userId,
+          amount: invoiceAmount,
+          receiptImage,
+          merchantNote: actionType === 'upgrade' ? 'مرفق مع طلب الترقية' : 'مرفق مع طلب الاشتراك',
+          status: 'pending',
+          invoiceId: invoice.id,
+        }
+      });
+    }
+
     // ─── 10. Handle wallet payment if requested ───────────────────────────
     if (paymentMethod === 'wallet' && !isFree && wallet) {
       if (wallet.balance >= invoiceAmount) {
