@@ -356,10 +356,14 @@ export default function StoreSettingsPage() {
         if (s.paymentDetails) setPaymentDetails(s.paymentDetails);
         if (s.themeSettings) setThemeSettings(s.themeSettings);
 
+        // Load currency from the root of settings (fetched from Wallet)
+        if (s.currency) {
+          setStoreCurrency(s.currency);
+        }
+
         // Load storeConfig from API
         if (s.storeConfig) {
           const config = typeof s.storeConfig === 'string' ? JSON.parse(s.storeConfig) : s.storeConfig;
-          if (config.currency) setStoreCurrency(config.currency);
           if (config.country) setGeneralSettings(prev => ({ ...prev, country: config.country }));
           if (config.timezone) setGeneralSettings(prev => ({ ...prev, timezone: config.timezone }));
           if (config.businessEmail) setGeneralSettings(prev => ({ ...prev, businessEmail: config.businessEmail }));
