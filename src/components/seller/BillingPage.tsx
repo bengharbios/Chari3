@@ -495,9 +495,20 @@ export default function BillingPage() {
           </Card>
           <Card className="border-border bg-card">
             <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">{t(locale, 'رصيد المحفظة', 'Wallet Balance')}</p>
-              <p className={`font-black text-lg mt-1 ${(wallet?.balance ?? 0) < 0 ? 'text-red-500' : 'text-green-500'}`}>{fmt(wallet?.balance ?? 0)}</p>
-              <p className="text-[10px] text-muted-foreground">{(wallet?.balance ?? 0) < 0 ? t(locale, 'مديونية مستحقة', 'Outstanding debt') : t(locale, 'رصيد متاح', 'Available credit')}</p>
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs text-muted-foreground">{t(locale, 'رصيد المحفظة', 'Wallet Balance')}</p>
+                  <p className="font-black text-lg mt-1 text-green-500">{fmt(wallet?.balance ?? 0)}</p>
+                  <p className="text-[10px] text-muted-foreground">{t(locale, 'رصيد متاح', 'Available credit')}</p>
+                </div>
+                {(wallet?.debt ?? 0) > 0 && (
+                  <div className="text-end">
+                    <p className="text-xs text-red-500/80 font-bold">{t(locale, 'المديونية', 'Debt')}</p>
+                    <p className="font-black text-lg mt-1 text-red-500">{fmt(wallet?.debt ?? 0)}</p>
+                    <p className="text-[10px] text-red-500/70">{t(locale, 'عمولات مستحقة', 'Outstanding comm')}</p>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
           <Card className="border-border bg-card">
@@ -537,8 +548,8 @@ export default function BillingPage() {
                         <Receipt className="h-5 w-5 text-brand" />
                         {t(locale, 'الفاتورة الحالية', 'Current Invoice')} #{inv.id.slice(-6).toUpperCase()}
                       </CardTitle>
-                      <Badge className={`border text-xs font-bold px-2 ${inv.status === 'PAID' ? 'bg-green-500/10 text-green-500 border-green-500/20' : inv.status === 'OVERDUE' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
-                        {inv.status === 'PAID' ? t(locale, 'مدفوعة', 'Paid') : inv.status === 'OVERDUE' ? t(locale, 'متأخرة', 'Overdue') : t(locale, 'معلقة', 'Pending')}
+                      <Badge className={`border text-xs font-bold px-2 ${inv.status === 'PAID' || inv.amount === 0 ? 'bg-green-500/10 text-green-500 border-green-500/20' : inv.status === 'OVERDUE' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                        {inv.status === 'PAID' || inv.amount === 0 ? t(locale, 'مدفوعة', 'Paid') : inv.status === 'OVERDUE' ? t(locale, 'متأخرة', 'Overdue') : t(locale, 'معلقة', 'Pending')}
                       </Badge>
                     </div>
                     {inv.periodStart && (
@@ -548,29 +559,51 @@ export default function BillingPage() {
                     )}
                   </CardHeader>
                   <CardContent className="p-4 space-y-3">
-                    {/* Line items */}
-                    {JSON.parse(inv.items || '[]').map((item: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between text-sm py-1 border-b border-border/50 last:border-0">
-                        <span className="text-muted-foreground">{item.label}</span>
-                        <span className="font-bold font-mono">{fmt(item.amount)}</span>
+                    {inv.amount === 0 ? (
+                      <div className="py-6 text-center space-y-3">
+                        <div className="mx-auto w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center">
+                          <CheckCircle2 className="h-6 w-6 text-green-500" />
+                        </div>
+                        <p className="font-bold text-lg text-foreground">
+                          {t(locale, 'اشتراكك الحالي مجاني', 'Your current subscription is free')}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {t(locale, 'لا توجد أي رسوم مستحقة للدفع في هذه الفاتورة. اشتراكك فعال ويمكنك استخدام المنصة.', 'There are no fees due for this invoice. Your subscription is active.')}
+                        </p>
+                        <div className="pt-2">
+                          <Button variant="outline" className="rounded-xl gap-2 font-bold" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-plans' : 'seller-billing-plans')}>
+                            <Sparkles className="h-4 w-4 text-brand" />
+                            {t(locale, 'ترقية الباقة', 'Upgrade Plan')}
+                          </Button>
+                        </div>
                       </div>
-                    ))}
-                    <div className="flex items-center justify-between pt-2 border-t border-border">
-                      <span className="font-bold">{t(locale, 'الإجمالي المستحق', 'Total Due')}</span>
-                      <span className="font-black text-xl text-brand font-mono">{fmt(inv.amount)}</span>
-                    </div>
-                    {inv.dueDate && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <CalendarDays className="h-3.5 w-3.5" />
-                        {t(locale, 'تاريخ الاستحقاق:', 'Due date:')} {new Date(inv.dueDate).toLocaleDateString('en-GB')}
-                      </div>
-                    )}
-                    {inv.status !== 'PAID' && (
-                      <Button className="w-full rounded-xl gap-2 bg-brand hover:bg-brand/90 text-navy font-bold" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
-                        <CreditCard className="h-4 w-4" />
-                        {t(locale, 'ادفع هذه الفاتورة', 'Pay This Invoice')}
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
+                    ) : (
+                      <>
+                        {/* Line items */}
+                        {JSON.parse(inv.items || '[]').map((item: any, i: number) => (
+                          <div key={i} className="flex items-center justify-between text-sm py-1 border-b border-border/50 last:border-0">
+                            <span className="text-muted-foreground">{item.label}</span>
+                            <span className="font-bold font-mono">{fmt(item.amount)}</span>
+                          </div>
+                        ))}
+                        <div className="flex items-center justify-between pt-2 border-t border-border">
+                          <span className="font-bold">{t(locale, 'الإجمالي المستحق', 'Total Due')}</span>
+                          <span className="font-black text-xl text-brand font-mono">{fmt(inv.amount)}</span>
+                        </div>
+                        {inv.dueDate && (
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <CalendarDays className="h-3.5 w-3.5" />
+                            {t(locale, 'تاريخ الاستحقاق:', 'Due date:')} {new Date(inv.dueDate).toLocaleDateString('en-GB')}
+                          </div>
+                        )}
+                        {inv.status !== 'PAID' && (
+                          <Button className="w-full rounded-xl gap-2 bg-brand hover:bg-brand/90 text-navy font-bold" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
+                            <CreditCard className="h-4 w-4" />
+                            {t(locale, 'ادفع هذه الفاتورة', 'Pay This Invoice')}
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </>
                     )}
                   </CardContent>
                 </Card>

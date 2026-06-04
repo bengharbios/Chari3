@@ -24,7 +24,7 @@ import {
   Loader2, Save, Check, X, Eye, Search, Filter,
   TrendingUp, AlertCircle, Clock, ShieldOff, Wallet,
   ChevronDown, ChevronUp, RefreshCw, CalendarDays, DollarSign,
-  Smartphone, MessageSquare, LayoutDashboard, Monitor, PlusSquare,
+  Smartphone, MessageSquare, LayoutDashboard, Monitor, PlusSquare, ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -148,15 +148,19 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
   const [adminNote, setAdminNote]                   = useState('');
   const [previewImageReceipt, setPreviewImageReceipt] = useState<any>(null);
 
+  // ── tab 5: wallets & debts ───────────────────────────────────────────────
+  const [adminUsers, setAdminUsers]                 = useState<any[]>([]);
+
   // ─── fetch all data in parallel ───────────────────────────────────────────
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [settingsRes, packagesRes, subsRes, receiptsRes] = await Promise.all([
+      const [settingsRes, packagesRes, subsRes, receiptsRes, usersRes] = await Promise.all([
         fetch('/api/admin/settings'),
         fetch('/api/admin/packages'),
         fetch('/api/admin/subscriptions'),
         fetch('/api/billing/receipts?status=pending'),
+        fetch('/api/admin/users'),
       ]);
 
       // Settings
@@ -191,6 +195,10 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
       // Receipts
       const receiptsData = await receiptsRes.json();
       if (receiptsData.success) setPendingReceipts(receiptsData.receipts || []);
+
+      // Users / Wallets
+      const usersData = await usersRes.json();
+      if (usersData.success) setAdminUsers(usersData.users || []);
     } catch (err) {
       console.error('BillingManager fetch error', err);
     } finally {
@@ -373,44 +381,35 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
       <Tabs defaultValue="platform-settings" className="space-y-4">
         {/* ── Tab list ── */}
         <div className="overflow-x-auto pb-1">
-          <TabsList className="h-auto p-1 flex flex-wrap gap-1 min-w-max">
-            <TabsTrigger value="platform-settings" className="gap-1.5 text-xs font-bold px-3 py-2">
-              <Settings className="h-3.5 w-3.5" />
-              {t(locale, 'إعدادات المنصة', 'Platform Settings')}
-            </TabsTrigger>
-            <TabsTrigger value="packages" className="gap-1.5 text-xs font-bold px-3 py-2">
-              <Package className="h-3.5 w-3.5" />
-              {t(locale, 'الباقات', 'Plans')}
-            </TabsTrigger>
-            <TabsTrigger value="merchants" className="gap-1.5 text-xs font-bold px-3 py-2">
-              <Users className="h-3.5 w-3.5" />
-              {t(locale, 'التجار والاشتراكات', 'Merchants')}
-              {subscriptions.length > 0 && (
-                <Badge variant="secondary" className="h-4 px-1.5 text-[10px] font-bold">
-                  {subscriptions.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="pending-slips" className="gap-1.5 text-xs font-bold px-3 py-2">
-              <FileText className="h-3.5 w-3.5" />
-              {t(locale, 'مراجعة الإيصالات', 'Review Slips')}
-              {pendingReceipts.length > 0 && (
-                <Badge variant="destructive" className="h-4 px-1.5 text-[10px] font-bold">
-                  {pendingReceipts.length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="revenue" className="gap-1.5 text-xs font-bold px-3 py-2">
-              <BarChart3 className="h-3.5 w-3.5" />
-              {t(locale, 'تقرير الإيرادات', 'Revenue')}
-            </TabsTrigger>
-          </TabsList>
+          <TabsList className="bg-muted/30 p-1 mb-6 flex-wrap h-auto inline-flex rounded-2xl border">
+          <TabsTrigger value="settings" className="rounded-xl px-4 py-2 text-xs font-bold gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+            <Settings className="h-3.5 w-3.5" />{t(locale, 'الإعدادات العامة', 'Settings')}
+          </TabsTrigger>
+          <TabsTrigger value="packages" className="rounded-xl px-4 py-2 text-xs font-bold gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+            <Package className="h-3.5 w-3.5" />{t(locale, 'الباقات', 'Packages')}
+          </TabsTrigger>
+          <TabsTrigger value="merchants" className="rounded-xl px-4 py-2 text-xs font-bold gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+            <Users className="h-3.5 w-3.5" />{t(locale, 'التجار والاشتراكات', 'Merchants')}
+          </TabsTrigger>
+          <TabsTrigger value="wallets" className="rounded-xl px-4 py-2 text-xs font-bold gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+            <Wallet className="h-3.5 w-3.5" />{t(locale, 'المحافظ والمديونيات', 'Wallets & Debts')}
+          </TabsTrigger>
+          <TabsTrigger value="pending-slips" className="rounded-xl px-4 py-2 text-xs font-bold gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-sm">
+            <Clock className="h-3.5 w-3.5" />
+            {t(locale, 'مراجعة الإيصالات', 'Pending Slips')}
+            {pendingReceipts.length > 0 && (
+              <Badge variant="destructive" className="ms-1 px-1.5 py-0 min-w-4 h-4 flex items-center justify-center text-[10px] rounded-full border-0">
+                {pendingReceipts.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
         </div>
 
         {/* ════════════════════════════════════════════════════════════════════
             TAB 1 — Platform Settings
         ════════════════════════════════════════════════════════════════════ */}
-        <TabsContent value="platform-settings">
+        <TabsContent value="settings">
           <form onSubmit={handleSaveSettings} className="space-y-5">
             {/* Section A */}
             <Card className="border-border bg-card">
@@ -848,17 +847,36 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
                             {sub.totalMonthly != null ? fmt(sub.totalMonthly) : (sub.package?.price != null ? fmt(sub.package.price) : '—')}
                           </TableCell>
                           <TableCell className="pe-4">
-                            <Button
-                              size="sm"
-                              variant={selectedMerchant?.id === sub.id ? 'default' : 'outline'}
-                              className="h-7 px-3 text-xs rounded-lg gap-1"
-                              onClick={() => selectedMerchant?.id === sub.id ? setSelectedMerchant(null) : openMerchantEdit(sub)}
-                            >
-                              {selectedMerchant?.id === sub.id
-                                ? <><ChevronUp className="h-3.5 w-3.5" />{t(locale, 'إغلاق', 'Close')}</>
-                                : <><ChevronDown className="h-3.5 w-3.5" />{t(locale, 'تعديل', 'Edit')}</>
-                              }
-                            </Button>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {(() => {
+                                const rec = pendingReceipts.find(r => r.userId === sub.userId || r.userId === sub.user?.id);
+                                if (rec) {
+                                  return (
+                                    <Button
+                                      size="sm"
+                                      variant="default"
+                                      className="h-7 px-3 text-xs rounded-lg gap-1 bg-amber-500 hover:bg-amber-600 text-white font-bold"
+                                      onClick={() => { setReviewReceipt(rec); setAdminNote(rec.adminNote || ''); }}
+                                    >
+                                      <Eye className="h-3.5 w-3.5" />
+                                      {t(locale, 'معاينة الإيصال', 'View Receipt')}
+                                    </Button>
+                                  );
+                                }
+                                return null;
+                              })()}
+                              <Button
+                                size="sm"
+                                variant={selectedMerchant?.id === sub.id ? 'default' : 'outline'}
+                                className="h-7 px-3 text-xs rounded-lg gap-1"
+                                onClick={() => selectedMerchant?.id === sub.id ? setSelectedMerchant(null) : openMerchantEdit(sub)}
+                              >
+                                {selectedMerchant?.id === sub.id
+                                  ? <><ChevronUp className="h-3.5 w-3.5" />{t(locale, 'إغلاق', 'Close')}</>
+                                  : <><ChevronDown className="h-3.5 w-3.5" />{t(locale, 'تعديل', 'Edit')}</>
+                                }
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
 
@@ -962,7 +980,94 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
         </TabsContent>
 
         {/* ════════════════════════════════════════════════════════════════════
-            TAB 4 — Pending Slips
+            TAB 4 — Wallets & Debts
+        ════════════════════════════════════════════════════════════════════ */}
+        <TabsContent value="wallets">
+          <Card className="border-border bg-card">
+            <CardHeader className="pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="text-sm font-bold flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-brand" />
+                    {t(locale, 'المحافظ والمديونيات', 'Wallets & Debts')}
+                  </CardTitle>
+                  <CardDescription className="text-xs mt-0.5">
+                    {t(locale, 'متابعة أرصدة التجار وعمولات المبيعات المستحقة', 'Track merchant balances and outstanding sales commissions')}
+                  </CardDescription>
+                </div>
+                <Button variant="outline" size="sm" className="h-8 rounded-xl gap-1.5 text-xs" onClick={() => fetchData()}>
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  {t(locale, 'تحديث', 'Refresh')}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-start ps-4 text-xs">{t(locale, 'التاجر / المتجر', 'Merchant / Store')}</TableHead>
+                      <TableHead className="text-start text-xs">{t(locale, 'الرصيد المتاح', 'Available Balance')}</TableHead>
+                      <TableHead className="text-start text-xs">{t(locale, 'المديونية (عمولات)', 'Debt (Commissions)')}</TableHead>
+                      <TableHead className="text-start text-xs">{t(locale, 'إجمالي المبيعات', 'Total Sales')}</TableHead>
+                      <TableHead className="text-start text-xs pe-4">{t(locale, 'إجراءات', 'Actions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {adminUsers.filter(u => u.role === 'seller' || u.role === 'store_manager').map((userObj: any) => {
+                      const wallet = userObj.wallet || { balance: 0, debt: 0, totalSales: 0 };
+                      return (
+                        <TableRow key={userObj.id}>
+                          <TableCell className="ps-4">
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-7 w-7 shrink-0">
+                                <AvatarFallback className="text-[10px] bg-brand/10 text-brand font-bold">
+                                  {userObj.name?.charAt(0) || 'U'}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="text-xs">
+                                <p className="font-bold">{userObj.name}</p>
+                                <p className="text-[10px] text-muted-foreground font-mono">{userObj.email}</p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`text-xs font-bold font-mono px-2 py-1 rounded-md ${wallet.balance > 0 ? 'bg-green-500/10 text-green-600' : 'text-muted-foreground'}`}>
+                              {fmt(wallet.balance || 0)}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`text-xs font-bold font-mono px-2 py-1 rounded-md ${wallet.debt > 0 ? 'bg-red-500/10 text-red-600 border border-red-500/20' : 'text-muted-foreground'}`}>
+                              {fmt(wallet.debt || 0)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-xs font-mono text-muted-foreground">
+                            {fmt(wallet.totalSales || 0)}
+                          </TableCell>
+                          <TableCell className="pe-4">
+                            <Button size="sm" variant="outline" className="h-7 px-3 text-xs rounded-lg text-muted-foreground hover:text-foreground">
+                              {t(locale, 'تصفية المديونية', 'Clear Debt')}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                    {adminUsers.filter(u => u.role === 'seller' || u.role === 'store_manager').length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-14 text-muted-foreground text-sm font-bold">
+                          {t(locale, 'لا يوجد تجار', 'No merchants found')}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ════════════════════════════════════════════════════════════════════
+            TAB 5 — Pending Slips
         ════════════════════════════════════════════════════════════════════ */}
         <TabsContent value="pending-slips">
           <Card className="border-border bg-card">
@@ -1075,63 +1180,8 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
             </CardContent>
           </Card>
 
-          {/* Review dialog (inline card) */}
-          {reviewReceipt && (
-            <Card className="border-brand/30 bg-card shadow-lg mt-4">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-bold flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-amber-500" />
-                  {t(locale, 'مراجعة وصل الدفع', 'Review Payment Slip')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="p-3 rounded-xl bg-muted/30 border text-xs space-y-1">
-                    <p className="text-muted-foreground">{t(locale, 'التاجر', 'Merchant')}</p>
-                    <p className="font-bold">{reviewReceipt.user?.name}</p>
-                  </div>
-                  <div className="p-3 rounded-xl bg-brand/5 border border-brand/20 text-xs space-y-1">
-                    <p className="text-muted-foreground">{t(locale, 'المبلغ', 'Amount')}</p>
-                    <p className="font-black text-brand text-lg">{fmt(reviewReceipt.amount)}</p>
-                  </div>
-                </div>
+          {/* The Review dialog is moved to a global overlay below */}
 
-                {reviewReceipt.receiptImage && (
-                  <div className="rounded-xl border overflow-hidden bg-slate-900 aspect-video flex items-center justify-center">
-                    <img src={reviewReceipt.receiptImage} alt="Receipt" className="max-h-56 object-contain" />
-                  </div>
-                )}
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">
-                    {t(locale, 'ملاحظات الإدارة / سبب الرفض', 'Admin Note / Rejection Reason')}
-                  </Label>
-                  <Textarea
-                    placeholder={t(locale, 'مثال: تم قبول الإيصال بنجاح / أو: يرجى إعادة إرسال صورة واضحة...', 'e.g. Approved / Please resend a clear image...')}
-                    value={adminNote}
-                    onChange={e => setAdminNote(e.target.value)}
-                    className="h-20 rounded-xl text-xs"
-                  />
-                </div>
-
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" className="rounded-xl" disabled={isProcessing} onClick={() => setReviewReceipt(null)}>
-                    {t(locale, 'إلغاء', 'Cancel')}
-                  </Button>
-                  <Button variant="destructive" className="gap-1.5 rounded-xl" disabled={isProcessing} onClick={() => handleReviewReceipt('rejected')}>
-                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
-                    {t(locale, 'رفض الوصل', 'Reject Slip')}
-                  </Button>
-                  <Button className="gap-1.5 rounded-xl bg-green-600 hover:bg-green-700 text-white" disabled={isProcessing} onClick={() => handleReviewReceipt('approved')}>
-                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                    {t(locale, 'موافقة وتفعيل', 'Approve & Activate')}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Large image preview */}
           {previewImageReceipt && (
             <div
               className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
@@ -1282,6 +1332,91 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Global Receipt Review Modal */}
+      {reviewReceipt && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setReviewReceipt(null)}>
+          <div className="max-w-xl w-full" onClick={e => e.stopPropagation()}>
+            <Card className="border-brand/40 bg-card shadow-2xl">
+              <CardHeader className="pb-3 border-b flex flex-row items-center justify-between bg-muted/20 rounded-t-xl">
+                <div>
+                  <CardTitle className="text-base font-black flex items-center gap-2 text-foreground">
+                    <AlertCircle className="h-5 w-5 text-amber-500" />
+                    {t(locale, 'تفاصيل مراجعة الإيصال يدوياً', 'Review manual receipt details')}
+                  </CardTitle>
+                </div>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-muted" onClick={() => setReviewReceipt(null)}>
+                  <X className="h-5 w-5" />
+                </Button>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="p-3.5 border rounded-xl bg-muted/20">
+                    <p className="text-muted-foreground mb-1 text-xs">{t(locale, 'التاجر المودع', 'Depositing Merchant')}</p>
+                    <p className="font-bold">{reviewReceipt.user?.name}</p>
+                  </div>
+                  <div className="p-3.5 border border-brand/30 rounded-xl bg-brand/5">
+                    <p className="text-muted-foreground mb-1 text-xs">{t(locale, 'المبلغ المصرّح به', 'Declared Amount')}</p>
+                    <p className="font-black text-brand text-lg font-mono">{fmt(reviewReceipt.amount)}</p>
+                  </div>
+                </div>
+
+                {reviewReceipt.merchantNote && (
+                  <div className="p-3.5 rounded-xl border bg-yellow-500/10 border-yellow-500/20 text-sm">
+                    <p className="text-amber-600 font-bold mb-1 text-xs">{t(locale, 'ملاحظة التاجر:', 'Merchant Note:')}</p>
+                    <p className="text-foreground leading-relaxed">{reviewReceipt.merchantNote}</p>
+                  </div>
+                )}
+
+                {/* Slip Preview image block */}
+                {reviewReceipt.receiptImage && (
+                  <div className="space-y-1.5 mt-2">
+                    <Label className="text-xs font-bold text-muted-foreground">{t(locale, 'مرفق مع طلب الاشتراك', 'Subscription receipt attachment')}</Label>
+                    <div 
+                      className="rounded-xl border-2 overflow-hidden bg-slate-900 aspect-video flex items-center justify-center cursor-zoom-in relative group shadow-inner"
+                      onClick={() => setPreviewImageReceipt(reviewReceipt)}
+                    >
+                      <img src={reviewReceipt.receiptImage} alt="Receipt slip" className="max-h-56 object-contain" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300 text-white text-sm font-bold gap-2">
+                        <ExternalLink className="h-5 w-5" />
+                        {t(locale, 'اضغط للتكبير', 'Click to zoom')}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Admin Note / Rejection Reason */}
+                <div className="space-y-2 pt-3">
+                  <Textarea
+                    placeholder={t(locale, 'مثال: تم قبول الدفع بنجاح / أو: الصورة غير واضحة، يرجى إعادة الإرسال...', 'e.g. Payment approved successfully / or: Image is blurred, please resend...')}
+                    value={adminNote}
+                    onChange={e => setAdminNote(e.target.value)}
+                    className="h-20 rounded-xl text-sm border-2 focus-visible:ring-brand/30"
+                  />
+                  <p className="text-[11px] text-red-500 font-bold flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {t(locale, '* حقل إلزامي فقط في حالة رفض الإيصال', '* Required only if rejecting the receipt')}
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t mt-2">
+                  <Button variant="outline" className="rounded-xl flex-1 h-11 text-sm font-bold shadow-sm" disabled={isProcessing} onClick={() => setReviewReceipt(null)}>
+                    {t(locale, 'إلغاء', 'Cancel')}
+                  </Button>
+                  <Button variant="destructive" className="gap-2 rounded-xl flex-1 h-11 text-sm font-bold shadow-sm hover:shadow-red-500/20" disabled={isProcessing} onClick={() => handleReviewReceipt('rejected')}>
+                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+                    {t(locale, 'رفض الوصل', 'Reject Slip')}
+                  </Button>
+                  <Button className="gap-2 rounded-xl flex-1 h-11 text-sm bg-green-600 hover:bg-green-700 text-white font-bold shadow-sm hover:shadow-green-500/20" disabled={isProcessing} onClick={() => handleReviewReceipt('approved')}>
+                    {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    {t(locale, 'موافقة وتفعيل', 'Approve & Activate')}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
