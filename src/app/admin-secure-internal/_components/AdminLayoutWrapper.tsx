@@ -8,6 +8,7 @@ import { Globe, LogOut, Menu, LayoutDashboard, Settings, Sliders, ToggleRight, T
 import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Link from 'next/link';
+import { useAppStore } from '@/lib/store';
 
 export default function AdminLayoutWrapper({
   children,
@@ -20,10 +21,13 @@ export default function AdminLayoutWrapper({
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    useAppStore.getState().setLocale(adminLocale);
+  }, [adminLocale]);
 
   const toggleLocale = () => {
-    setAdminLocale(adminLocale === 'ar' ? 'en' : 'ar');
+    const newLocale = adminLocale === 'ar' ? 'en' : 'ar';
+    setAdminLocale(newLocale);
+    useAppStore.getState().setLocale(newLocale);
   };
 
   const handleLogout = () => {

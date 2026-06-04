@@ -12,7 +12,14 @@ export default function RadixDirectionProvider({ children }: { children: React.R
     setMounted(true);
   }, []);
 
-  // During SSR or first render before hydration, default to 'rtl' since Arabic is primary
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = locale === 'ar' ? 'ar' : 'en';
+    }
+  }, [locale]);
+
+  // Prevent hydration mismatch: force a default during SSR, then update on client
   const dir = !mounted ? 'rtl' : (locale === 'ar' ? 'rtl' : 'ltr');
 
   return <DirectionProvider dir={dir}>{children}</DirectionProvider>;
