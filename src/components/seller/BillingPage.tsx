@@ -189,7 +189,7 @@ export default function BillingPage() {
         
         if (paymentMethod === 'receipt' && data.invoiceAmount > 0) {
           // Switch to pay tab so they can upload the receipt
-          setActiveTab('pay');
+          setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay');
           setPayAmount(String(data.invoiceAmount));
           if (data.invoice && data.invoice.id) {
             setPendingInvoiceId(data.invoice.id);
