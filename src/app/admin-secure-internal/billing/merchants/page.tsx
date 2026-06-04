@@ -568,6 +568,19 @@ export default function BillingMerchantsPage() {
           </div>
         </div>
       )}
+
+      {/* Image Preview Modal */}
+      <Dialog open={!!zoomImage} onOpenChange={(open) => !open && setZoomImage(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-1 flex flex-col justify-center items-center bg-black/5 border-none shadow-none">
+          {zoomImage && (
+            <img 
+              src={zoomImage} 
+              alt="Receipt Preview" 
+              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl ring-1 ring-white/10" 
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
