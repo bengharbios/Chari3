@@ -98,6 +98,12 @@ export async function PATCH(
     });
 
     if (status === 'ACTIVE') {
+      // Approve associated invoice and receipt
+      const invoices = await prisma.invoice.findMany({ where: { subscriptionId: subscription.id } });
+      for (const inv of invoices) {
+        await prisma.invoice.update({ where: { id: inv.id }, data: { status: 'PAID' } });
+        await prisma.debtPaymentReceipt.updateMany({ where: { invoiceId: inv.id }, data: { status: 'approved' } });
+      }
       // Expire other active subscriptions for this user
       await prisma.subscription.updateMany({
         where: {

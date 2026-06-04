@@ -7,11 +7,12 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, packageId, billingCycle, addons, paymentMethod } = body as {
+    const { userId, packageId, billingCycle, addons, paymentMethod, receiptImage } = body as {
       userId: string;
       packageId: string;
       billingCycle: 'MONTHLY' | 'ANNUAL';
       paymentMethod?: 'receipt' | 'wallet' | 'free';
+      receiptImage?: string;
       addons: {
         mobileApp?: boolean;
         whatsapp?: boolean;

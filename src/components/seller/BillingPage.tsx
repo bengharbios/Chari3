@@ -87,6 +87,9 @@ export default function BillingPage() {
   const [payAmount, setPayAmount]       = useState('');
   const [payNote, setPayNote]           = useState('');
   const [payReceipt, setPayReceipt]     = useState('');
+  const [payReceiptFile, setPayReceiptFile] = useState<File | null>(null);
+  const [upgradeCalc, setUpgradeCalc] = useState<any>(null);
+  const [isCalculatingUpgrade, setIsCalculatingUpgrade] = useState(false);
   const [pendingInvoiceId, setPendingInvoiceId] = useState<string | null>(null);
   const [isUploading, setIsUploading]   = useState(false);
 
@@ -168,18 +171,72 @@ export default function BillingPage() {
 
   useEffect(() => { fetchData(); }, [user]);
 
+  // Calculate upgrade cost dynamically
+  useEffect(() => {
+    if (!selectedPackageId || !user?.id) return;
+    const fetchUpgradeCalc = async () => {
+      setIsCalculatingUpgrade(true);
+      try {
+        const res = await fetch('/api/billing/calculate-upgrade', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user.id,
+            packageId: selectedPackageId,
+            billingCycle,
+            addons: addonState
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setUpgradeCalc(data);
+        } else {
+          setUpgradeCalc(null);
+        }
+      } catch (e) {
+        console.error(e);
+        setUpgradeCalc(null);
+      } finally {
+        setIsCalculatingUpgrade(false);
+      }
+    };
+    
+    // Only calculate if we are selecting a new package or changing billing cycle/addons
+    fetchUpgradeCalc();
+  }, [selectedPackageId, billingCycle, addonState, user?.id]);
+
   // ─── Subscribe / Upgrade ──────────────────────────────────────────────────
   const handleSubscribe = async () => {
     if (!selectedPackageId) {
       toast.error(t(locale, 'يرجى اختيار باقة أولاً', 'Please select a package first'));
       return;
     }
+    const amountToPay = upgradeCalc ? upgradeCalc.invoiceAmount : totalBilled;
+    if (paymentMethod === 'receipt' && !payReceiptFile && amountToPay > 0) {
+      toast.error(t(locale, 'يرجى إرفاق صورة إيصال الدفع أولاً', 'Please attach the payment receipt image first'));
+      return;
+    }
     setIsSubscribing(true);
     try {
+      let finalReceiptUrl = '';
+      if (paymentMethod === 'receipt' && payReceiptFile) {
+        const formData = new FormData();
+        formData.append('file', payReceiptFile);
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+        const uploadData = await uploadRes.json();
+        if (uploadData.success) {
+          finalReceiptUrl = uploadData.url;
+        } else {
+          throw new Error('Failed to upload receipt image');
+        }
+      }
       const res = await fetch('/api/billing/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user?.id, packageId: selectedPackageId, billingCycle, addons: addonState, paymentMethod }),
+        body: JSON.stringify({ userId: user?.id, packageId: selectedPackageId, billingCycle, addons: addonState, paymentMethod, receiptImage: finalReceiptUrl }),
       });
       const data = await res.json();
       if (data.success) {
@@ -187,14 +244,8 @@ export default function BillingPage() {
           ? t(locale, 'تم ترقية الباقة بنجاح! 🎉', 'Package upgraded successfully! 🎉') 
           : t(locale, 'تم إرسال طلب الاشتراك بنجاح! 🎉', 'Subscription request submitted! 🎉'));
         
-        if (paymentMethod === 'receipt' && data.invoiceAmount > 0) {
-          // Switch to pay tab so they can upload the receipt
-          setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay');
-          setPayAmount(String(data.invoiceAmount));
-          if (data.invoice && data.invoice.id) {
-            setPendingInvoiceId(data.invoice.id);
-          }
-        }
+        setPayReceiptFile(null);
+        // The invoice and receipt are already created by the backend if they uploaded an image.
         fetchData();
       } else {
         toast.error(locale === 'ar' ? (data.error || 'فشل إرسال طلب الاشتراك') : (data.errorEn || data.error));
@@ -630,10 +681,20 @@ export default function BillingPage() {
                           <p>{locale === 'ar' ? selectedPackage?.name : (selectedPackage?.nameEn || selectedPackage?.name)} — {billingCycle === 'ANNUAL' ? t(locale, 'سنوي', 'Annual') : t(locale, 'شهري', 'Monthly')}</p>
                           <p className="text-brand font-black text-lg">{fmt(totalBilled)}</p>
                           {billingCycle === 'ANNUAL' && <p className="text-green-500">{t(locale, `يُدفع سنوياً (${fmt(totalMonthly)}/شهر)`, `Billed annually (${fmt(totalMonthly)}/mo)`)}</p>}
-                          {sub && sub.packageId !== selectedPackageId && selectedPackage?.price > 0 && (
-                            <p className="text-indigo-500 font-bold mt-1">
-                              {t(locale, 'سيتم حساب الترقية وإرجاع رصيد الأيام المتبقية تلقائياً.', 'Pro-rata will be calculated automatically.')}
-                            </p>
+                          {isCalculatingUpgrade ? (
+                            <p className="text-muted-foreground flex items-center gap-2"><Loader2 className="h-3 w-3 animate-spin"/> {t(locale, 'جاري الحساب...', 'Calculating...')}</p>
+                          ) : upgradeCalc && upgradeCalc.actionType === 'upgrade' && (
+                            <div className="bg-indigo-500/10 text-indigo-600 p-2 rounded-lg mt-2 text-xs border border-indigo-500/20">
+                              <p className="font-bold mb-1">{t(locale, 'تفاصيل ترقية الباقة:', 'Upgrade Details:')}</p>
+                              <div className="flex justify-between">
+                                <span>{t(locale, 'رصيد الأيام المتبقية:', 'Remaining days credit:')}</span>
+                                <span className="font-mono">{fmt(upgradeCalc.proRataCredit)}</span>
+                              </div>
+                              <div className="flex justify-between font-bold mt-1 border-t border-indigo-500/10 pt-1">
+                                <span>{t(locale, 'المبلغ المطلوب دفعه:', 'Amount to pay:')}</span>
+                                <span className="font-mono">{fmt(upgradeCalc.invoiceAmount)}</span>
+                              </div>
+                            </div>
                           )}
                         </div>
                         
@@ -659,6 +720,34 @@ export default function BillingPage() {
                                 {t(locale, 'المحفظة', 'Wallet')}
                               </Button>
                             </div>
+                            
+                            {paymentMethod === 'receipt' && (upgradeCalc ? upgradeCalc.invoiceAmount > 0 : totalBilled > 0) && (
+                              <div className="mt-3 p-3 bg-muted/30 border border-dashed rounded-xl">
+                                <Label className="text-xs font-bold mb-2 block text-brand">
+                                  {t(locale, 'صورة إيصال الدفع البنكي / بريدي موب', 'Upload Payment Receipt')}
+                                </Label>
+                                <input 
+                                  type="file" 
+                                  accept="image/*"
+                                  className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-xs file:bg-brand file:text-navy file:font-bold hover:file:bg-brand/90"
+                                  onChange={(e) => {
+                                    if (e.target.files && e.target.files.length > 0) {
+                                      setPayReceiptFile(e.target.files[0]);
+                                    } else {
+                                      setPayReceiptFile(null);
+                                    }
+                                  }}
+                                />
+                                {payReceiptFile && <p className="text-[10px] text-green-600 mt-1">✅ {payReceiptFile.name}</p>}
+                                <p className="text-[10px] text-muted-foreground mt-2">
+                                  {t(locale, 
+                                    'يرجى تحويل المبلغ الموضح في الأعلى وإرفاق صورة الإيصال هنا لإتمام طلبك.', 
+                                    'Please transfer the exact amount shown above and attach the receipt image here.'
+                                  )}
+                                </p>
+                              </div>
+                            )}
+
                             {paymentMethod === 'wallet' && wallet && (
                               <p className={`text-[10px] ${wallet.balance < totalBilled ? 'text-red-500' : 'text-green-500'}`}>
                                 {t(locale, 'رصيد المحفظة:', 'Wallet balance:')} {fmt(wallet.balance)}

@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    const [subscriptions, total] = await Promise.all([
+    const [rawSubscriptions, total] = await Promise.all([
       prisma.subscription.findMany({
         where,
         skip,
@@ -62,6 +62,20 @@ export async function GET(req: NextRequest) {
       }),
       prisma.subscription.count({ where }),
     ]);
+
+    // Attach receipts manually because no direct Prisma relation on Invoice model
+    const invoiceIds = rawSubscriptions.flatMap(s => s.invoices.map(i => i.id));
+    const receipts = await prisma.debtPaymentReceipt.findMany({
+      where: { invoiceId: { in: invoiceIds } }
+    });
+    
+    const subscriptions = rawSubscriptions.map(sub => {
+      const subInvoices = sub.invoices.map(inv => ({
+        ...inv,
+        receipts: receipts.filter(r => r.invoiceId === inv.id)
+      }));
+      return { ...sub, invoices: subInvoices };
+    });
 
     return NextResponse.json({
       success: true,
