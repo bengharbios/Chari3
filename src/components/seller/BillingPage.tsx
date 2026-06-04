@@ -121,6 +121,8 @@ export default function BillingPage() {
   };
 
   const selectedPackage = packages.find(p => p.id === selectedPackageId);
+  const isCurrent = sub?.packageId === selectedPackageId && sub?.status === 'ACTIVE';
+  const isPendingPlan = sub?.packageId === selectedPackageId && sub?.status === 'PENDING_APPROVAL';
   const addonsTotal     = computeAddonsTotal(addonState);
   const basePrice       = selectedPackage?.price ?? 0;
   const annualDiscount  = billingCycle === 'ANNUAL' ? 0.2 : 0;
