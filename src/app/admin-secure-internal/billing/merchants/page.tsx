@@ -87,6 +87,9 @@ export default function BillingMerchantsPage() {
   const [selectedSub, setSelectedSub] = useState<any | null>(null);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
   const [isZoomedIn, setIsZoomedIn] = useState(false);
+  const [reviewReceipt, setReviewReceipt] = useState<any>(null);
+  const [adminNote, setAdminNote] = useState('');
+  const [isProcessingReceipt, setIsProcessingReceipt] = useState(false);
   const [editForm, setEditForm] = useState({
     status: '',
     packageId: '',
@@ -220,6 +223,33 @@ export default function BillingMerchantsPage() {
       toast.error(err.message || 'Error deleting');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleReviewReceipt = async (action: 'approved' | 'rejected') => {
+    if (!reviewReceipt) return;
+    if (action === 'rejected' && !adminNote.trim()) {
+      toast.error(t(locale, 'يرجى كتابة سبب الرفض', 'Please provide a rejection reason'));
+      return;
+    }
+    setIsProcessingReceipt(true);
+    try {
+      const res = await fetch('/api/billing/receipts', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receiptId: reviewReceipt.id, status: action, adminNote }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(t(locale, 'تم تحديث حالة الإيصال بنجاح!', 'Receipt status updated successfully!'));
+        setReviewReceipt(null);
+        setAdminNote('');
+        fetchSubscriptions();
+      } else throw new Error(data.error);
+    } catch (err: any) {
+      toast.error(err.message || t(locale, 'فشل تحديث الإيصال', 'Failed to update receipt'));
+    } finally {
+      setIsProcessingReceipt(false);
     }
   };
 
@@ -528,7 +558,14 @@ export default function BillingMerchantsPage() {
                                           <p className="text-[10px] text-muted-foreground mb-4 px-4">{t(locale, 'التاجر قام برفع إيصال مالي لإثبات التحويل.', 'Merchant uploaded a proof of payment.')}</p>
                                           
                                           <button 
-                                            onClick={() => setZoomImage(sub.invoices[0].receipts[0].receiptImage)}
+                                            onClick={() => {
+                                              const rec = sub.invoices[0].receipts[0];
+                                              setReviewReceipt({
+                                                ...rec,
+                                                user: sub.user
+                                              });
+                                              setAdminNote(rec.adminNote || '');
+                                            }}
                                             className="w-full relative z-10 flex items-center justify-center gap-2 bg-brand text-navy hover:bg-brand/90 font-black px-6 py-2.5 rounded-xl shadow-[0_4px_14px_0_rgba(255,200,0,0.39)] hover:shadow-[0_6px_20px_rgba(255,200,0,0.23)] hover:-translate-y-0.5 transition-all"
                                           >
                                             <FileText className="h-4 w-4" />
@@ -671,6 +708,91 @@ export default function BillingMerchantsPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Global Receipt Review Modal */}
+      {reviewReceipt && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setReviewReceipt(null)}>
+          <div className="max-w-xl w-full" onClick={e => e.stopPropagation()}>
+            <Card className="border-brand/40 bg-card shadow-2xl">
+              <CardHeader className="pb-3 border-b flex flex-row items-center justify-between bg-muted/20 rounded-t-xl">
+                <div>
+                  <CardTitle className="text-base font-black flex items-center gap-2 text-foreground">
+                    <AlertCircle className="h-5 w-5 text-amber-500" />
+                    {t(locale, 'تفاصيل مراجعة الإيصال يدوياً', 'Review manual receipt details')}
+                  </CardTitle>
+                </div>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-muted" onClick={() => setReviewReceipt(null)}>
+                  <X className="h-5 w-5" />
+                </Button>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="p-3.5 border rounded-xl bg-muted/20">
+                    <p className="text-muted-foreground mb-1 text-xs">{t(locale, 'التاجر المودع', 'Depositing Merchant')}</p>
+                    <p className="font-bold">{reviewReceipt.user?.name}</p>
+                  </div>
+                  <div className="p-3.5 border border-brand/30 rounded-xl bg-brand/5">
+                    <p className="text-muted-foreground mb-1 text-xs">{t(locale, 'المبلغ المصرّح به', 'Declared Amount')}</p>
+                    <p className="font-black text-brand text-lg font-mono">{fmt(reviewReceipt.amount)}</p>
+                  </div>
+                </div>
+
+                {reviewReceipt.merchantNote && (
+                  <div className="p-3.5 rounded-xl border bg-yellow-500/10 border-yellow-500/20 text-sm">
+                    <p className="text-amber-600 font-bold mb-1 text-xs">{t(locale, 'ملاحظة التاجر:', 'Merchant Note:')}</p>
+                    <p className="text-foreground leading-relaxed">{reviewReceipt.merchantNote}</p>
+                  </div>
+                )}
+
+                {/* Slip Preview image block */}
+                {reviewReceipt.receiptImage && (
+                  <div className="space-y-1.5 mt-2">
+                    <Label className="text-xs font-bold text-muted-foreground">{t(locale, 'مرفق مع طلب الاشتراك', 'Subscription receipt attachment')}</Label>
+                    <div 
+                      className="rounded-xl border-2 overflow-hidden bg-slate-900 aspect-video flex items-center justify-center cursor-zoom-in relative group shadow-inner"
+                      onClick={() => setZoomImage(reviewReceipt.receiptImage)}
+                    >
+                      <img src={reviewReceipt.receiptImage} alt="Receipt slip" className="max-h-56 object-contain" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300 text-white text-sm font-bold gap-2">
+                        <ExternalLink className="h-5 w-5" />
+                        {t(locale, 'اضغط للتكبير', 'Click to zoom')}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Admin Note / Rejection Reason */}
+                <div className="space-y-2 pt-3">
+                  <Textarea
+                    placeholder={t(locale, 'مثال: تم قبول الدفع بنجاح / أو: الصورة غير واضحة، يرجى إعادة الإرسال...', 'e.g. Payment approved successfully / or: Image is blurred, please resend...')}
+                    value={adminNote}
+                    onChange={e => setAdminNote(e.target.value)}
+                    className="h-20 rounded-xl text-sm border-2 focus-visible:ring-brand/30"
+                  />
+                  <p className="text-[11px] text-red-500 font-bold flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {t(locale, '* حقل إلزامي فقط في حالة رفض الإيصال', '* Required only if rejecting the receipt')}
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t mt-2">
+                  <Button variant="outline" className="rounded-xl flex-1 h-11 text-sm font-bold shadow-sm" disabled={isProcessingReceipt} onClick={() => setReviewReceipt(null)}>
+                    {t(locale, 'إلغاء', 'Cancel')}
+                  </Button>
+                  <Button variant="destructive" className="gap-2 rounded-xl flex-1 h-11 text-sm font-bold shadow-sm hover:shadow-red-500/20" disabled={isProcessingReceipt} onClick={() => handleReviewReceipt('rejected')}>
+                    {isProcessingReceipt ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
+                    {t(locale, 'رفض الوصل', 'Reject Slip')}
+                  </Button>
+                  <Button className="gap-2 rounded-xl flex-1 h-11 text-sm bg-green-600 hover:bg-green-700 text-white font-bold shadow-sm hover:shadow-green-500/20" disabled={isProcessingReceipt} onClick={() => handleReviewReceipt('approved')}>
+                    {isProcessingReceipt ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    {t(locale, 'موافقة وتفعيل', 'Approve & Activate')}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
