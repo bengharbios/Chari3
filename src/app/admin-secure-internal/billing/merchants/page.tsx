@@ -664,50 +664,45 @@ export default function BillingMerchantsPage() {
         </div>
       )}
 
-      {/* Image Preview Modal */}
-      <Dialog open={!!zoomImage} onOpenChange={(open) => {
-        if (!open) {
-          setZoomImage(null);
-          setTimeout(() => setIsZoomedIn(false), 200);
-        }
-      }}>
-        <DialogContent className={`max-w-[98vw] sm:max-w-[95vw] max-h-[95vh] p-2 flex flex-col ${isZoomedIn ? 'justify-start items-center overflow-auto' : 'justify-center items-center'} bg-black/80 backdrop-blur-md border-none shadow-none`}>
-          <DialogTitle className="sr-only">معاينة الإيصال</DialogTitle>
-          <DialogDescription className="sr-only">
-            معاينة مكبرة لإيصال الدفع البنكي الخاص بالتاجر
-          </DialogDescription>
-          
-          {/* Header toolbar */}
-          <div className="absolute top-4 right-4 z-50 flex gap-2">
-            {zoomImage && (
-              <a 
-                href={zoomImage} 
-                target="_blank" 
-                rel="noreferrer"
-                className="bg-black/50 hover:bg-black/80 text-white rounded-full p-2 backdrop-blur-md transition-colors"
-                title={t(locale, 'فتح في علامة تبويب جديدة', 'Open in new tab')}
-              >
-                <ExternalLink className="h-5 w-5" />
-              </a>
-            )}
-          </div>
-
-          {zoomImage && (
-            <div className={`relative ${isZoomedIn ? 'w-[150%] sm:w-[120%] lg:w-[100%] h-auto' : 'w-full h-full max-h-[85vh]'} flex justify-center items-start transition-all duration-300 ease-out`}>
-              <img 
-                src={zoomImage} 
-                alt="Receipt Preview" 
-                title={isZoomedIn ? t(locale, 'انقر للتصغير', 'Click to zoom out') : t(locale, 'انقر للتكبير', 'Click to zoom in')}
-                onClick={() => setIsZoomedIn(!isZoomedIn)}
-                className={isZoomedIn 
-                  ? "w-full h-auto object-contain cursor-zoom-out shadow-2xl" 
-                  : "w-full h-full object-contain cursor-zoom-in drop-shadow-2xl hover:scale-[1.02] transition-transform"
-                } 
+      {/* High-res Image Preview Modal */}
+      {zoomImage && (
+        <div
+          className="fixed inset-0 z-[60] bg-black/85 flex items-center justify-center p-4"
+          onClick={() => setZoomImage(null)}
+        >
+          <div className="max-w-3xl w-full rounded-2xl overflow-hidden bg-card border-none shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="p-3 border-b flex justify-between items-center bg-card">
+              <span className="font-bold text-xs">{t(locale, 'معاينة الوصل بالحجم الكامل', 'Full-size Slip Preview')}</span>
+              <div className="flex items-center gap-2">
+                <a 
+                  href={zoomImage} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="bg-brand/10 hover:bg-brand/20 text-brand rounded-lg p-1.5 transition-colors"
+                  title={t(locale, 'فتح في علامة تبويب جديدة', 'Open in new tab')}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-red-500/10 hover:text-red-500" onClick={() => setZoomImage(null)}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="p-4 bg-slate-900 flex justify-center items-center max-h-[80vh] overflow-y-auto">
+              <img
+                src={zoomImage}
+                alt="Receipt Full Preview"
+                className="max-h-[70vh] object-contain rounded-lg"
               />
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            <div className="bg-card border-t p-3 flex justify-end">
+              <Button variant="outline" size="sm" className="rounded-xl text-xs font-bold" onClick={() => setZoomImage(null)}>
+                {t(locale, 'إغلاق المعاينة', 'Close Preview')}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Global Receipt Review Modal */}
       {reviewReceipt && (
