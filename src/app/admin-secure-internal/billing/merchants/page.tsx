@@ -84,6 +84,7 @@ export default function BillingMerchantsPage() {
 
   // Edit merchant drawer/form state
   const [selectedSub, setSelectedSub] = useState<any | null>(null);
+  const [zoomImage, setZoomImage] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     status: '',
     packageId: '',
