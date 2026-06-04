@@ -7,7 +7,7 @@ import {
   Loader2, Save, Search, Filter, ChevronDown, ChevronUp,
   Users, Check, X, ShieldAlert, BadgePercent, AlertCircle,
   TrendingDown, RefreshCw, ArrowRight, UserCheck, UserX,
-  ChevronLeft, ChevronRight, FileText
+  ChevronLeft, ChevronRight, FileText, ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -633,22 +633,40 @@ export default function BillingMerchantsPage() {
           setTimeout(() => setIsZoomedIn(false), 200);
         }
       }}>
-        <DialogContent className={`max-w-[95vw] sm:max-w-screen-xl max-h-[95vh] p-2 flex flex-col ${isZoomedIn ? 'justify-start items-start overflow-auto' : 'justify-center items-center'} bg-black/30 backdrop-blur-sm border-none shadow-none`}>
+        <DialogContent className={`max-w-[98vw] sm:max-w-[95vw] max-h-[95vh] p-2 flex flex-col ${isZoomedIn ? 'justify-start items-center overflow-auto' : 'justify-center items-center'} bg-black/80 backdrop-blur-md border-none shadow-none`}>
           <DialogTitle className="sr-only">معاينة الإيصال</DialogTitle>
           <DialogDescription className="sr-only">
             معاينة مكبرة لإيصال الدفع البنكي الخاص بالتاجر
           </DialogDescription>
+          
+          {/* Header toolbar */}
+          <div className="absolute top-4 right-4 z-50 flex gap-2">
+            {zoomImage && (
+              <a 
+                href={zoomImage} 
+                target="_blank" 
+                rel="noreferrer"
+                className="bg-black/50 hover:bg-black/80 text-white rounded-full p-2 backdrop-blur-md transition-colors"
+                title={t(locale, 'فتح في علامة تبويب جديدة', 'Open in new tab')}
+              >
+                <ExternalLink className="h-5 w-5" />
+              </a>
+            )}
+          </div>
+
           {zoomImage && (
-            <img 
-              src={zoomImage} 
-              alt="Receipt Preview" 
-              title={isZoomedIn ? t(locale, 'انقر للتصغير', 'Click to zoom out') : t(locale, 'انقر للتكبير للحجم الأصلي', 'Click to view original size')}
-              onClick={() => setIsZoomedIn(!isZoomedIn)}
-              className={isZoomedIn 
-                ? "max-w-none cursor-zoom-out" 
-                : "max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl ring-1 ring-white/10 cursor-zoom-in transition-transform hover:scale-[1.01]"
-              } 
-            />
+            <div className={`relative ${isZoomedIn ? 'w-[150%] sm:w-[120%] lg:w-[100%] h-auto' : 'w-full h-full max-h-[85vh]'} flex justify-center items-start transition-all duration-300 ease-out`}>
+              <img 
+                src={zoomImage} 
+                alt="Receipt Preview" 
+                title={isZoomedIn ? t(locale, 'انقر للتصغير', 'Click to zoom out') : t(locale, 'انقر للتكبير', 'Click to zoom in')}
+                onClick={() => setIsZoomedIn(!isZoomedIn)}
+                className={isZoomedIn 
+                  ? "w-full h-auto object-contain cursor-zoom-out shadow-2xl" 
+                  : "w-full h-full object-contain cursor-zoom-in drop-shadow-2xl hover:scale-[1.02] transition-transform"
+                } 
+              />
+            </div>
           )}
         </DialogContent>
       </Dialog>
