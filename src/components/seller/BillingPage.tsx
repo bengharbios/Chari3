@@ -569,7 +569,9 @@ export default function BillingPage() {
                           <CheckCircle2 className="h-6 w-6 text-green-500" />
                         </div>
                         <p className="font-bold text-lg text-foreground">
-                          {t(locale, 'اشتراكك الحالي مجاني', 'Your current subscription is free')}
+                          {sub?.totalMonthly === 0 
+                            ? t(locale, 'اشتراكك الحالي مجاني', 'Your current subscription is free')
+                            : t(locale, 'هذه الفاتورة لا تتطلب الدفع', 'This invoice requires no payment')}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           {t(locale, 'لا توجد أي رسوم مستحقة للدفع في هذه الفاتورة. اشتراكك فعال ويمكنك استخدام المنصة.', 'There are no fees due for this invoice. Your subscription is active.')}

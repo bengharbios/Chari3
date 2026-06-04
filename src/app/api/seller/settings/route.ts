@@ -186,6 +186,15 @@ export async function POST(req: NextRequest) {
         }
       });
 
+      // Update the user's name as well
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          name: settings.name ?? undefined,
+          nameEn: settings.nameEn ?? undefined,
+        }
+      });
+
       return NextResponse.json({ success: true, settings: updatedStore });
     } else {
       // Independent Seller Profile
@@ -217,6 +226,15 @@ export async function POST(req: NextRequest) {
           shippingIntegrations: shippingIntegrationsStr,
           paymentDetails: paymentDetailsStr,
           themeSettings: themeSettingsStr,
+        }
+      });
+
+      // Update the user's name as well
+      await db.user.update({
+        where: { id: userId },
+        data: {
+          name: settings.name ?? undefined,
+          nameEn: settings.nameEn ?? undefined,
         }
       });
 

@@ -101,7 +101,7 @@ const ALGERIAN_WILAYAS = [
 
 export default function StoreSettingsPage() {
   const { locale } = useAppStore();
-  const { user } = useAuthStore();
+  const { user, updateProfile } = useAuthStore();
   const t = (ar: string, en: string) => locale === 'ar' ? ar : en;
   const isAr = locale === 'ar';
 
@@ -451,6 +451,12 @@ export default function StoreSettingsPage() {
       });
       const data = await res.json();
       if (data.success) {
+        if (generalSettings.name || generalSettings.nameEn) {
+          updateProfile({
+            name: generalSettings.name || user?.name || '',
+            nameEn: generalSettings.nameEn || user?.nameEn || ''
+          });
+        }
         toast.success(t('🎉 تم حفظ جميع الإعدادات باحترافية!', '🎉 All settings successfully saved!'));
       } else {
         throw new Error(data.error);

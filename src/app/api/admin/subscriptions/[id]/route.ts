@@ -27,10 +27,11 @@ export async function PATCH(
     } = body as {
       status?: string;
       packageId?: string;
+      addDays?: number;
+      startDate?: string;
       endDate?: string;
       freeCommission?: boolean;
       overrideNote?: string;
-      addDays?: number;
       overriddenBy?: string;
     };
 
@@ -49,6 +50,10 @@ export async function PATCH(
 
     if (packageId !== undefined) {
       updateData.packageId = packageId;
+    }
+
+    if (startDate !== undefined) {
+      updateData.startDate = new Date(startDate);
     }
 
     if (endDate !== undefined) {

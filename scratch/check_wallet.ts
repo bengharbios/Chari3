@@ -1,0 +1,1 @@
+import { db } from './src/lib/db'; async function run() { console.log('Settings:', await db.systemSetting.findMany({ where: { key: { contains: 'billing' } } })); console.log('Wallets:', await db.wallet.findMany()); } run();  

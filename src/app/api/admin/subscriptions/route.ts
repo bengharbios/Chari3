@@ -50,6 +50,18 @@ export async function GET(req: NextRequest) {
                 select: {
                   balance: true,
                 }
+              },
+              store: {
+                select: {
+                  name: true,
+                  nameEn: true,
+                }
+              },
+              sellerProfile: {
+                select: {
+                  storeName: true,
+                  storeNameEn: true,
+                }
               }
             },
           },

@@ -137,6 +137,8 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
     status: '',
     packageId: '',
     addDays: '',
+    startDate: '',
+    endDate: '',
     freeCommission: false,
     overrideNote: '',
   });
@@ -279,6 +281,8 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
       status:          sub.status || '',
       packageId:       sub.packageId || sub.package?.id || '',
       addDays:         '',
+      startDate:       sub.startDate ? new Date(sub.startDate).toISOString().slice(0, 10) : '',
+      endDate:         sub.endDate ? new Date(sub.endDate).toISOString().slice(0, 10) : '',
       freeCommission:  sub.freeCommission ?? false,
       overrideNote:    sub.overrideNote || '',
     });
@@ -296,6 +300,8 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
           status:         editForm.status || undefined,
           packageId:      editForm.packageId || undefined,
           addDays:        editForm.addDays ? parseInt(editForm.addDays) : undefined,
+          startDate:      editForm.startDate || undefined,
+          endDate:        editForm.endDate || undefined,
           freeCommission: editForm.freeCommission,
           overrideNote:   editForm.overrideNote || undefined,
         }),
@@ -344,7 +350,7 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
   // ─── filtered subscriptions ───────────────────────────────────────────────
   const filteredSubs = subscriptions.filter((sub) => {
     const name  = (sub.user?.name || sub.user?.email || '').toLowerCase();
-    const store = (sub.user?.storeName || '').toLowerCase();
+    const store = (sub.user?.store?.name || sub.user?.sellerProfile?.storeName || '').toLowerCase();
     const q     = merchantSearch.toLowerCase();
     const matchQ = !q || name.includes(q) || store.includes(q);
     const matchS = merchantStatusFilter === 'ALL' || sub.status === merchantStatusFilter;
@@ -357,8 +363,8 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
   const now              = new Date();
   const endOfMonth       = new Date(now.getFullYear(), now.getMonth() + 1, 0);
   const expiringThisMonth = subscriptions.filter(s => {
-    if (!s.currentPeriodEnd) return false;
-    const d = new Date(s.currentPeriodEnd);
+    if (!s.endDate) return false;
+    const d = new Date(s.endDate);
     return d >= now && d <= endOfMonth;
   });
   const monthlyRevenue = activeSubs.reduce((sum, s) => sum + (s.package?.price || s.totalMonthly || 0), 0);
@@ -846,8 +852,8 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
                             <StatusBadge status={sub.status} locale={locale} />
                           </TableCell>
                           <TableCell className="text-xs font-mono text-muted-foreground">
-                            {sub.currentPeriodEnd
-                              ? new Date(sub.currentPeriodEnd).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+                            {sub.endDate
+                              ? new Date(sub.endDate).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })
                               : '—'}
                           </TableCell>
                           <TableCell className="text-xs font-bold text-brand font-mono">
@@ -933,6 +939,28 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
                                     value={editForm.addDays}
                                     onChange={e => setEditForm(f => ({ ...f, addDays: e.target.value }))}
                                     className="h-9 rounded-xl font-mono"
+                                  />
+                                </div>
+
+                                {/* Start Date */}
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs font-semibold">{t(locale, 'تاريخ البدء', 'Start Date')}</Label>
+                                  <Input
+                                    type="date"
+                                    value={editForm.startDate}
+                                    onChange={e => setEditForm(f => ({ ...f, startDate: e.target.value }))}
+                                    className="h-9 rounded-xl font-mono text-xs"
+                                  />
+                                </div>
+
+                                {/* End Date */}
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs font-semibold">{t(locale, 'تاريخ الانتهاء', 'End Date')}</Label>
+                                  <Input
+                                    type="date"
+                                    value={editForm.endDate}
+                                    onChange={e => setEditForm(f => ({ ...f, endDate: e.target.value }))}
+                                    className="h-9 rounded-xl font-mono text-xs"
                                   />
                                 </div>
 
