@@ -7,13 +7,14 @@ import {
   Loader2, Save, Search, Filter, ChevronDown, ChevronUp,
   Users, Check, X, ShieldAlert, BadgePercent, AlertCircle,
   TrendingDown, RefreshCw, ArrowRight, UserCheck, UserX,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
