@@ -241,7 +241,7 @@ export default function BillingPage() {
       const data = await res.json();
       if (data.success) {
         toast.success(data.actionType === 'upgrade' 
-          ? t(locale, 'تم ترقية الباقة بنجاح! 🎉', 'Package upgraded successfully! 🎉') 
+          ? t(locale, 'تم إرسال طلب الترقية للمراجعة بنجاح! 🎉', 'Upgrade request submitted for review! 🎉') 
           : t(locale, 'تم إرسال طلب الاشتراك بنجاح! 🎉', 'Subscription request submitted! 🎉'));
         
         setPayReceiptFile(null);
@@ -656,7 +656,7 @@ export default function BillingPage() {
                     className={`w-full rounded-2xl font-bold py-6 text-sm sm:text-base transition-all ${isFeatured ? 'bg-brand hover:bg-brand/90 text-navy shadow-lg shadow-brand/20' : 'bg-muted hover:bg-muted/80 text-foreground'} ${isSelected ? 'ring-2 ring-brand ring-offset-2 ring-offset-background' : ''}`}
                     onClick={() => setSelectedPackageId(pkg.id)}
                   >
-                    {isSelected ? t(locale, 'تم الاختيار', 'Selected') : (isCurrent ? t(locale, 'باقتك الحالية', 'Current Plan') : t(locale, 'اختر هذه الباقة', 'Choose Plan'))}
+                    {isSelected ? t(locale, 'تم الاختيار', 'Selected') : (isCurrent ? t(locale, 'باقتك الحالية', 'Current Plan') : (isPendingPlan ? t(locale, 'قيد المراجعة ⏳', 'Under Review ⏳') : t(locale, 'اختر هذه الباقة', 'Choose Plan')))}
                   </Button>
                 </div>
               );
@@ -780,7 +780,7 @@ export default function BillingPage() {
                           onClick={handleSubscribe}
                         >
                           {isSubscribing ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
-                          {sub?.packageId === selectedPackageId ? t(locale, 'تجديد الباقة', 'Renew Plan') : (sub ? t(locale, 'ترقية الباقة الآن', 'Upgrade Plan Now') : t(locale, 'اشترك الآن', 'Subscribe Now'))}
+                          {isPendingPlan ? t(locale, 'بانتظار الموافقة', 'Pending Approval') : (isCurrent ? t(locale, 'تجديد الباقة', 'Renew Plan') : (sub ? t(locale, 'ترقية الباقة الآن', 'Upgrade Plan Now') : t(locale, 'اشترك الآن', 'Subscribe Now')))}
                         </Button>
                       </div>
                     </div>
