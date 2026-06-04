@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Wrench, Loader2 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
@@ -96,6 +96,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   const { isAuthenticated, user, isBuyerMode } = useAuthStore();
   const { isAdminAuthenticated } = useAdminAuthStore();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const {
     accountStatus, isCompleted, isSubmitted, isDraftSaved,
     setAccountStatus, setVerificationItems,
@@ -108,10 +109,11 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   // Read ?view= query parameter to open the correct dashboard from any sub-route
   useEffect(() => {
     const view = searchParams?.get('view');
-    if (view && DASHBOARD_MAP[view] && view !== currentPage) {
+    const statePage = useAppStore.getState().currentPage;
+    if (view && DASHBOARD_MAP[view] && view !== statePage) {
       setCurrentPage(view as PageType);
     }
-  }, [searchParams, setCurrentPage, currentPage]);
+  }, [searchParams, setCurrentPage]);
 
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
@@ -136,16 +138,13 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   // If initialPage prop is passed from a specific route (e.g. /store), set it
   useEffect(() => {
     if (initialPage) {
-      const view = searchParams?.get('view');
-      if (view) return; // Let the view parameter take precedence
-
       // Prevent reverting to overview tab when navigating inside the same dashboard
       const isSameDomain = currentPage === initialPage || currentPage.startsWith(`${initialPage}-`);
       if (!isSameDomain) {
         setCurrentPage(initialPage);
       }
     }
-  }, [initialPage, currentPage, setCurrentPage, searchParams]);
+  }, [initialPage]);
 
   // Synchronize browser URL bar with Zustand currentPage
   useEffect(() => {
@@ -165,10 +164,10 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
 
       const currentUrl = window.location.pathname + window.location.search;
       if (currentUrl !== targetPath) {
-        window.history.replaceState(null, '', targetPath);
+        router.replace(targetPath, { scroll: false });
       }
     }
-  }, [currentPage]);
+  }, [currentPage, router]);
 
   const DashboardComponent = DASHBOARD_MAP[currentPage];
 
