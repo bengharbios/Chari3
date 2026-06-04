@@ -97,6 +97,18 @@ export async function PATCH(
       },
     });
 
+    if (status === 'ACTIVE') {
+      // Expire other active subscriptions for this user
+      await prisma.subscription.updateMany({
+        where: {
+          userId: subscription.userId,
+          id: { not: subscription.id },
+          status: { in: ['ACTIVE', 'TRIAL'] }
+        },
+        data: { status: 'EXPIRED', cancelReason: 'ترقية/تفعيل باقة جديدة' }
+      });
+    }
+
     if (status !== undefined) {
       await syncStoreStatusWithSubscription(subscription.userId, subscription.status);
     }

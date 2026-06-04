@@ -100,8 +100,7 @@ export default function BillingPage() {
   // ─── Currency ─────────────────────────────────────────────────────────────
   const currencyCode = wallet?.currency || 'DZD';
   const fmt = (n: number) => {
-    const sym: Record<string, string> = { DZD: isRTL ? 'د.ج' : 'DZD', SAR: isRTL ? 'ر.س' : 'SAR', USD: '$', EUR: '€' };
-    return `${n.toLocaleString(isRTL ? 'ar-SA' : 'en-US')} ${sym[currencyCode] || currencyCode}`;
+    return `${n.toLocaleString('en-US')} د.ج`;
   };
 
   // ─── Addon Prices from Settings ───────────────────────────────────────────
@@ -391,7 +390,7 @@ export default function BillingPage() {
             {t(locale, `✅ اشتراكك نشط — ${daysRemaining} يوم متبقٍ`, `✅ Active subscription — ${daysRemaining} days remaining`)} <span className="font-normal opacity-80 text-sm ml-1">{planInfo}</span>
           </h3>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {t(locale, `ينتهي في ${endDate?.toLocaleDateString('ar-SA')}`, `Expires on ${endDate?.toLocaleDateString('en-US')}`)}
+            {t(locale, `ينتهي في ${endDate?.toLocaleDateString('en-GB')}`, `Expires on ${endDate?.toLocaleDateString('en-GB')}`)}
           </p>
         </div>
         {daysRemaining !== null && daysRemaining <= 10 && (
@@ -491,7 +490,7 @@ export default function BillingPage() {
                     </div>
                     {inv.periodStart && (
                       <p className="text-xs text-muted-foreground">
-                        {t(locale, 'الفترة:', 'Period:')} {new Date(inv.periodStart).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')} — {inv.periodEnd ? new Date(inv.periodEnd).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US') : '—'}
+                        {t(locale, 'الفترة:', 'Period:')} {new Date(inv.periodStart).toLocaleDateString('en-GB')} — {inv.periodEnd ? new Date(inv.periodEnd).toLocaleDateString('en-GB') : '—'}
                       </p>
                     )}
                   </CardHeader>
@@ -510,7 +509,7 @@ export default function BillingPage() {
                     {inv.dueDate && (
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <CalendarDays className="h-3.5 w-3.5" />
-                        {t(locale, 'تاريخ الاستحقاق:', 'Due date:')} {new Date(inv.dueDate).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                        {t(locale, 'تاريخ الاستحقاق:', 'Due date:')} {new Date(inv.dueDate).toLocaleDateString('en-GB')}
                       </div>
                     )}
                     {inv.status !== 'PAID' && (
@@ -566,9 +565,9 @@ export default function BillingPage() {
                   )}
 
                   <div className="text-center mb-6 border-b border-border/50 pb-6">
-                    <h3 className="font-bold text-xl mb-3" style={{ color: pkg.color }}>{locale === 'ar' ? pkg.name : (pkg.nameEn || pkg.name)}</h3>
+                    <h3 className="font-bold text-lg mb-2" style={{ color: pkg.color }}>{locale === 'ar' ? pkg.name : (pkg.nameEn || pkg.name)}</h3>
                     <div className="flex items-end justify-center gap-1 leading-none">
-                      <span className="font-black text-4xl sm:text-5xl tracking-tight">{fmt(price)}</span>
+                      <span className="font-black text-3xl sm:text-4xl tracking-tight">{fmt(price)}</span>
                       <span className="text-sm text-muted-foreground font-medium pb-1">/{t(locale, 'شهر', 'mo')}</span>
                     </div>
                     {billingCycle === 'ANNUAL' ? (
@@ -890,7 +889,7 @@ export default function BillingPage() {
                             <div className={`h-2 w-2 rounded-full ${r.status === 'approved' ? 'bg-green-500' : r.status === 'rejected' ? 'bg-red-500' : 'bg-amber-500'}`} />
                             <span className="font-mono">{fmt(r.amount)}</span>
                           </div>
-                          <span className="text-muted-foreground">{new Date(r.createdAt).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}</span>
+                          <span className="text-muted-foreground">{new Date(r.createdAt).toLocaleDateString('en-GB')}</span>
                         </div>
                       ))}
                     </div>
@@ -938,7 +937,7 @@ export default function BillingPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground pe-4">
-                          {new Date(inv.createdAt).toLocaleDateString(isRTL ? 'ar-SA' : 'en-US')}
+                          {new Date(inv.createdAt).toLocaleDateString('en-GB')}
                         </TableCell>
                       </TableRow>
                     ))}

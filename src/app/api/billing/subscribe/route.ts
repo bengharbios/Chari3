@@ -172,12 +172,8 @@ export async function POST(req: NextRequest) {
     const isFree = invoiceAmount === 0 && pkg.price === 0;
 
     // ─── 7. Expire current subscription if upgrading ──────────────────────
-    if (actionType === 'upgrade' && currentSub) {
-      await db.subscription.update({
-        where: { id: currentSub.id },
-        data: { status: 'EXPIRED', cancelReason: `ترقية إلى ${pkg.name}` },
-      });
-    }
+    // DO NOT EXPIRE IMMEDIATELY! It will be expired when the new subscription becomes ACTIVE.
+    // We leave currentSub.status as is so the user doesn't lose their current plan during review.
 
     // ─── 8. Create new subscription ───────────────────────────────────────
     const subscription = await db.subscription.create({

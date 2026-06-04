@@ -193,6 +193,14 @@ export async function PATCH(req: NextRequest) {
               where: { id: invoice.subscriptionId },
               data: { status: 'ACTIVE' }
             });
+            await db.subscription.updateMany({
+              where: {
+                userId: invoice.userId,
+                id: { not: invoice.subscriptionId },
+                status: { in: ['ACTIVE', 'TRIAL'] }
+              },
+              data: { status: 'EXPIRED', cancelReason: 'تفعيل اشتراك عبر الإيصال' }
+            });
             subscriptionActivated = true;
             // Charge the wallet for the subscription amount since we credited it from the receipt
             if (newBalance >= invoice.amount) {
