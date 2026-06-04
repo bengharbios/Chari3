@@ -94,6 +94,8 @@ export default function BillingMerchantsPage() {
     status: '',
     packageId: '',
     addDays: '',
+    startDate: '',
+    endDate: '',
     freeCommission: false,
     overrideNote: '',
   });
@@ -175,6 +177,8 @@ export default function BillingMerchantsPage() {
         status: sub.status || '',
         packageId: sub.packageId || sub.package?.id || '',
         addDays: '',
+        startDate: sub.startDate ? new Date(sub.startDate).toISOString().slice(0, 10) : '',
+        endDate: sub.endDate ? new Date(sub.endDate).toISOString().slice(0, 10) : '',
         freeCommission: sub.freeCommission ?? false,
         overrideNote: sub.overrideNote || '',
       });
@@ -524,6 +528,28 @@ export default function BillingMerchantsPage() {
                                         placeholder={t(locale, 'مثال: 15 يوم...', 'e.g., 15 days...')}
                                         value={editForm.addDays}
                                         onChange={e => setEditForm(f => ({ ...f, addDays: e.target.value }))}
+                                        className="h-11 rounded-xl font-mono text-sm bg-slate-50 dark:bg-slate-900/50 border-transparent hover:border-border transition-colors"
+                                      />
+                                    </div>
+
+                                    {/* Start Date */}
+                                    <div className="space-y-2">
+                                      <Label className="text-xs font-bold text-muted-foreground">{t(locale, 'تاريخ البدء', 'Start Date')}</Label>
+                                      <Input
+                                        type="date"
+                                        value={editForm.startDate}
+                                        onChange={e => setEditForm(f => ({ ...f, startDate: e.target.value }))}
+                                        className="h-11 rounded-xl font-mono text-sm bg-slate-50 dark:bg-slate-900/50 border-transparent hover:border-border transition-colors"
+                                      />
+                                    </div>
+
+                                    {/* End Date */}
+                                    <div className="space-y-2">
+                                      <Label className="text-xs font-bold text-muted-foreground">{t(locale, 'تاريخ الانتهاء', 'End Date')}</Label>
+                                      <Input
+                                        type="date"
+                                        value={editForm.endDate}
+                                        onChange={e => setEditForm(f => ({ ...f, endDate: e.target.value }))}
                                         className="h-11 rounded-xl font-mono text-sm bg-slate-50 dark:bg-slate-900/50 border-transparent hover:border-border transition-colors"
                                       />
                                     </div>
