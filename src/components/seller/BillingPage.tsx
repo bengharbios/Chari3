@@ -171,7 +171,11 @@ export default function BillingPage() {
     }
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => {
+    if (user?.id) {
+      fetchData();
+    }
+  }, [user?.id]);
 
   // Calculate upgrade cost dynamically
   useEffect(() => {
