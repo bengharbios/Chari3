@@ -765,12 +765,17 @@ export default function BillingPage() {
                               </div>
                             )}
 
-                            {paymentMethod === 'wallet' && wallet && (
-                              <div className={`p-4 rounded-xl border ${wallet.balance < (upgradeCalc ? upgradeCalc.invoiceAmount : totalBilled) ? 'bg-red-500/10 border-red-500/20 text-red-600' : 'bg-green-500/10 border-green-500/20 text-green-600'}`}>
+                            {paymentMethod === 'wallet' && (
+                              <div className={`p-4 rounded-xl border ${(wallet?.balance || 0) < (upgradeCalc ? upgradeCalc.invoiceAmount : totalBilled) ? 'bg-red-500/10 border-red-500/20 text-red-600' : 'bg-green-500/10 border-green-500/20 text-green-600'}`}>
                                 <p className="text-sm font-bold flex justify-between">
                                   <span>{t(locale, 'الرصيد المتاح:', 'Available Balance:')}</span>
-                                  <span>{fmt(wallet.balance)}</span>
+                                  <span>{fmt(wallet?.balance || 0)}</span>
                                 </p>
+                                {(wallet?.balance || 0) < (upgradeCalc ? upgradeCalc.invoiceAmount : totalBilled) && (
+                                  <p className="text-xs text-red-500 mt-2 font-bold bg-red-500/10 p-2 rounded-lg text-center">
+                                    {t(locale, '⚠️ رصيد المحفظة غير كافٍ لإتمام الدفع.', '⚠️ Insufficient wallet balance to complete payment.')}
+                                  </p>
+                                )}
                               </div>
                             )}
                           </div>

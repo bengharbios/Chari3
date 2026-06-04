@@ -106,14 +106,29 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   const lastKnownStatus = useRef<string | null>(null);
   const draftRestoredRef = useRef(false);
 
-  // Read ?view= query parameter to open the correct dashboard from any sub-route
+  // Reconcile initialPage and searchParams to determine the correct page
   useEffect(() => {
     const view = searchParams?.get('view');
     const statePage = useAppStore.getState().currentPage;
-    if (view && DASHBOARD_MAP[view] && view !== statePage) {
-      setCurrentPage(view as PageType);
+
+    if (view && DASHBOARD_MAP[view]) {
+       // Only accept the view if we are NOT given an initialPage, OR if the view matches the initialPage domain
+       if (!initialPage || view === initialPage || view.startsWith(`${initialPage}-`)) {
+          if (view !== statePage) {
+            setCurrentPage(view as PageType);
+          }
+          return; // View handled, done.
+       }
     }
-  }, [searchParams, setCurrentPage]);
+
+    // If we get here, either there's no view, or the view is invalid/cross-domain.
+    if (initialPage) {
+      const isSameDomain = statePage === initialPage || statePage.startsWith(`${initialPage}-`);
+      if (!isSameDomain) {
+        setCurrentPage(initialPage);
+      }
+    }
+  }, [initialPage, searchParams, setCurrentPage]);
 
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
@@ -134,17 +149,6 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
         setIsLoadingConfig(false);
       });
   }, []);
-
-  // If initialPage prop is passed from a specific route (e.g. /store), set it
-  useEffect(() => {
-    if (initialPage) {
-      // Prevent reverting to overview tab when navigating inside the same dashboard
-      const isSameDomain = currentPage === initialPage || currentPage.startsWith(`${initialPage}-`);
-      if (!isSameDomain) {
-        setCurrentPage(initialPage);
-      }
-    }
-  }, [initialPage]);
 
   // Synchronize browser URL bar with Zustand currentPage
   useEffect(() => {
