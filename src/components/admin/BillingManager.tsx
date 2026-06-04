@@ -380,8 +380,8 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
     <div dir={dir} className="space-y-4 text-start">
       <Tabs defaultValue="platform-settings" className="space-y-4">
         {/* ── Tab list ── */}
-        <div className="overflow-x-auto pb-1">
-          <TabsList className="bg-muted/30 p-1 mb-6 flex-wrap h-auto inline-flex rounded-2xl border">
+        <div className="overflow-x-auto pb-1 flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-4 mb-6">
+          <TabsList className="bg-muted/30 p-1 flex-wrap h-auto inline-flex rounded-2xl border">
           <TabsTrigger value="settings" className="rounded-xl px-4 py-2 text-xs font-bold gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
             <Settings className="h-3.5 w-3.5" />{t(locale, 'الإعدادات العامة', 'Settings')}
           </TabsTrigger>
@@ -391,8 +391,8 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
           <TabsTrigger value="merchants" className="rounded-xl px-4 py-2 text-xs font-bold gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
             <Users className="h-3.5 w-3.5" />{t(locale, 'التجار والاشتراكات', 'Merchants')}
           </TabsTrigger>
-          <TabsTrigger value="wallets" className="rounded-xl px-4 py-2 text-xs font-bold gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
-            <Wallet className="h-3.5 w-3.5" />{t(locale, 'المحافظ والمديونيات', 'Wallets & Debts')}
+          <TabsTrigger value="revenue" className="rounded-xl px-4 py-2 text-xs font-bold gap-2 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+            <TrendingUp className="h-3.5 w-3.5" />{t(locale, 'تقارير الإيرادات', 'Revenue Reports')}
           </TabsTrigger>
           <TabsTrigger value="pending-slips" className="rounded-xl px-4 py-2 text-xs font-bold gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white data-[state=active]:shadow-sm">
             <Clock className="h-3.5 w-3.5" />
@@ -404,6 +404,13 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
             )}
           </TabsTrigger>
         </TabsList>
+
+          <Link href="/admin-secure-internal/billing/wallets">
+            <Button variant="outline" size="sm" className="rounded-xl px-4 py-2 text-xs font-bold gap-2 bg-card hover:bg-brand/10 hover:text-brand transition-colors border-brand/20">
+              <Wallet className="h-4 w-4" />
+              {t(locale, 'المحافظ والمديونيات', 'Wallets & Debts')}
+            </Button>
+          </Link>
         </div>
 
         {/* ════════════════════════════════════════════════════════════════════
@@ -979,92 +986,6 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
           </Card>
         </TabsContent>
 
-        {/* ════════════════════════════════════════════════════════════════════
-            TAB 4 — Wallets & Debts
-        ════════════════════════════════════════════════════════════════════ */}
-        <TabsContent value="wallets">
-          <Card className="border-border bg-card">
-            <CardHeader className="pb-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div>
-                  <CardTitle className="text-sm font-bold flex items-center gap-2">
-                    <Wallet className="h-4 w-4 text-brand" />
-                    {t(locale, 'المحافظ والمديونيات', 'Wallets & Debts')}
-                  </CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
-                    {t(locale, 'متابعة أرصدة التجار وعمولات المبيعات المستحقة', 'Track merchant balances and outstanding sales commissions')}
-                  </CardDescription>
-                </div>
-                <Button variant="outline" size="sm" className="h-8 rounded-xl gap-1.5 text-xs" onClick={() => fetchData()}>
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  {t(locale, 'تحديث', 'Refresh')}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-start ps-4 text-xs">{t(locale, 'التاجر / المتجر', 'Merchant / Store')}</TableHead>
-                      <TableHead className="text-start text-xs">{t(locale, 'الرصيد المتاح', 'Available Balance')}</TableHead>
-                      <TableHead className="text-start text-xs">{t(locale, 'المديونية (عمولات)', 'Debt (Commissions)')}</TableHead>
-                      <TableHead className="text-start text-xs">{t(locale, 'إجمالي المبيعات', 'Total Sales')}</TableHead>
-                      <TableHead className="text-start text-xs pe-4">{t(locale, 'إجراءات', 'Actions')}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {adminUsers.filter(u => u.role === 'seller' || u.role === 'store_manager').map((userObj: any) => {
-                      const wallet = userObj.wallet || { balance: 0, debt: 0, totalSales: 0 };
-                      return (
-                        <TableRow key={userObj.id}>
-                          <TableCell className="ps-4">
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-7 w-7 shrink-0">
-                                <AvatarFallback className="text-[10px] bg-brand/10 text-brand font-bold">
-                                  {userObj.name?.charAt(0) || 'U'}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="text-xs">
-                                <p className="font-bold">{userObj.name}</p>
-                                <p className="text-[10px] text-muted-foreground font-mono">{userObj.email}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <span className={`text-xs font-bold font-mono px-2 py-1 rounded-md ${wallet.balance > 0 ? 'bg-green-500/10 text-green-600' : 'text-muted-foreground'}`}>
-                              {fmt(wallet.balance || 0)}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className={`text-xs font-bold font-mono px-2 py-1 rounded-md ${wallet.debt > 0 ? 'bg-red-500/10 text-red-600 border border-red-500/20' : 'text-muted-foreground'}`}>
-                              {fmt(wallet.debt || 0)}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-xs font-mono text-muted-foreground">
-                            {fmt(wallet.totalSales || 0)}
-                          </TableCell>
-                          <TableCell className="pe-4">
-                            <Button size="sm" variant="outline" className="h-7 px-3 text-xs rounded-lg text-muted-foreground hover:text-foreground">
-                              {t(locale, 'تصفية المديونية', 'Clear Debt')}
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                    {adminUsers.filter(u => u.role === 'seller' || u.role === 'store_manager').length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-14 text-muted-foreground text-sm font-bold">
-                          {t(locale, 'لا يوجد تجار', 'No merchants found')}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* ════════════════════════════════════════════════════════════════════
             TAB 5 — Pending Slips
