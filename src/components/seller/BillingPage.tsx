@@ -542,45 +542,72 @@ export default function BillingPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-center max-w-7xl mx-auto py-8">
             {packages.map((pkg: any, idx: number) => {
               const isSelected = selectedPackageId === pkg.id;
               const isCurrent  = sub?.packageId === pkg.id;
               const price = billingCycle === 'ANNUAL' ? pkg.price * 0.8 : pkg.price;
+              const isFeatured = idx === 1 || pkg.name === 'محترف' || pkg.nameEn === 'Pro';
+
               return (
                 <div
                   key={pkg.id}
-                  onClick={() => setSelectedPackageId(pkg.id)}
-                  className={`relative rounded-2xl border-2 p-4 cursor-pointer transition-all hover:shadow-md ${isSelected ? 'border-brand shadow-lg shadow-brand/10 bg-brand/5' : 'border-border hover:border-brand/40 bg-card'}`}
+                  className={`relative flex flex-col rounded-3xl border p-6 sm:p-8 bg-card transition-all duration-300 hover:shadow-xl ${isFeatured ? 'border-brand shadow-2xl xl:scale-105 z-10 bg-gradient-to-b from-card to-brand/5' : 'border-border shadow-sm'} ${isSelected ? 'ring-2 ring-brand ring-offset-2 ring-offset-background' : ''}`}
                 >
                   {isCurrent && (
-                    <div className="absolute -top-2.5 start-3">
-                      <Badge className="bg-green-500 text-white border-0 text-[10px] font-bold">{t(locale, 'باقتك الحالية', 'Current Plan')}</Badge>
+                    <div className="absolute top-0 start-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <Badge className="bg-green-500 text-white border-0 text-xs px-3 py-1 font-bold tracking-wider">{t(locale, 'باقتك الحالية', 'Current Plan')}</Badge>
                     </div>
                   )}
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="p-2 rounded-xl" style={{ backgroundColor: `${pkg.color}20`, color: pkg.color }}>
-                      {PLAN_ICONS[idx] || <Package className="h-5 w-5" />}
+                  {isFeatured && !isCurrent && (
+                    <div className="absolute top-0 start-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <Badge className="bg-brand text-navy border-0 text-xs px-3 py-1 font-bold tracking-wider">{t(locale, 'الأكثر شيوعاً', 'Most Popular')}</Badge>
                     </div>
-                    <div>
-                      <h3 className="font-black text-sm" style={{ color: pkg.color }}>{locale === 'ar' ? pkg.name : (pkg.nameEn || pkg.name)}</h3>
-                      <p className="text-[10px] text-muted-foreground">{t(locale, `عمولة ${pkg.commissionRate}%`, `${pkg.commissionRate}% commission`)}</p>
+                  )}
+
+                  <div className="text-center mb-6 border-b border-border/50 pb-6">
+                    <h3 className="font-bold text-xl mb-3" style={{ color: pkg.color }}>{locale === 'ar' ? pkg.name : (pkg.nameEn || pkg.name)}</h3>
+                    <div className="flex items-end justify-center gap-1 leading-none">
+                      <span className="font-black text-4xl sm:text-5xl tracking-tight">{fmt(price)}</span>
+                      <span className="text-sm text-muted-foreground font-medium pb-1">/{t(locale, 'شهر', 'mo')}</span>
                     </div>
+                    {billingCycle === 'ANNUAL' ? (
+                       <p className="text-sm text-green-500 font-bold mt-3 bg-green-500/10 inline-block px-3 py-1 rounded-full">{t(locale, `وفر ${fmt(pkg.price * 12 * 0.2)} سنوياً`, `Save ${fmt(pkg.price * 12 * 0.2)}/year`)}</p>
+                    ) : (
+                       <p className="text-sm text-transparent select-none mt-3">_</p>
+                    )}
                   </div>
-                  <div className="mb-3">
-                    <span className="font-black text-2xl">{fmt(price)}</span>
-                    <span className="text-xs text-muted-foreground">/{t(locale, 'شهر', 'mo')}</span>
-                    {billingCycle === 'ANNUAL' && <p className="text-[10px] text-green-500 font-bold mt-0.5">{t(locale, `وفّر ${fmt(pkg.price * 12 * 0.2)} سنوياً`, `Save ${fmt(pkg.price * 12 * 0.2)}/year`)}</p>}
+
+                  <div className="flex-1 space-y-4 mb-8 text-sm font-medium">
+                    <div className="flex items-center gap-3"><CheckCircle2 className={`h-5 w-5 shrink-0 ${isFeatured ? 'text-brand' : 'text-green-500'}`} /><span>{pkg.maxProducts === -1 ? t(locale, 'منتجات غير محدودة', 'Unlimited products') : t(locale, `حتى ${pkg.maxProducts} منتج`, `Up to ${pkg.maxProducts} products`)}</span></div>
+                    <div className="flex items-center gap-3"><CheckCircle2 className={`h-5 w-5 shrink-0 ${isFeatured ? 'text-brand' : 'text-green-500'}`} /><span>{pkg.maxMonthlyOrders === -1 ? t(locale, 'طلبات غير محدودة', 'Unlimited orders') : t(locale, `حتى ${pkg.maxMonthlyOrders} طلب/شهر`, `Up to ${pkg.maxMonthlyOrders} orders/mo`)}</span></div>
+                    <div className="flex items-center gap-3"><CheckCircle2 className={`h-5 w-5 shrink-0 ${isFeatured ? 'text-brand' : 'text-green-500'}`} /><span>{t(locale, `عمولة المبيعات: ${pkg.commissionRate}%`, `Sales commission: ${pkg.commissionRate}%`)}</span></div>
+                    
+                    {pkg.hasAnalytics ? (
+                      <div className="flex items-center gap-3"><CheckCircle2 className={`h-5 w-5 shrink-0 ${isFeatured ? 'text-brand' : 'text-green-500'}`} /><span>{t(locale, 'تحليلات وتقارير متقدمة', 'Advanced analytics')}</span></div>
+                    ) : (
+                      <div className="flex items-center gap-3 opacity-40"><X className="h-5 w-5 shrink-0" /><span className="line-through">{t(locale, 'تحليلات وتقارير متقدمة', 'Advanced analytics')}</span></div>
+                    )}
+
+                    {pkg.hasCoupons ? (
+                      <div className="flex items-center gap-3"><CheckCircle2 className={`h-5 w-5 shrink-0 ${isFeatured ? 'text-brand' : 'text-green-500'}`} /><span>{t(locale, 'كوبونات وخصومات', 'Coupons & discounts')}</span></div>
+                    ) : (
+                      <div className="flex items-center gap-3 opacity-40"><X className="h-5 w-5 shrink-0" /><span className="line-through">{t(locale, 'كوبونات وخصومات', 'Coupons & discounts')}</span></div>
+                    )}
+
+                    {pkg.hasCustomDomain ? (
+                      <div className="flex items-center gap-3"><CheckCircle2 className={`h-5 w-5 shrink-0 ${isFeatured ? 'text-brand' : 'text-green-500'}`} /><span>{t(locale, 'ربط دومين مخصص', 'Custom domain')}</span></div>
+                    ) : (
+                      <div className="flex items-center gap-3 opacity-40"><X className="h-5 w-5 shrink-0" /><span className="line-through">{t(locale, 'ربط دومين مخصص', 'Custom domain')}</span></div>
+                    )}
                   </div>
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{pkg.maxProducts === -1 ? t(locale, 'منتجات غير محدودة', 'Unlimited products') : t(locale, `${pkg.maxProducts} منتج`, `${pkg.maxProducts} products`)}</span></div>
-                    <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{pkg.maxMonthlyOrders === -1 ? t(locale, 'طلبات غير محدودة', 'Unlimited orders') : t(locale, `${pkg.maxMonthlyOrders} طلب/شهر`, `${pkg.maxMonthlyOrders} orders/mo`)}</span></div>
-                    {pkg.hasAnalytics && <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{t(locale, 'تحليلات متقدمة', 'Advanced analytics')}</span></div>}
-                    {pkg.hasCoupons && <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{t(locale, 'الكوبونات والخصومات', 'Coupons & discounts')}</span></div>}
-                    {pkg.hasCustomDomain && <div className="flex items-center gap-1.5"><Check className="h-3.5 w-3.5 text-green-500 shrink-0" /><span>{t(locale, 'نطاق مخصص', 'Custom domain')}</span></div>}
-                    {!pkg.hasAnalytics && <div className="flex items-center gap-1.5"><X className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" /><span className="text-muted-foreground/50">{t(locale, 'تحليلات متقدمة', 'Advanced analytics')}</span></div>}
-                  </div>
-                  {isSelected && <div className="mt-3 flex items-center gap-1.5 text-brand text-xs font-bold"><CheckCircle2 className="h-4 w-4" />{t(locale, 'تم الاختيار', 'Selected')}</div>}
+
+                  <Button 
+                    className={`w-full rounded-2xl font-bold py-6 text-sm sm:text-base transition-all ${isFeatured ? 'bg-brand hover:bg-brand/90 text-navy shadow-lg shadow-brand/20' : 'bg-muted hover:bg-muted/80 text-foreground'} ${isSelected ? 'ring-2 ring-brand ring-offset-2 ring-offset-background' : ''}`}
+                    onClick={() => setSelectedPackageId(pkg.id)}
+                  >
+                    {isSelected ? t(locale, 'تم الاختيار', 'Selected') : (isCurrent ? t(locale, 'باقتك الحالية', 'Current Plan') : t(locale, 'اختر هذه الباقة', 'Choose Plan'))}
+                  </Button>
                 </div>
               );
             })}
