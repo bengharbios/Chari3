@@ -15,6 +15,7 @@ const inter = Inter({
 });
 
 import NextAuthProvider from '@/providers/NextAuthProvider';
+import RadixDirectionProvider from '@/providers/RadixDirectionProvider';
 
 export const metadata: Metadata = {
   title: 'شاري داي - منصة التجارة الإلكترونية | CharyDay E-Commerce Platform',
@@ -30,7 +31,9 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={`${cairo.variable} ${inter.variable} antialiased`}>
         <NextAuthProvider>
-          {children}
+          <RadixDirectionProvider>
+            {children}
+          </RadixDirectionProvider>
         </NextAuthProvider>
       </body>
     </html>
