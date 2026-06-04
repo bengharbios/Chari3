@@ -145,6 +145,10 @@ export default function AdminLayoutWrapper({
                       <Users className="h-4.5 w-4.5 text-emerald-500" />
                       <span>{isRTL ? 'التجار والاشتراكات' : 'Merchants & Subscriptions'}</span>
                     </Link>
+                    <Link href={getAdminPath('billing/wallets')} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-800 text-white text-sm">
+                      <Wallet className="h-4.5 w-4.5 text-indigo-500" />
+                      <span>{isRTL ? 'المحافظ والمديونيات' : 'Wallets & Debts'}</span>
+                    </Link>
                     <Link href={getAdminPath('billing/receipts')} className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-800 text-white text-sm">
                       <Sliders className="h-4.5 w-4.5 text-blue-500" />
                       <span>{isRTL ? 'مراجعة الإيصالات' : 'Review Payment Receipts'}</span>

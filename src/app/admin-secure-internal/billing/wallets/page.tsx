@@ -58,11 +58,23 @@ export default function WalletsPage() {
     if (!isAdminAuthenticated) return;
     setIsLoading(true);
     try {
-      const res = await fetch('/api/admin/users');
-      const data = await res.json();
-      if (data.success) {
-        setAdminUsers(data.users || []);
+      let allUsers: any[] = [];
+      let currentPage = 1;
+      let totalPages = 1;
+      
+      while (currentPage <= totalPages) {
+        const res = await fetch(`/api/admin/users?pageSize=50&page=${currentPage}`);
+        const data = await res.json();
+        if (data.success) {
+          allUsers = [...allUsers, ...(data.users || [])];
+          totalPages = data.pagination?.totalPages || 1;
+          currentPage++;
+        } else {
+          break;
+        }
       }
+      
+      setAdminUsers(allUsers);
     } catch (err) {
       console.error('Error fetching wallets:', err);
       toast.error(t(locale, 'فشل تحميل بيانات المحافظ', 'Failed to load wallets data'));
@@ -152,8 +164,15 @@ export default function WalletsPage() {
                               </AvatarFallback>
                             </Avatar>
                             <div className="text-xs">
-                              <p className="font-bold text-foreground">{userObj.name}</p>
+                              <p className="font-bold text-foreground">
+                                {userObj.role === 'store_manager' && userObj.store?.name 
+                                  ? userObj.store.name 
+                                  : userObj.role === 'seller' && userObj.sellerProfile?.storeName 
+                                  ? userObj.sellerProfile.storeName 
+                                  : userObj.name}
+                              </p>
                               <p className="text-[10px] text-muted-foreground font-mono leading-tight">{userObj.email}</p>
+                              <p className="text-[9px] text-muted-foreground/60 uppercase">{userObj.role}</p>
                             </div>
                           </div>
                         </TableCell>

@@ -146,6 +146,13 @@ export default function AdminSidebar() {
           color: 'text-emerald-400' 
         },
         { 
+          icon: Wallet, 
+          labelAr: "المحافظ والمديونيات", 
+          labelEn: "Wallets & Debts", 
+          path: 'billing/wallets', 
+          color: 'text-indigo-400' 
+        },
+        { 
           icon: Sliders, 
           labelAr: "مراجعة الإيصالات", 
           labelEn: "Review Payment Receipts", 
