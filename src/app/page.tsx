@@ -135,10 +135,17 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
 
   // If initialPage prop is passed from a specific route (e.g. /store), set it
   useEffect(() => {
-    if (initialPage && currentPage !== initialPage) {
-      setCurrentPage(initialPage);
+    if (initialPage) {
+      const view = searchParams?.get('view');
+      if (view) return; // Let the view parameter take precedence
+
+      // Prevent reverting to overview tab when navigating inside the same dashboard
+      const isSameDomain = currentPage === initialPage || currentPage.startsWith(`${initialPage}-`);
+      if (!isSameDomain) {
+        setCurrentPage(initialPage);
+      }
     }
-  }, [initialPage, currentPage, setCurrentPage]);
+  }, [initialPage, currentPage, setCurrentPage, searchParams]);
 
   // Synchronize browser URL bar with Zustand currentPage
   useEffect(() => {
