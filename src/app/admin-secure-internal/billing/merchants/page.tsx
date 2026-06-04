@@ -450,11 +450,11 @@ export default function BillingMerchantsPage() {
                                     
                                     <div className="space-y-2">
                                       <Label className="text-xs font-bold text-muted-foreground">{t(locale, 'حالة الاشتراك الحالية', 'Current Status')}</Label>
-                                      <Select value={editForm.status} onValueChange={v => setEditForm(f => ({ ...f, status: v }))}>
+                                      <Select value={editForm.status} onValueChange={v => setEditForm(f => ({ ...f, status: v }))} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
                                         <SelectTrigger className="h-11 rounded-xl text-sm font-bold w-full bg-slate-50 dark:bg-slate-900/50 border-transparent hover:border-border transition-colors">
                                           <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent className="text-sm font-bold">
+                                        <SelectContent className="text-sm font-bold" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
                                           {Object.entries(STATUS_LABELS).map(([val, cfg]) => (
                                             <SelectItem key={val} value={val}>{t(locale, cfg.ar, cfg.en)}</SelectItem>
                                           ))}
@@ -464,11 +464,11 @@ export default function BillingMerchantsPage() {
 
                                     <div className="space-y-2">
                                       <Label className="text-xs font-bold text-muted-foreground">{t(locale, 'تغيير الباقة الفعالة', 'Active Package')}</Label>
-                                      <Select value={editForm.packageId} onValueChange={v => setEditForm(f => ({ ...f, packageId: v }))}>
+                                      <Select value={editForm.packageId} onValueChange={v => setEditForm(f => ({ ...f, packageId: v }))} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
                                         <SelectTrigger className="h-11 rounded-xl text-sm font-bold w-full bg-slate-50 dark:bg-slate-900/50 border-transparent hover:border-border transition-colors">
                                           <SelectValue />
                                         </SelectTrigger>
-                                        <SelectContent className="text-sm font-bold">
+                                        <SelectContent className="text-sm font-bold" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
                                           {packages.map(pkg => (
                                             <SelectItem key={pkg.id} value={pkg.id}>
                                               {locale === 'ar' ? pkg.name : (pkg.nameEn || pkg.name)}
@@ -511,6 +511,7 @@ export default function BillingMerchantsPage() {
                                           checked={editForm.freeCommission}
                                           onCheckedChange={v => setEditForm(f => ({ ...f, freeCommission: v }))}
                                           className="data-[state=checked]:bg-green-500"
+                                          dir={locale === 'ar' ? 'rtl' : 'ltr'}
                                         />
                                       </div>
                                     </div>
