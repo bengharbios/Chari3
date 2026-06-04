@@ -108,16 +108,10 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   // Read ?view= query parameter to open the correct dashboard from any sub-route
   useEffect(() => {
     const view = searchParams?.get('view');
-    if (view && DASHBOARD_MAP[view]) {
+    if (view && DASHBOARD_MAP[view] && view !== currentPage) {
       setCurrentPage(view as PageType);
-      // Clean the URL without reloading
-      if (typeof window !== 'undefined') {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('view');
-        window.history.replaceState(null, '', url.pathname);
-      }
     }
-  }, [searchParams, setCurrentPage]);
+  }, [searchParams, setCurrentPage, currentPage]);
 
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
@@ -149,17 +143,22 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   // Synchronize browser URL bar with Zustand currentPage
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const pathMap: Record<string, string> = {
-        store: '/store',
-        seller: '/seller',
-        supplier: '/supplier',
-        logistics: '/logistics',
-        buyer: '/buyer',
-        verification: '/verification',
-      };
-      const targetPath = pathMap[currentPage] || '/';
-      if (window.location.pathname !== targetPath) {
-        window.history.pushState(null, '', targetPath);
+      let targetPath = '/';
+      if (currentPage.startsWith('store')) targetPath = '/store';
+      else if (currentPage.startsWith('seller')) targetPath = '/seller';
+      else if (currentPage.startsWith('supplier')) targetPath = '/supplier';
+      else if (currentPage.startsWith('logistics')) targetPath = '/logistics';
+      else if (currentPage.startsWith('buyer')) targetPath = '/buyer';
+      else if (currentPage === 'verification') targetPath = '/verification';
+
+      const isBaseRoute = ['store', 'seller', 'supplier', 'logistics', 'buyer', 'verification', 'home', 'login'].includes(currentPage);
+      if (!isBaseRoute && targetPath !== '/') {
+        targetPath += `?view=${currentPage}`;
+      }
+
+      const currentUrl = window.location.pathname + window.location.search;
+      if (currentUrl !== targetPath) {
+        window.history.replaceState(null, '', targetPath);
       }
     }
   }, [currentPage]);
