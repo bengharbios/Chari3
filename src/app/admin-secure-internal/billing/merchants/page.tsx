@@ -86,6 +86,7 @@ export default function BillingMerchantsPage() {
   // Edit merchant drawer/form state
   const [selectedSub, setSelectedSub] = useState<any | null>(null);
   const [zoomImage, setZoomImage] = useState<string | null>(null);
+  const [isZoomedIn, setIsZoomedIn] = useState(false);
   const [editForm, setEditForm] = useState({
     status: '',
     packageId: '',
@@ -626,8 +627,13 @@ export default function BillingMerchantsPage() {
       )}
 
       {/* Image Preview Modal */}
-      <Dialog open={!!zoomImage} onOpenChange={(open) => !open && setZoomImage(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-1 flex flex-col justify-center items-center bg-black/5 border-none shadow-none">
+      <Dialog open={!!zoomImage} onOpenChange={(open) => {
+        if (!open) {
+          setZoomImage(null);
+          setTimeout(() => setIsZoomedIn(false), 200);
+        }
+      }}>
+        <DialogContent className={`max-w-[95vw] sm:max-w-screen-xl max-h-[95vh] p-2 flex flex-col ${isZoomedIn ? 'justify-start items-start overflow-auto' : 'justify-center items-center'} bg-black/30 backdrop-blur-sm border-none shadow-none`}>
           <DialogTitle className="sr-only">معاينة الإيصال</DialogTitle>
           <DialogDescription className="sr-only">
             معاينة مكبرة لإيصال الدفع البنكي الخاص بالتاجر
@@ -636,7 +642,12 @@ export default function BillingMerchantsPage() {
             <img 
               src={zoomImage} 
               alt="Receipt Preview" 
-              className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl ring-1 ring-white/10" 
+              title={isZoomedIn ? t(locale, 'انقر للتصغير', 'Click to zoom out') : t(locale, 'انقر للتكبير للحجم الأصلي', 'Click to view original size')}
+              onClick={() => setIsZoomedIn(!isZoomedIn)}
+              className={isZoomedIn 
+                ? "max-w-none cursor-zoom-out" 
+                : "max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl ring-1 ring-white/10 cursor-zoom-in transition-transform hover:scale-[1.01]"
+              } 
             />
           )}
         </DialogContent>
