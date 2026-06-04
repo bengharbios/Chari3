@@ -172,6 +172,20 @@ export async function POST(req: NextRequest) {
 
     const isFree = invoiceAmount === 0 && pkg.price === 0;
 
+    // ─── 6.5 Validate Wallet Balance if chosen ──────────────────────────
+    const wallet = await db.wallet.findUnique({ where: { userId } });
+    const currency = wallet?.currency || 'DZD';
+
+    if (paymentMethod === 'wallet' && invoiceAmount > 0) {
+      if (!wallet || wallet.balance < invoiceAmount) {
+        return NextResponse.json({
+          success: false,
+          error: 'رصيد المحفظة غير كافٍ لإتمام الدفع.',
+          errorEn: 'Insufficient wallet balance to complete payment.',
+        }, { status: 400 });
+      }
+    }
+
     // ─── 7. Expire current subscription if upgrading ──────────────────────
     // DO NOT EXPIRE IMMEDIATELY! It will be expired when the new subscription becomes ACTIVE.
     // We leave currentSub.status as is so the user doesn't lose their current plan during review.
@@ -221,10 +235,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fetch wallet currency
-    const wallet = await db.wallet.findUnique({ where: { userId } });
-    const currency = wallet?.currency || 'DZD';
-
     const invoice = await db.invoice.create({
       data: {
         userId,
@@ -257,13 +267,13 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── 10. Handle wallet payment if requested ───────────────────────────
-    if (paymentMethod === 'wallet' && !isFree && wallet) {
-      if (wallet.balance >= invoiceAmount) {
-        const newBalance = wallet.balance - invoiceAmount;
-        await db.wallet.update({
-          where: { id: wallet.id },
-          data: { balance: newBalance, totalSpent: wallet.totalSpent + invoiceAmount },
-        });
+    if (paymentMethod === 'wallet' && invoiceAmount > 0 && wallet) {
+      // Balance is already validated in step 6.5
+      const newBalance = wallet.balance - invoiceAmount;
+      await db.wallet.update({
+        where: { id: wallet.id },
+        data: { balance: newBalance, totalSpent: wallet.totalSpent + invoiceAmount },
+      });
         await db.walletTransaction.create({
           data: {
             walletId: wallet.id,
@@ -280,7 +290,6 @@ export async function POST(req: NextRequest) {
           where: { id: invoice.id },
           data: { status: 'PAID', amountPaid: invoiceAmount, paidAt: now },
         });
-      }
     }
 
     // ─── 11. Send notification to admins ───────────────────────────────────

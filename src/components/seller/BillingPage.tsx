@@ -778,7 +778,7 @@ export default function BillingPage() {
                         
                         <Button
                           className="gap-2 rounded-2xl h-14 bg-brand hover:bg-brand/90 text-navy font-black text-lg w-full shadow-lg shadow-brand/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                          disabled={isSubscribing || isPending || (paymentMethod === 'wallet' && selectedPackage?.price > 0 && wallet?.balance < (upgradeCalc ? upgradeCalc.invoiceAmount : totalBilled))}
+                          disabled={isSubscribing || isPending || (paymentMethod === 'wallet' && (upgradeCalc ? upgradeCalc.invoiceAmount : totalBilled) > 0 && (wallet?.balance || 0) < (upgradeCalc ? upgradeCalc.invoiceAmount : totalBilled))}
                           onClick={handleSubscribe}
                         >
                           {isSubscribing ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
