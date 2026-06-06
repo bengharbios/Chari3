@@ -13,12 +13,9 @@ export async function GET() {
       'upload_recommended_height',
       'currency',
       'platform_payment_model',
-      'seller_dashboard_template',
     ];
 
-    const settings = await db.systemSetting ? await db.systemSetting.findMany({
-      where: { key: { in: publicKeys } }
-    }) : await (db as any).setting.findMany({
+    const settings = await db.systemSetting.findMany({
       where: { key: { in: publicKeys } }
     });
 
@@ -36,7 +33,6 @@ export async function GET() {
         upload_recommended_height: settingsMap.upload_recommended_height || '800',
         currency: settingsMap.currency || 'DZD',
         platform_payment_model: settingsMap.platform_payment_model || 'mixed',
-        seller_dashboard_template: settingsMap.seller_dashboard_template || 'default',
       }
     });
   } catch (error) {

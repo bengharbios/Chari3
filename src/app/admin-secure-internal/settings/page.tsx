@@ -34,7 +34,6 @@ export default function AdminSettingsPage() {
     enable_delivery_calculator: 'true',
     enable_volume_discounts: 'true',
     enable_product_qa: 'true',
-    seller_dashboard_template: 'default',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -76,7 +75,6 @@ export default function AdminSettingsPage() {
             enable_product_qa: data.settings.enable_product_qa !== undefined
               ? String(data.settings.enable_product_qa)
               : 'true',
-            seller_dashboard_template: data.settings.seller_dashboard_template || 'default',
           }));
         }
       } catch (err) {
@@ -281,26 +279,6 @@ export default function AdminSettingsPage() {
                   <option value="true">{t('مفعّل (عرض تبويب الأسئلة والأجوبة بصفحة المنتج)', 'Enabled (Show customer Q&A tab on product page)')}</option>
                   <option value="false">{t('معطّل (إخفاء نظام الأسئلة)', 'Disabled (Hide Q&A system)')}</option>
                 </select>
-              </div>
-
-              <div className="space-y-2 pt-4 border-t border-border">
-                <Label htmlFor="seller_dashboard_template" className="text-brand flex items-center gap-2">
-                  <SettingsIcon className="h-4 w-4" />
-                  {t('قالب لوحة تحكم التجار والموردين', 'Seller & Supplier Dashboard Template')}
-                </Label>
-                <select
-                  id="seller_dashboard_template"
-                  name="seller_dashboard_template"
-                  value={settings.seller_dashboard_template}
-                  onChange={(e) => setSettings(prev => ({ ...prev, seller_dashboard_template: e.target.value }))}
-                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
-                >
-                  <option value="default">{t('القالب الافتراضي الحديث (Modern)', 'Default Modern Template')}</option>
-                  <option value="gentelella">{t('قالب Gentelella (الكلاسيكي الغامق)', 'Gentelella Template (Classic Dark Sidebar)')}</option>
-                </select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t('يتيح لك التبديل الفوري بين تصميم لوحة التحكم لجميع التجار والموردين بضغطة زر.', 'Allows you to instantly switch the dashboard design for all sellers and suppliers.')}
-                </p>
               </div>
               
               <Button 
