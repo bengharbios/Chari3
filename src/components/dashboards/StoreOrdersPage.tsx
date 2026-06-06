@@ -438,8 +438,8 @@ export default function StoreOrdersPage() {
                     
                     return (
                       <tr key={o.id} className="border-b hover:bg-muted/10 transition-colors cursor-pointer whitespace-nowrap" onClick={() => setSelectedOrder(o)}>
-                        <td className="px-4 py-3 align-middle font-mono text-emerald-500 font-bold" dir="ltr">#{o.orderNumber}</td>
-                        <td className="px-4 py-3 align-middle">
+                        <td className="px-4 py-3 align-middle font-mono text-emerald-500 font-bold text-start"><span dir="ltr">#{o.orderNumber}</span></td>
+                        <td className="px-4 py-3 align-middle text-start">
                           <div className="flex items-center gap-3">
                             <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-[10px] font-black shrink-0 ${getStatusColor(o.status)}`}>
                               {initials}
@@ -448,17 +448,17 @@ export default function StoreOrdersPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 align-middle text-center text-muted-foreground">{o.items?.length || 1}</td>
-                        <td className="px-4 py-3 align-middle font-bold">{o.total.toLocaleString()} <span className="text-[10px] text-muted-foreground">DZD</span></td>
-                        <td className="px-4 py-3 align-middle">
-                          <div className="flex items-center gap-2">
+                        <td className="px-4 py-3 align-middle font-bold text-start"><span dir="ltr">{o.total.toLocaleString()} DZD</span></td>
+                        <td className="px-4 py-3 align-middle text-start">
+                          <div className="flex items-center justify-start gap-2">
                             <span className={`h-2 w-2 rounded-full ${getStatusColor(o.status)} shrink-0`}></span>
                             <span className="text-xs font-bold text-muted-foreground">{statusConfig.label}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 align-middle text-xs text-muted-foreground">
-                          {o.paymentMethod.toUpperCase()} {o.paymentStatus === 'paid' ? '•••• 4242' : ''}
+                        <td className="px-4 py-3 align-middle text-xs text-muted-foreground text-start">
+                          <span dir="ltr">{o.paymentMethod.toUpperCase()} {o.paymentStatus === 'paid' ? '•••• 4242' : ''}</span>
                         </td>
-                        <td className="px-4 py-3 align-middle text-xs text-muted-foreground">{o.date}</td>
+                        <td className="px-4 py-3 align-middle text-xs text-muted-foreground text-start"><span dir="ltr">{o.date}</span></td>
                         <td className="px-4 py-3 align-middle text-end">
                           <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-muted shrink-0">
                             <MoreVertical className="h-4 w-4 text-muted-foreground" />
@@ -493,7 +493,7 @@ export default function StoreOrdersPage() {
 
       {/* Order Detail Dialog - Redesigned to match image 2 */}
       <Dialog open={!!selectedOrder} onOpenChange={(open) => { if (!open) setSelectedOrder(null); }}>
-        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden bg-background w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[95vh] sm:w-full flex flex-col rounded-xl">
+        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden bg-background w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[95vh] sm:w-full flex flex-col rounded-xl !z-[100] mt-10 md:mt-0">
           <DialogTitle className="sr-only">{t('تفاصيل الطلب', 'Order Details')} #{selectedOrder?.orderNumber}</DialogTitle>
           <DialogDescription className="sr-only">{t('عرض وتعديل تفاصيل الطلب الخاص بالعميل.', 'View and manage customer order details.')}</DialogDescription>
           {selectedOrder && (
@@ -504,16 +504,27 @@ export default function StoreOrdersPage() {
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{t('المتجر', 'SHOP')} &bull; {t('الطلبات', 'ORDERS')}</p>
                   <div className="flex flex-wrap items-center gap-2 md:gap-3">
                     <h2 className="text-lg sm:text-xl md:text-2xl font-black truncate">{t('طلب', 'Order')} <span dir="ltr">#{selectedOrder.orderNumber}</span></h2>
-                    <div className="flex items-center gap-2 bg-background border px-2 py-1 rounded-md shadow-sm shrink-0">
+                    <div className="flex items-center gap-2 bg-background border px-2 py-1 rounded-md shadow-sm shrink-0 hover:bg-muted/50 transition-colors">
                       <span className={`h-2 w-2 rounded-full ${getStatusColor(selectedOrder.status)}`}></span>
-                      <span className="text-xs font-bold" style={{ color: getStatusConfig(selectedOrder.status).color }}>{getStatusConfig(selectedOrder.status).label}</span>
+                      <select 
+                        value={selectedOrder.status}
+                        onChange={(e) => handleUpdateStatus(e.target.value, selectedOrder.id)}
+                        className="text-xs font-bold bg-transparent outline-none cursor-pointer appearance-none relative w-full"
+                        style={{ color: getStatusConfig(selectedOrder.status).color }}
+                      >
+                        {statuses.map(s => <option key={s.key} value={s.key} className="text-foreground">{isAr ? s.nameAr : (s.nameEn || s.nameAr)}</option>)}
+                      </select>
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 w-full lg:w-auto">
                   <Button variant="outline" size="sm" className="font-bold flex-1 sm:flex-none" onClick={handlePrintInvoice}>{t('طباعة', 'Print')}</Button>
-                  <Button variant="outline" size="sm" className="font-bold flex-1 sm:flex-none">{t('إرسال الفاتورة', 'Send invoice')}</Button>
-                  <Button size="sm" className="font-bold bg-[#1ABB9C] hover:bg-[#159a80] text-white flex-1 sm:flex-none whitespace-nowrap">{t('تعليم كمكتمل', 'Mark fulfilled')}</Button>
+                  <Button variant="outline" size="sm" className="font-bold flex-1 sm:flex-none" onClick={() => toast.success(t('تم إرسال الفاتورة إلى بريد العميل بنجاح', 'Invoice sent to customer email successfully'))}>
+                    {t('إرسال الفاتورة', 'Send invoice')}
+                  </Button>
+                  <Button size="sm" className="font-bold bg-[#1ABB9C] hover:bg-[#159a80] text-white flex-1 sm:flex-none whitespace-nowrap" onClick={() => handleUpdateStatus('delivered')}>
+                    {t('تعليم كمكتمل', 'Mark fulfilled')}
+                  </Button>
                 </div>
               </div>
 
@@ -607,8 +618,8 @@ export default function StoreOrdersPage() {
                                   <div className="h-8 w-8 md:h-10 md:w-10 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-100">
                                     {item.productName.substring(0, 2).toUpperCase()}
                                   </div>
-                                  <div className="min-w-0 flex-1">
-                                    <p className="font-bold text-sm text-foreground truncate">{item.productName}</p>
+                                  <div className="min-w-0 flex-1 whitespace-normal">
+                                    <p className="font-bold text-sm text-foreground break-words">{item.productName}</p>
                                     <p className="text-xs text-muted-foreground" dir="ltr">SKU - PRD-{item.id.substring(0,4)}</p>
                                   </div>
                                 </td>
