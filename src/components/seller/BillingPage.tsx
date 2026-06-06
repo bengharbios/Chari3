@@ -444,10 +444,10 @@ export default function BillingPage() {
         <div className="p-3 rounded-xl bg-green-500/10"><CheckCircle2 className="h-6 w-6 text-green-500" /></div>
         <div className="flex-1 text-center sm:text-start">
           <h3 className="font-bold text-base text-green-600">
-            {t(locale, `✅ اشتراكك نشط — ${daysRemaining} يوم متبقٍ`, `✅ Active subscription — ${daysRemaining} days remaining`)} <span className="font-normal opacity-80 text-sm ml-1">{planInfo}</span>
+            {t(locale, `✅ اشتراكك نشط${daysRemaining !== null ? ` — ${daysRemaining} يوم متبقٍ` : ''}`, `✅ Active subscription${daysRemaining !== null ? ` — ${daysRemaining} days remaining` : ''}`)} <span className="font-normal opacity-80 text-sm ml-1">{planInfo}</span>
           </h3>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {t(locale, `ينتهي في ${endDate?.toLocaleDateString('en-GB')}`, `Expires on ${endDate?.toLocaleDateString('en-GB')}`)}
+            {endDate ? t(locale, `ينتهي في ${endDate.toLocaleDateString('en-GB')}`, `Expires on ${endDate.toLocaleDateString('en-GB')}`) : t(locale, 'اشتراك غير محدود', 'Lifetime Subscription')}
           </p>
         </div>
         {daysRemaining !== null && daysRemaining <= 10 && (
