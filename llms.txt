@@ -1,0 +1,34 @@
+# ChariDay Platform - Project Summary
+
+## Overview
+ChariDay is an advanced, custom-built, multi-vendor e-commerce and marketplace platform. It enables businesses to set up custom storefronts, manage products, handle orders, and process payments. It is fully bilingual (Arabic and English) with full RTL support.
+
+## Tech Stack
+- Frontend & Backend: Next.js 14/15 (App Router)
+- Language: TypeScript
+- Database: PostgreSQL with Prisma ORM
+- UI Library: React, Tailwind CSS, Shadcn UI, Lucide React Icons
+- State & Data Fetching: React Hooks, Server Actions, Server Components
+
+## System Architecture
+### 1. Modules
+- **Admin Portal**: Super administrator interface for managing platforms, approving vendors, overseeing subscriptions, and handling manual billing overrides.
+- **Seller Portal**: Merchant dashboard for managing store settings, inventory, sales, and subscriptions.
+- **Storefront**: The public-facing shop for each merchant, browsed by buyers.
+- **Billing System**: A highly robust subscription engine that handles:
+  - Automated recurring billing.
+  - Manual admin overrides (e.g., global commission exemptions, free days).
+  - Wallets and payouts.
+  - Automatic downgrades to a "Beginner Plan" when subscriptions expire.
+
+### 2. File Organization
+- `src/app/api`: All backend REST endpoints.
+- `src/app/admin-secure-internal`: Admin frontend routes.
+- `src/app/seller`: Seller frontend routes.
+- `src/components/ui`: Reusable styling components.
+- `src/lib/billing.ts`: Core logic for subscription state transitions.
+
+## Best Practices
+- Modifications to `schema.prisma` require `npx prisma generate`.
+- Do not bypass Prisma for database updates to ensure referential integrity.
+- Use `t(locale, ar, en)` for all user-facing strings to maintain multilingual support.
