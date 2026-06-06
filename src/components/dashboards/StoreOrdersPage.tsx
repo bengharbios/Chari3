@@ -293,160 +293,177 @@ export default function StoreOrdersPage() {
   };
 
   return (
-    <div className="space-y-6 p-4 md:p-6 text-start">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <PageHeader title={t('إدارة الطلبات المتطورة', 'Advanced Order Management')} description={t('تتبع المبيعات الحية، مع فلترة دقيقة وعرض مرن.', 'Track live sales, precise filtering, and flexible views.')} />
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="rounded-xl border-white/10 shadow-sm" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
-            {t('تصدير', 'Export')}
-          </Button>
-          <div className="bg-background/50 backdrop-blur-md rounded-xl p-1 flex items-center border border-white/10 shrink-0">
-            <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => handleViewModeChange('list')} className="rounded-lg"><List className="h-4 w-4" /></Button>
-            <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" onClick={() => handleViewModeChange('table')} className="rounded-lg"><TableIcon className="h-4 w-4" /></Button>
-            <Button variant={viewMode === 'kanban' ? 'default' : 'ghost'} size="sm" onClick={() => handleViewModeChange('kanban')} className="rounded-lg"><LayoutGrid className="h-4 w-4" /></Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-background/60 backdrop-blur-xl p-4 rounded-3xl border border-white/10 shadow-lg">
-        <div className="flex flex-wrap gap-2 items-center w-full">
-          <Input placeholder={t('ابحث...', 'Search...')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && fetchOrders()} className="w-full sm:w-48 rounded-xl" />
-          <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-auto rounded-xl" />
-          <span className="text-muted-foreground">-</span>
-          <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-auto rounded-xl" />
-          <Button onClick={() => { setPage(1); fetchOrders(); }} size="sm" className="rounded-xl">{t('بحث', 'Search')}</Button>
-        </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-          <select 
-            value={statusFilter} 
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-background border border-white/10 rounded-xl px-4 h-10 text-sm font-bold cursor-pointer outline-none focus:border-primary w-full sm:w-auto"
-          >
-            <option value="all">{t('جميع الحالات', 'All Statuses')}</option>
-            {statuses.map((s) => (
-              <option key={s.key} value={s.key}>{isAr ? s.nameAr : (s.nameEn || s.nameAr)}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {isLoading ? (
-        <div className="h-40 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-      ) : orders.length === 0 ? (
-        <div className="h-40 flex items-center justify-center text-muted-foreground">{t('لا توجد طلبات مطابقة.', 'No orders found.')}</div>
-      ) : (
-        <>
-          {viewMode === 'table' && (
-            <div className="overflow-x-auto border border-white/10 rounded-2xl bg-background/50 backdrop-blur-md">
-              <table className="w-full text-sm text-start">
-                <thead className="bg-muted/50 border-b border-white/10">
-                  <tr>
-                    <th className="p-4">{t('رقم الطلب', 'Order ID')}</th>
-                    <th className="p-4">{t('العميل', 'Customer')}</th>
-                    <th className="p-4">{t('التاريخ', 'Date')}</th>
-                    <th className="p-4">{t('الحالة', 'Status')}</th>
-                    <th className="p-4">{t('المجموع', 'Total')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.map(o => (
-                    <tr key={o.id} onClick={() => setSelectedOrder(o)} className="border-b border-white/5 hover:bg-muted/30 cursor-pointer transition-colors">
-                      <td className="p-4 font-mono">#{o.orderNumber}</td>
-                      <td className="p-4 font-bold">{o.buyerName}</td>
-                      <td className="p-4">{o.date}</td>
-                      <td className="p-4">
-                        <Badge style={{ backgroundColor: getStatusConfig(o.status).color, color: '#fff' }} className="border-0 shadow-sm">{getStatusConfig(o.status).label}</Badge>
-                      </td>
-                      <td className="p-4 font-black">{o.total.toLocaleString()} DZD</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+    <div className="space-y-4 p-4 md:p-6 text-start">
+      
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-4">
+            <div>
+              <CardTitle>{t('الطلبات', 'Orders')} <small className="text-muted-foreground text-sm font-normal ml-2">{t('تتبع المبيعات الحية', 'Track live sales')}</small></CardTitle>
             </div>
-          )}
-
-          {viewMode === 'list' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {orders.map((order, idx) => (
-                <Card key={idx} onClick={() => setSelectedOrder(order)} className="border-white/10 bg-background/60 shadow-lg rounded-3xl overflow-hidden hover:border-primary/40 transition-all cursor-pointer">
-                  <CardContent className="p-5">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="font-black text-base">{order.buyerName}</h3>
-                        <p className="text-xs text-muted-foreground font-mono">#{order.orderNumber}</p>
-                      </div>
-                      <Badge style={{ backgroundColor: getStatusConfig(order.status).color, color: '#fff' }}>{getStatusConfig(order.status).label}</Badge>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div><span className="text-muted-foreground">{t('المجموع:', 'Total:')}</span> <span className="font-bold">{order.total.toLocaleString()} DZD</span></div>
-                      <div><span className="text-muted-foreground">{t('التاريخ:', 'Date:')}</span> <span className="font-bold">{order.date}</span></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          {viewMode === 'kanban' && (
-            <div className="flex gap-6 overflow-x-auto pb-4 hide-scrollbar">
-              {statuses.map(statusObj => {
-                const columnOrders = orders.filter(o => o.status === statusObj.key);
-                return (
-                  <div 
-                    key={statusObj.key} 
-                    className="min-w-[300px] w-[300px] flex-shrink-0 flex flex-col gap-4 bg-muted/10 p-3 rounded-3xl border border-white/5"
-                    onDragOver={handleDragOver}
-                    onDrop={(e) => handleDrop(e, statusObj.key)}
-                  >
-                    <div className="flex items-center justify-between p-3 rounded-2xl bg-background/80" style={{ borderTop: `4px solid ${statusObj.color}` }}>
-                      <span className="font-black text-sm">{isAr ? statusObj.nameAr : (statusObj.nameEn || statusObj.nameAr)}</span>
-                      <Badge>{columnOrders.length}</Badge>
-                    </div>
-                    <div className="flex flex-col gap-3 max-h-[60vh] overflow-y-auto hide-scrollbar">
-                      {columnOrders.map(order => (
-                        <Card 
-                          key={order.id} 
-                          draggable 
-                          onDragStart={(e) => handleDragStart(e, order.id)}
-                          onClick={() => setSelectedOrder(order)} 
-                          className="border-white/10 bg-background/90 shadow-md rounded-2xl cursor-grab active:cursor-grabbing hover:border-primary/50"
-                        >
-                          <CardContent className="p-4 text-start">
-                            <p className="font-bold text-sm truncate">{order.buyerName}</p>
-                            <p className="text-[10px] text-muted-foreground font-mono mt-0.5 mb-2">#{order.orderNumber}</p>
-                            <div className="flex justify-between items-center text-xs pt-2 border-t border-white/5">
-                              <span className="font-black text-primary">{order.total.toLocaleString()} DZD</span>
-                              <span className="text-muted-foreground">{order.date}</span>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="flex justify-between items-center bg-background/50 p-4 rounded-2xl border border-white/10">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">{t('الحد:', 'Limit:')}</span>
-              <select value={limit} onChange={(e) => setLimit(Number(e.target.value))} className="bg-background border border-white/10 rounded-lg p-1 text-sm">
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
+              <Button variant="outline" size="sm" onClick={handleExport}>
+                <Download className="h-4 w-4 mr-2" />
+                {t('تصدير', 'Export')}
+              </Button>
+              <div className="flex items-center border rounded-md p-0.5 bg-muted/20">
+                <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => handleViewModeChange('list')} className="h-7"><List className="h-4 w-4" /></Button>
+                <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" onClick={() => handleViewModeChange('table')} className="h-7"><TableIcon className="h-4 w-4" /></Button>
+                <Button variant={viewMode === 'kanban' ? 'default' : 'ghost'} size="sm" onClick={() => handleViewModeChange('kanban')} className="h-7"><LayoutGrid className="h-4 w-4" /></Button>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-muted/10 p-3 rounded-md border mb-4">
+            <div className="flex flex-wrap gap-2 items-center w-full">
+              <Input placeholder={t('ابحث...', 'Search...')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && fetchOrders()} className="w-full sm:w-48 h-9" />
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-auto h-9" />
+              <span className="text-muted-foreground">-</span>
+              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-auto h-9" />
+              <Button onClick={() => { setPage(1); fetchOrders(); }} size="sm" className="h-9">{t('بحث', 'Search')}</Button>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+              <select 
+                value={statusFilter} 
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-background border rounded-md px-3 h-9 text-sm font-bold cursor-pointer outline-none focus:border-primary w-full sm:w-auto"
+              >
+                <option value="all">{t('جميع الحالات', 'All Statuses')}</option>
+                {statuses.map((s) => (
+                  <option key={s.key} value={s.key}>{isAr ? s.nameAr : (s.nameEn || s.nameAr)}</option>
+                ))}
               </select>
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>{t('السابق', 'Prev')}</Button>
-              <span className="flex items-center px-2 text-sm font-bold">{page} / {totalPages}</span>
-              <Button size="sm" variant="outline" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>{t('التالي', 'Next')}</Button>
-            </div>
           </div>
-        </>
-      )}
+
+          {isLoading ? (
+            <div className="h-40 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+          ) : orders.length === 0 ? (
+            <div className="h-40 flex items-center justify-center text-muted-foreground">{t('لا توجد طلبات مطابقة.', 'No orders found.')}</div>
+          ) : (
+            <>
+              {viewMode === 'table' && (
+                <div className="overflow-x-auto">
+                  <table className="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>{t('رقم الطلب', 'Order ID')}</th>
+                        <th>{t('العميل', 'Customer')}</th>
+                        <th>{t('التاريخ', 'Date')}</th>
+                        <th>{t('الحالة', 'Status')}</th>
+                        <th className="text-end">{t('المجموع', 'Total')}</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {orders.map(o => (
+                        <tr key={o.id}>
+                          <td className="align-middle font-mono text-xs">#{o.orderNumber}</td>
+                          <td className="align-middle font-bold">{o.buyerName}</td>
+                          <td className="align-middle">{o.date}</td>
+                          <td className="align-middle">
+                            <Badge style={{ backgroundColor: getStatusConfig(o.status).color, color: '#fff' }} className="border-0 font-normal">{getStatusConfig(o.status).label}</Badge>
+                          </td>
+                          <td className="align-middle text-end font-bold">{o.total.toLocaleString()} DZD</td>
+                          <td className="align-middle text-center">
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(o)} className="h-8 px-2">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {viewMode === 'list' && (
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                  {orders.map((order, idx) => (
+                    <Card key={idx} onClick={() => setSelectedOrder(order)} className="cursor-pointer hover:border-primary/40 transition-all">
+                      <CardContent className="p-4 flex justify-between items-center">
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 bg-primary/10 rounded flex items-center justify-center shrink-0">
+                            <Package className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-sm m-0">{order.buyerName}</h3>
+                            <p className="text-xs text-muted-foreground font-mono m-0">#{order.orderNumber} &bull; {order.date}</p>
+                          </div>
+                        </div>
+                        <div className="text-end">
+                          <div className="font-bold mb-1">{order.total.toLocaleString()} DZD</div>
+                          <Badge style={{ backgroundColor: getStatusConfig(order.status).color, color: '#fff' }} className="text-[10px] py-0">{getStatusConfig(order.status).label}</Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+
+              {viewMode === 'kanban' && (
+                <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
+                  {statuses.map(statusObj => {
+                    const columnOrders = orders.filter(o => o.status === statusObj.key);
+                    return (
+                      <div 
+                        key={statusObj.key} 
+                        className="min-w-[280px] w-[280px] flex-shrink-0 flex flex-col gap-3 bg-muted/10 p-2 rounded-md border"
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, statusObj.key)}
+                      >
+                        <div className="flex items-center justify-between px-2 pb-2 border-b" style={{ borderBottomColor: statusObj.color }}>
+                          <span className="font-bold text-sm" style={{ color: statusObj.color }}>{isAr ? statusObj.nameAr : (statusObj.nameEn || statusObj.nameAr)}</span>
+                          <Badge variant="secondary" className="font-mono text-xs">{columnOrders.length}</Badge>
+                        </div>
+                        <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto hide-scrollbar px-1">
+                          {columnOrders.map(order => (
+                            <Card 
+                              key={order.id} 
+                              draggable 
+                              onDragStart={(e) => handleDragStart(e, order.id)}
+                              onClick={() => setSelectedOrder(order)} 
+                              className="cursor-grab active:cursor-grabbing shadow-sm"
+                            >
+                              <CardContent className="p-3 text-start">
+                                <p className="font-bold text-sm truncate m-0">{order.buyerName}</p>
+                                <p className="text-[11px] text-muted-foreground font-mono mt-0 mb-2">#{order.orderNumber}</p>
+                                <div className="flex justify-between items-center text-xs pt-2 border-t mt-2">
+                                  <span className="font-bold">{order.total.toLocaleString()} DZD</span>
+                                  <span className="text-muted-foreground">{order.date}</span>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="flex justify-between items-center mt-4 pt-4 border-t">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">{t('الحد:', 'Limit:')}</span>
+                  <select value={limit} onChange={(e) => setLimit(Number(e.target.value))} className="bg-background border rounded p-1 text-sm">
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>{t('السابق', 'Prev')}</Button>
+                  <span className="flex items-center px-2 text-sm font-bold">{page} / {totalPages}</span>
+                  <Button size="sm" variant="outline" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>{t('التالي', 'Next')}</Button>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       <Dialog open={!!selectedOrder} onOpenChange={(open) => { if (!open) setSelectedOrder(null); }}>
         <DialogContent className="border-white/10 bg-background/95 backdrop-blur-xl rounded-3xl max-w-xl max-h-[90vh] overflow-y-auto text-start">
