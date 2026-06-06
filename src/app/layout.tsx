@@ -16,6 +16,7 @@ const inter = Inter({
 
 import NextAuthProvider from '@/providers/NextAuthProvider';
 import RadixDirectionProvider from '@/providers/RadixDirectionProvider';
+import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
   title: 'شاري داي - منصة التجارة الإلكترونية | CharyDay E-Commerce Platform',
@@ -33,6 +34,7 @@ export default function RootLayout({
         <NextAuthProvider>
           <RadixDirectionProvider>
             {children}
+            <Toaster position="top-center" richColors />
           </RadixDirectionProvider>
         </NextAuthProvider>
       </body>

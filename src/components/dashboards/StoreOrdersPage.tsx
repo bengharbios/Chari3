@@ -522,16 +522,17 @@ export default function StoreOrdersPage() {
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{t('المتجر', 'SHOP')} &bull; {t('الطلبات', 'ORDERS')}</p>
                   <div className="flex flex-wrap items-center gap-2 md:gap-3">
                     <h2 className="text-lg sm:text-xl md:text-2xl font-black truncate">{t('طلب', 'Order')} <span dir="ltr">#{selectedOrder.orderNumber}</span></h2>
-                    <div className="flex items-center gap-2 bg-background border px-2 py-1 rounded-md shadow-sm shrink-0 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-2 bg-background border px-2 py-1 rounded-md shadow-sm shrink-0 hover:bg-muted/50 transition-colors relative">
                       <span className={`h-2 w-2 rounded-full ${getStatusColor(selectedOrder.status)}`}></span>
                       <select 
                         value={selectedOrder.status}
                         onChange={(e) => handleUpdateStatus(e.target.value, selectedOrder.id)}
-                        className="text-xs font-bold bg-transparent outline-none cursor-pointer appearance-none relative w-full"
+                        className="text-xs font-bold bg-transparent outline-none cursor-pointer appearance-none pe-4 relative w-full z-10"
                         style={{ color: getStatusConfig(selectedOrder.status).color }}
                       >
                         {statuses.map(s => <option key={s.key} value={s.key} className="text-foreground">{isAr ? s.nameAr : (s.nameEn || s.nameAr)}</option>)}
                       </select>
+                      <svg className="w-3 h-3 absolute end-2 pointer-events-none text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                     </div>
                   </div>
                 </div>
@@ -619,37 +620,40 @@ export default function StoreOrdersPage() {
                       <CardHeader className="pb-2 border-b">
                         <CardTitle className="text-sm font-black">{t('المنتجات', 'Items')} &bull; {selectedOrder.items.length}</CardTitle>
                       </CardHeader>
-                      <CardContent className="p-0 overflow-x-auto w-full">
-                        <table className="w-full text-sm">
-                          <thead className="bg-muted/10 text-[10px] text-muted-foreground uppercase">
-                            <tr>
-                              <th className="p-3 md:p-4 font-bold text-start w-1/2 min-w-[200px]">{t('المنتج', 'PRODUCT')}</th>
-                              <th className="p-3 md:p-4 font-bold text-center w-16">{t('الكمية', 'QTY')}</th>
-                              <th className="p-3 md:p-4 font-bold text-end w-24 whitespace-nowrap">{t('السعر', 'PRICE')}</th>
-                              <th className="p-3 md:p-4 font-bold text-end w-28 whitespace-nowrap">{t('المجموع', 'TOTAL')}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {selectedOrder.items.map((item: any, idx: number) => (
-                              <tr key={idx} className="border-b">
-                                <td className="p-3 md:p-4 flex gap-3 items-start md:items-center flex-col md:flex-row">
-                                  <div className="h-8 w-8 md:h-10 md:w-10 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-100">
-                                    {item.productName.substring(0, 2).toUpperCase()}
-                                  </div>
-                                  <div className="min-w-0 flex-1 whitespace-normal">
-                                    <p className="font-bold text-sm text-foreground break-words">{item.productName}</p>
-                                    <p className="text-xs text-muted-foreground" dir="ltr">SKU - PRD-{item.id.substring(0,4)}</p>
-                                  </div>
-                                </td>
-                                <td className="p-3 md:p-4 text-center font-bold align-middle">{item.quantity}</td>
-                                <td className="p-3 md:p-4 text-end text-muted-foreground align-middle whitespace-nowrap" dir="ltr">{item.price.toLocaleString()} DZD</td>
-                                <td className="p-3 md:p-4 text-end font-bold text-foreground align-middle whitespace-nowrap" dir="ltr">{item.total.toLocaleString()} DZD</td>
+                      <CardContent className="p-0">
+                        <div className="overflow-y-auto overflow-x-hidden max-h-[300px] w-full">
+                          <table className="w-full text-sm table-fixed">
+                            <thead className="bg-muted/10 text-[10px] text-muted-foreground uppercase sticky top-0 z-10">
+                              <tr>
+                                <th className="p-3 md:p-4 font-bold text-start w-1/2">{t('المنتج', 'PRODUCT')}</th>
+                                <th className="p-3 md:p-4 font-bold text-center w-16">{t('الكمية', 'QTY')}</th>
+                                <th className="p-3 md:p-4 font-bold text-end w-24">{t('السعر', 'PRICE')}</th>
+                                <th className="p-3 md:p-4 font-bold text-end w-28">{t('المجموع', 'TOTAL')}</th>
                               </tr>
-                            ))}
-                            {/* Totals rows inside table footer */}
-                            <tr>
-                              <td colSpan={2}></td>
-                              <td className="p-2 md:p-3 text-end text-xs text-muted-foreground font-bold">{t('المجموع الفرعي', 'Subtotal')}</td>
+                            </thead>
+                            <tbody>
+                              {selectedOrder.items.map((item: any, idx: number) => (
+                                <tr key={idx} className="border-b">
+                                  <td className="p-3 md:p-4 align-middle">
+                                    <div className="flex gap-3 items-center">
+                                      <div className="h-8 w-8 md:h-10 md:w-10 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-100">
+                                        {item.productName.substring(0, 2).toUpperCase()}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="font-bold text-sm text-foreground break-words whitespace-normal line-clamp-2" title={item.productName}>{item.productName}</p>
+                                        <p className="text-xs text-muted-foreground" dir="ltr">SKU - PRD-{item.id.substring(0,4)}</p>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="p-3 md:p-4 text-center font-bold align-middle">{item.quantity}</td>
+                                  <td className="p-3 md:p-4 text-end text-muted-foreground align-middle whitespace-nowrap" dir="ltr">{item.price.toLocaleString()} DZD</td>
+                                  <td className="p-3 md:p-4 text-end font-bold text-foreground align-middle whitespace-nowrap" dir="ltr">{item.total.toLocaleString()} DZD</td>
+                                </tr>
+                              ))}
+                              {/* Totals rows inside table footer */}
+                              <tr>
+                                <td colSpan={2}></td>
+                                <td className="p-2 md:p-3 text-end text-xs text-muted-foreground font-bold">{t('المجموع الفرعي', 'Subtotal')}</td>
                               <td className="p-2 md:p-3 text-end font-bold text-sm whitespace-nowrap" dir="ltr">{selectedOrder.subtotal.toLocaleString()} DZD</td>
                             </tr>
                             <tr>
