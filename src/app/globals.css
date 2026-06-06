@@ -631,3 +631,50 @@
     border: 1px solid #ddd !important;
   }
 }
+
+/* ============================================
+   GENTELELLA TEMPLATE GLOBALS
+   ============================================ */
+html[data-template="gentelella"][data-g-theme="light"] {
+  --background: #F7F7F7;
+  --foreground: #73879C;
+  --card: #FFFFFF;
+  --card-foreground: #73879C;
+  --border: #E6E9ED;
+  --muted: #EEEEEE;
+  --muted-foreground: #73879C;
+}
+
+html[data-template="gentelella"][data-g-theme="dark"] {
+  --background: #0f172a;
+  --foreground: #cbd5e1;
+  --card: #1e293b;
+  --card-foreground: #cbd5e1;
+  --border: #334155;
+  --muted: #0f172a;
+  --muted-foreground: #94a3b8;
+}
+
+/* Remove glassmorphism and apply flat Gentelella style to panels */
+html[data-template="gentelella"] .glass,
+html[data-template="gentelella"] .card-surface,
+html[data-template="gentelella"] [class*="bg-background/60"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+html[data-template="gentelella"][data-g-theme="light"] .glass,
+html[data-template="gentelella"][data-g-theme="light"] .card-surface,
+html[data-template="gentelella"][data-g-theme="light"] [class*="bg-background/60"] {
+  background: #FFFFFF !important;
+  border: 1px solid #E6E9ED !important;
+}
+
+html[data-template="gentelella"][data-g-theme="dark"] .glass,
+html[data-template="gentelella"][data-g-theme="dark"] .card-surface,
+html[data-template="gentelella"][data-g-theme="dark"] [class*="bg-background/60"] {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}

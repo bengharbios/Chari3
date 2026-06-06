@@ -16,15 +16,13 @@ export const useGentelellaTheme = create<GentelellaThemeState>()(
       toggleDark: () => {
         set((state) => {
           const next = !state.isDark;
-          const el = document.getElementById('gentelella-root');
-          if (el) el.setAttribute('data-g-theme', next ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-g-theme', next ? 'dark' : 'light');
           return { isDark: next };
         });
       },
       setDark: (isDark) => {
         set({ isDark });
-        const el = document.getElementById('gentelella-root');
-        if (el) el.setAttribute('data-g-theme', isDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-g-theme', isDark ? 'dark' : 'light');
       }
     }),
     {

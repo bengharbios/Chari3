@@ -12,6 +12,7 @@ import GentelellaHeader from '@/components/layout/gentelella/GentelellaHeader';
 import Footer from '@/components/layout/Footer';
 import BottomNav from '@/components/layout/BottomNav';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { useGentelellaTheme } from '@/components/layout/gentelella/theme';
 import AuthPage from '@/components/auth/AuthPage';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import VerificationStatusPage from '@/components/onboarding/VerificationStatusPage';
@@ -138,6 +139,11 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
   const [dashboardTemplate, setDashboardTemplate] = useState<string>('default');
+  const { isDark } = useGentelellaTheme();
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-g-theme', isDark ? 'dark' : 'light');
+  }, [isDark]);
 
   useEffect(() => {
     fetch('/api/homepage')
@@ -171,6 +177,14 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
       setDashboardTemplate('default');
     }
   }, [user, isBuyerMode]);
+
+  useEffect(() => {
+    if (dashboardTemplate === 'gentelella') {
+      document.documentElement.setAttribute('data-template', 'gentelella');
+    } else {
+      document.documentElement.removeAttribute('data-template');
+    }
+  }, [dashboardTemplate]);
 
   // Synchronize browser URL bar with Zustand currentPage
   useEffect(() => {
@@ -486,7 +500,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
         </div>
       )}
       {(!isStorefrontPage && dashboardTemplate === 'gentelella') ? null : (
-        <Header />
+        dashboardTemplate === 'gentelella' ? <GentelellaHeader /> : <Header />
       )}
 
       {isStorefrontPage ? (
