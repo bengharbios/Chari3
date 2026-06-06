@@ -494,6 +494,8 @@ export default function StoreOrdersPage() {
       {/* Order Detail Dialog - Redesigned to match image 2 */}
       <Dialog open={!!selectedOrder} onOpenChange={(open) => { if (!open) setSelectedOrder(null); }}>
         <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden bg-background w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[95vh] sm:w-full flex flex-col rounded-xl">
+          <DialogTitle className="sr-only">{t('تفاصيل الطلب', 'Order Details')} #{selectedOrder?.orderNumber}</DialogTitle>
+          <DialogDescription className="sr-only">{t('عرض وتعديل تفاصيل الطلب الخاص بالعميل.', 'View and manage customer order details.')}</DialogDescription>
           {selectedOrder && (
             <div className="flex flex-col h-full overflow-hidden text-start">
               {/* Detail Header */}
