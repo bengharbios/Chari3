@@ -422,14 +422,14 @@ export default function StoreOrdersPage() {
               <table className="table w-full text-sm text-start mb-0">
                 <thead className="bg-muted/30 border-b text-xs uppercase text-muted-foreground whitespace-nowrap">
                   <tr>
-                    <th className="px-4 py-3 font-bold">{t('الطلب', 'ORDER')}</th>
-                    <th className="px-4 py-3 font-bold">{t('العميل', 'CUSTOMER')}</th>
-                    <th className="px-4 py-3 font-bold text-center">{t('العناصر', 'ITEMS')}</th>
-                    <th className="px-4 py-3 font-bold">{t('المجموع', 'TOTAL')}</th>
-                    <th className="px-4 py-3 font-bold">{t('الحالة', 'STATUS')}</th>
-                    <th className="px-4 py-3 font-bold">{t('الدفع', 'PAYMENT')}</th>
-                    <th className="px-4 py-3 font-bold">{t('التاريخ', 'DATE')}</th>
-                    <th className="px-4 py-3 font-bold text-end">{t('إجراء', 'ACTION')}</th>
+                    <th className="px-4 py-3 font-bold text-start">{t('الطلب', 'ORDER')}</th>
+                    <th className="px-4 py-3 font-bold text-start">{t('العميل', 'CUSTOMER')}</th>
+                    <th className="px-4 py-3 font-bold text-start">{t('العناصر', 'ITEMS')}</th>
+                    <th className="px-4 py-3 font-bold text-start">{t('المجموع', 'TOTAL')}</th>
+                    <th className="px-4 py-3 font-bold text-start">{t('الحالة', 'STATUS')}</th>
+                    <th className="px-4 py-3 font-bold text-start">{t('الدفع', 'PAYMENT')}</th>
+                    <th className="px-4 py-3 font-bold text-start">{t('التاريخ', 'DATE')}</th>
+                    <th className="px-4 py-3 font-bold text-start">{t('إجراء', 'ACTION')}</th>
                   </tr>
                 </thead>
                 <tbody>
