@@ -485,7 +485,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
           </span>
         </div>
       )}
-      {!isStorefrontPage && dashboardTemplate !== 'gentelella' && (
+      {(!isStorefrontPage && dashboardTemplate === 'gentelella') ? null : (
         <Header />
       )}
 

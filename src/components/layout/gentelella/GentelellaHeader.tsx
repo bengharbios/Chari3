@@ -13,6 +13,7 @@ import { useGentelellaTheme } from './theme';
 
 import { useRouter } from 'next/navigation';
 import type { PageType } from '@/types';
+import { useTheme } from 'next-themes';
 
 const rolePages: Record<string, PageType> = {
   admin: 'admin',
@@ -29,6 +30,7 @@ export default function GentelellaHeader() {
   const { locale, setLocale, toggleDesktopSidebar, setSidebarOpen, isSidebarOpen, setCurrentPage } = useAppStore();
   const { user, logout, isBuyerMode, setBuyerMode } = useAuthStore();
   const { isDark, toggleDark: toggle } = useGentelellaTheme();
+  const { setTheme } = useTheme();
   const router = useRouter();
   const isRTL = locale === 'ar';
 
@@ -133,7 +135,10 @@ export default function GentelellaHeader() {
 
         {/* Dark / Light mode toggle — matches reference exactly */}
         <button
-          onClick={toggle}
+          onClick={() => {
+            toggle();
+            setTheme(isDark ? 'light' : 'dark');
+          }}
           className={cn(
             'p-2 rounded-md transition-colors relative',
             isDark ? 'hover:bg-white/10 text-[#8899aa] hover:text-[#f0c040]' : 'hover:bg-gray-100 text-[#666] hover:text-[#555]'
