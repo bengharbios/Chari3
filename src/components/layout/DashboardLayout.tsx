@@ -36,7 +36,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen overflow-x-hidden flex flex-col">
+    <div id={dashboardTemplate === 'gentelella' ? 'gentelella-root' : undefined} className="min-h-screen overflow-x-hidden flex flex-col">
       <div className="flex flex-1">
         {dashboardTemplate === 'gentelella' ? <GentelellaSidebar /> : <Sidebar />}
         <main
