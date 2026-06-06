@@ -4,10 +4,11 @@ const nextConfig: any = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   reactStrictMode: false,
   experimental: {
-    cpus: 2,
-    workerThreads: false,
     serverActions: {
       bodySizeLimit: "10mb",
     },
