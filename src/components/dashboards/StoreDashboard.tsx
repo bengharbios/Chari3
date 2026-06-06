@@ -166,142 +166,359 @@ export default function StoreDashboard() {
 
   return (
     <motion.div 
-      className="space-y-6 text-start"
+      className="space-y-4 text-start max-w-[1600px]"
       variants={STAGGER_CONTAINER}
       initial="hidden"
       animate="visible"
     >
       {/* Page Header */}
-      <motion.div variants={FADE_IN_VARIANTS} className="flex items-center justify-between flex-wrap gap-4">
-        <PageHeader
-          title={t(locale, 'لوحة تحكم المتجر', 'Store Dashboard')}
-          description={`${t(locale, 'مرحباً بك في لوحة تحكم متجرك:', 'Welcome to your store dashboard:')} ${dashboardData.seller?.storeName || user?.name}`}
-        />
-        <Button variant="default" size="sm" onClick={fetchDashboardData} className="font-bold rounded-xl bg-gradient-to-r from-primary to-primary/80 shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-          <Activity className="h-4 w-4 me-2" />
-          {t(locale, 'تحديث حي', 'Live Sync')}
-        </Button>
+      <motion.div variants={FADE_IN_VARIANTS} className="flex items-center justify-between flex-wrap gap-4 mb-3 px-1">
+        <div>
+          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">
+            {t(locale, 'نظرة عامة', 'OVERVIEW')}
+          </p>
+          <h1 className="text-[26px] leading-tight font-bold text-[#2A3F54] dark:text-white">{t(locale, 'لوحة التحكم', 'Dashboard')}</h1>
+        </div>
+        <div className="flex items-center gap-3">
+           <Button variant="outline" size="sm" className="font-bold rounded border-border text-xs h-8">
+             + {t(locale, 'عرض جديد', 'New view')}
+           </Button>
+           <Button variant="default" size="sm" onClick={fetchDashboardData} className="font-bold rounded bg-[#1ABB9C] hover:bg-[#159a80] text-white text-xs h-8">
+             + {t(locale, 'إنشاء تقرير', 'Create report')}
+           </Button>
+        </div>
       </motion.div>
 
-      {/* KPI Stats Cards - Tremor */}
+      {/* KPI Stats Cards */}
       <motion.div variants={FADE_IN_VARIANTS}>
-        <TremorGrid numItems={1} numItemsSm={2} numItemsLg={4} className="gap-6">
-          <TremorCard decoration="top" decorationColor="emerald" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
-            <Text>{t(locale, 'الإيرادات', 'Revenue')}</Text>
-            <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
-              <Metric className="font-black text-foreground">{formatStoreCurrency(kpis.monthRevenue ?? 0)}</Metric>
-              <BadgeDelta deltaType="moderateIncrease">+12%</BadgeDelta>
-            </Flex>
-          </TremorCard>
-          
-          <TremorCard decoration="top" decorationColor="blue" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
-            <Text>{t(locale, 'المبيعات', 'Sales')}</Text>
-            <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
-              <Metric className="font-black text-foreground">{formatNumber(kpis.totalSales ?? 0)}</Metric>
-              <BadgeDelta deltaType="moderateIncrease">+8%</BadgeDelta>
-            </Flex>
-          </TremorCard>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-5">
+          {/* TOTAL USERS */}
+          <div className="card-surface bg-card text-card-foreground border border-border rounded shadow-sm relative overflow-hidden flex flex-col h-[110px]">
+            <div className="p-4 flex-1 flex">
+              <div className="flex gap-4 w-full">
+                <div className="h-10 w-10 mt-1 rounded flex items-center justify-center shrink-0 bg-emerald-500/10">
+                  <Users className="h-5 w-5 text-emerald-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'إجمالي المستخدمين', 'TOTAL USERS')}</p>
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-[22px] font-bold truncate text-[#2A3F54] dark:text-white">2,500</h3>
+                    <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 12%</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground truncate mt-1">342 {t(locale, 'جديد هذا الأسبوع', 'new this week')}</p>
+                </div>
+              </div>
+            </div>
+            <div className="absolute bottom-3 end-4 flex items-end gap-[2px] h-6 opacity-40" dir="ltr">
+              {[4, 7, 3, 8, 5, 9, 6].map((h, i) => (
+                <div key={i} className="w-[3px] bg-emerald-500 rounded-t-sm" style={{ height: `${h * 10}%` }} />
+              ))}
+            </div>
+          </div>
 
-          <TremorCard decoration="top" decorationColor="purple" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
-            <Text>{t(locale, 'المنتجات', 'Products')}</Text>
-            <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
-              <Metric className="font-black text-foreground">{products.length}</Metric>
-              <BadgeDelta deltaType="unchanged">0%</BadgeDelta>
-            </Flex>
-          </TremorCard>
+          {/* AVG SESSION */}
+          <div className="card-surface bg-card text-card-foreground border border-border rounded shadow-sm relative overflow-hidden flex flex-col h-[110px]">
+            <div className="p-4 flex-1 flex">
+              <div className="flex gap-4 w-full">
+                <div className="h-10 w-10 mt-1 rounded flex items-center justify-center shrink-0 bg-blue-500/10">
+                  <Activity className="h-5 w-5 text-blue-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'متوسط الجلسة', 'AVG SESSION')}</p>
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-[22px] font-bold truncate text-[#2A3F54] dark:text-white">123.5<span className="text-[13px] ml-0.5">min</span></h3>
+                    <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 8%</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground truncate mt-1">+14min {t(locale, 'من الأسبوع الماضي', 'from last week')}</p>
+                </div>
+              </div>
+            </div>
+            <div className="absolute bottom-3 end-4 flex items-end gap-[2px] h-6 opacity-40" dir="ltr">
+              {[6, 8, 5, 9, 7, 4, 8].map((h, i) => (
+                <div key={i} className="w-[3px] bg-blue-500 rounded-t-sm" style={{ height: `${h * 10}%` }} />
+              ))}
+            </div>
+          </div>
 
-          <TremorCard decoration="top" decorationColor="orange" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
-            <Text>{t(locale, 'الزوار', 'Visitors')}</Text>
-            <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
-              <Metric className="font-black text-foreground">12,450</Metric>
-              <BadgeDelta deltaType="increase">+24%</BadgeDelta>
-            </Flex>
-          </TremorCard>
-        </TremorGrid>
+          {/* ORDERS */}
+          <div className="card-surface bg-card text-card-foreground border border-border rounded shadow-sm relative overflow-hidden flex flex-col h-[110px]">
+            <div className="p-4 flex-1 flex">
+              <div className="flex gap-4 w-full">
+                <div className="h-10 w-10 mt-1 rounded flex items-center justify-center shrink-0 bg-orange-500/10">
+                  <Package className="h-5 w-5 text-orange-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'الطلبات', 'ORDERS')}</p>
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-[22px] font-bold truncate text-[#2A3F54] dark:text-white">1,240</h3>
+                    <span className="text-[11px] font-bold text-red-500 flex items-center"><TrendingUp className="h-3 w-3 rotate-180" /> 3%</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground truncate mt-1">78 {t(locale, 'تم شحنها اليوم', 'shipped today')}</p>
+                </div>
+              </div>
+            </div>
+            <div className="absolute bottom-3 end-4 flex items-end gap-[2px] h-6 opacity-40" dir="ltr">
+              {[8, 6, 9, 5, 4, 7, 5].map((h, i) => (
+                <div key={i} className="w-[3px] bg-orange-500 rounded-t-sm" style={{ height: `${h * 10}%` }} />
+              ))}
+            </div>
+          </div>
+
+          {/* REVENUE */}
+          <div className="card-surface bg-card text-card-foreground border border-border rounded shadow-sm relative overflow-hidden flex flex-col h-[110px]">
+            <div className="p-4 flex-1 flex">
+              <div className="flex gap-4 w-full">
+                <div className="h-10 w-10 mt-1 rounded flex items-center justify-center shrink-0 bg-emerald-500/10">
+                  <DollarSign className="h-5 w-5 text-emerald-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'الإيرادات', 'REVENUE')}</p>
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-[22px] font-bold truncate text-[#2A3F54] dark:text-white">{formatStoreCurrency(kpis.monthRevenue ?? 0)}</h3>
+                    <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 18%</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground truncate mt-1">{formatStoreCurrency(3218)} {t(locale, 'اليوم', 'today')}</p>
+                </div>
+              </div>
+            </div>
+            <div className="w-full px-4 pb-4">
+              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                 <div className="h-full bg-[#1ABB9C] w-[65%] rounded-full" />
+              </div>
+            </div>
+          </div>
+
+          {/* CONVERSIONS */}
+          <div className="card-surface bg-card text-card-foreground border border-border rounded shadow-sm relative overflow-hidden flex flex-col h-[110px]">
+            <div className="p-4 flex-1 flex">
+              <div className="flex gap-4 w-full">
+                <div className="h-10 w-10 mt-1 rounded flex items-center justify-center shrink-0 bg-red-500/10">
+                  <TrendingUp className="h-5 w-5 text-red-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'التحويلات', 'CONVERSIONS')}</p>
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-[22px] font-bold truncate text-[#2A3F54] dark:text-white">2,315</h3>
+                    <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 5%</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground truncate mt-1">{t(locale, 'المعدل:', 'Rate:')} 4.2%</p>
+                </div>
+              </div>
+            </div>
+            <div className="w-full px-4 pb-4">
+              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                 <div className="h-full bg-red-500 w-[42%] rounded-full" />
+              </div>
+            </div>
+          </div>
+
+          {/* PAGE VIEWS */}
+          <div className="card-surface bg-card text-card-foreground border border-border rounded shadow-sm relative overflow-hidden flex flex-col h-[110px]">
+            <div className="p-4 flex-1 flex">
+              <div className="flex gap-4 w-full">
+                <div className="h-10 w-10 mt-1 rounded flex items-center justify-center shrink-0 bg-purple-500/10">
+                  <Activity className="h-5 w-5 text-purple-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'مشاهدات الصفحة', 'PAGE VIEWS')}</p>
+                  <div className="flex items-baseline gap-2">
+                    <h3 className="text-[22px] font-bold truncate text-[#2A3F54] dark:text-white">47,325</h3>
+                    <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 22%</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground truncate mt-1">6,854 {t(locale, 'زائر فريد', 'unique visitors')}</p>
+                </div>
+              </div>
+            </div>
+            <div className="w-full px-4 pb-4">
+              <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
+                 <div className="h-full bg-purple-500 w-[85%] rounded-full" />
+              </div>
+            </div>
+          </div>
+        </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         {/* Main Chart */}
         <motion.div variants={FADE_IN_VARIANTS} className="xl:col-span-2">
-          <TremorCard className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-xl h-full flex flex-col">
-            <Title className="text-foreground">{t(locale, 'تحليل الأداء (أرباح وزيارات)', 'Performance Analysis (Revenue & Traffic)')}</Title>
-            <div dir="ltr" className="flex-1 mt-4">
-              <AreaChart
-                className="h-72 mt-4"
-                data={chartData}
-                index="name"
-                categories={[t(locale, 'المبيعات', 'Sales'), t(locale, 'الزوار', 'Visitors')]}
-                colors={["blue", "cyan"]}
-                valueFormatter={(number: number) => formatNumber(number)}
-                showAnimation={true}
-              />
-            </div>
-          </TremorCard>
-        </motion.div>
-
-        {/* Donut Chart / Category Breakdown */}
-        <motion.div variants={FADE_IN_VARIANTS} className="xl:col-span-1">
-          <TremorCard className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-xl h-full flex flex-col">
-            <Title className="text-foreground">{t(locale, 'المبيعات حسب الفئة', 'Sales by Category')}</Title>
-            <div dir="ltr" className="flex-1 mt-6 flex flex-col justify-center">
-              <DonutChart
-                className="h-48"
-                data={donutData}
-                category="sales"
-                index="name"
-                valueFormatter={(number: number) => formatNumber(number)}
-                colors={["blue", "cyan", "indigo", "violet"]}
-                showAnimation={true}
-              />
-            </div>
-          </TremorCard>
-        </motion.div>
-
-        {/* Recent Orders List Mini */}
-        <motion.div variants={FADE_IN_VARIANTS} className="xl:col-span-3">
-          <Card className="border-border bg-background/60 backdrop-blur-xl shadow-xl rounded-2xl h-full flex flex-col">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg font-bold">
-                {t(locale, 'أحدث الطلبات', 'Recent Orders')}
+          <Card className="rounded-md shadow-sm border-border h-full flex flex-col card-surface">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/50 px-5 pt-5">
+              <CardTitle className="text-[15px] font-bold text-[#2A3F54] dark:text-white">
+                {t(locale, 'نشاط الشبكة', 'Network Activities')}
               </CardTitle>
-              <Button variant="ghost" size="icon" onClick={() => setCurrentPage('store-orders' as any)}>
-                <ArrowUpRight className="h-5 w-5" />
-              </Button>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-auto">
-              <div className="space-y-4 mt-2">
-                {recentOrders.slice(0, 5).map((item: any, idx: number) => {
-                  const st = STATUS_CONFIG[item.order.status] ?? STATUS_CONFIG.pending;
-                  return (
-                    <motion.div 
-                      key={idx}
-                      whileHover={{ x: isAr ? -5 : 5 }}
-                      className="flex items-center justify-between p-3 rounded-xl hover:bg-muted/50 border border-transparent hover:border-border transition-all cursor-pointer"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${st.color} bg-opacity-20`}>
-                          <Package className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm max-w-[120px] truncate">{item.product.name}</p>
-                          <p className="text-xs text-muted-foreground font-mono">#{item.order.orderNumber}</p>
-                        </div>
-                      </div>
-                      <div className="text-end">
-                        <p className="font-bold text-sm text-primary">{formatStoreCurrency(item.total)}</p>
-                        <Badge variant="outline" className={`text-[10px] mt-1 border ${st.color}`}>
-                          {st.label}
-                        </Badge>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+              <div className="flex items-center text-[11px] font-bold border border-border rounded divide-x divide-border">
+                 <button className="px-3 py-1 hover:bg-muted transition-colors">7 days</button>
+                 <button className="px-3 py-1 bg-muted">30 days</button>
+                 <button className="px-3 py-1 hover:bg-muted transition-colors">90 days</button>
               </div>
+            </CardHeader>
+            <CardContent className="pt-5 px-5">
+               <div className="flex items-baseline gap-2 mb-1">
+                 <h2 className="text-[28px] font-bold">6,782</h2>
+                 <span className="text-emerald-500 text-sm font-bold flex items-center"><ArrowUpRight className="h-3 w-3" /> 7%</span>
+               </div>
+               <p className="text-[12px] text-muted-foreground mb-6">{t(locale, 'إجمالي الجلسات هذا الأسبوع', 'Total sessions this week')}</p>
+               <div dir="ltr">
+                  <AreaChart
+                    className="h-72"
+                    data={chartData}
+                    index="name"
+                    categories={[t(locale, 'المبيعات', 'Sales'), t(locale, 'الزوار', 'Visitors')]}
+                    colors={["emerald", "blue"]}
+                    valueFormatter={(number: number) => formatNumber(number)}
+                    showAnimation={true}
+                    curveType="monotone"
+                    showGridLines={true}
+                  />
+               </div>
             </CardContent>
           </Card>
         </motion.div>
-      </div>
 
+        {/* Recent Activity */}
+        <motion.div variants={FADE_IN_VARIANTS} className="xl:col-span-1">
+          <Card className="rounded-md shadow-sm border-border h-full flex flex-col card-surface">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/50 px-5 pt-5">
+              <CardTitle className="text-[15px] font-bold text-[#2A3F54] dark:text-white">
+                {t(locale, 'النشاط الأخير', 'Recent Activity')}
+              </CardTitle>
+              <Button variant="ghost" size="icon" className="h-6 w-6">
+                <span className="sr-only">More</span>
+                ...
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-5 px-5 flex-1">
+               <div className="space-y-6 relative before:absolute before:inset-0 before:ms-4 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
+                  {[
+                    { initial: 'SK', color: 'bg-emerald-500', title: 'Sarah K. placed a new order for $245.00', time: '2 min ago' },
+                    { initial: 'MR', color: 'bg-blue-600', title: 'Michael R. registered a new account', time: '18 min ago' },
+                    { initial: 'SY', color: 'bg-emerald-600', title: 'Payment processed — Invoice #4521', time: '45 min ago' },
+                    { initial: 'JL', color: 'bg-orange-500', title: 'Jeffie L. reviewed Dashboard Kit', time: '1 hour ago' },
+                    { initial: 'EL', color: 'bg-purple-500', title: 'Emmy L. created project Morning Clock', time: '4 hours ago' },
+                    { initial: 'DS', color: 'bg-red-500', title: 'Shipment dispatched — Order #3847', time: '8 hours ago' },
+                  ].map((activity, idx) => (
+                    <div key={idx} className="relative flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={`h-8 w-8 rounded-full ${activity.color} text-white flex items-center justify-center text-[10px] font-bold shrink-0 ring-4 ring-card z-10`}>
+                          {activity.initial}
+                        </div>
+                        <div>
+                          <p className="text-[13px] font-medium leading-tight">{activity.title}</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">{activity.time}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Recent Orders List Mini */}
+        <motion.div variants={FADE_IN_VARIANTS} className="xl:col-span-2">
+          <Card className="rounded-md shadow-sm border-border h-full flex flex-col card-surface">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/50 px-5 pt-5">
+              <div>
+                <CardTitle className="text-[15px] font-bold text-[#2A3F54] dark:text-white">
+                  {t(locale, 'أحدث الطلبات', 'Recent Orders')}
+                </CardTitle>
+                <p className="text-[11px] text-muted-foreground mt-1">Latest 5 transactions</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => setCurrentPage('store-orders' as any)} className="text-xs h-7 px-3 rounded">
+                View All →
+              </Button>
+            </CardHeader>
+            <CardContent className="p-0">
+               <div className="overflow-x-auto">
+                 <table className="w-full text-sm text-start">
+                   <thead className="text-[11px] text-muted-foreground uppercase bg-muted/30 border-b border-border">
+                     <tr>
+                       <th className="px-5 py-3 font-semibold text-start">Order</th>
+                       <th className="px-5 py-3 font-semibold text-start">Customer</th>
+                       <th className="px-5 py-3 font-semibold text-start">Product</th>
+                       <th className="px-5 py-3 font-semibold text-start">Amount</th>
+                       <th className="px-5 py-3 font-semibold text-start">Status</th>
+                       <th className="px-5 py-3 font-semibold text-start">Date</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-border">
+                     {recentOrders.slice(0, 5).map((item: any, idx: number) => {
+                        const st = STATUS_CONFIG[item.order.status] ?? STATUS_CONFIG.pending;
+                        return (
+                          <tr key={idx} className="hover:bg-muted/30 transition-colors">
+                            <td className="px-5 py-3 font-mono text-xs">#{item.order.orderNumber}</td>
+                            <td className="px-5 py-3 font-medium text-[13px]">{item.order.user?.name || 'Guest'}</td>
+                            <td className="px-5 py-3 text-[13px] max-w-[150px] truncate">{item.product.name}</td>
+                            <td className="px-5 py-3 font-bold text-[13px]">{formatStoreCurrency(item.total)}</td>
+                            <td className="px-5 py-3">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${st.color}`}>
+                                {st.label}
+                              </span>
+                            </td>
+                            <td className="px-5 py-3 text-[11px] text-muted-foreground">
+                              {new Date(item.order.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US')}
+                            </td>
+                          </tr>
+                        );
+                     })}
+                   </tbody>
+                 </table>
+               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Storage */}
+        <motion.div variants={FADE_IN_VARIANTS} className="xl:col-span-1">
+          <Card className="rounded-md shadow-sm border-border h-full flex flex-col card-surface">
+            <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/50 px-5 pt-5">
+              <CardTitle className="text-[15px] font-bold text-[#2A3F54] dark:text-white">
+                {t(locale, 'مساحة التخزين', 'Storage')}
+              </CardTitle>
+              <span className="text-[11px] text-muted-foreground">6.8 GB of 8 GB used</span>
+            </CardHeader>
+            <CardContent className="pt-6 px-5">
+               <div className="w-full h-2 bg-muted flex rounded-full overflow-hidden mb-6">
+                 <div className="h-full bg-emerald-500 w-[40%]" />
+                 <div className="h-full bg-blue-500 w-[20%]" />
+                 <div className="h-full bg-orange-500 w-[15%]" />
+               </div>
+               
+               <div className="space-y-4">
+                 <div className="flex items-center justify-between text-[13px]">
+                   <div className="flex items-center gap-2">
+                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                     <span>Regular</span>
+                   </div>
+                   <span className="font-bold">3.4 GB</span>
+                 </div>
+                 <div className="flex items-center justify-between text-[13px]">
+                   <div className="flex items-center gap-2">
+                     <span className="h-2 w-2 rounded-full bg-blue-500" />
+                     <span>System</span>
+                   </div>
+                   <span className="font-bold">1.4 GB</span>
+                 </div>
+                 <div className="flex items-center justify-between text-[13px]">
+                   <div className="flex items-center gap-2">
+                     <span className="h-2 w-2 rounded-full bg-orange-500" />
+                     <span>Shared</span>
+                   </div>
+                   <span className="font-bold">1.0 GB</span>
+                 </div>
+                 <div className="flex items-center justify-between text-[13px]">
+                   <div className="flex items-center gap-2">
+                     <span className="h-2 w-2 rounded-full bg-muted-foreground" />
+                     <span>Free</span>
+                   </div>
+                   <span className="font-bold">1.2 GB</span>
+                 </div>
+               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+      </div>
     </motion.div>
   );
 }
