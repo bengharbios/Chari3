@@ -493,12 +493,12 @@ export default function StoreOrdersPage() {
 
       {/* Order Detail Dialog - Redesigned to match image 2 */}
       <Dialog open={!!selectedOrder} onOpenChange={(open) => { if (!open) setSelectedOrder(null); }}>
-        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden bg-background w-[95vw] max-h-[95vh] sm:w-full flex flex-col rounded-xl">
+        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden bg-background w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[95vh] sm:w-full flex flex-col rounded-xl">
           {selectedOrder && (
             <div className="flex flex-col h-full overflow-hidden text-start">
               {/* Detail Header */}
-              <div className="p-4 md:p-6 border-b flex justify-between items-start md:items-center flex-col md:flex-row gap-4 bg-muted/10 shrink-0">
-                <div className="min-w-0 w-full md:w-auto">
+              <div className="p-4 md:p-6 border-b flex justify-between items-start lg:items-center flex-col lg:flex-row gap-4 bg-muted/10 shrink-0">
+                <div className="min-w-0 w-full lg:w-auto">
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{t('المتجر', 'SHOP')} &bull; {t('الطلبات', 'ORDERS')}</p>
                   <div className="flex flex-wrap items-center gap-2 md:gap-3">
                     <h2 className="text-lg sm:text-xl md:text-2xl font-black truncate">{t('طلب', 'Order')} <span dir="ltr">#{selectedOrder.orderNumber}</span></h2>
@@ -508,10 +508,10 @@ export default function StoreOrdersPage() {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2 w-full md:w-auto">
-                  <Button variant="outline" size="sm" className="font-bold flex-1 md:flex-none" onClick={handlePrintInvoice}>{t('طباعة', 'Print')}</Button>
-                  <Button variant="outline" size="sm" className="font-bold flex-1 md:flex-none">{t('إرسال الفاتورة', 'Send invoice')}</Button>
-                  <Button size="sm" className="font-bold bg-[#1ABB9C] hover:bg-[#159a80] text-white flex-1 md:flex-none">{t('تعليم كمكتمل', 'Mark fulfilled')}</Button>
+                <div className="flex flex-wrap gap-2 w-full lg:w-auto">
+                  <Button variant="outline" size="sm" className="font-bold flex-1 sm:flex-none" onClick={handlePrintInvoice}>{t('طباعة', 'Print')}</Button>
+                  <Button variant="outline" size="sm" className="font-bold flex-1 sm:flex-none">{t('إرسال الفاتورة', 'Send invoice')}</Button>
+                  <Button size="sm" className="font-bold bg-[#1ABB9C] hover:bg-[#159a80] text-white flex-1 sm:flex-none whitespace-nowrap">{t('تعليم كمكتمل', 'Mark fulfilled')}</Button>
                 </div>
               </div>
 
@@ -521,67 +521,69 @@ export default function StoreOrdersPage() {
                 {/* Progress Bar */}
                 <Card className="mb-4 md:mb-6 shadow-sm border-0 bg-white dark:bg-card">
                   <CardContent className="p-4 md:p-6 overflow-x-auto hide-scrollbar w-full">
-                    <div className="flex justify-between items-center relative min-w-[500px]">
-                      <div className="absolute top-4 start-8 end-8 h-[2px] bg-muted -z-0"></div>
-                      
-                      {/* Step 1 */}
-                      <div className="flex flex-col items-center z-10 gap-2 w-24">
-                        <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-card"><CheckCircle2 className="h-4 w-4" /></div>
-                        <div className="text-center">
-                          <p className="text-xs font-bold">{t('تم الطلب', 'Placed')}</p>
-                          <p className="text-[10px] text-muted-foreground" dir="ltr">{selectedOrder.date}</p>
+                    <div className="max-w-3xl mx-auto w-full">
+                      <div className="flex justify-between items-center relative min-w-[500px]">
+                        <div className="absolute top-4 start-8 end-8 h-[2px] bg-muted -z-0"></div>
+                        
+                        {/* Step 1 */}
+                        <div className="flex flex-col items-center z-10 gap-2 w-24">
+                          <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-card"><CheckCircle2 className="h-4 w-4" /></div>
+                          <div className="text-center">
+                            <p className="text-xs font-bold">{t('تم الطلب', 'Placed')}</p>
+                            <p className="text-[10px] text-muted-foreground" dir="ltr">{selectedOrder.date}</p>
+                          </div>
                         </div>
-                      </div>
-                      
-                      {/* Step 2 */}
-                      <div className="flex flex-col items-center z-10 gap-2 w-24">
-                        <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-card"><CheckCircle2 className="h-4 w-4" /></div>
-                        <div className="text-center">
-                          <p className="text-xs font-bold">{t('تم الدفع', 'Paid')}</p>
-                          <p className="text-[10px] text-muted-foreground" dir="ltr">{selectedOrder.date}</p>
+                        
+                        {/* Step 2 */}
+                        <div className="flex flex-col items-center z-10 gap-2 w-24">
+                          <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-card"><CheckCircle2 className="h-4 w-4" /></div>
+                          <div className="text-center">
+                            <p className="text-xs font-bold">{t('تم الدفع', 'Paid')}</p>
+                            <p className="text-[10px] text-muted-foreground" dir="ltr">{selectedOrder.date}</p>
+                          </div>
                         </div>
-                      </div>
 
-                      {/* Step 3 */}
-                      <div className="flex flex-col items-center z-10 gap-2 w-24">
-                        <div className={`h-8 w-8 rounded-full flex items-center justify-center border-4 border-white dark:border-card ${selectedOrder.status === 'confirmed' || selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? 'bg-emerald-500 text-white' : 'bg-white border-2 border-emerald-500 text-emerald-500'}`}>
-                           {selectedOrder.status === 'confirmed' || selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : <div className="h-3 w-3 rounded-full bg-emerald-500"></div>}
+                        {/* Step 3 */}
+                        <div className="flex flex-col items-center z-10 gap-2 w-24">
+                          <div className={`h-8 w-8 rounded-full flex items-center justify-center border-4 border-white dark:border-card ${selectedOrder.status === 'confirmed' || selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? 'bg-emerald-500 text-white' : 'bg-white border-2 border-emerald-500 text-emerald-500'}`}>
+                             {selectedOrder.status === 'confirmed' || selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : <div className="h-3 w-3 rounded-full bg-emerald-500"></div>}
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs font-bold">{t('قيد التجهيز', 'Preparing')}</p>
+                            <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'confirmed' ? t('قيد العمل', 'In progress') : t('مكتمل', 'Done')}</p>
+                          </div>
                         </div>
-                        <div className="text-center">
-                          <p className="text-xs font-bold">{t('قيد التجهيز', 'Preparing')}</p>
-                          <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'confirmed' ? t('قيد العمل', 'In progress') : t('مكتمل', 'Done')}</p>
-                        </div>
-                      </div>
 
-                      {/* Step 4 */}
-                      <div className="flex flex-col items-center z-10 gap-2 w-24">
-                         <div className={`h-8 w-8 rounded-full flex items-center justify-center border-4 border-white dark:border-card ${selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? 'bg-emerald-500 text-white' : 'bg-muted border-muted-foreground text-transparent'}`}>
-                          {selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : ''}
+                        {/* Step 4 */}
+                        <div className="flex flex-col items-center z-10 gap-2 w-24">
+                           <div className={`h-8 w-8 rounded-full flex items-center justify-center border-4 border-white dark:border-card ${selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? 'bg-emerald-500 text-white' : 'bg-muted border-muted-foreground text-transparent'}`}>
+                            {selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : ''}
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs font-bold">{t('تم الشحن', 'Shipped')}</p>
+                            <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? t('مكتمل', 'Done') : t('في الانتظار', 'Pending')}</p>
+                          </div>
                         </div>
-                        <div className="text-center">
-                          <p className="text-xs font-bold">{t('تم الشحن', 'Shipped')}</p>
-                          <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? t('مكتمل', 'Done') : t('في الانتظار', 'Pending')}</p>
-                        </div>
-                      </div>
 
-                      {/* Step 5 */}
-                      <div className="flex flex-col items-center z-10 gap-2 w-24">
-                        <div className={`h-8 w-8 rounded-full flex items-center justify-center border-4 border-white dark:border-card ${selectedOrder.status === 'delivered' ? 'bg-emerald-500 text-white' : 'bg-muted border-muted-foreground text-transparent'}`}>
-                          {selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : ''}
+                        {/* Step 5 */}
+                        <div className="flex flex-col items-center z-10 gap-2 w-24">
+                          <div className={`h-8 w-8 rounded-full flex items-center justify-center border-4 border-white dark:border-card ${selectedOrder.status === 'delivered' ? 'bg-emerald-500 text-white' : 'bg-muted border-muted-foreground text-transparent'}`}>
+                            {selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : ''}
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs font-bold">{t('تم التوصيل', 'Delivered')}</p>
+                            <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'delivered' ? t('مكتمل', 'Done') : t('في الانتظار', 'Pending')}</p>
+                          </div>
                         </div>
-                        <div className="text-center">
-                          <p className="text-xs font-bold">{t('تم التوصيل', 'Delivered')}</p>
-                          <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'delivered' ? t('مكتمل', 'Done') : t('في الانتظار', 'Pending')}</p>
-                        </div>
-                      </div>
 
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                   {/* Left Column - Items & Notes */}
-                  <div className="lg:col-span-2 space-y-4 md:space-y-6">
+                  <div className="lg:col-span-2 space-y-4 md:space-y-6 order-2 lg:order-1">
                     <Card className="shadow-sm overflow-hidden">
                       <CardHeader className="pb-2 border-b">
                         <CardTitle className="text-sm font-black">{t('المنتجات', 'Items')} &bull; {selectedOrder.items.length}</CardTitle>
