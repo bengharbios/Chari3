@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import {
   Package, Search, Calendar, MapPin, Truck, CheckCircle2, XCircle, Clock, 
   MoreVertical, Download, Printer, Loader2, User, Table as TableIcon, LayoutGrid, List
@@ -428,7 +429,7 @@ export default function StoreOrdersPage() {
                     <th className="px-4 py-3 font-bold">{t('الحالة', 'STATUS')}</th>
                     <th className="px-4 py-3 font-bold">{t('الدفع', 'PAYMENT')}</th>
                     <th className="px-4 py-3 font-bold">{t('التاريخ', 'DATE')}</th>
-                    <th className="px-4 py-3"></th>
+                    <th className="px-4 py-3 font-bold text-end">{t('إجراء', 'ACTION')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -437,7 +438,7 @@ export default function StoreOrdersPage() {
                     const statusConfig = getStatusConfig(o.status);
                     
                     return (
-                      <tr key={o.id} className="border-b hover:bg-muted/10 transition-colors cursor-pointer whitespace-nowrap" onClick={() => setSelectedOrder(o)}>
+                      <tr key={o.id} className="border-b hover:bg-muted/10 transition-colors whitespace-nowrap">
                         <td className="px-4 py-3 align-middle font-mono text-emerald-500 font-bold text-start"><span dir="ltr">#{o.orderNumber}</span></td>
                         <td className="px-4 py-3 align-middle text-start">
                           <div className="flex items-center gap-3">
@@ -460,9 +461,26 @@ export default function StoreOrdersPage() {
                         </td>
                         <td className="px-4 py-3 align-middle text-xs text-muted-foreground text-start"><span dir="ltr">{o.date}</span></td>
                         <td className="px-4 py-3 align-middle text-end">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-muted shrink-0">
-                            <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-muted shrink-0 focus-visible:ring-0">
+                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 text-start" dir={isAr ? 'rtl' : 'ltr'}>
+                              <DropdownMenuLabel>{t('إجراءات الطلب', 'Order Actions')}</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => setSelectedOrder(o)} className="cursor-pointer">
+                                {t('التفاصيل', 'Details')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleUpdateStatus('delivered', o.id)} className="cursor-pointer text-emerald-600 focus:text-emerald-600 focus:bg-emerald-50">
+                                {t('تعليم كمكتمل', 'Mark fulfilled')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleUpdateStatus('cancelled', o.id)} className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50">
+                                {t('إلغاء الطلب', 'Cancel order')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </td>
                       </tr>
                     );
@@ -639,6 +657,13 @@ export default function StoreOrdersPage() {
                               <td className="p-2 md:p-3 text-end text-xs text-muted-foreground font-bold">{t('تكلفة الشحن', 'Shipping')}</td>
                               <td className="p-2 md:p-3 text-end font-bold text-sm whitespace-nowrap" dir="ltr">{(selectedOrder.shippingCost || 0).toLocaleString()} DZD</td>
                             </tr>
+                            {selectedOrder.discount > 0 && (
+                              <tr>
+                                <td colSpan={2}></td>
+                                <td className="p-2 md:p-3 text-end text-xs text-red-500 font-bold">{t('الخصم', 'Discount')}</td>
+                                <td className="p-2 md:p-3 text-end font-bold text-sm text-red-500 whitespace-nowrap" dir="ltr">-{selectedOrder.discount.toLocaleString()} DZD</td>
+                              </tr>
+                            )}
                             <tr>
                               <td colSpan={2}></td>
                               <td className="p-2 md:p-3 text-end text-xs text-muted-foreground font-bold">{t('الضريبة', 'Tax')}</td>
