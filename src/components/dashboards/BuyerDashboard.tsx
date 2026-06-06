@@ -18,6 +18,16 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Card as TremorCard,
+  Metric,
+  Text,
+  Tracker,
+  Flex,
+  BadgeDelta,
+  Grid as TremorGrid,
+  ProgressBar
+} from '@tremor/react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -210,32 +220,38 @@ export default function BuyerDashboard() {
       {/* ============================================ */}
       {/* QUICK STATS (Real Data)                      */}
       {/* ============================================ */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title={t(locale, 'إجمالي الطلبات', 'Total Orders')}
-          value={isLoadingOrders ? '...' : stats.totalOrders}
-          icon={<Package className="h-5 w-5" />}
-          iconBg="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-        />
-        <StatsCard
-          title={t(locale, 'إجمالي الإنفاق', 'Total Spent')}
-          value={isLoadingOrders ? '...' : formatBuyerCurrency(stats.totalSpent)}
-          icon={<ShoppingBag className="h-5 w-5" />}
-          iconBg="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
-        />
-        <StatsCard
-          title={t(locale, 'رصيد المحفظة', 'Wallet Balance')}
-          value={isLoadingOrders ? '...' : formatBuyerCurrency(stats.walletBalance)}
-          icon={<Wallet className="h-5 w-5" />}
-          iconBg="bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
-        />
-        <StatsCard
-          title={t(locale, 'المفضلة', 'Wishlist')}
-          value={isLoadingOrders ? '...' : stats.wishlistCount}
-          icon={<Star className="h-5 w-5" />}
-          iconBg="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
-        />
-      </div>
+      {/* ============================================ */}
+      {/* QUICK STATS (Real Data)                      */}
+      {/* ============================================ */}
+      <TremorGrid numItems={1} numItemsSm={2} numItemsLg={4} className="gap-4">
+        <TremorCard decoration="top" decorationColor="blue" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
+          <Text>{t(locale, 'إجمالي الطلبات', 'Total Orders')}</Text>
+          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+            <Metric className="font-black text-foreground">{isLoadingOrders ? '...' : stats.totalOrders}</Metric>
+          </Flex>
+        </TremorCard>
+        
+        <TremorCard decoration="top" decorationColor="rose" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
+          <Text>{t(locale, 'إجمالي الإنفاق', 'Total Spent')}</Text>
+          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+            <Metric className="font-black text-foreground">{isLoadingOrders ? '...' : formatBuyerCurrency(stats.totalSpent)}</Metric>
+          </Flex>
+        </TremorCard>
+
+        <TremorCard decoration="top" decorationColor="emerald" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
+          <Text>{t(locale, 'رصيد المحفظة', 'Wallet Balance')}</Text>
+          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+            <Metric className="font-black text-foreground">{isLoadingOrders ? '...' : formatBuyerCurrency(stats.walletBalance)}</Metric>
+          </Flex>
+        </TremorCard>
+
+        <TremorCard decoration="top" decorationColor="amber" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
+          <Text>{t(locale, 'المفضلة', 'Wishlist')}</Text>
+          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+            <Metric className="font-black text-foreground">{isLoadingOrders ? '...' : stats.wishlistCount}</Metric>
+          </Flex>
+        </TremorCard>
+      </TremorGrid>
 
       {/* ============================================ */}
       {/* MAIN TABS SECTION                            */}
@@ -373,49 +389,47 @@ export default function BuyerDashboard() {
         <TabsContent value="wishlist" className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {wishlistProducts.map((product) => (
-              <Card key={product.id} className="card-surface overflow-hidden">
-                <CardContent className="p-0">
-                  {/* Product Image Placeholder */}
-                  <div className="relative aspect-square bg-muted/50 flex items-center justify-center">
-                    <ShoppingBag className="h-12 w-12 text-muted-foreground/30" />
-                    {product.comparePrice && (
-                      <Badge className="absolute top-3 start-3 bg-red-500 text-white">
-                        -{Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}%
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="p-4 space-y-3">
-                    <div>
-                      <h3 className="font-semibold text-sm truncate">
-                        {locale === 'ar' ? product.name : (product.nameEn ?? product.name)}
-                      </h3>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-base font-bold text-primary">
-                          {formatBuyerCurrency(product.price)}
+              <TremorCard key={product.id} className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg p-0 overflow-hidden">
+                {/* Product Image Placeholder */}
+                <div className="relative aspect-square bg-muted/50 flex items-center justify-center">
+                  <ShoppingBag className="h-12 w-12 text-muted-foreground/30" />
+                  {product.comparePrice && (
+                    <Badge className="absolute top-3 start-3 bg-red-500 text-white">
+                      -{Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)}%
+                    </Badge>
+                  )}
+                </div>
+                <div className="p-4 space-y-3">
+                  <div>
+                    <Text className="font-semibold text-sm truncate text-foreground">
+                      {locale === 'ar' ? product.name : (product.nameEn ?? product.name)}
+                    </Text>
+                    <Flex className="mt-1" justifyContent="start" spaceX="2">
+                      <span className="text-base font-bold text-primary">
+                        {formatBuyerCurrency(product.price)}
+                      </span>
+                      {product.comparePrice && (
+                        <span className="text-xs text-muted-foreground line-through">
+                          {formatBuyerCurrency(product.comparePrice)}
                         </span>
-                        {product.comparePrice && (
-                          <span className="text-xs text-muted-foreground line-through">
-                            {formatBuyerCurrency(product.comparePrice)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        className="flex-1 gap-1.5"
-                        onClick={() => addItem(product)}
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        {t(locale, 'أضف للسلة', 'Add to Cart')}
-                      </Button>
-                      <Button size="sm" variant="outline" className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                      )}
+                    </Flex>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      className="flex-1 gap-1.5"
+                      onClick={() => addItem(product)}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      {t(locale, 'أضف للسلة', 'Add to Cart')}
+                    </Button>
+                    <Button size="sm" variant="outline" className="text-destructive hover:text-destructive">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </TremorCard>
             ))}
           </div>
         </TabsContent>
@@ -425,13 +439,12 @@ export default function BuyerDashboard() {
         {/* ======================================== */}
         <TabsContent value="wallet" className="space-y-6">
           {/* Balance Card */}
-          <Card className="card-surface overflow-hidden">
-            <CardContent className="p-0">
-              <div className="gradient-brand p-6 text-white">
-                <p className="text-sm text-white/80">{t(locale, 'رصيدك الحالي', 'Your Current Balance')}</p>
-                <p className="text-3xl md:text-4xl font-bold mt-2">
-                  {formatBuyerCurrency(stats.walletBalance)}
-                </p>
+          <TremorCard className="ring-0 border-border shadow-lg p-0 overflow-hidden">
+            <div className="gradient-brand p-6 text-white">
+              <Text className="text-white/80">{t(locale, 'رصيدك الحالي', 'Your Current Balance')}</Text>
+              <Metric className="text-white mt-2">
+                {formatBuyerCurrency(stats.walletBalance)}
+              </Metric>
                 <div className="flex items-center gap-6 mt-4 text-sm text-white/80">
                   <div>
                     {t(locale, 'مُضاف', 'Earned')}: {formatBuyerCurrency(MOCK_WALLET.totalEarned)}
@@ -442,66 +455,61 @@ export default function BuyerDashboard() {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+          </TremorCard>
 
           {/* Transactions Table */}
-          <Card className="card-surface">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base font-semibold">
-                {t(locale, 'المعاملات الأخيرة', 'Recent Transactions')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t(locale, 'النوع', 'Type')}</TableHead>
-                      <TableHead>{t(locale, 'الوصف', 'Description')}</TableHead>
-                      <TableHead>{t(locale, 'المبلغ', 'Amount')}</TableHead>
-                      <TableHead>{t(locale, 'التاريخ', 'Date')}</TableHead>
-                      <TableHead>{t(locale, 'الرصيد بعد', 'Balance After')}</TableHead>
+          <TremorCard className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg mt-4">
+            <Text className="text-foreground font-semibold mb-4">
+              {t(locale, 'المعاملات الأخيرة', 'Recent Transactions')}
+            </Text>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t(locale, 'النوع', 'Type')}</TableHead>
+                    <TableHead>{t(locale, 'الوصف', 'Description')}</TableHead>
+                    <TableHead>{t(locale, 'المبلغ', 'Amount')}</TableHead>
+                    <TableHead>{t(locale, 'التاريخ', 'Date')}</TableHead>
+                    <TableHead>{t(locale, 'الرصيد بعد', 'Balance After')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {MOCK_WALLET.transactions.map((tx) => (
+                    <TableRow key={tx.id}>
+                      <TableCell>
+                        <TransactionTypeBadge type={tx.type} locale={locale} />
+                      </TableCell>
+                      <TableCell className="text-sm">{tx.description}</TableCell>
+                      <TableCell>
+                        <span
+                          className={cn(
+                            'text-sm font-semibold',
+                            tx.type === 'credit' && 'text-green-600 dark:text-green-400',
+                            tx.type === 'debit' && 'text-red-600 dark:text-red-400',
+                            tx.type === 'refund' && 'text-blue-600 dark:text-blue-400',
+                            tx.type === 'withdrawal' && 'text-orange-600 dark:text-orange-400'
+                          )}
+                        >
+                          {tx.type === 'credit' || tx.type === 'refund' ? '+' : '-'}
+                          {formatBuyerCurrency(tx.amount)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(tx.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {formatBuyerCurrency(tx.balance)}
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {MOCK_WALLET.transactions.map((tx) => (
-                      <TableRow key={tx.id}>
-                        <TableCell>
-                          <TransactionTypeBadge type={tx.type} locale={locale} />
-                        </TableCell>
-                        <TableCell className="text-sm">{tx.description}</TableCell>
-                        <TableCell>
-                          <span
-                            className={cn(
-                              'text-sm font-semibold',
-                              tx.type === 'credit' && 'text-green-600 dark:text-green-400',
-                              tx.type === 'debit' && 'text-red-600 dark:text-red-400',
-                              tx.type === 'refund' && 'text-blue-600 dark:text-blue-400',
-                              tx.type === 'withdrawal' && 'text-orange-600 dark:text-orange-400'
-                            )}
-                          >
-                            {tx.type === 'credit' || tx.type === 'refund' ? '+' : '-'}
-                            {formatBuyerCurrency(tx.amount)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {new Date(tx.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </TableCell>
-                        <TableCell className="text-sm font-medium">
-                          {formatBuyerCurrency(tx.balance)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </TremorCard>
         </TabsContent>
 
         {/* ======================================== */}
@@ -510,8 +518,8 @@ export default function BuyerDashboard() {
         <TabsContent value="addresses" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {MOCK_ADDRESSES.map((addr) => (
-              <Card key={addr.id} className="card-surface">
-                <CardContent className="p-5 space-y-3">
+              <TremorCard key={addr.id} className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
+                <div className="space-y-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-primary" />
@@ -546,8 +554,8 @@ export default function BuyerDashboard() {
                       {t(locale, 'حذف', 'Delete')}
                     </Button>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </TremorCard>
             ))}
           </div>
         </TabsContent>
@@ -561,68 +569,55 @@ export default function BuyerDashboard() {
 // ============================================
 function OrderTrackingSection({ order, locale }: { order: Order; locale: Locale }) {
   const currentStep = getStepIndex(order.status);
-  const progressValue = ((currentStep + 1) / ORDER_STEPS.length) * 100;
+
+  const trackerData = ORDER_STEPS.map((step, index) => {
+    const isCompleted = index < currentStep;
+    const isCurrent = index === currentStep;
+    const label = locale === 'ar' ? stepLabelsAr[index] : stepLabelsEn[index];
+    
+    let color = 'slate';
+    if (isCompleted) color = 'emerald';
+    else if (isCurrent) color = 'blue';
+
+    return { color, tooltip: label };
+  });
 
   return (
-    <Card className="card-surface border-primary/20">
-      <CardContent className="p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Truck className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-semibold">
-              {t(locale, 'تتبع الطلب', 'Order Tracking')}
-            </h3>
-          </div>
-          <Badge className={getOrderStatusColor(order.status)}>
-            {locale === 'ar' ? getOrderStatusText(order.status) : order.status}
-          </Badge>
+    <TremorCard className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg border-primary/20">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Truck className="h-5 w-5 text-primary" />
+          <Text className="font-semibold text-foreground">
+            {t(locale, 'تتبع الطلب', 'Order Tracking')} - {order.orderNumber}
+          </Text>
         </div>
+        <Badge className={getOrderStatusColor(order.status)}>
+          {locale === 'ar' ? getOrderStatusText(order.status) : order.status}
+        </Badge>
+      </div>
 
-        {/* Progress Bar */}
-        <Progress value={progressValue} className="h-2" />
-
-        {/* Steps */}
-        <div className="relative flex items-start justify-between">
-          {/* Connector line */}
-          <div className="absolute top-4 start-4 end-4 h-0.5 bg-muted hidden sm:block" />
-
-          {ORDER_STEPS.map((step, index) => {
-            const StepIcon = stepIcons[index];
-            const isCompleted = index < currentStep;
-            const isCurrent = index === currentStep;
-            const label = locale === 'ar' ? stepLabelsAr[index] : stepLabelsEn[index];
-
-            return (
-              <div
-                key={step}
-                className="relative flex flex-col items-center gap-1.5 z-10 flex-1"
-              >
-                <div
-                  className={cn(
-                    'h-8 w-8 rounded-full flex items-center justify-center border-2 transition-all',
-                    isCompleted && 'bg-primary border-primary text-primary-foreground',
-                    isCurrent && 'bg-primary border-primary text-primary-foreground ring-4 ring-primary/20',
-                    !isCompleted && !isCurrent && 'bg-background border-muted-foreground/30 text-muted-foreground'
-                  )}
-                >
-                  <StepIcon className="h-3.5 w-3.5" />
-                </div>
-                <span
-                  className={cn(
-                    'text-[11px] font-medium text-center leading-tight',
-                    isCurrent && 'text-primary',
-                    isCompleted && 'text-foreground',
-                    !isCompleted && !isCurrent && 'text-muted-foreground'
-                  )}
-                >
-                  {label}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+      <Tracker data={trackerData as any} className="mt-4 h-8" />
+      
+      <div className="flex items-center justify-between mt-3 px-1">
+        {ORDER_STEPS.map((step, index) => {
+          const isCompleted = index < currentStep;
+          const isCurrent = index === currentStep;
+          const label = locale === 'ar' ? stepLabelsAr[index] : stepLabelsEn[index];
+          
+          return (
+            <Text 
+              key={step} 
+              className={cn(
+                "text-[10px] sm:text-xs font-medium text-center flex-1",
+                isCurrent ? "text-primary" : (isCompleted ? "text-foreground" : "text-muted-foreground")
+              )}
+            >
+              {label}
+            </Text>
+          );
+        })}
+      </div>
+    </TremorCard>
   );
 }
 
@@ -693,9 +688,10 @@ function OrderCard({ order, locale }: { order: Order; locale: Locale }) {
       {/* Progress for active orders */}
       {isActive && (
         <div className="mb-3">
-          <Progress
+          <ProgressBar
             value={((getStepIndex(order.status) + 1) / ORDER_STEPS.length) * 100}
-            className="h-1.5"
+            color="blue"
+            className="mt-2"
           />
         </div>
       )}

@@ -98,6 +98,7 @@ export default function BillingMerchantsPage() {
     endDate: '',
     freeCommission: false,
     overrideNote: '',
+    paymentModel: 'default',
   });
 
   useEffect(() => {
@@ -181,6 +182,7 @@ export default function BillingMerchantsPage() {
         endDate: sub.endDate ? new Date(sub.endDate).toISOString().slice(0, 10) : '',
         freeCommission: sub.freeCommission ?? false,
         overrideNote: sub.overrideNote || '',
+        paymentModel: sub.user?.sellerProfile?.paymentModel || 'default',
       });
     }
   };
@@ -552,6 +554,21 @@ export default function BillingMerchantsPage() {
                                         onChange={e => setEditForm(f => ({ ...f, endDate: e.target.value }))}
                                         className="h-11 rounded-xl font-mono text-sm bg-slate-50 dark:bg-slate-900/50 border-transparent hover:border-border transition-colors"
                                       />
+                                    </div>
+
+                                    <div className="space-y-2 pt-1">
+                                      <Label className="text-xs font-bold text-muted-foreground">{t(locale, 'تخصيص نموذج الدفع للتاجر', 'Payment Model Override')}</Label>
+                                      <Select value={editForm.paymentModel} onValueChange={v => setEditForm(f => ({ ...f, paymentModel: v }))} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+                                        <SelectTrigger className="h-11 rounded-xl text-xs font-bold w-full bg-slate-50 dark:bg-slate-900/50 border-transparent hover:border-border transition-colors">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="text-xs font-bold" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+                                          <SelectItem value="default">{t(locale, 'الافتراضي للمنصة', 'Platform Default')}</SelectItem>
+                                          <SelectItem value="centralized">{t(locale, 'الدفع للمنصة حصراً (يستفيد من السحب)', 'Centralized (Platform Only)')}</SelectItem>
+                                          <SelectItem value="decentralized">{t(locale, 'الدفع المباشر للتاجر حصراً (مديونيات)', 'Decentralized (Direct to Merchant)')}</SelectItem>
+                                          <SelectItem value="mixed">{t(locale, 'مدمج (سحب + مديونيات)', 'Mixed (Both)')}</SelectItem>
+                                        </SelectContent>
+                                      </Select>
                                     </div>
 
                                     <div className="space-y-2 pt-1">

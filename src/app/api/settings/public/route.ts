@@ -12,6 +12,7 @@ export async function GET() {
       'upload_recommended_width',
       'upload_recommended_height',
       'currency',
+      'platform_payment_model',
     ];
 
     const settings = await db.systemSetting.findMany({
@@ -31,6 +32,7 @@ export async function GET() {
         upload_recommended_width: settingsMap.upload_recommended_width || '800',
         upload_recommended_height: settingsMap.upload_recommended_height || '800',
         currency: settingsMap.currency || 'DZD',
+        platform_payment_model: settingsMap.platform_payment_model || 'mixed',
       }
     });
   } catch (error) {

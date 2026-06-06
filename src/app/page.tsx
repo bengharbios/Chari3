@@ -30,6 +30,8 @@ import ProductDetailPage from '@/components/storefront/ProductDetailPage';
 import SellerProfilePage from '@/components/storefront/SellerProfilePage';
 import SearchPage from '@/components/storefront/SearchPage';
 import BillingPage from '@/components/seller/BillingPage';
+import WalletPage from '@/components/seller/WalletPage';
+import DebtsPage from '@/components/seller/DebtsPage';
 import { toast } from 'sonner';
 import type { PageType, UserRole } from '@/types';
 
@@ -39,6 +41,8 @@ const DASHBOARD_MAP: Record<string, React.ComponentType> = {
   'store-billing-addons': BillingPage,
   'store-billing-pay': BillingPage,
   'store-billing-history': BillingPage,
+  'seller-wallet': WalletPage,
+  'seller-debts': DebtsPage,
   'seller-billing': BillingPage,
   'seller-billing-plans': BillingPage,
   'seller-billing-addons': BillingPage,

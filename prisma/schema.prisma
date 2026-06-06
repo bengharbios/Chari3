@@ -144,6 +144,8 @@ model SellerProfile {
   categoryId          String?
   category            Category? @relation(fields: [categoryId], references: [id])
 
+  paymentModel        String    @default("default") // default, centralized, decentralized, mixed
+
   isVerified          Boolean   @default(false)
   wantsUpgrade        Boolean   @default(false)
   upgradeRequestedAt  DateTime?

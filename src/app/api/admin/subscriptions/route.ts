@@ -61,6 +61,7 @@ export async function GET(req: NextRequest) {
                 select: {
                   storeName: true,
                   storeNameEn: true,
+                  paymentModel: true,
                 }
               }
             },

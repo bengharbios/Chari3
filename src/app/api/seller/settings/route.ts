@@ -110,6 +110,7 @@ export async function GET(req: NextRequest) {
           themeSettings: themeParsed,
           storeConfig: themeParsed?.storeConfig || null,
           currency,
+          paymentModel: seller.paymentModel,
         }
       });
     }

@@ -25,6 +25,7 @@ export async function PATCH(
       overrideNote,
       addDays,
       overriddenBy,
+      paymentModel,
     } = body as {
       status?: string;
       packageId?: string;
@@ -34,6 +35,7 @@ export async function PATCH(
       freeCommission?: boolean;
       overrideNote?: string;
       overriddenBy?: string;
+      paymentModel?: string;
     };
 
     // Fetch current subscription
@@ -78,6 +80,13 @@ export async function PATCH(
       const baseDate = existing.endDate ? new Date(existing.endDate) : new Date();
       baseDate.setDate(baseDate.getDate() + addDays);
       updateData.endDate = baseDate;
+    }
+
+    if (paymentModel !== undefined) {
+      await prisma.sellerProfile.updateMany({
+        where: { userId: existing.userId },
+        data: { paymentModel }
+      });
     }
 
     const subscription = await prisma.subscription.update({

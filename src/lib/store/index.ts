@@ -106,6 +106,7 @@ interface AppState {
   theme: Theme;
   currentPage: PageType;
   isSidebarOpen: boolean;
+  isDesktopSidebarCollapsed: boolean;
   isMobileMenuOpen: boolean;
   searchQuery: string;
   notifications: number;
@@ -118,6 +119,8 @@ interface AppState {
   setCurrentPage: (page: PageType) => void;
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
+  toggleDesktopSidebar: () => void;
+  setDesktopSidebarCollapsed: (collapsed: boolean) => void;
   toggleMobileMenu: () => void;
   setMobileMenuOpen: (open: boolean) => void;
   setSearchQuery: (query: string) => void;
@@ -134,6 +137,7 @@ export const useAppStore = create<AppState>()(
       theme: 'light',
       currentPage: 'home',
       isSidebarOpen: true,
+      isDesktopSidebarCollapsed: false,
       isMobileMenuOpen: false,
       searchQuery: '',
       notifications: 5,
@@ -146,6 +150,8 @@ export const useAppStore = create<AppState>()(
       setCurrentPage: (currentPage) => set({ currentPage, isMobileMenuOpen: false }),
       toggleSidebar: () => set((state) => ({ isSidebarOpen: !state.isSidebarOpen })),
       setSidebarOpen: (isSidebarOpen) => set({ isSidebarOpen }),
+      toggleDesktopSidebar: () => set((state) => ({ isDesktopSidebarCollapsed: !state.isDesktopSidebarCollapsed })),
+      setDesktopSidebarCollapsed: (isDesktopSidebarCollapsed) => set({ isDesktopSidebarCollapsed }),
       toggleMobileMenu: () => set((state) => ({ isMobileMenuOpen: !state.isMobileMenuOpen })),
       setMobileMenuOpen: (isMobileMenuOpen) => set({ isMobileMenuOpen }),
       setSearchQuery: (searchQuery) => set({ searchQuery }),

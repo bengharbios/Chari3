@@ -17,7 +17,8 @@ import {
   Users,
   Store,
   Wallet,
-  Boxes
+  Boxes,
+  Banknote
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -151,6 +152,13 @@ export default function AdminSidebar() {
           labelEn: "Wallets & Debts", 
           path: 'billing/wallets', 
           color: 'text-indigo-400' 
+        },
+        { 
+          icon: Banknote, 
+          labelAr: "طلبات سحب الأرباح", 
+          labelEn: "Payout Requests", 
+          path: 'billing/withdrawals', 
+          color: 'text-green-400' 
         },
         { 
           icon: Sliders, 

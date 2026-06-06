@@ -2,21 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
-import { formatCurrency, formatNumber } from '@/lib/mock-data';
+import { formatNumber } from '@/lib/mock-data';
 import { PageHeader } from '@/components/shared/StatsCard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import {
+  Card as TremorCard,
+  Metric,
+  Text,
   AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from 'recharts';
+  DonutChart,
+  Title,
+  Flex,
+  BadgeDelta,
+  Grid as TremorGrid,
+  Tracker,
+  Color
+} from '@tremor/react';
 import {
   ShoppingCart,
   DollarSign,
@@ -143,20 +147,26 @@ export default function StoreDashboard() {
     return `${storeCurrency} ${formattedAmount}`;
   };
 
-
   // Chart Data Preparation
   const chartData = [
-    { name: getMonthLabel(0, locale), sales: 320, visitors: 1500 },
-    { name: getMonthLabel(1, locale), sales: 480, visitors: 2100 },
-    { name: getMonthLabel(2, locale), sales: 640, visitors: 3400 },
-    { name: getMonthLabel(3, locale), sales: 410, visitors: 1800 },
-    { name: getMonthLabel(4, locale), sales: 520, visitors: 2900 },
-    { name: getMonthLabel(5, locale), sales: 890, visitors: 4200 },
+    { name: getMonthLabel(0, locale), [t(locale, 'المبيعات', 'Sales')]: 320, [t(locale, 'الزوار', 'Visitors')]: 1500 },
+    { name: getMonthLabel(1, locale), [t(locale, 'المبيعات', 'Sales')]: 480, [t(locale, 'الزوار', 'Visitors')]: 2100 },
+    { name: getMonthLabel(2, locale), [t(locale, 'المبيعات', 'Sales')]: 640, [t(locale, 'الزوار', 'Visitors')]: 3400 },
+    { name: getMonthLabel(3, locale), [t(locale, 'المبيعات', 'Sales')]: 410, [t(locale, 'الزوار', 'Visitors')]: 1800 },
+    { name: getMonthLabel(4, locale), [t(locale, 'المبيعات', 'Sales')]: 520, [t(locale, 'الزوار', 'Visitors')]: 2900 },
+    { name: getMonthLabel(5, locale), [t(locale, 'المبيعات', 'Sales')]: 890, [t(locale, 'الزوار', 'Visitors')]: 4200 },
+  ];
+
+  const donutData = [
+    { name: t(locale, 'إلكترونيات', 'Electronics'), sales: 450 },
+    { name: t(locale, 'أزياء', 'Fashion'), sales: 300 },
+    { name: t(locale, 'منزل', 'Home'), sales: 250 },
+    { name: t(locale, 'أخرى', 'Other'), sales: 100 },
   ];
 
   return (
     <motion.div 
-      className="space-y-6 p-4 md:p-6 text-start"
+      className="space-y-6 text-start"
       variants={STAGGER_CONTAINER}
       initial="hidden"
       animate="visible"
@@ -173,98 +183,83 @@ export default function StoreDashboard() {
         </Button>
       </motion.div>
 
-      {/* KPI Stats Cards - Glassmorphism */}
-      <motion.div variants={FADE_IN_VARIANTS} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { title: t(locale, 'الإيرادات', 'Revenue'), value: formatStoreCurrency(kpis.monthRevenue ?? 0), icon: DollarSign, color: 'from-emerald-500 to-teal-400', shadow: 'shadow-emerald-500/20' },
-          { title: t(locale, 'المبيعات', 'Sales'), value: formatNumber(kpis.totalSales ?? 0), icon: ShoppingCart, color: 'from-blue-500 to-indigo-400', shadow: 'shadow-blue-500/20' },
-          { title: t(locale, 'المنتجات', 'Products'), value: products.length, icon: Package, color: 'from-purple-500 to-pink-400', shadow: 'shadow-purple-500/20' },
-          { title: t(locale, 'الزوار', 'Visitors'), value: '12,450', icon: Users, color: 'from-orange-500 to-amber-400', shadow: 'shadow-orange-500/20' },
-        ].map((stat, idx) => (
-          <motion.div 
-            key={idx}
-            whileHover={{ y: -5, scale: 1.02 }}
-            className={`relative overflow-hidden rounded-2xl border border-white/10 bg-background/60 backdrop-blur-xl shadow-xl ${stat.shadow} p-6 transition-all`}
-          >
-            <div className={`absolute -end-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br ${stat.color} opacity-20 blur-2xl`} />
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                <h3 className="text-2xl font-black mt-1">{stat.value}</h3>
-              </div>
-              <div className={`h-12 w-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow-lg text-white`}>
-                <stat.icon className="h-6 w-6" />
-              </div>
-            </div>
-            <div className="mt-4 flex items-center text-xs font-medium text-emerald-500">
-              <TrendingUp className="h-3 w-3 me-1" />
-              <span>+12% {t(locale, 'عن الشهر الماضي', 'vs last month')}</span>
-            </div>
-          </motion.div>
-        ))}
+      {/* KPI Stats Cards - Tremor */}
+      <motion.div variants={FADE_IN_VARIANTS}>
+        <TremorGrid numItems={1} numItemsSm={2} numItemsLg={4} className="gap-6">
+          <TremorCard decoration="top" decorationColor="emerald" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
+            <Text>{t(locale, 'الإيرادات', 'Revenue')}</Text>
+            <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+              <Metric className="font-black text-foreground">{formatStoreCurrency(kpis.monthRevenue ?? 0)}</Metric>
+              <BadgeDelta deltaType="moderateIncrease">+12%</BadgeDelta>
+            </Flex>
+          </TremorCard>
+          
+          <TremorCard decoration="top" decorationColor="blue" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
+            <Text>{t(locale, 'المبيعات', 'Sales')}</Text>
+            <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+              <Metric className="font-black text-foreground">{formatNumber(kpis.totalSales ?? 0)}</Metric>
+              <BadgeDelta deltaType="moderateIncrease">+8%</BadgeDelta>
+            </Flex>
+          </TremorCard>
+
+          <TremorCard decoration="top" decorationColor="purple" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
+            <Text>{t(locale, 'المنتجات', 'Products')}</Text>
+            <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+              <Metric className="font-black text-foreground">{products.length}</Metric>
+              <BadgeDelta deltaType="unchanged">0%</BadgeDelta>
+            </Flex>
+          </TremorCard>
+
+          <TremorCard decoration="top" decorationColor="orange" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
+            <Text>{t(locale, 'الزوار', 'Visitors')}</Text>
+            <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+              <Metric className="font-black text-foreground">12,450</Metric>
+              <BadgeDelta deltaType="increase">+24%</BadgeDelta>
+            </Flex>
+          </TremorCard>
+        </TremorGrid>
       </motion.div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Main Chart */}
         <motion.div variants={FADE_IN_VARIANTS} className="xl:col-span-2">
-          <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl overflow-hidden h-full">
-            <CardHeader>
-              <CardTitle className="text-lg font-bold flex items-center gap-2">
-                <Activity className="h-5 w-5 text-primary" />
-                {t(locale, 'تحليل الأداء (أرباح وزيارات)', 'Performance Analysis (Revenue & Traffic)')}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[350px] w-full" dir="ltr">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.5} />
-                    <XAxis 
-                      dataKey="name" 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} 
-                      dy={10}
-                    />
-                    <YAxis 
-                      axisLine={false} 
-                      tickLine={false} 
-                      tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} 
-                      dx={-10}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        borderRadius: '12px', 
-                        border: '1px solid hsl(var(--border))',
-                        background: 'hsl(var(--background))',
-                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'
-                      }} 
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="sales" 
-                      stroke="hsl(var(--primary))" 
-                      strokeWidth={3}
-                      fillOpacity={1} 
-                      fill="url(#colorSales)" 
-                      activeDot={{ r: 6, strokeWidth: 0, fill: 'hsl(var(--primary))' }}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          <TremorCard className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-xl h-full flex flex-col">
+            <Title className="text-foreground">{t(locale, 'تحليل الأداء (أرباح وزيارات)', 'Performance Analysis (Revenue & Traffic)')}</Title>
+            <div dir="ltr" className="flex-1 mt-4">
+              <AreaChart
+                className="h-72 mt-4"
+                data={chartData}
+                index="name"
+                categories={[t(locale, 'المبيعات', 'Sales'), t(locale, 'الزوار', 'Visitors')]}
+                colors={["blue", "cyan"]}
+                valueFormatter={(number: number) => formatNumber(number)}
+                showAnimation={true}
+              />
+            </div>
+          </TremorCard>
+        </motion.div>
+
+        {/* Donut Chart / Category Breakdown */}
+        <motion.div variants={FADE_IN_VARIANTS} className="xl:col-span-1">
+          <TremorCard className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-xl h-full flex flex-col">
+            <Title className="text-foreground">{t(locale, 'المبيعات حسب الفئة', 'Sales by Category')}</Title>
+            <div dir="ltr" className="flex-1 mt-6 flex flex-col justify-center">
+              <DonutChart
+                className="h-48"
+                data={donutData}
+                category="sales"
+                index="name"
+                valueFormatter={(number: number) => formatNumber(number)}
+                colors={["blue", "cyan", "indigo", "violet"]}
+                showAnimation={true}
+              />
+            </div>
+          </TremorCard>
         </motion.div>
 
         {/* Recent Orders List Mini */}
-        <motion.div variants={FADE_IN_VARIANTS}>
-          <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl h-full flex flex-col">
+        <motion.div variants={FADE_IN_VARIANTS} className="xl:col-span-3">
+          <Card className="border-border bg-background/60 backdrop-blur-xl shadow-xl rounded-2xl h-full flex flex-col">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-lg font-bold">
                 {t(locale, 'أحدث الطلبات', 'Recent Orders')}

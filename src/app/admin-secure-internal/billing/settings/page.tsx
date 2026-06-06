@@ -93,6 +93,16 @@ export default function BillingSettingsPage() {
   const [ccpName, setCcpName] = useState('');
   const [ccpRip, setCcpRip] = useState('');
 
+  // Withdrawal Settings
+  const [withdrawalMinAmount, setWithdrawalMinAmount] = useState('5000');
+  const [withdrawalMethodCcp, setWithdrawalMethodCcp] = useState(true);
+  const [withdrawalMethodCib, setWithdrawalMethodCib] = useState(true);
+  const [withdrawalMethodBank, setWithdrawalMethodBank] = useState(true);
+  const [withdrawalMethodCash, setWithdrawalMethodCash] = useState(false);
+
+  // Platform Payment Model
+  const [platformPaymentModel, setPlatformPaymentModel] = useState<'centralized' | 'decentralized' | 'mixed'>('mixed');
+
   // Addons States
   const [addons, setAddons] = useState<any[]>([]);
   const [editingAddon, setEditingAddon] = useState<any | null>(null);
@@ -148,6 +158,23 @@ export default function BillingSettingsPage() {
         if (s.billing_trial_on_registration !== undefined) setTrialOnRegistration(s.billing_trial_on_registration === 'true' || s.billing_trial_on_registration === true);
         if (s.billing_expiry_action) setExpiryAction(s.billing_expiry_action);
         if (s.currency) setCurrency(s.currency);
+        
+        // Withdrawal Settings
+        if (s.withdrawal_min_amount !== undefined) setWithdrawalMinAmount(s.withdrawal_min_amount);
+        if (s.withdrawal_methods) {
+          try {
+            const methods = JSON.parse(s.withdrawal_methods);
+            setWithdrawalMethodCcp(methods.includes('ccp'));
+            setWithdrawalMethodCib(methods.includes('cib'));
+            setWithdrawalMethodBank(methods.includes('bank_transfer'));
+            setWithdrawalMethodCash(methods.includes('cash'));
+          } catch (e) {}
+        }
+        
+        // Platform Payment Model
+        if (s.platform_payment_model) {
+          setPlatformPaymentModel(s.platform_payment_model as 'centralized' | 'decentralized' | 'mixed');
+        }
       }
 
       const addonsData = await addonsRes.json();
@@ -198,6 +225,14 @@ export default function BillingSettingsPage() {
             billing_default_package_id: defaultPackageId,
             billing_trial_on_registration: trialOnRegistration,
             billing_expiry_action: expiryAction,
+            withdrawal_min_amount: withdrawalMinAmount,
+            platform_payment_model: platformPaymentModel,
+            withdrawal_methods: JSON.stringify([
+              ...(withdrawalMethodCcp ? ['ccp'] : []),
+              ...(withdrawalMethodCib ? ['cib'] : []),
+              ...(withdrawalMethodBank ? ['bank_transfer'] : []),
+              ...(withdrawalMethodCash ? ['cash'] : []),
+            ]),
           }
         })
       });
@@ -338,7 +373,51 @@ export default function BillingSettingsPage() {
           {/* Platform & Commission forms (Left 2 cols) */}
           <div className="lg:col-span-2 space-y-6">
             <form onSubmit={handleSaveSettings} className="space-y-6">
-              {/* Section A: Subscriptions */}
+              
+              {/* Section 0: Platform Payment Model */}
+              <Card className="border-border bg-card shadow-sm hover:shadow transition-shadow border-blue-500/20">
+                <CardHeader className="bg-blue-500/5 border-b border-blue-500/10">
+                  <CardTitle className="text-base font-bold flex items-center gap-2">
+                    <Settings className="h-5 w-5 text-blue-500" />
+                    {t(locale, 'النموذج المالي العام للمنصة', 'Global Platform Payment Model')}
+                  </CardTitle>
+                  <CardDescription>
+                    {t(locale, 'تحديد كيفية عمل المنصة مالياً. هل تدفع الأموال للمنصة أم مباشرة للتاجر؟', 'Configure how money flows through the platform globally.')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-4">
+                  <div className="space-y-3">
+                    <Label className="text-xs font-semibold block">{t(locale, 'اختر نموذج الدفع الافتراضي:', 'Select Default Payment Model:')}</Label>
+                    <Select value={platformPaymentModel} onValueChange={(val: any) => setPlatformPaymentModel(val)}>
+                      <SelectTrigger className="w-full h-12 bg-background border-border rounded-xl shadow-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="centralized">
+                          <div className="flex flex-col text-start">
+                            <span className="font-bold text-sm">الدفع للمنصة (Centralized)</span>
+                            <span className="text-[10px] text-muted-foreground">المنصة تستلم الأموال وتعطي التاجر رصيداً قابلاً للسحب.</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="decentralized">
+                          <div className="flex flex-col text-start">
+                            <span className="font-bold text-sm">الدفع المباشر للتاجر (Decentralized)</span>
+                            <span className="text-[10px] text-muted-foreground">التاجر يقبض أمواله كاش وتحتسب المنصة عمولتها كمديونية على التاجر.</span>
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="mixed">
+                          <div className="flex flex-col text-start">
+                            <span className="font-bold text-sm">النظام المدمج (Mixed)</span>
+                            <span className="text-[10px] text-muted-foreground">دعم النظامين معاً (رصيد موجب أو مديونية) بناءً على طريقة الدفع.</span>
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Section A: Global Settings */}
               <Card className="border-border bg-card shadow-sm hover:shadow transition-shadow">
                 <CardHeader>
                   <CardTitle className="text-base font-bold flex items-center gap-2">
@@ -568,6 +647,68 @@ export default function BillingSettingsPage() {
                       onChange={e => setCcpRip(e.target.value)}
                       className="h-9 rounded-xl font-mono"
                     />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Section D: Withdrawal Settings */}
+              <Card className="border-border bg-card shadow-sm hover:shadow transition-shadow">
+                <CardHeader>
+                  <CardTitle className="text-base font-bold flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-green-500" />
+                    {t(locale, 'إعدادات سحب الأرباح (الرصيد المتاح)', 'Payouts & Withdrawals Settings')}
+                  </CardTitle>
+                  <CardDescription>
+                    {t(locale, 'تحديد الحد الأدنى لسحب أرباح التاجر وطرق السحب المتاحة لهم', 'Configure minimum withdrawal limits and available payout methods for merchants')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="withdrawalMinAmount" className="text-xs font-semibold">
+                        {t(locale, 'الحد الأدنى لطلب السحب (د.ج)', 'Minimum Withdrawal Amount (DZD)')}
+                      </Label>
+                      <Input
+                        id="withdrawalMinAmount"
+                        type="number"
+                        min="0"
+                        value={withdrawalMinAmount}
+                        onChange={e => setWithdrawalMinAmount(e.target.value)}
+                        className="h-9 rounded-xl font-mono font-bold"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="pt-2 border-t space-y-3">
+                    <Label className="text-xs font-semibold">
+                      {t(locale, 'طرق السحب المتاحة للتجار', 'Available Withdrawal Methods')}
+                    </Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <SwitchRow
+                        id="with_ccp"
+                        checked={withdrawalMethodCcp}
+                        onCheckedChange={setWithdrawalMethodCcp}
+                        label={t(locale, 'البريد الجزائري (CCP)', 'Algeria Post (CCP)')}
+                      />
+                      <SwitchRow
+                        id="with_cib"
+                        checked={withdrawalMethodCib}
+                        onCheckedChange={setWithdrawalMethodCib}
+                        label={t(locale, 'البطاقة الذهبية / CIB', 'CIB / Edahabia')}
+                      />
+                      <SwitchRow
+                        id="with_bank"
+                        checked={withdrawalMethodBank}
+                        onCheckedChange={setWithdrawalMethodBank}
+                        label={t(locale, 'تحويل بنكي (Bank Transfer)', 'Bank Transfer')}
+                      />
+                      <SwitchRow
+                        id="with_cash"
+                        checked={withdrawalMethodCash}
+                        onCheckedChange={setWithdrawalMethodCash}
+                        label={t(locale, 'نقداً (Cash)', 'Cash pickup')}
+                      />
+                    </div>
                   </div>
                 </CardContent>
               </Card>

@@ -18,6 +18,18 @@ import { Separator } from '@/components/ui/separator';
 import { useOnboardingStore } from '@/lib/store/onboarding';
 import { useAppStore as appStore } from '@/lib/store';
 import { toast } from 'sonner';
+import {
+  Card as TremorCard,
+  Metric,
+  Text,
+  AreaChart,
+  DonutChart,
+  Title,
+  Flex,
+  BadgeDelta,
+  Grid as TremorGrid,
+  ProgressBar
+} from '@tremor/react';
 
 const DZD = (n: number) => `${n.toLocaleString('ar-DZ')} د.ج`;
 
@@ -365,102 +377,116 @@ export default function SellerDashboard() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { label: t('أرباح الشهر', 'Month Earnings'), value: DZD(kpis?.monthNetEarnings ?? 0), icon: Wallet, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-900/10' },
-          { label: t('طلبات الشهر', 'Month Orders'), value: kpis?.monthOrderCount ?? 0, icon: Package, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/10' },
-          { label: t('التقييم العام', 'Overall Rating'), value: `${(kpis?.rating ?? 0).toFixed(1)} ⭐`, icon: Star, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/10' },
-          { label: t('رصيد المحفظة', 'Wallet Balance'), value: DZD(kpis?.walletBalance ?? 0), icon: TrendingUp, color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/10' },
-        ].map((kpi) => (
-          <Card key={kpi.label} className={kpi.bg}>
-            <CardContent className="pt-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">{kpi.label}</p>
-                  <p className="text-xl font-black">{kpi.value}</p>
-                </div>
-                <kpi.icon className={`size-5 ${kpi.color}`} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {/* KPI Cards - Tremor */}
+      <TremorGrid numItems={1} numItemsSm={2} numItemsLg={4} className="gap-6">
+        <TremorCard decoration="top" decorationColor="emerald" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
+          <Text>{t('أرباح الشهر', 'Month Earnings')}</Text>
+          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+            <Metric className="font-black text-foreground">{DZD(kpis?.monthNetEarnings ?? 0)}</Metric>
+            <BadgeDelta deltaType="moderateIncrease">+5%</BadgeDelta>
+          </Flex>
+        </TremorCard>
+        
+        <TremorCard decoration="top" decorationColor="blue" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
+          <Text>{t('طلبات الشهر', 'Month Orders')}</Text>
+          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+            <Metric className="font-black text-foreground">{kpis?.monthOrderCount ?? 0}</Metric>
+            <BadgeDelta deltaType="increase">+12%</BadgeDelta>
+          </Flex>
+        </TremorCard>
+
+        <TremorCard decoration="top" decorationColor="amber" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
+          <Text>{t('التقييم العام', 'Overall Rating')}</Text>
+          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+            <Metric className="font-black text-foreground">{(kpis?.rating ?? 0).toFixed(1)} ⭐</Metric>
+            <BadgeDelta deltaType="unchanged">0%</BadgeDelta>
+          </Flex>
+        </TremorCard>
+
+        <TremorCard decoration="top" decorationColor="purple" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
+          <Text>{t('رصيد المحفظة', 'Wallet Balance')}</Text>
+          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+            <Metric className="font-black text-foreground">{DZD(kpis?.walletBalance ?? 0)}</Metric>
+            <BadgeDelta deltaType="moderateIncrease">+8%</BadgeDelta>
+          </Flex>
+        </TremorCard>
+      </TremorGrid>
 
       {/* Level Progress */}
       {nextLevel && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="pt-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Target className="size-4 text-primary" />
-                <span className="text-sm font-semibold">{t('تقدمك نحو المستوى', 'Progress to Level')} {nextLevel.level} — {nextLevel.nameAr}</span>
-              </div>
-              <Badge variant="outline" className="text-primary border-primary/30">{t('مستوى', 'Level')} {lvl} / 10</Badge>
+        <TremorCard className="border-primary/20 bg-primary/5 ring-0 shadow-sm mt-4">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Target className="size-5 text-primary" />
+              <Title className="text-foreground">{t('تقدمك نحو المستوى', 'Progress to Level')} {nextLevel.level} — {nextLevel.nameAr}</Title>
             </div>
-            <div className="grid grid-cols-3 gap-3 text-xs">
-              {[
-                { label: t('معدل الإكمال', 'Completion'), current: kpis?.completionRate ?? 0, target: nextLevel.minCompletionRate, unit: '%' },
-                { label: t('التقييم', 'Rating'), current: kpis?.rating ?? 0, target: nextLevel.minRating, unit: '⭐' },
-                { label: t('العملاء', 'Customers'), current: data?.seller?.totalSales ?? 0, target: nextLevel.minCustomers, unit: '' },
-              ].map((m) => (
-                <div key={m.label} className="space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">{m.label}</span>
-                    <span className="font-medium">{m.current.toFixed(m.unit === '%' ? 0 : 1)}{m.unit} / {m.target}{m.unit}</span>
-                  </div>
-                  <Progress value={Math.min(100, (m.current / (m.target || 1)) * 100)} className="h-1.5" />
+            <Badge variant="outline" className="text-primary border-primary/30">{t('مستوى', 'Level')} {lvl} / 10</Badge>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { label: t('معدل الإكمال', 'Completion'), current: kpis?.completionRate ?? 0, target: nextLevel.minCompletionRate, unit: '%', color: 'emerald' },
+              { label: t('التقييم', 'Rating'), current: kpis?.rating ?? 0, target: nextLevel.minRating, unit: '⭐', color: 'amber' },
+              { label: t('العملاء', 'Customers'), current: data?.seller?.totalSales ?? 0, target: nextLevel.minCustomers, unit: '', color: 'blue' },
+            ].map((m) => {
+              const progress = Math.min(100, (m.current / (m.target || 1)) * 100);
+              return (
+                <div key={m.label}>
+                  <Flex className="mb-2">
+                    <Text>{m.label}</Text>
+                    <Text className="font-bold">{m.current.toFixed(m.unit === '%' ? 0 : 1)}{m.unit} / {m.target}{m.unit}</Text>
+                  </Flex>
+                  <ProgressBar value={progress} color={m.color as any} className="mt-2" />
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              );
+            })}
+          </div>
+        </TremorCard>
       )}
 
       {/* Conversion Rate & Product Traffic Analytics */}
       {data?.products && data.products.length > 0 && (
-        <Card className="card-surface">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-bold flex items-center gap-2">
-              📊 {isAr ? 'معدل التحويل وزيارات المنتجات' : 'Conversion Rate & Product Traffic'}
-            </CardTitle>
-            <CardDescription className="text-xs">
+        <TremorCard className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg mt-4">
+          <div className="mb-4">
+            <Title className="text-foreground flex items-center gap-2">
+              <Activity className="size-5 text-blue-500" />
+              {isAr ? 'معدل التحويل وزيارات المنتجات' : 'Conversion Rate & Product Traffic'}
+            </Title>
+            <Text>
               {isAr ? 'نسبة المشترين الفعليين مقارنة بعدد زوار منتجاتك.' : 'The percentage of actual buyers compared to product visitors.'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {(() => {
-              const totalViews = data.products.reduce((sum, p: any) => sum + (p.viewCount || 0), 0);
-              const totalSold = data.products.reduce((sum, p: any) => sum + (p.soldCount || 0), 0);
-              const conversionRate = totalViews > 0 ? ((totalSold / totalViews) * 100).toFixed(1) : '0';
-              return (
-                <>
-                  <div className="grid grid-cols-3 gap-2 bg-slate-50 dark:bg-slate-900/10 p-3.5 rounded-2xl border border-border">
-                    <div className="text-center">
-                      <p className="text-[10px] text-muted-foreground">{isAr ? 'مشاهدات المنتجات' : 'Product Views'}</p>
-                      <p className="text-base sm:text-lg font-black text-amber-500 mt-0.5">{totalViews.toLocaleString()}</p>
-                    </div>
-                    <div className="text-center border-x border-border">
-                      <p className="text-[10px] text-muted-foreground">{isAr ? 'القطع المباعة' : 'Units Sold'}</p>
-                      <p className="text-base sm:text-lg font-black text-green-500 mt-0.5">{totalSold.toLocaleString()}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-[10px] text-muted-foreground">{isAr ? 'معدل التحويل' : 'Conversion'}</p>
-                      <p className="text-base sm:text-lg font-black text-blue-500 mt-0.5">{conversionRate}%</p>
-                    </div>
+            </Text>
+          </div>
+          {(() => {
+            const totalViews = data.products.reduce((sum, p: any) => sum + (p.viewCount || 0), 0);
+            const totalSold = data.products.reduce((sum, p: any) => sum + (p.soldCount || 0), 0);
+            const conversionRate = totalViews > 0 ? ((totalSold / totalViews) * 100).toFixed(1) : '0';
+            const progress = Math.min(100, (parseFloat(conversionRate) / 3.5) * 100);
+            return (
+              <div className="space-y-6">
+                <TremorGrid numItems={1} numItemsSm={3} className="gap-4">
+                  <div className="bg-slate-50 dark:bg-slate-900/10 p-4 rounded-xl border border-border text-center">
+                    <Text>{isAr ? 'مشاهدات المنتجات' : 'Product Views'}</Text>
+                    <Metric className="text-amber-500 mt-2">{totalViews.toLocaleString()}</Metric>
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-[10px] font-bold text-muted-foreground">
-                      <span>{isAr ? 'معدل التحويل المستهدف: 3.5%' : 'Target Conversion: 3.5%'}</span>
-                      <span>{conversionRate}% / 3.5%</span>
-                    </div>
-                    <Progress value={Math.min(100, (parseFloat(conversionRate) / 3.5) * 100)} className="h-2" />
+                  <div className="bg-slate-50 dark:bg-slate-900/10 p-4 rounded-xl border border-border text-center">
+                    <Text>{isAr ? 'القطع المباعة' : 'Units Sold'}</Text>
+                    <Metric className="text-green-500 mt-2">{totalSold.toLocaleString()}</Metric>
                   </div>
-                </>
-              );
-            })()}
-          </CardContent>
-        </Card>
+                  <div className="bg-slate-50 dark:bg-slate-900/10 p-4 rounded-xl border border-border text-center">
+                    <Text>{isAr ? 'معدل التحويل' : 'Conversion'}</Text>
+                    <Metric className="text-blue-500 mt-2">{conversionRate}%</Metric>
+                  </div>
+                </TremorGrid>
+                <div>
+                  <Flex className="mb-2">
+                    <Text>{isAr ? 'معدل التحويل المستهدف: 3.5%' : 'Target Conversion: 3.5%'}</Text>
+                    <Text className="font-bold">{conversionRate}% / 3.5%</Text>
+                  </Flex>
+                  <ProgressBar value={progress} color="blue" className="mt-2" />
+                </div>
+              </div>
+            );
+          })()}
+        </TremorCard>
       )}
 
       {/* Commission info */}
@@ -506,82 +532,76 @@ export default function SellerDashboard() {
       )}
 
       {/* Performance metrics */}
-      <Card>
-        <CardHeader><CardTitle className="text-base">{t('📊 مؤشرات الأداء', '📊 Performance Metrics')}</CardTitle></CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { label: t('معدل إكمال الطلبات', 'Completion Rate'), value: kpis?.completionRate ?? 100, suffix: '%', good: 90 },
-              { label: t('معدل نجاح التواصل', 'Response Rate'), value: kpis?.responseRate ?? 100, suffix: '%', good: 80 },
-            ].map((m) => (
-              <div key={m.label}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-muted-foreground">{m.label}</span>
-                  <span className={`font-bold ${m.value >= m.good ? 'text-green-600' : 'text-orange-500'}`}>{m.value.toFixed(0)}{m.suffix}</span>
-                </div>
-                <Progress value={m.value} className="h-2" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <TremorCard className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg mt-4">
+        <Title className="text-foreground">{t('📊 مؤشرات الأداء', '📊 Performance Metrics')}</Title>
+        <div className="grid grid-cols-2 gap-6 mt-4">
+          {[
+            { label: t('معدل إكمال الطلبات', 'Completion Rate'), value: kpis?.completionRate ?? 100, suffix: '%', good: 90, color: 'emerald' },
+            { label: t('معدل نجاح التواصل', 'Response Rate'), value: kpis?.responseRate ?? 100, suffix: '%', good: 80, color: 'emerald' },
+          ].map((m) => (
+            <div key={m.label}>
+              <Flex className="mb-2">
+                <Text>{m.label}</Text>
+                <Text className={`font-bold ${m.value >= m.good ? 'text-green-600' : 'text-orange-500'}`}>
+                  {m.value.toFixed(0)}{m.suffix}
+                </Text>
+              </Flex>
+              <ProgressBar value={m.value} color={m.value >= m.good ? m.color as any : 'orange'} className="mt-2" />
+            </div>
+          ))}
+        </div>
+      </TremorCard>
 
       {/* Recent orders */}
       {(data?.recentOrders?.length ?? 0) > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center justify-between">
-              {t('آخر الطلبات', 'Recent Orders')}
-              <Button size="sm" variant="ghost" onClick={() => appStore.getState().setCurrentPage('seller-orders' as any)}>
-                {t('عرض الكل', 'View All')}
-              </Button>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="divide-y divide-border">
-              {data?.recentOrders?.slice(0, 5).map((item, i) => {
-                const st = STATUS_CONFIG[item.order.status] ?? STATUS_CONFIG.pending;
-                const StatusIcon = st.icon;
-                return (
-                  <div key={i} className="py-3 flex items-center justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-medium">{item.product.name}</p>
-                      <p className="text-xs text-muted-foreground">#{item.order.orderNumber} · {item.quantity} × {DZD(item.product.price)}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1 ${st.color}`}>
-                        <StatusIcon className="size-3" />{st.label}
-                      </span>
+        <TremorCard className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg mt-4">
+          <Flex className="mb-4">
+            <Title className="text-foreground">{t('آخر الطلبات', 'Recent Orders')}</Title>
+            <Button size="sm" variant="ghost" onClick={() => appStore.getState().setCurrentPage('seller-orders' as any)}>
+              {t('عرض الكل', 'View All')}
+            </Button>
+          </Flex>
+          <div className="divide-y divide-border">
+            {data?.recentOrders?.slice(0, 5).map((item, i) => {
+              const st = STATUS_CONFIG[item.order.status] ?? STATUS_CONFIG.pending;
+              const StatusIcon = st.icon;
+              return (
+                <div key={i} className="py-3 flex items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium">{item.product.name}</p>
+                    <p className="text-xs text-muted-foreground">#{item.order.orderNumber} · {item.quantity} × {DZD(item.product.price)}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium flex items-center gap-1 ${st.color}`}>
+                      <StatusIcon className="size-3" />{st.label}
+                    </span>
                       <span className="text-sm font-bold text-primary">{DZD(item.total)}</span>
                     </div>
                   </div>
                 );
               })}
             </div>
-          </CardContent>
-        </Card>
+        </TremorCard>
       )}
 
       {/* Recent reviews */}
       {(data?.reviews?.length ?? 0) > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-base">{t('أحدث التقييمات', 'Latest Reviews')}</CardTitle></CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {data?.reviews?.slice(0, 3).map((rev) => (
-                <div key={rev.id} className="p-3 rounded-lg bg-muted/40">
-                  <div className="flex items-center gap-1 mb-1">
-                    {Array.from({ length: 5 }).map((_, s) => (
-                      <Star key={s} className={`size-3 ${s < rev.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
-                    ))}
-                  </div>
-                  {rev.comment && <p className="text-sm text-muted-foreground">{rev.comment}</p>}
-                  {rev.sellerReply && <p className="text-xs text-primary mt-1 ps-2 border-s-2 border-primary/30">{rev.sellerReply}</p>}
+        <TremorCard className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg mt-4">
+          <Title className="text-foreground mb-4">{t('أحدث التقييمات', 'Latest Reviews')}</Title>
+          <div className="space-y-3">
+            {data?.reviews?.slice(0, 3).map((rev) => (
+              <div key={rev.id} className="p-3 rounded-lg bg-muted/40 border border-border">
+                <div className="flex items-center gap-1 mb-1">
+                  {Array.from({ length: 5 }).map((_, s) => (
+                    <Star key={s} className={`size-3 ${s < rev.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                {rev.comment && <p className="text-sm text-muted-foreground">{rev.comment}</p>}
+                {rev.sellerReply && <p className="text-xs text-primary mt-1 ps-2 border-s-2 border-primary/30">{rev.sellerReply}</p>}
+              </div>
+            ))}
+          </div>
+        </TremorCard>
       )}
     </div>
   );
