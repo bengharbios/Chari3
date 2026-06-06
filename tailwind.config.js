@@ -11,6 +11,16 @@ module.exports = {
     current: 'currentColor',
     extend: {
       colors: {
+        primary: '#3c50e0',
+        bodydark: '#aeB7C0',
+        bodydark1: '#DEE4EE',
+        bodydark2: '#8A99AF',
+        stroke: '#E2E8F0',
+        boxdark: '#24303F',
+        'boxdark-2': '#1A222C',
+        sidebar: '#1c2434',
+        'sidebar-dark': '#1c2434',
+        'sidebar-accent': '#333a48',
         tremor: {
           brand: {
             faint: '#eff6ff', // blue-50

@@ -402,230 +402,171 @@ export default function Header() {
   return (
     <>
     <header
-      className={`sticky top-0 z-[var(--z-sticky)] w-full transition-all duration-300 ${
-        scrolled
-          ? 'bg-background/95 backdrop-blur-md shadow-sm border-b border-border'
-          : 'bg-background border-b border-transparent'
+      className={`sticky top-0 z-[var(--z-sticky)] w-full flex bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none transition-all duration-300 ${
+        scrolled ? 'shadow-sm' : ''
       }`}
     >
-      {isBuyerMode && (
-        <div className="bg-gradient-to-r from-brand to-amber-300 text-navy py-1.5 px-4 text-center text-xs font-bold flex flex-wrap items-center justify-center gap-2 w-full border-b border-navy/10 shadow-sm relative">
-          <ShoppingBag className="h-3.5 w-3.5 shrink-0" />
-          <span>
-            {t('أنت الآن تتصفح المنصة كمشتري.', 'You are currently browsing the platform as a buyer.')}
-          </span>
-          <button 
-            onClick={() => {
-              const { setBuyerMode } = useAuthStore.getState();
-              setBuyerMode(false);
-              navigateToDashboard(rolePages[user?.role || 'buyer'] || 'seller');
-            }}
-            className="ms-2 underline decoration-navy/50 hover:decoration-navy transition-colors bg-white/40 px-2 py-0.5 rounded-full whitespace-nowrap"
+      <div className="flex flex-grow items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
+        
+        {/* Hamburger + Search (Left) */}
+        <div className="flex items-center gap-2 sm:gap-4 lg:hidden">
+          <Button
+            variant="ghost"
+            className="z-99999 block rounded-sm border border-stroke bg-white p-1.5 shadow-sm dark:border-strokedark dark:bg-boxdark lg:hidden"
+            onClick={(e) => { e.stopPropagation(); setSidebarOpen(!isSidebarOpen); }}
           >
-            {t('العودة للوحة التحكم', 'Return to Dashboard')}
-          </button>
-        </div>
-      )}
-      {/* Main Header — Single clean row: Logo | Search | Actions */}
-      <div className="w-full px-4 md:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-[var(--header-height)] gap-4">
-          {/* Logo */}
-          <div className="flex items-center gap-3 shrink-0">
-            {isAuthenticated && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="lg:hidden"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            )}
-            <button
+            <Menu className="h-5.5 w-5.5 text-black dark:text-white" />
+          </Button>
+          <button
               onClick={() => {
                 useAppStore.getState().setCurrentPage('home');
                 router.push('/');
               }}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 lg:hidden"
             >
-              <div className="gradient-brand rounded-lg px-2.5 py-1 font-bold text-navy text-lg">
-                {t('شاري داي', 'CharyDay')}
+              <div className="bg-primary rounded px-2 py-1 font-bold text-white text-lg">
+                {t('شاري داي', 'ChariDay')}
               </div>
+          </button>
+        </div>
+
+        <div className="hidden sm:block">
+          <div className="relative">
+            <button className="absolute left-0 top-1/2 -translate-y-1/2">
+              <Search className="h-5 w-5 text-bodydark2" />
             </button>
-          </div>
-
-          {/* Search Bar — Desktop only */}
-          <div className="hidden md:flex flex-1 max-w-2xl mx-4">
-            <div className="relative w-full">
-              <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('ابحث عن منتجات، ماركات، وأكثر...', 'Search for products, brands, and more...')}
-                className="ps-10 pe-4 h-10 rounded-full border-border bg-surface focus:ring-2 focus:ring-brand"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                    useAppStore.getState().setCurrentPage('search' as PageType);
-                    router.push(`/?view=search&q=${encodeURIComponent(e.currentTarget.value.trim())}`);
-                  }
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Actions — Right side: search(mobile) | theme | lang | cart | user */}
-          <div className="flex items-center gap-1 md:gap-2">
-            {/* Mobile Search Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
-            >
-              {mobileSearchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
-            </Button>
-
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            >
-              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-            </Button>
-
-            {/* Language Toggle — ONE button only */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
-            >
-              <Globe className="h-5 w-5" />
-            </Button>
-
-            {/* Notifications */}
-            {isAuthenticated && <NotificationPanel />}
-
-            {/* Cart — visible to everyone */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative"
-              onClick={() => setCartOpen(true)}
-            >
-              <ShoppingCart className="h-5 w-5" />
-              {itemCount > 0 && (
-                <Badge className="absolute -top-1 -end-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px] bg-brand text-navy border-2 border-background">
-                  {itemCount}
-                </Badge>
-              )}
-            </Button>
-
-            {/* User Menu (authenticated) or Sign In button */}
-            {isAuthenticated && user ? (
-              <DropdownMenu dir={isRTL ? 'rtl' : 'ltr'}>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 px-2">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-brand text-navy text-sm font-bold">
-                        {user.name.charAt(0)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="hidden lg:block text-sm font-medium max-w-[120px] truncate text-start">
-                      {user.name}
-                    </span>
-                    <ChevronDown className="h-4 w-4 hidden lg:block" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 z-[var(--z-modal)]">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col gap-1 text-start">
-                      <p className="text-sm font-medium">{user.name}</p>
-                      <p className="text-xs text-muted-foreground">{user.email}</p>
-                      <Badge variant="secondary" className="w-fit text-xs mt-1">
-                        {t(
-                          ({ admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', logistics: 'مندوب شحن', buyer: 'مشتري' } as Record<string, string>)[user.role] || user.role,
-                          ({ admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', logistics: 'Courier', buyer: 'Buyer' } as Record<string, string>)[user.role] || user.role
-                        )}
-                      </Badge>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigateToDashboard(isBuyerMode ? 'buyer' : (rolePages[user.role] || 'buyer'))}>
-                    <User className="h-4 w-4" />
-                    {t('لوحة التحكم', 'Dashboard')}
-                  </DropdownMenuItem>
-                  {user.role !== 'admin' && user.role !== 'buyer' && (
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        const { setBuyerMode, isBuyerMode } = useAuthStore.getState();
-                        const newMode = !isBuyerMode;
-                        setBuyerMode(newMode);
-                        if (newMode) {
-                          // Switching to Buyer: Go to Home to shop
-                          navigateToDashboard('home');
-                        } else {
-                          // Switching back: Go to Seller Dashboard
-                          navigateToDashboard(rolePages[user.role] || 'seller');
-                        }
-                      }}
-                      className={useAuthStore.getState().isBuyerMode ? "bg-brand/10 text-brand" : ""}
-                    >
-                      <ShoppingBag className="h-4 w-4" />
-                      {useAuthStore.getState().isBuyerMode 
-                        ? t('العودة لحساب التاجر', 'Return to Dashboard') 
-                        : t('تصفح كـ مشتري', 'Browse as Buyer')}
-                    </DropdownMenuItem>
-                  )}
-                  {user.role !== 'admin' && user.role !== 'buyer' && (
-                    <DropdownMenuItem onClick={() => navigateToDashboard('verification')}>
-                      <ClipboardCheck className="h-4 w-4" />
-                      {t('حالة التوثيق', 'Verification Status')}
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem>
-                    <Settings className="h-4 w-4" />
-                    {t('الإعدادات', 'Settings')}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
-                    <LogOut className="h-4 w-4" />
-                    {t('تسجيل الخروج', 'Logout')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button
-                variant="default"
-                size="sm"
-                className="gradient-brand text-navy font-bold ms-2"
-                onClick={() => useAppStore.getState().setCurrentPage('login')}
-              >
-                <User className="h-4 w-4 me-1.5" />
-                {t('تسجيل الدخول', 'Sign In')}
-              </Button>
-            )}
+            <input
+              type="text"
+              placeholder={t('ابحث عن منتجات، ماركات...', 'Search for products, brands...')}
+              className="w-full bg-transparent pl-9 pr-4 text-black focus:outline-none dark:text-white xl:w-125"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                  useAppStore.getState().setCurrentPage('search' as PageType);
+                  router.push(`/?view=search&q=${encodeURIComponent(e.currentTarget.value.trim())}`);
+                }
+              }}
+            />
           </div>
         </div>
 
-        {/* Mobile Search (only when toggled) */}
-        {mobileSearchOpen && (
-          <div className="md:hidden pb-3 animate-fade-in">
-            <div className="relative">
-              <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t('ابحث عن منتجات...', 'Search for products...')}
-                className="ps-10 pe-4 h-10 rounded-full border-border bg-surface"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-                    setMobileSearchOpen(false);
-                    useAppStore.getState().setCurrentPage('search' as PageType);
-                    router.push(`/?view=search&q=${encodeURIComponent(e.currentTarget.value.trim())}`);
-                  }
-                }}
-              />
-            </div>
-          </div>
-        )}
+        {/* Right Side Actions */}
+        <div className="flex items-center gap-3 2xsm:gap-7">
+          <ul className="flex items-center gap-2 2xsm:gap-4">
+            
+            {/* Dark Mode Toggler */}
+            <li>
+              <button
+                className="relative flex h-8.5 w-8.5 items-center justify-center rounded-full border-[0.5px] border-stroke bg-gray hover:text-primary dark:border-strokedark dark:bg-meta-4 dark:text-white"
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              >
+                {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              </button>
+            </li>
+
+            {/* Language Toggler */}
+            <li>
+              <button
+                className="relative flex h-8.5 w-8.5 items-center justify-center rounded-full border-[0.5px] border-stroke bg-gray hover:text-primary dark:border-strokedark dark:bg-meta-4 dark:text-white"
+                onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
+              >
+                <Globe className="h-5 w-5" />
+              </button>
+            </li>
+
+            {/* Notification Menu Area */}
+            {isAuthenticated && (
+              <li>
+                <div className="relative flex h-8.5 w-8.5 items-center justify-center rounded-full border-[0.5px] border-stroke bg-gray hover:text-primary dark:border-strokedark dark:bg-meta-4 dark:text-white">
+                  <NotificationPanel />
+                </div>
+              </li>
+            )}
+
+            {/* Cart Icon */}
+            <li>
+              <button
+                className="relative flex h-8.5 w-8.5 items-center justify-center rounded-full border-[0.5px] border-stroke bg-gray hover:text-primary dark:border-strokedark dark:bg-meta-4 dark:text-white"
+                onClick={() => setCartOpen(true)}
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-0.5 right-0 z-1 h-2 w-2 rounded-full bg-meta-1">
+                    <span className="absolute -z-1 inline-flex h-full w-full animate-ping rounded-full bg-meta-1 opacity-75"></span>
+                  </span>
+                )}
+              </button>
+            </li>
+          </ul>
+
+          {/* User Area */}
+          {isAuthenticated && user ? (
+            <DropdownMenu dir={isRTL ? 'rtl' : 'ltr'}>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-4 hover:opacity-80">
+                  <span className="hidden text-right lg:block">
+                    <span className="block text-sm font-medium text-black dark:text-white">
+                      {user.name}
+                    </span>
+                    <span className="block text-xs text-bodydark2">
+                      {t(
+                        ({ admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', logistics: 'مندوب شحن', buyer: 'مشتري' } as Record<string, string>)[user.role] || user.role,
+                        ({ admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', logistics: 'Courier', buyer: 'Buyer' } as Record<string, string>)[user.role] || user.role
+                      )}
+                    </span>
+                  </span>
+                  <span className="h-11 w-11 rounded-full border border-stroke dark:border-strokedark flex items-center justify-center bg-bodydark1 dark:bg-boxdark-2 text-primary font-bold">
+                    {user.name.charAt(0)}
+                  </span>
+                  <ChevronDown className="hidden h-4 w-4 sm:block text-bodydark2" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="mt-4 flex w-62.5 flex-col rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark z-[99999]">
+                <ul className="flex flex-col gap-5 border-b border-stroke px-6 py-7.5 dark:border-strokedark">
+                  <li>
+                    <button onClick={() => navigateToDashboard(isBuyerMode ? 'buyer' : (rolePages[user.role] || 'buyer'))} className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base text-bodydark2">
+                      <User className="h-5 w-5" />
+                      {t('لوحة التحكم', 'Dashboard')}
+                    </button>
+                  </li>
+                  {user.role !== 'admin' && user.role !== 'buyer' && (
+                    <li>
+                      <button 
+                        onClick={() => {
+                          const { setBuyerMode, isBuyerMode } = useAuthStore.getState();
+                          const newMode = !isBuyerMode;
+                          setBuyerMode(newMode);
+                          if (newMode) navigateToDashboard('home');
+                          else navigateToDashboard(rolePages[user.role] || 'seller');
+                        }}
+                        className={`flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base text-bodydark2`}
+                      >
+                        <ShoppingBag className="h-5 w-5" />
+                        {useAuthStore.getState().isBuyerMode ? t('العودة لحساب التاجر', 'Return to Dashboard') : t('تصفح كـ مشتري', 'Browse as Buyer')}
+                      </button>
+                    </li>
+                  )}
+                  <li>
+                    <button className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base text-bodydark2">
+                      <Settings className="h-5 w-5" />
+                      {t('الإعدادات', 'Settings')}
+                    </button>
+                  </li>
+                </ul>
+                <button onClick={logout} className="flex items-center gap-3.5 px-6 py-4 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base text-bodydark2">
+                  <LogOut className="h-5 w-5" />
+                  {t('تسجيل الخروج', 'Logout')}
+                </button>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button
+              className="bg-primary text-white font-medium"
+              onClick={() => useAppStore.getState().setCurrentPage('login')}
+            >
+              {t('تسجيل الدخول', 'Sign In')}
+            </Button>
+          )}
+        </div>
       </div>
     </header>
 

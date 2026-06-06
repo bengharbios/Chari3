@@ -161,7 +161,7 @@ interface SidebarProps {
         {/* Mobile Overlay */}
         {isSidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/50 z-[var(--z-overlay)] lg:hidden"
+            className="fixed inset-0 bg-black/50 z-[9998] lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -169,68 +169,70 @@ interface SidebarProps {
         <aside
           dir={isRTL ? 'rtl' : 'ltr'}
           className={cn(
-          'fixed top-[var(--header-height)] bottom-0 z-[var(--z-overlay)] lg:z-auto',
-            'bg-sidebar text-sidebar-foreground flex flex-col',
+          'fixed top-0 bottom-0 z-[9999] lg:z-auto',
+            'bg-[#1c2434] text-[#8A99AF] flex flex-col shadow-lg',
             'transition-all duration-300 ease-in-out',
-            'lg:sticky lg:top-[var(--header-height)] lg:h-[calc(100dvh-var(--header-height))]',
+            'lg:sticky lg:h-screen',
             // On mobile: fixed width, slide in/out
-            isSidebarOpen ? 'start-0 w-[var(--sidebar-width)]' : '-start-[280px] w-[var(--sidebar-width)]',
+            isSidebarOpen ? 'start-0 w-[280px]' : '-start-[280px] w-[280px]',
             // On desktop: width depends on collapse state
             'lg:start-0',
-            isDesktopSidebarCollapsed ? 'lg:w-[80px]' : 'lg:w-[var(--sidebar-width)]',
+            isDesktopSidebarCollapsed ? 'lg:w-[80px]' : 'lg:w-[280px]',
             className
           )}
         >
-          {/* Collapse Toggle (Desktop Only) */}
-          <button
-            onClick={toggleDesktopSidebar}
-            className="hidden lg:flex absolute top-4 -end-3 bg-brand text-navy rounded-full p-1 shadow-md hover:scale-110 transition-transform z-10 border border-border"
-          >
-            {isDesktopSidebarCollapsed ? (
-              isRTL ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
-            ) : (
-              isRTL ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />
-            )}
-          </button>
-
-          {/* User Info */}
-          <div className="p-4 border-b border-sidebar-border relative">
-            <div className={cn("flex items-center gap-3 transition-all duration-300", isDesktopSidebarCollapsed ? "justify-center" : "justify-start")}>
-              <Avatar className="h-10 w-10 border-2 border-brand shrink-0">
-                <AvatarFallback className="bg-brand text-navy font-bold">
+          {/* Logo Area matches TailAdmin */}
+          <div className="flex items-center justify-between gap-2 px-6 py-5.5 lg:py-6.5 h-[var(--header-height)]">
+            <div className={cn("flex items-center gap-3 transition-all duration-300", isDesktopSidebarCollapsed ? "justify-center w-full" : "justify-start")}>
+              <div className="bg-primary text-white rounded p-1.5 shrink-0">
+                <Store className="h-6 w-6" />
+              </div>
+              <div className={cn("flex-1 min-w-0 transition-opacity duration-300", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+                <p className="text-xl font-bold text-white tracking-wide uppercase">
+                  {t(locale, 'شاري داي', 'ChariDay')}
+                </p>
+              </div>
+            </div>
+            {/* Mobile Close Button */}
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden text-[#8A99AF] hover:text-white"
+              aria-label={isRTL ? 'إغلاق' : 'Close'}
+            >
+              <CloseIcon className="h-6 w-6" />
+            </button>
+          </div>
+  
+          {/* User Info (Simplified for TailAdmin look) */}
+          <div className={cn("px-6 mb-6 mt-4 transition-all duration-300", isDesktopSidebarCollapsed ? "hidden" : "block")}>
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10 shrink-0 border border-[#333a48]">
+                <AvatarFallback className="bg-[#333a48] text-white">
                   {user.name.charAt(0)}
                 </AvatarFallback>
               </Avatar>
-              <div className={cn("flex-1 min-w-0 transition-opacity duration-300", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                <p className="text-sm font-semibold truncate">{user.name}</p>
-                <Badge variant="secondary" className="text-[10px] mt-0.5 bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-border">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">{user.name}</p>
+                <p className="text-[10px] text-[#8A99AF] truncate mt-0.5">
                   {t(locale,
                     isBuyerMode ? 'مشتري' : { admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', supplier: 'مورد', logistics: 'مندوب شحن', buyer: 'مشتري' }[user.role] || 'مشتري',
                     isBuyerMode ? 'Buyer' : { admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', supplier: 'Supplier', logistics: 'Courier', buyer: 'Buyer' }[user.role] || 'Buyer'
                   )}
-                </Badge>
+                </p>
               </div>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="lg:hidden p-1 rounded hover:bg-sidebar-accent/20 shrink-0"
-                aria-label={isRTL ? 'إغلاق' : 'Close'}
-              >
-                <CloseIcon className="h-4 w-4" />
-              </button>
             </div>
           </div>
   
           {/* Navigation */}
-          <div className="flex-1 py-4 overflow-y-auto overflow-x-hidden">
-            <div className={cn("space-y-1.5", isDesktopSidebarCollapsed ? "px-2" : "px-3")}>
+          <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
+            <nav className="mt-1 py-4 px-4 lg:mt-2 lg:px-6">
+              <ul className="mb-6 flex flex-col gap-1.5">
               {navItems.map((item, index) => {
                 if (item.isSection) {
                   return (
-                    <div key={`section-${item.id}-${index}`} className={cn("px-4 py-2 mt-4 first:mt-0 transition-opacity duration-300", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                      <p className="text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-wider">
+                    <h3 key={`section-${item.id}-${index}`} className={cn("mb-4 ml-4 mt-4 text-sm font-semibold text-[#8A99AF] uppercase", isDesktopSidebarCollapsed ? "hidden" : "block")}>
                         {t(locale, item.labelAr, item.labelEn)}
-                      </p>
-                    </div>
+                    </h3>
                   );
                 }
   
@@ -238,56 +240,46 @@ interface SidebarProps {
                 const isActive = currentPage === item.id;
   
                 return (
+                  <li key={item.id + item.labelAr}>
                   <button
-                    key={item.id + item.labelAr}
                     dir={isRTL ? 'rtl' : 'ltr'}
                     onClick={() => {
                       setCurrentPage(item.id as PageType);
                       if (window.innerWidth < 1024) setSidebarOpen(false);
                     }}
                     className={cn(
-                      'w-full flex items-center gap-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative',
-                      isDesktopSidebarCollapsed ? 'justify-center px-0' : 'px-3',
+                      'group relative flex items-center gap-2.5 rounded-sm px-4 py-2 font-medium text-[#DEE4EE] duration-300 ease-in-out hover:bg-[#333a48]',
+                      isDesktopSidebarCollapsed ? 'justify-center px-0 py-3' : '',
                       isActive
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm'
-                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
+                        ? 'bg-[#333a48] text-white'
+                        : ''
                     )}
                     title={isDesktopSidebarCollapsed ? t(locale, item.labelAr, item.labelEn) : undefined}
                   >
-                    <Icon className="h-5 w-5 shrink-0" />
+                    <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-white" : "")} />
                     
-                    <span className={cn("flex-1 truncate text-start transition-opacity duration-300", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+                    <span className={cn("flex-1 text-start transition-opacity duration-300", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
                       {t(locale, item.labelAr, item.labelEn)}
                     </span>
                     
                     {item.badge && item.badge > 0 && (
-                      <Badge className={cn("h-5 min-w-[20px] flex items-center justify-center px-1.5 text-[10px] bg-brand text-navy border-0 shrink-0", isDesktopSidebarCollapsed ? "absolute -top-1 -end-1 shadow-sm border border-white" : "")}>
+                      <Badge className={cn("h-5 min-w-[20px] flex items-center justify-center px-1.5 text-[10px] bg-primary text-white border-0 shrink-0 rounded", isDesktopSidebarCollapsed ? "absolute top-1 end-1" : "")}>
                         {item.badge}
                       </Badge>
                     )}
                     
                     {/* Tooltip for collapsed state */}
                     {isDesktopSidebarCollapsed && (
-                      <div className="absolute start-14 opacity-0 invisible group-hover:opacity-100 group-hover:visible bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 transition-all shadow-lg pointer-events-none">
+                      <div className="absolute start-16 opacity-0 invisible group-hover:opacity-100 group-hover:visible bg-black text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 transition-all shadow-lg pointer-events-none">
                         {t(locale, item.labelAr, item.labelEn)}
                       </div>
                     )}
                   </button>
+                  </li>
                 );
               })}
-            </div>
-        </div>
-
-        {/* Logout */}
-        <div className="p-3 border-t border-sidebar-border">
-          <button
-            onClick={logout}
-            dir={isRTL ? 'rtl' : 'ltr'}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-colors"
-          >
-            <LogOut className="h-5 w-5 shrink-0" />
-            <span className="flex-1 truncate text-start">{t(locale, 'تسجيل الخروج', 'Logout')}</span>
-          </button>
+              </ul>
+            </nav>
         </div>
       </aside>
     </>
