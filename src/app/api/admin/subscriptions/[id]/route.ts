@@ -19,6 +19,7 @@ export async function PATCH(
     const {
       status,
       packageId,
+      startDate,
       endDate,
       freeCommission,
       overrideNote,
@@ -52,11 +53,11 @@ export async function PATCH(
       updateData.packageId = packageId;
     }
 
-    if (startDate !== undefined) {
+    if (startDate !== undefined && startDate !== '') {
       updateData.startDate = new Date(startDate);
     }
 
-    if (endDate !== undefined) {
+    if (endDate !== undefined && endDate !== '') {
       updateData.endDate = new Date(endDate);
     }
 
@@ -106,7 +107,14 @@ export async function PATCH(
       // Approve associated invoice and receipt
       const invoices = await prisma.invoice.findMany({ where: { subscriptionId: subscription.id } });
       for (const inv of invoices) {
-        await prisma.invoice.update({ where: { id: inv.id }, data: { status: 'PAID' } });
+        await prisma.invoice.update({ 
+          where: { id: inv.id }, 
+          data: { 
+            status: 'PAID',
+            ...(updateData.startDate && { periodStart: updateData.startDate as Date }),
+            ...(updateData.endDate && { periodEnd: updateData.endDate as Date, dueDate: updateData.endDate as Date })
+          } 
+        });
         await prisma.debtPaymentReceipt.updateMany({ where: { invoiceId: inv.id }, data: { status: 'approved' } });
       }
       // Expire other active subscriptions for this user
@@ -118,6 +126,18 @@ export async function PATCH(
         },
         data: { status: 'EXPIRED', cancelReason: 'ترقية/تفعيل باقة جديدة' }
       });
+    } else if (updateData.startDate || updateData.endDate) {
+      // Even if not changing status to ACTIVE, sync invoice dates if they were changed
+      const invoices = await prisma.invoice.findMany({ where: { subscriptionId: subscription.id } });
+      for (const inv of invoices) {
+        await prisma.invoice.update({ 
+          where: { id: inv.id }, 
+          data: { 
+            ...(updateData.startDate && { periodStart: updateData.startDate as Date }),
+            ...(updateData.endDate && { periodEnd: updateData.endDate as Date, dueDate: updateData.endDate as Date })
+          } 
+        });
+      }
     }
 
     if (status !== undefined) {
