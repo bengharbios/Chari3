@@ -49,14 +49,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             isGentelella
               ? isDark
                 ? 'bg-[#0f172a] text-[#cbd5e1]'
-                : 'bg-[#f3f4f6] text-[#475569]'
+                : 'bg-[#F7F7F7] text-[#73879C]'
               : ''
           }`}
         >
           {isGentelella && <GentelellaHeader />}
-          <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-[1750px] mx-auto w-full flex-1">
+          <div className={`p-4 md:p-6 lg:p-8 pb-24 md:pb-8 w-full flex-1 ${isGentelella ? '' : 'max-w-[1750px] mx-auto'}`}>
             {children}
           </div>
+          {isGentelella && (
+            <footer className={`py-4 px-6 text-end text-[13px] font-semibold mt-auto ${isDark ? 'bg-[#1a2332] text-[#c8d3e0]' : 'bg-white text-[#73879C]'}`}>
+              Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com" className="text-[#1ABB9C] hover:underline transition-colors">Colorlib</a>
+            </footer>
+          )}
         </main>
       </div>
     </div>

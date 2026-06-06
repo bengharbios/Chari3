@@ -336,9 +336,18 @@ export default function GentelellaSidebar({ className }: { className?: string })
   const toggleTree = (treeId: string) => {
     if (isDesktopSidebarCollapsed) return; // Don't toggle in collapsed mode
     setOpenTrees(prev => ({
-      ...prev,
       [treeId]: !prev[treeId]
     }));
+  };
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
   };
 
   return (
@@ -376,8 +385,22 @@ export default function GentelellaSidebar({ className }: { className?: string })
             </div>
           </div>
 
+          {/* User Profile Info (Top of sidebar like v4) */}
+          <div className={cn("flex items-center gap-3 p-4", isDesktopSidebarCollapsed ? "justify-center" : "")}>
+            <div className="relative shrink-0">
+              <div className={cn("rounded-full flex items-center justify-center text-white font-bold border-2 border-white/20", isDesktopSidebarCollapsed ? "h-10 w-10" : "h-14 w-14", "bg-[#1ABB9C]")}>
+                {initials}
+              </div>
+            </div>
+            <div className={cn("flex flex-col flex-1 min-w-0 transition-opacity", isDesktopSidebarCollapsed ? "hidden opacity-0" : "opacity-100")}>
+              <span className="text-[13px] text-[#BAB8B8]">{t(locale, 'مرحباً بك،', 'Welcome,')}</span>
+              <span className="text-[15px] font-semibold text-[#E7E7E7] truncate">{user.name}</span>
+            </div>
+          </div>
+          <div className="w-full h-px bg-white/5 mb-2" />
+
           {/* Sidebar Menu */}
-          <div className="flex-1 py-4">
+          <div className="flex-1 py-2">
             <nav className="flex flex-col w-full">
               {activeGroups.map((group, gIdx) => (
                 <div key={group.id} className="mb-4">
@@ -520,32 +543,37 @@ export default function GentelellaSidebar({ className }: { className?: string })
           </div>
         </div>
 
-        {/* User Profile Footer */}
+        {/* Gentelella Footer Icons */}
         <div className={cn(
-          "shrink-0 border-t border-white/5 p-4 flex items-center gap-3", 
-          isDesktopSidebarCollapsed ? "justify-center flex-col p-4" : ""
+          "shrink-0 bg-[#171f2d] flex",
+          isDesktopSidebarCollapsed ? "hidden" : ""
         )}>
-          <div className="relative shrink-0">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#1ABB9C] to-[#0f7a65] flex items-center justify-center text-white font-bold shadow-md">
-              {initials}
-            </div>
-            <span className={cn(
-              "absolute bottom-0 w-3 h-3 bg-green-500 border-2 border-[#1a2332] rounded-full",
-              isRTL ? "left-0" : "right-0"
-            )}></span>
-          </div>
-          
-          <div className={cn("flex flex-col flex-1 min-w-0 transition-opacity", isDesktopSidebarCollapsed ? "hidden opacity-0" : "opacity-100")}>
-            <span className="text-sm font-semibold text-white truncate">{user.name}</span>
-            <span className="text-xs text-[#64748b] truncate capitalize">{user.role.replace('_', ' ')}</span>
-          </div>
-
+          <button 
+            className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
+            title={t(locale, 'الإعدادات', 'Settings')}
+            onClick={() => setCurrentPage(user.role === 'store_manager' ? 'store-settings' : 'seller-settings')}
+          >
+            <Settings className="h-[18px] w-[18px]" />
+          </button>
+          <button 
+            className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
+            title={t(locale, 'ملء الشاشة', 'Full Screen')}
+            onClick={toggleFullScreen}
+          >
+            <Monitor className="h-[18px] w-[18px]" />
+          </button>
+          <button 
+            className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
+            title={t(locale, 'قفل الشاشة', 'Lock')}
+          >
+            <KeyRound className="h-[18px] w-[18px]" />
+          </button>
           <button 
             onClick={logout}
-            className={cn("text-[#64748b] hover:text-white transition-colors p-1.5 rounded-md hover:bg-white/10", isDesktopSidebarCollapsed ? "hidden" : "block")}
+            className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-red-400 transition-colors hover:bg-[#1a2332]"
             title={t(locale, 'تسجيل الخروج', 'Logout')}
           >
-            <MoreHorizontal className="h-5 w-5" />
+            <LogOut className="h-[18px] w-[18px]" />
           </button>
         </div>
       </aside>

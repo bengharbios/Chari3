@@ -11,12 +11,25 @@ import {
 import { User, Settings, LogOut, Globe } from 'lucide-react';
 import { useGentelellaTheme } from './theme';
 
+import { useRouter } from 'next/navigation';
+import type { PageType } from '@/types';
+
+const rolePages: Record<string, PageType> = {
+  admin: 'admin',
+  store_manager: 'store',
+  seller: 'seller',
+  supplier: 'seller',
+  logistics: 'logistics',
+  buyer: 'buyer',
+};
+
 const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
 
 export default function GentelellaHeader() {
-  const { locale, setLocale, toggleDesktopSidebar, setSidebarOpen, isSidebarOpen } = useAppStore();
-  const { user, logout } = useAuthStore();
+  const { locale, setLocale, toggleDesktopSidebar, setSidebarOpen, isSidebarOpen, setCurrentPage } = useAppStore();
+  const { user, logout, isBuyerMode, setBuyerMode } = useAuthStore();
   const { isDark, toggleDark: toggle } = useGentelellaTheme();
+  const router = useRouter();
   const isRTL = locale === 'ar';
 
   if (!user) return null;
@@ -28,10 +41,15 @@ export default function GentelellaHeader() {
     .toUpperCase()
     .slice(0, 2);
 
+  const navigateToDashboard = (view: string) => {
+    setCurrentPage(view as PageType);
+    router.push(`/?view=${view}`);
+  };
+
   return (
     <header
       className={cn(
-        'h-[50px] flex items-center justify-between px-3 sticky top-0 z-[var(--z-sticky)]',
+        'h-[72px] flex items-center justify-between px-3 sticky top-0 z-[var(--z-sticky)]',
         'border-b transition-colors',
         isDark
           ? 'bg-[#1a2332] border-[#263346] text-[#c8d3e0]'
@@ -77,7 +95,7 @@ export default function GentelellaHeader() {
 
       {/* CENTER: Search box */}
       <div className={cn(
-        'flex-1 max-w-[380px] mx-4 hidden md:flex items-center gap-2 px-3 h-[32px] rounded-md border text-[13px] transition-colors',
+        'flex-1 max-w-[380px] mx-4 hidden md:flex items-center gap-2 px-3 h-[36px] rounded-md border text-[13px] transition-colors',
         isDark
           ? 'bg-[#263346] border-[#344760] text-[#8899aa] focus-within:border-[#1ABB9C]'
           : 'bg-[#f5f7fa] border-[#e4e9f0] text-[#999] focus-within:border-[#1ABB9C]'
@@ -124,13 +142,11 @@ export default function GentelellaHeader() {
           aria-label="Toggle theme"
         >
           {isDark ? (
-            // Sun icon (switch to light)
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <circle cx="12" cy="12" r="4"/>
               <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
             </svg>
           ) : (
-            // Moon icon (switch to dark)
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
@@ -160,7 +176,7 @@ export default function GentelellaHeader() {
         <DropdownMenu dir={isRTL ? 'rtl' : 'ltr'}>
           <DropdownMenuTrigger asChild>
             <button
-              className="ms-1 h-[30px] w-[30px] rounded-full bg-[#1ABB9C] text-white text-[12px] font-bold flex items-center justify-center shrink-0 hover:opacity-90 transition-opacity"
+              className="ms-1 h-[34px] w-[34px] rounded-full bg-[#1ABB9C] text-white text-[13px] font-bold flex items-center justify-center shrink-0 hover:opacity-90 transition-opacity"
               aria-label="Account menu"
             >
               {initials}
@@ -169,35 +185,68 @@ export default function GentelellaHeader() {
           <DropdownMenuContent
             align="end"
             className={cn(
-              'w-48 z-[var(--z-modal)] rounded-md border shadow-lg mt-1 text-[13px]',
+              'w-56 z-[var(--z-modal)] rounded-md border shadow-lg mt-1 text-[13px]',
               isDark
                 ? 'bg-[#1e2d40] border-[#344760] text-[#c8d3e0]'
                 : 'bg-white border-[#e4e9f0] text-[#555]'
             )}
           >
-            <div className="px-3 py-2 border-b border-current/10">
+            <div className="px-3 py-3 border-b border-current/10">
               <div className="font-semibold truncate">{user.name}</div>
-              <div className="text-[11px] opacity-60 truncate">{user.email || user.role}</div>
+              <div className="text-[11px] opacity-60 truncate mt-0.5">{user.email || user.role}</div>
             </div>
+
+            <DropdownMenuItem onClick={() => navigateToDashboard(isBuyerMode ? 'buyer' : (rolePages[user.role] || 'buyer'))} className={cn('py-2.5 px-3 cursor-pointer gap-2', isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50')}>
+              <svg className="h-4 w-4 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+              {t(locale, 'لوحة التحكم', 'Dashboard')}
+            </DropdownMenuItem>
+
+            {user.role !== 'admin' && user.role !== 'buyer' && (
+              <DropdownMenuItem 
+                onClick={() => {
+                  const newMode = !isBuyerMode;
+                  setBuyerMode(newMode);
+                  if (newMode) {
+                    navigateToDashboard('home');
+                  } else {
+                    navigateToDashboard(rolePages[user.role] || 'seller');
+                  }
+                }}
+                className={cn('py-2.5 px-3 cursor-pointer gap-2', isBuyerMode ? (isDark ? 'bg-[#1ABB9C]/20 text-[#1ABB9C]' : 'bg-[#1ABB9C]/10 text-[#1ABB9C]') : (isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50'))}
+              >
+                <svg className="h-4 w-4 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                {isBuyerMode ? t(locale, 'العودة لحساب التاجر', 'Return to Dashboard') : t(locale, 'تصفح كـ مشتري', 'Browse as Buyer')}
+              </DropdownMenuItem>
+            )}
+
+            {user.role !== 'admin' && user.role !== 'buyer' && (
+              <DropdownMenuItem onClick={() => navigateToDashboard('verification')} className={cn('py-2.5 px-3 cursor-pointer gap-2', isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50')}>
+                <svg className="h-4 w-4 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg>
+                {t(locale, 'حالة التوثيق', 'Verification Status')}
+              </DropdownMenuItem>
+            )}
+
+            <DropdownMenuSeparator className="opacity-20 my-1" />
+
             <DropdownMenuItem className={cn('py-2 px-3 cursor-pointer gap-2', isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50')}>
-              <User className="h-3.5 w-3.5 opacity-60" />
+              <User className="h-4 w-4 opacity-70" />
               {t(locale, 'الملف الشخصي', 'Profile')}
             </DropdownMenuItem>
             <DropdownMenuItem className={cn('py-2 px-3 cursor-pointer gap-2', isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50')}>
-              <Settings className="h-3.5 w-3.5 opacity-60" />
+              <Settings className="h-4 w-4 opacity-70" />
               <span className="flex-1">{t(locale, 'الإعدادات', 'Settings')}</span>
               <span className="bg-[#1ABB9C] text-white text-[10px] px-1.5 py-0.5 rounded font-bold">50%</span>
             </DropdownMenuItem>
             <DropdownMenuItem className={cn('py-2 px-3 cursor-pointer gap-2', isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50')}>
-              <svg className="h-3.5 w-3.5 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg>
+              <svg className="h-4 w-4 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg>
               {t(locale, 'مركز المساعدة', 'Help Center')}
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="opacity-20" />
+            <DropdownMenuSeparator className="opacity-20 my-1" />
             <DropdownMenuItem
               onClick={logout}
-              className={cn('py-2 px-3 cursor-pointer gap-2 text-red-500', isDark ? 'hover:bg-white/10' : 'hover:bg-red-50')}
+              className={cn('py-2 px-3 cursor-pointer gap-2 text-red-500 font-medium', isDark ? 'hover:bg-white/10' : 'hover:bg-red-50')}
             >
-              <LogOut className="h-3.5 w-3.5" />
+              <LogOut className="h-4 w-4" />
               {t(locale, 'تسجيل الخروج', 'Log Out')}
             </DropdownMenuItem>
           </DropdownMenuContent>
