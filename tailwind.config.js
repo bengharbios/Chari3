@@ -11,6 +11,10 @@ module.exports = {
     current: 'currentColor',
     extend: {
       colors: {
+        'gentelella-bg': '#2A3F54',
+        'gentelella-nav': '#EDEDED',
+        'gentelella-green': '#1ABB9C',
+        'gentelella-hover': 'rgba(255,255,255,0.05)',
         tremor: {
           brand: {
             faint: '#eff6ff', // blue-50
