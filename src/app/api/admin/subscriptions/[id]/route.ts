@@ -45,7 +45,15 @@ export async function PATCH(
     }
 
     // Build update payload
-    const updateData: Record<string, unknown> = {};
+    const updateData: {
+      status?: string;
+      packageId?: string;
+      startDate?: Date;
+      endDate?: Date;
+      freeCommission?: boolean;
+      overrideNote?: string;
+      overriddenBy?: string;
+    } = {};
 
     if (status !== undefined) {
       updateData.status = status;
@@ -120,8 +128,8 @@ export async function PATCH(
           where: { id: inv.id }, 
           data: { 
             status: 'PAID',
-            ...(updateData.startDate && { periodStart: updateData.startDate as Date }),
-            ...(updateData.endDate && { periodEnd: updateData.endDate as Date, dueDate: updateData.endDate as Date })
+            ...(updateData.startDate && { periodStart: updateData.startDate }),
+            ...(updateData.endDate && { periodEnd: updateData.endDate, dueDate: updateData.endDate })
           } 
         });
         await prisma.debtPaymentReceipt.updateMany({ where: { invoiceId: inv.id }, data: { status: 'approved' } });
@@ -142,8 +150,8 @@ export async function PATCH(
         await prisma.invoice.update({ 
           where: { id: inv.id }, 
           data: { 
-            ...(updateData.startDate && { periodStart: updateData.startDate as Date }),
-            ...(updateData.endDate && { periodEnd: updateData.endDate as Date, dueDate: updateData.endDate as Date })
+            ...(updateData.startDate && { periodStart: updateData.startDate }),
+            ...(updateData.endDate && { periodEnd: updateData.endDate, dueDate: updateData.endDate })
           } 
         });
       }

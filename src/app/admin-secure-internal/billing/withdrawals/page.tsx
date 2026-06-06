@@ -144,12 +144,12 @@ export default function AdminWithdrawalsPage() {
         <CardHeader className="pb-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="relative w-full sm:max-w-xs">
-              <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground`} />
+              <Search className={`absolute ${locale === 'ar' ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground`} />
               <Input
                 placeholder={t(locale, 'بحث باسم التاجر أو البريد...', 'Search merchant name or email...')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className={`h-9 rounded-xl ${isRTL ? 'pr-9' : 'pl-9'}`}
+                className={`h-9 rounded-xl ${locale === 'ar' ? 'pr-9' : 'pl-9'}`}
               />
             </div>
             

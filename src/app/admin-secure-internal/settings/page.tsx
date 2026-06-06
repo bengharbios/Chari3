@@ -34,6 +34,7 @@ export default function AdminSettingsPage() {
     enable_delivery_calculator: 'true',
     enable_volume_discounts: 'true',
     enable_product_qa: 'true',
+    seller_dashboard_template: 'default',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -75,6 +76,7 @@ export default function AdminSettingsPage() {
             enable_product_qa: data.settings.enable_product_qa !== undefined
               ? String(data.settings.enable_product_qa)
               : 'true',
+            seller_dashboard_template: data.settings.seller_dashboard_template || 'default',
           }));
         }
       } catch (err) {
@@ -279,6 +281,23 @@ export default function AdminSettingsPage() {
                   <option value="true">{t('مفعّل (عرض تبويب الأسئلة والأجوبة بصفحة المنتج)', 'Enabled (Show customer Q&A tab on product page)')}</option>
                   <option value="false">{t('معطّل (إخفاء نظام الأسئلة)', 'Disabled (Hide Q&A system)')}</option>
                 </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="seller_dashboard_template">{t('قالب لوحة تحكم التجار', 'Seller Dashboard Template')}</Label>
+                <select
+                  id="seller_dashboard_template"
+                  name="seller_dashboard_template"
+                  value={settings.seller_dashboard_template}
+                  onChange={(e) => setSettings(prev => ({ ...prev, seller_dashboard_template: e.target.value }))}
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                >
+                  <option value="default">{t('الافتراضي (ChariDay UI)', 'Default (ChariDay UI)')}</option>
+                  <option value="gentelella">{t('Gentelella (النسخة الكلاسيكية)', 'Gentelella (Classic Version)')}</option>
+                </select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('اختر التصميم الذي سيظهر للتجار في لوحات التحكم الخاصة بهم.', 'Select the design template for the seller dashboards.')}
+                </p>
               </div>
               
               <Button 

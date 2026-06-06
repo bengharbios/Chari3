@@ -8,6 +8,7 @@ import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { useOnboardingStore, restoreDraftFields, calcResumeStep } from '@/lib/store/onboarding';
 import AppShell from '@/components/layout/AppShell';
 import Header from '@/components/layout/Header';
+import GentelellaHeader from '@/components/layout/gentelella/GentelellaHeader';
 import Footer from '@/components/layout/Footer';
 import BottomNav from '@/components/layout/BottomNav';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -136,6 +137,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
 
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  const [dashboardTemplate, setDashboardTemplate] = useState<string>('default');
 
   useEffect(() => {
     fetch('/api/homepage')
@@ -152,7 +154,18 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
       .finally(() => {
         setIsLoadingConfig(false);
       });
-  }, []);
+
+    if (user?.role === 'seller' && !isBuyerMode) {
+      fetch('/api/settings/public')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.settings?.seller_dashboard_template) {
+            setDashboardTemplate(data.settings.seller_dashboard_template);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user, isBuyerMode]);
 
   // Synchronize browser URL bar with Zustand currentPage
   useEffect(() => {
@@ -467,7 +480,11 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
           </span>
         </div>
       )}
-      <Header />
+      {!isStorefrontPage && dashboardTemplate === 'gentelella' && user && user.role !== 'admin' && !isBuyerMode ? (
+        <GentelellaHeader />
+      ) : (
+        <Header />
+      )}
 
       {isStorefrontPage ? (
         <main className="flex-1">

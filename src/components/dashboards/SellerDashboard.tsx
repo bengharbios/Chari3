@@ -6,7 +6,7 @@ import {
   Wallet, AlertTriangle, ChevronUp, BarChart3, Clock, CheckCircle,
   XCircle, Eye, Plus, Edit, Trash2, Trophy, Target, Zap, Wrench, Loader2, Upload, X, Layers,
   LayoutGrid, List, ClipboardCheck, Truck, CheckSquare, Check,
-  ShieldAlert, Ban, Lock, Info
+  ShieldAlert, Ban, Lock, Info, Activity
 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -381,7 +381,7 @@ export default function SellerDashboard() {
       <TremorGrid numItems={1} numItemsSm={2} numItemsLg={4} className="gap-6">
         <TremorCard decoration="top" decorationColor="emerald" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
           <Text>{t('أرباح الشهر', 'Month Earnings')}</Text>
-          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+          <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
             <Metric className="font-black text-foreground">{DZD(kpis?.monthNetEarnings ?? 0)}</Metric>
             <BadgeDelta deltaType="moderateIncrease">+5%</BadgeDelta>
           </Flex>
@@ -389,7 +389,7 @@ export default function SellerDashboard() {
         
         <TremorCard decoration="top" decorationColor="blue" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
           <Text>{t('طلبات الشهر', 'Month Orders')}</Text>
-          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+          <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
             <Metric className="font-black text-foreground">{kpis?.monthOrderCount ?? 0}</Metric>
             <BadgeDelta deltaType="increase">+12%</BadgeDelta>
           </Flex>
@@ -397,7 +397,7 @@ export default function SellerDashboard() {
 
         <TremorCard decoration="top" decorationColor="amber" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
           <Text>{t('التقييم العام', 'Overall Rating')}</Text>
-          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+          <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
             <Metric className="font-black text-foreground">{(kpis?.rating ?? 0).toFixed(1)} ⭐</Metric>
             <BadgeDelta deltaType="unchanged">0%</BadgeDelta>
           </Flex>
@@ -405,7 +405,7 @@ export default function SellerDashboard() {
 
         <TremorCard decoration="top" decorationColor="purple" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
           <Text>{t('رصيد المحفظة', 'Wallet Balance')}</Text>
-          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+          <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
             <Metric className="font-black text-foreground">{DZD(kpis?.walletBalance ?? 0)}</Metric>
             <BadgeDelta deltaType="moderateIncrease">+8%</BadgeDelta>
           </Flex>

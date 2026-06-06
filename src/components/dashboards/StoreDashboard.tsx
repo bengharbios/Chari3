@@ -188,7 +188,7 @@ export default function StoreDashboard() {
         <TremorGrid numItems={1} numItemsSm={2} numItemsLg={4} className="gap-6">
           <TremorCard decoration="top" decorationColor="emerald" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
             <Text>{t(locale, 'الإيرادات', 'Revenue')}</Text>
-            <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+            <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
               <Metric className="font-black text-foreground">{formatStoreCurrency(kpis.monthRevenue ?? 0)}</Metric>
               <BadgeDelta deltaType="moderateIncrease">+12%</BadgeDelta>
             </Flex>
@@ -196,7 +196,7 @@ export default function StoreDashboard() {
           
           <TremorCard decoration="top" decorationColor="blue" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
             <Text>{t(locale, 'المبيعات', 'Sales')}</Text>
-            <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+            <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
               <Metric className="font-black text-foreground">{formatNumber(kpis.totalSales ?? 0)}</Metric>
               <BadgeDelta deltaType="moderateIncrease">+8%</BadgeDelta>
             </Flex>
@@ -204,7 +204,7 @@ export default function StoreDashboard() {
 
           <TremorCard decoration="top" decorationColor="purple" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
             <Text>{t(locale, 'المنتجات', 'Products')}</Text>
-            <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+            <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
               <Metric className="font-black text-foreground">{products.length}</Metric>
               <BadgeDelta deltaType="unchanged">0%</BadgeDelta>
             </Flex>
@@ -212,7 +212,7 @@ export default function StoreDashboard() {
 
           <TremorCard decoration="top" decorationColor="orange" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
             <Text>{t(locale, 'الزوار', 'Visitors')}</Text>
-            <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+            <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
               <Metric className="font-black text-foreground">12,450</Metric>
               <BadgeDelta deltaType="increase">+24%</BadgeDelta>
             </Flex>

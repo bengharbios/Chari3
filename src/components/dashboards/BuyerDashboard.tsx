@@ -226,28 +226,28 @@ export default function BuyerDashboard() {
       <TremorGrid numItems={1} numItemsSm={2} numItemsLg={4} className="gap-4">
         <TremorCard decoration="top" decorationColor="blue" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
           <Text>{t(locale, 'إجمالي الطلبات', 'Total Orders')}</Text>
-          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+          <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
             <Metric className="font-black text-foreground">{isLoadingOrders ? '...' : stats.totalOrders}</Metric>
           </Flex>
         </TremorCard>
         
         <TremorCard decoration="top" decorationColor="rose" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
           <Text>{t(locale, 'إجمالي الإنفاق', 'Total Spent')}</Text>
-          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+          <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
             <Metric className="font-black text-foreground">{isLoadingOrders ? '...' : formatBuyerCurrency(stats.totalSpent)}</Metric>
           </Flex>
         </TremorCard>
 
         <TremorCard decoration="top" decorationColor="emerald" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
           <Text>{t(locale, 'رصيد المحفظة', 'Wallet Balance')}</Text>
-          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+          <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
             <Metric className="font-black text-foreground">{isLoadingOrders ? '...' : formatBuyerCurrency(stats.walletBalance)}</Metric>
           </Flex>
         </TremorCard>
 
         <TremorCard decoration="top" decorationColor="amber" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
           <Text>{t(locale, 'المفضلة', 'Wishlist')}</Text>
-          <Flex className="mt-2" justifyContent="start" alignItems="baseline" spaceX="2">
+          <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
             <Metric className="font-black text-foreground">{isLoadingOrders ? '...' : stats.wishlistCount}</Metric>
           </Flex>
         </TremorCard>
@@ -404,7 +404,7 @@ export default function BuyerDashboard() {
                     <Text className="font-semibold text-sm truncate text-foreground">
                       {locale === 'ar' ? product.name : (product.nameEn ?? product.name)}
                     </Text>
-                    <Flex className="mt-1" justifyContent="start" spaceX="2">
+                    <Flex className="mt-1 gap-2" justifyContent="start">
                       <span className="text-base font-bold text-primary">
                         {formatBuyerCurrency(product.price)}
                       </span>
