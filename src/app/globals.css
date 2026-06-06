@@ -815,7 +815,23 @@ html[data-template="gentelella"] [data-slot="card-content"] {
   margin-top: 5px !important;
 }
 
-/* Fix Tremor Card styles inside Gentelella */
+/* ============================================
+   GLOBAL TEXT & HEADING COLOR OVERRIDES
+   ============================================ */
+html[data-template="gentelella"] h1,
+html[data-template="gentelella"] h2,
+html[data-template="gentelella"] h3,
+html[data-template="gentelella"] h4,
+html[data-template="gentelella"] h5,
+html[data-template="gentelella"] h6 {
+  color: var(--gentelella-heading) !important;
+}
+
+html[data-template="gentelella"] p {
+  color: var(--foreground);
+}
+
+/* Fix Tremor styles inside Gentelella */
 html[data-template="gentelella"] .tremor-Card-root {
   border-radius: 3px !important;
   border: 1px solid var(--border) !important;
@@ -832,4 +848,12 @@ html[data-template="gentelella"] .tremor-Title-root {
   margin-bottom: 15px !important;
   border-bottom: 2px solid var(--border) !important;
   padding-bottom: 6px !important;
+}
+
+html[data-template="gentelella"] .tremor-Text-root {
+  color: var(--muted-foreground) !important;
+}
+
+html[data-template="gentelella"] .tremor-Metric-root {
+  color: var(--gentelella-heading) !important;
 }
