@@ -166,7 +166,7 @@ export default function StoreDashboard() {
 
   return (
     <motion.div 
-      className="space-y-4 text-start max-w-[1600px]"
+      className="space-y-4 text-start w-full"
       variants={STAGGER_CONTAINER}
       initial="hidden"
       animate="visible"
@@ -177,7 +177,7 @@ export default function StoreDashboard() {
           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">
             {t(locale, 'نظرة عامة', 'OVERVIEW')}
           </p>
-          <h1 className="text-[26px] leading-tight font-bold text-[#2A3F54] dark:text-white">{t(locale, 'لوحة التحكم', 'Dashboard')}</h1>
+          <h1 className="text-[26px] leading-tight font-bold text-[var(--gentelella-heading)]">{t(locale, 'لوحة التحكم', 'Dashboard')}</h1>
         </div>
         <div className="flex items-center gap-3">
            <Button variant="outline" size="sm" className="font-bold rounded border-border text-xs h-8">
@@ -202,7 +202,7 @@ export default function StoreDashboard() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'إجمالي المستخدمين', 'TOTAL USERS')}</p>
                   <div className="flex items-baseline gap-2">
-                    <h3 className="text-[22px] font-bold truncate text-[#2A3F54] dark:text-white">2,500</h3>
+                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">2,500</h3>
                     <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 12%</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground truncate mt-1">342 {t(locale, 'جديد هذا الأسبوع', 'new this week')}</p>
@@ -226,7 +226,7 @@ export default function StoreDashboard() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'متوسط الجلسة', 'AVG SESSION')}</p>
                   <div className="flex items-baseline gap-2">
-                    <h3 className="text-[22px] font-bold truncate text-[#2A3F54] dark:text-white">123.5<span className="text-[13px] ml-0.5">min</span></h3>
+                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">123.5<span className="text-[13px] ml-0.5">min</span></h3>
                     <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 8%</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground truncate mt-1">+14min {t(locale, 'من الأسبوع الماضي', 'from last week')}</p>
@@ -250,7 +250,7 @@ export default function StoreDashboard() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'الطلبات', 'ORDERS')}</p>
                   <div className="flex items-baseline gap-2">
-                    <h3 className="text-[22px] font-bold truncate text-[#2A3F54] dark:text-white">1,240</h3>
+                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">1,240</h3>
                     <span className="text-[11px] font-bold text-red-500 flex items-center"><TrendingUp className="h-3 w-3 rotate-180" /> 3%</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground truncate mt-1">78 {t(locale, 'تم شحنها اليوم', 'shipped today')}</p>
@@ -274,7 +274,7 @@ export default function StoreDashboard() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'الإيرادات', 'REVENUE')}</p>
                   <div className="flex items-baseline gap-2">
-                    <h3 className="text-[22px] font-bold truncate text-[#2A3F54] dark:text-white">{formatStoreCurrency(kpis.monthRevenue ?? 0)}</h3>
+                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">{formatStoreCurrency(kpis.monthRevenue ?? 0)}</h3>
                     <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 18%</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground truncate mt-1">{formatStoreCurrency(3218)} {t(locale, 'اليوم', 'today')}</p>
@@ -298,7 +298,7 @@ export default function StoreDashboard() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'التحويلات', 'CONVERSIONS')}</p>
                   <div className="flex items-baseline gap-2">
-                    <h3 className="text-[22px] font-bold truncate text-[#2A3F54] dark:text-white">2,315</h3>
+                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">2,315</h3>
                     <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 5%</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground truncate mt-1">{t(locale, 'المعدل:', 'Rate:')} 4.2%</p>
@@ -322,7 +322,7 @@ export default function StoreDashboard() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'مشاهدات الصفحة', 'PAGE VIEWS')}</p>
                   <div className="flex items-baseline gap-2">
-                    <h3 className="text-[22px] font-bold truncate text-[#2A3F54] dark:text-white">47,325</h3>
+                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">47,325</h3>
                     <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 22%</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground truncate mt-1">6,854 {t(locale, 'زائر فريد', 'unique visitors')}</p>
@@ -343,7 +343,7 @@ export default function StoreDashboard() {
         <motion.div variants={FADE_IN_VARIANTS} className="xl:col-span-2">
           <Card className="rounded-md shadow-sm border-border h-full flex flex-col card-surface">
             <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/50 px-5 pt-5">
-              <CardTitle className="text-[15px] font-bold text-[#2A3F54] dark:text-white">
+              <CardTitle className="text-[15px] font-bold text-[var(--gentelella-heading)]">
                 {t(locale, 'نشاط الشبكة', 'Network Activities')}
               </CardTitle>
               <div className="flex items-center text-[11px] font-bold border border-border rounded divide-x divide-border">
@@ -379,7 +379,7 @@ export default function StoreDashboard() {
         <motion.div variants={FADE_IN_VARIANTS} className="xl:col-span-1">
           <Card className="rounded-md shadow-sm border-border h-full flex flex-col card-surface">
             <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/50 px-5 pt-5">
-              <CardTitle className="text-[15px] font-bold text-[#2A3F54] dark:text-white">
+              <CardTitle className="text-[15px] font-bold text-[var(--gentelella-heading)]">
                 {t(locale, 'النشاط الأخير', 'Recent Activity')}
               </CardTitle>
               <Button variant="ghost" size="icon" className="h-6 w-6">
@@ -419,7 +419,7 @@ export default function StoreDashboard() {
           <Card className="rounded-md shadow-sm border-border h-full flex flex-col card-surface">
             <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/50 px-5 pt-5">
               <div>
-                <CardTitle className="text-[15px] font-bold text-[#2A3F54] dark:text-white">
+                <CardTitle className="text-[15px] font-bold text-[var(--gentelella-heading)]">
                   {t(locale, 'أحدث الطلبات', 'Recent Orders')}
                 </CardTitle>
                 <p className="text-[11px] text-muted-foreground mt-1">Latest 5 transactions</p>
@@ -472,7 +472,7 @@ export default function StoreDashboard() {
         <motion.div variants={FADE_IN_VARIANTS} className="xl:col-span-1">
           <Card className="rounded-md shadow-sm border-border h-full flex flex-col card-surface">
             <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/50 px-5 pt-5">
-              <CardTitle className="text-[15px] font-bold text-[#2A3F54] dark:text-white">
+              <CardTitle className="text-[15px] font-bold text-[var(--gentelella-heading)]">
                 {t(locale, 'مساحة التخزين', 'Storage')}
               </CardTitle>
               <span className="text-[11px] text-muted-foreground">6.8 GB of 8 GB used</span>

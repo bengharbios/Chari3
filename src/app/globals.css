@@ -643,6 +643,7 @@ html[data-template="gentelella"][data-g-theme="light"] {
   --border: #E6E9ED;
   --muted: #EEEEEE;
   --muted-foreground: #73879C;
+  --gentelella-heading: #4E342E;
 }
 
 html[data-template="gentelella"][data-g-theme="dark"] {
@@ -653,6 +654,7 @@ html[data-template="gentelella"][data-g-theme="dark"] {
   --border: #334155;
   --muted: #0f172a;
   --muted-foreground: #94a3b8;
+  --gentelella-heading: #ffffff;
 }
 
 /* Remove glassmorphism and apply flat Gentelella style to panels */
@@ -663,6 +665,98 @@ html[data-template="gentelella"] [class*="bg-background/60"] {
   -webkit-backdrop-filter: none !important;
   border-radius: 4px !important;
   box-shadow: none !important;
+  border-color: var(--border) !important;
+}
+
+/* ============================================
+   GENTELELLA EXACT CLASSES (.x_panel, etc.)
+   ============================================ */
+html[data-template="gentelella"] .x_panel {
+  position: relative;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 10px 17px;
+  display: inline-block;
+  background: var(--card);
+  border: 1px solid var(--border);
+  -webkit-column-break-inside: avoid;
+  -moz-column-break-inside: avoid;
+  column-break-inside: avoid;
+  opacity: 1;
+  transition: all .2s ease;
+  border-radius: 3px;
+}
+
+html[data-template="gentelella"] .x_title {
+  border-bottom: 2px solid var(--border);
+  padding: 1px 5px 6px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+html[data-template="gentelella"] .x_title h2 {
+  margin: 5px 0 6px;
+  float: left;
+  display: block;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--gentelella-heading);
+}
+
+html[data-template="gentelella"] .x_title h2 small {
+  margin-left: 10px;
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+
+html[data-template="gentelella"] .x_content {
+  padding: 0 5px 6px;
+  position: relative;
+  width: 100%;
+  float: left;
+  clear: both;
+  margin-top: 5px;
+}
+
+/* Gentelella Tables */
+html[data-template="gentelella"] .table {
+  width: 100%;
+  max-width: 100%;
+  margin-bottom: 20px;
+  background-color: transparent;
+  border-spacing: 0;
+  border-collapse: collapse;
+}
+
+html[data-template="gentelella"] .table > thead > tr > th,
+html[data-template="gentelella"] .table > tbody > tr > th,
+html[data-template="gentelella"] .table > tfoot > tr > th,
+html[data-template="gentelella"] .table > thead > tr > td,
+html[data-template="gentelella"] .table > tbody > tr > td,
+html[data-template="gentelella"] .table > tfoot > tr > td {
+  padding: 8px;
+  line-height: 1.42857143;
+  vertical-align: top;
+  border-top: 1px solid var(--border);
+}
+
+html[data-template="gentelella"] .table > thead > tr > th {
+  vertical-align: bottom;
+  border-bottom: 2px solid var(--border);
+  color: var(--gentelella-heading);
+}
+
+html[data-template="gentelella"] .table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: rgba(0,0,0,0.02);
+}
+html[data-template="gentelella"][data-g-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: rgba(255,255,255,0.02);
 }
 
 html[data-template="gentelella"][data-g-theme="light"] .glass,
