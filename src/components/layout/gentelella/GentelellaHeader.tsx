@@ -181,11 +181,16 @@ export default function GentelellaHeader() {
             </div>
             <DropdownMenuItem className={cn('py-2 px-3 cursor-pointer gap-2', isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50')}>
               <User className="h-3.5 w-3.5 opacity-60" />
-              {t(locale, 'ملفي الشخصي', 'Your Profile')}
+              {t(locale, 'الملف الشخصي', 'Profile')}
             </DropdownMenuItem>
             <DropdownMenuItem className={cn('py-2 px-3 cursor-pointer gap-2', isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50')}>
               <Settings className="h-3.5 w-3.5 opacity-60" />
-              {t(locale, 'الإعدادات', 'Settings')}
+              <span className="flex-1">{t(locale, 'الإعدادات', 'Settings')}</span>
+              <span className="bg-[#1ABB9C] text-white text-[10px] px-1.5 py-0.5 rounded font-bold">50%</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem className={cn('py-2 px-3 cursor-pointer gap-2', isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50')}>
+              <svg className="h-3.5 w-3.5 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg>
+              {t(locale, 'مركز المساعدة', 'Help Center')}
             </DropdownMenuItem>
             <DropdownMenuSeparator className="opacity-20" />
             <DropdownMenuItem

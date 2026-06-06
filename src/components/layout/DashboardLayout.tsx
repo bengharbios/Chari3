@@ -5,6 +5,8 @@ import { useEffect, useState } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import Sidebar from './Sidebar';
 import GentelellaSidebar from './gentelella/GentelellaSidebar';
+import GentelellaHeader from './gentelella/GentelellaHeader';
+import { useGentelellaTheme } from './gentelella/theme';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -14,6 +16,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isSidebarOpen } = useAppStore();
   const { user, isBuyerMode } = useAuthStore();
   const [dashboardTemplate, setDashboardTemplate] = useState<string>('default');
+  const { isDark } = useGentelellaTheme();
 
   useEffect(() => {
     const isDashboardRole = user?.role && !['admin', 'buyer'].includes(user.role) && !isBuyerMode;
@@ -35,14 +38,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (!user) return null;
 
+  const isGentelella = dashboardTemplate === 'gentelella';
+
   return (
-    <div id={dashboardTemplate === 'gentelella' ? 'gentelella-root' : undefined} className="min-h-screen overflow-x-hidden flex flex-col">
+    <div id={isGentelella ? 'gentelella-root' : undefined} className="min-h-screen overflow-x-hidden flex flex-col">
       <div className="flex flex-1">
-        {dashboardTemplate === 'gentelella' ? <GentelellaSidebar /> : <Sidebar />}
+        {isGentelella ? <GentelellaSidebar /> : <Sidebar />}
         <main
-          className={`flex-1 min-w-0 transition-all duration-300 ${isSidebarOpen ? 'lg:ms-0' : 'lg:ms-0'}`}
+          className={`flex-1 min-w-0 transition-all duration-300 flex flex-col ${isSidebarOpen ? 'lg:ms-0' : 'lg:ms-0'} ${
+            isGentelella
+              ? isDark
+                ? 'bg-[#0f172a] text-[#cbd5e1]'
+                : 'bg-[#f3f4f6] text-[#475569]'
+              : ''
+          }`}
         >
-          <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-[1750px] mx-auto">
+          {isGentelella && <GentelellaHeader />}
+          <div className="p-4 md:p-6 lg:p-8 pb-24 md:pb-8 max-w-[1750px] mx-auto w-full flex-1">
             {children}
           </div>
         </main>

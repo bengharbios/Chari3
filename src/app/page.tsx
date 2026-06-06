@@ -485,9 +485,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
           </span>
         </div>
       )}
-      {!isStorefrontPage && dashboardTemplate === 'gentelella' && user && user.role !== 'admin' && !isBuyerMode ? (
-        <GentelellaHeader />
-      ) : (
+      {!isStorefrontPage && dashboardTemplate !== 'gentelella' && (
         <Header />
       )}
 

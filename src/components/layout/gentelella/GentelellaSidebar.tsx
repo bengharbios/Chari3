@@ -4,88 +4,242 @@ import { useEffect, useState } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import type { NavItem, PageType, UserRole } from '@/types';
+import type { PageType, UserRole } from '@/types';
 import { useGentelellaTheme } from './theme';
 import {
   LayoutDashboard, Users, Package, ShoppingCart, BarChart3, Settings,
   Store, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
   Wallet, Heart, Star, Bell, ChevronLeft, ChevronRight, LogOut,
-  TrendingUp, CreditCard, Boxes, ChevronUp, ArrowLeftRight, Layers,
-  Receipt, Sparkles, ChevronDown, Monitor, KeyRound, MoreHorizontal
+  TrendingUp, CreditCard, Boxes, ChevronUp, ChevronDown, ArrowLeftRight, Layers,
+  Receipt, Sparkles, Monitor, KeyRound, MoreHorizontal
 } from 'lucide-react';
 
 const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
 
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  LayoutDashboard, Users, Package, ShoppingCart, BarChart3, Settings,
-  Store, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
-  Wallet, Heart, Star, Bell, LogOut, TrendingUp, CreditCard, Boxes,
-  ChevronUp, ArrowLeftRight, Layers, Receipt, Sparkles,
+// Type for the nested sidebar structure
+type GentelellaNavSubItem = {
+  id: PageType;
+  labelAr: string;
+  labelEn: string;
+  badge?: number;
 };
 
-// ... Same nav items as before
-const STORE_NAV: NavItem[] = [
-  { id: 'section-store', labelAr: 'عام', labelEn: 'GENERAL', isSection: true },
-  { id: 'store', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
-  { id: 'store-products', labelAr: 'المنتجات', labelEn: 'Products', icon: 'Boxes', badge: 5 },
-  { id: 'store-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 12 },
-  { id: 'store-coupons', labelAr: 'الكوبونات والخصومات', labelEn: 'Coupons', icon: 'CreditCard' },
-  { id: 'store-staff', labelAr: 'الفريق', labelEn: 'Team', icon: 'Users' },
-  { id: 'store-analytics', labelAr: 'التحليلات', labelEn: 'Analytics', icon: 'BarChart3' },
-  { id: 'section-billing', labelAr: 'المالية', labelEn: 'BILLING', isSection: true },
-  { id: 'store-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice', icon: 'Receipt' },
-  { id: 'store-billing-plans', labelAr: 'اختر باقة', labelEn: 'Choose Plan', icon: 'Package' },
-  { id: 'store-billing-addons', labelAr: 'الميزات الإضافية', labelEn: 'Add-ons', icon: 'Sparkles' },
-  { id: 'store-billing-pay', labelAr: 'الدفع والتسديد', labelEn: 'Payment', icon: 'CreditCard' },
-  { id: 'store-billing-history', labelAr: 'سجل الفواتير', labelEn: 'Invoice History', icon: 'FileText' },
-  { id: 'section-settings', labelAr: 'إعدادات', labelEn: 'SETTINGS', isSection: true },
-  { id: 'store-settings', labelAr: 'إعدادات المتجر', labelEn: 'Store Settings', icon: 'Settings' },
+type GentelellaNavTree = {
+  id: string;
+  labelAr: string;
+  labelEn: string;
+  icon: any;
+  badge?: number | string;
+  badgeColor?: string;
+  children?: GentelellaNavSubItem[];
+  directPageId?: PageType; // If it has no children, it links directly
+};
+
+type GentelellaNavGroup = {
+  id: string;
+  labelAr: string;
+  labelEn: string;
+  trees: GentelellaNavTree[];
+};
+
+// Define structure for STORE MANAGER
+const STORE_GROUPS: GentelellaNavGroup[] = [
+  {
+    id: 'general',
+    labelAr: 'عام',
+    labelEn: 'General',
+    trees: [
+      {
+        id: 'dashboards',
+        labelAr: 'لوحات القيادة',
+        labelEn: 'Dashboards',
+        icon: LayoutDashboard,
+        children: [
+          { id: 'store', labelAr: 'العمليات', labelEn: 'Operations' },
+          { id: 'store-analytics', labelAr: 'التحليلات', labelEn: 'Analytics' },
+        ]
+      },
+      {
+        id: 'team',
+        labelAr: 'الفريق',
+        labelEn: 'Team',
+        icon: Users,
+        directPageId: 'store-staff'
+      }
+    ]
+  },
+  {
+    id: 'ecommerce',
+    labelAr: 'التجارة الإلكترونية',
+    labelEn: 'E-commerce',
+    trees: [
+      {
+        id: 'products-tree',
+        labelAr: 'المنتجات',
+        labelEn: 'Products',
+        icon: Boxes,
+        directPageId: 'store-products',
+        badge: 5,
+        badgeColor: 'bg-blue-500'
+      },
+      {
+        id: 'orders-tree',
+        labelAr: 'الطلبات',
+        labelEn: 'Orders',
+        icon: Package,
+        children: [
+          { id: 'store-orders', labelAr: 'كل الطلبات', labelEn: 'All orders', badge: 12 },
+        ]
+      },
+      {
+        id: 'marketing-tree',
+        labelAr: 'التسويق',
+        labelEn: 'Marketing',
+        icon: CreditCard,
+        directPageId: 'store-coupons'
+      }
+    ]
+  },
+  {
+    id: 'finance',
+    labelAr: 'المالية',
+    labelEn: 'Finance',
+    trees: [
+      {
+        id: 'billing-tree',
+        labelAr: 'الفواتير',
+        labelEn: 'Billing',
+        icon: Receipt,
+        children: [
+          { id: 'store-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice' },
+          { id: 'store-billing-plans', labelAr: 'الخطط', labelEn: 'Plans' },
+          { id: 'store-billing-addons', labelAr: 'الإضافات', labelEn: 'Add-ons' },
+          { id: 'store-billing-pay', labelAr: 'الدفع', labelEn: 'Payment' },
+          { id: 'store-billing-history', labelAr: 'سجل الفواتير', labelEn: 'History' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'admin',
+    labelAr: 'الإدارة',
+    labelEn: 'Admin',
+    trees: [
+      {
+        id: 'settings-tree',
+        labelAr: 'الإعدادات',
+        labelEn: 'Settings',
+        icon: Settings,
+        directPageId: 'store-settings'
+      }
+    ]
+  }
 ];
 
-const SELLER_NAV: NavItem[] = [
-  { id: 'section-seller', labelAr: 'عام', labelEn: 'GENERAL', isSection: true },
-  { id: 'seller', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
-  { id: 'seller-products', labelAr: 'منتجاتي', labelEn: 'My Products', icon: 'Boxes' },
-  { id: 'seller-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 4 },
-  { id: 'section-billing', labelAr: 'المالية', labelEn: 'BILLING', isSection: true },
-  { id: 'seller-wallet', labelAr: 'محفظتي والأرباح', labelEn: 'Wallet & Payouts', icon: 'Wallet' },
-  { id: 'seller-debts', labelAr: 'سداد المديونية', labelEn: 'Pay Debts', icon: 'Receipt' },
-  { id: 'seller-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice', icon: 'Receipt' },
-  { id: 'seller-billing-plans', labelAr: 'اختر باقة', labelEn: 'Choose Plan', icon: 'Package' },
-  { id: 'seller-billing-addons', labelAr: 'الميزات الإضافية', labelEn: 'Add-ons', icon: 'Sparkles' },
-  { id: 'seller-billing-pay', labelAr: 'الدفع والتسديد', labelEn: 'Payment', icon: 'CreditCard' },
-  { id: 'seller-billing-history', labelAr: 'سجل الفواتير', labelEn: 'Invoice History', icon: 'FileText' },
-  { id: 'section-settings', labelAr: 'إعدادات', labelEn: 'SETTINGS', isSection: true },
-  { id: 'seller-settings', labelAr: 'الإعدادات', labelEn: 'Settings', icon: 'Settings' },
-  { id: 'seller-upgrade', labelAr: 'ترقية لمتجر', labelEn: 'Upgrade to Store', icon: 'TrendingUp' },
+// Define structure for SELLER
+const SELLER_GROUPS: GentelellaNavGroup[] = [
+  {
+    id: 'general',
+    labelAr: 'عام',
+    labelEn: 'General',
+    trees: [
+      {
+        id: 'dashboards',
+        labelAr: 'لوحات القيادة',
+        labelEn: 'Dashboards',
+        icon: LayoutDashboard,
+        children: [
+          { id: 'seller', labelAr: 'العمليات', labelEn: 'Operations' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'ecommerce',
+    labelAr: 'التجارة الإلكترونية',
+    labelEn: 'E-commerce',
+    trees: [
+      {
+        id: 'products-tree',
+        labelAr: 'المنتجات',
+        labelEn: 'Products',
+        icon: Boxes,
+        directPageId: 'seller-products'
+      },
+      {
+        id: 'orders-tree',
+        labelAr: 'الطلبات',
+        labelEn: 'Orders',
+        icon: Package,
+        children: [
+          { id: 'seller-orders', labelAr: 'كل الطلبات', labelEn: 'All orders', badge: 4 },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'finance',
+    labelAr: 'المالية',
+    labelEn: 'Finance',
+    trees: [
+      {
+        id: 'wallet-tree',
+        labelAr: 'المحفظة',
+        labelEn: 'Wallet',
+        icon: Wallet,
+        children: [
+          { id: 'seller-wallet', labelAr: 'الأرباح', labelEn: 'Payouts' },
+          { id: 'seller-debts', labelAr: 'المديونية', labelEn: 'Debts' },
+        ]
+      },
+      {
+        id: 'billing-tree',
+        labelAr: 'الفواتير',
+        labelEn: 'Billing',
+        icon: Receipt,
+        children: [
+          { id: 'seller-billing', labelAr: 'الفاتورة', labelEn: 'Invoice' },
+          { id: 'seller-billing-plans', labelAr: 'الخطط', labelEn: 'Plans' },
+          { id: 'seller-billing-addons', labelAr: 'الإضافات', labelEn: 'Add-ons' },
+          { id: 'seller-billing-pay', labelAr: 'الدفع', labelEn: 'Payment' },
+          { id: 'seller-billing-history', labelAr: 'السجل', labelEn: 'History' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'admin',
+    labelAr: 'الإدارة',
+    labelEn: 'Admin',
+    trees: [
+      {
+        id: 'settings-tree',
+        labelAr: 'الإعدادات',
+        labelEn: 'Settings',
+        icon: Settings,
+        directPageId: 'seller-settings'
+      },
+      {
+        id: 'upgrade-tree',
+        labelAr: 'ترقية',
+        labelEn: 'Upgrade',
+        icon: TrendingUp,
+        directPageId: 'seller-upgrade',
+        badge: 'New',
+        badgeColor: 'bg-teal-500'
+      }
+    ]
+  }
 ];
 
-const getSellerNav = (paymentModel: string): NavItem[] => {
-  return SELLER_NAV.filter(item => {
-    if (item.id === 'seller-wallet' && paymentModel === 'decentralized') return false;
-    if (item.id === 'seller-debts' && paymentModel === 'centralized') return false;
-    return true;
-  });
-};
-
-const NAV_ITEMS: Record<UserRole, NavItem[]> = {
-  admin: [],
-  store_manager: STORE_NAV,
-  seller: SELLER_NAV,
-  supplier: [],
-  logistics: [],
-  buyer: [],
-};
-
-interface SidebarProps {
-  className?: string;
-}
-
-export default function GentelellaSidebar({ className }: SidebarProps) {
+export default function GentelellaSidebar({ className }: { className?: string }) {
   const { locale, currentPage, setCurrentPage, isSidebarOpen, setSidebarOpen, isDesktopSidebarCollapsed } = useAppStore();
   const { user, isBuyerMode, logout } = useAuthStore();
   const { isDark } = useGentelellaTheme();
   const isRTL = locale === 'ar';
+  
+  // Track open accordion trees
+  const [openTrees, setOpenTrees] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const handleResize = () => {
@@ -123,9 +277,51 @@ export default function GentelellaSidebar({ className }: SidebarProps) {
     }
   }, [user, isBuyerMode]);
 
+  // Open the tree that contains the current page automatically on load
+  useEffect(() => {
+    const groups = user?.role === 'store_manager' ? STORE_GROUPS : user?.role === 'seller' ? SELLER_GROUPS : [];
+    const newOpenTrees = { ...openTrees };
+    let changed = false;
+    
+    groups.forEach(group => {
+      group.trees.forEach(tree => {
+        if (tree.children?.some(child => child.id === currentPage)) {
+          if (!newOpenTrees[tree.id]) {
+            newOpenTrees[tree.id] = true;
+            changed = true;
+          }
+        }
+      });
+    });
+    
+    if (changed) setOpenTrees(newOpenTrees);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, user?.role]);
+
   if (!user) return null;
 
-  const navItems = user.role === 'seller' ? getSellerNav(paymentModel) : (NAV_ITEMS[user.role] || []);
+  // Filter wallet/debts based on payment model
+  let activeGroups = user.role === 'store_manager' ? STORE_GROUPS : user.role === 'seller' ? SELLER_GROUPS : [];
+  
+  if (user.role === 'seller') {
+    activeGroups = activeGroups.map(group => {
+      if (group.id !== 'finance') return group;
+      return {
+        ...group,
+        trees: group.trees.map(tree => {
+          if (tree.id !== 'wallet-tree') return tree;
+          return {
+            ...tree,
+            children: tree.children?.filter(child => {
+              if (child.id === 'seller-wallet' && paymentModel === 'decentralized') return false;
+              if (child.id === 'seller-debts' && paymentModel === 'centralized') return false;
+              return true;
+            })
+          };
+        }).filter(tree => tree.children && tree.children.length > 0)
+      };
+    });
+  }
 
   const initials = user.name
     .split(' ')
@@ -134,14 +330,19 @@ export default function GentelellaSidebar({ className }: SidebarProps) {
     .toUpperCase()
     .slice(0, 2);
 
-  // Styling maps based on theme
-  const sidebarBg = isDark ? 'bg-[#1a2332]' : 'bg-[#1e293b]'; // v4 sidebar is always dark even in light mode, but slightly different shade? Wait, reference has always dark sidebar in v4!
-  // Actually, the new v4 has a dark sidebar in light mode too, typically #1a2332. Let's stick to a very dark rich blue-gray.
-  const themeBg = '#1a2332';
+  const themeBg = '#1a2332'; // Gentelella v4 signature sidebar color
+  const ChevronIcon = isRTL ? ChevronLeft : ChevronRight;
   
+  const toggleTree = (treeId: string) => {
+    if (isDesktopSidebarCollapsed) return; // Don't toggle in collapsed mode
+    setOpenTrees(prev => ({
+      ...prev,
+      [treeId]: !prev[treeId]
+    }));
+  };
+
   return (
     <>
-      {/* Mobile overlay */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-[9998] lg:hidden backdrop-blur-sm"
@@ -154,7 +355,7 @@ export default function GentelellaSidebar({ className }: SidebarProps) {
         className={cn(
           'fixed top-0 bottom-0 z-[9999] lg:z-auto flex flex-col font-sans',
           'transition-all duration-300 ease-in-out',
-          'lg:sticky lg:h-screen text-[#94a3b8]', // Default text color
+          'lg:sticky lg:h-screen text-[#94a3b8]',
           isSidebarOpen ? 'start-0 w-[260px]' : '-start-[260px] w-[260px]',
           'lg:start-0',
           isDesktopSidebarCollapsed ? 'lg:w-[76px]' : 'lg:w-[260px]',
@@ -176,81 +377,150 @@ export default function GentelellaSidebar({ className }: SidebarProps) {
           </div>
 
           {/* Sidebar Menu */}
-          <div className="flex-1 py-6 px-4">
-            <ul className="flex flex-col w-full gap-1">
-              {navItems.map((item, index) => {
-                if (item.isSection) {
-                  return (
-                    <li key={`section-${item.id}-${index}`} className={cn("px-2 pt-5 pb-2 transition-opacity", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                      <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-widest">
-                        {t(locale, item.labelAr, item.labelEn)}
-                      </span>
-                    </li>
-                  );
-                }
-
-                const Icon = iconMap[item.icon || 'LayoutDashboard'] || LayoutDashboard;
-                const isActive = currentPage === item.id;
-
-                return (
-                  <li key={item.id + item.labelAr} className="relative group">
-                    <button
-                      dir={isRTL ? 'rtl' : 'ltr'}
-                      onClick={() => {
-                        setCurrentPage(item.id as PageType);
-                        if (window.innerWidth < 1024) setSidebarOpen(false);
-                      }}
-                      className={cn(
-                        'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[14px] font-medium transition-all duration-200',
-                        isActive 
-                          ? 'bg-white/10 text-white shadow-sm' 
-                          : 'text-[#94a3b8] hover:bg-white/5 hover:text-white',
-                        isDesktopSidebarCollapsed && 'justify-center px-0'
-                      )}
-                      title={isDesktopSidebarCollapsed ? t(locale, item.labelAr, item.labelEn) : undefined}
-                    >
-                      {/* Active Left Indicator */}
-                      {isActive && !isDesktopSidebarCollapsed && (
-                        <div className="absolute start-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#1ABB9C] rounded-e-md" />
-                      )}
-
-                      <div className="flex items-center gap-3">
-                        <Icon className={cn(
-                          "h-[20px] w-[20px] shrink-0 transition-colors", 
-                          isActive ? "text-[#1ABB9C]" : "group-hover:text-[#1ABB9C]"
-                        )} strokeWidth={isActive ? 2.5 : 2} />
-                        <span className={cn("text-start transition-opacity", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                          {t(locale, item.labelAr, item.labelEn)}
-                        </span>
-                      </div>
+          <div className="flex-1 py-4">
+            <nav className="flex flex-col w-full">
+              {activeGroups.map((group, gIdx) => (
+                <div key={group.id} className="mb-4">
+                  <div className={cn("px-6 mb-2 transition-opacity", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+                    <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-widest">
+                      {t(locale, group.labelAr, group.labelEn)}
+                    </span>
+                  </div>
+                  
+                  <ul className="flex flex-col px-3 gap-0.5">
+                    {group.trees.map(tree => {
+                      const hasChildren = tree.children && tree.children.length > 0;
+                      const isOpen = openTrees[tree.id] || false;
+                      const isTreeActive = hasChildren 
+                        ? tree.children!.some(c => c.id === currentPage)
+                        : tree.directPageId === currentPage;
                       
-                      {!isDesktopSidebarCollapsed && (
-                        <div className="flex items-center gap-2">
-                          {item.badge && item.badge > 0 && (
-                            <Badge className="h-[20px] px-2 text-[11px] font-bold bg-[#1ABB9C] hover:bg-[#1ABB9C] text-white border-0 shrink-0">
-                              {item.badge}
-                            </Badge>
+                      const Icon = tree.icon;
+
+                      return (
+                        <li key={tree.id} className="relative group">
+                          <button
+                            dir={isRTL ? 'rtl' : 'ltr'}
+                            onClick={() => {
+                              if (hasChildren) {
+                                toggleTree(tree.id);
+                              } else if (tree.directPageId) {
+                                setCurrentPage(tree.directPageId);
+                                if (window.innerWidth < 1024) setSidebarOpen(false);
+                              }
+                            }}
+                            className={cn(
+                              'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[14px] font-medium transition-all duration-200 outline-none',
+                              isTreeActive && !hasChildren
+                                ? 'bg-white/10 text-white' 
+                                : isOpen 
+                                  ? 'text-white'
+                                  : 'text-[#94a3b8] hover:bg-white/5 hover:text-white',
+                              isDesktopSidebarCollapsed && 'justify-center px-0'
+                            )}
+                            title={isDesktopSidebarCollapsed ? t(locale, tree.labelAr, tree.labelEn) : undefined}
+                          >
+                            <div className="flex items-center gap-3">
+                              <Icon className={cn(
+                                "h-[20px] w-[20px] shrink-0 transition-colors", 
+                                isTreeActive ? "text-[#1ABB9C]" : "group-hover:text-[#1ABB9C]"
+                              )} strokeWidth={isTreeActive ? 2.5 : 2} />
+                              <span className={cn("text-start transition-opacity", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+                                {t(locale, tree.labelAr, tree.labelEn)}
+                              </span>
+                            </div>
+                            
+                            {!isDesktopSidebarCollapsed && (
+                              <div className="flex items-center gap-2">
+                                {tree.badge && (
+                                  <Badge className={cn("h-[20px] px-2 text-[10px] font-bold text-white border-0 shrink-0", tree.badgeColor || 'bg-blue-500')}>
+                                    {tree.badge}
+                                  </Badge>
+                                )}
+                                {hasChildren && (
+                                  <ChevronDown className={cn(
+                                    "h-4 w-4 transition-transform duration-200 opacity-50",
+                                    isOpen && (isRTL ? "rotate-90" : "-rotate-90") // Depending on RTL, point up/down
+                                  )} />
+                                )}
+                              </div>
+                            )}
+                          </button>
+                          
+                          {/* Nested Children Accordion */}
+                          {hasChildren && !isDesktopSidebarCollapsed && (
+                            <div className={cn(
+                              "overflow-hidden transition-all duration-300 ease-in-out",
+                              isOpen ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0"
+                            )}>
+                              <ul className={cn(
+                                "relative flex flex-col gap-1 py-1",
+                                isRTL ? "pr-9" : "pl-9"
+                              )}>
+                                {/* Vertical line connector */}
+                                <div className={cn(
+                                  "absolute top-0 bottom-0 w-px bg-white/10",
+                                  isRTL ? "right-5" : "left-5"
+                                )} />
+                                
+                                {tree.children!.map(child => {
+                                  const isChildActive = currentPage === child.id;
+                                  return (
+                                    <li key={child.id} className="relative">
+                                      <button
+                                        onClick={() => {
+                                          setCurrentPage(child.id);
+                                          if (window.innerWidth < 1024) setSidebarOpen(false);
+                                        }}
+                                        className={cn(
+                                          "w-full flex items-center justify-between py-2 px-3 rounded-lg text-[13px] transition-colors relative",
+                                          isChildActive ? "text-white font-semibold" : "text-[#64748b] hover:text-white hover:bg-white/5"
+                                        )}
+                                      >
+                                        {/* Horizontal line connector for active item */}
+                                        {isChildActive && (
+                                          <div className={cn(
+                                            "absolute top-1/2 -translate-y-1/2 w-3 h-px bg-[#1ABB9C]",
+                                            isRTL ? "-right-4" : "-left-4"
+                                          )} />
+                                        )}
+                                        
+                                        <span>{t(locale, child.labelAr, child.labelEn)}</span>
+                                        {child.badge && (
+                                          <span className="text-[10px] font-bold bg-white/10 px-1.5 py-0.5 rounded text-white">
+                                            {child.badge}
+                                          </span>
+                                        )}
+                                      </button>
+                                    </li>
+                                  );
+                                })}
+                              </ul>
+                            </div>
                           )}
-                        </div>
-                      )}
-                    </button>
-                    
-                    {/* Hover tooltip for collapsed state */}
-                    {isDesktopSidebarCollapsed && (
-                      <div className="absolute start-[110%] top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover:opacity-100 transition-all z-[100] translate-x-2 group-hover:translate-x-0">
-                        <div className="bg-white text-[#1e293b] text-xs font-bold px-3 py-2 rounded-md whitespace-nowrap shadow-xl">
-                          {t(locale, item.labelAr, item.labelEn)}
-                        </div>
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
+
+                          {/* Hover tooltip for collapsed state */}
+                          {isDesktopSidebarCollapsed && (
+                            <div className={cn(
+                              "absolute top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover:opacity-100 transition-all z-[100]",
+                              isRTL ? "right-[110%] -translate-x-2 group-hover:translate-x-0" : "left-[110%] translate-x-2 group-hover:translate-x-0"
+                            )}>
+                              <div className="bg-white text-[#1e293b] text-xs font-bold px-3 py-2 rounded-md whitespace-nowrap shadow-xl">
+                                {t(locale, tree.labelAr, tree.labelEn)}
+                              </div>
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+            </nav>
           </div>
         </div>
 
-        {/* User Profile Footer (Matching v4 design) */}
+        {/* User Profile Footer */}
         <div className={cn(
           "shrink-0 border-t border-white/5 p-4 flex items-center gap-3", 
           isDesktopSidebarCollapsed ? "justify-center flex-col p-4" : ""
@@ -259,7 +529,10 @@ export default function GentelellaSidebar({ className }: SidebarProps) {
             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#1ABB9C] to-[#0f7a65] flex items-center justify-center text-white font-bold shadow-md">
               {initials}
             </div>
-            <span className="absolute bottom-0 end-0 w-3 h-3 bg-green-500 border-2 border-[#1a2332] rounded-full"></span>
+            <span className={cn(
+              "absolute bottom-0 w-3 h-3 bg-green-500 border-2 border-[#1a2332] rounded-full",
+              isRTL ? "left-0" : "right-0"
+            )}></span>
           </div>
           
           <div className={cn("flex flex-col flex-1 min-w-0 transition-opacity", isDesktopSidebarCollapsed ? "hidden opacity-0" : "opacity-100")}>
