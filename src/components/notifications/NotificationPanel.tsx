@@ -373,7 +373,8 @@ export default function NotificationPanel() {
           <div
             dir={isAr ? 'rtl' : 'ltr'}
             className={cn(
-              'absolute top-full mt-2 end-0 z-50 w-[380px] max-w-[calc(100vw-2rem)]',
+              'fixed sm:absolute top-16 sm:top-full mt-0 sm:mt-2 z-[100] w-[calc(100vw-2rem)] sm:w-[380px]',
+              'left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:end-0',
               'bg-background border border-border rounded-xl shadow-xl',
               'animate-in fade-in-0 zoom-in-95 slide-in-from-top-2'
             )}
