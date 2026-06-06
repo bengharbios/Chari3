@@ -155,15 +155,20 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
         setIsLoadingConfig(false);
       });
 
-    if (user?.role === 'seller' && !isBuyerMode) {
+    const isDashboardRole = user?.role && !['admin', 'buyer'].includes(user.role) && !isBuyerMode;
+    if (isDashboardRole) {
       fetch('/api/settings/public')
         .then(res => res.json())
         .then(data => {
           if (data.success && data.settings?.seller_dashboard_template) {
             setDashboardTemplate(data.settings.seller_dashboard_template);
+          } else {
+            setDashboardTemplate('default');
           }
         })
-        .catch(() => {});
+        .catch(() => setDashboardTemplate('default'));
+    } else {
+      setDashboardTemplate('default');
     }
   }, [user, isBuyerMode]);
 
