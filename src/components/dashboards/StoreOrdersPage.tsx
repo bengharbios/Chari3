@@ -292,215 +292,447 @@ export default function StoreOrdersPage() {
     return found ? { label: isAr ? found.nameAr : (found.nameEn || found.nameAr), color: found.color } : { label: statusKey, color: '#6B7280' };
   };
 
-  return (
-    <div className="space-y-4 p-4 md:p-6 text-start">
-      
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-4">
-            <div>
-              <CardTitle>{t('الطلبات', 'Orders')} <small className="text-muted-foreground text-sm font-normal ml-2">{t('تتبع المبيعات الحية', 'Track live sales')}</small></CardTitle>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleExport}>
-                <Download className="h-4 w-4 mr-2" />
-                {t('تصدير', 'Export')}
-              </Button>
-              <div className="flex items-center border rounded-md p-0.5 bg-muted/20">
-                <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="sm" onClick={() => handleViewModeChange('list')} className="h-7"><List className="h-4 w-4" /></Button>
-                <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" onClick={() => handleViewModeChange('table')} className="h-7"><TableIcon className="h-4 w-4" /></Button>
-                <Button variant={viewMode === 'kanban' ? 'default' : 'ghost'} size="sm" onClick={() => handleViewModeChange('kanban')} className="h-7"><LayoutGrid className="h-4 w-4" /></Button>
-              </div>
-            </div>
-          </div>
-        </CardHeader>
+  const getStatusColor = (statusKey: string) => {
+    switch (statusKey) {
+      case 'delivered': return 'bg-emerald-500';
+      case 'shipped': return 'bg-blue-500';
+      case 'processing': return 'bg-blue-400';
+      case 'confirmed': return 'bg-indigo-500';
+      case 'pending': return 'bg-amber-500';
+      case 'cancelled': return 'bg-red-500';
+      case 'refunded': return 'bg-purple-500';
+      default: return 'bg-gray-400';
+    }
+  };
 
-        <CardContent>
-          <div className="flex flex-col lg:flex-row gap-4 items-center justify-between bg-muted/10 p-3 rounded-md border mb-4">
-            <div className="flex flex-wrap gap-2 items-center w-full">
-              <Input placeholder={t('ابحث...', 'Search...')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && fetchOrders()} className="w-full sm:w-48 h-9" />
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-auto h-9" />
-              <span className="text-muted-foreground">-</span>
-              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-auto h-9" />
-              <Button onClick={() => { setPage(1); fetchOrders(); }} size="sm" className="h-9">{t('بحث', 'Search')}</Button>
+  const totalOrdersCount = orders.length; // Ideally from API
+  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+  const pendingCount = orders.filter(o => o.status === 'pending').length;
+
+  return (
+    <div className="space-y-6 p-4 md:p-6 text-start">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <p className="text-xs font-bold text-muted-foreground tracking-wider uppercase mb-1">SHOP &bull; {t('الطلبات', 'ORDERS')}</p>
+          <h1 className="text-2xl font-black">{t('الطلبات', 'Orders')}</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleExport} className="font-bold">
+            {t('تصدير', 'Export CSV')}
+          </Button>
+          <Button size="sm" className="font-bold bg-[#1ABB9C] hover:bg-[#159a80] text-white">
+            + {t('طلب يدوي', 'Manual order')}
+          </Button>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="h-12 w-12 bg-emerald-50 rounded-lg border border-emerald-100 flex items-center justify-center shrink-0">
+              <Package className="h-5 w-5 text-emerald-500" />
             </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            <div>
+              <p className="text-[11px] font-bold text-muted-foreground uppercase">{t('إجمالي الطلبات', 'TOTAL ORDERS')}</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-xl font-black">{totalOrdersCount}</h3>
+                <span className="text-xs font-bold text-emerald-500">12%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">{t('78 اليوم', '78 today')}</p>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="h-12 w-12 bg-emerald-50 rounded-lg border border-emerald-100 flex items-center justify-center shrink-0">
+              <span className="text-emerald-500 font-black text-lg">$</span>
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-muted-foreground uppercase">{t('الإيرادات', 'REVENUE')}</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-xl font-black">{totalRevenue.toLocaleString()} <span className="text-sm">DZD</span></h3>
+                <span className="text-xs font-bold text-emerald-500">18%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">{t('3,218 اليوم', '$3,218 today')}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardContent className="p-4 flex items-center gap-4">
+            <div className="h-12 w-12 bg-amber-50 rounded-lg border border-amber-100 flex items-center justify-center shrink-0">
+              <Clock className="h-5 w-5 text-amber-500" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-muted-foreground uppercase">{t('قيد الانتظار', 'PENDING')}</p>
+              <div className="flex items-baseline gap-2">
+                <h3 className="text-xl font-black">{pendingCount}</h3>
+                <span className="text-xs font-bold text-red-500">3%</span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">{t('5 في انتظار الدفع', '5 awaiting payment')}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Table Card */}
+      <Card className="shadow-sm">
+        <CardHeader className="border-b pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div>
+              <CardTitle className="text-lg">{t('جميع الطلبات', 'All orders')}</CardTitle>
+              <CardDescription className="text-xs">{totalOrdersCount} {t('نتيجة', 'results')}</CardDescription>
+            </div>
+            <div className="flex items-center gap-2 border-s ps-4 ms-2">
+              <span className="text-xs text-muted-foreground">{t('الحالة', 'Status')}</span>
               <select 
                 value={statusFilter} 
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-background border rounded-md px-3 h-9 text-sm font-bold cursor-pointer outline-none focus:border-primary w-full sm:w-auto"
+                className="bg-transparent border rounded px-2 h-8 text-xs font-bold outline-none"
               >
-                <option value="all">{t('جميع الحالات', 'All Statuses')}</option>
+                <option value="all">{t('جميع الحالات', 'All statuses')}</option>
                 {statuses.map((s) => (
                   <option key={s.key} value={s.key}>{isAr ? s.nameAr : (s.nameEn || s.nameAr)}</option>
                 ))}
               </select>
             </div>
           </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder={t('ابحث...', 'Search...')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && fetchOrders()} className="ps-9 h-9 text-xs w-full" />
+            </div>
+            <Button variant="outline" size="sm" onClick={handleExport} className="h-9 px-3 shrink-0">
+              {t('تصدير', 'Export CSV')}
+            </Button>
+          </div>
+        </CardHeader>
 
+        <CardContent className="p-0">
           {isLoading ? (
             <div className="h-40 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
           ) : orders.length === 0 ? (
             <div className="h-40 flex items-center justify-center text-muted-foreground">{t('لا توجد طلبات مطابقة.', 'No orders found.')}</div>
           ) : (
-            <>
-              {viewMode === 'table' && (
-                <div className="overflow-x-auto">
-                  <table className="table table-striped">
-                    <thead>
-                      <tr>
-                        <th>{t('رقم الطلب', 'Order ID')}</th>
-                        <th>{t('العميل', 'Customer')}</th>
-                        <th>{t('التاريخ', 'Date')}</th>
-                        <th>{t('الحالة', 'Status')}</th>
-                        <th className="text-end">{t('المجموع', 'Total')}</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orders.map(o => (
-                        <tr key={o.id}>
-                          <td className="align-middle font-mono text-xs">#{o.orderNumber}</td>
-                          <td className="align-middle font-bold">{o.buyerName}</td>
-                          <td className="align-middle">{o.date}</td>
-                          <td className="align-middle">
-                            <Badge style={{ backgroundColor: getStatusConfig(o.status).color, color: '#fff' }} className="border-0 font-normal">{getStatusConfig(o.status).label}</Badge>
-                          </td>
-                          <td className="align-middle text-end font-bold">{o.total.toLocaleString()} DZD</td>
-                          <td className="align-middle text-center">
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedOrder(o)} className="h-8 px-2">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {viewMode === 'list' && (
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  {orders.map((order, idx) => (
-                    <Card key={idx} onClick={() => setSelectedOrder(order)} className="cursor-pointer hover:border-primary/40 transition-all">
-                      <CardContent className="p-4 flex justify-between items-center">
-                        <div className="flex items-center gap-4">
-                          <div className="h-10 w-10 bg-primary/10 rounded flex items-center justify-center shrink-0">
-                            <Package className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-sm m-0">{order.buyerName}</h3>
-                            <p className="text-xs text-muted-foreground font-mono m-0">#{order.orderNumber} &bull; {order.date}</p>
-                          </div>
-                        </div>
-                        <div className="text-end">
-                          <div className="font-bold mb-1">{order.total.toLocaleString()} DZD</div>
-                          <Badge style={{ backgroundColor: getStatusConfig(order.status).color, color: '#fff' }} className="text-[10px] py-0">{getStatusConfig(order.status).label}</Badge>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-
-              {viewMode === 'kanban' && (
-                <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
-                  {statuses.map(statusObj => {
-                    const columnOrders = orders.filter(o => o.status === statusObj.key);
+            <div className="overflow-x-auto">
+              <table className="table w-full text-sm text-start mb-0">
+                <thead className="bg-muted/30 border-b text-xs uppercase text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3 font-bold">{t('الطلب', 'ORDER')}</th>
+                    <th className="px-4 py-3 font-bold">{t('العميل', 'CUSTOMER')}</th>
+                    <th className="px-4 py-3 font-bold text-center">{t('العناصر', 'ITEMS')}</th>
+                    <th className="px-4 py-3 font-bold">{t('المجموع', 'TOTAL')}</th>
+                    <th className="px-4 py-3 font-bold">{t('الحالة', 'STATUS')}</th>
+                    <th className="px-4 py-3 font-bold">{t('الدفع', 'PAYMENT')}</th>
+                    <th className="px-4 py-3 font-bold">{t('التاريخ', 'DATE')}</th>
+                    <th className="px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map(o => {
+                    const initials = o.buyerName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
+                    const statusConfig = getStatusConfig(o.status);
+                    
                     return (
-                      <div 
-                        key={statusObj.key} 
-                        className="min-w-[280px] w-[280px] flex-shrink-0 flex flex-col gap-3 bg-muted/10 p-2 rounded-md border"
-                        onDragOver={handleDragOver}
-                        onDrop={(e) => handleDrop(e, statusObj.key)}
-                      >
-                        <div className="flex items-center justify-between px-2 pb-2 border-b" style={{ borderBottomColor: statusObj.color }}>
-                          <span className="font-bold text-sm" style={{ color: statusObj.color }}>{isAr ? statusObj.nameAr : (statusObj.nameEn || statusObj.nameAr)}</span>
-                          <Badge variant="secondary" className="font-mono text-xs">{columnOrders.length}</Badge>
-                        </div>
-                        <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto hide-scrollbar px-1">
-                          {columnOrders.map(order => (
-                            <Card 
-                              key={order.id} 
-                              draggable 
-                              onDragStart={(e) => handleDragStart(e, order.id)}
-                              onClick={() => setSelectedOrder(order)} 
-                              className="cursor-grab active:cursor-grabbing shadow-sm"
-                            >
-                              <CardContent className="p-3 text-start">
-                                <p className="font-bold text-sm truncate m-0">{order.buyerName}</p>
-                                <p className="text-[11px] text-muted-foreground font-mono mt-0 mb-2">#{order.orderNumber}</p>
-                                <div className="flex justify-between items-center text-xs pt-2 border-t mt-2">
-                                  <span className="font-bold">{order.total.toLocaleString()} DZD</span>
-                                  <span className="text-muted-foreground">{order.date}</span>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      </div>
+                      <tr key={o.id} className="border-b hover:bg-muted/10 transition-colors cursor-pointer" onClick={() => setSelectedOrder(o)}>
+                        <td className="px-4 py-3 align-middle font-mono text-emerald-500 font-bold">#{o.orderNumber}</td>
+                        <td className="px-4 py-3 align-middle">
+                          <div className="flex items-center gap-3">
+                            <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-[10px] font-black shrink-0 ${getStatusColor(o.status)}`}>
+                              {initials}
+                            </div>
+                            <span className="font-bold text-foreground">{o.buyerName}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 align-middle text-center text-muted-foreground">{o.items?.length || 1}</td>
+                        <td className="px-4 py-3 align-middle font-bold">{o.total.toLocaleString()} <span className="text-[10px] text-muted-foreground">DZD</span></td>
+                        <td className="px-4 py-3 align-middle">
+                          <div className="flex items-center gap-2">
+                            <span className={`h-2 w-2 rounded-full ${getStatusColor(o.status)}`}></span>
+                            <span className="text-xs font-bold text-muted-foreground">{statusConfig.label}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 align-middle text-xs text-muted-foreground">
+                          {o.paymentMethod.toUpperCase()} {o.paymentStatus === 'paid' ? '•••• 4242' : ''}
+                        </td>
+                        <td className="px-4 py-3 align-middle text-xs text-muted-foreground">{o.date}</td>
+                        <td className="px-4 py-3 align-middle text-end">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-muted">
+                            <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </td>
+                      </tr>
                     );
                   })}
-                </div>
-              )}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-              <div className="flex justify-between items-center mt-4 pt-4 border-t">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">{t('الحد:', 'Limit:')}</span>
-                  <select value={limit} onChange={(e) => setLimit(Number(e.target.value))} className="bg-background border rounded p-1 text-sm">
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>{t('السابق', 'Prev')}</Button>
-                  <span className="flex items-center px-2 text-sm font-bold">{page} / {totalPages}</span>
-                  <Button size="sm" variant="outline" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>{t('التالي', 'Next')}</Button>
-                </div>
+          {/* Pagination Footer */}
+          {!isLoading && orders.length > 0 && (
+            <div className="flex justify-between items-center p-4 border-t text-sm text-muted-foreground">
+              <div>
+                Showing {Math.max(1, (page - 1) * limit + 1)}-{Math.min(page * limit, totalOrdersCount)} of {totalOrdersCount}
               </div>
-            </>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>&laquo;</Button>
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>&lsaquo;</Button>
+                <Button variant="default" size="sm" className="h-8 w-8 p-0 bg-[#1ABB9C] hover:bg-[#159a80]">{page}</Button>
+                {page < totalPages && <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(page + 1)}>{page + 1}</Button>}
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>&rsaquo;</Button>
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(totalPages)} disabled={page >= totalPages}>&raquo;</Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
 
+      {/* Order Detail Dialog - Redesigned to match image 2 */}
       <Dialog open={!!selectedOrder} onOpenChange={(open) => { if (!open) setSelectedOrder(null); }}>
-        <DialogContent className="border-white/10 bg-background/95 backdrop-blur-xl rounded-3xl max-w-xl max-h-[90vh] overflow-y-auto text-start">
+        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden bg-background">
           {selectedOrder && (
-            <div className="space-y-6 pt-4">
-              <div className="flex justify-between items-center border-b border-white/10 pb-4">
-                <DialogTitle className="text-lg font-black">{t('تفاصيل الطلب', 'Order Details')} #{selectedOrder.orderNumber}</DialogTitle>
-                <Button variant="outline" size="sm" onClick={handlePrintInvoice} className="rounded-lg h-8 print:hidden">
-                  <Printer className="h-4 w-4 mr-2" />
-                  {t('طباعة', 'Print')}
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div><p className="text-muted-foreground">{t('العميل', 'Customer')}</p><p className="font-bold">{selectedOrder.buyerName}</p></div>
-                <div><p className="text-muted-foreground">{t('الهاتف', 'Phone')}</p><p className="font-bold font-mono" dir="ltr">{selectedOrder.buyerPhone}</p></div>
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-black text-xs text-muted-foreground uppercase">{t('المنتجات', 'Items')}</h4>
-                {selectedOrder.items.map((item: any, idx: number) => (
-                  <div key={idx} className="flex justify-between p-3 bg-muted/20 rounded-xl border border-white/5 text-xs">
-                    <div><p className="font-bold">{item.productName}</p><p className="text-muted-foreground">{item.price.toLocaleString()} DZD x {item.quantity}</p></div>
-                    <span className="font-black text-primary">{item.total.toLocaleString()} DZD</span>
+            <div className="flex flex-col h-[85vh] md:h-[80vh] text-start">
+              {/* Detail Header */}
+              <div className="p-6 border-b flex justify-between items-start md:items-center flex-col md:flex-row gap-4 bg-muted/10">
+                <div>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">SHOP &bull; ORDERS</p>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-2xl font-black">Order #{selectedOrder.orderNumber}</h2>
+                    <div className="flex items-center gap-2">
+                      <span className={`h-2 w-2 rounded-full ${getStatusColor(selectedOrder.status)}`}></span>
+                      <span className="text-sm font-bold" style={{ color: getStatusConfig(selectedOrder.status).color }}>{getStatusConfig(selectedOrder.status).label}</span>
+                    </div>
                   </div>
-                ))}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="font-bold" onClick={handlePrintInvoice}>Print</Button>
+                  <Button variant="outline" size="sm" className="font-bold">Send invoice</Button>
+                  <Button size="sm" className="font-bold bg-[#1ABB9C] hover:bg-[#159a80] text-white">Mark fulfilled</Button>
+                </div>
               </div>
-              <div className="p-4 bg-muted/20 rounded-2xl space-y-2 text-xs">
-                <div className="flex justify-between"><span className="text-muted-foreground">{t('المجموع الفرعي', 'Subtotal')}</span><span className="font-bold">{selectedOrder.subtotal.toLocaleString()} DZD</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">{t('تكلفة الشحن', 'Shipping')}</span><span className="font-bold">{(selectedOrder.shippingCost || 0).toLocaleString()} DZD</span></div>
-                {selectedOrder.discount > 0 && (
-                  <div className="flex justify-between text-red-500"><span className="font-bold">{t('الخصم', 'Discount')}</span><span className="font-bold">-{selectedOrder.discount.toLocaleString()} DZD</span></div>
-                )}
-                <div className="border-t border-white/5 pt-2 flex justify-between font-black text-sm"><span className="text-foreground">{t('المجموع النهائي', 'Total')}</span><span className="text-primary">{selectedOrder.total.toLocaleString()} DZD</span></div>
-              </div>
-              <div className="flex gap-3">
-                <select className="flex-1 bg-background border border-white/10 rounded-xl px-3 h-11 text-sm font-bold cursor-pointer" value={selectedOrder.status} onChange={(e) => handleUpdateStatus(e.target.value)}>
-                  {statuses.map(s => <option key={s.key} value={s.key}>{isAr ? s.nameAr : (s.nameEn || s.nameAr)}</option>)}
-                </select>
+
+              {/* Detail Content (Scrollable) */}
+              <div className="p-6 overflow-y-auto flex-1 bg-muted/5">
+                
+                {/* Progress Bar */}
+                <Card className="mb-6 shadow-sm border-0 bg-white dark:bg-card">
+                  <CardContent className="p-6">
+                    <div className="flex justify-between items-center relative">
+                      <div className="absolute top-4 start-8 end-8 h-[2px] bg-muted -z-0"></div>
+                      
+                      {/* Step 1 */}
+                      <div className="flex flex-col items-center z-10 gap-2 w-24">
+                        <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-card"><CheckCircle2 className="h-4 w-4" /></div>
+                        <div className="text-center">
+                          <p className="text-xs font-bold">Placed</p>
+                          <p className="text-[10px] text-muted-foreground">{selectedOrder.date}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Step 2 */}
+                      <div className="flex flex-col items-center z-10 gap-2 w-24">
+                        <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-card"><CheckCircle2 className="h-4 w-4" /></div>
+                        <div className="text-center">
+                          <p className="text-xs font-bold">Paid</p>
+                          <p className="text-[10px] text-muted-foreground">{selectedOrder.date}</p>
+                        </div>
+                      </div>
+
+                      {/* Step 3 */}
+                      <div className="flex flex-col items-center z-10 gap-2 w-24">
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center border-4 border-white dark:border-card ${selectedOrder.status === 'confirmed' || selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? 'bg-emerald-500 text-white' : 'bg-white border-2 border-emerald-500 text-emerald-500'}`}>
+                           {selectedOrder.status === 'confirmed' || selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : <div className="h-3 w-3 rounded-full bg-emerald-500"></div>}
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs font-bold">Preparing</p>
+                          <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'confirmed' ? 'In progress' : 'Done'}</p>
+                        </div>
+                      </div>
+
+                      {/* Step 4 */}
+                      <div className="flex flex-col items-center z-10 gap-2 w-24">
+                         <div className={`h-8 w-8 rounded-full flex items-center justify-center border-4 border-white dark:border-card ${selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? 'bg-emerald-500 text-white' : 'bg-muted border-muted-foreground text-transparent'}`}>
+                          {selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : ''}
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs font-bold">Shipped</p>
+                          <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? 'Done' : 'Pending'}</p>
+                        </div>
+                      </div>
+
+                      {/* Step 5 */}
+                      <div className="flex flex-col items-center z-10 gap-2 w-24">
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center border-4 border-white dark:border-card ${selectedOrder.status === 'delivered' ? 'bg-emerald-500 text-white' : 'bg-muted border-muted-foreground text-transparent'}`}>
+                          {selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : ''}
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs font-bold">Delivered</p>
+                          <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'delivered' ? 'Done' : 'Pending'}</p>
+                        </div>
+                      </div>
+
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left Column - Items & Notes */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <Card className="shadow-sm">
+                      <CardHeader className="pb-2 border-b">
+                        <CardTitle className="text-sm font-black">Items &bull; {selectedOrder.items.length}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted/10 text-[10px] text-muted-foreground uppercase">
+                            <tr>
+                              <th className="p-4 font-bold text-start">PRODUCT</th>
+                              <th className="p-4 font-bold text-center">QTY</th>
+                              <th className="p-4 font-bold text-end">PRICE</th>
+                              <th className="p-4 font-bold text-end">TOTAL</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedOrder.items.map((item: any, idx: number) => (
+                              <tr key={idx} className="border-b">
+                                <td className="p-4 flex gap-3 items-center">
+                                  <div className="h-10 w-10 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-100">
+                                    {item.productName.substring(0, 2).toUpperCase()}
+                                  </div>
+                                  <div>
+                                    <p className="font-bold text-sm text-foreground">{item.productName}</p>
+                                    <p className="text-xs text-muted-foreground">SKU - PRD-{item.id.substring(0,4)}</p>
+                                  </div>
+                                </td>
+                                <td className="p-4 text-center font-bold">{item.quantity}</td>
+                                <td className="p-4 text-end text-muted-foreground">{item.price.toLocaleString()} DZD</td>
+                                <td className="p-4 text-end font-bold text-foreground">{item.total.toLocaleString()} DZD</td>
+                              </tr>
+                            ))}
+                            {/* Totals rows inside table footer */}
+                            <tr>
+                              <td colSpan={2}></td>
+                              <td className="p-3 text-end text-xs text-muted-foreground font-bold">Subtotal</td>
+                              <td className="p-3 text-end font-bold text-sm">{selectedOrder.subtotal.toLocaleString()} DZD</td>
+                            </tr>
+                            <tr>
+                              <td colSpan={2}></td>
+                              <td className="p-3 text-end text-xs text-muted-foreground font-bold">Shipping</td>
+                              <td className="p-3 text-end font-bold text-sm">{(selectedOrder.shippingCost || 0).toLocaleString()} DZD</td>
+                            </tr>
+                            <tr>
+                              <td colSpan={2}></td>
+                              <td className="p-3 text-end text-xs text-muted-foreground font-bold">Tax</td>
+                              <td className="p-3 text-end font-bold text-sm">{(selectedOrder.tax || 0).toLocaleString()} DZD</td>
+                            </tr>
+                            <tr className="border-t">
+                              <td colSpan={2}></td>
+                              <td className="p-4 text-end font-black text-base">Total</td>
+                              <td className="p-4 text-end font-black text-base">{selectedOrder.total.toLocaleString()} DZD</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="shadow-sm">
+                      <CardHeader className="pb-2 border-b">
+                        <CardTitle className="text-sm font-black">Order notes</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <div className="space-y-4 mb-4">
+                          <div className="flex gap-3">
+                            <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold shrink-0">JD</div>
+                            <div>
+                              <p className="text-sm text-foreground">Customer requested expedited shipping if available.</p>
+                              <p className="text-xs text-muted-foreground">{selectedOrder.date} - 10:15</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-3">
+                            <div className="h-8 w-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold shrink-0">AS</div>
+                            <div>
+                              <p className="text-sm text-foreground"><span className="font-bold">Admin S.</span> noted the customer is a returning user with 5+ orders.</p>
+                              <p className="text-xs text-muted-foreground">{selectedOrder.date} - 10:32</p>
+                            </div>
+                          </div>
+                        </div>
+                        <textarea className="w-full border rounded-md p-3 text-sm min-h-[80px] outline-none focus:border-primary" placeholder="Add a note for your team..."></textarea>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Right Column - Customer Info */}
+                  <div className="space-y-6">
+                    <Card className="shadow-sm">
+                      <CardHeader className="pb-2 border-b">
+                        <CardTitle className="text-sm font-black">Customer</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-6">
+                          <div className="h-12 w-12 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-lg">
+                            {selectedOrder.buyerName.split(' ').map((n: string) => n[0]).join('').substring(0,2).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-bold text-foreground text-base">{selectedOrder.buyerName}</p>
+                            <p className="text-xs text-muted-foreground">5 previous orders</p>
+                          </div>
+                        </div>
+                        <div className="space-y-3 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Email</span>
+                            <span className="text-emerald-500 font-bold hover:underline cursor-pointer">customer@example.com</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Phone</span>
+                            <span className="font-bold" dir="ltr">{selectedOrder.buyerPhone || '+213 555 010 202'}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="shadow-sm">
+                      <CardHeader className="pb-2 border-b">
+                        <CardTitle className="text-sm font-black">Shipping address</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4 text-sm text-foreground">
+                        <p className="font-bold mb-1">{selectedOrder.buyerName}</p>
+                        <p>{selectedOrder.address?.street || '1234 Market Street, Suite 500'}</p>
+                        <p>{selectedOrder.address?.city || 'San Francisco, CA 94103'}</p>
+                        <p>{selectedOrder.address?.country || 'Algeria'}</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="shadow-sm">
+                      <CardHeader className="pb-2 border-b">
+                        <CardTitle className="text-sm font-black">Payment</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4 space-y-3 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Method</span>
+                          <span className="font-bold">{selectedOrder.paymentMethod.toUpperCase()} {selectedOrder.paymentStatus === 'paid' ? '•••• 4242' : ''}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Transaction</span>
+                          <span className="font-mono text-xs">ch_30qXyZ...</span>
+                        </div>
+                        <div className="flex justify-between items-center mt-2">
+                          <span className="text-muted-foreground">Status</span>
+                          <div className="flex items-center gap-2">
+                            <span className={`h-2 w-2 rounded-full ${selectedOrder.paymentStatus === 'paid' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                            <span className="font-bold text-xs" style={{ color: selectedOrder.paymentStatus === 'paid' ? '#10B981' : '#F59E0B' }}>
+                              {selectedOrder.paymentStatus === 'paid' ? 'Captured' : 'Pending'}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+
               </div>
             </div>
           )}
