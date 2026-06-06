@@ -27,7 +27,7 @@ const rolePages: Record<string, PageType> = {
 const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
 
 export default function GentelellaHeader() {
-  const { locale, setLocale, toggleDesktopSidebar, setSidebarOpen, isSidebarOpen, setCurrentPage } = useAppStore();
+  const { locale, setLocale, toggleDesktopSidebar, setSidebarOpen, isSidebarOpen, setCurrentPage, currentPage } = useAppStore();
   const { user, logout, isBuyerMode, setBuyerMode } = useAuthStore();
   const { isDark, toggleDark: toggle } = useGentelellaTheme();
   const { setTheme } = useTheme();
@@ -46,6 +46,34 @@ export default function GentelellaHeader() {
   const navigateToDashboard = (view: string) => {
     setCurrentPage(view as PageType);
     router.push(`/?view=${view}`);
+  };
+
+  const getPageTitle = (page: string) => {
+    const titles: Record<string, {ar: string, en: string}> = {
+      'home': { ar: 'الرئيسية', en: 'Home' },
+      'seller': { ar: 'لوحة التحكم', en: 'Dashboard' },
+      'store': { ar: 'لوحة التحكم', en: 'Dashboard' },
+      'store-products': { ar: 'المنتجات', en: 'Products' },
+      'store-orders': { ar: 'الطلبات', en: 'Orders' },
+      'store-settings': { ar: 'إعدادات المتجر', en: 'Settings' },
+      'store-staff': { ar: 'فريق العمل', en: 'Staff' },
+      'store-coupons': { ar: 'الكوبونات', en: 'Coupons' },
+      'seller-products': { ar: 'المنتجات', en: 'Products' },
+      'seller-orders': { ar: 'الطلبات', en: 'Orders' },
+      'seller-wallet': { ar: 'المحفظة', en: 'Wallet' },
+      'seller-billing': { ar: 'الاشتراكات والفواتير', en: 'Billing & Subscriptions' },
+      'seller-debts': { ar: 'الديون والمستحقات', en: 'Debts' },
+      'admin': { ar: 'لوحة التحكم', en: 'Dashboard' },
+      'admin-users': { ar: 'المستخدمين', en: 'Users' },
+      'admin-stores': { ar: 'المتاجر', en: 'Stores' },
+      'admin-orders': { ar: 'الطلبات', en: 'Orders' },
+      'admin-settings': { ar: 'الإعدادات', en: 'Settings' },
+      'logistics': { ar: 'لوحة تحكم شركة الشحن', en: 'Logistics Dashboard' },
+    };
+    const mapped = titles[page];
+    if (mapped) return isRTL ? mapped.ar : mapped.en;
+    if (!page) return isRTL ? 'الرئيسية' : 'Home';
+    return page.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   };
 
   return (
@@ -88,9 +116,13 @@ export default function GentelellaHeader() {
           </svg>
         </button>
         {/* Breadcrumb */}
-        <nav className="hidden sm:block text-[13px]">
-          <span className={cn('font-medium', isDark ? 'text-[#c8d3e0]' : 'text-[#555]')}>
+        <nav className="hidden sm:flex items-center gap-2 text-[13px]">
+          <span className={cn('opacity-70 cursor-pointer hover:underline', isDark ? 'text-[#c8d3e0]' : 'text-[#555]')} onClick={() => navigateToDashboard(rolePages[user.role] || 'home')}>
             {t(locale, 'الرئيسية', 'Home')}
+          </span>
+          <span className="opacity-50 text-[10px]">/</span>
+          <span className={cn('font-medium', isDark ? 'text-white' : 'text-[var(--gentelella-heading)]')}>
+            {getPageTitle(currentPage)}
           </span>
         </nav>
       </div>
