@@ -314,12 +314,12 @@ export default function StoreOrdersPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <p className="text-xs font-bold text-muted-foreground tracking-wider uppercase mb-1">SHOP &bull; {t('الطلبات', 'ORDERS')}</p>
+          <p className="text-xs font-bold text-muted-foreground tracking-wider uppercase mb-1">{t('المتجر', 'SHOP')} &bull; {t('الطلبات', 'ORDERS')}</p>
           <h1 className="text-2xl font-black">{t('الطلبات', 'Orders')}</h1>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleExport} className="font-bold">
-            {t('تصدير', 'Export CSV')}
+            {t('تصدير CSV', 'Export CSV')}
           </Button>
           <Button size="sm" className="font-bold bg-[#1ABB9C] hover:bg-[#159a80] text-white">
             + {t('طلب يدوي', 'Manual order')}
@@ -338,9 +338,9 @@ export default function StoreOrdersPage() {
               <p className="text-[11px] font-bold text-muted-foreground uppercase">{t('إجمالي الطلبات', 'TOTAL ORDERS')}</p>
               <div className="flex items-baseline gap-2">
                 <h3 className="text-xl font-black">{totalOrdersCount}</h3>
-                <span className="text-xs font-bold text-emerald-500">12%</span>
+                <span className="text-xs font-bold text-emerald-500" dir="ltr">+12%</span>
               </div>
-              <p className="text-[10px] text-muted-foreground">{t('78 اليوم', '78 today')}</p>
+              <p className="text-[10px] text-muted-foreground">{t('اليوم', 'today')}</p>
             </div>
           </CardContent>
         </Card>
@@ -354,9 +354,9 @@ export default function StoreOrdersPage() {
               <p className="text-[11px] font-bold text-muted-foreground uppercase">{t('الإيرادات', 'REVENUE')}</p>
               <div className="flex items-baseline gap-2">
                 <h3 className="text-xl font-black">{totalRevenue.toLocaleString()} <span className="text-sm">DZD</span></h3>
-                <span className="text-xs font-bold text-emerald-500">18%</span>
+                <span className="text-xs font-bold text-emerald-500" dir="ltr">+18%</span>
               </div>
-              <p className="text-[10px] text-muted-foreground">{t('3,218 اليوم', '$3,218 today')}</p>
+              <p className="text-[10px] text-muted-foreground">{t('اليوم', 'today')}</p>
             </div>
           </CardContent>
         </Card>
@@ -370,9 +370,9 @@ export default function StoreOrdersPage() {
               <p className="text-[11px] font-bold text-muted-foreground uppercase">{t('قيد الانتظار', 'PENDING')}</p>
               <div className="flex items-baseline gap-2">
                 <h3 className="text-xl font-black">{pendingCount}</h3>
-                <span className="text-xs font-bold text-red-500">3%</span>
+                <span className="text-xs font-bold text-red-500" dir="ltr">3%</span>
               </div>
-              <p className="text-[10px] text-muted-foreground">{t('5 في انتظار الدفع', '5 awaiting payment')}</p>
+              <p className="text-[10px] text-muted-foreground">{t('في انتظار الدفع', 'awaiting payment')}</p>
             </div>
           </CardContent>
         </Card>
@@ -391,7 +391,7 @@ export default function StoreOrdersPage() {
               <select 
                 value={statusFilter} 
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-transparent border rounded px-2 h-8 text-xs font-bold outline-none"
+                className="bg-transparent border rounded px-2 h-8 text-xs font-bold outline-none cursor-pointer"
               >
                 <option value="all">{t('جميع الحالات', 'All statuses')}</option>
                 {statuses.map((s) => (
@@ -438,7 +438,7 @@ export default function StoreOrdersPage() {
                     
                     return (
                       <tr key={o.id} className="border-b hover:bg-muted/10 transition-colors cursor-pointer" onClick={() => setSelectedOrder(o)}>
-                        <td className="px-4 py-3 align-middle font-mono text-emerald-500 font-bold">#{o.orderNumber}</td>
+                        <td className="px-4 py-3 align-middle font-mono text-emerald-500 font-bold" dir="ltr">#{o.orderNumber}</td>
                         <td className="px-4 py-3 align-middle">
                           <div className="flex items-center gap-3">
                             <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-[10px] font-black shrink-0 ${getStatusColor(o.status)}`}>
@@ -476,10 +476,10 @@ export default function StoreOrdersPage() {
           {!isLoading && orders.length > 0 && (
             <div className="flex justify-between items-center p-4 border-t text-sm text-muted-foreground">
               <div>
-                Showing {Math.max(1, (page - 1) * limit + 1)}-{Math.min(page * limit, totalOrdersCount)} of {totalOrdersCount}
+                {t('عرض', 'Showing')} {Math.max(1, (page - 1) * limit + 1)}-{Math.min(page * limit, totalOrdersCount)} {t('من', 'of')} {totalOrdersCount}
               </div>
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>&laquo;</Button>
+              <div className="flex items-center gap-1" dir="ltr">
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(1)} disabled={page === 1}>&laquo;</Button>
                 <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>&lsaquo;</Button>
                 <Button variant="default" size="sm" className="h-8 w-8 p-0 bg-[#1ABB9C] hover:bg-[#159a80]">{page}</Button>
                 {page < totalPages && <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(page + 1)}>{page + 1}</Button>}
@@ -499,37 +499,37 @@ export default function StoreOrdersPage() {
               {/* Detail Header */}
               <div className="p-6 border-b flex justify-between items-start md:items-center flex-col md:flex-row gap-4 bg-muted/10">
                 <div>
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">SHOP &bull; ORDERS</p>
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{t('المتجر', 'SHOP')} &bull; {t('الطلبات', 'ORDERS')}</p>
                   <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-black">Order #{selectedOrder.orderNumber}</h2>
-                    <div className="flex items-center gap-2">
+                    <h2 className="text-xl md:text-2xl font-black">{t('طلب', 'Order')} <span dir="ltr">#{selectedOrder.orderNumber}</span></h2>
+                    <div className="flex items-center gap-2 bg-background border px-2 py-1 rounded-md shadow-sm">
                       <span className={`h-2 w-2 rounded-full ${getStatusColor(selectedOrder.status)}`}></span>
-                      <span className="text-sm font-bold" style={{ color: getStatusConfig(selectedOrder.status).color }}>{getStatusConfig(selectedOrder.status).label}</span>
+                      <span className="text-xs font-bold" style={{ color: getStatusConfig(selectedOrder.status).color }}>{getStatusConfig(selectedOrder.status).label}</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="font-bold" onClick={handlePrintInvoice}>Print</Button>
-                  <Button variant="outline" size="sm" className="font-bold">Send invoice</Button>
-                  <Button size="sm" className="font-bold bg-[#1ABB9C] hover:bg-[#159a80] text-white">Mark fulfilled</Button>
+                  <Button variant="outline" size="sm" className="font-bold hidden sm:inline-flex" onClick={handlePrintInvoice}>{t('طباعة', 'Print')}</Button>
+                  <Button variant="outline" size="sm" className="font-bold">{t('إرسال الفاتورة', 'Send invoice')}</Button>
+                  <Button size="sm" className="font-bold bg-[#1ABB9C] hover:bg-[#159a80] text-white">{t('تعليم كمكتمل', 'Mark fulfilled')}</Button>
                 </div>
               </div>
 
               {/* Detail Content (Scrollable) */}
-              <div className="p-6 overflow-y-auto flex-1 bg-muted/5">
+              <div className="p-4 md:p-6 overflow-y-auto flex-1 bg-muted/5">
                 
                 {/* Progress Bar */}
                 <Card className="mb-6 shadow-sm border-0 bg-white dark:bg-card">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-center relative">
+                  <CardContent className="p-4 md:p-6 overflow-x-auto hide-scrollbar">
+                    <div className="flex justify-between items-center relative min-w-[500px]">
                       <div className="absolute top-4 start-8 end-8 h-[2px] bg-muted -z-0"></div>
                       
                       {/* Step 1 */}
                       <div className="flex flex-col items-center z-10 gap-2 w-24">
                         <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-card"><CheckCircle2 className="h-4 w-4" /></div>
                         <div className="text-center">
-                          <p className="text-xs font-bold">Placed</p>
-                          <p className="text-[10px] text-muted-foreground">{selectedOrder.date}</p>
+                          <p className="text-xs font-bold">{t('تم الطلب', 'Placed')}</p>
+                          <p className="text-[10px] text-muted-foreground" dir="ltr">{selectedOrder.date}</p>
                         </div>
                       </div>
                       
@@ -537,8 +537,8 @@ export default function StoreOrdersPage() {
                       <div className="flex flex-col items-center z-10 gap-2 w-24">
                         <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-card"><CheckCircle2 className="h-4 w-4" /></div>
                         <div className="text-center">
-                          <p className="text-xs font-bold">Paid</p>
-                          <p className="text-[10px] text-muted-foreground">{selectedOrder.date}</p>
+                          <p className="text-xs font-bold">{t('تم الدفع', 'Paid')}</p>
+                          <p className="text-[10px] text-muted-foreground" dir="ltr">{selectedOrder.date}</p>
                         </div>
                       </div>
 
@@ -548,8 +548,8 @@ export default function StoreOrdersPage() {
                            {selectedOrder.status === 'confirmed' || selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : <div className="h-3 w-3 rounded-full bg-emerald-500"></div>}
                         </div>
                         <div className="text-center">
-                          <p className="text-xs font-bold">Preparing</p>
-                          <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'confirmed' ? 'In progress' : 'Done'}</p>
+                          <p className="text-xs font-bold">{t('قيد التجهيز', 'Preparing')}</p>
+                          <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'confirmed' ? t('قيد العمل', 'In progress') : t('مكتمل', 'Done')}</p>
                         </div>
                       </div>
 
@@ -559,8 +559,8 @@ export default function StoreOrdersPage() {
                           {selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : ''}
                         </div>
                         <div className="text-center">
-                          <p className="text-xs font-bold">Shipped</p>
-                          <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? 'Done' : 'Pending'}</p>
+                          <p className="text-xs font-bold">{t('تم الشحن', 'Shipped')}</p>
+                          <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? t('مكتمل', 'Done') : t('في الانتظار', 'Pending')}</p>
                         </div>
                       </div>
 
@@ -570,8 +570,8 @@ export default function StoreOrdersPage() {
                           {selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : ''}
                         </div>
                         <div className="text-center">
-                          <p className="text-xs font-bold">Delivered</p>
-                          <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'delivered' ? 'Done' : 'Pending'}</p>
+                          <p className="text-xs font-bold">{t('تم التوصيل', 'Delivered')}</p>
+                          <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'delivered' ? t('مكتمل', 'Done') : t('في الانتظار', 'Pending')}</p>
                         </div>
                       </div>
 
@@ -584,55 +584,55 @@ export default function StoreOrdersPage() {
                   <div className="lg:col-span-2 space-y-6">
                     <Card className="shadow-sm">
                       <CardHeader className="pb-2 border-b">
-                        <CardTitle className="text-sm font-black">Items &bull; {selectedOrder.items.length}</CardTitle>
+                        <CardTitle className="text-sm font-black">{t('المنتجات', 'Items')} &bull; {selectedOrder.items.length}</CardTitle>
                       </CardHeader>
-                      <CardContent className="p-0">
+                      <CardContent className="p-0 overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead className="bg-muted/10 text-[10px] text-muted-foreground uppercase">
                             <tr>
-                              <th className="p-4 font-bold text-start">PRODUCT</th>
-                              <th className="p-4 font-bold text-center">QTY</th>
-                              <th className="p-4 font-bold text-end">PRICE</th>
-                              <th className="p-4 font-bold text-end">TOTAL</th>
+                              <th className="p-4 font-bold text-start w-1/2 min-w-[250px]">{t('المنتج', 'PRODUCT')}</th>
+                              <th className="p-4 font-bold text-center w-16">{t('الكمية', 'QTY')}</th>
+                              <th className="p-4 font-bold text-end w-24 whitespace-nowrap">{t('السعر', 'PRICE')}</th>
+                              <th className="p-4 font-bold text-end w-28 whitespace-nowrap">{t('المجموع', 'TOTAL')}</th>
                             </tr>
                           </thead>
                           <tbody>
                             {selectedOrder.items.map((item: any, idx: number) => (
                               <tr key={idx} className="border-b">
-                                <td className="p-4 flex gap-3 items-center">
+                                <td className="p-4 flex gap-3 items-start md:items-center flex-col md:flex-row">
                                   <div className="h-10 w-10 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-100">
                                     {item.productName.substring(0, 2).toUpperCase()}
                                   </div>
-                                  <div>
-                                    <p className="font-bold text-sm text-foreground">{item.productName}</p>
-                                    <p className="text-xs text-muted-foreground">SKU - PRD-{item.id.substring(0,4)}</p>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-bold text-sm text-foreground truncate">{item.productName}</p>
+                                    <p className="text-xs text-muted-foreground" dir="ltr">SKU - PRD-{item.id.substring(0,4)}</p>
                                   </div>
                                 </td>
-                                <td className="p-4 text-center font-bold">{item.quantity}</td>
-                                <td className="p-4 text-end text-muted-foreground">{item.price.toLocaleString()} DZD</td>
-                                <td className="p-4 text-end font-bold text-foreground">{item.total.toLocaleString()} DZD</td>
+                                <td className="p-4 text-center font-bold align-middle">{item.quantity}</td>
+                                <td className="p-4 text-end text-muted-foreground align-middle whitespace-nowrap" dir="ltr">{item.price.toLocaleString()} DZD</td>
+                                <td className="p-4 text-end font-bold text-foreground align-middle whitespace-nowrap" dir="ltr">{item.total.toLocaleString()} DZD</td>
                               </tr>
                             ))}
                             {/* Totals rows inside table footer */}
                             <tr>
                               <td colSpan={2}></td>
-                              <td className="p-3 text-end text-xs text-muted-foreground font-bold">Subtotal</td>
-                              <td className="p-3 text-end font-bold text-sm">{selectedOrder.subtotal.toLocaleString()} DZD</td>
+                              <td className="p-3 text-end text-xs text-muted-foreground font-bold">{t('المجموع الفرعي', 'Subtotal')}</td>
+                              <td className="p-3 text-end font-bold text-sm whitespace-nowrap" dir="ltr">{selectedOrder.subtotal.toLocaleString()} DZD</td>
                             </tr>
                             <tr>
                               <td colSpan={2}></td>
-                              <td className="p-3 text-end text-xs text-muted-foreground font-bold">Shipping</td>
-                              <td className="p-3 text-end font-bold text-sm">{(selectedOrder.shippingCost || 0).toLocaleString()} DZD</td>
+                              <td className="p-3 text-end text-xs text-muted-foreground font-bold">{t('تكلفة الشحن', 'Shipping')}</td>
+                              <td className="p-3 text-end font-bold text-sm whitespace-nowrap" dir="ltr">{(selectedOrder.shippingCost || 0).toLocaleString()} DZD</td>
                             </tr>
                             <tr>
                               <td colSpan={2}></td>
-                              <td className="p-3 text-end text-xs text-muted-foreground font-bold">Tax</td>
-                              <td className="p-3 text-end font-bold text-sm">{(selectedOrder.tax || 0).toLocaleString()} DZD</td>
+                              <td className="p-3 text-end text-xs text-muted-foreground font-bold">{t('الضريبة', 'Tax')}</td>
+                              <td className="p-3 text-end font-bold text-sm whitespace-nowrap" dir="ltr">{(selectedOrder.tax || 0).toLocaleString()} DZD</td>
                             </tr>
                             <tr className="border-t">
                               <td colSpan={2}></td>
-                              <td className="p-4 text-end font-black text-base">Total</td>
-                              <td className="p-4 text-end font-black text-base">{selectedOrder.total.toLocaleString()} DZD</td>
+                              <td className="p-4 text-end font-black text-base">{t('المجموع', 'Total')}</td>
+                              <td className="p-4 text-end font-black text-base whitespace-nowrap" dir="ltr">{selectedOrder.total.toLocaleString()} DZD</td>
                             </tr>
                           </tbody>
                         </table>
@@ -641,26 +641,26 @@ export default function StoreOrdersPage() {
 
                     <Card className="shadow-sm">
                       <CardHeader className="pb-2 border-b">
-                        <CardTitle className="text-sm font-black">Order notes</CardTitle>
+                        <CardTitle className="text-sm font-black">{t('ملاحظات الطلب', 'Order notes')}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-4">
                         <div className="space-y-4 mb-4">
                           <div className="flex gap-3">
                             <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold shrink-0">JD</div>
                             <div>
-                              <p className="text-sm text-foreground">Customer requested expedited shipping if available.</p>
-                              <p className="text-xs text-muted-foreground">{selectedOrder.date} - 10:15</p>
+                              <p className="text-sm text-foreground">{t('طلب العميل شحن سريع إن أمكن.', 'Customer requested expedited shipping if available.')}</p>
+                              <p className="text-xs text-muted-foreground" dir="ltr">{selectedOrder.date} - 10:15</p>
                             </div>
                           </div>
                           <div className="flex gap-3">
                             <div className="h-8 w-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold shrink-0">AS</div>
                             <div>
-                              <p className="text-sm text-foreground"><span className="font-bold">Admin S.</span> noted the customer is a returning user with 5+ orders.</p>
-                              <p className="text-xs text-muted-foreground">{selectedOrder.date} - 10:32</p>
+                              <p className="text-sm text-foreground"><span className="font-bold">{t('المدير ص.', 'Admin S.')}</span> {t('أشار إلى أن العميل لديه أكثر من 5 طلبات.', 'noted the customer is a returning user with 5+ orders.')}</p>
+                              <p className="text-xs text-muted-foreground" dir="ltr">{selectedOrder.date} - 10:32</p>
                             </div>
                           </div>
                         </div>
-                        <textarea className="w-full border rounded-md p-3 text-sm min-h-[80px] outline-none focus:border-primary" placeholder="Add a note for your team..."></textarea>
+                        <textarea className="w-full border rounded-md p-3 text-sm min-h-[80px] outline-none focus:border-primary" placeholder={t('أضف ملاحظة لفريقك...', 'Add a note for your team...')}></textarea>
                       </CardContent>
                     </Card>
                   </div>
@@ -669,25 +669,25 @@ export default function StoreOrdersPage() {
                   <div className="space-y-6">
                     <Card className="shadow-sm">
                       <CardHeader className="pb-2 border-b">
-                        <CardTitle className="text-sm font-black">Customer</CardTitle>
+                        <CardTitle className="text-sm font-black">{t('العميل', 'Customer')}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-4">
                         <div className="flex items-center gap-3 mb-6">
-                          <div className="h-12 w-12 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-lg">
+                          <div className="h-12 w-12 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-lg shrink-0">
                             {selectedOrder.buyerName.split(' ').map((n: string) => n[0]).join('').substring(0,2).toUpperCase()}
                           </div>
-                          <div>
-                            <p className="font-bold text-foreground text-base">{selectedOrder.buyerName}</p>
-                            <p className="text-xs text-muted-foreground">5 previous orders</p>
+                          <div className="min-w-0">
+                            <p className="font-bold text-foreground text-base truncate">{selectedOrder.buyerName}</p>
+                            <p className="text-xs text-muted-foreground">{t('5 طلبات سابقة', '5 previous orders')}</p>
                           </div>
                         </div>
                         <div className="space-y-3 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Email</span>
-                            <span className="text-emerald-500 font-bold hover:underline cursor-pointer">customer@example.com</span>
+                          <div className="flex justify-between items-center gap-2">
+                            <span className="text-muted-foreground shrink-0">{t('البريد', 'Email')}</span>
+                            <span className="text-emerald-500 font-bold hover:underline cursor-pointer truncate" dir="ltr">customer@example.com</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Phone</span>
+                          <div className="flex justify-between items-center gap-2">
+                            <span className="text-muted-foreground shrink-0">{t('الهاتف', 'Phone')}</span>
                             <span className="font-bold" dir="ltr">{selectedOrder.buyerPhone || '+213 555 010 202'}</span>
                           </div>
                         </div>
@@ -696,35 +696,34 @@ export default function StoreOrdersPage() {
 
                     <Card className="shadow-sm">
                       <CardHeader className="pb-2 border-b">
-                        <CardTitle className="text-sm font-black">Shipping address</CardTitle>
+                        <CardTitle className="text-sm font-black">{t('عنوان الشحن', 'Shipping address')}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-4 text-sm text-foreground">
                         <p className="font-bold mb-1">{selectedOrder.buyerName}</p>
-                        <p>{selectedOrder.address?.street || '1234 Market Street, Suite 500'}</p>
-                        <p>{selectedOrder.address?.city || 'San Francisco, CA 94103'}</p>
-                        <p>{selectedOrder.address?.country || 'Algeria'}</p>
+                        <p>{selectedOrder.address?.street || t('1234 شارع السوق، جناح 500', '1234 Market Street, Suite 500')}</p>
+                        <p>{selectedOrder.address?.city || t('الجزائر العاصمة', 'Algiers, Algeria')}</p>
                       </CardContent>
                     </Card>
 
                     <Card className="shadow-sm">
                       <CardHeader className="pb-2 border-b">
-                        <CardTitle className="text-sm font-black">Payment</CardTitle>
+                        <CardTitle className="text-sm font-black">{t('الدفع', 'Payment')}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-4 space-y-3 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Method</span>
-                          <span className="font-bold">{selectedOrder.paymentMethod.toUpperCase()} {selectedOrder.paymentStatus === 'paid' ? '•••• 4242' : ''}</span>
+                        <div className="flex justify-between items-center gap-2">
+                          <span className="text-muted-foreground">{t('الطريقة', 'Method')}</span>
+                          <span className="font-bold truncate" dir="ltr">{selectedOrder.paymentMethod.toUpperCase()} {selectedOrder.paymentStatus === 'paid' ? '•••• 4242' : ''}</span>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Transaction</span>
-                          <span className="font-mono text-xs">ch_30qXyZ...</span>
+                        <div className="flex justify-between items-center gap-2">
+                          <span className="text-muted-foreground">{t('المعاملة', 'Transaction')}</span>
+                          <span className="font-mono text-xs truncate" dir="ltr">ch_30qXyZ...</span>
                         </div>
                         <div className="flex justify-between items-center mt-2">
-                          <span className="text-muted-foreground">Status</span>
+                          <span className="text-muted-foreground">{t('الحالة', 'Status')}</span>
                           <div className="flex items-center gap-2">
                             <span className={`h-2 w-2 rounded-full ${selectedOrder.paymentStatus === 'paid' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
                             <span className="font-bold text-xs" style={{ color: selectedOrder.paymentStatus === 'paid' ? '#10B981' : '#F59E0B' }}>
-                              {selectedOrder.paymentStatus === 'paid' ? 'Captured' : 'Pending'}
+                              {selectedOrder.paymentStatus === 'paid' ? t('تم السحب', 'Captured') : t('في الانتظار', 'Pending')}
                             </span>
                           </div>
                         </div>
