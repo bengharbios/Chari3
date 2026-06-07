@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from 'next-themes';
 import { ThemeSettings, defaultPlatformTheme } from '@/lib/theme-defaults';
+import { cn } from '@/lib/utils';
 
 export default function AdminLayoutWrapper({
   children,
