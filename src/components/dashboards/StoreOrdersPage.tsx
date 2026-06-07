@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Package, Search, Calendar, MapPin, Truck, CheckCircle2, XCircle, Clock, 
   MoreVertical, Download, Printer, Loader2, User, Table as TableIcon, LayoutGrid, List
@@ -451,18 +452,22 @@ export default function StoreOrdersPage() {
                         <td className="px-4 py-3 align-middle text-center text-muted-foreground">{o.items?.length || 1}</td>
                         <td className="px-4 py-3 align-middle font-bold text-start"><span dir="ltr">{o.total.toLocaleString()} DZD</span></td>
                         <td className="px-4 py-3 align-middle text-start">
-                          <div className="flex items-center justify-start gap-2 bg-background border px-2 py-1 rounded-md shadow-sm w-fit relative hover:bg-muted/50 transition-colors">
-                            <span className={`h-2 w-2 rounded-full ${getStatusColor(o.status)} shrink-0`}></span>
-                            <select
-                              value={o.status}
-                              onChange={(e) => handleUpdateStatus(e.target.value, o.id)}
-                              className="text-xs font-bold bg-transparent outline-none cursor-pointer appearance-none pe-4 relative z-10"
-                              style={{ color: getStatusConfig(o.status).color }}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {statuses.map(s => <option key={s.key} value={s.key} className="text-foreground">{isAr ? s.nameAr : (s.nameEn || s.nameAr)}</option>)}
-                            </select>
-                            <svg className="w-3 h-3 absolute end-2 pointer-events-none text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <Select value={o.status} onValueChange={(val) => handleUpdateStatus(val, o.id)} dir={isAr ? 'rtl' : 'ltr'}>
+                              <SelectTrigger className="h-8 text-xs font-bold w-fit min-w-[130px] border shadow-sm bg-background hover:bg-muted/50 transition-colors focus:ring-0 focus:ring-offset-0" style={{ color: getStatusConfig(o.status).color }}>
+                                <div className="flex items-center gap-2">
+                                  <span className={`h-2 w-2 rounded-full ${getStatusColor(o.status)} shrink-0`}></span>
+                                  <SelectValue />
+                                </div>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {statuses.map(s => (
+                                  <SelectItem key={s.key} value={s.key} className="text-xs font-bold cursor-pointer">
+                                    {isAr ? s.nameAr : (s.nameEn || s.nameAr)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                         </td>
                         <td className="px-4 py-3 align-middle text-xs text-muted-foreground text-start">
@@ -531,18 +536,21 @@ export default function StoreOrdersPage() {
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{t('المتجر', 'SHOP')} &bull; {t('الطلبات', 'ORDERS')}</p>
                   <div className="flex flex-wrap items-center gap-2 md:gap-3">
                     <h2 className="text-lg sm:text-xl md:text-2xl font-black truncate">{t('طلب', 'Order')} <span dir="ltr">#{selectedOrder.orderNumber}</span></h2>
-                    <div className="flex items-center gap-2 bg-background border px-2 py-1 rounded-md shadow-sm shrink-0 hover:bg-muted/50 transition-colors relative">
-                      <span className={`h-2 w-2 rounded-full ${getStatusColor(selectedOrder.status)}`}></span>
-                      <select 
-                        value={selectedOrder.status}
-                        onChange={(e) => handleUpdateStatus(e.target.value, selectedOrder.id)}
-                        className="text-xs font-bold bg-transparent outline-none cursor-pointer appearance-none pe-4 relative w-full z-10"
-                        style={{ color: getStatusConfig(selectedOrder.status).color }}
-                      >
-                        {statuses.map(s => <option key={s.key} value={s.key} className="text-foreground">{isAr ? s.nameAr : (s.nameEn || s.nameAr)}</option>)}
-                      </select>
-                      <svg className="w-3 h-3 absolute end-2 pointer-events-none text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                    </div>
+                    <Select value={selectedOrder.status} onValueChange={(val) => handleUpdateStatus(val, selectedOrder.id)} dir={isAr ? 'rtl' : 'ltr'}>
+                      <SelectTrigger className="h-8 text-xs font-bold w-fit min-w-[130px] border shadow-sm bg-background hover:bg-muted/50 transition-colors focus:ring-0 focus:ring-offset-0" style={{ color: getStatusConfig(selectedOrder.status).color }}>
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full ${getStatusColor(selectedOrder.status)} shrink-0`}></span>
+                          <SelectValue />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {statuses.map(s => (
+                          <SelectItem key={s.key} value={s.key} className="text-xs font-bold cursor-pointer">
+                            {isAr ? s.nameAr : (s.nameEn || s.nameAr)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 w-full lg:w-auto">
