@@ -80,6 +80,7 @@ export default function BillingMerchantsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -127,7 +128,7 @@ export default function BillingMerchantsPage() {
       const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
       const statusParam = statusFilter !== 'ALL' ? `&status=${statusFilter}` : '';
       
-      const res = await fetch(`/api/admin/subscriptions?page=${page}&limit=10${searchParam}${statusParam}`);
+      const res = await fetch(`/api/admin/subscriptions?page=${page}&limit=${limit}${searchParam}${statusParam}`);
       const data = await res.json();
       if (data.success) {
         setSubscriptions(data.subscriptions || []);
@@ -142,7 +143,7 @@ export default function BillingMerchantsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [isAdminAuthenticated, searchQuery, statusFilter, page, locale]);
+  }, [isAdminAuthenticated, searchQuery, statusFilter, page, limit, locale]);
 
   const fetchPackages = useCallback(async () => {
     try {
@@ -679,33 +680,46 @@ export default function BillingMerchantsPage() {
       </Card>
 
       {/* Pagination controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-2">
+      <div className="flex items-center justify-between pt-2 flex-wrap gap-4">
+        <div className="flex items-center gap-4">
           <p className="text-xs text-muted-foreground">
             {t(locale, `الصفحة ${page} من ${totalPages}`, `Page ${page} of ${totalPages}`)}
           </p>
-          <div className="flex gap-1.5">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 rounded-lg"
-              disabled={page === 1}
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-            >
-              <ChevronRight className={`h-4 w-4 ${locale === 'ar' ? '' : 'rotate-180'}`} />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8 rounded-lg"
-              disabled={page === totalPages}
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-            >
-              <ChevronLeft className={`h-4 w-4 ${locale === 'ar' ? '' : 'rotate-180'}`} />
-            </Button>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{t(locale, 'الصفوف:', 'Rows:')}</span>
+            <Select value={String(limit)} onValueChange={(val) => { setLimit(Number(val)); setPage(1); }}>
+              <SelectTrigger className="h-8 text-xs rounded-lg font-bold w-[70px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="text-xs">
+                {[5, 10, 25, 50, 100].map(size => (
+                  <SelectItem key={size} value={String(size)}>{size}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
-      )}
+        <div className="flex gap-1.5">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-lg"
+            disabled={page === 1}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+          >
+            <ChevronRight className={`h-4 w-4 ${locale === 'ar' ? '' : 'rotate-180'}`} />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-lg"
+            disabled={page === totalPages || totalPages === 0}
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          >
+            <ChevronLeft className={`h-4 w-4 ${locale === 'ar' ? '' : 'rotate-180'}`} />
+          </Button>
+        </div>
+      </div>
 
       {/* High-res Image Preview Modal */}
       {zoomImage && (

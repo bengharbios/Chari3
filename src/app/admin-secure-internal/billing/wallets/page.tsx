@@ -92,6 +92,11 @@ export default function WalletsPage() {
   if (!isMounted || !isAdminAuthenticated) return null;
 
   const merchants = adminUsers.filter(u => u.role === 'seller' || u.role === 'store_manager');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const totalCount = merchants.length;
+  const totalPages = Math.ceil(totalCount / limit) || 1;
+  const paginatedMerchants = merchants.slice((page - 1) * limit, page * limit);
 
   return (
     <div dir={dir} className="max-w-[1750px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6 text-start">
@@ -120,7 +125,7 @@ export default function WalletsPage() {
               {t(locale, 'أرصدة التجار الحالية', 'Current Merchant Balances')}
             </CardTitle>
             <CardDescription className="text-xs">
-              {t(locale, `تم العثور على ${merchants.length} متجراً`, `${merchants.length} stores found`)}
+              {t(locale, `تم العثور على ${totalCount} متجراً`, `${totalCount} stores found`)}
             </CardDescription>
           </div>
           <Button variant="outline" size="sm" className="h-8 rounded-xl gap-1" onClick={fetchWallets}>
@@ -146,13 +151,13 @@ export default function WalletsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {merchants.length === 0 ? (
+                  {paginatedMerchants.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center py-16 text-muted-foreground text-sm font-bold">
                         {t(locale, 'لا يوجد تجار', 'No merchants found')}
                       </TableCell>
                     </TableRow>
-                  ) : merchants.map((userObj: any) => {
+                  ) : paginatedMerchants.map((userObj: any) => {
                     const wallet = userObj.wallet || { balance: 0, debt: 0, totalSales: 0 };
                     return (
                       <TableRow key={userObj.id} className="hover:bg-muted/5">
@@ -203,6 +208,47 @@ export default function WalletsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Pagination controls */}
+      <div className="flex items-center justify-between pt-2 flex-wrap gap-4">
+        <div className="flex items-center gap-4">
+          <p className="text-xs text-muted-foreground">
+            {t(locale, `الصفحة ${page} من ${totalPages}`, `Page ${page} of ${totalPages}`)}
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{t(locale, 'الصفوف:', 'Rows:')}</span>
+            <select
+              value={String(limit)}
+              onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+              className="h-8 text-xs rounded-lg font-bold w-[70px] border px-2 bg-background text-foreground"
+            >
+              {[5, 10, 25, 50, 100].map(size => (
+                <option key={size} value={String(size)}>{size}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <div className="flex gap-1.5">
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-lg"
+            disabled={page === 1}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+          >
+            <span className={`font-bold ${locale === 'ar' ? '' : 'rotate-180'}`}>&gt;</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-lg"
+            disabled={page === totalPages || totalPages === 0}
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          >
+            <span className={`font-bold ${locale === 'ar' ? '' : 'rotate-180'}`}>&lt;</span>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

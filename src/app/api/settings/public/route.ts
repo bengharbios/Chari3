@@ -14,6 +14,7 @@ export async function GET() {
       'currency',
       'platform_payment_model',
       'seller_dashboard_template',
+      'theme_seller_dashboard',
     ];
 
     const settings = await db.systemSetting.findMany({
@@ -35,6 +36,7 @@ export async function GET() {
         currency: settingsMap.currency || 'DZD',
         platform_payment_model: settingsMap.platform_payment_model || 'mixed',
         seller_dashboard_template: settingsMap.seller_dashboard_template || 'default',
+        theme_seller_dashboard: settingsMap.theme_seller_dashboard || null,
       }
     });
   } catch (error) {

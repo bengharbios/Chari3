@@ -18,7 +18,8 @@ import {
   Store,
   Wallet,
   Boxes,
-  Banknote
+  Banknote,
+  Palette
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -221,6 +222,13 @@ export default function AdminSidebar() {
           labelEn: "General Settings", 
           path: 'settings', 
           color: 'text-slate-400' 
+        },
+        { 
+          icon: Palette, 
+          labelAr: "القوالب والتصميم", 
+          labelEn: "Theme & Design", 
+          path: 'settings/theme', 
+          color: 'text-purple-400' 
         },
       ]
     }

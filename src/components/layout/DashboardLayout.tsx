@@ -8,6 +8,7 @@ import GentelellaSidebar from './gentelella/GentelellaSidebar';
 import GentelellaHeader from './gentelella/GentelellaHeader';
 import { useGentelellaTheme } from './gentelella/theme';
 import Footer from './Footer';
+import { ThemeSettings, defaultSellerTheme } from '@/lib/theme-defaults';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -17,6 +18,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isSidebarOpen } = useAppStore();
   const { user, isBuyerMode } = useAuthStore();
   const [dashboardTemplate, setDashboardTemplate] = useState<string>('default');
+  const [theme, setTheme] = useState<ThemeSettings>(defaultSellerTheme);
   const { isDark } = useGentelellaTheme();
 
   useEffect(() => {
@@ -30,6 +32,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           } else {
             setDashboardTemplate('default');
           }
+          if (data.success && data.settings?.theme_seller_dashboard) {
+            try {
+              setTheme(JSON.parse(data.settings.theme_seller_dashboard));
+            } catch (e) {
+              console.error('Failed to parse theme JSON', e);
+            }
+          }
         })
         .catch(() => setDashboardTemplate('default'));
     } else {
@@ -41,8 +50,28 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const isGentelella = dashboardTemplate === 'gentelella';
 
+  const themeMode = isDark ? 'dark' : 'light';
+  
+  const themeStyles = {
+    '--theme-bg-sidebar': theme.colors.sidebarBackground[themeMode],
+    '--theme-text-sidebar': theme.colors.sidebarText[themeMode],
+    '--theme-bg-header': theme.colors.headerBackground[themeMode],
+    '--theme-text-header': theme.colors.headerText[themeMode],
+    '--theme-bg-main': theme.colors.mainBackground[themeMode],
+    '--theme-text-main': theme.colors.mainText[themeMode],
+    '--theme-primary': theme.colors.primaryColor[themeMode],
+    '--theme-bg-footer': theme.colors.footerBackground[themeMode],
+    '--theme-text-footer': theme.colors.footerText[themeMode],
+    'fontFamily': theme.typography.fontFamily,
+  } as React.CSSProperties;
+
   return (
-    <div id={isGentelella ? 'gentelella-root' : undefined} className={`flex-1 flex flex-col overflow-hidden ${isGentelella ? 'min-h-screen max-h-screen' : 'min-h-[calc(100dvh-var(--header-height))] max-h-[calc(100dvh-var(--header-height))]'}`}>
+    <div 
+      id={isGentelella ? 'gentelella-root' : undefined} 
+      className={`flex-1 flex flex-col overflow-hidden ${isGentelella ? 'min-h-screen max-h-screen' : 'min-h-[calc(100dvh-var(--header-height))] max-h-[calc(100dvh-var(--header-height))]'}`}
+      style={themeStyles}
+    >
+      {theme.customCss && <style>{theme.customCss}</style>}
       <div className="flex flex-1 overflow-hidden">
         {isGentelella ? <GentelellaSidebar /> : <Sidebar />}
         <main
@@ -58,7 +87,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className={`p-4 md:p-6 lg:p-8 pb-24 md:pb-8 w-full flex-1 ${isGentelella ? '' : 'max-w-[1750px] mx-auto'}`}>
             {children}
           </div>
-          <Footer />
+          {theme.footer.enabled && <Footer theme={theme} />}
         </main>
       </div>
     </div>
