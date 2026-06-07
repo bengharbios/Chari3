@@ -180,8 +180,8 @@ export default function AdminLayoutWrapper({
       dir={isRTL ? 'rtl' : 'ltr'} 
       className={cn("min-h-screen w-full flex bg-[#F7F7F7] font-sans text-[#73879C]", themeMode === 'dark' ? 'bg-[#0f172a] text-[#94a3b8]' : '')}
     >
-      {/* Sidebar (Desktop) */}
-      <AdminSidebar className="hidden lg:flex" />
+      {/* Sidebar */}
+      <AdminSidebar />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -242,7 +242,10 @@ export default function AdminLayoutWrapper({
               <circle cx="7" cy="7" r="5"/>
               <path d="M11 11l3.5 3.5"/>
             </svg>
+            <label htmlFor="admin-search-input" className="sr-only">Search</label>
             <input
+              id="admin-search-input"
+              name="admin-search-input"
               type="text"
               placeholder={isRTL ? 'ابحث أو نفّذ أمراً...' : 'Search pages or run a command…'}
               className="bg-transparent border-0 outline-none w-full text-[13px] placeholder:opacity-60"
