@@ -406,18 +406,34 @@ export default function StoreOrdersPage() {
               <CardTitle className="text-lg">{t('جميع الطلبات', 'All orders')}</CardTitle>
               <CardDescription className="text-xs">{totalOrdersCount} {t('نتيجة', 'results')}</CardDescription>
             </div>
-            <div className="flex items-center gap-2 sm:border-s sm:ps-4 sm:ms-2 w-full sm:w-auto mt-2 sm:mt-0">
-              <span className="text-xs text-muted-foreground shrink-0">{t('الحالة', 'Status')}</span>
-              <select 
-                value={statusFilter} 
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-transparent border rounded px-2 h-8 text-xs font-bold outline-none cursor-pointer w-full sm:w-auto"
-              >
-                <option value="all">{t('جميع الحالات', 'All statuses')}</option>
-                {statuses.map((s) => (
-                  <option key={s.key} value={s.key}>{isAr ? s.nameAr : (s.nameEn || s.nameAr)}</option>
-                ))}
-              </select>
+            <div className="flex flex-wrap items-center gap-2 sm:border-s sm:ps-4 sm:ms-2 w-full sm:w-auto mt-2 sm:mt-0">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground shrink-0">{t('الحالة', 'Status')}</span>
+                <select 
+                  value={statusFilter} 
+                  onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                  className="bg-transparent border rounded px-2 h-8 text-xs font-bold outline-none cursor-pointer w-full sm:w-auto"
+                >
+                  <option value="all">{t('جميع الحالات', 'All statuses')}</option>
+                  {statuses.map((s) => (
+                    <option key={s.key} value={s.key}>{isAr ? s.nameAr : (s.nameEn || s.nameAr)}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2 sm:border-s sm:ps-4">
+                <span className="text-xs text-muted-foreground shrink-0">{t('العدد', 'Show')}</span>
+                <select 
+                  value={limit} 
+                  onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+                  className="bg-transparent border rounded px-2 h-8 text-xs font-bold outline-none cursor-pointer w-full sm:w-auto"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
             </div>
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
