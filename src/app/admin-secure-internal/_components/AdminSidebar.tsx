@@ -1,39 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { 
-  LayoutDashboard, 
-  Settings, 
-  Sliders, 
-  ToggleRight, 
-  ChevronRight, 
-  ChevronLeft,
-  ChevronDown,
-  Menu,
-  FolderTree,
-  Tag,
-  TrendingUp,
-  ShoppingCart,
-  Users,
-  Store,
-  Wallet,
-  Boxes,
-  Banknote,
-  Palette
+  LayoutDashboard, Settings, Sliders, ToggleRight, ChevronRight, ChevronLeft,
+  Menu, FolderTree, Tag, TrendingUp, ShoppingCart, Users, Store, Wallet,
+  Boxes, Banknote, Palette, ChevronDown, Monitor, KeyRound, LogOut
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { useTheme } from 'next-themes';
 
 export default function AdminSidebar() {
-  const { adminLocale } = useAdminAuthStore();
+  const { adminLocale, adminUser, logout } = useAdminAuthStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<number, boolean>>({});
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const toggleGroup = (idx: number) => {
+    if (isCollapsed) return;
     setCollapsedGroups(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
@@ -45,11 +33,13 @@ export default function AdminSidebar() {
       title: "الإدارة العامة",
       collapse: "طي القائمة",
       expand: "توسيع",
+      welcome: "مرحباً بك،",
     },
     en: {
       title: "Admin Panel",
       collapse: "Collapse",
       expand: "Expand",
+      welcome: "Welcome,",
     }
   };
 
@@ -72,170 +62,50 @@ export default function AdminSidebar() {
       titleAr: "نظرة عامة وتقارير",
       titleEn: "Overview & Reports",
       items: [
-        { 
-          icon: LayoutDashboard, 
-          labelAr: "لوحة التحكم الرئيسية", 
-          labelEn: "Dashboard Overview", 
-          path: '', 
-          color: 'text-blue-400' 
-        },
-        { 
-          icon: TrendingUp, 
-          labelAr: "المنتجات الأكثر مبيعاً", 
-          labelEn: "Top Selling Products", 
-          path: '?tab=products', 
-          color: 'text-yellow-400' 
-        },
+        { icon: LayoutDashboard, labelAr: "لوحة التحكم الرئيسية", labelEn: "Dashboard Overview", path: '' },
+        { icon: TrendingUp, labelAr: "المنتجات الأكثر مبيعاً", labelEn: "Top Selling Products", path: '?tab=products' },
       ]
     },
     {
       titleAr: "الطلبات والتحكم الفوري",
       titleEn: "Orders & Direct Control",
       items: [
-        { 
-          icon: ShoppingCart, 
-          labelAr: "إدارة الطلبات المنفذة", 
-          labelEn: "Fulfilled Orders", 
-          path: '?tab=orders', 
-          color: 'text-indigo-400' 
-        },
-        { 
-          icon: Sliders, 
-          labelAr: "إعدادات الحالات", 
-          labelEn: "Order Statuses", 
-          path: '?tab=order-statuses', 
-          color: 'text-cyan-400' 
-        },
+        { icon: ShoppingCart, labelAr: "إدارة الطلبات المنفذة", labelEn: "Fulfilled Orders", path: '?tab=orders' },
+        { icon: Sliders, labelAr: "إعدادات الحالات", labelEn: "Order Statuses", path: '?tab=order-statuses' },
       ]
     },
     {
       titleAr: "الحسابات والتجارة",
       titleEn: "Accounts & Merchants",
       items: [
-        { 
-          icon: Users, 
-          labelAr: "إدارة حسابات المستخدمين", 
-          labelEn: "User Accounts", 
-          path: '?tab=users', 
-          color: 'text-purple-400' 
-        },
-        { 
-          icon: Store, 
-          labelAr: "المتاجر والتجار", 
-          labelEn: "Stores & Sellers", 
-          path: '?tab=stores-sellers', 
-          color: 'text-emerald-400' 
-        },
+        { icon: Users, labelAr: "إدارة حسابات المستخدمين", labelEn: "User Accounts", path: '?tab=users' },
+        { icon: Store, labelAr: "المتاجر والتجار", labelEn: "Stores & Sellers", path: '?tab=stores-sellers' },
       ]
     },
     {
       titleAr: "المالية والاشتراكات",
       titleEn: "Finance & Subscriptions",
       items: [
-        { 
-          icon: Settings, 
-          labelAr: "إعدادات المنصة والعمولة", 
-          labelEn: "Platform & Commission Settings", 
-          path: 'billing/settings', 
-          color: 'text-rose-400' 
-        },
-        { 
-          icon: Tag, 
-          labelAr: "باقات الاشتراك", 
-          labelEn: "Subscription Packages", 
-          path: 'billing/packages', 
-          color: 'text-amber-400' 
-        },
-        { 
-          icon: Users, 
-          labelAr: "التجار والاشتراكات", 
-          labelEn: "Merchants & Subscriptions", 
-          path: 'billing/merchants', 
-          color: 'text-emerald-400' 
-        },
-        { 
-          icon: Wallet, 
-          labelAr: "المحافظ والمديونيات", 
-          labelEn: "Wallets & Debts", 
-          path: 'billing/wallets', 
-          color: 'text-indigo-400' 
-        },
-        { 
-          icon: Banknote, 
-          labelAr: "طلبات سحب الأرباح", 
-          labelEn: "Payout Requests", 
-          path: 'billing/withdrawals', 
-          color: 'text-green-400' 
-        },
-        { 
-          icon: Sliders, 
-          labelAr: "مراجعة الإيصالات", 
-          labelEn: "Review Payment Receipts", 
-          path: 'billing/receipts', 
-          color: 'text-blue-400' 
-        },
-        { 
-          icon: TrendingUp, 
-          labelAr: "تقرير الإيرادات", 
-          labelEn: "Revenue Reports", 
-          path: 'billing/revenue', 
-          color: 'text-yellow-400' 
-        },
+        { icon: Settings, labelAr: "إعدادات المنصة والعمولة", labelEn: "Commission Settings", path: 'billing/settings' },
+        { icon: Tag, labelAr: "باقات الاشتراك", labelEn: "Subscription Packages", path: 'billing/packages' },
+        { icon: Users, labelAr: "التجار والاشتراكات", labelEn: "Merchants & Subscriptions", path: 'billing/merchants' },
+        { icon: Wallet, labelAr: "المحافظ والمديونيات", labelEn: "Wallets & Debts", path: 'billing/wallets' },
+        { icon: Banknote, labelAr: "طلبات سحب الأرباح", labelEn: "Payout Requests", path: 'billing/withdrawals' },
+        { icon: Sliders, labelAr: "مراجعة الإيصالات", labelEn: "Review Receipts", path: 'billing/receipts' },
+        { icon: TrendingUp, labelAr: "تقرير الإيرادات", labelEn: "Revenue Reports", path: 'billing/revenue' },
       ]
     },
     {
       titleAr: "إعدادات المنصة",
       titleEn: "Platform Settings",
       items: [
-        { 
-          icon: Tag, 
-          labelAr: "الكوبونات العامة", 
-          labelEn: "Global Coupons", 
-          path: 'coupons', 
-          color: 'text-amber-400' 
-        },
-        { 
-          icon: FolderTree, 
-          labelAr: "إدارة التصنيفات", 
-          labelEn: "Manage Categories", 
-          path: 'categories', 
-          color: 'text-sky-400' 
-        },
-        { 
-          icon: Boxes, 
-          labelAr: "إدارة الماركات", 
-          labelEn: "Manage Brands", 
-          path: 'brands', 
-          color: 'text-teal-400' 
-        },
-        { 
-          icon: Sliders, 
-          labelAr: "إدارة الواجهة (CMS)", 
-          labelEn: "Storefront CMS", 
-          path: 'cms', 
-          color: 'text-pink-400' 
-        },
-        { 
-          icon: ToggleRight, 
-          labelAr: "مفاتيح الميزات", 
-          labelEn: "Feature Flags", 
-          path: 'flags', 
-          color: 'text-red-400' 
-        },
-        { 
-          icon: Settings, 
-          labelAr: "الإعدادات العامة", 
-          labelEn: "General Settings", 
-          path: 'settings', 
-          color: 'text-slate-400' 
-        },
-        { 
-          icon: Palette, 
-          labelAr: "القوالب والتصميم", 
-          labelEn: "Theme & Design", 
-          path: 'settings/theme', 
-          color: 'text-purple-400' 
-        },
+        { icon: Tag, labelAr: "الكوبونات العامة", labelEn: "Global Coupons", path: 'coupons' },
+        { icon: FolderTree, labelAr: "إدارة التصنيفات", labelEn: "Manage Categories", path: 'categories' },
+        { icon: Boxes, labelAr: "إدارة الماركات", labelEn: "Manage Brands", path: 'brands' },
+        { icon: Sliders, labelAr: "إدارة الواجهة (CMS)", labelEn: "Storefront CMS", path: 'cms' },
+        { icon: ToggleRight, labelAr: "مفاتيح الميزات", labelEn: "Feature Flags", path: 'flags' },
+        { icon: Settings, labelAr: "الإعدادات العامة", labelEn: "General Settings", path: 'settings' },
+        { icon: Palette, labelAr: "القوالب والتصميم", labelEn: "Theme & Design", path: 'settings/theme' },
       ]
     }
   ];
@@ -247,91 +117,163 @@ export default function AdminSidebar() {
     return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
   };
 
+  const initials = adminUser?.name
+    ? adminUser.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
+    : 'A';
+
+  const themeBg = '#1a2332'; // Gentelella Admin Signature Color
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
   return (
-    <div 
+    <aside
       dir={isRTL ? 'rtl' : 'ltr'}
-      className={`relative h-screen bg-navy text-white transition-all duration-300 ease-in-out flex flex-col z-20 ${
-        isCollapsed ? 'w-20' : 'w-64'
-      } hidden lg:flex`}
+      className={cn(
+        'relative flex flex-col font-sans transition-all duration-300 ease-in-out z-20 hidden lg:flex h-screen shrink-0',
+        isCollapsed ? 'w-[76px]' : 'w-[260px]'
+      )}
+      style={{ backgroundColor: themeBg }}
     >
-      {/* Sidebar Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-slate-700">
-        {!isCollapsed && (
-          <span className="font-bold text-lg text-brand">{t.title}</span>
-        )}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="text-white hover:bg-slate-700"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
-          {isCollapsed ? (
-            <Menu className="h-5 w-5" />
-          ) : isRTL ? (
-            <ChevronRight className="h-5 w-5" />
-          ) : (
-            <ChevronLeft className="h-5 w-5" />
-          )}
-        </Button>
-      </div>
+      <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
+        {/* Logo Section */}
+        <div className="flex items-center gap-3 px-6 h-[72px] shrink-0 border-b border-white/5 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#1ABB9C] text-white font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(26,187,156,0.3)]">
+            A
+          </div>
+          <div className={cn("flex flex-col transition-opacity duration-300", isCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+            <span className="text-white text-lg font-bold tracking-wide">
+              {t.title}
+            </span>
+          </div>
+        </div>
 
-      {/* Navigation Items */}
-      <nav className="flex-1 py-4 space-y-4 px-2 overflow-y-auto">
-        {navGroups.map((group, gIdx) => {
-          const isGroupCollapsed = collapsedGroups[gIdx];
-          return (
-            <div key={gIdx} className="space-y-1">
-              {!isCollapsed && (
-                <button 
-                  onClick={() => toggleGroup(gIdx)}
-                  className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-black tracking-wider text-slate-400 uppercase select-none hover:text-slate-200 transition-colors group/btn"
-                >
-                  <span>{isRTL ? group.titleAr : group.titleEn}</span>
-                  <ChevronDown className={`h-3 w-3 transition-transform ${isGroupCollapsed ? (isRTL ? 'rotate-90' : '-rotate-90') : 'rotate-0'}`} />
-                </button>
-              )}
-              {/* Only show items if sidebar is collapsed (icons only) OR if group is expanded */}
-              {(!isGroupCollapsed || isCollapsed) && group.items.map((item) => {
-                const isActive = getIsActive(item.path);
-                const label = isRTL ? item.labelAr : item.labelEn;
-                return (
-                  <Link 
-                    key={item.path} 
-                    href={getAdminPath(item.path)}
-                    dir={isRTL ? 'rtl' : 'ltr'}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all group ${
-                      isActive 
-                        ? 'bg-brand text-navy font-bold shadow-md' 
-                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                    }`}
-                  >
-                    <item.icon className={`h-4.5 w-4.5 flex-shrink-0 ${isActive ? 'text-navy' : item.color} group-hover:scale-110 transition-transform`} />
-                    
-                    {!isCollapsed && (
-                      <span className="text-xs font-semibold truncate">{label}</span>
-                    )}
-                    
-                    {isCollapsed && (
-                      <div className={`absolute ${isRTL ? 'right-24' : 'left-24'} bg-white text-navy text-xs font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity shadow-lg pointer-events-none whitespace-nowrap z-30`}>
-                        {label}
-                      </div>
-                    )}
-                  </Link>
-                );
-              })}
+        {/* User Profile Info */}
+        <div className={cn("flex items-center gap-3 p-4", isCollapsed ? "justify-center" : "")}>
+          <div className="relative shrink-0">
+            <div className={cn("rounded-full flex items-center justify-center text-white font-bold border-2 border-white/20", isCollapsed ? "h-10 w-10" : "h-14 w-14", "bg-[#1ABB9C]")}>
+              {initials}
             </div>
-          );
-        })}
-      </nav>
+          </div>
+          <div className={cn("flex flex-col flex-1 min-w-0 transition-opacity", isCollapsed ? "hidden opacity-0" : "opacity-100")}>
+            <span className="text-[13px] text-[#BAB8B8]">{t.welcome}</span>
+            <span className="text-[15px] font-semibold text-[#E7E7E7] truncate">{adminUser?.name || 'Admin'}</span>
+          </div>
+        </div>
+        <div className="w-full h-px bg-white/5 mb-2" />
 
-      {/* Footer / Info */}
-      <div className="p-4 border-t border-slate-700 text-xs text-slate-400">
-        {!isCollapsed ? (
-          <p className="text-center">ChariDay v2.0</p>
-        ) : (
-          <p className="text-center">v2</p>
-        )}
+        {/* Sidebar Menu */}
+        <div className="flex-1 py-2">
+          <nav className="flex flex-col w-full">
+            {navGroups.map((group, gIdx) => {
+              const isOpen = !collapsedGroups[gIdx];
+              return (
+                <div key={gIdx} className="mb-4">
+                  <div 
+                    className={cn("px-6 mb-2 transition-opacity cursor-pointer flex justify-between items-center", isCollapsed ? "opacity-0 hidden" : "opacity-100")}
+                    onClick={() => toggleGroup(gIdx)}
+                  >
+                    <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-widest select-none hover:text-[#94a3b8] transition-colors">
+                      {isRTL ? group.titleAr : group.titleEn}
+                    </span>
+                    <ChevronDown className={cn("h-3 w-3 text-[#64748b] transition-transform", !isOpen && (isRTL ? "rotate-90" : "-rotate-90"))} />
+                  </div>
+                  
+                  <ul className={cn("flex flex-col px-3 gap-0.5 overflow-hidden transition-all duration-300 ease-in-out", (!isOpen && !isCollapsed) ? "max-h-0 opacity-0" : "max-h-[1000px] opacity-100")}>
+                    {group.items.map((item) => {
+                      const isActive = getIsActive(item.path);
+                      const label = isRTL ? item.labelAr : item.labelEn;
+                      const Icon = item.icon;
+
+                      return (
+                        <li key={item.path} className="relative group">
+                          <Link
+                            dir={isRTL ? 'rtl' : 'ltr'}
+                            href={getAdminPath(item.path)}
+                            className={cn(
+                              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] font-medium transition-all duration-200 outline-none relative',
+                              isActive
+                                ? 'bg-white/10 text-white' 
+                                : 'text-[#94a3b8] hover:bg-white/5 hover:text-white',
+                              isCollapsed && 'justify-center px-0'
+                            )}
+                          >
+                            {/* Horizontal line connector for active item to mimic gentelella v4 */}
+                            {isActive && !isCollapsed && (
+                              <div className={cn(
+                                "absolute top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#1ABB9C] rounded-full",
+                                isRTL ? "right-0" : "left-0"
+                              )} />
+                            )}
+                            
+                            <Icon className={cn(
+                              "h-[20px] w-[20px] shrink-0 transition-colors", 
+                              isActive ? "text-[#1ABB9C]" : "group-hover:text-[#1ABB9C]"
+                            )} strokeWidth={isActive ? 2.5 : 2} />
+                            
+                            <span className={cn("text-start transition-opacity truncate", isCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+                              {label}
+                            </span>
+                            
+                            {/* Hover tooltip for collapsed state */}
+                            {isCollapsed && (
+                              <div className={cn(
+                                "absolute top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover:opacity-100 transition-all z-[100]",
+                                isRTL ? "right-[110%] -translate-x-2 group-hover:translate-x-0" : "left-[110%] translate-x-2 group-hover:translate-x-0"
+                              )}>
+                                <div className="bg-white text-[#1e293b] text-xs font-bold px-3 py-2 rounded-md whitespace-nowrap shadow-xl">
+                                  {label}
+                                </div>
+                              </div>
+                            )}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
+          </nav>
+        </div>
       </div>
-    </div>
+
+      {/* Gentelella Footer Icons */}
+      <div className={cn(
+        "shrink-0 bg-[#171f2d] flex mt-auto",
+        isCollapsed ? "hidden" : ""
+      )}>
+        <Link 
+          href={getAdminPath('settings')}
+          className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
+        >
+          <Settings className="h-[18px] w-[18px]" />
+        </Link>
+        <button 
+          className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
+          onClick={toggleFullScreen}
+        >
+          <Monitor className="h-[18px] w-[18px]" />
+        </button>
+        <button 
+          className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
+        >
+          <KeyRound className="h-[18px] w-[18px]" />
+        </button>
+        <button 
+          onClick={() => { logout(); window.location.reload(); }}
+          className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-red-400 transition-colors hover:bg-[#1a2332]"
+        >
+          <LogOut className="h-[18px] w-[18px]" />
+        </button>
+      </div>
+    </aside>
   );
 }
