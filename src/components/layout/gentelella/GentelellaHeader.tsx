@@ -111,7 +111,7 @@ export default function GentelellaHeader() {
   return (
     <header
       className={cn(
-        'h-[72px] flex items-center justify-between px-3 sticky top-0 z-[var(--z-sticky)]',
+        'h-[72px] flex items-center justify-between px-4 md:px-6 lg:px-8 sticky top-0 z-[var(--z-sticky)]',
         'border-b transition-colors',
         isDark
           ? 'bg-[#1a2332] border-[#263346] text-[#c8d3e0]'
