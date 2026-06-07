@@ -58,6 +58,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className={`p-4 md:p-6 lg:p-8 pb-24 md:pb-8 w-full flex-1 ${isGentelella ? '' : 'max-w-[1750px] mx-auto'}`}>
             {children}
           </div>
+          <Footer />
         </main>
       </div>
     </div>
