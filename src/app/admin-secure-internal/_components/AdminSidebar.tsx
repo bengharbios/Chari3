@@ -9,6 +9,7 @@ import {
   ToggleRight, 
   ChevronRight, 
   ChevronLeft,
+  ChevronDown,
   Menu,
   FolderTree,
   Tag,
@@ -28,8 +29,13 @@ import { Button } from '@/components/ui/button';
 export default function AdminSidebar() {
   const { adminLocale } = useAdminAuthStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<number, boolean>>({});
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const toggleGroup = (idx: number) => {
+    setCollapsedGroups(prev => ({ ...prev, [idx]: !prev[idx] }));
+  };
 
   const isRTL = adminLocale === 'ar';
   const currentTab = searchParams.get('tab') || 'overview';
@@ -271,43 +277,51 @@ export default function AdminSidebar() {
 
       {/* Navigation Items */}
       <nav className="flex-1 py-4 space-y-4 px-2 overflow-y-auto">
-        {navGroups.map((group, gIdx) => (
-          <div key={gIdx} className="space-y-1">
-            {!isCollapsed && (
-              <div className="px-3 py-1.5 text-[10px] font-black tracking-wider text-slate-400 uppercase select-none">
-                {isRTL ? group.titleAr : group.titleEn}
-              </div>
-            )}
-            {group.items.map((item) => {
-              const isActive = getIsActive(item.path);
-              const label = isRTL ? item.labelAr : item.labelEn;
-              return (
-                <Link 
-                  key={item.path} 
-                  href={getAdminPath(item.path)}
-                  dir={isRTL ? 'rtl' : 'ltr'}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all group ${
-                    isActive 
-                      ? 'bg-brand text-navy font-bold shadow-md' 
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  }`}
+        {navGroups.map((group, gIdx) => {
+          const isGroupCollapsed = collapsedGroups[gIdx];
+          return (
+            <div key={gIdx} className="space-y-1">
+              {!isCollapsed && (
+                <button 
+                  onClick={() => toggleGroup(gIdx)}
+                  className="w-full flex items-center justify-between px-3 py-1.5 text-[10px] font-black tracking-wider text-slate-400 uppercase select-none hover:text-slate-200 transition-colors group/btn"
                 >
-                  <item.icon className={`h-4.5 w-4.5 flex-shrink-0 ${isActive ? 'text-navy' : item.color} group-hover:scale-110 transition-transform`} />
-                  
-                  {!isCollapsed && (
-                    <span className="text-xs font-semibold truncate">{label}</span>
-                  )}
-                  
-                  {isCollapsed && (
-                    <div className={`absolute ${isRTL ? 'right-24' : 'left-24'} bg-white text-navy text-xs font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity shadow-lg pointer-events-none whitespace-nowrap z-30`}>
-                      {label}
-                    </div>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
+                  <span>{isRTL ? group.titleAr : group.titleEn}</span>
+                  <ChevronDown className={`h-3 w-3 transition-transform ${isGroupCollapsed ? (isRTL ? 'rotate-90' : '-rotate-90') : 'rotate-0'}`} />
+                </button>
+              )}
+              {/* Only show items if sidebar is collapsed (icons only) OR if group is expanded */}
+              {(!isGroupCollapsed || isCollapsed) && group.items.map((item) => {
+                const isActive = getIsActive(item.path);
+                const label = isRTL ? item.labelAr : item.labelEn;
+                return (
+                  <Link 
+                    key={item.path} 
+                    href={getAdminPath(item.path)}
+                    dir={isRTL ? 'rtl' : 'ltr'}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all group ${
+                      isActive 
+                        ? 'bg-brand text-navy font-bold shadow-md' 
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    }`}
+                  >
+                    <item.icon className={`h-4.5 w-4.5 flex-shrink-0 ${isActive ? 'text-navy' : item.color} group-hover:scale-110 transition-transform`} />
+                    
+                    {!isCollapsed && (
+                      <span className="text-xs font-semibold truncate">{label}</span>
+                    )}
+                    
+                    {isCollapsed && (
+                      <div className={`absolute ${isRTL ? 'right-24' : 'left-24'} bg-white text-navy text-xs font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity shadow-lg pointer-events-none whitespace-nowrap z-30`}>
+                        {label}
+                      </div>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          );
+        })}
       </nav>
 
       {/* Footer / Info */}

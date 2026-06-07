@@ -8,7 +8,7 @@ import GentelellaSidebar from './gentelella/GentelellaSidebar';
 import GentelellaHeader from './gentelella/GentelellaHeader';
 import { useGentelellaTheme } from './gentelella/theme';
 import Footer from './Footer';
-import { ThemeSettings, defaultSellerTheme } from '@/lib/theme-defaults';
+import { ThemeSettings, defaultSellerTheme, defaultPlatformTheme } from '@/lib/theme-defaults';
 import { useTheme } from 'next-themes';
 
 interface DashboardLayoutProps {
@@ -19,6 +19,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isSidebarOpen } = useAppStore();
   const { user, isBuyerMode } = useAuthStore();
   const [dashboardTemplate, setDashboardTemplate] = useState<string>('default');
+  
+  // Use correct default theme based on role
+  const getInitialTheme = () => {
+    if (!user) return defaultSellerTheme;
+    if (user.role === 'admin' || user.role === 'buyer' || isBuyerMode) return defaultPlatformTheme;
+    return defaultSellerTheme;
+  };
+  
   const [theme, setTheme] = useState<ThemeSettings>(defaultSellerTheme);
   const [isThemeLoaded, setIsThemeLoaded] = useState(false);
   const { isDark } = useGentelellaTheme();
@@ -29,13 +37,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       const cachedTheme = localStorage.getItem('chari_dashboard_theme');
       if (cachedTheme) {
         setTheme(JSON.parse(cachedTheme));
+      } else {
+        setTheme(getInitialTheme());
       }
       const cachedTemplate = localStorage.getItem('chari_dashboard_template');
       if (cachedTemplate) {
         setDashboardTemplate(cachedTemplate);
       }
-    } catch (e) {}
-  }, []);
+    } catch (e) {
+      setTheme(getInitialTheme());
+    }
+  }, [user, isBuyerMode]);
 
   useEffect(() => {
     fetch('/api/settings/public')
@@ -47,10 +59,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         }
         
         let themeKey = 'theme_seller_dashboard';
+        let defaultTh = defaultSellerTheme;
         if (isBuyerMode || user?.role === 'buyer') {
           themeKey = 'theme_buyer_dashboard';
+          defaultTh = defaultPlatformTheme;
         } else if (user?.role === 'admin') {
           themeKey = 'theme_admin_dashboard';
+          defaultTh = defaultPlatformTheme;
         }
 
         const isDashboardRole = user?.role && !['admin', 'buyer'].includes(user.role) && !isBuyerMode;
@@ -74,7 +89,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             localStorage.setItem('chari_dashboard_theme', data.settings[themeKey]);
           } catch (e) {
             console.error('Failed to parse theme JSON', e);
+            setTheme(defaultTh);
           }
+        } else {
+          setTheme(defaultTh);
         }
       })
       .catch(() => setDashboardTemplate('default'))
