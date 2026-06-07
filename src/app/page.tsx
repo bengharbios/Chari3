@@ -533,11 +533,11 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
         </DashboardLayout>
       )}
 
+      {dashboardTemplate !== 'gentelella' && isStorefrontPage && (
+        <Footer />
+      )}
       {dashboardTemplate !== 'gentelella' && (
-        <>
-          <Footer />
-          <BottomNav />
-        </>
+        <BottomNav />
       )}
     </AppShell>
   );

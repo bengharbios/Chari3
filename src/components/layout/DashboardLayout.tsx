@@ -7,6 +7,7 @@ import Sidebar from './Sidebar';
 import GentelellaSidebar from './gentelella/GentelellaSidebar';
 import GentelellaHeader from './gentelella/GentelellaHeader';
 import { useGentelellaTheme } from './gentelella/theme';
+import Footer from './Footer';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -41,11 +42,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const isGentelella = dashboardTemplate === 'gentelella';
 
   return (
-    <div id={isGentelella ? 'gentelella-root' : undefined} className="min-h-screen flex flex-col">
-      <div className="flex flex-1">
+    <div id={isGentelella ? 'gentelella-root' : undefined} className="flex-1 flex flex-col min-h-[calc(100dvh-var(--header-height))] max-h-[calc(100dvh-var(--header-height))]">
+      <div className="flex flex-1 overflow-hidden">
         {isGentelella ? <GentelellaSidebar /> : <Sidebar />}
         <main
-          className={`flex-1 min-w-0 transition-all duration-300 flex flex-col ${isSidebarOpen ? 'lg:ms-0' : 'lg:ms-0'} ${
+          className={`flex-1 min-w-0 overflow-y-auto overflow-x-hidden transition-all duration-300 flex flex-col ${isSidebarOpen ? 'lg:ms-0' : 'lg:ms-0'} ${
             isGentelella
               ? isDark
                 ? 'bg-[#0f172a] text-[#cbd5e1]'
@@ -57,10 +58,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className={`p-4 md:p-6 lg:p-8 pb-24 md:pb-8 w-full flex-1 ${isGentelella ? '' : 'max-w-[1750px] mx-auto'}`}>
             {children}
           </div>
-          {isGentelella && (
+          {isGentelella ? (
             <footer className={`py-4 px-6 text-end text-[13px] font-semibold mt-auto ${isDark ? 'bg-[#1a2332] text-[#c8d3e0]' : 'bg-white text-[#73879C]'}`}>
               Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com" className="text-[#1ABB9C] hover:underline transition-colors">Colorlib</a>
             </footer>
+          ) : (
+            <Footer />
           )}
         </main>
       </div>
