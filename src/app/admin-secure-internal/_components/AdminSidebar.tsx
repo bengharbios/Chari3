@@ -16,17 +16,23 @@ import { useTheme } from 'next-themes';
 export default function AdminSidebar() {
   const { adminLocale, adminUser, logout } = useAdminAuthStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<number, boolean>>({});
+  const [activeGroup, setActiveGroup] = useState<number | null>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const toggleGroup = (idx: number) => {
-    if (isCollapsed) return;
-    setCollapsedGroups(prev => ({ ...prev, [idx]: !prev[idx] }));
-  };
-
   const isRTL = adminLocale === 'ar';
   const currentTab = searchParams.get('tab') || 'overview';
+
+  useEffect(() => {
+    const handleToggle = () => setIsCollapsed(prev => !prev);
+    window.addEventListener('toggleAdminSidebar', handleToggle);
+    return () => window.removeEventListener('toggleAdminSidebar', handleToggle);
+  }, []);
+
+  const toggleGroup = (idx: number) => {
+    if (isCollapsed) return;
+    setActiveGroup(prev => prev === idx ? null : idx);
+  };
 
   const dict = {
     ar: {
@@ -110,6 +116,14 @@ export default function AdminSidebar() {
     }
   ];
 
+  useEffect(() => {
+    const idx = navGroups.findIndex(g => g.items.some(i => getIsActive(i.path)));
+    if (idx !== -1) {
+      setActiveGroup(idx);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, currentTab]);
+
   const getAdminPath = (subPath: string) => {
     if (typeof window === 'undefined') return '';
     const segments = window.location.pathname.split('/');
@@ -142,18 +156,19 @@ export default function AdminSidebar() {
       )}
       style={{ backgroundColor: themeBg }}
     >
-      <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
-        {/* Logo Section */}
-        <div className="flex items-center gap-3 px-6 h-[72px] shrink-0 border-b border-white/5 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#1ABB9C] text-white font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(26,187,156,0.3)]">
-            A
-          </div>
-          <div className={cn("flex flex-col transition-opacity duration-300", isCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-            <span className="text-white text-lg font-bold tracking-wide">
-              {t.title}
-            </span>
-          </div>
+      {/* Logo Section */}
+      <div className="flex items-center gap-3 px-6 h-[72px] shrink-0 border-b border-white/5 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
+        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#1ABB9C] text-white font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(26,187,156,0.3)]">
+          A
         </div>
+        <div className={cn("flex flex-col transition-opacity duration-300", isCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+          <span className="text-white text-lg font-bold tracking-wide">
+            {t.title}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
 
         {/* User Profile Info */}
         <div className={cn("flex items-center gap-3 p-4", isCollapsed ? "justify-center" : "")}>
@@ -173,7 +188,7 @@ export default function AdminSidebar() {
         <div className="flex-1 py-2">
           <nav className="flex flex-col w-full">
             {navGroups.map((group, gIdx) => {
-              const isOpen = !collapsedGroups[gIdx];
+              const isOpen = activeGroup === gIdx;
               return (
                 <div key={gIdx} className="mb-4">
                   <div 

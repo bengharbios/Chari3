@@ -335,9 +335,11 @@ export default function GentelellaSidebar({ className }: { className?: string })
   
   const toggleTree = (treeId: string) => {
     if (isDesktopSidebarCollapsed) return; // Don't toggle in collapsed mode
-    setOpenTrees(prev => ({
-      [treeId]: !prev[treeId]
-    }));
+    setOpenTrees(prev => {
+      // Accordion behavior: close all others
+      if (prev[treeId]) return {};
+      return { [treeId]: true };
+    });
   };
 
   const toggleFullScreen = () => {
@@ -372,18 +374,19 @@ export default function GentelellaSidebar({ className }: { className?: string })
         )}
         style={{ backgroundColor: themeBg }}
       >
-        <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
-          {/* Logo Section */}
-          <div className="flex items-center gap-3 px-6 h-[72px] shrink-0 border-b border-white/5">
-            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#1ABB9C] text-white font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(26,187,156,0.3)]">
-              G
-            </div>
-            <div className={cn("flex flex-col transition-opacity duration-300", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-              <span className="text-white text-lg font-bold tracking-wide">
-                Gentelella <span className="text-[11px] text-[#1ABB9C] align-top ml-1">v4</span>
-              </span>
-            </div>
+        {/* Fixed Logo Section */}
+        <div className="flex items-center gap-3 px-6 h-[72px] shrink-0 border-b border-white/5 cursor-pointer" onClick={() => useAppStore.getState().toggleDesktopSidebar()}>
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#1ABB9C] text-white font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(26,187,156,0.3)]">
+            G
           </div>
+          <div className={cn("flex flex-col transition-opacity duration-300", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+            <span className="text-white text-lg font-bold tracking-wide">
+              Gentelella <span className="text-[11px] text-[#1ABB9C] align-top ml-1">v4</span>
+            </span>
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
 
           {/* User Profile Info (Top of sidebar like v4) */}
           <div className={cn("flex items-center gap-3 p-4", isDesktopSidebarCollapsed ? "justify-center" : "")}>

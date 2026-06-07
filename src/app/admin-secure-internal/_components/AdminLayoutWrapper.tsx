@@ -1,17 +1,83 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import AdminSidebar from './AdminSidebar';
 import { Button } from '@/components/ui/button';
 import { Globe, LogOut, Menu, LayoutDashboard, Settings, Sliders, ToggleRight, TrendingUp, ShoppingCart, Users, Store, Wallet, Tag, FolderTree, Boxes, Moon, Sun } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from 'next-themes';
 import { ThemeSettings, defaultPlatformTheme } from '@/lib/theme-defaults';
 import { cn } from '@/lib/utils';
+
+function AdminBreadcrumb() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const { adminLocale } = useAdminAuthStore();
+  const { theme: globalTheme } = useTheme();
+  
+  const isRTL = adminLocale === 'ar';
+  const currentTab = searchParams.get('tab') || 'overview';
+  const themeMode = globalTheme === 'dark' ? 'dark' : 'light';
+
+  const getPageTitle = () => {
+    const path = pathname.split('/').pop() || '';
+    
+    const titles: Record<string, { ar: string, en: string }> = {
+      'overview': { ar: 'لوحة التحكم الرئيسية', en: 'Dashboard Overview' },
+      'products': { ar: 'المنتجات الأكثر مبيعاً', en: 'Top Selling Products' },
+      'orders': { ar: 'إدارة الطلبات المنفذة', en: 'Fulfilled Orders' },
+      'order-statuses': { ar: 'إعدادات الحالات', en: 'Order Statuses' },
+      'users': { ar: 'إدارة حسابات المستخدمين', en: 'User Accounts' },
+      'stores-sellers': { ar: 'المتاجر والتجار', en: 'Stores & Sellers' },
+      'settings': { ar: 'الإعدادات العامة', en: 'General Settings' },
+      'theme': { ar: 'القوالب والتصميم', en: 'Theme & Design' },
+      'packages': { ar: 'باقات الاشتراك', en: 'Subscription Packages' },
+      'merchants': { ar: 'التجار والاشتراكات', en: 'Merchants & Subscriptions' },
+      'wallets': { ar: 'المحافظ والمديونيات', en: 'Wallets & Debts' },
+      'withdrawals': { ar: 'طلبات سحب الأرباح', en: 'Payout Requests' },
+      'receipts': { ar: 'مراجعة الإيصالات', en: 'Review Receipts' },
+      'revenue': { ar: 'تقرير الإيرادات', en: 'Revenue Reports' },
+      'coupons': { ar: 'الكوبونات العامة', en: 'Global Coupons' },
+      'categories': { ar: 'إدارة التصنيفات', en: 'Manage Categories' },
+      'brands': { ar: 'إدارة الماركات', en: 'Manage Brands' },
+      'cms': { ar: 'إدارة الواجهة', en: 'Storefront CMS' },
+      'flags': { ar: 'مفاتيح الميزات', en: 'Feature Flags' },
+    };
+
+    let key = currentTab;
+    if (!pathname.endsWith('/admin-secure-internal') && path !== 'admin-secure-internal') {
+       key = path;
+    }
+
+    const mapped = titles[key];
+    if (mapped) return isRTL ? mapped.ar : mapped.en;
+    
+    return isRTL ? 'لوحة التحكم' : 'Dashboard';
+  };
+
+  const getAdminPath = (subPath: string) => {
+    if (typeof window === 'undefined') return '';
+    const segments = window.location.pathname.split('/');
+    const baseSlug = segments[1] || 'super-admin';
+    return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
+  };
+
+  return (
+    <nav className="hidden sm:flex items-center gap-2 text-[13px]">
+      <span className={cn('opacity-70 cursor-pointer hover:underline', themeMode === 'dark' ? 'text-[#c8d3e0]' : 'text-[#555]')} onClick={() => window.location.href = getAdminPath('')}>
+        {isRTL ? 'الرئيسية' : 'Home'}
+      </span>
+      <span className="opacity-50 text-[10px]">/</span>
+      <span className={cn('font-medium', themeMode === 'dark' ? 'text-white' : 'text-[#73879C]')}>
+        {getPageTitle()}
+      </span>
+    </nav>
+  );
+}
 
 export default function AdminLayoutWrapper({
   children,
@@ -149,17 +215,25 @@ export default function AdminLayoutWrapper({
                 <AdminSidebar />
               </SheetContent>
             </Sheet>
+
+            {/* Desktop collapse toggle */}
+            <button
+              onClick={() => window.dispatchEvent(new Event('toggleAdminSidebar'))}
+              className={cn(
+                'hidden lg:block p-1.5 rounded-md transition-colors',
+                themeMode === 'dark' ? 'hover:bg-white/10' : 'hover:bg-gray-100'
+              )}
+              aria-label="Toggle sidebar"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
             
             {/* Breadcrumb */}
-            <nav className="hidden sm:flex items-center gap-2 text-[13px]">
-              <span className={cn('opacity-70 cursor-pointer hover:underline', themeMode === 'dark' ? 'text-[#c8d3e0]' : 'text-[#555]')} onClick={() => window.location.href = getAdminPath('')}>
-                {isRTL ? 'الرئيسية' : 'Home'}
-              </span>
-              <span className="opacity-50 text-[10px]">/</span>
-              <span className={cn('font-medium', themeMode === 'dark' ? 'text-white' : 'text-[#73879C]')}>
-                {isRTL ? 'لوحة التحكم' : 'Dashboard'}
-              </span>
-            </nav>
+            <Suspense fallback={<div className="hidden sm:flex items-center gap-2 text-[13px] opacity-70">...</div>}>
+              <AdminBreadcrumb />
+            </Suspense>
           </div>
 
           {/* CENTER: Search box */}
