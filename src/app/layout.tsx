@@ -18,6 +18,7 @@ import NextAuthProvider from '@/providers/NextAuthProvider';
 import RadixDirectionProvider from '@/providers/RadixDirectionProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
+import { LocaleProvider } from '@/components/providers/LocaleProvider';
 
 export const metadata: Metadata = {
   title: 'شاري داي - منصة التجارة الإلكترونية | CharyDay E-Commerce Platform',
@@ -32,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={`${cairo.variable} ${inter.variable} antialiased`}>
+        <LocaleProvider />
         <NextAuthProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <RadixDirectionProvider>

@@ -3,7 +3,7 @@
 // ============================================
 
 export type UserRole = 'admin' | 'store_manager' | 'seller' | 'supplier' | 'logistics' | 'buyer';
-export type Locale = 'ar' | 'en';
+export type Locale = 'ar' | 'en' | 'fr';
 export type Theme = 'light' | 'dark';
 
 export interface User {

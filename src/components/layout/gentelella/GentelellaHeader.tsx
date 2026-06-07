@@ -10,10 +10,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { User, Settings, LogOut, Globe } from 'lucide-react';
 import { useGentelellaTheme } from './theme';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
 import { useRouter } from 'next/navigation';
 import type { PageType } from '@/types';
 import { useTheme } from 'next-themes';
+import { localeDirections } from '@/lib/i18n/config';
 
 const rolePages: Record<string, PageType> = {
   admin: 'admin',
@@ -24,7 +26,11 @@ const rolePages: Record<string, PageType> = {
   buyer: 'buyer',
 };
 
-const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
+const t = (locale: string, ar: string, en: string, fr?: string) => {
+  if (locale === 'ar') return ar;
+  if (locale === 'fr') return fr || en;
+  return en;
+};
 
 export default function GentelellaHeader() {
   const { locale, setLocale, toggleDesktopSidebar, setSidebarOpen, isSidebarOpen, setCurrentPage, currentPage } = useAppStore();
@@ -32,7 +38,7 @@ export default function GentelellaHeader() {
   const { isDark, toggleDark: toggle } = useGentelellaTheme();
   const { setTheme } = useTheme();
   const router = useRouter();
-  const isRTL = locale === 'ar';
+  const isRTL = localeDirections[locale] === 'rtl';
 
   if (!user) return null;
 
@@ -186,16 +192,7 @@ export default function GentelellaHeader() {
       <div className="flex items-center gap-0.5 shrink-0">
 
         {/* Language toggle */}
-        <button
-          onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
-          className={cn(
-            'p-2 rounded-md transition-colors text-[13px] font-bold',
-            isDark ? 'hover:bg-white/10 text-[#8899aa] hover:text-white' : 'hover:bg-gray-100 text-[#666] hover:text-[#333]'
-          )}
-          title="Toggle Language"
-        >
-          <Globe className="h-[17px] w-[17px]" />
-        </button>
+        <LanguageSwitcher />
 
         {/* Dark / Light mode toggle — matches reference exactly */}
         <button

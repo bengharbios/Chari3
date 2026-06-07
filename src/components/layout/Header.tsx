@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppStore, useAuthStore, useCartStore } from '@/lib/store';
 import {
-  Search, ShoppingCart, Moon, Sun, Globe,
+  Search, ShoppingCart, Moon, Sun,
   Menu, X, ChevronDown, User, LogOut, Settings,
   ClipboardCheck, Trash2, Plus, Minus, Loader2, CheckSquare,
   ArrowLeft, ArrowRight, ShoppingBag, Truck, Tag, AlertCircle
@@ -22,6 +22,8 @@ import { Input } from '@/components/ui/input';
 
 import NotificationPanel from '@/components/notifications/NotificationPanel';
 import type { PageType } from '@/types';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { localeDirections } from '@/lib/i18n/config';
 
 
 const rolePages: Record<string, PageType> = {
@@ -411,9 +413,9 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isRTL = locale === 'ar';
-  const t = (ar: string, en: string, values?: Record<string, string | number>) => {
-    let result = locale === 'ar' ? ar : en;
+  const isRTL = localeDirections[locale] === 'rtl';
+  const t = (ar: string, en: string, fr?: string, values?: Record<string, string | number>) => {
+    let result = locale === 'ar' ? ar : locale === 'fr' ? (fr || en) : en;
     if (values) {
       Object.entries(values).forEach(([key, val]) => {
         result = result.replace(new RegExp(`%${key}%`, 'g'), String(val));
@@ -534,14 +536,8 @@ export default function Header() {
               {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
             </Button>
 
-            {/* Language Toggle — ONE button only */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
-            >
-              <Globe className="h-5 w-5" />
-            </Button>
+            {/* Language Toggle */}
+            <LanguageSwitcher />
 
             {/* Notifications */}
             {isAuthenticated && <NotificationPanel />}

@@ -12,7 +12,8 @@ import { toast } from 'sonner';
 import { ThemeSettings, defaultSellerTheme } from '@/lib/theme-defaults';
 
 export default function ThemeBuilder() {
-  const { adminLocale, token, admin } = useAdminAuthStore();
+  const { adminLocale, adminUser } = useAdminAuthStore();
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [currentTab, setCurrentTab] = useState<'seller' | 'buyer' | 'admin' | 'storefront'>('seller');
@@ -64,9 +65,8 @@ export default function ThemeBuilder() {
 
   const fetchTheme = async () => {
     try {
-      const res = await fetch('/api/admin/settings', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch('/api/admin/settings');
+
       const data = await res.json();
       if (data.success && data.settings) {
         const newThemes = { ...themes };
@@ -93,17 +93,18 @@ export default function ThemeBuilder() {
           theme_admin_dashboard: JSON.stringify(themes.admin),
           theme_storefront: JSON.stringify(themes.storefront),
         },
-        adminId: admin?.id
+        adminId: adminUser?.id
+
       };
 
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });
+
 
       const data = await res.json();
       if (data.success) {

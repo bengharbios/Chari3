@@ -10,14 +10,14 @@ interface AdminAuthState {
   isLoading: boolean;
   error: string | null;
   adminStep: 'login' | 'otp' | 'success';
-  adminLocale: 'ar' | 'en';
+  adminLocale: 'ar' | 'en' | 'fr';
 
   login: (email: string, pass: string) => Promise<boolean>;
   verifyOtp: (code: string) => Promise<boolean>;
   logout: () => void;
   setError: (error: string | null) => void;
   setStep: (step: 'login' | 'otp' | 'success') => void;
-  setAdminLocale: (locale: 'ar' | 'en') => void;
+  setAdminLocale: (locale: 'ar' | 'en' | 'fr') => void;
 }
 
 export const useAdminAuthStore = create<AdminAuthState>()(

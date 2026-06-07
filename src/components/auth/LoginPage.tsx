@@ -9,13 +9,19 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import {
   ShieldCheck, Store, UserCircle, Truck, ShoppingBag,
-  Globe, Moon, Sun, Zap, ChevronDown, ChevronUp
+  Moon, Sun, Zap, ChevronDown, ChevronUp
 } from 'lucide-react';
 import type { UserRole } from '@/types';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { localeDirections } from '@/lib/i18n/config';
 
-const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
+const t = (locale: string, ar: string, en: string, fr?: string) => {
+  if (locale === 'ar') return ar;
+  if (locale === 'fr') return fr || en;
+  return en;
+};
 
 const DEMO_ACCOUNTS: { role: UserRole; labelAr: string; labelEn: string; email: string; icon: React.ComponentType<{ className?: string }>; color: string; status: string }[] = [
   { role: 'admin', labelAr: 'مدير النظام', labelEn: 'System Admin', email: 'bengharbios@gmail.com', icon: ShieldCheck, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', status: 'active' },
@@ -29,7 +35,7 @@ const DEMO_ACCOUNTS: { role: UserRole; labelAr: string; labelEn: string; email: 
 
 export default function LoginPage() {
   const { loginAsDemo } = useAuthStore();
-  const { locale, setLocale, theme, setTheme } = useAppStore();
+  const { locale, theme, setTheme } = useAppStore();
   const { resetOnboarding, setAccountStatus, setVerificationItems, setRejectionReason, setRejectedItems, setOtpStep } = useOnboardingStore();
   const [showDemo, setShowDemo] = useState(false);
   const [loadingRole, setLoadingRole] = useState<UserRole | null>(null);
@@ -93,18 +99,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100dvh-var(--header-height))] flex flex-col" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-[calc(100dvh-var(--header-height))] flex flex-col" dir={localeDirections[locale] || 'rtl'}>
       {/* Top Controls */}
       <div className="fixed top-4 start-4 end-4 flex items-center justify-between z-10">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
-          className="gap-1 bg-background/80 backdrop-blur-sm"
-        >
-          <Globe className="h-3.5 w-3.5" />
-          {locale === 'ar' ? 'English' : 'العربية'}
-        </Button>
+        <div className="bg-background/80 backdrop-blur-sm rounded-md">
+          <LanguageSwitcher className="h-9 px-2" />
+        </div>
         <Button
           variant="outline"
           size="icon"

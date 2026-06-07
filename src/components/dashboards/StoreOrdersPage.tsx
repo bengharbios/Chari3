@@ -21,6 +21,7 @@ export default function StoreOrdersPage() {
   const t = (ar: string, en: string) => locale === 'ar' ? ar : en;
   const isAr = locale === 'ar';
 
+
   const [orders, setOrders] = useState<any[]>([]);
   const [statuses, setStatuses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -515,7 +516,7 @@ export default function StoreOrdersPage() {
                                 <MoreVertical className="h-4 w-4 text-muted-foreground" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 text-start" dir={isAr ? 'rtl' : 'ltr'}>
+                            <DropdownMenuContent align="end" className="w-48 text-start">
                               <DropdownMenuLabel>{t('إجراءات الطلب', 'Order Actions')}</DropdownMenuLabel>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => setSelectedOrder(o)} className="cursor-pointer">

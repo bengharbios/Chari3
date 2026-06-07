@@ -23,7 +23,8 @@ import type { ShipmentStatus } from '@/types';
 // HELPERS
 // ============================================
 
-const t = (locale: 'ar' | 'en', ar: string, en: string) => locale === 'ar' ? ar : en;
+const t = (locale: string, ar: string, en: string) => locale === 'ar' ? ar : en;
+
 
 const TIMELINE_STEPS: ShipmentStatus[] = [
   'pending',

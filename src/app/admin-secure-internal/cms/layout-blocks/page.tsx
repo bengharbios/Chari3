@@ -10,7 +10,8 @@ import { Save, Loader2, Plus, Trash2, LayoutTemplate } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function LayoutBlocksCMS() {
-  const { adminLocale, token, admin } = useAdminAuthStore();
+  const { adminLocale, adminUser } = useAdminAuthStore();
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -36,9 +37,8 @@ export default function LayoutBlocksCMS() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch('/api/admin/settings', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await fetch('/api/admin/settings');
+
       const data = await res.json();
       if (data.success && data.settings) {
         if (data.settings.header_blocks) {
@@ -63,17 +63,18 @@ export default function LayoutBlocksCMS() {
           header_blocks: JSON.stringify(headerBlocks),
           footer_blocks: JSON.stringify(footerBlocks),
         },
-        adminId: admin?.id
+        adminId: adminUser?.id
+
       };
 
       const res = await fetch('/api/admin/settings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify(payload)
       });
+
 
       const data = await res.json();
       if (data.success) {

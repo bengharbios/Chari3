@@ -14,15 +14,18 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 
+import { useTranslation } from '@/lib/i18n/useTranslation';
+
 export default function AdminSidebar({ className }: { className?: string }) {
-  const { adminLocale, adminUser, logout } = useAdminAuthStore();
+  const { adminUser, logout } = useAdminAuthStore();
   const { isSidebarOpen, setSidebarOpen } = useAppStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeGroup, setActiveGroup] = useState<number | null>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t, locale } = useTranslation();
 
-  const isRTL = adminLocale === 'ar';
+  const isRTL = locale === 'ar';
   const currentTab = searchParams.get('tab') || 'overview';
 
   useEffect(() => {
@@ -35,23 +38,6 @@ export default function AdminSidebar({ className }: { className?: string }) {
     if (isCollapsed) return;
     setActiveGroup(prev => prev === idx ? null : idx);
   };
-
-  const dict = {
-    ar: {
-      title: "الإدارة العامة",
-      collapse: "طي القائمة",
-      expand: "توسيع",
-      welcome: "مرحباً بك،",
-    },
-    en: {
-      title: "Admin Panel",
-      collapse: "Collapse",
-      expand: "Expand",
-      welcome: "Welcome,",
-    }
-  };
-
-  const t = dict[adminLocale] || dict.ar;
 
   const getIsActive = (path: string) => {
     const isBasePage = pathname.split('/').filter(Boolean).length === 1;
@@ -67,53 +53,48 @@ export default function AdminSidebar({ className }: { className?: string }) {
 
   const navGroups = [
     {
-      titleAr: "نظرة عامة وتقارير",
-      titleEn: "Overview & Reports",
+      title: t('admin.overview'),
       items: [
-        { icon: LayoutDashboard, labelAr: "لوحة التحكم الرئيسية", labelEn: "Dashboard Overview", path: '' },
-        { icon: TrendingUp, labelAr: "المنتجات الأكثر مبيعاً", labelEn: "Top Selling Products", path: '?tab=products' },
+        { icon: LayoutDashboard, label: t('admin.dashboardOverview'), path: '' },
+        { icon: TrendingUp, label: t('admin.topProducts'), path: '?tab=products' },
       ]
     },
     {
-      titleAr: "الطلبات والتحكم الفوري",
-      titleEn: "Orders & Direct Control",
+      title: t('admin.ordersControl'),
       items: [
-        { icon: ShoppingCart, labelAr: "إدارة الطلبات المنفذة", labelEn: "Fulfilled Orders", path: '?tab=orders' },
-        { icon: Sliders, labelAr: "إعدادات الحالات", labelEn: "Order Statuses", path: '?tab=order-statuses' },
+        { icon: ShoppingCart, label: t('admin.fulfilledOrders'), path: '?tab=orders' },
+        { icon: Sliders, label: t('admin.orderStatuses'), path: '?tab=order-statuses' },
       ]
     },
     {
-      titleAr: "الحسابات والتجارة",
-      titleEn: "Accounts & Merchants",
+      title: t('admin.accounts'),
       items: [
-        { icon: Users, labelAr: "إدارة حسابات المستخدمين", labelEn: "User Accounts", path: '?tab=users' },
-        { icon: Store, labelAr: "المتاجر والتجار", labelEn: "Stores & Sellers", path: '?tab=stores-sellers' },
+        { icon: Users, label: t('admin.userAccounts'), path: '?tab=users' },
+        { icon: Store, label: t('admin.storesSellers'), path: '?tab=stores-sellers' },
       ]
     },
     {
-      titleAr: "المالية والاشتراكات",
-      titleEn: "Finance & Subscriptions",
+      title: t('admin.financeSubscriptions'),
       items: [
-        { icon: Settings, labelAr: "إعدادات المنصة والعمولة", labelEn: "Commission Settings", path: 'billing/settings' },
-        { icon: Tag, labelAr: "باقات الاشتراك", labelEn: "Subscription Packages", path: 'billing/packages' },
-        { icon: Users, labelAr: "التجار والاشتراكات", labelEn: "Merchants & Subscriptions", path: 'billing/merchants' },
-        { icon: Wallet, labelAr: "المحافظ والمديونيات", labelEn: "Wallets & Debts", path: 'billing/wallets' },
-        { icon: Banknote, labelAr: "طلبات سحب الأرباح", labelEn: "Payout Requests", path: 'billing/withdrawals' },
-        { icon: Sliders, labelAr: "مراجعة الإيصالات", labelEn: "Review Receipts", path: 'billing/receipts' },
-        { icon: TrendingUp, labelAr: "تقرير الإيرادات", labelEn: "Revenue Reports", path: 'billing/revenue' },
+        { icon: Settings, label: t('admin.commissionSettings'), path: 'billing/settings' },
+        { icon: Tag, label: t('admin.subscriptionPackages'), path: 'billing/packages' },
+        { icon: Users, label: t('admin.merchantsSubscriptions'), path: 'billing/merchants' },
+        { icon: Wallet, label: t('admin.walletsDebts'), path: 'billing/wallets' },
+        { icon: Banknote, label: t('admin.payoutRequests'), path: 'billing/withdrawals' },
+        { icon: Sliders, label: t('admin.reviewReceipts'), path: 'billing/receipts' },
+        { icon: TrendingUp, label: t('admin.revenueReports'), path: 'billing/revenue' },
       ]
     },
     {
-      titleAr: "إعدادات المنصة",
-      titleEn: "Platform Settings",
+      title: t('admin.platformSettings'),
       items: [
-        { icon: Tag, labelAr: "الكوبونات العامة", labelEn: "Global Coupons", path: 'coupons' },
-        { icon: FolderTree, labelAr: "إدارة التصنيفات", labelEn: "Manage Categories", path: 'categories' },
-        { icon: Boxes, labelAr: "إدارة الماركات", labelEn: "Manage Brands", path: 'brands' },
-        { icon: Sliders, labelAr: "إدارة الواجهة (CMS)", labelEn: "Storefront CMS", path: 'cms' },
-        { icon: ToggleRight, labelAr: "مفاتيح الميزات", labelEn: "Feature Flags", path: 'flags' },
-        { icon: Settings, labelAr: "الإعدادات العامة", labelEn: "General Settings", path: 'settings' },
-        { icon: Palette, labelAr: "القوالب والتصميم", labelEn: "Theme & Design", path: 'settings/theme' },
+        { icon: Tag, label: t('admin.globalCoupons'), path: 'coupons' },
+        { icon: FolderTree, label: t('admin.manageCategories'), path: 'categories' },
+        { icon: Boxes, label: t('admin.manageBrands'), path: 'brands' },
+        { icon: Sliders, label: t('admin.storefrontCMS'), path: 'cms' },
+        { icon: ToggleRight, label: t('admin.featureFlags'), path: 'flags' },
+        { icon: Settings, label: t('admin.generalSettings'), path: 'settings' },
+        { icon: Palette, label: t('admin.themeDesign'), path: 'settings/theme' },
       ]
     }
   ];
@@ -178,12 +159,12 @@ export default function AdminSidebar({ className }: { className?: string }) {
         </div>
         <div className={cn("flex flex-col transition-opacity duration-300", isCollapsed ? "opacity-0 hidden" : "opacity-100")}>
           <span className="text-white text-lg font-bold tracking-wide">
-            {t.title}
+            {t('admin.title')}
           </span>
         </div>
       </div>
 
-      <div className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
+      <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
 
         {/* User Profile Info */}
         <div className={cn("flex items-center gap-3 p-4", isCollapsed ? "justify-center" : "")}>
@@ -193,7 +174,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
             </div>
           </div>
           <div className={cn("flex flex-col flex-1 min-w-0 transition-opacity", isCollapsed ? "hidden opacity-0" : "opacity-100")}>
-            <span className="text-[13px] text-[#BAB8B8]">{t.welcome}</span>
+            <span className="text-[13px] text-[#BAB8B8]">{t('common.welcome')}</span>
             <span className="text-[15px] font-semibold text-[#E7E7E7] truncate">{adminUser?.name || 'Admin'}</span>
           </div>
         </div>
@@ -211,18 +192,19 @@ export default function AdminSidebar({ className }: { className?: string }) {
                     onClick={() => toggleGroup(gIdx)}
                   >
                     <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-widest select-none hover:text-[#94a3b8] transition-colors">
-                      {isRTL ? group.titleAr : group.titleEn}
+                      {group.title}
+
                     </span>
                     <ChevronDown className={cn("h-3 w-3 text-[#64748b] transition-transform", !isOpen && (isRTL ? "rotate-90" : "-rotate-90"))} />
                   </div>
                   
-                  <ul className={cn("flex flex-col px-3 gap-0.5 overflow-hidden transition-all duration-300 ease-in-out", (!isOpen && !isCollapsed) ? "max-h-0 opacity-0" : "max-h-[1000px] opacity-100")}>
-                    {group.items.map((item) => {
-                      const isActive = getIsActive(item.path);
-                      const label = isRTL ? item.labelAr : item.labelEn;
-                      const Icon = item.icon;
+                    <ul className={cn("flex flex-col px-3 gap-0.5 overflow-hidden transition-all duration-300 ease-in-out", (!isOpen && !isCollapsed) ? "max-h-0 opacity-0" : "max-h-[1000px] opacity-100")}>
+                      {group.items.map((item) => {
+                        const isActive = getIsActive(item.path);
+                        const label = item.label;
+                        const Icon = item.icon;
 
-                      return (
+                        return (
                         <li key={item.path} className="relative group">
                           <Link
                             dir={isRTL ? 'rtl' : 'ltr'}

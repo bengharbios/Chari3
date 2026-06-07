@@ -12,51 +12,54 @@ import { useAppStore } from '@/lib/store';
 import { useTheme } from 'next-themes';
 import { ThemeSettings, defaultPlatformTheme } from '@/lib/theme-defaults';
 import { cn } from '@/lib/utils';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { useTranslation } from '@/lib/i18n/useTranslation';
+import { localeDirections } from '@/lib/i18n/config';
 
 function AdminBreadcrumb() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { adminLocale } = useAdminAuthStore();
   const { theme: globalTheme } = useTheme();
-  
-  const isRTL = adminLocale === 'ar';
+  const { t, locale } = useTranslation();
+  const isRTL = localeDirections[locale] === 'rtl';
   const currentTab = searchParams.get('tab') || 'overview';
   const themeMode = globalTheme === 'dark' ? 'dark' : 'light';
 
   const getPageTitle = () => {
     const path = pathname.split('/').pop() || '';
     
-    const titles: Record<string, { ar: string, en: string }> = {
-      'overview': { ar: 'لوحة التحكم الرئيسية', en: 'Dashboard Overview' },
-      'products': { ar: 'المنتجات الأكثر مبيعاً', en: 'Top Selling Products' },
-      'orders': { ar: 'إدارة الطلبات المنفذة', en: 'Fulfilled Orders' },
-      'order-statuses': { ar: 'إعدادات الحالات', en: 'Order Statuses' },
-      'users': { ar: 'إدارة حسابات المستخدمين', en: 'User Accounts' },
-      'stores-sellers': { ar: 'المتاجر والتجار', en: 'Stores & Sellers' },
-      'settings': { ar: 'الإعدادات العامة', en: 'General Settings' },
-      'theme': { ar: 'القوالب والتصميم', en: 'Theme & Design' },
-      'packages': { ar: 'باقات الاشتراك', en: 'Subscription Packages' },
-      'merchants': { ar: 'التجار والاشتراكات', en: 'Merchants & Subscriptions' },
-      'wallets': { ar: 'المحافظ والمديونيات', en: 'Wallets & Debts' },
-      'withdrawals': { ar: 'طلبات سحب الأرباح', en: 'Payout Requests' },
-      'receipts': { ar: 'مراجعة الإيصالات', en: 'Review Receipts' },
-      'revenue': { ar: 'تقرير الإيرادات', en: 'Revenue Reports' },
-      'coupons': { ar: 'الكوبونات العامة', en: 'Global Coupons' },
-      'categories': { ar: 'إدارة التصنيفات', en: 'Manage Categories' },
-      'brands': { ar: 'إدارة الماركات', en: 'Manage Brands' },
-      'cms': { ar: 'إدارة الواجهة', en: 'Storefront CMS' },
-      'flags': { ar: 'مفاتيح الميزات', en: 'Feature Flags' },
-    };
-
     let key = currentTab;
     if (!pathname.endsWith('/admin-secure-internal') && path !== 'admin-secure-internal') {
        key = path;
     }
 
-    const mapped = titles[key];
-    if (mapped) return isRTL ? mapped.ar : mapped.en;
+    // Map path/tab keys to translation keys
+    const keyMap: Record<string, string> = {
+      'overview': 'admin.dashboardOverview',
+      'products': 'admin.topProducts',
+      'orders': 'admin.fulfilledOrders',
+      'order-statuses': 'admin.orderStatuses',
+      'users': 'admin.userAccounts',
+      'stores-sellers': 'admin.storesSellers',
+      'settings': 'admin.generalSettings',
+      'theme': 'admin.themeDesign',
+      'packages': 'admin.subscriptionPackages',
+      'merchants': 'admin.merchantsSubscriptions',
+      'wallets': 'admin.walletsDebts',
+      'withdrawals': 'admin.payoutRequests',
+      'receipts': 'admin.reviewReceipts',
+      'revenue': 'admin.revenueReports',
+      'coupons': 'admin.globalCoupons',
+      'categories': 'admin.manageCategories',
+      'brands': 'admin.manageBrands',
+      'cms': 'admin.storefrontCMS',
+      'flags': 'admin.featureFlags',
+    };
+
+    const translationKey = keyMap[key];
+    if (translationKey) return t(translationKey);
     
-    return isRTL ? 'لوحة التحكم' : 'Dashboard';
+    return t('admin.title');
   };
 
   const getAdminPath = (subPath: string) => {
@@ -69,7 +72,7 @@ function AdminBreadcrumb() {
   return (
     <nav className="hidden sm:flex items-center gap-2 text-[13px]">
       <span className={cn('opacity-70 cursor-pointer hover:underline', themeMode === 'dark' ? 'text-[#c8d3e0]' : 'text-[#555]')} onClick={() => window.location.href = getAdminPath('')}>
-        {isRTL ? 'الرئيسية' : 'Home'}
+        {t('common.home')}
       </span>
       <span className="opacity-50 text-[10px]">/</span>
       <span className={cn('font-medium', themeMode === 'dark' ? 'text-white' : 'text-[#73879C]')}>
@@ -88,6 +91,7 @@ export default function AdminLayoutWrapper({
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   const { theme: globalTheme, setTheme: setGlobalTheme } = useTheme();
+  const { t, locale } = useTranslation();
   
   const [theme, setTheme] = useState<ThemeSettings>(defaultPlatformTheme);
   const [isThemeLoaded, setIsThemeLoaded] = useState(false);
@@ -122,12 +126,6 @@ export default function AdminLayoutWrapper({
       .finally(() => setIsThemeLoaded(true));
   }, [isAdminAuthenticated]);
 
-  const toggleLocale = () => {
-    const newLocale = adminLocale === 'ar' ? 'en' : 'ar';
-    setAdminLocale(newLocale);
-    useAppStore.getState().setLocale(newLocale);
-  };
-
   const toggleTheme = () => {
     setGlobalTheme(globalTheme === 'dark' ? 'light' : 'dark');
   };
@@ -141,7 +139,7 @@ export default function AdminLayoutWrapper({
     return <div className="min-h-screen bg-background" />;
   }
 
-  const isRTL = adminLocale === 'ar';
+  const isRTL = localeDirections[locale] === 'rtl';
   const isLoginPage = pathname.includes('/login');
 
   const getAdminPath = (subPath: string) => {
@@ -247,7 +245,7 @@ export default function AdminLayoutWrapper({
               id="admin-search-input"
               name="admin-search-input"
               type="text"
-              placeholder={isRTL ? 'ابحث أو نفّذ أمراً...' : 'Search pages or run a command…'}
+              placeholder={t('common.searchPages')}
               className="bg-transparent border-0 outline-none w-full text-[13px] placeholder:opacity-60"
               dir={isRTL ? 'rtl' : 'ltr'}
             />
@@ -260,16 +258,7 @@ export default function AdminLayoutWrapper({
           {/* RIGHT: Action buttons */}
           <div className="flex items-center gap-0.5 shrink-0">
             {/* Language toggle */}
-            <button
-              onClick={toggleLocale}
-              className={cn(
-                'p-2 rounded-md transition-colors text-[13px] font-bold',
-                themeMode === 'dark' ? 'hover:bg-white/10 text-[#8899aa] hover:text-white' : 'hover:bg-gray-100 text-[#666] hover:text-[#333]'
-              )}
-              title="Toggle Language"
-            >
-              <Globe className="h-[17px] w-[17px]" />
-            </button>
+            <LanguageSwitcher />
 
             {/* Dark / Light mode toggle */}
             <button
@@ -278,7 +267,7 @@ export default function AdminLayoutWrapper({
                 'p-2 rounded-md transition-colors relative',
                 themeMode === 'dark' ? 'hover:bg-white/10 text-[#8899aa] hover:text-[#f0c040]' : 'hover:bg-gray-100 text-[#666] hover:text-[#555]'
               )}
-              title={themeMode === 'dark' ? (isRTL ? 'الوضع النهاري' : 'Light Mode') : (isRTL ? 'الوضع الليلي' : 'Dark Mode')}
+              title={themeMode === 'dark' ? t('common.themeLight') : t('common.themeDark')}
               aria-label="Toggle theme"
             >
               {themeMode === 'dark' ? (
@@ -299,7 +288,7 @@ export default function AdminLayoutWrapper({
                 'p-2 rounded-md transition-colors relative hidden sm:block',
                 themeMode === 'dark' ? 'hover:bg-white/10 text-[#8899aa] hover:text-white' : 'hover:bg-gray-100 text-[#666] hover:text-[#333]'
               )}
-              title={isRTL ? 'الرسائل' : 'Messages'}
+              title={t('common.messages')}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <rect x="2" y="4" width="20" height="16" rx="3"/>
@@ -314,7 +303,7 @@ export default function AdminLayoutWrapper({
                 'p-2 rounded-md transition-colors relative',
                 themeMode === 'dark' ? 'hover:bg-white/10 text-red-400 hover:text-red-300' : 'hover:bg-red-50 text-red-500 hover:text-red-600'
               )}
-              title={isRTL ? 'تسجيل الخروج' : 'Logout'}
+              title={t('common.logout')}
             >
               <LogOut className="h-[17px] w-[17px]" />
             </button>

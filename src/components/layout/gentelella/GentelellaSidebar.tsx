@@ -14,20 +14,19 @@ import {
   Receipt, Sparkles, Monitor, KeyRound, MoreHorizontal
 } from 'lucide-react';
 
-const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
+import { useTranslation } from '@/lib/i18n/useTranslation';
+import { localeDirections } from '@/lib/i18n/config';
 
 // Type for the nested sidebar structure
 type GentelellaNavSubItem = {
   id: PageType;
-  labelAr: string;
-  labelEn: string;
+  labelKey: string;
   badge?: number;
 };
 
 type GentelellaNavTree = {
   id: string;
-  labelAr: string;
-  labelEn: string;
+  labelKey: string;
   icon: any;
   badge?: number | string;
   badgeColor?: string;
@@ -37,8 +36,7 @@ type GentelellaNavTree = {
 
 type GentelellaNavGroup = {
   id: string;
-  labelAr: string;
-  labelEn: string;
+  labelKey: string;
   trees: GentelellaNavTree[];
 };
 
@@ -46,23 +44,20 @@ type GentelellaNavGroup = {
 const STORE_GROUPS: GentelellaNavGroup[] = [
   {
     id: 'general',
-    labelAr: 'عام',
-    labelEn: 'General',
+    labelKey: 'sidebar.general',
     trees: [
       {
         id: 'dashboards',
-        labelAr: 'لوحات القيادة',
-        labelEn: 'Dashboards',
+        labelKey: 'sidebar.dashboard',
         icon: LayoutDashboard,
         children: [
-          { id: 'store', labelAr: 'العمليات', labelEn: 'Operations' },
-          { id: 'store-analytics', labelAr: 'التحليلات', labelEn: 'Analytics' },
+          { id: 'store', labelKey: 'sidebar.operations' },
+          { id: 'store-analytics', labelKey: 'sidebar.analytics' },
         ]
       },
       {
         id: 'team',
-        labelAr: 'الفريق',
-        labelEn: 'Team',
+        labelKey: 'sidebar.team',
         icon: Users,
         directPageId: 'store-staff'
       }
@@ -70,13 +65,11 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
   },
   {
     id: 'ecommerce',
-    labelAr: 'التجارة الإلكترونية',
-    labelEn: 'E-commerce',
+    labelKey: 'sidebar.ecommerce',
     trees: [
       {
         id: 'products-tree',
-        labelAr: 'المنتجات',
-        labelEn: 'Products',
+        labelKey: 'sidebar.products',
         icon: Boxes,
         directPageId: 'store-products',
         badge: 5,
@@ -84,17 +77,15 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
       },
       {
         id: 'orders-tree',
-        labelAr: 'الطلبات',
-        labelEn: 'Orders',
+        labelKey: 'sidebar.orders',
         icon: Package,
         children: [
-          { id: 'store-orders', labelAr: 'كل الطلبات', labelEn: 'All orders', badge: 12 },
+          { id: 'store-orders', labelKey: 'sidebar.allOrders', badge: 12 },
         ]
       },
       {
         id: 'marketing-tree',
-        labelAr: 'التسويق',
-        labelEn: 'Marketing',
+        labelKey: 'sidebar.marketing',
         icon: CreditCard,
         directPageId: 'store-coupons'
       }
@@ -102,33 +93,29 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
   },
   {
     id: 'finance',
-    labelAr: 'المالية',
-    labelEn: 'Finance',
+    labelKey: 'sidebar.finance',
     trees: [
       {
         id: 'billing-tree',
-        labelAr: 'الفواتير',
-        labelEn: 'Billing',
+        labelKey: 'sidebar.billing',
         icon: Receipt,
         children: [
-          { id: 'store-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice' },
-          { id: 'store-billing-plans', labelAr: 'الخطط', labelEn: 'Plans' },
-          { id: 'store-billing-addons', labelAr: 'الإضافات', labelEn: 'Add-ons' },
-          { id: 'store-billing-pay', labelAr: 'الدفع', labelEn: 'Payment' },
-          { id: 'store-billing-history', labelAr: 'سجل الفواتير', labelEn: 'History' },
+          { id: 'store-billing', labelKey: 'sidebar.currentInvoice' },
+          { id: 'store-billing-plans', labelKey: 'sidebar.plans' },
+          { id: 'store-billing-addons', labelKey: 'sidebar.addons' },
+          { id: 'store-billing-pay', labelKey: 'sidebar.payment' },
+          { id: 'store-billing-history', labelKey: 'sidebar.history' },
         ]
       }
     ]
   },
   {
     id: 'admin',
-    labelAr: 'الإدارة',
-    labelEn: 'Admin',
+    labelKey: 'sidebar.admin',
     trees: [
       {
         id: 'settings-tree',
-        labelAr: 'الإعدادات',
-        labelEn: 'Settings',
+        labelKey: 'common.settings',
         icon: Settings,
         directPageId: 'store-settings'
       }
@@ -140,89 +127,78 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
 const SELLER_GROUPS: GentelellaNavGroup[] = [
   {
     id: 'general',
-    labelAr: 'عام',
-    labelEn: 'General',
+    labelKey: 'sidebar.general',
     trees: [
       {
         id: 'dashboards',
-        labelAr: 'لوحات القيادة',
-        labelEn: 'Dashboards',
+        labelKey: 'sidebar.dashboard',
         icon: LayoutDashboard,
         children: [
-          { id: 'seller', labelAr: 'العمليات', labelEn: 'Operations' },
+          { id: 'seller', labelKey: 'sidebar.operations' },
         ]
       }
     ]
   },
   {
     id: 'ecommerce',
-    labelAr: 'التجارة الإلكترونية',
-    labelEn: 'E-commerce',
+    labelKey: 'sidebar.ecommerce',
     trees: [
       {
         id: 'products-tree',
-        labelAr: 'المنتجات',
-        labelEn: 'Products',
+        labelKey: 'sidebar.products',
         icon: Boxes,
         directPageId: 'seller-products'
       },
       {
         id: 'orders-tree',
-        labelAr: 'الطلبات',
-        labelEn: 'Orders',
+        labelKey: 'sidebar.orders',
         icon: Package,
         children: [
-          { id: 'seller-orders', labelAr: 'كل الطلبات', labelEn: 'All orders', badge: 4 },
+          { id: 'seller-orders', labelKey: 'sidebar.allOrders', badge: 4 },
         ]
       }
     ]
   },
   {
     id: 'finance',
-    labelAr: 'المالية',
-    labelEn: 'Finance',
+    labelKey: 'sidebar.finance',
     trees: [
       {
         id: 'wallet-tree',
-        labelAr: 'المحفظة',
-        labelEn: 'Wallet',
+        labelKey: 'sidebar.wallet',
         icon: Wallet,
         children: [
-          { id: 'seller-wallet', labelAr: 'الأرباح', labelEn: 'Payouts' },
-          { id: 'seller-debts', labelAr: 'المديونية', labelEn: 'Debts' },
+          { id: 'seller-wallet' as PageType, labelKey: 'sidebar.payouts' },
+          { id: 'seller-debts' as PageType, labelKey: 'sidebar.debts' },
         ]
       },
       {
         id: 'billing-tree',
-        labelAr: 'الفواتير',
-        labelEn: 'Billing',
+        labelKey: 'sidebar.billing',
         icon: Receipt,
         children: [
-          { id: 'seller-billing', labelAr: 'الفاتورة', labelEn: 'Invoice' },
-          { id: 'seller-billing-plans', labelAr: 'الخطط', labelEn: 'Plans' },
-          { id: 'seller-billing-addons', labelAr: 'الإضافات', labelEn: 'Add-ons' },
-          { id: 'seller-billing-pay', labelAr: 'الدفع', labelEn: 'Payment' },
-          { id: 'seller-billing-history', labelAr: 'السجل', labelEn: 'History' },
+          { id: 'seller-billing', labelKey: 'sidebar.currentInvoice' },
+          { id: 'seller-billing-plans', labelKey: 'sidebar.plans' },
+          { id: 'seller-billing-addons', labelKey: 'sidebar.addons' },
+          { id: 'seller-billing-pay', labelKey: 'sidebar.payment' },
+          { id: 'seller-billing-history', labelKey: 'sidebar.history' },
         ]
       }
     ]
   },
   {
     id: 'admin',
-    labelAr: 'الإدارة',
-    labelEn: 'Admin',
+    labelKey: 'sidebar.admin',
     trees: [
       {
         id: 'settings-tree',
-        labelAr: 'الإعدادات',
-        labelEn: 'Settings',
+        labelKey: 'common.settings',
         icon: Settings,
         directPageId: 'seller-settings'
       },
       {
         id: 'upgrade-tree',
-        labelAr: 'ترقية',
-        labelEn: 'Upgrade',
+        labelKey: 'sidebar.upgrade',
         icon: TrendingUp,
         directPageId: 'seller-upgrade',
         badge: 'New',
@@ -236,7 +212,8 @@ export default function GentelellaSidebar({ className }: { className?: string })
   const { locale, currentPage, setCurrentPage, isSidebarOpen, setSidebarOpen, isDesktopSidebarCollapsed } = useAppStore();
   const { user, isBuyerMode, logout } = useAuthStore();
   const { isDark } = useGentelellaTheme();
-  const isRTL = locale === 'ar';
+  const { t } = useTranslation();
+  const isRTL = localeDirections[locale] === 'rtl';
   
   // Track open accordion trees
   const [openTrees, setOpenTrees] = useState<Record<string, boolean>>({});
@@ -313,8 +290,9 @@ export default function GentelellaSidebar({ className }: { className?: string })
           return {
             ...tree,
             children: tree.children?.filter(child => {
-              if (child.id === 'seller-wallet' && paymentModel === 'decentralized') return false;
-              if (child.id === 'seller-debts' && paymentModel === 'centralized') return false;
+        if ((child.id as string) === 'seller-wallet' && paymentModel === 'decentralized') return false;
+        if ((child.id as string) === 'seller-debts' && paymentModel === 'centralized') return false;
+
               return true;
             })
           };
@@ -396,7 +374,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
               </div>
             </div>
             <div className={cn("flex flex-col flex-1 min-w-0 transition-opacity", isDesktopSidebarCollapsed ? "hidden opacity-0" : "opacity-100")}>
-              <span className="text-[13px] text-[#BAB8B8]">{t(locale, 'مرحباً بك،', 'Welcome,')}</span>
+              <span className="text-[13px] text-[#BAB8B8]">{t('common.welcome')}</span>
               <span className="text-[15px] font-semibold text-[#E7E7E7] truncate">{user.name}</span>
             </div>
           </div>
@@ -409,7 +387,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
                 <div key={group.id} className="mb-4">
                   <div className={cn("px-6 mb-2 transition-opacity", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
                     <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-widest">
-                      {t(locale, group.labelAr, group.labelEn)}
+                      {t(group.labelKey)}
                     </span>
                   </div>
                   
@@ -444,7 +422,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
                                   : 'text-[#94a3b8] hover:bg-white/5 hover:text-white',
                               isDesktopSidebarCollapsed && 'justify-center px-0'
                             )}
-                            title={isDesktopSidebarCollapsed ? t(locale, tree.labelAr, tree.labelEn) : undefined}
+                            title={isDesktopSidebarCollapsed ? t(tree.labelKey) : undefined}
                           >
                             <div className="flex items-center gap-3">
                               <Icon className={cn(
@@ -452,7 +430,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
                                 isTreeActive ? "text-[#1ABB9C]" : "group-hover:text-[#1ABB9C]"
                               )} strokeWidth={isTreeActive ? 2.5 : 2} />
                               <span className={cn("text-start transition-opacity", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                                {t(locale, tree.labelAr, tree.labelEn)}
+                                {t(tree.labelKey)}
                               </span>
                             </div>
                             
@@ -511,7 +489,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
                                           )} />
                                         )}
                                         
-                                        <span>{t(locale, child.labelAr, child.labelEn)}</span>
+                                        <span>{t(child.labelKey)}</span>
                                         {child.badge && (
                                           <span className="text-[10px] font-bold bg-white/10 px-1.5 py-0.5 rounded text-white">
                                             {child.badge}
@@ -532,7 +510,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
                               isRTL ? "right-[110%] -translate-x-2 group-hover:translate-x-0" : "left-[110%] translate-x-2 group-hover:translate-x-0"
                             )}>
                               <div className="bg-white text-[#1e293b] text-xs font-bold px-3 py-2 rounded-md whitespace-nowrap shadow-xl">
-                                {t(locale, tree.labelAr, tree.labelEn)}
+                                {t(tree.labelKey)}
                               </div>
                             </div>
                           )}
@@ -553,28 +531,28 @@ export default function GentelellaSidebar({ className }: { className?: string })
         )}>
           <button 
             className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
-            title={t(locale, 'الإعدادات', 'Settings')}
+            title={t('common.settings')}
             onClick={() => setCurrentPage(user.role === 'store_manager' ? 'store-settings' : 'seller-settings')}
           >
             <Settings className="h-[18px] w-[18px]" />
           </button>
           <button 
             className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
-            title={t(locale, 'ملء الشاشة', 'Full Screen')}
+            title={t('common.fullScreen')}
             onClick={toggleFullScreen}
           >
             <Monitor className="h-[18px] w-[18px]" />
           </button>
           <button 
             className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
-            title={t(locale, 'قفل الشاشة', 'Lock')}
+            title={t('common.lock')}
           >
             <KeyRound className="h-[18px] w-[18px]" />
           </button>
           <button 
             onClick={logout}
             className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-red-400 transition-colors hover:bg-[#1a2332]"
-            title={t(locale, 'تسجيل الخروج', 'Logout')}
+            title={t('common.logout')}
           >
             <LogOut className="h-[18px] w-[18px]" />
           </button>
