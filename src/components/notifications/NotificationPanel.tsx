@@ -374,7 +374,8 @@ export default function NotificationPanel() {
             dir={isAr ? 'rtl' : 'ltr'}
             className={cn(
               'fixed sm:absolute top-16 sm:top-full mt-0 sm:mt-2 z-[100] w-[calc(100vw-2rem)] sm:w-[380px]',
-              'left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:end-0',
+              'left-1/2 -translate-x-1/2 sm:translate-x-0',
+              isAr ? 'sm:left-0 sm:right-auto' : 'sm:right-0 sm:left-auto',
               'bg-background border border-border rounded-xl shadow-xl',
               'animate-in fade-in-0 zoom-in-95 slide-in-from-top-2'
             )}
