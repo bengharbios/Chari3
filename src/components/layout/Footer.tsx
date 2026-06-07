@@ -1,5 +1,6 @@
 import { useAppStore } from '@/lib/store';
 import { ThemeSettings } from '@/lib/theme-defaults';
+import { useEffect, useState } from 'react';
 
 const t = (localeOrAr: string, arOrEn: string, en?: string) => {
   if (en !== undefined) {
@@ -21,10 +22,29 @@ interface FooterProps {
 
 export default function Footer({ theme }: FooterProps) {
   const { locale } = useAppStore();
+  const [footerBlocks, setFooterBlocks] = useState<any[]>([]);
 
-  // If no theme provided, use a hardcoded default structure or fallback.
-  // In Phase 2, we will fully connect this to a global translation engine.
-  const dynamicColumns = theme?.footer.columns || [];
+  useEffect(() => {
+    fetch('/api/settings/public')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.settings?.footer_blocks) {
+          setFooterBlocks(JSON.parse(data.settings.footer_blocks));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const dynamicColumns = footerBlocks.length > 0 
+    ? footerBlocks.map(b => ({
+        id: b.id,
+        titleKey: locale === 'ar' ? b.titleAr : b.titleEn,
+        links: b.links.map((l: any) => ({
+          textKey: locale === 'ar' ? l.labelAr : l.labelEn,
+          url: l.url
+        }))
+      }))
+    : theme?.footer.columns || [];
   
   const socialConfig = theme?.footer.socialMedia;
 
@@ -84,11 +104,11 @@ export default function Footer({ theme }: FooterProps) {
           </div>
 
           {/* Dynamic Links Columns */}
-          {dynamicColumns.map((col, idx) => (
+          {dynamicColumns.map((col: any, idx: number) => (
             <div key={col.id || idx}>
               <h3 className="font-semibold text-sm mb-3 opacity-90">{col.titleKey}</h3>
               <ul className="space-y-2">
-                {col.links.map((link, linkIdx) => (
+                {col.links.map((link: any, linkIdx: number) => (
                   <li key={linkIdx}>
                     <a
                       href={link.url}

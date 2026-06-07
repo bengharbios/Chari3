@@ -10,6 +10,7 @@ import {
   ArrowLeft, ArrowRight, ShoppingBag, Truck, Tag, AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -96,7 +97,8 @@ const ALGERIAN_WILAYAS = [
 export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
-  const { locale, setLocale, theme, setTheme, toggleMobileMenu, setSidebarOpen, isSidebarOpen, allowGuestCheckout, setAllowGuestCheckout } = useAppStore();
+  const { theme, setTheme } = useTheme();
+  const { locale, setLocale, toggleMobileMenu, setSidebarOpen, isSidebarOpen, allowGuestCheckout, setAllowGuestCheckout } = useAppStore();
   const { user, isAuthenticated, logout, isBuyerMode } = useAuthStore();
   const {
     itemCount,
@@ -134,8 +136,22 @@ export default function Header() {
   const [customCities, setCustomCities] = useState<any[]>([]);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
 
+  // Dynamic Header CMS Blocks
+  const [headerBlocks, setHeaderBlocks] = useState<any[]>([]);
+
   // Keep city in sync with selectedState for backward compat with shipping calc
   const city = selectedState;
+
+  useEffect(() => {
+    fetch('/api/settings/public')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.settings?.header_blocks) {
+          setHeaderBlocks(JSON.parse(data.settings.header_blocks));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (items.length > 0 && cartStep === 'checkout') {
@@ -396,7 +412,15 @@ export default function Header() {
   }, []);
 
   const isRTL = locale === 'ar';
-  const t = (ar: string, en: string) => (locale === 'ar' ? ar : en);
+  const t = (ar: string, en: string, values?: Record<string, string | number>) => {
+    let result = locale === 'ar' ? ar : en;
+    if (values) {
+      Object.entries(values).forEach(([key, val]) => {
+        result = result.replace(new RegExp(`%${key}%`, 'g'), String(val));
+      });
+    }
+    return result;
+  };
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
   return (
@@ -408,6 +432,24 @@ export default function Header() {
           : 'bg-background border-b border-transparent'
       }`}
     >
+      {/* Dynamic Header Blocks (Announcement bars) */}
+      {headerBlocks.map((block, idx) => {
+        if (!block.isActive) return null;
+        return (
+          <div key={block.id || idx} className="bg-primary text-primary-foreground py-1.5 px-4 text-center text-xs font-bold w-full relative">
+            <div className="container-platform flex items-center justify-center gap-2">
+              {block.link ? (
+                <a href={block.link} className="hover:underline flex items-center gap-1">
+                  <span>{isRTL ? block.contentAr : block.contentEn}</span>
+                  <ArrowLeft className={`h-3 w-3 ${isRTL ? '' : 'rotate-180'}`} />
+                </a>
+              ) : (
+                <span>{isRTL ? block.contentAr : block.contentEn}</span>
+              )}
+            </div>
+          </div>
+        );
+      })}
       {isBuyerMode && (
         <div className="bg-gradient-to-r from-brand to-amber-300 text-navy py-1.5 px-4 text-center text-xs font-bold flex flex-wrap items-center justify-center gap-2 w-full border-b border-navy/10 shadow-sm relative">
           <ShoppingBag className="h-3.5 w-3.5 shrink-0" />

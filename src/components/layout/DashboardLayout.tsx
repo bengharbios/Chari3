@@ -9,6 +9,7 @@ import GentelellaHeader from './gentelella/GentelellaHeader';
 import { useGentelellaTheme } from './gentelella/theme';
 import Footer from './Footer';
 import { ThemeSettings, defaultSellerTheme } from '@/lib/theme-defaults';
+import { useTheme } from 'next-themes';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -22,35 +23,48 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isDark } = useGentelellaTheme();
 
   useEffect(() => {
-    const isDashboardRole = user?.role && !['admin', 'buyer'].includes(user.role) && !isBuyerMode;
-    if (isDashboardRole) {
-      fetch('/api/settings/public')
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.settings?.seller_dashboard_template) {
+    fetch('/api/settings/public')
+      .then(res => res.json())
+      .then(data => {
+        if (!data.success || !data.settings) return;
+        
+        let themeKey = 'theme_seller_dashboard';
+        if (isBuyerMode || user?.role === 'buyer') {
+          themeKey = 'theme_buyer_dashboard';
+        } else if (user?.role === 'admin') {
+          themeKey = 'theme_admin_dashboard';
+        }
+
+        const isDashboardRole = user?.role && !['admin', 'buyer'].includes(user.role) && !isBuyerMode;
+        if (isDashboardRole) {
+          if (data.settings.seller_dashboard_template) {
             setDashboardTemplate(data.settings.seller_dashboard_template);
           } else {
             setDashboardTemplate('default');
           }
-          if (data.success && data.settings?.theme_seller_dashboard) {
-            try {
-              setTheme(JSON.parse(data.settings.theme_seller_dashboard));
-            } catch (e) {
-              console.error('Failed to parse theme JSON', e);
-            }
+        } else {
+          setDashboardTemplate('default');
+        }
+
+        if (data.settings[themeKey]) {
+          try {
+            setTheme(JSON.parse(data.settings[themeKey]));
+          } catch (e) {
+            console.error('Failed to parse theme JSON', e);
           }
-        })
-        .catch(() => setDashboardTemplate('default'));
-    } else {
-      setDashboardTemplate('default');
-    }
+        }
+      })
+      .catch(() => setDashboardTemplate('default'));
   }, [user, isBuyerMode]);
 
   if (!user) return null;
 
+  const { isDark: gentelellaDark } = useGentelellaTheme();
+  const { theme: globalTheme } = useTheme();
+
   const isGentelella = dashboardTemplate === 'gentelella';
 
-  const themeMode = isDark ? 'dark' : 'light';
+  const themeMode = globalTheme === 'dark' || (isGentelella && gentelellaDark) ? 'dark' : 'light';
   
   const themeStyles = {
     '--theme-bg-sidebar': theme.colors.sidebarBackground[themeMode],

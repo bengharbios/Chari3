@@ -15,7 +15,14 @@ export default function ThemeBuilder() {
   const { adminLocale, token, admin } = useAdminAuthStore();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [theme, setTheme] = useState<ThemeSettings>(defaultSellerTheme);
+  const [currentTab, setCurrentTab] = useState<'seller' | 'buyer' | 'admin' | 'storefront'>('seller');
+  
+  const [themes, setThemes] = useState<Record<string, ThemeSettings>>({
+    seller: defaultSellerTheme,
+    buyer: defaultSellerTheme,
+    admin: defaultSellerTheme,
+    storefront: defaultSellerTheme,
+  });
 
   const isRTL = adminLocale === 'ar';
   const t = {
@@ -61,8 +68,13 @@ export default function ThemeBuilder() {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json();
-      if (data.success && data.settings.theme_seller_dashboard) {
-        setTheme(JSON.parse(data.settings.theme_seller_dashboard));
+      if (data.success && data.settings) {
+        const newThemes = { ...themes };
+        if (data.settings.theme_seller_dashboard) newThemes.seller = JSON.parse(data.settings.theme_seller_dashboard);
+        if (data.settings.theme_buyer_dashboard) newThemes.buyer = JSON.parse(data.settings.theme_buyer_dashboard);
+        if (data.settings.theme_admin_dashboard) newThemes.admin = JSON.parse(data.settings.theme_admin_dashboard);
+        if (data.settings.theme_storefront) newThemes.storefront = JSON.parse(data.settings.theme_storefront);
+        setThemes(newThemes);
       }
     } catch (error) {
       console.error('Failed to fetch theme:', error);
@@ -76,7 +88,10 @@ export default function ThemeBuilder() {
     try {
       const payload = {
         settings: {
-          theme_seller_dashboard: JSON.stringify(theme)
+          theme_seller_dashboard: JSON.stringify(themes.seller),
+          theme_buyer_dashboard: JSON.stringify(themes.buyer),
+          theme_admin_dashboard: JSON.stringify(themes.admin),
+          theme_storefront: JSON.stringify(themes.storefront),
         },
         adminId: admin?.id
       };
@@ -105,17 +120,22 @@ export default function ThemeBuilder() {
   };
 
   const handleColorChange = (key: keyof ThemeSettings['colors'], mode: 'light' | 'dark', value: string) => {
-    setTheme(prev => ({
+    setThemes(prev => ({
       ...prev,
-      colors: {
-        ...prev.colors,
-        [key]: {
-          ...prev.colors[key],
-          [mode]: value
+      [currentTab]: {
+        ...prev[currentTab],
+        colors: {
+          ...prev[currentTab].colors,
+          [key]: {
+            ...prev[currentTab].colors[key],
+            [mode]: value
+          }
         }
       }
     }));
   };
+
+  const theme = themes[currentTab];
 
   if (isLoading) {
     return (
@@ -138,7 +158,7 @@ export default function ThemeBuilder() {
         </Button>
       </div>
 
-      <Tabs defaultValue="seller" className="w-full">
+      <Tabs value={currentTab} onValueChange={(val) => setCurrentTab(val as any)} className="w-full">
         <TabsList className="mb-4 flex-wrap h-auto">
           <TabsTrigger value="seller">{t.tabs.seller}</TabsTrigger>
           <TabsTrigger value="buyer">{t.tabs.buyer}</TabsTrigger>
@@ -146,7 +166,7 @@ export default function ThemeBuilder() {
           <TabsTrigger value="storefront">{t.tabs.storefront}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="seller" className="space-y-8 bg-white p-6 rounded-xl border border-slate-200">
+        <div className="space-y-8 bg-white p-6 rounded-xl border border-slate-200">
           
           {/* Colors Section */}
           <div className="space-y-4">
@@ -209,7 +229,7 @@ export default function ThemeBuilder() {
                 <Label>Font Family</Label>
                 <Input 
                   value={theme.typography.fontFamily} 
-                  onChange={(e) => setTheme({...theme, typography: {...theme.typography, fontFamily: e.target.value}})}
+                  onChange={(e) => setThemes({...themes, [currentTab]: {...theme, typography: {...theme.typography, fontFamily: e.target.value}}})}
                   placeholder="e.g. Cairo, sans-serif"
                 />
               </div>
@@ -223,7 +243,7 @@ export default function ThemeBuilder() {
               <div className="flex items-center gap-2 text-sm font-normal">
                 <Switch 
                   checked={theme.footer.enabled} 
-                  onCheckedChange={(c) => setTheme({...theme, footer: {...theme.footer, enabled: c}})}
+                  onCheckedChange={(c) => setThemes({...themes, [currentTab]: {...theme, footer: {...theme.footer, enabled: c}}})}
                 />
                 <Label>تفعيل الفوتر</Label>
               </div>
@@ -242,7 +262,7 @@ export default function ThemeBuilder() {
                           onChange={(e) => {
                             const newCols = [...theme.footer.columns];
                             newCols[idx].titleKey = e.target.value;
-                            setTheme({...theme, footer: {...theme.footer, columns: newCols}});
+                            setThemes({...themes, [currentTab]: {...theme, footer: {...theme.footer, columns: newCols}}});
                           }}
                         />
                         <Button variant="destructive" size="icon">
@@ -268,23 +288,12 @@ export default function ThemeBuilder() {
               className="w-full h-48 p-4 font-mono text-sm bg-slate-900 text-green-400 rounded-lg outline-none"
               placeholder="/* Add your custom CSS here */&#10;body {&#10;  /* overrides */&#10;}"
               value={theme.customCss}
-              onChange={(e) => setTheme({...theme, customCss: e.target.value})}
+              onChange={(e) => setThemes({...themes, [currentTab]: {...theme, customCss: e.target.value}})}
               dir="ltr"
             />
           </div>
 
-        </TabsContent>
-        
-        {/* Placeholder for other tabs */}
-        <TabsContent value="buyer" className="p-12 text-center text-slate-500 border rounded-xl bg-slate-50">
-          سيتم توفير واجهة تخصيص المشتري لاحقاً
-        </TabsContent>
-        <TabsContent value="admin" className="p-12 text-center text-slate-500 border rounded-xl bg-slate-50">
-          سيتم توفير واجهة تخصيص الإدارة لاحقاً
-        </TabsContent>
-        <TabsContent value="storefront" className="p-12 text-center text-slate-500 border rounded-xl bg-slate-50">
-          سيتم توفير واجهة تخصيص المتجر لاحقاً
-        </TabsContent>
+        </div>
       </Tabs>
     </div>
   );

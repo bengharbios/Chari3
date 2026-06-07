@@ -16,6 +16,7 @@ const inter = Inter({
 
 import NextAuthProvider from '@/providers/NextAuthProvider';
 import RadixDirectionProvider from '@/providers/RadixDirectionProvider';
+import { ThemeProvider } from '@/providers/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
@@ -32,10 +33,12 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={`${cairo.variable} ${inter.variable} antialiased`}>
         <NextAuthProvider>
-          <RadixDirectionProvider>
-            {children}
-            <Toaster position="top-center" richColors />
-          </RadixDirectionProvider>
+          <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <RadixDirectionProvider>
+              {children}
+              <Toaster position="top-center" richColors />
+            </RadixDirectionProvider>
+          </ThemeProvider>
         </NextAuthProvider>
       </body>
     </html>

@@ -19,11 +19,6 @@ export default function AppShell({ children }: AppShellProps) {
     document.documentElement.setAttribute('lang', locale);
   }, [locale]);
 
-  useEffect(() => {
-    document.documentElement.classList.remove('light', 'dark');
-    document.documentElement.classList.add(theme);
-  }, [theme]);
-
   return (
     <div
       className={`min-h-dvh max-w-full overflow-x-hidden flex flex-col bg-background text-foreground transition-colors duration-300 ${
@@ -33,14 +28,6 @@ export default function AppShell({ children }: AppShellProps) {
     >
       {children}
       <FloatingCart />
-      <Toaster
-        position={locale === 'ar' ? 'top-left' : 'top-right'}
-        richColors
-        closeButton
-        toastOptions={{
-          className: 'font-[var(--font-platform)]',
-        }}
-      />
     </div>
   );
 }
