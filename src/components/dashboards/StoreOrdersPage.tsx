@@ -439,7 +439,7 @@ export default function StoreOrdersPage() {
                     const statusConfig = getStatusConfig(o.status);
                     
                     return (
-                      <tr key={o.id} className="border-b hover:bg-muted/10 transition-colors whitespace-nowrap">
+                      <tr key={o.id} onClick={() => setSelectedOrder(o)} className="border-b hover:bg-muted/10 transition-colors whitespace-nowrap cursor-pointer">
                         <td className="px-4 py-3 align-middle font-mono text-emerald-500 font-bold text-start"><span dir="ltr">#{o.orderNumber}</span></td>
                         <td className="px-4 py-3 align-middle text-start">
                           <div className="flex items-center gap-3">
@@ -474,7 +474,7 @@ export default function StoreOrdersPage() {
                           <span dir="ltr">{o.paymentMethod.toUpperCase()} {o.paymentStatus === 'paid' ? '•••• 4242' : ''}</span>
                         </td>
                         <td className="px-4 py-3 align-middle text-xs text-muted-foreground text-start"><span dir="ltr">{o.date}</span></td>
-                        <td className="px-4 py-3 align-middle text-end">
+                        <td className="px-4 py-3 align-middle text-end" onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-muted shrink-0 focus-visible:ring-0">
@@ -638,20 +638,20 @@ export default function StoreOrdersPage() {
                         <CardTitle className="text-sm font-black">{t('المنتجات', 'Items')} &bull; {selectedOrder.items.length}</CardTitle>
                       </CardHeader>
                       <CardContent className="p-0">
-                        <div className="overflow-y-auto overflow-x-hidden max-h-[300px] w-full">
-                          <table className="w-full text-sm table-fixed">
+                        <div className="overflow-y-auto overflow-x-auto max-h-[300px] w-full">
+                          <table className="w-full text-sm">
                             <thead className="bg-muted/10 text-[10px] text-muted-foreground uppercase sticky top-0 z-10">
                               <tr>
-                                <th className="p-3 md:p-4 font-bold text-start w-1/2">{t('المنتج', 'PRODUCT')}</th>
-                                <th className="p-3 md:p-4 font-bold text-center w-16">{t('الكمية', 'QTY')}</th>
-                                <th className="p-3 md:p-4 font-bold text-end w-24">{t('السعر', 'PRICE')}</th>
-                                <th className="p-3 md:p-4 font-bold text-end w-28">{t('المجموع', 'TOTAL')}</th>
+                                <th className="p-2 md:p-4 font-bold text-start min-w-[180px] w-1/2">{t('المنتج', 'PRODUCT')}</th>
+                                <th className="p-2 md:p-4 font-bold text-center w-16 whitespace-nowrap">{t('الكمية', 'QTY')}</th>
+                                <th className="p-2 md:p-4 font-bold text-end w-24 whitespace-nowrap">{t('السعر', 'PRICE')}</th>
+                                <th className="p-2 md:p-4 font-bold text-end w-28 whitespace-nowrap">{t('المجموع', 'TOTAL')}</th>
                               </tr>
                             </thead>
                             <tbody>
                               {selectedOrder.items.map((item: any, idx: number) => (
                                 <tr key={idx} className="border-b">
-                                  <td className="p-3 md:p-4 align-middle">
+                                  <td className="p-2 md:p-4 align-middle">
                                     <div className="flex gap-3 items-center">
                                       <div className="h-8 w-8 md:h-10 md:w-10 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-100">
                                         {item.productName.substring(0, 2).toUpperCase()}
@@ -662,9 +662,9 @@ export default function StoreOrdersPage() {
                                       </div>
                                     </div>
                                   </td>
-                                  <td className="p-3 md:p-4 text-center font-bold align-middle">{item.quantity}</td>
-                                  <td className="p-3 md:p-4 text-end text-muted-foreground align-middle whitespace-nowrap" dir="ltr">{item.price.toLocaleString()} DZD</td>
-                                  <td className="p-3 md:p-4 text-end font-bold text-foreground align-middle whitespace-nowrap" dir="ltr">{item.total.toLocaleString()} DZD</td>
+                                  <td className="p-2 md:p-4 text-center font-bold align-middle">{item.quantity}</td>
+                                  <td className="p-2 md:p-4 text-end text-muted-foreground align-middle whitespace-nowrap" dir="ltr">{item.price.toLocaleString()} DZD</td>
+                                  <td className="p-2 md:p-4 text-end font-bold text-foreground align-middle whitespace-nowrap" dir="ltr">{item.total.toLocaleString()} DZD</td>
                                 </tr>
                               ))}
                               {/* Totals rows inside table footer */}

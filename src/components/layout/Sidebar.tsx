@@ -118,6 +118,12 @@ interface SidebarProps {
           setSidebarOpen(false);
         }
       };
+      
+      // Check immediately on mount
+      if (typeof window !== 'undefined' && window.innerWidth < 1024 && isSidebarOpen) {
+        setSidebarOpen(false);
+      }
+
       window.addEventListener('resize', handleResize);
       return () => window.removeEventListener('resize', handleResize);
     }, [isSidebarOpen, setSidebarOpen]);
