@@ -3,7 +3,7 @@
 import { useAppStore } from '@/lib/store';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { usePathname } from 'next/navigation';
-import { Globe, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTranslationStore } from '@/lib/store/translation-store';
 import {
@@ -86,19 +86,18 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
           )}
           title="Change Language / تغيير اللغة / Changer la langue"
         >
-          <Globe className="h-[17px] w-[17px]" />
-          <span className="hidden sm:flex items-center gap-1.5 text-[12px] uppercase">
-            {currentLangMeta && (
-              <img
-                src={`https://hatscripts.github.io/circle-flags/flags/${flagEmojiToCode(currentLangMeta.flag)}.svg`}
-                className="w-4.5 h-4.5 rounded-full object-cover shrink-0"
-                alt={currentLangMeta.name}
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
-            )}
-            <span className="hidden md:inline">{currentLangMeta?.name || 'العربية'}</span>
+          {currentLangMeta && (
+            <img
+              src={`https://hatscripts.github.io/circle-flags/flags/${flagEmojiToCode(currentLangMeta.flag)}.svg`}
+              className="w-5 h-5 rounded-full object-cover shrink-0"
+              alt={currentLangMeta.name}
+              onError={(e) => {
+                (e.target as HTMLElement).style.display = 'none';
+              }}
+            />
+          )}
+          <span className="hidden md:inline text-[12px] uppercase">
+            {currentLangMeta?.name || 'العربية'}
           </span>
         </button>
       </DropdownMenuTrigger>
