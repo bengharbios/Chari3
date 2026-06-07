@@ -689,6 +689,7 @@ export default function StoreOrdersPage() {
                             </tr>
                           </tbody>
                         </table>
+                        </div>
                       </CardContent>
                     </Card>
 
