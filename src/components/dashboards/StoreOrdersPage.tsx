@@ -137,6 +137,24 @@ export default function StoreOrdersPage() {
   useEffect(() => { fetchStatuses(); }, []);
   useEffect(() => { fetchOrders(); }, [user?.id, page, limit, statusFilter, startDate, endDate]);
 
+  // Open order details directly if orderId is in URL
+  useEffect(() => {
+    if (!isLoading && orders.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const targetOrderId = params.get('orderId');
+      if (targetOrderId) {
+        const found = orders.find((o) => o.id === targetOrderId);
+        if (found && !selectedOrder) {
+          setSelectedOrder(found);
+          // Optionally clean up the URL without a page reload
+          const url = new URL(window.location.href);
+          url.searchParams.delete('orderId');
+          window.history.replaceState({}, '', url.toString());
+        }
+      }
+    }
+  }, [isLoading, orders, selectedOrder]);
+
   const handleUpdateStatus = async (status: string, orderId?: string) => {
     const targetId = orderId || selectedOrder?.id;
     if (!targetId) return;
@@ -440,7 +458,7 @@ export default function StoreOrdersPage() {
                     
                     return (
                       <tr key={o.id} onClick={() => setSelectedOrder(o)} className="border-b hover:bg-muted/10 transition-colors whitespace-nowrap cursor-pointer">
-                        <td className="px-4 py-3 align-middle font-mono text-emerald-500 font-bold text-start"><span dir="ltr">#{o.orderNumber}</span></td>
+                        <td className="px-4 py-3 align-middle font-mono text-emerald-500 font-bold text-start hover:underline"><span dir="ltr">#{o.orderNumber}</span></td>
                         <td className="px-4 py-3 align-middle text-start">
                           <div className="flex items-center gap-3">
                             <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-[10px] font-black shrink-0 ${getStatusColor(o.status)}`}>
@@ -525,7 +543,7 @@ export default function StoreOrdersPage() {
 
       {/* Order Detail Dialog - Redesigned to match image 2 */}
       <Dialog open={!!selectedOrder} onOpenChange={(open) => { if (!open) setSelectedOrder(null); }}>
-        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden bg-background w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[95vh] sm:w-full flex flex-col rounded-xl !z-[100] mt-10 md:mt-0">
+        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden bg-background w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[95vh] sm:w-full flex flex-col rounded-xl mt-10 md:mt-0">
           <DialogTitle className="sr-only">{t('تفاصيل الطلب', 'Order Details')} #{selectedOrder?.orderNumber}</DialogTitle>
           <DialogDescription className="sr-only">{t('عرض وتعديل تفاصيل الطلب الخاص بالعميل.', 'View and manage customer order details.')}</DialogDescription>
           {selectedOrder && (

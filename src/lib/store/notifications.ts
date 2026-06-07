@@ -25,6 +25,7 @@ export interface AppNotification {
   // Visual
   iconBg: string;
   urgency: 'low' | 'normal' | 'high' | 'urgent';
+  data?: string;
 }
 
 interface NotificationState {

@@ -154,10 +154,21 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
     if (e) e.stopPropagation();
     await handleMarkAsRead();
     setOpen(false);
+    
+    let targetOrderId = '';
+    if (notification.data) {
+      try {
+        const parsed = JSON.parse(notification.data);
+        if (parsed.orderId) targetOrderId = parsed.orderId;
+      } catch (err) {}
+    }
+
     if (notification.actionPage) {
+      const url = `/?view=${notification.actionPage}${targetOrderId ? '&orderId=' + targetOrderId : ''}`;
       if (pathname !== '/') {
-        router.push(`/?view=${notification.actionPage}`);
+        router.push(url);
       } else {
+        router.push(url);
         setCurrentPage(notification.actionPage);
       }
     } else if (notification.actionUrl) {
@@ -283,11 +294,10 @@ export default function NotificationPanel() {
         const data = await res.json();
         if (!data.success || !data.notifications) return;
 
-        // Map DB notifications to AppNotification format
         data.notifications.forEach((dbNotif: {
           id: string; title: string; titleEn?: string;
           body: string; bodyEn?: string; type: string;
-          isRead: boolean; createdAt: string;
+          isRead: boolean; createdAt: string; data?: string;
         }) => {
           const typeToCategory: Record<string, string> = {
             new_order: 'order', shipment: 'shipment',
@@ -320,6 +330,7 @@ export default function NotificationPanel() {
             actionUrl: null,
             iconBg: iconBgMap[cat] || iconBgMap.system,
             urgency: dbNotif.type === 'new_order' ? 'high' : 'normal',
+            data: dbNotif.data,
           });
         });
       } catch {
@@ -369,13 +380,12 @@ export default function NotificationPanel() {
           {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
 
-          {/* Panel */}
           <div
             dir={isAr ? 'rtl' : 'ltr'}
             className={cn(
               'fixed sm:absolute top-16 sm:top-full mt-0 sm:mt-2 z-[100] w-[calc(100vw-2rem)] sm:w-[380px]',
               'left-1/2 -translate-x-1/2 sm:translate-x-0',
-              isAr ? 'sm:left-0 sm:right-auto' : 'sm:right-0 sm:left-auto',
+              'sm:end-0 sm:start-auto', // Use logical properties for better RTL handling
               'bg-background border border-border rounded-xl shadow-xl',
               'animate-in fade-in-0 zoom-in-95 slide-in-from-top-2'
             )}

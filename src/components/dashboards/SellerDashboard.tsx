@@ -1429,6 +1429,27 @@ function ProductQAPreview({ productId, isAr, t }: { productId: string; isAr: boo
 
 // ── Orders sub-page ────────────────────────────────────────────────────────────
 function SellerOrdersTab({ data, isLoading, t, isAr, onRefresh }: { data: DashboardData | null; isLoading: boolean; t: (a: string, e: string) => string; isAr: boolean; onRefresh: () => void }) {
+  useEffect(() => {
+    if (!isLoading && data?.recentOrders) {
+      const params = new URLSearchParams(window.location.search);
+      const targetOrderId = params.get('orderId');
+      if (targetOrderId) {
+        const el = document.getElementById(`order-card-${targetOrderId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'bg-primary/5');
+          setTimeout(() => {
+            el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'bg-primary/5');
+            // Clean URL without reloading
+            const url = new URL(window.location.href);
+            url.searchParams.delete('orderId');
+            window.history.replaceState({}, '', url.toString());
+          }, 3000);
+        }
+      }
+    }
+  }, [isLoading, data]);
+
   const walletCurrency = data?.kpis?.walletCurrency || 'DZD';
   const DZD2 = (n: number) => {
     const formattedAmount = n.toLocaleString(isAr ? 'ar-DZ' : 'en-US');
@@ -1508,7 +1529,7 @@ function SellerOrdersTab({ data, isLoading, t, isAr, onRefresh }: { data: Dashbo
               const fullAddress = `${addressDetails.street || ''}, ${addressDetails.city || ''}`;
 
               return (
-                <Card key={i} className="overflow-hidden border border-primary/10 hover:border-primary/20 transition-all shadow-md">
+                <Card key={i} id={`order-card-${orderId}`} className="overflow-hidden border border-primary/10 hover:border-primary/20 transition-all shadow-md">
                   <div className="p-4 bg-primary/5 border-b border-border flex items-center justify-between flex-wrap gap-2">
                     <div className="space-y-0.5">
                       <span className="text-xs text-muted-foreground font-bold">{t('رقم الطلب', 'Order No.')}</span>

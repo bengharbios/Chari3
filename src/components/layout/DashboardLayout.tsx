@@ -42,7 +42,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const isGentelella = dashboardTemplate === 'gentelella';
 
   return (
-    <div id={isGentelella ? 'gentelella-root' : undefined} className="flex-1 flex flex-col min-h-[calc(100dvh-var(--header-height))] max-h-[calc(100dvh-var(--header-height))]">
+    <div id={isGentelella ? 'gentelella-root' : undefined} className={`flex-1 flex flex-col overflow-hidden ${isGentelella ? 'min-h-screen max-h-screen' : 'min-h-[calc(100dvh-var(--header-height))] max-h-[calc(100dvh-var(--header-height))]'}`}>
       <div className="flex flex-1 overflow-hidden">
         {isGentelella ? <GentelellaSidebar /> : <Sidebar />}
         <main
@@ -58,13 +58,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className={`p-4 md:p-6 lg:p-8 pb-24 md:pb-8 w-full flex-1 ${isGentelella ? '' : 'max-w-[1750px] mx-auto'}`}>
             {children}
           </div>
-          {isGentelella ? (
-            <footer className={`py-4 px-6 text-end text-[13px] font-semibold mt-auto ${isDark ? 'bg-[#1a2332] text-[#c8d3e0]' : 'bg-white text-[#73879C]'}`}>
-              Gentelella - Bootstrap Admin Template by <a href="https://colorlib.com" className="text-[#1ABB9C] hover:underline transition-colors">Colorlib</a>
-            </footer>
-          ) : (
-            <Footer />
-          )}
         </main>
       </div>
     </div>
