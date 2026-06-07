@@ -13,6 +13,8 @@ const staticDictionaries: Record<string, any> = {
   fr: frDict,
 };
 
+import { isAdminPath } from './config';
+
 export function useTranslation() {
   const { locale } = useAppStore();
   const { adminLocale } = useAdminAuthStore();
@@ -21,7 +23,7 @@ export function useTranslation() {
 
   const activeLocale = useMemo(() => {
     // Decouple: use adminLocale when inside admin dashboard, else storefront locale
-    if (pathname && pathname.startsWith('/admin-secure-internal')) {
+    if (isAdminPath(pathname)) {
       return adminLocale;
     }
     return locale;

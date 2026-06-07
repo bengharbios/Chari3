@@ -35,3 +35,24 @@ export const localeNames: Record<string, string> = {
   en: 'English',
   fr: 'Français',
 };
+
+export function isAdminPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments.length === 0) return false;
+  
+  const firstSegment = segments[0];
+  
+  // Explicitly check known admin paths
+  if (firstSegment === 'admin-secure-internal' || firstSegment === 'super-admin') {
+    return true;
+  }
+  
+  // Check if it's NOT a storefront/seller/buyer/etc. path
+  const nonAdminSegments = [
+    'seller', 'buyer', 'store', 'supplier', 'logistics', 
+    'verification', 'search', 'login', 'api', '_next'
+  ];
+  
+  return !nonAdminSegments.includes(firstSegment);
+}

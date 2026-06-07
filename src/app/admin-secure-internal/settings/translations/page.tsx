@@ -180,6 +180,9 @@ export default function TranslationsManagerPage() {
   const [customLang, setCustomLang]       = useState<Language>({
     code: '', name: '', nameEn: '', flag: '🇩🇿', direction: 'ltr',
   });
+  const [editingLang, setEditingLang]     = useState<Language | null>(null);
+  const [showEditLang, setShowEditLang]   = useState(false);
+  const [searchEditFlagQuery, setSearchEditFlagQuery] = useState('');
 
   const adminId = adminUser?.id || 'admin';
 
@@ -267,6 +270,26 @@ export default function TranslationsManagerPage() {
       setShowAddLang(false);
       setShowCustomLang(false);
       toast.success(`✅ تمت إضافة لغة "${lang.nameEn}" — ابدأ بترجمة النصوص`);
+    }
+  };
+
+  // ─── Update language ──────────────────────────────────────────────────────
+  const updateLanguage = async (updatedLang: Language) => {
+    const newLanguages = languages.map(l => l.code === updatedLang.code ? updatedLang : l);
+
+    const res = await fetch('/api/admin/translations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save_languages', languages: newLanguages, adminId }),
+    });
+
+    if ((await res.json()).success) {
+      setLanguages(newLanguages);
+      setShowEditLang(false);
+      setEditingLang(null);
+      toast.success(`✅ تم تحديث بيانات لغة "${updatedLang.nameEn}" بنجاح`);
+    } else {
+      toast.error('فشل تحديث بيانات اللغة');
     }
   };
 
@@ -384,19 +407,47 @@ export default function TranslationsManagerPage() {
 
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-[calc(100vh-170px)]">
         {/* ── Mobile Language Picker (Visible only on mobile/tablet) ───────── */}
-        <div className="lg:hidden p-4 bg-white border-b border-slate-200">
-          <label className="block text-xs font-bold text-slate-500 mb-2">اختر لغة التعديل:</label>
-          <select
-            value={activeLang}
-            onChange={(e) => setActiveLang(e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm"
-          >
-            {languages.map(lang => (
-              <option key={lang.code} value={lang.code}>
-                {lang.flag} {lang.name} ({completionPct(lang.code)}%)
-              </option>
-            ))}
-          </select>
+        <div className="lg:hidden p-4 bg-white border-b border-slate-200 flex flex-col gap-2">
+          <label className="block text-xs font-bold text-slate-500">اختر لغة التعديل:</label>
+          <div className="flex gap-2">
+            <select
+              value={activeLang}
+              onChange={(e) => setActiveLang(e.target.value)}
+              className="flex-1 h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm"
+            >
+              {languages.map(lang => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.flag} {lang.name} ({completionPct(lang.code)}%)
+                </option>
+              ))}
+            </select>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-10 w-10 shrink-0"
+              onClick={() => {
+                const lang = languages.find(l => l.code === activeLang);
+                if (lang) {
+                  setEditingLang(lang);
+                  setShowEditLang(true);
+                }
+              }}
+              title="تعديل اللغة الحالية"
+            >
+              <Edit3 className="h-4 w-4" />
+            </Button>
+            {activeLangMeta && !activeLangMeta.isBuiltin && (
+              <Button
+                variant="destructive"
+                size="icon"
+                className="h-10 w-10 shrink-0 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200"
+                onClick={() => deleteLanguage(activeLang)}
+                title="حذف اللغة الحالية"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* ── Left Panel: Language List (Desktop Only) ────────────────────── */}
@@ -453,14 +504,28 @@ export default function TranslationsManagerPage() {
                       )}
                     </div>
                   </div>
-                  {!lang.isBuiltin && (
+                  <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
                     <button
-                      onClick={e => { e.stopPropagation(); deleteLanguage(lang.code); }}
-                      className="opacity-0 group-hover:opacity-100 absolute top-2 end-2 w-5 h-5 flex items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-100 transition-all"
+                      onClick={e => {
+                        e.stopPropagation();
+                        setEditingLang(lang);
+                        setShowEditLang(true);
+                      }}
+                      className="w-5 h-5 flex items-center justify-center rounded-full bg-slate-50 text-slate-500 hover:bg-slate-100 transition-all"
+                      title="تعديل اللغة"
                     >
-                      <Trash2 className="h-3 w-3" />
+                      <Edit3 className="h-3 w-3" />
                     </button>
-                  )}
+                    {!lang.isBuiltin && (
+                      <button
+                        onClick={e => { e.stopPropagation(); deleteLanguage(lang.code); }}
+                        className="w-5 h-5 flex items-center justify-center rounded-full bg-red-50 text-red-500 hover:bg-red-100 transition-all"
+                        title="حذف اللغة"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -823,6 +888,144 @@ export default function TranslationsManagerPage() {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Edit Language Dialog ─────────────────────────────────────────── */}
+      <Dialog open={showEditLang} onOpenChange={setShowEditLang}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto z-[var(--z-modal)] font-sans" dir={isRTL ? 'rtl' : 'ltr'}>
+          <DialogHeader className="text-start">
+            <DialogTitle>تعديل بيانات اللغة</DialogTitle>
+            <DialogDescription>
+              تعديل الاسم أو العلم أو اتجاه الكتابة لهذه اللغة.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingLang && (
+            <div className="space-y-4 pt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-600">رمز اللغة (غير قابل للتعديل)</label>
+                  <Input
+                    value={editingLang.code}
+                    disabled
+                    className="bg-slate-50 text-slate-400"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-600">الاسم الأصلي *</label>
+                  <Input
+                    placeholder="Español"
+                    value={editingLang.name}
+                    onChange={e => setEditingLang(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
+                  />
+                </div>
+                <div className="space-y-1 col-span-2">
+                  <label className="text-xs font-semibold text-slate-600">الاسم بالإنجليزية</label>
+                  <Input
+                    placeholder="Spanish"
+                    value={editingLang.nameEn}
+                    onChange={e => setEditingLang(prev => prev ? ({ ...prev, nameEn: e.target.value }) : null)}
+                  />
+                </div>
+              </div>
+
+              {/* Flag Grid Search/Picker */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-slate-600 block">اختر علم الدولة *</label>
+                <div className="relative mb-2">
+                  <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <Input
+                    placeholder="ابحث عن علم..."
+                    value={searchEditFlagQuery}
+                    onChange={e => setSearchEditFlagQuery(e.target.value)}
+                    className="ps-8 h-8 text-xs rounded-lg bg-white"
+                  />
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-36 overflow-y-auto p-1.5 border border-slate-200 rounded-lg bg-white">
+                  {COMMON_FLAGS.filter(f => {
+                    if (!searchEditFlagQuery) return true;
+                    const q = searchEditFlagQuery.toLowerCase();
+                    return f.nameAr.includes(q) || f.nameEn.toLowerCase().includes(q) || f.code.includes(q);
+                  }).map(f => {
+                    const isSelected = editingLang.flag === f.emoji;
+                    return (
+                      <button
+                        key={f.code}
+                        type="button"
+                        onClick={() => setEditingLang(prev => prev ? ({ ...prev, flag: f.emoji }) : null)}
+                        className={`flex items-center gap-1.5 p-1 rounded-md border text-start transition-all hover:bg-slate-50 ${
+                          isSelected
+                            ? 'border-[#1ABB9C] bg-[#1ABB9C]/5 ring-1 ring-[#1ABB9C]'
+                            : 'border-slate-100'
+                        }`}
+                      >
+                        <img
+                          src={`https://hatscripts.github.io/circle-flags/flags/${f.code}.svg`}
+                          className="w-4 h-4 rounded-full object-cover shrink-0"
+                          alt={f.nameEn}
+                        />
+                        <span className="text-[10px] font-medium truncate flex-1">{isRTL ? f.nameAr : f.nameEn}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {editingLang.flag && (
+                  <div className="flex items-center gap-2 mt-2 p-2 bg-white rounded-lg border border-slate-200 text-xs">
+                    <span className="text-slate-500">العلم المختار:</span>
+                    <img
+                      src={`https://hatscripts.github.io/circle-flags/flags/${flagEmojiToCode(editingLang.flag)}.svg`}
+                      className="w-5 h-5 rounded-full object-cover"
+                      alt="Selected Flag"
+                    />
+                    <span className="font-semibold">{editingLang.flag}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-600">اتجاه الكتابة</label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingLang(prev => prev ? ({ ...prev, direction: 'ltr' }) : null)}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-all ${
+                      editingLang.direction === 'ltr'
+                        ? 'border-[#1ABB9C] bg-[#1ABB9C]/10 text-[#1ABB9C]'
+                        : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                    }`}
+                  >
+                    <AlignLeft className="h-4 w-4" /> LTR (يسار لليمين)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingLang(prev => prev ? ({ ...prev, direction: 'rtl' }) : null)}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-all ${
+                      editingLang.direction === 'rtl'
+                        ? 'border-[#1ABB9C] bg-[#1ABB9C]/10 text-[#1ABB9C]'
+                        : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                    }`}
+                  >
+                    <AlignRight className="h-4 w-4" /> RTL (يمين لليسار)
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  type="button"
+                  className="flex-1 bg-[#1ABB9C] hover:bg-[#17a589] text-white font-bold"
+                  disabled={!editingLang.name || !editingLang.flag}
+                  onClick={() => updateLanguage(editingLang)}
+                >
+                  <Save className="h-4 w-4 me-2" /> حفظ التغييرات
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setShowEditLang(false)}>
+                  إلغاء
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

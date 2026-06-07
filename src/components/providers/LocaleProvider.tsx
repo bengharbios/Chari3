@@ -6,6 +6,8 @@ import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { usePathname } from 'next/navigation';
 import { useTranslationStore } from '@/lib/store/translation-store';
 
+import { isAdminPath } from '@/lib/i18n/config';
+
 export function LocaleProvider() {
   const { locale } = useAppStore();
   const { adminLocale } = useAdminAuthStore();
@@ -14,7 +16,7 @@ export function LocaleProvider() {
 
   useEffect(() => {
     // Determine which locale is active based on the path
-    const activeLocale = pathname.startsWith('/admin-secure-internal') ? adminLocale : locale;
+    const activeLocale = isAdminPath(pathname) ? adminLocale : locale;
     
     // Load dynamic translations from DB/API
     loadTranslations(activeLocale);

@@ -43,6 +43,8 @@ function flagEmojiToCode(emoji: string): string {
   return 'un';
 }
 
+import { isAdminPath } from '@/lib/i18n/config';
+
 export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const { locale, setLocale } = useAppStore();
   const { adminLocale, setAdminLocale } = useAdminAuthStore();
@@ -56,7 +58,7 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
     setMounted(true);
   }, []);
 
-  const isAdmin = pathname.startsWith('/admin-secure-internal');
+  const isAdmin = isAdminPath(pathname);
   const currentLocale = isAdmin ? adminLocale : locale;
   const currentLangMeta = languages.find(l => l.code === currentLocale);
 
