@@ -178,10 +178,10 @@ export default function AdminLayoutWrapper({
   return (
     <div 
       dir={isRTL ? 'rtl' : 'ltr'} 
-      className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+      className={cn("min-h-screen w-full flex bg-[#F7F7F7] font-sans text-[#73879C]", themeMode === 'dark' ? 'bg-[#0f172a] text-[#94a3b8]' : '')}
     >
       {/* Sidebar (Desktop) */}
-      <AdminSidebar />
+      <AdminSidebar className="hidden lg:flex" />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
@@ -197,24 +197,19 @@ export default function AdminLayoutWrapper({
         >
           {/* LEFT: Mobile Menu Button + Breadcrumb */}
           <div className="flex items-center gap-2 shrink-0">
-            <Sheet>
-              <SheetTrigger asChild>
-                <button
-                  className={cn(
-                    'lg:hidden p-1.5 rounded-md transition-colors',
-                    themeMode === 'dark' ? 'hover:bg-white/10' : 'hover:bg-gray-100'
-                  )}
-                  aria-label="Open menu"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M4 6h16M4 12h16M4 18h16"/>
-                  </svg>
-                </button>
-              </SheetTrigger>
-              <SheetContent side={isRTL ? "right" : "left"} className="p-0 bg-navy text-white w-64 border-none">
-                <AdminSidebar />
-              </SheetContent>
-            </Sheet>
+            {/* Mobile toggle */}
+            <button
+              onClick={() => useAppStore.getState().setSidebarOpen(true)}
+              className={cn(
+                'lg:hidden p-1.5 rounded-md transition-colors',
+                themeMode === 'dark' ? 'hover:bg-white/10' : 'hover:bg-gray-100'
+              )}
+              aria-label="Open menu"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M4 6h16M4 12h16M4 18h16"/>
+              </svg>
+            </button>
 
             {/* Desktop collapse toggle */}
             <button

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
+import { useAppStore } from '@/lib/store';
 import { 
   LayoutDashboard, Settings, Sliders, ToggleRight, ChevronRight, ChevronLeft,
   Menu, FolderTree, Tag, TrendingUp, ShoppingCart, Users, Store, Wallet,
@@ -13,8 +14,9 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ className }: { className?: string }) {
   const { adminLocale, adminUser, logout } = useAdminAuthStore();
+  const { isSidebarOpen, setSidebarOpen } = useAppStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [activeGroup, setActiveGroup] = useState<number | null>(null);
   const pathname = usePathname();
@@ -148,14 +150,27 @@ export default function AdminSidebar() {
   };
 
   return (
-    <aside
-      dir={isRTL ? 'rtl' : 'ltr'}
-      className={cn(
-        'relative flex flex-col font-sans transition-all duration-300 ease-in-out z-20 hidden lg:flex h-screen shrink-0',
-        isCollapsed ? 'w-[76px]' : 'w-[260px]'
+    <>
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[9998] lg:hidden backdrop-blur-sm"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
-      style={{ backgroundColor: themeBg }}
-    >
+
+      <aside
+        dir={isRTL ? 'rtl' : 'ltr'}
+        className={cn(
+          'fixed top-0 bottom-0 z-[9999] lg:z-auto flex flex-col font-sans',
+          'transition-all duration-300 ease-in-out',
+          'lg:sticky lg:h-screen text-[#94a3b8]',
+          isSidebarOpen ? 'start-0 w-[260px]' : '-start-[260px] w-[260px]',
+          'lg:start-0',
+          isCollapsed ? 'lg:w-[76px]' : 'lg:w-[260px]',
+          className
+        )}
+        style={{ backgroundColor: themeBg }}
+      >
       {/* Logo Section */}
       <div className="flex items-center gap-3 px-6 h-[72px] shrink-0 border-b border-white/5 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
         <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#1ABB9C] text-white font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(26,187,156,0.3)]">
@@ -290,5 +305,6 @@ export default function AdminSidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }
