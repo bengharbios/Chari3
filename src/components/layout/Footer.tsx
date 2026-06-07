@@ -1,14 +1,7 @@
-import { useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { ThemeSettings } from '@/lib/theme-defaults';
 import { useEffect, useState } from 'react';
-
-const t = (localeOrAr: string, arOrEn: string, en?: string) => {
-  if (en !== undefined) {
-    return localeOrAr === 'ar' ? arOrEn : en;
-  }
-  const currentLocale = useAppStore.getState().locale;
-  return currentLocale === 'ar' ? localeOrAr : arOrEn;
-};
+import { useAppStore } from '@/lib/store';
 
 // ... social icons omitted for brevity but they are the same SVG
 function FacebookIcon() { return <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>; }
@@ -21,7 +14,34 @@ interface FooterProps {
 }
 
 export default function Footer({ theme }: FooterProps) {
+  const { t: globalT } = useTranslation();
   const { locale } = useAppStore();
+  
+  const t = (localeOrAr: string, arOrEn: string, en?: string) => {
+    let arVal = '';
+    if (en !== undefined) {
+      arVal = arOrEn;
+    } else {
+      arVal = localeOrAr;
+    }
+
+    if (arVal.includes('التجارة الإلكترونية الأولى') || arVal.includes('e-commerce platform')) {
+      return globalT('footer.desc');
+    }
+    if (arVal.includes('جميع الحقوق محفوظة') || arVal.includes('All rights reserved')) {
+      return globalT('footer.copyright');
+    }
+    if (arVal === 'شاري داي' || arVal === 'CharyDay') {
+      return globalT('footer.brandName');
+    }
+
+    // Fallback
+    if (en !== undefined) {
+      return localeOrAr === 'ar' ? arOrEn : en;
+    }
+    return localeOrAr === 'ar' ? localeOrAr : arOrEn;
+  };
+
   const [footerBlocks, setFooterBlocks] = useState<any[]>([]);
 
   useEffect(() => {

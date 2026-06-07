@@ -24,6 +24,7 @@ import NotificationPanel from '@/components/notifications/NotificationPanel';
 import type { PageType } from '@/types';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { localeDirections } from '@/lib/i18n/config';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 
 const rolePages: Record<string, PageType> = {
@@ -413,12 +414,60 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const { t: globalT } = useTranslation();
   const isRTL = localeDirections[locale] === 'rtl';
   const t = (ar: string, en: string, fr?: string, values?: Record<string, string | number>) => {
+    const arKeyMap: Record<string, string> = {
+      'أنت الآن تتصفح المنصة كمشتري.': 'header.browseAsBuyerNote',
+      'العودة للوحة التحكم': 'header.returnToDashboard',
+      'شاري داي': 'header.brandName',
+      'ابحث عن منتجات، ماركات، وأكثر...': 'header.searchPlaceholder',
+      'مدير النظام': 'header.roleAdmin',
+      'مدير متجر': 'header.roleStoreManager',
+      'تاجر مستقل': 'header.roleSeller',
+      'مندوب شحن': 'header.roleLogistics',
+      'مشتري': 'header.roleBuyer',
+      'لوحة التحكم': 'header.dashboard',
+      'العودة لحساب التاجر': 'header.returnToSellerAccount',
+      'تصفح كـ مشتري': 'header.browseAsBuyer',
+      'حالة التوثيق': 'header.verificationStatus',
+      'الإعدادات': 'header.settings',
+      'تسجيل الخروج': 'header.logout',
+      'تسجيل الدخول': 'header.signIn',
+      'ابحث عن منتجات...': 'header.searchProductsMobile',
+      'تم الطلب!': 'header.orderPlaced',
+      'تأكيد الطلب': 'header.confirmOrder',
+      'سلة التسوق': 'header.shoppingCart',
+      'شكراً لطلبك!': 'header.thankYouOrder',
+      'تم تسجيل طلبك بنجاح وسوف يقوم التاجر بالتواصل معك لتأكيد الشحن.': 'header.orderSuccessNote',
+      'رقم الطلب المرجعي': 'header.orderRefNumber',
+      'تتبع طلبك في لوحة التحكم': 'header.trackOrderDashboard',
+      'الاستمرار في التسوق': 'header.continueShopping',
+      'سلتك فارغة': 'header.emptyCart',
+      'تصفح المتجر وأضف بعض المنتجات الرائعة للبدء في التسوق!': 'header.emptyCartNote',
+      'تسوق الآن': 'header.shopNow',
+      'المنتجات المضافة': 'header.addedProducts',
+      'سعر الوحدة: ': 'header.unitPrice',
+      'الشحن القياسي - الدفع عند الاستلام (COD)': 'header.codShipping',
+      'طلب ضيف — يمكنك تتبع الطلب بعد التسجيل': 'header.guestOrderNote',
+      'الرجاء تسجيل الدخول لإتمام عملية الشراء': 'header.loginToCheckoutNote',
+      '🎉 تم تطبيق كود الخصم بنجاح!': 'header.couponSuccess',
+      'فشل التحقق من الكوبون': 'header.couponError',
+      'الرجاء تسجيل الدخول أولاً للطلب': 'header.loginRequired',
+      'الرجاء ملء جميع الحقول المطلوبة': 'header.fieldsRequired',
+      'تم تسجيل طلبك بنجاح!': 'header.orderSuccessToast',
+      'فشل إرسال الطلب. الرجاء المحاولة مرة أخرى': 'header.orderFailedToast',
+    };
+
+    const key = arKeyMap[ar.trim()];
+    if (key) {
+      return globalT(key, values);
+    }
+
     let result = locale === 'ar' ? ar : locale === 'fr' ? (fr || en) : en;
     if (values) {
-      Object.entries(values).forEach(([key, val]) => {
-        result = result.replace(new RegExp(`%${key}%`, 'g'), String(val));
+      Object.entries(values).forEach(([k, v]) => {
+        result = result.replace(new RegExp(`%${k}%`, 'g'), String(v));
       });
     }
     return result;

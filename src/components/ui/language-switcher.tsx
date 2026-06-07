@@ -21,6 +21,28 @@ interface LanguageSwitcherProps {
   className?: string;
 }
 
+// Convert regional indicator symbol emojis (e.g. 🇩🇿) to lowercase 2-letter country codes (e.g. dz)
+function flagEmojiToCode(emoji: string): string {
+  if (!emoji) return 'un';
+  if (/^[a-zA-Z]{2}$/.test(emoji)) return emoji.toLowerCase();
+  
+  const codePoints = Array.from(emoji).map(c => c.codePointAt(0));
+  const chars = codePoints
+    .filter(cp => cp !== undefined && cp >= 127462 && cp <= 127487)
+    .map(cp => String.fromCharCode(cp! - 127462 + 97));
+  
+  if (chars.length === 2) {
+    return chars.join('');
+  }
+  
+  const clean = emoji.trim().toLowerCase();
+  if (clean === 'ar' || clean === 'العربية' || clean === 'dz') return 'dz';
+  if (clean === 'en' || clean === 'english' || clean === 'gb') return 'gb';
+  if (clean === 'fr' || clean === 'français' || clean === 'french') return 'fr';
+  
+  return 'un';
+}
+
 export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const { locale, setLocale } = useAppStore();
   const { adminLocale, setAdminLocale } = useAdminAuthStore();
@@ -39,12 +61,11 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const currentLangMeta = languages.find(l => l.code === currentLocale);
 
   const handleSelect = (newLocale: string) => {
-    // Load dictionary for the new locale
     loadTranslations(newLocale);
     
     if (isAdmin) {
       setAdminLocale(newLocale as any);
-      setLocale(newLocale as any);
+      // Decouple: do NOT call setLocale(newLocale) here so the seller/buyer language remains unaffected!
     } else {
       setLocale(newLocale as any);
     }
@@ -66,8 +87,17 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
           title="Change Language / تغيير اللغة / Changer la langue"
         >
           <Globe className="h-[17px] w-[17px]" />
-          <span className="hidden sm:flex items-center gap-1 text-[12px] uppercase">
-            {currentLangMeta?.flag || '🇩🇿'}
+          <span className="hidden sm:flex items-center gap-1.5 text-[12px] uppercase">
+            {currentLangMeta && (
+              <img
+                src={`https://hatscripts.github.io/circle-flags/flags/${flagEmojiToCode(currentLangMeta.flag)}.svg`}
+                className="w-4.5 h-4.5 rounded-full object-cover shrink-0"
+                alt={currentLangMeta.name}
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            )}
             <span className="hidden md:inline">{currentLangMeta?.name || 'العربية'}</span>
           </span>
         </button>
@@ -84,7 +114,6 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator className={isDark ? 'bg-white/10' : ''} />
         {languages.map((lang) => {
-          const dir = lang.direction;
           const isActive = currentLocale === lang.code;
           return (
             <DropdownMenuItem
@@ -102,26 +131,17 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
               )}
             >
               <div className="flex items-center gap-2">
-                <span className="text-base">{lang.flag}</span>
+                <img
+                  src={`https://hatscripts.github.io/circle-flags/flags/${flagEmojiToCode(lang.flag)}.svg`}
+                  className="w-5 h-5 rounded-full object-cover shrink-0"
+                  alt={lang.name}
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                  }}
+                />
                 <span>{lang.name}</span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                {/* RTL/LTR badge */}
-                <span
-                  className={cn(
-                    'text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wide',
-                    dir === 'rtl'
-                      ? isDark
-                        ? 'border-amber-400/40 text-amber-400 bg-amber-400/10'
-                        : 'border-amber-500/40 text-amber-600 bg-amber-50'
-                      : isDark
-                      ? 'border-blue-400/40 text-blue-400 bg-blue-400/10'
-                      : 'border-blue-500/40 text-blue-600 bg-blue-50'
-                  )}
-                >
-                  {dir.toUpperCase()}
-                </span>
-                {/* Active checkmark */}
                 {isActive && (
                   <Check className={cn('h-3.5 w-3.5', isDark ? 'text-white' : 'text-primary')} />
                 )}

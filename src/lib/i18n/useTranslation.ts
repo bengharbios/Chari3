@@ -1,6 +1,8 @@
 import { useCallback, useMemo } from 'react';
 import { useAppStore } from '@/lib/store';
+import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { useTranslationStore } from '@/lib/store/translation-store';
+import { usePathname } from 'next/navigation';
 import arDict from './dictionaries/ar.json';
 import enDict from './dictionaries/en.json';
 import frDict from './dictionaries/fr.json';
@@ -13,19 +15,28 @@ const staticDictionaries: Record<string, any> = {
 
 export function useTranslation() {
   const { locale } = useAppStore();
+  const { adminLocale } = useAdminAuthStore();
+  const pathname = usePathname();
   const { dictionaries: dynamicDicts } = useTranslationStore();
+
+  const activeLocale = useMemo(() => {
+    // Decouple: use adminLocale when inside admin dashboard, else storefront locale
+    if (pathname && pathname.startsWith('/admin-secure-internal')) {
+      return adminLocale;
+    }
+    return locale;
+  }, [locale, adminLocale, pathname]);
 
   const dict = useMemo(() => {
     // 1. Look up in dynamically loaded dictionaries from DB
-    if (dynamicDicts[locale]) {
-      return dynamicDicts[locale];
+    if (dynamicDicts[activeLocale]) {
+      return dynamicDicts[activeLocale];
     }
     // 2. Fallback to static dictionaries
-    return staticDictionaries[locale] || staticDictionaries.ar;
-  }, [locale, dynamicDicts]);
+    return staticDictionaries[activeLocale] || staticDictionaries.ar;
+  }, [activeLocale, dynamicDicts]);
 
   const t = useCallback((key: string, values?: Record<string, string | number>) => {
-    // Navigate object dot notation like 'sidebar.dashboard'
     const keys = key.split('.');
     let result: any = dict;
     
@@ -38,8 +49,6 @@ export function useTranslation() {
       }
     }
 
-    // If key is not found in the current dictionary (e.g. not translated yet in a new language),
-    // try fallback to English, then Arabic static dictionaries to avoid showing raw dot-notation keys.
     if (result === undefined) {
       const fallbackLocales = ['en', 'ar'];
       for (const fallback of fallbackLocales) {
@@ -62,12 +71,11 @@ export function useTranslation() {
 
     if (result === undefined) {
       console.warn(`[i18n] Missing translation for key: ${key}`);
-      return key; // Fallback to the key itself
+      return key; // Fallback to key itself
     }
 
     let text = String(result);
 
-    // Interpolate values if provided (e.g., "Welcome, %name%")
     if (values) {
       Object.entries(values).forEach(([k, v]) => {
         text = text.replace(new RegExp(`%${k}%`, 'g'), String(v));
@@ -77,5 +85,5 @@ export function useTranslation() {
     return text;
   }, [dict, dynamicDicts]);
 
-  return { t, locale };
+  return { t, locale: activeLocale };
 }

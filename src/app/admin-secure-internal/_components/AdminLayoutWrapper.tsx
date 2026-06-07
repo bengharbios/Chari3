@@ -98,8 +98,7 @@ export default function AdminLayoutWrapper({
 
   useEffect(() => {
     setIsMounted(true);
-    useAppStore.getState().setLocale(adminLocale);
-  }, [adminLocale]);
+  }, []);
 
   // Load theme from API
   useEffect(() => {

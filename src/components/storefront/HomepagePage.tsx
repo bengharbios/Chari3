@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 const CURRENCY = { symbol: 'د.ج', code: 'DZD' };
 
@@ -20,46 +21,134 @@ const DEFAULT_HERO_SLIDES = [
     id: '1',
     title: 'تسوق بثقة',
     titleEn: 'Shop with Confidence',
+    titleFr: 'Achetez en toute confiance',
     subtitle: 'آلاف المنتجات من تجار موثوقين في الجزائر',
     subtitleEn: 'Thousands of products from verified Algerian sellers',
+    subtitleFr: 'Des milliers de produits de vendeurs algériens vérifiés',
     bg: 'from-blue-900 via-blue-800 to-indigo-900',
     badge: '🔥 العروض الحصرية',
+    badgeFr: '🔥 Offres exclusives',
     cta: 'تسوق الآن',
+    ctaFr: 'Acheter maintenant',
   },
   {
     id: '2',
     title: 'توصيل سريع',
     titleEn: 'Fast Delivery',
+    titleFr: 'Livraison rapide',
     subtitle: 'نوصل لجميع ولايات الجزائر خلال 24-72 ساعة',
     subtitleEn: 'Delivery to all wilayas within 24-72 hours',
+    subtitleFr: 'Livraison dans toutes les wilayas en 24-72 heures',
     bg: 'from-emerald-900 via-teal-800 to-cyan-900',
     badge: '🚀 توصيل سريع',
+    badgeFr: '🚀 Livraison rapide',
     cta: 'اكتشف المزيد',
+    ctaFr: 'Découvrir plus',
   },
   {
     id: '3',
     title: 'ضمان الجودة',
     titleEn: 'Quality Guarantee',
+    titleFr: 'Garantie de qualité',
     subtitle: 'جميع المنتجات مضمونة وقابلة للإرجاع',
     subtitleEn: 'All products are guaranteed with easy returns',
+    subtitleFr: 'Tous les produits sont garantis avec retour facile',
     bg: 'from-purple-900 via-violet-800 to-indigo-900',
     badge: '✅ ضمان الجودة',
+    badgeFr: '✅ Garantie de qualité',
     cta: 'ابدأ التسوق',
+    ctaFr: 'Commencer vos achats',
   },
 ];
 
 const DEFAULT_TESTIMONIALS = [
-  { name: 'فاطمة بن علي', text: 'خدمة ممتازة وتوصيل سريع، أنصح الجميع بالتسوق من هنا!', rating: 5, city: 'الجزائر العاصمة' },
-  { name: 'محمد الأمين', text: 'منصة رائعة، المنتجات أصلية والأسعار معقولة جداً', rating: 5, city: 'وهران' },
-  { name: 'نور الدين حداد', text: 'تعاملت مع عدة تجار والكل موثوق ومحترف', rating: 4, city: 'قسنطينة' },
-  { name: 'سارة بوزيان', text: 'أفضل تجربة تسوق أونلاين في الجزائر حتى الآن', rating: 5, city: 'عنابة' },
+  { 
+    name: 'فاطمة بن علي', 
+    nameEn: 'Fatima Ben Ali', 
+    nameFr: 'Fatima Ben Ali',
+    text: 'خدمة ممتازة وتوصيل سريع، أنصح الجميع بالتسوق من هنا!', 
+    textEn: 'Excellent service and fast delivery, highly recommend shopping here!',
+    textFr: 'Excellent service et livraison rapide, je recommande vivement !',
+    rating: 5, 
+    city: 'الجزائر العاصمة',
+    cityEn: 'Algiers',
+    cityFr: 'Alger'
+  },
+  { 
+    name: 'محمد الأمين', 
+    nameEn: 'Mohamed Lamine',
+    nameFr: 'Mohamed Lamine',
+    text: 'منصة رائعة، المنتجات أصلية والأسعار معقولة جداً', 
+    textEn: 'Great platform, original products and very reasonable prices',
+    textFr: 'Excellente plateforme, produits authentiques et prix très raisonnables',
+    rating: 5, 
+    city: 'وهران',
+    cityEn: 'Oran',
+    cityFr: 'Oran'
+  },
+  { 
+    name: 'نور الدين حداد', 
+    nameEn: 'Noureddine Haddad',
+    nameFr: 'Noureddine Haddad',
+    text: 'تعاملت مع عدة تجار والكل موثوق ومحترف', 
+    textEn: 'I dealt with several merchants and all are reliable and professional',
+    textFr: "J'ai traité avec plusieurs vendeurs et tous sont fiables et professionnels",
+    rating: 4, 
+    city: 'قسنطينة',
+    cityEn: 'Constantine',
+    cityFr: 'Constantine'
+  },
+  { 
+    name: 'سارة بوزيان', 
+    nameEn: 'Sara Bouziane',
+    nameFr: 'Sara Bouziane',
+    text: 'أفضل تجربة تسوق أونلاين في الجزائر حتى الآن', 
+    textEn: 'Best online shopping experience in Algeria so far',
+    textFr: "La meilleure expérience d'achat en ligne en Algérie à ce jour",
+    rating: 5, 
+    city: 'عنابة',
+    cityEn: 'Annaba',
+    cityFr: 'Annaba'
+  },
 ];
 
 const FEATURES = [
-  { icon: Shield, title: 'توثيق كامل', desc: 'جميع التجار موثقون رسمياً' },
-  { icon: Truck, title: 'توصيل لكل ولاية', desc: '58 ولاية مغطاة في الجزائر' },
-  { icon: Award, title: 'ضمان الجودة', desc: 'إرجاع مجاني خلال 14 يوم' },
-  { icon: TrendingUp, title: 'أفضل الأسعار', desc: 'مقارنة أسعار فورية بين التجار' },
+  { 
+    icon: Shield, 
+    title: 'توثيق كامل', 
+    titleEn: 'Full Verification',
+    titleFr: 'Vérification complète',
+    desc: 'جميع التجار موثقون رسمياً',
+    descEn: 'All merchants are officially verified',
+    descFr: 'Tous les vendeurs sont officiellement vérifiés'
+  },
+  { 
+    icon: Truck, 
+    title: 'توصيل لكل ولاية', 
+    titleEn: 'Delivery to All Wilayas',
+    titleFr: 'Livraison à toutes les wilayas',
+    desc: '58 ولاية مغطاة في الجزائر',
+    descEn: '58 wilayas covered in Algeria',
+    descFr: '58 wilayas couvertes en Algérie'
+  },
+  { 
+    icon: Award, 
+    title: 'ضمان الجودة', 
+    titleEn: 'Quality Guarantee',
+    titleFr: 'Garantie de qualité',
+    desc: 'إرجاع مجاني خلال 14 يوم',
+    descEn: 'Free return within 14 days',
+    descFr: 'Retour gratuit sous 14 jours'
+  },
+  { 
+    icon: TrendingUp, 
+    title: 'أفضل الأسعار', 
+    titleEn: 'Best Prices',
+    titleFr: 'Meilleurs prix',
+    desc: 'مقارنة أسعار فورية بين التجار',
+    descEn: 'Instant price comparison between sellers',
+    descFr: 'Comparaison instantanée des prix entre vendeurs'
+  },
 ];
 
 interface HomepageData {
@@ -82,7 +171,18 @@ interface HomepageData {
     _count: { products: number };
   }[];
   advertisements: Record<string, { id: string; title: string; imageUrl: string; linkUrl?: string }[]>;
-  testimonials: { name: string; text: string; rating: number; city: string }[];
+  testimonials: {
+    name: string;
+    nameEn?: string;
+    nameFr?: string;
+    text: string;
+    textEn?: string;
+    textFr?: string;
+    rating: number;
+    city: string;
+    cityEn?: string;
+    cityFr?: string;
+  }[];
   layout?: string[];
   heroSlides?: any[];
   globalCouponCampaigns?: { coupon: any; products: any[] }[];
@@ -118,10 +218,66 @@ const LEVEL_BADGE: Record<number, string> = {
 
 export default function StorefrontHomepage() {
   const router = useRouter();
+  const { t: globalT } = useTranslation();
   const { locale } = useAppStore();
   const { isAuthenticated } = useAuthStore();
   const isAr = locale === 'ar';
-  const t = (ar: string, en: string) => isAr ? ar : en;
+  
+  const t = (ar: string, en: string) => {
+    const arKeyMap: Record<string, string> = {
+      'تسوق الآن': 'homepage.shopNow',
+      'اكتشف المزيد': 'homepage.exploreMore',
+      'ابدأ التسوق': 'homepage.startShopping',
+      'سجل متجرك': 'homepage.startSelling',
+      'تسوق حسب الفئة': 'homepage.shopByCategory',
+      'اكتشف آلاف المنتجات مرتبة بعناية': 'homepage.shopByCategoryDesc',
+      'إلغاء الفلتر': 'homepage.clearFilter',
+      'لا توجد تصنيفات متاحة حالياً': 'homepage.noCategories',
+      'منتجات مميزة': 'homepage.featuredProducts',
+      'اختيارات حصرية من أفضل التجار': 'homepage.featuredProductsDesc',
+      'فلتر': 'homepage.filter',
+      'ابحث عن منتج...': 'homepage.searchPlaceholder',
+      'الأحدث': 'homepage.newest',
+      'السعر: الأقل': 'homepage.priceAsc',
+      'السعر: الأعلى': 'homepage.priceDesc',
+      'الأعلى تقييماً': 'homepage.topRated',
+      'الأكثر مبيعاً': 'homepage.popular',
+      'كل الفئات': 'homepage.allCategories',
+      'سعر من': 'homepage.minPrice',
+      'سعر إلى': 'homepage.maxPrice',
+      'مسح': 'homepage.clear',
+      'جاري البحث...': 'homepage.searching',
+      'نتيجة': 'homepage.results',
+      'عرض المزيد': 'homepage.loadMore',
+      'تجار شاري داي المميزين': 'homepage.topMerchants',
+      'تسوق من الشركاء الموثوقين': 'homepage.topMerchantsTitle',
+      'نوفر لك نخبة من كبرى المتاجر الجزائرية والتجار الأحرار الموثقين بشارات الجودة والمستويات الاحترافية.': 'homepage.topMerchantsDesc',
+      'المتاجر الكبرى المتميزة': 'homepage.premiumStores',
+      'التجار المستقلون الأحرار': 'homepage.independentSellers',
+      'لا توجد متاجر نشطة حالياً': 'homepage.noActiveStores',
+      'مدير المتجر:': 'homepage.storeManager',
+      'منتج': 'homepage.productsCount',
+      'لا يوجد تجار مستقلون حالياً': 'homepage.noActiveSellers',
+      'تاجر مستقل معتمد': 'homepage.certifiedMerchant',
+      'عرض جميع التجار': 'homepage.viewAllMerchants',
+      'آراء عملائنا': 'homepage.customerReviews',
+      'ماذا قالوا عنا؟': 'homepage.testimonialsTitle',
+      'آراء حقيقية من مشترين حقيقيين': 'homepage.testimonialsDesc',
+      'ابدأ البيع اليوم!': 'homepage.ctaTitle',
+      'انضم لآلاف التجار الناجحين على منصة شاري داي وابدأ رحلتك نحو النجاح التجاري': 'homepage.ctaDesc',
+      'أنشئ حساب تاجر': 'homepage.createSellerAccount',
+      'تعرف على الباقات': 'homepage.viewPackages',
+      'حملة خصم كبرى': 'homepage.discountCampaign',
+      'واحصل على خصم': 'homepage.getDiscount',
+      'ينتهي في: ': 'homepage.expiresAt',
+    };
+
+    const key = arKeyMap[ar.trim()];
+    if (key) {
+      return globalT(key);
+    }
+    return isAr ? ar : en;
+  };
 
   const [data, setData] = useState<HomepageData | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
@@ -198,9 +354,9 @@ export default function StorefrontHomepage() {
 
   const slide = currentHeroSlides[heroIndex] || currentHeroSlides[0] || DEFAULT_HERO_SLIDES[0];
   const slideBg = slide?.bg || 'from-blue-900 via-blue-800 to-indigo-900';
-  const slideBadge = slide?.badge || '';
-  const slideTitle = isAr ? (slide?.title || '') : (slide?.titleEn || slide?.title || '');
-  const slideSubtitle = isAr ? (slide?.subtitle || '') : (slide?.subtitleEn || slide?.subtitle || '');
+  const slideBadge = locale === 'ar' ? (slide?.badge || '') : locale === 'fr' ? (slide?.badgeFr || slide?.badge || '') : (slide?.badge || '');
+  const slideTitle = locale === 'ar' ? (slide?.title || '') : locale === 'fr' ? (slide?.titleFr || slide?.titleEn || slide?.title || '') : (slide?.titleEn || slide?.title || '');
+  const slideSubtitle = locale === 'ar' ? (slide?.subtitle || '') : locale === 'fr' ? (slide?.subtitleFr || slide?.subtitleEn || slide?.subtitle || '') : (slide?.subtitleEn || slide?.subtitle || '');
 
   const renderSection = (sectionName: string) => {
     switch (sectionName) {
@@ -222,7 +378,7 @@ export default function StorefrontHomepage() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button size="lg" className="bg-white text-blue-900 hover:bg-white/90 font-bold px-8 w-full sm:w-auto">
-                    {slide.cta || t('تسوق الآن', 'Shop Now')}
+                    {locale === 'ar' ? (slide.cta || 'تسوق الآن') : locale === 'fr' ? (slide.ctaFr || slide.cta || 'Acheter maintenant') : (slide.cta || 'Shop Now')}
                     {isAr ? <ArrowLeft className="ms-2 size-5" /> : <ArrowRight className="ms-2 size-5" />}
                   </Button>
                   {!isAuthenticated && (
@@ -267,8 +423,8 @@ export default function StorefrontHomepage() {
                       <f.icon className="size-5 text-primary" />
                     </div>
                     <div>
-                      <p className="text-xs md:text-sm font-semibold">{f.title}</p>
-                      <p className="hidden md:block text-xs text-muted-foreground">{f.desc}</p>
+                      <p className="text-xs md:text-sm font-semibold">{locale === 'ar' ? f.title : locale === 'fr' ? (f.titleFr || f.titleEn || f.title) : (f.titleEn || f.title)}</p>
+                      <p className="hidden md:block text-xs text-muted-foreground">{locale === 'ar' ? f.desc : locale === 'fr' ? (f.descFr || f.descEn || f.desc) : (f.descEn || f.desc)}</p>
                     </div>
                   </div>
                 ))}
@@ -690,11 +846,17 @@ export default function StorefrontHomepage() {
                   <Card key={i} className="border-border hover:shadow-lg transition-all">
                     <CardContent className="p-5">
                       <Quote className="size-6 text-primary/30 mb-3" />
-                      <p className="text-sm text-muted-foreground mb-4 leading-relaxed">"{t2.text || ''}"</p>
+                      <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                        "{locale === 'ar' ? (t2.text || '') : locale === 'fr' ? (t2.textFr || t2.textEn || t2.text || '') : (t2.textEn || t2.text || '')}"
+                      </p>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm font-semibold">{t2.name || ''}</p>
-                          <p className="text-xs text-muted-foreground">{t2.city || ''}</p>
+                          <p className="text-sm font-semibold">
+                            {locale === 'ar' ? (t2.name || '') : locale === 'fr' ? (t2.nameFr || t2.nameEn || t2.name || '') : (t2.nameEn || t2.name || '')}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {locale === 'ar' ? (t2.city || '') : locale === 'fr' ? (t2.cityFr || t2.cityEn || t2.city || '') : (t2.cityEn || t2.city || '')}
+                          </p>
                         </div>
                         <StarRating rating={Number(t2.rating) || 5} />
                       </div>

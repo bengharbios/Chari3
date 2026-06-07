@@ -14,7 +14,7 @@ import {
   Receipt, Sparkles
 } from 'lucide-react';
 
-const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, Users, Package, ShoppingCart, BarChart3, Settings,
@@ -110,6 +110,71 @@ interface SidebarProps {
     const { locale, currentPage, setCurrentPage, isSidebarOpen, setSidebarOpen, isDesktopSidebarCollapsed, toggleDesktopSidebar } = useAppStore();
     const { user, logout, isBuyerMode } = useAuthStore();
     const isRTL = locale === 'ar';
+    const { t: globalT } = useTranslation();
+
+    const getSidebarKey = (id: string, labelAr: string): string => {
+      const idMap: Record<string, string> = {
+        'section-store': 'sidebar.sectionStore',
+        'store': 'sidebar.overview',
+        'store-products': 'sidebar.products',
+        'store-orders': 'sidebar.orders',
+        'store-coupons': 'sidebar.coupons',
+        'store-staff': 'sidebar.team',
+        'store-analytics': 'sidebar.analytics',
+        'section-billing': 'sidebar.sectionBilling',
+        'store-billing': 'sidebar.currentInvoice',
+        'store-billing-plans': 'sidebar.plans',
+        'store-billing-addons': 'sidebar.addons',
+        'store-billing-pay': 'sidebar.payment',
+        'store-billing-history': 'sidebar.history',
+        'section-settings': 'sidebar.sectionSettings',
+        'store-settings': 'sidebar.settings',
+        'section-seller': 'sidebar.sectionSeller',
+        'seller': 'sidebar.overview',
+        'seller-products': 'sidebar.myProducts',
+        'seller-orders': 'sidebar.orders',
+        'seller-wallet': 'sidebar.wallet',
+        'seller-debts': 'sidebar.debts',
+        'seller-billing': 'sidebar.currentInvoice',
+        'seller-billing-plans': 'sidebar.plans',
+        'seller-billing-addons': 'sidebar.addons',
+        'seller-billing-pay': 'sidebar.payment',
+        'seller-billing-history': 'sidebar.history',
+        'seller-settings': 'sidebar.settings',
+        'seller-upgrade': 'sidebar.upgrade',
+        'supplier': 'sidebar.overview',
+        'supplier-products': 'sidebar.products',
+        'supplier-orders': 'sidebar.orders',
+        'supplier-inventory': 'sidebar.inventory',
+        'logistics': 'sidebar.overview',
+        'logistics-active': 'sidebar.activeShipments',
+        'logistics-deliveries': 'sidebar.deliveries',
+        'logistics-history': 'sidebar.history',
+        'logistics-earnings': 'sidebar.earnings',
+        'buyer': 'sidebar.overview',
+        'buyer-orders': 'sidebar.myOrders',
+        'buyer-wishlist': 'sidebar.wishlist',
+        'buyer-addresses': 'sidebar.addresses',
+        'buyer-wallet': 'sidebar.wallet',
+        'buyer-reviews': 'sidebar.reviews',
+      };
+      return idMap[id] || `sidebar.${id}`;
+    };
+
+    const t = (loc: string, ar: string, en: string, itemId?: string) => {
+      if (itemId) {
+        const key = getSidebarKey(itemId, ar);
+        return globalT(key);
+      }
+      if (ar === 'مدير النظام') return globalT('header.roleAdmin');
+      if (ar === 'مدير متجر') return globalT('header.roleStoreManager');
+      if (ar === 'تاجر مستقل') return globalT('header.roleSeller');
+      if (ar === 'مورد') return globalT('header.roleSupplier') || 'مورد';
+      if (ar === 'مندوب شحن') return globalT('header.roleLogistics');
+      if (ar === 'مشتري') return globalT('header.roleBuyer');
+      if (ar === 'تسجيل الخروج') return globalT('common.logout');
+      return loc === 'ar' ? ar : en;
+    };
   
     // Automatically collapse sidebar when window is resized below 1024px (tablet/mobile)
     useEffect(() => {
@@ -247,7 +312,7 @@ interface SidebarProps {
                         className={cn("w-full flex items-center justify-between px-4 py-2 mt-4 first:mt-0 transition-opacity duration-300 group hover:bg-sidebar-accent/5 rounded-md", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}
                       >
                         <p className="text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-wider group-hover:text-sidebar-foreground/80 transition-colors">
-                          {t(locale, item.labelAr, item.labelEn)}
+                          {t(locale, item.labelAr, item.labelEn, item.id)}
                         </p>
                         {isCollapsed ? (
                           <ChevronLeft className={cn("h-3 w-3 text-sidebar-foreground/50", isRTL ? "" : "-rotate-90")} />
@@ -281,12 +346,12 @@ interface SidebarProps {
                           ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm'
                           : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
                       )}
-                      title={isDesktopSidebarCollapsed ? t(locale, item.labelAr, item.labelEn) : undefined}
+                      title={isDesktopSidebarCollapsed ? t(locale, item.labelAr, item.labelEn, item.id) : undefined}
                     >
                       <Icon className="h-5 w-5 shrink-0" />
                       
                       <span className={cn("flex-1 truncate text-start transition-opacity duration-300", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                        {t(locale, item.labelAr, item.labelEn)}
+                        {t(locale, item.labelAr, item.labelEn, item.id)}
                       </span>
                       
                       {item.badge && item.badge > 0 && (
@@ -298,7 +363,7 @@ interface SidebarProps {
                       {/* Tooltip for collapsed state */}
                       {isDesktopSidebarCollapsed && (
                         <div className="absolute start-14 opacity-0 invisible group-hover:opacity-100 group-hover:visible bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 transition-all shadow-lg pointer-events-none">
-                          {t(locale, item.labelAr, item.labelEn)}
+                          {t(locale, item.labelAr, item.labelEn, item.id)}
                         </div>
                       )}
                     </button>

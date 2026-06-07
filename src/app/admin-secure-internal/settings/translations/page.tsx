@@ -11,7 +11,7 @@ import {
 import {
   Languages, Plus, Trash2, Save, Search, Globe, ChevronDown,
   ChevronRight, Loader2, Check, X, AlignLeft, AlignRight, RefreshCw,
-  AlertTriangle, Edit3, ToggleLeft,
+  AlertTriangle, Edit3,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -55,6 +55,36 @@ function unflattenDict(flat: Record<string, string>): DictTree {
   return result;
 }
 
+// Convert regional indicator emojis to 2-letter country code
+function flagEmojiToCode(emoji: string): string {
+  if (!emoji) return 'un';
+  if (/^[a-zA-Z]{2}$/.test(emoji)) return emoji.toLowerCase();
+  
+  const codePoints = Array.from(emoji).map(c => c.codePointAt(0));
+  const chars = codePoints
+    .filter(cp => cp !== undefined && cp >= 127462 && cp <= 127487)
+    .map(cp => String.fromCharCode(cp! - 127462 + 97));
+  
+  if (chars.length === 2) {
+    return chars.join('');
+  }
+  
+  const clean = emoji.trim().toLowerCase();
+  if (clean === 'ar' || clean === 'العربية' || clean === 'dz') return 'dz';
+  if (clean === 'en' || clean === 'english' || clean === 'gb') return 'gb';
+  if (clean === 'fr' || clean === 'français' || clean === 'french') return 'fr';
+  
+  return 'un';
+}
+
+function codeToFlagEmoji(code: string): string {
+  if (!code || code.length !== 2) return '🌐';
+  const char1 = code.toUpperCase().charCodeAt(0);
+  const char2 = code.toUpperCase().charCodeAt(1);
+  if (char1 < 65 || char1 > 90 || char2 < 65 || char2 > 90) return '🌐';
+  return String.fromCodePoint(char1 - 65 + 127462) + String.fromCodePoint(char2 - 65 + 127462);
+}
+
 // ─── POPULAR LANGUAGES PRESET ────────────────────────────────────────────────
 const POPULAR_LANGS: Language[] = [
   { code: 'es', name: 'Español',    nameEn: 'Spanish',   flag: '🇪🇸', direction: 'ltr' },
@@ -69,12 +99,66 @@ const POPULAR_LANGS: Language[] = [
   { code: 'ko', name: '한국어',       nameEn: 'Korean',    flag: '🇰🇷', direction: 'ltr' },
 ];
 
-// ─── Section group label mapping ──────────────────────────────────────────────
-const SECTION_LABELS: Record<string, string> = {
-  common:  'عناصر مشتركة / Common',
-  sidebar: 'القائمة الجانبية / Sidebar',
-  admin:   'لوحة الأدمن / Admin Panel',
-};
+const COMMON_FLAGS = [
+  { code: 'dz', nameAr: 'الجزائر', nameEn: 'Algeria', emoji: '🇩🇿' },
+  { code: 'sa', nameAr: 'السعودية', nameEn: 'Saudi Arabia', emoji: '🇸🇦' },
+  { code: 'ma', nameAr: 'المغرب', nameEn: 'Morocco', emoji: '🇲🇦' },
+  { code: 'tn', nameAr: 'تونس', nameEn: 'Tunisia', emoji: '🇹🇳' },
+  { code: 'eg', nameAr: 'مصر', nameEn: 'Egypt', emoji: '🇪🇬' },
+  { code: 'ae', nameAr: 'الإمارات', nameEn: 'UAE', emoji: '🇦🇪' },
+  { code: 'qa', nameAr: 'قطر', nameEn: 'Qatar', emoji: '🇶🇦' },
+  { code: 'kw', nameAr: 'الكويت', nameEn: 'Kuwait', emoji: '🇰🇼' },
+  { code: 'om', nameAr: 'عمان', nameEn: 'Oman', emoji: '🇴🇲' },
+  { code: 'bh', nameAr: 'البحرين', nameEn: 'Bahrain', emoji: '🇧🇭' },
+  { code: 'jo', nameAr: 'الأردن', nameEn: 'Jordan', emoji: '🇯🇴' },
+  { code: 'lb', nameAr: 'لبنان', nameEn: 'Lebanon', emoji: '🇱🇧' },
+  { code: 'sy', nameAr: 'سوريا', nameEn: 'Syria', emoji: '🇸🇾' },
+  { code: 'iq', nameAr: 'العراق', nameEn: 'Iraq', emoji: '🇮🇶' },
+  { code: 'ps', nameAr: 'فلسطين', nameEn: 'Palestine', emoji: '🇵🇸' },
+  { code: 'sd', nameAr: 'السودان', nameEn: 'Sudan', emoji: '🇸🇩' },
+  { code: 'ly', nameAr: 'ليبيا', nameEn: 'Libya', emoji: '🇱🇾' },
+  { code: 'ye', nameAr: 'اليمن', nameEn: 'Yemen', emoji: '🇾🇪' },
+  { code: 'fr', nameAr: 'فرنسا', nameEn: 'France', emoji: '🇫🇷' },
+  { code: 'gb', nameAr: 'بريطانيا', nameEn: 'United Kingdom', emoji: '🇬🇧' },
+  { code: 'us', nameAr: 'أمريكا', nameEn: 'United States', emoji: '🇺🇸' },
+  { code: 'es', nameAr: 'إسبانيا', nameEn: 'Spain', emoji: '🇪🇸' },
+  { code: 'de', nameAr: 'ألمانيا', nameEn: 'Germany', emoji: '🇩🇪' },
+  { code: 'it', nameAr: 'إيطاليا', nameEn: 'Italy', emoji: '🇮🇹' },
+  { code: 'tr', nameAr: 'تركيا', nameEn: 'Turkey', emoji: '🇹🇷' },
+  { code: 'cn', nameAr: 'الصين', nameEn: 'China', emoji: '🇨🇳' },
+  { code: 'ru', nameAr: 'روسيا', nameEn: 'Russia', emoji: '🇷🇺' },
+  { code: 'jp', nameAr: 'اليابان', nameEn: 'Japan', emoji: '🇯🇵' },
+  { code: 'kr', nameAr: 'كوريا الجنوبية', nameEn: 'South Korea', emoji: '🇰🇷' },
+  { code: 'in', nameAr: 'الهند', nameEn: 'India', emoji: '🇮🇳' },
+  { code: 'br', nameAr: 'البرازيل', nameEn: 'Brazil', emoji: '🇧🇷' },
+  { code: 'ca', nameAr: 'كندا', nameEn: 'Canada', emoji: '🇨🇦' },
+  { code: 'au', nameAr: 'أستراليا', nameEn: 'Australia', emoji: '🇦🇺' },
+  { code: 'pk', nameAr: 'باكستان', nameEn: 'Pakistan', emoji: '🇵🇰' },
+  { code: 'ir', nameAr: 'إيران', nameEn: 'Iran', emoji: '🇮🇷' },
+  { code: 'id', nameAr: 'إندونيسيا', nameEn: 'Indonesia', emoji: '🇮🇩' },
+  { code: 'my', nameAr: 'ماليزيا', nameEn: 'Malaysia', emoji: '🇲🇾' },
+  { code: 'sn', nameAr: 'السنغال', nameEn: 'Senegal', emoji: '🇸🇳' },
+];
+
+const TABS = [
+  { id: 'common', labelAr: '⚙️ عام وأزرار', labelEn: '⚙️ Common / General' },
+  { id: 'sidebar', labelAr: '📋 القائمة الجانبية', labelEn: '📋 Sidebar' },
+  { id: 'admin', labelAr: '🛠️ لوحة الأدمن', labelEn: '🛠️ Admin Panel' },
+  { id: 'header_footer', labelAr: '🖥️ الهيدر والفوتر', labelEn: '🖥️ Header & Footer' },
+  { id: 'homepage', labelAr: '🏠 الصفحة الرئيسية', labelEn: '🏠 Homepage' },
+  { id: 'notifications', labelAr: '🔔 الإشعارات والرسائل', labelEn: '🔔 Notifications' },
+];
+
+function getTabForKey(key: string): string {
+  const prefix = key.split('.')[0];
+  if (prefix === 'common') return 'common';
+  if (prefix === 'sidebar') return 'sidebar';
+  if (prefix === 'admin') return 'admin';
+  if (prefix === 'header' || prefix === 'footer') return 'header_footer';
+  if (prefix === 'homepage') return 'homepage';
+  if (prefix === 'notifications') return 'notifications';
+  return 'common';
+}
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function TranslationsManagerPage() {
@@ -86,14 +170,15 @@ export default function TranslationsManagerPage() {
   const [activeLang, setActiveLang]       = useState<string>('ar');
   const [dicts, setDicts]                 = useState<Record<string, Record<string, string>>>({});
   const [searchQuery, setSearchQuery]     = useState('');
-  const [openSections, setOpenSections]   = useState<Record<string, boolean>>({ common: true, sidebar: true, admin: true });
+  const [activeTab, setActiveTab]         = useState('common');
   const [isLoading, setIsLoading]         = useState(true);
   const [isSaving, setIsSaving]           = useState(false);
   const [dirtyLocales, setDirtyLocales]   = useState<Set<string>>(new Set());
   const [showAddLang, setShowAddLang]     = useState(false);
   const [showCustomLang, setShowCustomLang] = useState(false);
+  const [searchFlagQuery, setSearchFlagQuery] = useState('');
   const [customLang, setCustomLang]       = useState<Language>({
-    code: '', name: '', nameEn: '', flag: '🌐', direction: 'ltr',
+    code: '', name: '', nameEn: '', flag: '🇩🇿', direction: 'ltr',
   });
 
   const adminId = adminUser?.id || 'admin';
@@ -106,7 +191,6 @@ export default function TranslationsManagerPage() {
       const data = await res.json();
       if (data.success) {
         setLanguages(data.languages);
-        // Flatten all dicts
         const flatDicts: Record<string, Record<string, string>> = {};
         for (const [code, dict] of Object.entries(data.dicts || {})) {
           flatDicts[code] = flattenDict(dict as any);
@@ -162,7 +246,6 @@ export default function TranslationsManagerPage() {
       return;
     }
 
-    // Copy keys from 'en' as empty strings for new lang
     const baseFlatDict = dicts['en'] || {};
     const emptyDict: Record<string, string> = {};
     for (const key of Object.keys(baseFlatDict)) {
@@ -171,7 +254,6 @@ export default function TranslationsManagerPage() {
 
     const newLanguages = [...languages, { ...lang, isBuiltin: false }];
 
-    // Save languages list
     const res = await fetch('/api/admin/translations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -212,20 +294,31 @@ export default function TranslationsManagerPage() {
   const currentDict = dicts[activeLang] || {};
   const allKeys = Object.keys(arDict);
 
-  const sections = Array.from(new Set(allKeys.map(k => k.split('.')[0])));
+  const filteredKeys = allKeys
+    .filter(k => getTabForKey(k) === activeTab)
+    .filter(k => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        k.toLowerCase().includes(q) ||
+        (arDict[k] || '').toLowerCase().includes(q) ||
+        (currentDict[k] || '').toLowerCase().includes(q)
+      );
+    });
 
-  const filteredKeys = (section: string) =>
-    allKeys
-      .filter(k => k.startsWith(`${section}.`))
-      .filter(k => {
-        if (!searchQuery) return true;
-        const q = searchQuery.toLowerCase();
-        return (
-          k.toLowerCase().includes(q) ||
-          (arDict[k] || '').toLowerCase().includes(q) ||
-          (currentDict[k] || '').toLowerCase().includes(q)
-        );
-      });
+  const getTabKeysCount = (tabId: string) => {
+    return allKeys.filter(k => {
+      const matchesTab = getTabForKey(k) === tabId;
+      if (!matchesTab) return false;
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        k.toLowerCase().includes(q) ||
+        (arDict[k] || '').toLowerCase().includes(q) ||
+        (dicts[activeLang]?.[k] || '').toLowerCase().includes(q)
+      );
+    }).length;
+  };
 
   const completionPct = (locale: string) => {
     const keys = Object.keys(arDict);
@@ -233,6 +326,13 @@ export default function TranslationsManagerPage() {
     const filled = keys.filter(k => (dicts[locale]?.[k] || '').trim() !== '').length;
     return Math.round((filled / keys.length) * 100);
   };
+
+  // ─── Flag selection filters ────────────────────────────────────────────────
+  const filteredFlags = COMMON_FLAGS.filter(f =>
+    f.nameAr.includes(searchFlagQuery) ||
+    f.nameEn.toLowerCase().includes(searchFlagQuery.toLowerCase()) ||
+    f.code.includes(searchFlagQuery.toLowerCase())
+  );
 
   // ─── UI ───────────────────────────────────────────────────────────────────
   if (isLoading) {
@@ -249,16 +349,16 @@ export default function TranslationsManagerPage() {
   const activeLangMeta = languages.find(l => l.code === activeLang);
 
   return (
-    <div className="min-h-screen bg-slate-50" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="w-full flex flex-col min-h-screen bg-slate-50" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="bg-white border-b border-slate-200 px-6 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-white border-b border-slate-200 px-4 py-4 md:px-6 md:py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#1ABB9C]/10 flex items-center justify-center">
             <Languages className="h-5 w-5 text-[#1ABB9C]" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-800">إدارة الترجمات واللغات</h1>
-            <p className="text-sm text-slate-500">أضف لغات جديدة وعدّل نصوص الترجمة من هنا</p>
+            <h1 className="text-lg md:text-xl font-bold text-slate-800">إدارة الترجمات واللغات</h1>
+            <p className="text-xs md:text-sm text-slate-500">أضف لغات جديدة وعدّل نصوص الترجمة من هنا</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -282,10 +382,25 @@ export default function TranslationsManagerPage() {
         </div>
       </div>
 
-      <div className="flex h-[calc(100vh-89px)]">
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-[calc(100vh-170px)]">
+        {/* ── Mobile Language Picker (Visible only on mobile/tablet) ───────── */}
+        <div className="lg:hidden p-4 bg-white border-b border-slate-200">
+          <label className="block text-xs font-bold text-slate-500 mb-2">اختر لغة التعديل:</label>
+          <select
+            value={activeLang}
+            onChange={(e) => setActiveLang(e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm"
+          >
+            {languages.map(lang => (
+              <option key={lang.code} value={lang.code}>
+                {lang.flag} {lang.name} ({completionPct(lang.code)}%)
+              </option>
+            ))}
+          </select>
+        </div>
 
-        {/* ── Left Panel: Language List ───────────────────────────────────── */}
-        <div className="w-64 shrink-0 bg-white border-e border-slate-200 flex flex-col">
+        {/* ── Left Panel: Language List (Desktop Only) ────────────────────── */}
+        <div className="hidden lg:flex w-64 shrink-0 bg-white border-e border-slate-200 flex-col">
           <div className="p-4 border-b border-slate-100">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
               اللغات النشطة ({languages.length})
@@ -305,7 +420,11 @@ export default function TranslationsManagerPage() {
                       : 'hover:bg-slate-50 border-s-2 border-transparent'
                   }`}
                 >
-                  <span className="text-2xl shrink-0">{lang.flag}</span>
+                  <img
+                    src={`https://hatscripts.github.io/circle-flags/flags/${flagEmojiToCode(lang.flag)}.svg`}
+                    className="w-6 h-6 rounded-full object-cover shrink-0"
+                    alt={lang.name}
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm font-semibold text-slate-700 truncate">{lang.name}</span>
@@ -334,7 +453,6 @@ export default function TranslationsManagerPage() {
                       )}
                     </div>
                   </div>
-                  {/* Delete button (non-builtin only) */}
                   {!lang.isBuiltin && (
                     <button
                       onClick={e => { e.stopPropagation(); deleteLanguage(lang.code); }}
@@ -349,44 +467,46 @@ export default function TranslationsManagerPage() {
           </div>
         </div>
 
-        {/* ── Main Panel: Translation Editor ─────────────────────────────── */}
+        {/* ── Right Panel: Translation Editor ─────────────────────────────── */}
         <div className="flex-1 flex flex-col overflow-hidden">
-
           {/* Sub-header */}
-          <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">{activeLangMeta?.flag}</span>
+          <div className="bg-white border-b border-slate-200 px-4 py-3 md:px-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-2 md:gap-3">
+              <img
+                src={`https://hatscripts.github.io/circle-flags/flags/${flagEmojiToCode(activeLangMeta?.flag || 'ar')}.svg`}
+                className="w-6 h-6 rounded-full object-cover shrink-0"
+                alt={activeLangMeta?.name}
+              />
               <div>
                 <span className="font-bold text-slate-800">{activeLangMeta?.name}</span>
                 <span className="text-slate-400 mx-2">·</span>
-                <span className="text-sm text-slate-500">{allKeys.length} مفتاح ترجمة</span>
+                <span className="text-xs md:text-sm text-slate-500">{allKeys.length} مفتاح ترجمة</span>
               </div>
-              <Badge variant="outline" className="gap-1">
+              <Badge variant="outline" className="gap-1 text-[10px] md:text-xs">
                 {activeLangMeta?.direction === 'rtl'
                   ? <><AlignRight className="h-3 w-3" /> RTL</>
                   : <><AlignLeft className="h-3 w-3" /> LTR</>}
               </Badge>
               {dirtyLocales.has(activeLang) && (
-                <Badge className="bg-amber-50 text-amber-700 border-amber-200 gap-1">
+                <Badge className="bg-amber-50 text-amber-700 border-amber-200 gap-1 text-[10px] md:text-xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                   تغييرات غير محفوظة
                 </Badge>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              {/* Search */}
-              <div className="relative">
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <div className="relative flex-1 md:flex-initial">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
                   placeholder="ابحث عن مفتاح أو نص..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="ps-9 w-64 h-9 text-sm"
+                  className="ps-9 w-full md:w-64 h-9 text-sm"
                 />
               </div>
               <Button
                 size="sm"
-                className="gap-2 bg-[#1ABB9C] hover:bg-[#17a589] text-white"
+                className="gap-2 bg-[#1ABB9C] hover:bg-[#17a589] text-white whitespace-nowrap"
                 disabled={isSaving || !dirtyLocales.has(activeLang)}
                 onClick={() => saveLocale(activeLang)}
               >
@@ -398,154 +518,140 @@ export default function TranslationsManagerPage() {
             </div>
           </div>
 
+          {/* Dynamic Tabs Bar */}
+          <div className="bg-white border-b border-slate-200 px-4 py-2 md:px-6 overflow-x-auto flex gap-1 scrollbar-none shrink-0">
+            {TABS.map(tab => {
+              const isActive = activeTab === tab.id;
+              const count = getTabKeysCount(tab.id);
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-4 py-2 rounded-lg text-xs md:text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
+                    isActive
+                      ? 'bg-[#1ABB9C] text-white shadow-md'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
+                  }`}
+                >
+                  <span>{isRTL ? tab.labelAr : tab.labelEn}</span>
+                  <Badge className={`text-[9px] px-1.5 py-0.5 rounded-full ${
+                    isActive ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'
+                  }`}>
+                    {count}
+                  </Badge>
+                </button>
+              );
+            })}
+          </div>
+
           {/* Translation keys editor */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            {/* Reference lang note */}
+          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
             {activeLang !== 'ar' && (
-              <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-sm text-blue-700">
+              <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-xs md:text-sm text-blue-700">
                 <Globe className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>
                   يظهر النص العربي (المرجع) على اليسار، والنص القابل للتعديل على اليمين.
-                  يمكنك الاستناد إلى النص الإنجليزي كمرجع إضافي.
+                  يمكنك الاستناد إلى النص كمرجع إضافي.
                 </span>
               </div>
             )}
 
-            {sections.map(section => {
-              const keys = filteredKeys(section);
-              if (!keys.length) return null;
-              const isOpen = openSections[section] !== false;
+            {filteredKeys.length === 0 ? (
+              <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
+                <AlertTriangle className="h-10 w-10 mx-auto mb-2 opacity-50" />
+                <p>لا توجد نصوص تطابق البحث في هذا التبويب</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                {/* Column headers (Desktop Only) */}
+                <div className="hidden lg:grid grid-cols-[220px_1fr_1fr] gap-0 bg-slate-50 border-b border-slate-100">
+                  <div className="px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider">المفتاح Key</div>
+                  <div className="px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider border-s border-slate-100">
+                    🇩🇿 العربية (مرجع)
+                  </div>
+                  <div className="px-4 py-3.5 text-xs font-semibold text-slate-400 uppercase tracking-wider border-s border-slate-100">
+                    <span className="flex items-center gap-1.5">
+                      <img
+                        src={`https://hatscripts.github.io/circle-flags/flags/${flagEmojiToCode(activeLangMeta?.flag || 'ar')}.svg`}
+                        className="w-4 h-4 rounded-full object-cover"
+                        alt={activeLangMeta?.name}
+                      />
+                      {activeLangMeta?.name}
+                    </span>
+                  </div>
+                </div>
 
-              return (
-                <div key={section} className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                  {/* Section header */}
-                  <button
-                    className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors"
-                    onClick={() => setOpenSections(prev => ({ ...prev, [section]: !isOpen }))}
-                  >
-                    <div className="flex items-center gap-3">
-                      {isOpen
-                        ? <ChevronDown className="h-4 w-4 text-slate-400" />
-                        : <ChevronRight className="h-4 w-4 text-slate-400" />}
-                      <span className="font-semibold text-slate-700">
-                        {SECTION_LABELS[section] || section}
-                      </span>
-                      <Badge variant="secondary" className="text-xs">
-                        {keys.length} مفتاح
-                      </Badge>
-                      {/* Missing keys count */}
-                      {(() => {
-                        const missing = keys.filter(k => !(currentDict[k] || '').trim()).length;
-                        return missing > 0 ? (
-                          <Badge className="bg-red-50 text-red-600 border-red-200 text-xs gap-1">
-                            <AlertTriangle className="h-3 w-3" />
-                            {missing} ناقص
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-green-50 text-green-600 border-green-200 text-xs gap-1">
-                            <Check className="h-3 w-3" />
-                            مكتمل
-                          </Badge>
-                        );
-                      })()}
-                    </div>
-                  </button>
+                {/* Keys list */}
+                <div className="divide-y divide-slate-100">
+                  {filteredKeys.map(key => {
+                    const shortKey = key.replace(`${activeTab}.`, '');
+                    const arVal = arDict[key] || '';
+                    const curVal = currentDict[key] || '';
+                    const isEmpty = !curVal.trim();
 
-                  {/* Keys list */}
-                  {isOpen && (
-                    <div className="divide-y divide-slate-100">
-                      {/* Column headers */}
-                      <div className="grid grid-cols-[220px_1fr_1fr] gap-0 bg-slate-50 border-t border-slate-100">
-                        <div className="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">مفتاح</div>
-                        <div className="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider border-s border-slate-100">
-                          🇩🇿 العربية (مرجع)
+                    return (
+                      <div
+                        key={key}
+                        className={`flex flex-col lg:grid lg:grid-cols-[220px_1fr_1fr] gap-2 lg:gap-0 p-4 lg:p-0 hover:bg-slate-50 transition-colors ${
+                          isEmpty ? 'bg-red-50/20' : ''
+                        }`}
+                      >
+                        {/* Key name */}
+                        <div className="lg:px-4 lg:py-3.5 flex items-center">
+                          <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded break-all">
+                            {shortKey}
+                          </span>
                         </div>
-                        <div className="px-4 py-2 text-xs font-semibold text-slate-400 uppercase tracking-wider border-s border-slate-100">
-                          {activeLangMeta?.flag} {activeLangMeta?.name}
+
+                        {/* Arabic reference */}
+                        <div className="lg:px-4 lg:py-3.5 lg:border-s lg:border-slate-100 flex items-center">
+                          <div className="flex flex-col lg:block w-full">
+                            <span className="lg:hidden text-[10px] font-semibold text-slate-400 mb-0.5 block">العربية (مرجع):</span>
+                            <span className="text-sm text-slate-600 leading-relaxed" dir="rtl">
+                              {arVal || <span className="text-slate-300 italic text-xs">فارغ</span>}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Editable field */}
+                        <div className="lg:px-3 lg:py-2 lg:border-s lg:border-slate-100 flex items-center">
+                          <div className="flex flex-col lg:block w-full">
+                            <span className="lg:hidden text-[10px] font-semibold text-slate-400 mb-1 block">
+                              {activeLangMeta?.name}:
+                            </span>
+                            <input
+                              type="text"
+                              value={curVal}
+                              onChange={e => updateKey(activeLang, key, e.target.value)}
+                              dir={activeLang === 'ar' ? 'rtl' : (activeLangMeta?.direction || 'ltr')}
+                              className={`w-full text-sm px-2.5 py-1.5 rounded-lg border outline-none focus:ring-2 focus:ring-[#1ABB9C]/30 focus:border-[#1ABB9C] transition-all ${
+                                isEmpty
+                                  ? 'border-red-200 bg-red-50/50'
+                                  : 'border-slate-200 bg-white'
+                              }`}
+                              placeholder={activeLang === 'ar' ? "أدخل الترجمة..." : "Enter translation..."}
+                            />
+                          </div>
                         </div>
                       </div>
-
-                      {keys.map(key => {
-                        const shortKey = key.replace(`${section}.`, '');
-                        const arVal = arDict[key] || '';
-                        const curVal = currentDict[key] || '';
-                        const isEmpty = !curVal.trim();
-
-                        return (
-                          <div
-                            key={key}
-                            className={`grid grid-cols-[220px_1fr_1fr] group hover:bg-slate-50 transition-colors ${
-                              isEmpty ? 'bg-red-50/40' : ''
-                            }`}
-                          >
-                            {/* Key name */}
-                            <div className="px-4 py-3 flex items-center">
-                              <span className="text-xs font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                                {shortKey}
-                              </span>
-                            </div>
-
-                            {/* Arabic reference */}
-                            <div className="px-4 py-3 border-s border-slate-100 flex items-center">
-                              <span
-                                className="text-sm text-slate-600"
-                                dir="rtl"
-                              >
-                                {arVal || <span className="text-slate-300 italic text-xs">فارغ</span>}
-                              </span>
-                            </div>
-
-                            {/* Editable field */}
-                            <div className="px-3 py-2 border-s border-slate-100 flex items-center">
-                              {activeLang === 'ar' ? (
-                                <input
-                                  type="text"
-                                  value={curVal}
-                                  onChange={e => updateKey(activeLang, key, e.target.value)}
-                                  dir="rtl"
-                                  className={`w-full text-sm px-2 py-1.5 rounded border outline-none focus:ring-2 focus:ring-[#1ABB9C]/30 focus:border-[#1ABB9C] transition-all ${
-                                    isEmpty
-                                      ? 'border-red-200 bg-red-50'
-                                      : 'border-slate-200 bg-white'
-                                  }`}
-                                  placeholder="أدخل الترجمة..."
-                                />
-                              ) : (
-                                <input
-                                  type="text"
-                                  value={curVal}
-                                  onChange={e => updateKey(activeLang, key, e.target.value)}
-                                  dir={activeLangMeta?.direction || 'ltr'}
-                                  className={`w-full text-sm px-2 py-1.5 rounded border outline-none focus:ring-2 focus:ring-[#1ABB9C]/30 focus:border-[#1ABB9C] transition-all ${
-                                    isEmpty
-                                      ? 'border-red-200 bg-red-50'
-                                      : 'border-slate-200 bg-white'
-                                  }`}
-                                  placeholder="Enter translation..."
-                                />
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* ── Add Language Dialog ─────────────────────────────────────────────── */}
       <Dialog open={showAddLang} onOpenChange={setShowAddLang}>
-        <DialogContent className="max-w-lg" dir={isRTL ? 'rtl' : 'ltr'}>
+        <DialogContent className="max-w-lg overflow-y-auto max-h-[90vh]" dir={isRTL ? 'rtl' : 'ltr'}>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2 font-bold text-lg text-slate-800">
               <Globe className="h-5 w-5 text-[#1ABB9C]" />
               إضافة لغة جديدة
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-xs md:text-sm">
               اختر من اللغات الشائعة أو أضف لغة مخصصة
             </DialogDescription>
           </DialogHeader>
@@ -553,14 +659,19 @@ export default function TranslationsManagerPage() {
           {/* Popular languages grid */}
           <div className="space-y-4">
             <p className="text-sm font-semibold text-slate-600">اللغات الشائعة</p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {POPULAR_LANGS.filter(l => !languages.find(x => x.code === l.code)).map(lang => (
                 <button
                   key={lang.code}
+                  type="button"
                   onClick={() => addLanguage(lang)}
                   className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-[#1ABB9C] hover:bg-[#1ABB9C]/5 transition-all text-start group"
                 >
-                  <span className="text-2xl">{lang.flag}</span>
+                  <img
+                    src={`https://hatscripts.github.io/circle-flags/flags/${flagEmojiToCode(lang.flag)}.svg`}
+                    className="w-8 h-8 rounded-full object-cover shrink-0"
+                    alt={lang.nameEn}
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-slate-700 group-hover:text-[#1ABB9C] truncate">{lang.name}</p>
                     <p className="text-xs text-slate-400">{lang.nameEn} · {lang.code.toUpperCase()} · {lang.direction.toUpperCase()}</p>
@@ -571,7 +682,7 @@ export default function TranslationsManagerPage() {
             </div>
 
             {/* Divider */}
-            <div className="relative">
+            <div className="relative py-2">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-200" />
               </div>
@@ -583,6 +694,7 @@ export default function TranslationsManagerPage() {
             {!showCustomLang ? (
               <Button
                 variant="outline"
+                type="button"
                 className="w-full gap-2 border-dashed"
                 onClick={() => setShowCustomLang(true)}
               >
@@ -590,7 +702,7 @@ export default function TranslationsManagerPage() {
                 إضافة لغة مخصصة
               </Button>
             ) : (
-              <div className="space-y-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <div className="space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-600">رمز اللغة *</label>
@@ -602,14 +714,6 @@ export default function TranslationsManagerPage() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-xs font-semibold text-slate-600">علم الإيموجي</label>
-                    <Input
-                      placeholder="🇪🇸"
-                      value={customLang.flag}
-                      onChange={e => setCustomLang(prev => ({ ...prev, flag: e.target.value }))}
-                    />
-                  </div>
-                  <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-600">الاسم الأصلي *</label>
                     <Input
                       placeholder="Español"
@@ -617,7 +721,7 @@ export default function TranslationsManagerPage() {
                       onChange={e => setCustomLang(prev => ({ ...prev, name: e.target.value }))}
                     />
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 col-span-2">
                     <label className="text-xs font-semibold text-slate-600">الاسم بالإنجليزية</label>
                     <Input
                       placeholder="Spanish"
@@ -626,25 +730,77 @@ export default function TranslationsManagerPage() {
                     />
                   </div>
                 </div>
+
+                {/* Comprehensive Flag Grid Search/Picker */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-slate-600 block">اختر علم الدولة *</label>
+                  <div className="relative mb-2">
+                    <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                    <Input
+                      placeholder="ابحث عن علم (مثال: الجزائر، مصر، fr...)"
+                      value={searchFlagQuery}
+                      onChange={e => setSearchFlagQuery(e.target.value)}
+                      className="ps-8 h-8 text-xs rounded-lg bg-white"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-36 overflow-y-auto p-1.5 border border-slate-200 rounded-lg bg-white">
+                    {filteredFlags.map(f => {
+                      const isSelected = customLang.flag === f.emoji;
+                      return (
+                        <button
+                          key={f.code}
+                          type="button"
+                          onClick={() => setCustomLang(prev => ({ ...prev, flag: f.emoji }))}
+                          className={`flex items-center gap-1.5 p-1 rounded-md border text-start transition-all hover:bg-slate-50 ${
+                            isSelected
+                              ? 'border-[#1ABB9C] bg-[#1ABB9C]/5 ring-1 ring-[#1ABB9C]'
+                              : 'border-slate-100'
+                          }`}
+                        >
+                          <img
+                            src={`https://hatscripts.github.io/circle-flags/flags/${f.code}.svg`}
+                            className="w-4 h-4 rounded-full object-cover shrink-0"
+                            alt={f.nameEn}
+                          />
+                          <span className="text-[10px] font-medium truncate flex-1">{isRTL ? f.nameAr : f.nameEn}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {customLang.flag && (
+                    <div className="flex items-center gap-2 mt-2 p-2 bg-white rounded-lg border border-slate-200 text-xs">
+                      <span className="text-slate-500">العلم المختار:</span>
+                      <img
+                        src={`https://hatscripts.github.io/circle-flags/flags/${flagEmojiToCode(customLang.flag)}.svg`}
+                        className="w-5 h-5 rounded-full object-cover"
+                        alt="Selected Flag"
+                      />
+                      <span className="font-semibold">{customLang.flag}</span>
+                    </div>
+                  )}
+                </div>
+
                 <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-600">اتجاه الكتابة</label>
                   <div className="flex gap-2">
                     <button
+                      type="button"
                       onClick={() => setCustomLang(prev => ({ ...prev, direction: 'ltr' }))}
                       className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-all ${
                         customLang.direction === 'ltr'
                           ? 'border-[#1ABB9C] bg-[#1ABB9C]/10 text-[#1ABB9C]'
-                          : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                          : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
                       }`}
                     >
                       <AlignLeft className="h-4 w-4" /> LTR (يسار لليمين)
                     </button>
                     <button
+                      type="button"
                       onClick={() => setCustomLang(prev => ({ ...prev, direction: 'rtl' }))}
                       className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-all ${
                         customLang.direction === 'rtl'
                           ? 'border-[#1ABB9C] bg-[#1ABB9C]/10 text-[#1ABB9C]'
-                          : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                          : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
                       }`}
                     >
                       <AlignRight className="h-4 w-4" /> RTL (يمين لليسار)
@@ -653,13 +809,14 @@ export default function TranslationsManagerPage() {
                 </div>
                 <div className="flex gap-2 pt-1">
                   <Button
+                    type="button"
                     className="flex-1 bg-[#1ABB9C] hover:bg-[#17a589] text-white"
-                    disabled={!customLang.code || !customLang.name}
+                    disabled={!customLang.code || !customLang.name || !customLang.flag}
                     onClick={() => addLanguage(customLang)}
                   >
                     <Plus className="h-4 w-4 me-2" /> إضافة اللغة
                   </Button>
-                  <Button variant="outline" onClick={() => setShowCustomLang(false)}>
+                  <Button type="button" variant="outline" onClick={() => setShowCustomLang(false)}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
