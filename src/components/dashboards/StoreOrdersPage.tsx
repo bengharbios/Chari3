@@ -451,9 +451,18 @@ export default function StoreOrdersPage() {
                         <td className="px-4 py-3 align-middle text-center text-muted-foreground">{o.items?.length || 1}</td>
                         <td className="px-4 py-3 align-middle font-bold text-start"><span dir="ltr">{o.total.toLocaleString()} DZD</span></td>
                         <td className="px-4 py-3 align-middle text-start">
-                          <div className="flex items-center justify-start gap-2">
+                          <div className="flex items-center justify-start gap-2 bg-background border px-2 py-1 rounded-md shadow-sm w-fit relative hover:bg-muted/50 transition-colors">
                             <span className={`h-2 w-2 rounded-full ${getStatusColor(o.status)} shrink-0`}></span>
-                            <span className="text-xs font-bold text-muted-foreground">{statusConfig.label}</span>
+                            <select
+                              value={o.status}
+                              onChange={(e) => handleUpdateStatus(e.target.value, o.id)}
+                              className="text-xs font-bold bg-transparent outline-none cursor-pointer appearance-none pe-4 relative z-10"
+                              style={{ color: getStatusConfig(o.status).color }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {statuses.map(s => <option key={s.key} value={s.key} className="text-foreground">{isAr ? s.nameAr : (s.nameEn || s.nameAr)}</option>)}
+                            </select>
+                            <svg className="w-3 h-3 absolute end-2 pointer-events-none text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                           </div>
                         </td>
                         <td className="px-4 py-3 align-middle text-xs text-muted-foreground text-start">
