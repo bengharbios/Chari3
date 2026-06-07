@@ -119,18 +119,23 @@ interface SidebarProps {
         }
       };
       
-      // Check immediately on mount
-      if (typeof window !== 'undefined' && window.innerWidth < 1024 && isSidebarOpen) {
-        setSidebarOpen(false);
-      }
+    // Check immediately on mount
+    if (typeof window !== 'undefined' && window.innerWidth < 1024 && isSidebarOpen) {
+      setSidebarOpen(false);
+    }
 
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
-    }, [isSidebarOpen, setSidebarOpen]);
-  
-    const [paymentModel, setPaymentModel] = useState<string>('mixed');
-  
-    useEffect(() => {
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isSidebarOpen, setSidebarOpen]);
+
+  const [paymentModel, setPaymentModel] = useState<string>('mixed');
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  const toggleSection = (sectionId: string) => {
+    setCollapsedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+  };
+
+  useEffect(() => {
       if (user?.role === 'seller' && !isBuyerMode) {
         // 1. Fetch Global Settings First
         fetch('/api/settings/public')
@@ -229,58 +234,77 @@ interface SidebarProps {
           {/* Navigation */}
           <div className="flex-1 py-4 overflow-y-auto overflow-x-hidden">
             <div className={cn("space-y-1.5", isDesktopSidebarCollapsed ? "px-2" : "px-3")}>
-              {navItems.map((item, index) => {
-                if (item.isSection) {
+              {(() => {
+                let currentSectionId = 'default';
+                return navItems.map((item, index) => {
+                  if (item.isSection) {
+                    currentSectionId = item.id;
+                    const isCollapsed = collapsedSections[item.id];
+                    return (
+                      <button 
+                        key={`section-${item.id}-${index}`} 
+                        onClick={() => toggleSection(item.id)}
+                        className={cn("w-full flex items-center justify-between px-4 py-2 mt-4 first:mt-0 transition-opacity duration-300 group hover:bg-sidebar-accent/5 rounded-md", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}
+                      >
+                        <p className="text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-wider group-hover:text-sidebar-foreground/80 transition-colors">
+                          {t(locale, item.labelAr, item.labelEn)}
+                        </p>
+                        {isCollapsed ? (
+                          <ChevronLeft className={cn("h-3 w-3 text-sidebar-foreground/50", isRTL ? "" : "-rotate-90")} />
+                        ) : (
+                          <ChevronDown className="h-3 w-3 text-sidebar-foreground/50" />
+                        )}
+                      </button>
+                    );
+                  }
+
+                  // If the current section is collapsed, don't render this item (unless sidebar is fully collapsed, then show all or hide? Hide makes sense)
+                  if (collapsedSections[currentSectionId] && !isDesktopSidebarCollapsed) {
+                    return null;
+                  }
+
+                  const Icon = iconMap[item.icon || 'LayoutDashboard'] || LayoutDashboard;
+                  const isActive = currentPage === item.id;
+
                   return (
-                    <div key={`section-${item.id}-${index}`} className={cn("px-4 py-2 mt-4 first:mt-0 transition-opacity duration-300", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                      <p className="text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-wider">
+                    <button
+                      key={item.id + item.labelAr}
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                      onClick={() => {
+                        setCurrentPage(item.id as PageType);
+                        if (window.innerWidth < 1024) setSidebarOpen(false);
+                      }}
+                      className={cn(
+                        'w-full flex items-center gap-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative',
+                        isDesktopSidebarCollapsed ? 'justify-center px-0' : 'px-3',
+                        isActive
+                          ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm'
+                          : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
+                      )}
+                      title={isDesktopSidebarCollapsed ? t(locale, item.labelAr, item.labelEn) : undefined}
+                    >
+                      <Icon className="h-5 w-5 shrink-0" />
+                      
+                      <span className={cn("flex-1 truncate text-start transition-opacity duration-300", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
                         {t(locale, item.labelAr, item.labelEn)}
-                      </p>
-                    </div>
+                      </span>
+                      
+                      {item.badge && item.badge > 0 && (
+                        <Badge className={cn("h-5 min-w-[20px] flex items-center justify-center px-1.5 text-[10px] bg-brand text-navy border-0 shrink-0", isDesktopSidebarCollapsed ? "absolute -top-1 -end-1 shadow-sm border border-white" : "")}>
+                          {item.badge}
+                        </Badge>
+                      )}
+                      
+                      {/* Tooltip for collapsed state */}
+                      {isDesktopSidebarCollapsed && (
+                        <div className="absolute start-14 opacity-0 invisible group-hover:opacity-100 group-hover:visible bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 transition-all shadow-lg pointer-events-none">
+                          {t(locale, item.labelAr, item.labelEn)}
+                        </div>
+                      )}
+                    </button>
                   );
-                }
-  
-                const Icon = iconMap[item.icon || 'LayoutDashboard'] || LayoutDashboard;
-                const isActive = currentPage === item.id;
-  
-                return (
-                  <button
-                    key={item.id + item.labelAr}
-                    dir={isRTL ? 'rtl' : 'ltr'}
-                    onClick={() => {
-                      setCurrentPage(item.id as PageType);
-                      if (window.innerWidth < 1024) setSidebarOpen(false);
-                    }}
-                    className={cn(
-                      'w-full flex items-center gap-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative',
-                      isDesktopSidebarCollapsed ? 'justify-center px-0' : 'px-3',
-                      isActive
-                        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm'
-                        : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
-                    )}
-                    title={isDesktopSidebarCollapsed ? t(locale, item.labelAr, item.labelEn) : undefined}
-                  >
-                    <Icon className="h-5 w-5 shrink-0" />
-                    
-                    <span className={cn("flex-1 truncate text-start transition-opacity duration-300", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                      {t(locale, item.labelAr, item.labelEn)}
-                    </span>
-                    
-                    {item.badge && item.badge > 0 && (
-                      <Badge className={cn("h-5 min-w-[20px] flex items-center justify-center px-1.5 text-[10px] bg-brand text-navy border-0 shrink-0", isDesktopSidebarCollapsed ? "absolute -top-1 -end-1 shadow-sm border border-white" : "")}>
-                        {item.badge}
-                      </Badge>
-                    )}
-                    
-                    {/* Tooltip for collapsed state */}
-                    {isDesktopSidebarCollapsed && (
-                      <div className="absolute start-14 opacity-0 invisible group-hover:opacity-100 group-hover:visible bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 transition-all shadow-lg pointer-events-none">
-                        {t(locale, item.labelAr, item.labelEn)}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
+                });
+              })()}
             </div>
         </div>
 

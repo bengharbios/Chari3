@@ -223,15 +223,59 @@ export default function ThemeBuilder() {
 
           {/* Typography Section */}
           <div className="space-y-4">
-            <h2 className="text-lg font-bold border-b pb-2">{t.sections.typography}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Font Family</Label>
-                <Input 
-                  value={theme.typography.fontFamily} 
-                  onChange={(e) => setThemes({...themes, [currentTab]: {...theme, typography: {...theme.typography, fontFamily: e.target.value}}})}
-                  placeholder="e.g. Cairo, sans-serif"
-                />
+            <h2 className="text-lg font-bold border-b pb-2 flex items-center gap-2">
+              <Palette className="h-5 w-5 text-slate-500" />
+              {t.sections.typography}
+            </h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-3 p-4 bg-slate-50 rounded-lg border border-slate-100">
+                <Label className="font-semibold text-sm block mb-1">الخط الأساسي (Font Family)</Label>
+                <p className="text-xs text-muted-foreground mb-3">اختر من خطوط جوجل المدعومة أو أدخل اسم خط مخصص</p>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <select 
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    value={theme.typography.fontFamily.split(',')[0].replace(/['"]/g, '')}
+                    onChange={(e) => {
+                      const font = e.target.value;
+                      const value = font ? `"${font}", sans-serif` : '';
+                      setThemes({...themes, [currentTab]: {...theme, typography: {...theme.typography, fontFamily: value}}});
+                    }}
+                  >
+                    <option value="">-- اختر خطاً --</option>
+                    <optgroup label="خطوط عربية (Arabic)">
+                      <option value="Cairo">Cairo</option>
+                      <option value="Tajawal">Tajawal</option>
+                      <option value="Almarai">Almarai</option>
+                      <option value="Changa">Changa</option>
+                      <option value="El Messiri">El Messiri</option>
+                      <option value="Amiri">Amiri</option>
+                      <option value="Readex Pro">Readex Pro</option>
+                      <option value="IBM Plex Sans Arabic">IBM Plex Sans Arabic</option>
+                    </optgroup>
+                    <optgroup label="خطوط لاتينية (Latin)">
+                      <option value="Inter">Inter</option>
+                      <option value="Roboto">Roboto</option>
+                      <option value="Open Sans">Open Sans</option>
+                      <option value="Lato">Lato</option>
+                      <option value="Montserrat">Montserrat</option>
+                      <option value="Poppins">Poppins</option>
+                      <option value="Oswald">Oswald</option>
+                      <option value="Raleway">Raleway</option>
+                      <option value="Nunito">Nunito</option>
+                      <option value="Rubik">Rubik</option>
+                      <option value="DM Sans">DM Sans</option>
+                      <option value="Playfair Display">Playfair Display</option>
+                    </optgroup>
+                  </select>
+                  
+                  <Input 
+                    value={theme.typography.fontFamily} 
+                    onChange={(e) => setThemes({...themes, [currentTab]: {...theme, typography: {...theme.typography, fontFamily: e.target.value}}})}
+                    placeholder="e.g. 'Cairo', sans-serif"
+                    className="w-full font-mono text-xs"
+                    dir="ltr"
+                  />
+                </div>
               </div>
             </div>
           </div>
