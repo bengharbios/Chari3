@@ -6,7 +6,7 @@ import { useAppStore } from '@/lib/store';
 import { 
   LayoutDashboard, Settings, Sliders, ToggleRight, ChevronRight, ChevronLeft,
   Menu, FolderTree, Tag, TrendingUp, ShoppingCart, Users, Store, Wallet,
-  Boxes, Banknote, Palette, ChevronDown, Monitor, KeyRound, LogOut
+  Boxes, Banknote, Palette, ChevronDown, Monitor, KeyRound, LogOut, Globe
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -93,6 +93,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { icon: Boxes, label: t('admin.manageBrands'), path: 'brands' },
         { icon: Sliders, label: t('admin.storefrontCMS'), path: 'cms' },
         { icon: ToggleRight, label: t('admin.featureFlags'), path: 'flags' },
+        { icon: Globe, label: t('admin.manageTranslations'), path: 'settings/translations' },
         { icon: Settings, label: t('admin.generalSettings'), path: 'settings' },
         { icon: Palette, label: t('admin.themeDesign'), path: 'settings/theme' },
       ]

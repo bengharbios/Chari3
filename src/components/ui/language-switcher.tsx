@@ -5,7 +5,7 @@ import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { usePathname } from 'next/navigation';
 import { Globe, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { AppLocale, locales, localeNames, localeDirections } from '@/lib/i18n/config';
+import { useTranslationStore } from '@/lib/store/translation-store';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,25 +21,14 @@ interface LanguageSwitcherProps {
   className?: string;
 }
 
-// Locale emoji flags and short labels
-const localeFlags: Record<AppLocale, string> = {
-  ar: '🇩🇿',
-  en: '🇬🇧',
-  fr: '🇫🇷',
-};
-
-const localeShortNames: Record<AppLocale, string> = {
-  ar: 'العربية',
-  en: 'EN',
-  fr: 'FR',
-};
-
 export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const { locale, setLocale } = useAppStore();
   const { adminLocale, setAdminLocale } = useAdminAuthStore();
   const pathname = usePathname();
   const { theme, systemTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  
+  const { languages, loadTranslations } = useTranslationStore();
 
   useEffect(() => {
     setMounted(true);
@@ -47,10 +36,14 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
 
   const isAdmin = pathname.startsWith('/admin-secure-internal');
   const currentLocale = isAdmin ? adminLocale : locale;
+  const currentLangMeta = languages.find(l => l.code === currentLocale);
 
-  const handleSelect = (newLocale: AppLocale) => {
+  const handleSelect = (newLocale: string) => {
+    // Load dictionary for the new locale
+    loadTranslations(newLocale);
+    
     if (isAdmin) {
-      setAdminLocale(newLocale);
+      setAdminLocale(newLocale as any);
       setLocale(newLocale as any);
     } else {
       setLocale(newLocale as any);
@@ -74,8 +67,8 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
         >
           <Globe className="h-[17px] w-[17px]" />
           <span className="hidden sm:flex items-center gap-1 text-[12px] uppercase">
-            {localeFlags[currentLocale]}
-            <span className="hidden md:inline">{localeShortNames[currentLocale]}</span>
+            {currentLangMeta?.flag || '🇩🇿'}
+            <span className="hidden md:inline">{currentLangMeta?.name || 'العربية'}</span>
           </span>
         </button>
       </DropdownMenuTrigger>
@@ -90,13 +83,13 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
           Language / اللغة
         </DropdownMenuLabel>
         <DropdownMenuSeparator className={isDark ? 'bg-white/10' : ''} />
-        {locales.map((loc) => {
-          const dir = localeDirections[loc];
-          const isActive = currentLocale === loc;
+        {languages.map((lang) => {
+          const dir = lang.direction;
+          const isActive = currentLocale === lang.code;
           return (
             <DropdownMenuItem
-              key={loc}
-              onClick={() => handleSelect(loc)}
+              key={lang.code}
+              onClick={() => handleSelect(lang.code)}
               className={cn(
                 'cursor-pointer font-medium text-sm flex items-center justify-between gap-2 py-2.5',
                 isActive
@@ -109,8 +102,8 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
               )}
             >
               <div className="flex items-center gap-2">
-                <span className="text-base">{localeFlags[loc]}</span>
-                <span>{localeNames[loc]}</span>
+                <span className="text-base">{lang.flag}</span>
+                <span>{lang.name}</span>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 {/* RTL/LTR badge */}
