@@ -20,13 +20,31 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, isBuyerMode } = useAuthStore();
   const [dashboardTemplate, setDashboardTemplate] = useState<string>('default');
   const [theme, setTheme] = useState<ThemeSettings>(defaultSellerTheme);
+  const [isThemeLoaded, setIsThemeLoaded] = useState(false);
   const { isDark } = useGentelellaTheme();
+
+  // Load from localStorage immediately for instant display
+  useEffect(() => {
+    try {
+      const cachedTheme = localStorage.getItem('chari_dashboard_theme');
+      if (cachedTheme) {
+        setTheme(JSON.parse(cachedTheme));
+      }
+      const cachedTemplate = localStorage.getItem('chari_dashboard_template');
+      if (cachedTemplate) {
+        setDashboardTemplate(cachedTemplate);
+      }
+    } catch (e) {}
+  }, []);
 
   useEffect(() => {
     fetch('/api/settings/public')
       .then(res => res.json())
       .then(data => {
-        if (!data.success || !data.settings) return;
+        if (!data.success || !data.settings) {
+          setIsThemeLoaded(true);
+          return;
+        }
         
         let themeKey = 'theme_seller_dashboard';
         if (isBuyerMode || user?.role === 'buyer') {
@@ -39,25 +57,36 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         if (isDashboardRole) {
           if (data.settings.seller_dashboard_template) {
             setDashboardTemplate(data.settings.seller_dashboard_template);
+            localStorage.setItem('chari_dashboard_template', data.settings.seller_dashboard_template);
           } else {
             setDashboardTemplate('default');
+            localStorage.removeItem('chari_dashboard_template');
           }
         } else {
           setDashboardTemplate('default');
+          localStorage.removeItem('chari_dashboard_template');
         }
 
         if (data.settings[themeKey]) {
           try {
-            setTheme(JSON.parse(data.settings[themeKey]));
+            const newTheme = JSON.parse(data.settings[themeKey]);
+            setTheme(newTheme);
+            localStorage.setItem('chari_dashboard_theme', data.settings[themeKey]);
           } catch (e) {
             console.error('Failed to parse theme JSON', e);
           }
         }
       })
-      .catch(() => setDashboardTemplate('default'));
+      .catch(() => setDashboardTemplate('default'))
+      .finally(() => setIsThemeLoaded(true));
   }, [user, isBuyerMode]);
 
   if (!user) return null;
+  
+  // Prevent flash by waiting for theme load or at least showing cached theme
+  if (!isThemeLoaded && !theme.colors) {
+     return <div className="min-h-screen bg-background flex items-center justify-center">...</div>;
+  }
 
   const { isDark: gentelellaDark } = useGentelellaTheme();
   const { theme: globalTheme } = useTheme();
@@ -77,6 +106,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     '--theme-bg-footer': theme.colors.footerBackground[themeMode],
     '--theme-text-footer': theme.colors.footerText[themeMode],
     'fontFamily': theme.typography.fontFamily,
+    // Override Shadcn UI CSS variables so Tailwind utilities like bg-sidebar and text-sidebar-foreground pick up the custom theme colors
+    '--sidebar': theme.colors.sidebarBackground[themeMode],
+    '--sidebar-foreground': theme.colors.sidebarText[themeMode],
+    '--background': theme.colors.mainBackground[themeMode],
+    '--foreground': theme.colors.mainText[themeMode],
   } as React.CSSProperties;
 
   return (
