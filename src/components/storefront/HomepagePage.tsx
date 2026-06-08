@@ -1344,31 +1344,45 @@ export default function StorefrontHomepage() {
   };
 
   const defaultLayout = ['hero', 'features', 'categories', 'bento_offers', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
-  const activeLayout = Array.isArray(data?.layout) && data.layout.length > 0
-    ? data.layout
-        .filter((sect: any) => {
-          if (!sect) return false;
-          return typeof sect === 'string' ? true : sect.visible !== false;
-        })
-        .map((sect: any) => {
-          if (typeof sect === 'string') {
-            const id = sect === 'mega_offers_timer' ? 'bento_offers' : sect;
-            return { id, type: id, visible: true };
-          }
-          return {
-            id: sect.id,
-            type: sect.type || sect.id,
-            titleAr: sect.titleAr,
-            titleEn: sect.titleEn,
-            categoryId: sect.categoryId || '',
-            layoutStyle: sect.layoutStyle || 'carousel',
-            imageArUrl: sect.imageArUrl || '',
-            imageEnUrl: sect.imageEnUrl || '',
-            linkUrl: sect.linkUrl || '',
-            visible: sect.visible !== false
-          };
-        })
-    : defaultLayout.map(id => ({ id, type: id, visible: true }));
+  const coreSectionTypes = new Set(defaultLayout);
+  
+  const activeLayout = (() => {
+    if (!Array.isArray(data?.layout) || data.layout.length === 0) {
+      return defaultLayout.map(id => ({ id, type: id, visible: true }));
+    }
+    // Map items to normalized objects
+    const mapped = data.layout
+      .filter((sect: any) => {
+        if (!sect) return false;
+        return typeof sect === 'string' ? true : sect.visible !== false;
+      })
+      .map((sect: any) => {
+        if (typeof sect === 'string') {
+          const id = sect === 'mega_offers_timer' ? 'bento_offers' : sect;
+          return { id, type: id, visible: true };
+        }
+        return {
+          id: sect.id,
+          type: sect.type || sect.id,
+          titleAr: sect.titleAr,
+          titleEn: sect.titleEn,
+          categoryId: sect.categoryId || '',
+          layoutStyle: sect.layoutStyle || 'carousel',
+          imageArUrl: sect.imageArUrl || '',
+          imageEnUrl: sect.imageEnUrl || '',
+          linkUrl: sect.linkUrl || '',
+          visible: sect.visible !== false
+        };
+      });
+    // Ensure all core sections exist - append missing ones at the end
+    const existingTypes = new Set(mapped.map((s: any) => s.type));
+    for (const coreType of defaultLayout) {
+      if (!existingTypes.has(coreType)) {
+        mapped.push({ id: coreType, type: coreType, visible: true });
+      }
+    }
+    return mapped;
+  })();
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] dark:bg-slate-950 font-cairo">

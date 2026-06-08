@@ -245,14 +245,27 @@ export async function GET() {
       }
     } catch {}
 
-    // Parse dynamic layout
-    const defaultLayout = ['hero', 'features', 'categories', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
-    let parsedLayout: string[] = defaultLayout;
+    // Parse dynamic layout - always ensure core sections exist
+    const coreDefaultOrder = ['hero', 'features', 'categories', 'bento_offers', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
+    const coreSectionTypes = new Set(coreDefaultOrder);
+    let parsedLayout: any[] = coreDefaultOrder;
     try {
       if (layoutSetting?.value) {
         const val = JSON.parse(layoutSetting.value);
         if (Array.isArray(val) && val.length > 0) {
-          parsedLayout = val;
+          // Normalize: detect which core sections exist in saved layout
+          const savedCoreTypes = new Set<string>();
+          for (const item of val) {
+            const itemType = typeof item === 'string' ? item : item?.type;
+            if (itemType && coreSectionTypes.has(itemType)) {
+              savedCoreTypes.add(itemType);
+            }
+          }
+          // Find missing core sections and append them
+          const missingCore = coreDefaultOrder
+            .filter(ct => !savedCoreTypes.has(ct))
+            .map(ct => ({ id: ct, type: ct, visible: true }));
+          parsedLayout = [...val, ...missingCore];
         }
       }
     } catch {}

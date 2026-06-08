@@ -306,8 +306,8 @@ export default function AdminHomepageManager() {
           return {
             id: sect.id,
             type: sect.type || sect.id,
-            titleAr: sect.titleAr || sectionNames[sect.id]?.ar || sect.id,
-            titleEn: sect.titleEn || sectionNames[sect.id]?.en || sect.id,
+            titleAr: sect.titleAr || sectionNames[sect.type || sect.id]?.ar || sect.id,
+            titleEn: sect.titleEn || sectionNames[sect.type || sect.id]?.en || sect.id,
             categoryId: sect.categoryId || '',
             layoutStyle: sect.layoutStyle || 'carousel',
             imageArUrl: sect.imageArUrl || '',
@@ -316,6 +316,20 @@ export default function AdminHomepageManager() {
             visible: sect.visible !== false,
           };
         });
+        // Ensure ALL core sections exist - append missing ones
+        const coreSections = ['hero', 'features', 'categories', 'bento_offers', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
+        const existingTypes = new Set(mappedLayout.map((s: SectionItem) => s.type));
+        for (const coreType of coreSections) {
+          if (!existingTypes.has(coreType)) {
+            mappedLayout.push({
+              id: coreType,
+              type: coreType,
+              titleAr: sectionNames[coreType]?.ar || coreType,
+              titleEn: sectionNames[coreType]?.en || coreType,
+              visible: true,
+            });
+          }
+        }
         setLayout(mappedLayout);
 
         setPinned({
@@ -574,11 +588,20 @@ export default function AdminHomepageManager() {
     await persistConfig(updated, pinned, countdown, heroSlides);
   };
 
+  // Core section types that cannot be deleted (only hidden)
+  const CORE_SECTION_TYPES = new Set(['hero', 'features', 'categories', 'bento_offers', 'featured_products', 'top_sellers', 'testimonials', 'cta']);
+
   const deleteSection = async (index: number) => {
-    const sectId = layout[index]?.id;
+    const sect = layout[index];
+    if (!sect) return;
+    // Block deletion of core sections
+    if (CORE_SECTION_TYPES.has(sect.type)) {
+      toast.error(t('لا يمكن حذف الأقسام الأساسية. يمكنك إخفاءها فقط.', 'Core sections cannot be deleted. You can hide them instead.'));
+      return;
+    }
     const updated = layout.filter((_, i) => i !== index);
     setLayout(updated);
-    if (editingSectId === sectId) {
+    if (editingSectId === sect.id) {
       setEditingSectId(null);
     }
     await persistConfig(updated, pinned, countdown, heroSlides);
@@ -815,9 +838,15 @@ export default function AdminHomepageManager() {
                             <Button variant="outline" size="icon" onClick={() => toggleSectionVisibility(idx)} className="rounded-full h-8 w-8">
                               {sect.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-destructive" />}
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => deleteSection(idx)} className="rounded-full h-8 w-8 text-destructive hover:bg-destructive/10">
-                              <Trash className="w-4 h-4" />
-                            </Button>
+                            {CORE_SECTION_TYPES.has(sect.type) ? (
+                              <Button variant="ghost" size="icon" disabled className="rounded-full h-8 w-8 opacity-30 cursor-not-allowed" title={t('قسم أساسي لا يمكن حذفه', 'Core section, cannot delete')}>
+                                <Trash className="w-4 h-4" />
+                              </Button>
+                            ) : (
+                              <Button variant="ghost" size="icon" onClick={() => deleteSection(idx)} className="rounded-full h-8 w-8 text-destructive hover:bg-destructive/10">
+                                <Trash className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       );
