@@ -85,7 +85,8 @@
     "generalSettings": "General Settings",
     "manageTranslations": "Manage Translations",
     "themeDesign": "Theme & Design",
-    "homepageSettings": "Homepage Settings"
+    "homepageSettings": "Homepage Settings",
+    "manageAdvertisements": "Manage Advertisements"
   },
   "header": {
     "browseAsBuyerNote": "You are currently browsing the platform as a buyer.",

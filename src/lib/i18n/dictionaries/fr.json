@@ -85,7 +85,8 @@
     "generalSettings": "Paramètres généraux",
     "manageTranslations": "Gérer les traductions",
     "themeDesign": "Thème et design",
-    "homepageSettings": "Paramètres de la page d'accueil"
+    "homepageSettings": "Paramètres de la page d'accueil",
+    "manageAdvertisements": "Gérer les Publicités"
   },
   "header": {
     "browseAsBuyerNote": "Vous naviguez actuellement en tant qu'acheteur.",

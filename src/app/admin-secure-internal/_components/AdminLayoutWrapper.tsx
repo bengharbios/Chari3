@@ -53,6 +53,7 @@ function AdminBreadcrumb() {
       'categories': 'admin.manageCategories',
       'brands': 'admin.manageBrands',
       'cms': 'admin.storefrontCMS',
+      'advertisements': 'admin.manageAdvertisements',
       'flags': 'admin.featureFlags',
     };
 

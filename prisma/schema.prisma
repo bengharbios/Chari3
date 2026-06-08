@@ -751,7 +751,7 @@ model Coupon {
 model Setting {
   id    String @id @default(cuid())
   key   String @unique
-  value String
+  value String @db.LongText
   type  String @default("string")
   group String @default("general")
 }
