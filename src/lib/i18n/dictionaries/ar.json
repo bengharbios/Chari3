@@ -84,7 +84,8 @@
     "featureFlags": "مفاتيح الميزات",
     "generalSettings": "الإعدادات العامة",
     "manageTranslations": "إدارة الترجمات واللغات",
-    "themeDesign": "القوالب والتصميم"
+    "themeDesign": "القوالب والتصميم",
+    "homepageSettings": "تصميم وإدارة الواجهة الرئيسية"
   },
   "header": {
     "browseAsBuyerNote": "أنت الآن تتصفح المنصة كمشتري.",

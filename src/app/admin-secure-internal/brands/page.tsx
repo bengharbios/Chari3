@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
-import { useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { 
   Loader2, Plus, ArrowRight, Tag, Trash2, Edit2, 
   Search, ShieldAlert, CheckCircle, XCircle 
@@ -16,7 +16,7 @@ import Link from 'next/link';
 
 export default function AdminBrandsPage() {
   const { isAdminAuthenticated, adminUser } = useAdminAuthStore();
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const isAr = locale === 'ar';
   const dir = isAr ? 'rtl' : 'ltr';
   const t = (ar: string, en: string) => isAr ? ar : en;

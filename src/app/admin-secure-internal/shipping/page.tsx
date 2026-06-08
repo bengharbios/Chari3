@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
-import { useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Loader2, Plus, Edit2, Check, X, ArrowRight, MapPin, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -13,7 +13,7 @@ import Link from 'next/link';
 
 export default function AdminShippingPage() {
   const { isAdminAuthenticated } = useAdminAuthStore();
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const isAr = locale === 'ar';
 

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
-import { useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { 
   Loader2, Save, ArrowRight, Home, LayoutGrid, Pin, Clock, 
   ChevronUp, ChevronDown, Trash, Search, Plus, Eye, EyeOff, Sparkles, CheckCircle2
@@ -24,7 +24,7 @@ interface SectionItem {
 
 export default function AdminHomepageManager() {
   const { isAdminAuthenticated, adminUser } = useAdminAuthStore();
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const isAr = locale === 'ar';
 

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
-import { useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { 
   Loader2, Save, Plus, Trash2, Edit2, Check, X, 
   Settings, DollarSign, Wallet, CalendarDays, PlusCircle,
@@ -50,7 +50,7 @@ function SwitchRow({
 
 export default function BillingSettingsPage() {
   const { isAdminAuthenticated, adminUser } = useAdminAuthStore();
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
   const getAdminPath = (subPath: string = '') => {

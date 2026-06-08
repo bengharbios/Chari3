@@ -84,7 +84,8 @@
     "featureFlags": "Fonctionnalités",
     "generalSettings": "Paramètres généraux",
     "manageTranslations": "Gérer les traductions",
-    "themeDesign": "Thème et design"
+    "themeDesign": "Thème et design",
+    "homepageSettings": "Paramètres de la page d'accueil"
   },
   "header": {
     "browseAsBuyerNote": "Vous naviguez actuellement en tant qu'acheteur.",

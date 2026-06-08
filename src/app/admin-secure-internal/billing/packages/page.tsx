@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
-import { useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { 
   Loader2, Save, Plus, Trash2, Edit2, Check, X, 
   Package, DollarSign, Settings, Settings2, ShieldCheck, 
@@ -51,7 +51,7 @@ const INITIAL_PACKAGE = {
 
 export default function BillingPackagesPage() {
   const { isAdminAuthenticated } = useAdminAuthStore();
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
   const getAdminPath = (subPath: string = '') => {

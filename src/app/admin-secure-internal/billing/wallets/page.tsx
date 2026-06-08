@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
-import { useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { 
   Loader2, RefreshCw, Wallet, ArrowRight 
 } from 'lucide-react';
@@ -17,7 +17,7 @@ const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en
 
 export default function WalletsPage() {
   const { isAdminAuthenticated } = useAdminAuthStore();
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
   const getAdminPath = (subPath: string = '') => {

@@ -249,6 +249,7 @@ export default function StorefrontHomepage() {
   const { t: globalT } = useTranslation();
   const { locale } = useAppStore();
   const { isAuthenticated } = useAuthStore();
+  const { items: cartItems, addItem } = useCartStore();
   const isAr = locale === 'ar';
   
   const t = (ar: string, en: string) => {
@@ -390,7 +391,6 @@ export default function StorefrontHomepage() {
   // Render product card helper with 3D shadows and quick-add to cart
   const renderProductCard = (product: any, isOfferCard: boolean = false) => {
     if (!product || !product.id) return null;
-    const { items: cartItems, addItem } = useCartStore();
     const isInCart = cartItems.some((item) => item.product.id === product.id);
 
     let images: string[] = [];

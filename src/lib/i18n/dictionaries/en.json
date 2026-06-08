@@ -84,7 +84,8 @@
     "featureFlags": "Feature Flags",
     "generalSettings": "General Settings",
     "manageTranslations": "Manage Translations",
-    "themeDesign": "Theme & Design"
+    "themeDesign": "Theme & Design",
+    "homepageSettings": "Homepage Settings"
   },
   "header": {
     "browseAsBuyerNote": "You are currently browsing the platform as a buyer.",

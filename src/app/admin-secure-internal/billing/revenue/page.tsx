@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
-import { useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { 
   Loader2, BarChart3, TrendingUp, DollarSign, CalendarDays,
   Clock, ShieldOff, Package, AlertTriangle, ArrowRight,
@@ -36,7 +36,7 @@ function StatusBadge({ status, locale }: { status: string; locale: string }) {
 
 export default function BillingRevenuePage() {
   const { isAdminAuthenticated } = useAdminAuthStore();
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
   const getAdminPath = (subPath: string = '') => {

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
-import { useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { 
   Loader2, Check, X, Eye, RefreshCw, Clock, ArrowRight,
   FileText, AlertCircle, Calendar, DollarSign, ExternalLink
@@ -33,7 +33,7 @@ const SLIP_STATUS_LABELS: Record<string, { ar: string; en: string; color: string
 
 export default function BillingReceiptsPage() {
   const { isAdminAuthenticated, adminUser } = useAdminAuthStore();
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
   const getAdminPath = (subPath: string = '') => {

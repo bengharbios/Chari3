@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
-import { useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import {
   Loader2, FolderTree, ArrowRight, Plus, X, ShieldAlert,
   CheckCircle2, MessageSquare, Edit2, ToggleLeft, ToggleRight, Tag
@@ -33,7 +33,7 @@ const COMMON_ICONS = ['📦','🛍️','👗','👟','📱','💻','🏠','🍕'
 
 export default function AdminCategoriesPage() {
   const { isAdminAuthenticated, adminUser } = useAdminAuthStore();
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const isAr = locale === 'ar';
   const dir = isAr ? 'rtl' : 'ltr';
   const t = (ar: string, en: string) => isAr ? ar : en;

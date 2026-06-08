@@ -92,6 +92,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { icon: FolderTree, label: t('admin.manageCategories'), path: 'categories' },
         { icon: Boxes, label: t('admin.manageBrands'), path: 'brands' },
         { icon: Sliders, label: t('admin.storefrontCMS'), path: 'cms' },
+        { icon: Settings, label: t('admin.homepageSettings'), path: 'settings/homepage' },
         { icon: ToggleRight, label: t('admin.featureFlags'), path: 'flags' },
         { icon: Globe, label: t('admin.manageTranslations'), path: 'settings/translations' },
         { icon: Settings, label: t('admin.generalSettings'), path: 'settings' },
