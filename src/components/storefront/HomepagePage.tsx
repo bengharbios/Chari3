@@ -885,7 +885,7 @@ export default function StorefrontHomepage() {
       case 'bento_offers':
         // Noon-style Bento Promo grid with countdown timer
         const hasCountdown = data?.countdownConfig?.enabled || false;
-        const productsList = data?.featuredProducts || [];
+        const productsList = (data?.featuredProducts || []).slice(0, section.limit || 10);
         const timerProducts = productsList.slice(0, 2);
 
         return (
@@ -1078,7 +1078,7 @@ export default function StorefrontHomepage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                 {productsToShow
                   .filter((product: any) => product && product.id)
-                  .slice(0, displayCount)
+                  .slice(0, section.limit ? Math.min(displayCount, section.limit) : displayCount)
                   .map((product: any) => <ProductCard key={product.id} product={product} />)}
               </div>
             )}
@@ -1103,8 +1103,8 @@ export default function StorefrontHomepage() {
         );
 
       case 'top_sellers':
-        const stores = data?.topStores || [];
-        const sellers = data?.topSellers || [];
+        const stores = (data?.topStores || []).slice(0, section.limit || 8);
+        const sellers = (data?.topSellers || []).slice(0, section.limit || 8);
 
         return (
           <section key="top_sellers" className="bg-gradient-to-br from-stone-950 via-slate-900 to-indigo-950 text-white py-16 mt-12 relative overflow-hidden border-y border-white/5">

@@ -28,6 +28,8 @@ interface SectionItem {
   imageEnUrl?: string;
   linkUrl?: string;
   visible: boolean;
+  filterType?: string;
+  limit?: number;
 }
 
 // -------------------------------------------------------------
@@ -198,6 +200,8 @@ export default function AdminHomepageManager() {
     imageArUrl: '',
     imageEnUrl: '',
     linkUrl: '',
+    filterType: 'smart',
+    limit: 10,
   });
   const [newSectType, setNewSectType] = useState<string>('category_products');
 
@@ -380,6 +384,8 @@ export default function AdminHomepageManager() {
           imageEnUrl: sect.imageEnUrl || '',
           linkUrl: sect.linkUrl || '',
           visible: sect.visible,
+          filterType: sect.filterType || 'smart',
+          limit: sect.limit || 10,
         })),
         pinned: {
           products: (updatedPinned.products || []).map((p: any, idx: number) => ({ id: p.id, order: idx + 1, name: p.name, price: p.price, image: p.image })),
@@ -619,6 +625,8 @@ export default function AdminHomepageManager() {
       imageArUrl: sect.imageArUrl || '',
       imageEnUrl: sect.imageEnUrl || '',
       linkUrl: sect.linkUrl || '',
+      filterType: sect.filterType || 'smart',
+      limit: sect.limit || 10,
     });
   };
 
@@ -635,6 +643,8 @@ export default function AdminHomepageManager() {
           imageArUrl: editSectData.imageArUrl,
           imageEnUrl: editSectData.imageEnUrl,
           linkUrl: editSectData.linkUrl,
+          filterType: editSectData.filterType,
+          limit: editSectData.limit,
         };
       }
       return sect;
@@ -670,7 +680,9 @@ export default function AdminHomepageManager() {
       imageArUrl: '',
       imageEnUrl: '',
       linkUrl: '',
-      visible: true
+      visible: true,
+      filterType: 'smart',
+      limit: 10
     };
     const updated = [...layout, newSect];
     setLayout(updated);
@@ -683,6 +695,8 @@ export default function AdminHomepageManager() {
       imageArUrl: '',
       imageEnUrl: '',
       linkUrl: '',
+      filterType: 'smart',
+      limit: 10,
     });
     await persistConfig(updated, pinned, countdown, heroSlides);
   };
@@ -1005,6 +1019,56 @@ export default function AdminHomepageManager() {
                               className="rounded-xl text-sm font-mono text-start"
                               placeholder="/search?q=sunscreen"
                             />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Filtering and Limits for Products/Sellers sections */}
+                      {(layout.find(s => s.id === editingSectId)?.type === 'featured_products' || 
+                        layout.find(s => s.id === editingSectId)?.type === 'bento_offers' || 
+                        layout.find(s => s.id === editingSectId)?.type === 'top_sellers') && (
+                        <div className="space-y-4 pt-4 border-t">
+                          <h4 className="text-xs font-bold text-amber-500 uppercase flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            {t('معايير الفرز الذكي', 'Smart Sorting Criteria')}
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2 text-start">
+                              <Label className="text-xs font-bold">{t('معيار فرز المحتوى', 'Content Sort By')}</Label>
+                              <select
+                                value={editSectData.filterType || 'smart'}
+                                onChange={(e) => setEditSectData(prev => ({ ...prev, filterType: e.target.value }))}
+                                className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
+                              >
+                                {layout.find(s => s.id === editingSectId)?.type === 'top_sellers' ? (
+                                  <>
+                                    <option value="smart">🤖 {t('خوارزمية ذكية (تلقائي)', 'Smart Algorithm (Auto)')}</option>
+                                    <option value="most_sales">📈 {t('الأكثر مبيعاً وطلباً', 'Most Sales & Orders')}</option>
+                                    <option value="highest_rated">⭐ {t('الأعلى تقييماً', 'Highest Rated')}</option>
+                                    <option value="most_products">📦 {t('الأكثر منتجات', 'Most Products')}</option>
+                                  </>
+                                ) : (
+                                  <>
+                                    <option value="smart">🤖 {t('خوارزمية ذكية (تلقائي)', 'Smart Algorithm (Auto)')}</option>
+                                    <option value="most_sold">🔥 {t('الأكثر مبيعاً (المبيعات)', 'Most Sold (Sales)')}</option>
+                                    <option value="most_viewed">👁️ {t('الأكثر مشاهدة وطلباً', 'Most Viewed & Requested')}</option>
+                                    <option value="highest_rated">⭐ {t('الأعلى تقييماً', 'Highest Rated')}</option>
+                                    <option value="newest">🆕 {t('الأحدث إضافة', 'Newest Added')}</option>
+                                  </>
+                                )}
+                              </select>
+                            </div>
+                            <div className="space-y-2 text-start">
+                              <Label className="text-xs font-bold">{t('الحد الأقصى للعرض', 'Maximum Items to Show')}</Label>
+                              <Input
+                                type="number"
+                                min={1}
+                                max={100}
+                                value={editSectData.limit || 10}
+                                onChange={e => setEditSectData(prev => ({ ...prev, limit: parseInt(e.target.value) || 10 }))}
+                                className="rounded-xl text-sm"
+                              />
+                            </div>
                           </div>
                         </div>
                       )}

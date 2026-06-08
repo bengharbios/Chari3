@@ -165,6 +165,36 @@ export async function GET() {
       })
     ]);
 
+    // Parse dynamic layout - always ensure core sections exist
+    const coreDefaultOrder = ['hero', 'features', 'categories', 'bento_offers', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
+    const coreSectionTypes = new Set(coreDefaultOrder);
+    let parsedLayout: any[] = coreDefaultOrder;
+    try {
+      if (layoutSetting?.value) {
+        const val = JSON.parse(layoutSetting.value);
+        if (Array.isArray(val) && val.length > 0) {
+          const savedCoreTypes = new Set<string>();
+          for (const item of val) {
+            const itemType = typeof item === 'string' ? item : item?.type;
+            if (itemType && coreSectionTypes.has(itemType)) {
+              savedCoreTypes.add(itemType);
+            }
+          }
+          const missingCore = coreDefaultOrder
+            .filter(ct => !savedCoreTypes.has(ct))
+            .map(ct => ({ id: ct, type: ct, visible: true }));
+          parsedLayout = [...val, ...missingCore];
+        }
+      }
+    } catch {}
+
+    let featuredProductsFilter = 'smart';
+    let topSellersFilter = 'smart';
+    for (const item of parsedLayout) {
+      if (item.type === 'featured_products' && item.filterType) featuredProductsFilter = item.filterType;
+      if (item.type === 'top_sellers' && item.filterType) topSellersFilter = item.filterType;
+    }
+
     // 3. Rank products dynamically in memory
     const rankedProducts = rawProducts.map((product: any) => {
       const merchant = product.seller || product.store;
@@ -195,8 +225,18 @@ export async function GET() {
       return { ...product, score };
     });
     
-    // Sort regular ranked list
-    rankedProducts.sort((a, b) => b.score - a.score);
+    // Sort regular ranked list based on filterType
+    if (featuredProductsFilter === 'most_sold') {
+      rankedProducts.sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
+    } else if (featuredProductsFilter === 'most_viewed') {
+      rankedProducts.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+    } else if (featuredProductsFilter === 'highest_rated') {
+      rankedProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else if (featuredProductsFilter === 'newest') {
+      rankedProducts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else {
+      rankedProducts.sort((a, b) => b.score - a.score);
+    }
 
     // Sort by pinned configurations (pinned items are forced to the top)
     const pinnedProductMap = new Map(pinnedProductIds.map((id, index) => [id, index]));
@@ -210,6 +250,13 @@ export async function GET() {
     const storePinned = topStores.filter(s => pinnedStoreMap.has(s.id))
       .sort((a, b) => pinnedStoreMap.get(a.id)! - pinnedStoreMap.get(b.id)!);
     const storeRegular = topStores.filter(s => !pinnedStoreMap.has(s.id));
+    if (topSellersFilter === 'most_sales') {
+      storeRegular.sort((a, b) => (b.totalSales || 0) - (a.totalSales || 0));
+    } else if (topSellersFilter === 'highest_rated') {
+      storeRegular.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else if (topSellersFilter === 'most_products') {
+      storeRegular.sort((a, b) => (b._count?.products || 0) - (a._count?.products || 0));
+    }
     const finalStores = [...storePinned, ...storeRegular].slice(0, 8);
 
     // Apply pinning for sellers
@@ -217,6 +264,13 @@ export async function GET() {
     const sellerPinned = topSellers.filter(s => pinnedSellerMap.has(s.id))
       .sort((a, b) => pinnedSellerMap.get(a.id)! - pinnedSellerMap.get(b.id)!);
     const sellerRegular = topSellers.filter(s => !pinnedSellerMap.has(s.id));
+    if (topSellersFilter === 'most_sales') {
+      sellerRegular.sort((a, b) => (b.totalSales || 0) - (a.totalSales || 0));
+    } else if (topSellersFilter === 'highest_rated') {
+      sellerRegular.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else if (topSellersFilter === 'most_products') {
+      sellerRegular.sort((a, b) => (b._count?.products || 0) - (a._count?.products || 0));
+    }
     const finalSellers = [...sellerPinned, ...sellerRegular].slice(0, 8);
 
     // Track impressions for ads
@@ -245,30 +299,7 @@ export async function GET() {
       }
     } catch {}
 
-    // Parse dynamic layout - always ensure core sections exist
-    const coreDefaultOrder = ['hero', 'features', 'categories', 'bento_offers', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
-    const coreSectionTypes = new Set(coreDefaultOrder);
-    let parsedLayout: any[] = coreDefaultOrder;
-    try {
-      if (layoutSetting?.value) {
-        const val = JSON.parse(layoutSetting.value);
-        if (Array.isArray(val) && val.length > 0) {
-          // Normalize: detect which core sections exist in saved layout
-          const savedCoreTypes = new Set<string>();
-          for (const item of val) {
-            const itemType = typeof item === 'string' ? item : item?.type;
-            if (itemType && coreSectionTypes.has(itemType)) {
-              savedCoreTypes.add(itemType);
-            }
-          }
-          // Find missing core sections and append them
-          const missingCore = coreDefaultOrder
-            .filter(ct => !savedCoreTypes.has(ct))
-            .map(ct => ({ id: ct, type: ct, visible: true }));
-          parsedLayout = [...val, ...missingCore];
-        }
-      }
-    } catch {}
+    // Parse testimonials
 
     // Parse dynamic hero slides
     let parsedHeroSlides: unknown[] = [];
