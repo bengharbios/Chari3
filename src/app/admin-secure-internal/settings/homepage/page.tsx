@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { 
   Loader2, Save, ArrowRight, Home, LayoutGrid, Pin, Clock, 
   ChevronUp, ChevronDown, Trash, Search, Plus, Eye, EyeOff, Sparkles, CheckCircle2,
-  Edit, Settings
+  Edit, Settings, Sparkle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { ImageUploader } from '@/components/ui/ImageUploader';
 
 interface SectionItem {
   id: string;
@@ -29,8 +30,135 @@ interface SectionItem {
   visible: boolean;
 }
 
+// -------------------------------------------------------------
+// Beautiful Custom Combobox / Searchable Dropdown Selector
+// -------------------------------------------------------------
+interface SelectorOption {
+  id: string;
+  name: string;
+  price?: number;
+  image?: string;
+  subText?: string;
+}
+
+function SearchableSelector({
+  items,
+  selectedValue,
+  onSelect,
+  placeholder,
+  emptyText,
+  isAr,
+}: {
+  items: SelectorOption[];
+  selectedValue: string;
+  onSelect: (value: string) => void;
+  placeholder: string;
+  emptyText: string;
+  isAr: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredItems = items.filter(item =>
+    item.name.toLowerCase().includes(search.toLowerCase()) ||
+    (item.subText && item.subText.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  const selectedItem = items.find(item => item.id === selectedValue);
+
+  return (
+    <div className="relative w-full text-start" ref={containerRef}>
+      <button
+        type="button"
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setSearch('');
+        }}
+        className="flex items-center justify-between w-full bg-background border border-border px-4 py-3 rounded-xl text-sm font-bold text-start hover:border-slate-400 dark:hover:border-slate-600 transition-all outline-none focus:ring-2 focus:ring-brand/20 select-none"
+      >
+        {selectedItem ? (
+          <div className="flex items-center gap-2.5 min-w-0">
+            {selectedItem.image ? (
+              <img src={selectedItem.image} alt="" className="w-6 h-6 rounded-md object-cover bg-slate-100 shrink-0" />
+            ) : (
+              <div className="w-6 h-6 rounded-md bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-xs shrink-0">📦</div>
+            )}
+            <div className="min-w-0">
+              <p className="font-bold truncate text-xs text-slate-800 dark:text-slate-200">{selectedItem.name}</p>
+              {selectedItem.price !== undefined && (
+                <p className="text-[10px] text-amber-500 font-bold">{selectedItem.price.toLocaleString()} د.ج</p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <span className="text-muted-foreground text-xs">{placeholder}</span>
+        )}
+        <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-2.5 space-y-2 max-h-72 overflow-y-auto animate-in fade-in slide-in-from-top-1">
+          <div className="relative flex items-center">
+            <Search className="absolute start-3 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder={isAr ? "ابحث..." : "Search..."}
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-border rounded-xl ps-9 pe-3 py-2 text-xs font-bold outline-none focus:border-brand"
+            />
+          </div>
+
+          <div className="divide-y divide-border/40 overflow-y-auto max-h-48 scrollbar-thin">
+            {filteredItems.length === 0 ? (
+              <p className="text-center py-4 text-xs text-muted-foreground">{emptyText}</p>
+            ) : (
+              filteredItems.map(item => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    onSelect(item.id);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-2.5 p-2 rounded-lg text-start hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${selectedValue === item.id ? 'bg-brand/10 text-brand' : ''}`}
+                >
+                  {item.image ? (
+                    <img src={item.image} alt="" className="w-8 h-8 rounded-lg object-cover bg-slate-100 shrink-0" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm shrink-0">📦</div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold truncate text-slate-850 dark:text-slate-200">{item.name}</p>
+                    {item.price !== undefined ? (
+                      <p className="text-[10px] text-amber-500 font-bold mt-0.5">{item.price.toLocaleString()} د.ج</p>
+                    ) : item.subText ? (
+                      <p className="text-[10px] text-muted-foreground truncate mt-0.5">{item.subText}</p>
+                    ) : null}
+                  </div>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminHomepageManager() {
-  const { isAdminAuthenticated, adminUser } = useAdminAuthStore();
+  const { isAdminAuthenticated } = useAdminAuthStore();
   const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const isAr = locale === 'ar';
@@ -44,17 +172,23 @@ export default function AdminHomepageManager() {
 
   const t = (ar: string, en: string) => (isAr ? ar : en);
 
-  const fmt = (amount: number) => {
-    return `${amount.toLocaleString(locale === 'ar' ? 'ar-DZ' : 'en-US')} ${t('د.ج', 'DZD')}`;
-  };
-
   const [isMounted, setIsMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'layout' | 'pinning' | 'timer' | 'slides'>('layout');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Categories list state for dynamic sections
+  // preloaded selector data
+  const [allProducts, setAllProducts] = useState<any[]>([]);
+  const [allStores, setAllStores] = useState<any[]>([]);
+  const [allSellers, setAllSellers] = useState<any[]>([]);
   const [categoriesList, setCategoriesList] = useState<any[]>([]);
+
+  // Selected state for selectors
+  const [selectedProdId, setSelectedProdId] = useState('');
+  const [selectedStoreId, setSelectedStoreId] = useState('');
+  const [selectedSellerId, setSelectedSellerId] = useState('');
+
+  // Editing structures
   const [editingSectId, setEditingSectId] = useState<string | null>(null);
   const [editSectData, setEditSectData] = useState<any>({
     titleAr: '',
@@ -83,9 +217,8 @@ export default function AdminHomepageManager() {
     cta: 'تسوق الآن',
     ctaFr: '',
     linkUrl: '',
+    imageUrl: '',
   });
-
-
 
   // Layout state
   const [layout, setLayout] = useState<SectionItem[]>([]);
@@ -104,12 +237,6 @@ export default function AdminHomepageManager() {
     titleAr: '',
     titleEn: '',
   });
-
-  // Searching state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [searchType, setSearchType] = useState<'product' | 'store' | 'seller'>('product');
-  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -130,10 +257,25 @@ export default function AdminHomepageManager() {
     }
   }, [isMounted, isAdminAuthenticated]);
 
+  // Load all configurations & preloaded selector lists
   const fetchHomepageConfig = useCallback(async () => {
     try {
-      const res = await fetch('/api/admin/homepage');
-      const d = await res.json();
+      const [homeRes, prodRes, storeRes, sellerRes] = await Promise.all([
+        fetch('/api/admin/homepage'),
+        fetch('/api/products?limit=200'),
+        fetch('/api/stores'),
+        fetch('/api/sellers'),
+      ]);
+
+      const d = await homeRes.json();
+      const prodData = await prodRes.json();
+      const storeData = await storeRes.json();
+      const sellerData = await sellerRes.json();
+
+      if (prodData.products) setAllProducts(prodData.products);
+      if (storeData.stores) setAllStores(storeData.stores);
+      if (sellerData.sellers) setAllSellers(sellerData.sellers);
+
       if (d.success) {
         // Map layout keys to translations
         const sectionNames: Record<string, { ar: string; en: string }> = {
@@ -176,7 +318,6 @@ export default function AdminHomepageManager() {
         });
         setLayout(mappedLayout);
 
-        // Fetch detailed pinned lists
         setPinned({
           products: d.pinned?.products || [],
           stores: d.pinned?.stores || [],
@@ -204,36 +345,6 @@ export default function AdminHomepageManager() {
       fetchHomepageConfig();
     }
   }, [isMounted, isAdminAuthenticated, fetchHomepageConfig]);
-
-  // Handle Search for Pinning
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-    setIsSearching(true);
-    try {
-      let url = '';
-      if (searchType === 'product') {
-        url = `/api/products?q=${encodeURIComponent(searchQuery)}&limit=10`;
-      } else if (searchType === 'store') {
-        url = `/api/stores?q=${encodeURIComponent(searchQuery)}`;
-      } else {
-        url = `/api/sellers?q=${encodeURIComponent(searchQuery)}`;
-      }
-      
-      const res = await fetch(url);
-      const d = await res.json();
-      if (searchType === 'product') {
-        setSearchResults(d.products || []);
-      } else if (searchType === 'store') {
-        setSearchResults(d.stores || []);
-      } else {
-        setSearchResults(d.sellers || []);
-      }
-    } catch {
-      toast.error(t('فشل البحث', 'Failed to search items'));
-    } finally {
-      setIsSearching(false);
-    }
-  };
 
   const persistConfig = async (
     updatedLayout = layout,
@@ -306,6 +417,7 @@ export default function AdminHomepageManager() {
       cta: 'تسوق الآن',
       ctaFr: '',
       linkUrl: '',
+      imageUrl: '',
     });
     setEditingSlideIndex(heroSlides.length);
   };
@@ -326,6 +438,7 @@ export default function AdminHomepageManager() {
       cta: slide.cta || 'تسوق الآن',
       ctaFr: slide.ctaFr || '',
       linkUrl: slide.linkUrl || '',
+      imageUrl: slide.imageUrl || '',
     });
     setEditingSlideIndex(index);
   };
@@ -370,21 +483,51 @@ export default function AdminHomepageManager() {
     await persistConfig(layout, pinned, countdown, updated);
   };
 
-  // Pinned items handlers
-  const handlePinItem = async (item: any) => {
-    const listKey = searchType === 'product' ? 'products' : searchType === 'store' ? 'stores' : 'sellers';
+  // Pinned items handlers (triggered from Selectors)
+  const handlePinPreloadedItem = async (type: 'product' | 'store' | 'seller') => {
+    let itemToPin: any = null;
+    let listKey: 'products' | 'stores' | 'sellers' = 'products';
+
+    if (type === 'product') {
+      itemToPin = allProducts.find(p => p.id === selectedProdId);
+      listKey = 'products';
+    } else if (type === 'store') {
+      itemToPin = allStores.find(s => s.id === selectedStoreId);
+      listKey = 'stores';
+    } else if (type === 'seller') {
+      itemToPin = allSellers.find(s => s.id === selectedSellerId);
+      listKey = 'sellers';
+    }
+
+    if (!itemToPin) {
+      toast.error(t('يرجى تحديد عنصر أولاً!', 'Please select an item first!'));
+      return;
+    }
+
     const currentList = pinned[listKey] || [];
 
-    if (currentList.some((i: any) => i.id === item.id)) {
+    if (currentList.some((i: any) => i.id === itemToPin.id)) {
       toast.error(t('هذا العنصر مثبت بالفعل!', 'This item is already pinned!'));
       return;
     }
 
+    let pImage = '';
+    if (type === 'product') {
+      let images: string[] = [];
+      if (Array.isArray(itemToPin.images)) images = itemToPin.images;
+      else if (typeof itemToPin.images === 'string') {
+        try { images = JSON.parse(itemToPin.images); } catch {}
+      }
+      pImage = images[0] || '';
+    } else {
+      pImage = itemToPin.logo || itemToPin.user?.avatar || '';
+    }
+
     const newItem = {
-      id: item.id,
-      name: item.name || item.storeName || item.title || item.user?.name || '',
-      price: item.price || 0,
-      image: item.logo || item.user?.avatar || (Array.isArray(item.images) ? item.images[0] : null) || ''
+      id: itemToPin.id,
+      name: itemToPin.name || itemToPin.storeName || itemToPin.title || itemToPin.user?.name || '',
+      price: itemToPin.price || 0,
+      image: pImage,
     };
 
     const updatedPinned = {
@@ -393,6 +536,12 @@ export default function AdminHomepageManager() {
     };
 
     setPinned(updatedPinned);
+
+    // Clear selection state
+    if (type === 'product') setSelectedProdId('');
+    else if (type === 'store') setSelectedStoreId('');
+    else if (type === 'seller') setSelectedSellerId('');
+
     await persistConfig(layout, updatedPinned, countdown, heroSlides);
   };
 
@@ -519,6 +668,35 @@ export default function AdminHomepageManager() {
     await persistConfig(layout, pinned, countdown, heroSlides);
   };
 
+  // Adapt lists for searchable selectors
+  const productOptions: SelectorOption[] = allProducts.map(p => {
+    let images: string[] = [];
+    if (Array.isArray(p.images)) images = p.images;
+    else if (typeof p.images === 'string') {
+      try { images = JSON.parse(p.images); } catch {}
+    }
+    return {
+      id: p.id,
+      name: isAr ? p.name : (p.nameEn || p.name),
+      price: p.price,
+      image: images[0] || '',
+    };
+  });
+
+  const storeOptions: SelectorOption[] = allStores.map(s => ({
+    id: s.id,
+    name: isAr ? s.name : (s.nameEn || s.name),
+    image: s.logo || '',
+    subText: s.manager?.name || '',
+  }));
+
+  const sellerOptions: SelectorOption[] = allSellers.map(s => ({
+    id: s.id,
+    name: s.storeName || s.user?.name || '',
+    image: s.logo || s.user?.avatar || '',
+    subText: s.user?.name || '',
+  }));
+
   if (!isMounted || !isAdminAuthenticated) return null;
 
   return (
@@ -540,28 +718,28 @@ export default function AdminHomepageManager() {
         </div>
       </div>
 
-      <div className="flex flex-wrap p-1 bg-muted/50 rounded-2xl border max-w-2xl gap-1 select-none w-fit">
-        <button onClick={() => setActiveTab('layout')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'layout' ? 'bg-white text-slate-950 shadow' : 'text-muted-foreground hover:text-foreground'}`}>
+      <div className="flex flex-wrap p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border max-w-2xl gap-1 select-none w-fit">
+        <button onClick={() => setActiveTab('layout')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'layout' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
           <LayoutGrid className="w-4 h-4" />
           {t('ترتيب الأقسام', 'Sections Layout')}
         </button>
-        <button onClick={() => setActiveTab('pinning')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'pinning' ? 'bg-white text-slate-950 shadow' : 'text-muted-foreground hover:text-foreground'}`}>
+        <button onClick={() => setActiveTab('pinning')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'pinning' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
           <Pin className="w-4 h-4" />
           {t('التثبيت والترتيب اليدوي', 'Manual Pinning')}
         </button>
-        <button onClick={() => setActiveTab('timer')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'timer' ? 'bg-white text-slate-950 shadow' : 'text-muted-foreground hover:text-foreground'}`}>
+        <button onClick={() => setActiveTab('timer')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'timer' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
           <Clock className="w-4 h-4" />
           {t('عداد العروض التنازلية', 'Countdown Timer')}
         </button>
-        <button onClick={() => setActiveTab('slides')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'slides' ? 'bg-white text-slate-950 shadow' : 'text-muted-foreground hover:text-foreground'}`}>
+        <button onClick={() => setActiveTab('slides')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'slides' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
           <Sparkles className="w-4 h-4" />
           {t('سلايدر البانر الرئيسي', 'Hero Slides')}
         </button>
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center p-12">
-          <Loader2 className="h-8 w-8 animate-spin text-brand" />
+        <div className="flex justify-center p-24">
+          <Loader2 className="h-10 w-10 animate-spin text-brand" />
         </div>
       ) : (
         <div className="space-y-6">
@@ -569,7 +747,7 @@ export default function AdminHomepageManager() {
           {activeTab === 'layout' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Left Column: Sections List & Ordering */}
-              <Card className="lg:col-span-6 card-surface rounded-[24px]">
+              <Card className="lg:col-span-6 card-surface rounded-[24px] shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold">{t('ترتيب وهيكل أقسام الصفحة الرئيسية', 'Homepage Section Order')}</CardTitle>
                   <CardDescription>
@@ -577,7 +755,7 @@ export default function AdminHomepageManager() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="border border-border/80 rounded-[20px] divide-y overflow-hidden bg-background">
+                  <div className="border border-border/85 rounded-[20px] divide-y overflow-hidden bg-background shadow-inner">
                     {layout.map((sect, idx) => {
                       const sectionNames: Record<string, { ar: string; en: string }> = {
                         hero: { ar: 'البانر الترويجي الرئيسي (Slides)', en: 'Hero Promotion Slides' },
@@ -614,7 +792,7 @@ export default function AdminHomepageManager() {
                       };
 
                       return (
-                        <div key={sect.id} className={`flex items-center justify-between p-3.5 transition-colors ${sect.visible ? 'bg-background' : 'bg-muted/30 opacity-75'} ${editingSectId === sect.id ? 'border-l-4 border-l-brand bg-slate-50 dark:bg-slate-900/40' : ''}`}>
+                        <div key={sect.id} className={`flex items-center justify-between p-3.5 transition-colors ${sect.visible ? 'bg-background hover:bg-slate-50/50 dark:hover:bg-slate-800/10' : 'bg-muted/40 opacity-70'} ${editingSectId === sect.id ? 'border-l-4 border-l-brand bg-slate-50 dark:bg-slate-900/40' : ''}`}>
                           <div className="min-w-0 flex items-center gap-3">
                             <span className="font-mono text-xs text-muted-foreground w-6 shrink-0">#{idx + 1}</span>
                             <div className="min-w-0">
@@ -632,7 +810,7 @@ export default function AdminHomepageManager() {
                               <ChevronDown className="w-4 h-4" />
                             </Button>
                             <Button variant="outline" size="icon" onClick={() => startEditSection(idx)} className={`rounded-full h-8 w-8 ${editingSectId === sect.id ? 'bg-brand/10 border-brand' : ''}`}>
-                              <Settings className="w-4 h-4 text-slate-600 dark:text-slate-450" />
+                              <Settings className="w-4 h-4 text-slate-650 dark:text-slate-400" />
                             </Button>
                             <Button variant="outline" size="icon" onClick={() => toggleSectionVisibility(idx)} className="rounded-full h-8 w-8">
                               {sect.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-destructive" />}
@@ -647,13 +825,13 @@ export default function AdminHomepageManager() {
                   </div>
 
                   {/* Add New Section Block */}
-                  <div className="p-4 border border-dashed rounded-[20px] bg-slate-50/50 dark:bg-slate-900/10 space-y-3">
+                  <div className="p-4 border border-dashed border-slate-300 dark:border-slate-700 rounded-[20px] bg-slate-50/50 dark:bg-slate-900/10 space-y-3">
                     <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('إضافة قسم مخصص جديد', 'Add Custom Section')}</Label>
                     <div className="flex gap-2">
                       <select
                         value={newSectType}
                         onChange={(e) => setNewSectType(e.target.value)}
-                        className="bg-background border border-border text-foreground px-3.5 py-2 rounded-xl text-sm font-bold grow"
+                        className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold grow"
                       >
                         <option value="category_products">📦 {t('منتجات تصنيف (Category Showcase Grid)', 'Category Showcase Products')}</option>
                         <option value="category_circles">⭕ {t('أيقونات تصنيفات فرعية دائرية (Subcategory Circles)', 'Subcategory Circles Row')}</option>
@@ -667,7 +845,7 @@ export default function AdminHomepageManager() {
                         <option value="testimonials">💬 {t('آراء وتقييمات العملاء', 'Customer Testimonials')}</option>
                         <option value="cta">💼 {t('دعوة التجار للتسجيل (CTA)', 'Seller CTA Panel')}</option>
                       </select>
-                      <Button onClick={addSection} className="rounded-xl font-bold gap-1">
+                      <Button onClick={addSection} className="rounded-xl font-bold gap-1 px-5">
                         <Plus className="w-4 h-4" />
                         {t('إضافة', 'Add')}
                       </Button>
@@ -675,7 +853,7 @@ export default function AdminHomepageManager() {
                   </div>
 
                   <div className="flex justify-end pt-2 border-t">
-                    <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl">
+                    <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
                       {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                       {t('حفظ ترتيب وهيكل الصفحة', 'Save Layout changes')}
                     </Button>
@@ -684,7 +862,7 @@ export default function AdminHomepageManager() {
               </Card>
 
               {/* Right Column: Edit Section Parameters */}
-              <Card className="lg:col-span-6 card-surface rounded-[24px]">
+              <Card className="lg:col-span-6 card-surface rounded-[24px] shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold flex items-center gap-1.5">
                     <Edit className="w-5 h-5 text-brand" />
@@ -700,7 +878,7 @@ export default function AdminHomepageManager() {
                 </CardHeader>
                 <CardContent>
                   {editingSectId === null ? (
-                    <div className="flex flex-col items-center justify-center py-24 text-muted-foreground border border-dashed rounded-[20px] bg-background">
+                    <div className="flex flex-col items-center justify-center py-28 text-muted-foreground border border-dashed rounded-[20px] bg-background">
                       <Settings className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-3" />
                       <p className="text-sm font-medium">{t('لم يتم تحديد أي قسم بعد لتخصيصه', 'No section selected for configuration')}</p>
                     </div>
@@ -708,7 +886,7 @@ export default function AdminHomepageManager() {
                     <div className="space-y-4">
                       {/* Common Titles Fields */}
                       <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                        <div className="space-y-2 text-start">
                           <Label className="text-xs font-bold">{t('العنوان باللغة العربية', 'Title (Arabic)')}</Label>
                           <Input
                             value={editSectData.titleAr}
@@ -717,7 +895,7 @@ export default function AdminHomepageManager() {
                             placeholder="أجهزة إلكترونية مميزة"
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 text-start">
                           <Label className="text-xs font-bold">{t('العنوان باللغة الإنجليزية', 'Title (English)')}</Label>
                           <Input
                             value={editSectData.titleEn}
@@ -732,7 +910,7 @@ export default function AdminHomepageManager() {
                       {(layout.find(s => s.id === editingSectId)?.type === 'category_products' || 
                         layout.find(s => s.id === editingSectId)?.type === 'category_circles') && (
                         <div className="space-y-4 pt-2 border-t">
-                          <div className="space-y-2">
+                          <div className="space-y-2 text-start">
                             <Label className="text-xs font-bold">{t('اختر التصنيف الرئيسي المستهدف', 'Target Category')}</Label>
                             <select
                               value={editSectData.categoryId}
@@ -752,7 +930,7 @@ export default function AdminHomepageManager() {
                           </div>
 
                           {layout.find(s => s.id === editingSectId)?.type === 'category_products' && (
-                            <div className="space-y-2">
+                            <div className="space-y-2 text-start">
                               <Label className="text-xs font-bold">{t('نمط التخطيط والهيكل', 'Layout Style')}</Label>
                               <select
                                 value={editSectData.layoutStyle}
@@ -767,30 +945,30 @@ export default function AdminHomepageManager() {
                         </div>
                       )}
 
-                      {/* Custom Banner Showcase Settings */}
+                      {/* Custom Banner Showcase Settings - Direct Image Upload */}
                       {layout.find(s => s.id === editingSectId)?.type === 'banner' && (
                         <div className="space-y-4 pt-2 border-t">
-                          <div className="space-y-2">
-                            <Label className="text-xs font-bold">{t('رابط الصورة الإعلانية باللغة العربية (Ar Banner Image URL)', 'Arabic Banner Graphic Image URL')}</Label>
-                            <Input
-                              value={editSectData.imageArUrl}
-                              onChange={e => setEditSectData(prev => ({ ...prev, imageArUrl: e.target.value }))}
-                              className="rounded-xl text-sm font-mono text-start"
-                              placeholder="https://example.com/ar-banner.png"
-                            />
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2 text-start">
+                              <Label className="text-xs font-bold">{t('صورة الإعلان باللغة العربية', 'Arabic Banner Image')}</Label>
+                              <ImageUploader
+                                value={editSectData.imageArUrl}
+                                onChange={url => setEditSectData(prev => ({ ...prev, imageArUrl: url }))}
+                                hint={t('الصورة الإعلانية التي ستظهر للمتصفح العربي.', 'Uploaded banner displayed in Arabic locale.')}
+                              />
+                            </div>
+
+                            <div className="space-y-2 text-start">
+                              <Label className="text-xs font-bold">{t('صورة الإعلان باللغة الإنجليزية', 'English Banner Image')}</Label>
+                              <ImageUploader
+                                value={editSectData.imageEnUrl}
+                                onChange={url => setEditSectData(prev => ({ ...prev, imageEnUrl: url }))}
+                                hint={t('الصورة الإعلانية التي ستظهر للمتصفح الإنجليزي.', 'Uploaded banner displayed in English locale.')}
+                              />
+                            </div>
                           </div>
 
-                          <div className="space-y-2">
-                            <Label className="text-xs font-bold">{t('رابط الصورة الإعلانية باللغة الإنجليزية (En Banner Image URL)', 'English Banner Graphic Image URL')}</Label>
-                            <Input
-                              value={editSectData.imageEnUrl}
-                              onChange={e => setEditSectData(prev => ({ ...prev, imageEnUrl: e.target.value }))}
-                              className="rounded-xl text-sm font-mono text-start"
-                              placeholder="https://example.com/en-banner.png"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
+                          <div className="space-y-2 text-start">
                             <Label className="text-xs font-bold">{t('رابط التوجيه عند النقر (Target Link URL)', 'Redirect URL Link')}</Label>
                             <Input
                               value={editSectData.linkUrl}
@@ -806,7 +984,7 @@ export default function AdminHomepageManager() {
                         <Button variant="ghost" onClick={() => setEditingSectId(null)} className="rounded-xl text-xs font-bold">
                           {t('إلغاء', 'Cancel')}
                         </Button>
-                        <Button onClick={saveSectionSettings} className="rounded-xl text-xs font-bold gap-1">
+                        <Button onClick={saveSectionSettings} className="rounded-xl text-xs font-bold gap-1 px-4">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           {t('تأكيد الإعدادات وحفظ محلي', 'Confirm Section Settings')}
                         </Button>
@@ -818,75 +996,110 @@ export default function AdminHomepageManager() {
             </div>
           )}
 
-          {/* Pinning Tab */}
+          {/* Pinning Tab - Completely rebuilt with Autocomplete Comboboxes */}
           {activeTab === 'pinning' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left Column: Search & Add */}
-              <Card className="lg:col-span-5 card-surface rounded-[24px]">
+              {/* Left Column: Preloaded Select selectors */}
+              <Card className="lg:col-span-5 card-surface rounded-[24px] shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-lg font-bold">{t('ابحث وثبّت العناصر', 'Search & Pin Items')}</CardTitle>
+                  <CardTitle className="text-lg font-bold">{t('اختيار وتثبيت العناصر', 'Select & Pin Items')}</CardTitle>
                   <CardDescription>
-                    {t('ابحث في المنصة لإضافة عناصر محددة إلى قوائم الصفحة الرئيسية.', 'Find items to pin on the storefront homepage.')}
+                    {t('اختر من القوائم الجاهزة مباشرة لتثبيتها على الصفحة الرئيسية دون عناء.', 'Pin items directly using dropdown selectors.')}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex gap-2 mb-3 select-none">
-                    <button onClick={() => { setSearchType('product'); setSearchResults([]); }} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${searchType === 'product' ? 'bg-brand text-slate-950' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
-                      🛒 {t('منتجات', 'Products')}
-                    </button>
-                    <button onClick={() => { setSearchType('store'); setSearchResults([]); }} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${searchType === 'store' ? 'bg-brand text-slate-950' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
-                      🏪 {t('متاجر كبرى', 'Premium Stores')}
-                    </button>
-                    <button onClick={() => { setSearchType('seller'); setSearchResults([]); }} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${searchType === 'seller' ? 'bg-brand text-slate-950' : 'bg-muted text-muted-foreground hover:bg-muted/80'}`}>
-                      👤 {t('تجار أحرار', 'Freelance Sellers')}
-                    </button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      placeholder={t('اكتب للبحث هنا...', 'Type search query here...')}
-                      className="rounded-xl"
-                      onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                    />
-                    <Button onClick={handleSearch} disabled={isSearching} className="rounded-xl shrink-0 gap-1 font-bold">
-                      {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-                      {t('بحث', 'Search')}
-                    </Button>
+                <CardContent className="space-y-6">
+                  {/* Pin Products Section */}
+                  <div className="space-y-2 text-start border-b pb-4 border-border/40">
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                      <span>🛒</span> {t('تثبيت المنتجات', 'Pin Products')}
+                    </Label>
+                    <div className="flex gap-2 items-center">
+                      <div className="grow">
+                        <SearchableSelector
+                          items={productOptions}
+                          selectedValue={selectedProdId}
+                          onSelect={setSelectedProdId}
+                          placeholder={t('اختر منتجاً لتثبيته...', 'Choose a product to pin...')}
+                          emptyText={t('لا توجد منتجات مطابقة', 'No matching products')}
+                          isAr={isAr}
+                        />
+                      </div>
+                      <Button
+                        onClick={() => handlePinPreloadedItem('product')}
+                        disabled={!selectedProdId}
+                        className="rounded-xl font-bold px-4 shrink-0"
+                      >
+                        <Plus className="w-4 h-4 me-1" />
+                        {t('تثبيت', 'Pin')}
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="border border-border/80 rounded-[20px] bg-background max-h-[340px] overflow-y-auto divide-y">
-                    {searchResults.length === 0 ? (
-                      <p className="text-center py-8 text-xs text-muted-foreground">{t('اكتب كلمة بحث واضغط زر البحث للبدء', 'Search to fetch items')}</p>
-                    ) : (
-                      searchResults.map((item: any) => {
-                        const name = item.name || item.storeName || item.title || item.user?.name || '';
-                        return (
-                          <div key={item.id} className="flex items-center justify-between p-3">
-                            <div className="min-w-0">
-                              <p className="text-xs font-bold truncate">{name}</p>
-                              {item.price && <p className="text-[10px] text-amber-500 font-bold mt-0.5">{fmt(item.price)}</p>}
-                            </div>
-                            <Button size="sm" variant="ghost" onClick={() => handlePinItem(item)} className="rounded-full text-emerald-500 hover:text-emerald-600">
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        );
-                      })
-                    )}
+                  {/* Pin Premium Stores Section */}
+                  <div className="space-y-2 text-start border-b pb-4 border-border/40">
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                      <span>🏪</span> {t('تثبيت المتاجر الكبرى', 'Pin Premium Stores')}
+                    </Label>
+                    <div className="flex gap-2 items-center">
+                      <div className="grow">
+                        <SearchableSelector
+                          items={storeOptions}
+                          selectedValue={selectedStoreId}
+                          onSelect={setSelectedStoreId}
+                          placeholder={t('اختر متجراً لتثبيته...', 'Choose a store to pin...')}
+                          emptyText={t('لا توجد متاجر مطابقة', 'No matching stores')}
+                          isAr={isAr}
+                        />
+                      </div>
+                      <Button
+                        onClick={() => handlePinPreloadedItem('store')}
+                        disabled={!selectedStoreId}
+                        className="rounded-xl font-bold px-4 shrink-0"
+                      >
+                        <Plus className="w-4 h-4 me-1" />
+                        {t('تثبيت', 'Pin')}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Pin Freelance Sellers Section */}
+                  <div className="space-y-2 text-start">
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                      <span>👤</span> {t('تثبيت التجار الأحرار', 'Pin Freelance Sellers')}
+                    </Label>
+                    <div className="flex gap-2 items-center">
+                      <div className="grow">
+                        <SearchableSelector
+                          items={sellerOptions}
+                          selectedValue={selectedSellerId}
+                          onSelect={setSelectedSellerId}
+                          placeholder={t('اختر تاجراً لتثبيته...', 'Choose a seller to pin...')}
+                          emptyText={t('لا توجد تجار مطابقة', 'No matching sellers')}
+                          isAr={isAr}
+                        />
+                      </div>
+                      <Button
+                        onClick={() => handlePinPreloadedItem('seller')}
+                        disabled={!selectedSellerId}
+                        className="rounded-xl font-bold px-4 shrink-0"
+                      >
+                        <Plus className="w-4 h-4 me-1" />
+                        {t('تثبيت', 'Pin')}
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
               {/* Right Column: Manage Pinned lists */}
-              <Card className="lg:col-span-7 card-surface rounded-[24px]">
+              <Card className="lg:col-span-7 card-surface rounded-[24px] shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold flex items-center gap-1.5">
                     <Pin className="w-5 h-5 text-brand" />
                     {t('العناصر المثبتة حالياً', 'Pinned Items')}
                   </CardTitle>
                   <CardDescription>
-                    {t('قم بترتيب العناصر يدوياً أو حذفها لإعطاء الأولوية لهذه العناصر.', 'Pin order matches displays priority.')}
+                    {t('رتب أو احذف العناصر المثبتة لتخصيص عرض الواجهة الأمامية.', 'Manage the pinned displays priority.')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -896,18 +1109,29 @@ export default function AdminHomepageManager() {
                       const typeLabel = type === 'products' ? t('المنتجات المثبتة', 'Pinned Products') : type === 'stores' ? t('المتاجر المثبتة', 'Pinned Stores') : t('التجار المستقلين المثبتين', 'Pinned Sellers');
                       return (
                         <div key={type} className="space-y-2">
-                          <Label className="text-xs font-black text-slate-500 uppercase tracking-wider">{typeLabel}</Label>
+                          <Label className="text-xs font-black text-slate-500 uppercase tracking-wider flex justify-between items-center">
+                            <span>{typeLabel}</span>
+                            <Badge variant="outline" className="font-mono">{list.length}</Badge>
+                          </Label>
                           {list.length === 0 ? (
-                            <div className="p-4 border border-dashed rounded-xl text-center text-xs text-muted-foreground">{t('لا توجد عناصر مثبتة حالياً', 'No items pinned yet')}</div>
+                            <div className="p-5 border border-dashed rounded-[18px] text-center text-xs text-muted-foreground">{t('لا توجد عناصر مثبتة حالياً', 'No items pinned yet')}</div>
                           ) : (
-                            <div className="border border-border/80 rounded-xl divide-y bg-background max-h-[220px] overflow-y-auto">
+                            <div className="border border-border/80 rounded-[18px] divide-y bg-background max-h-[220px] overflow-y-auto shadow-inner">
                               {list.map((item: any, idx: number) => (
-                                <div key={item.id} className="flex items-center justify-between p-2.5">
+                                <div key={item.id} className="flex items-center justify-between p-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/10 transition-colors">
                                   <div className="flex items-center gap-2.5 min-w-0">
-                                    <span className="font-mono text-[10px] text-muted-foreground">#{idx + 1}</span>
-                                    <p className="text-xs font-bold truncate text-slate-800 dark:text-slate-100">{item.name}</p>
+                                    <span className="font-mono text-[10px] text-muted-foreground w-6 shrink-0">#{idx + 1}</span>
+                                    {item.image ? (
+                                      <img src={item.image} alt="" className="w-8 h-8 rounded-lg object-cover bg-slate-50" />
+                                    ) : (
+                                      <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xs">📦</div>
+                                    )}
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-bold truncate text-slate-800 dark:text-slate-100">{item.name}</p>
+                                      {item.price > 0 && <p className="text-[10px] text-amber-500 font-bold">{item.price.toLocaleString()} د.ج</p>}
+                                    </div>
                                   </div>
-                                  <Button size="icon" variant="ghost" className="text-destructive rounded-full" onClick={() => handleUnpinItem(item.id, type as any)}>
+                                  <Button size="icon" variant="ghost" className="text-destructive rounded-full hover:bg-destructive/10 h-8 w-8" onClick={() => handleUnpinItem(item.id, type as any)}>
                                     <Trash className="w-4 h-4" />
                                   </Button>
                                 </div>
@@ -919,7 +1143,7 @@ export default function AdminHomepageManager() {
                     })}
                   </div>
                   <div className="flex justify-end pt-4 border-t border-border/60">
-                    <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl">
+                    <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
                       {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                       {t('حفظ التثبيت اليدوي', 'Save Pinned Items')}
                     </Button>
@@ -931,7 +1155,7 @@ export default function AdminHomepageManager() {
 
           {/* Timer Tab */}
           {activeTab === 'timer' && (
-            <Card className="card-surface rounded-[24px] max-w-2xl mx-auto">
+            <Card className="card-surface rounded-[24px] max-w-2xl mx-auto shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg font-bold flex items-center gap-2">
                   <Clock className="w-5 h-5 text-brand" />
@@ -942,8 +1166,8 @@ export default function AdminHomepageManager() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-2xl border border-border bg-background mb-4">
-                  <div className="space-y-0.5">
+                <div className="flex items-center justify-between p-4 rounded-2xl border border-border bg-background mb-4 shadow-sm">
+                  <div className="space-y-0.5 text-start">
                     <Label htmlFor="timer_enabled" className="text-sm font-bold">{t('حالة العداد التنازلي الترويجي', 'Countdown timer status')}</Label>
                     <p className="text-xs text-muted-foreground">{t('تفعيل عداد تنازلي يعرض عروض الخصومات الكبرى', 'Enable countdown banner detailing hours/minutes/seconds')}</p>
                   </div>
@@ -956,7 +1180,7 @@ export default function AdminHomepageManager() {
                       setCountdown(updated);
                       persistConfig(layout, pinned, updated, heroSlides);
                     }}
-                    className="bg-background border border-border text-foreground px-3 py-1.5 rounded-xl text-xs font-bold"
+                    className="bg-background border border-border text-foreground px-3.5 py-2 rounded-xl text-xs font-bold outline-none"
                   >
                     <option value="true">{t('نشط (يظهر العداد في الصفحة)', 'Active')}</option>
                     <option value="false">{t('معطل (إخفاء العداد بالكامل)', 'Disabled')}</option>
@@ -965,7 +1189,7 @@ export default function AdminHomepageManager() {
 
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-start">
                       <Label htmlFor="titleAr" className="text-xs font-bold">{t('عنوان الحملة بالعربية', 'Campaign Title (Arabic)')}</Label>
                       <Input
                         id="titleAr"
@@ -975,7 +1199,7 @@ export default function AdminHomepageManager() {
                         placeholder="عروض ميجا"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 text-start">
                       <Label htmlFor="titleEn" className="text-xs font-bold">{t('عنوان الحملة بالإنجليزية', 'Campaign Title (English)')}</Label>
                       <Input
                         id="titleEn"
@@ -987,7 +1211,7 @@ export default function AdminHomepageManager() {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 text-start">
                     <Label htmlFor="endDate" className="text-xs font-bold">{t('تاريخ ووقت انتهاء الحملة', 'Campaign End Date & Time')}</Label>
                     <Input
                       id="endDate"
@@ -1000,7 +1224,7 @@ export default function AdminHomepageManager() {
                 </div>
 
                 <div className="flex justify-end pt-4 border-t border-border/60">
-                  <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl">
+                  <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
                     {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                     {t('حفظ إعدادات العداد', 'Save Timer Settings')}
                   </Button>
@@ -1013,7 +1237,7 @@ export default function AdminHomepageManager() {
           {activeTab === 'slides' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Left side: Slides List & Order */}
-              <Card className="lg:col-span-5 card-surface rounded-[24px]">
+              <Card className="lg:col-span-5 card-surface rounded-[24px] shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <div>
                     <CardTitle className="text-lg font-bold">{t('سلايدر البانر الترويجي', 'Hero Slider Manager')}</CardTitle>
@@ -1021,28 +1245,34 @@ export default function AdminHomepageManager() {
                       {t('أضف ورتب السلايدات المعروضة في البانر الرئيسي.', 'Manage and reorder slides on the main home banner.')}
                     </CardDescription>
                   </div>
-                  <Button size="sm" onClick={handleStartAddSlide} className="rounded-xl font-bold gap-1">
+                  <Button size="sm" onClick={handleStartAddSlide} className="rounded-xl font-bold gap-1 px-3">
                     <Plus className="w-4 h-4" />
                     {t('إضافة سلايد', 'Add Slide')}
                   </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {heroSlides.length === 0 ? (
-                    <div className="p-8 border border-dashed rounded-2xl text-center text-sm text-muted-foreground">
+                    <div className="p-8 border border-dashed border-slate-350 rounded-2xl text-center text-sm text-muted-foreground bg-slate-50/20">
                       <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-35 text-amber-500 animate-pulse" />
                       {t('لا توجد سلايدات مخصصة حالياً. سيتم استخدام السلايدات الافتراضية.', 'No slides added yet. Storefront will display fallback defaults.')}
                     </div>
                   ) : (
-                    <div className="border border-border/80 rounded-[20px] divide-y overflow-hidden bg-background">
+                    <div className="border border-border/80 rounded-[20px] divide-y overflow-hidden bg-background shadow-inner">
                       {heroSlides.map((s, idx) => (
                         <div key={s.id || idx} className={`flex items-center justify-between p-4 transition-colors ${editingSlideIndex === idx ? 'bg-muted/40 border-l-4 border-l-brand' : 'bg-background'}`}>
                           <div className="min-w-0 flex items-center gap-3">
-                            <span className="font-mono text-xs text-muted-foreground">#{idx + 1}</span>
+                            <span className="font-mono text-xs text-muted-foreground w-6 shrink-0">#{idx + 1}</span>
                             <div className="min-w-0">
-                              <p className="font-bold text-sm truncate">{isAr ? s.title : (s.titleEn || s.title || t('بلا عنوان', 'Untitled'))}</p>
+                              <p className="font-bold text-sm truncate text-slate-800 dark:text-slate-100">{isAr ? s.title : (s.titleEn || s.title || t('بلا عنوان', 'Untitled'))}</p>
                               <div className="flex items-center gap-1.5 mt-1">
-                                <div className={`w-3.5 h-3.5 rounded bg-gradient-to-br ${s.bg || 'from-blue-950 to-slate-900'} border border-white/10`} />
-                                <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">{s.bg}</span>
+                                {s.imageUrl ? (
+                                  <div className="w-5 h-5 rounded overflow-hidden border border-border">
+                                    <img src={s.imageUrl} className="w-full h-full object-cover" alt="" />
+                                  </div>
+                                ) : (
+                                  <div className={`w-3.5 h-3.5 rounded bg-gradient-to-br ${s.bg || 'from-blue-950 to-slate-900'} border border-white/10`} />
+                                )}
+                                <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">{s.imageUrl ? t('صورة خلفية', 'Background Image') : s.bg}</span>
                               </div>
                             </div>
                           </div>
@@ -1066,7 +1296,7 @@ export default function AdminHomepageManager() {
                   )}
 
                   <div className="flex justify-end pt-4 border-t border-border/60">
-                    <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl">
+                    <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
                       {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                       {t('حفظ السلايدات بالداتابيز', 'Save Banner Configuration')}
                     </Button>
@@ -1074,8 +1304,8 @@ export default function AdminHomepageManager() {
                 </CardContent>
               </Card>
 
-              {/* Right side: Add / Edit Form */}
-              <Card className="lg:col-span-7 card-surface rounded-[24px]">
+              {/* Right side: Add / Edit Form with direct image uploader */}
+              <Card className="lg:col-span-7 card-surface rounded-[24px] shadow-sm">
                 <CardHeader>
                   <CardTitle className="text-lg font-bold flex items-center gap-1.5">
                     <Sparkles className="w-5 h-5 text-brand" />
@@ -1093,32 +1323,41 @@ export default function AdminHomepageManager() {
                 </CardHeader>
                 <CardContent>
                   {editingSlideIndex === null ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground border border-dashed rounded-[20px] bg-background">
+                    <div className="flex flex-col items-center justify-center py-24 text-muted-foreground border border-dashed rounded-[20px] bg-background">
                       <Sparkles className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-3" />
                       <p className="text-sm font-medium">{t('لم يتم اختيار أي سلايد لتعديله', 'No slide selected for editing')}</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       {/* Live preview */}
-                      <div className="border border-border/80 rounded-[20px] overflow-hidden p-6 bg-slate-950 text-white relative">
-                        <div className={`absolute inset-0 bg-gradient-to-br ${editSlideData.bg || 'from-blue-950 to-slate-900'} opacity-90`} />
-                        <div className="relative z-10 space-y-3 text-start">
+                      <div className="border border-border/80 rounded-[20px] overflow-hidden p-6 text-white relative h-40 flex items-center bg-slate-950">
+                        {editSlideData.imageUrl ? (
+                          <>
+                            <img src={editSlideData.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-80" />
+                            <div className="absolute inset-0 bg-slate-950/40 mix-blend-multiply" />
+                          </>
+                        ) : (
+                          <div className={`absolute inset-0 bg-gradient-to-br ${editSlideData.bg || 'from-blue-950 to-slate-900'} opacity-90`} />
+                        )}
+                        <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
+                        <div className="relative z-10 space-y-2 text-start">
                           {editSlideData.badge && (
-                            <Badge className="bg-white/10 text-white border-white/10 text-[10px]">
+                            <Badge className="bg-white/10 text-white border-white/10 text-[9px] px-2 py-0.5 rounded">
                               {editSlideData.badge}
                             </Badge>
                           )}
-                          <h4 className="text-xl font-black">{editSlideData.title || t('عنوان السلايد الرئيسي', 'Slide Title')}</h4>
-                          <p className="text-xs text-white/70 max-w-md">{editSlideData.subtitle || t('العنوان الفرعي للسلايد أو وصف العرض الترويجي المتاح للمشترين', 'Slide Subtitle or promotion description')}</p>
-                          <Button size="sm" className="bg-amber-500 text-slate-950 font-black rounded-lg pointer-events-none mt-2">
+                          <h4 className="text-lg font-black">{editSlideData.title || t('عنوان السلايد الرئيسي', 'Slide Title')}</h4>
+                          <p className="text-[10px] text-white/70 max-w-sm line-clamp-2">{editSlideData.subtitle || t('العنوان الفرعي للسلايد أو وصف العرض الترويجي المتاح للمشترين', 'Slide Subtitle or promotion description')}</p>
+                          <Button size="sm" className="bg-amber-500 text-slate-950 font-black rounded-lg pointer-events-none mt-1 h-7 text-[10px]">
                             {editSlideData.cta || t('تسوق الآن', 'Shop Now')}
                           </Button>
                         </div>
                         <span className="absolute bottom-2 end-3 text-[9px] font-mono text-white/40 tracking-wider uppercase select-none">{t('معاينة حية', 'Live Preview')}</span>
                       </div>
 
+                      {/* Title inputs */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
+                        <div className="space-y-2 text-start">
                           <Label className="text-xs font-bold">{t('العنوان الرئيسي (العربية)', 'Title (Arabic)')}</Label>
                           <Input
                             value={editSlideData.title}
@@ -1127,7 +1366,7 @@ export default function AdminHomepageManager() {
                             placeholder="تسوق بثقة"
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 text-start">
                           <Label className="text-xs font-bold">{t('العنوان الرئيسي (الإنجليزية)', 'Title (English)')}</Label>
                           <Input
                             value={editSlideData.titleEn}
@@ -1136,7 +1375,7 @@ export default function AdminHomepageManager() {
                             placeholder="Shop with Confidence"
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 text-start">
                           <Label className="text-xs font-bold">{t('العنوان الرئيسي (الفرنسية)', 'Title (French)')}</Label>
                           <Input
                             value={editSlideData.titleFr}
@@ -1147,8 +1386,9 @@ export default function AdminHomepageManager() {
                         </div>
                       </div>
 
+                      {/* Subtitle inputs */}
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
+                        <div className="space-y-2 text-start">
                           <Label className="text-xs font-bold">{t('الوصف/العنوان الفرعي (العربية)', 'Subtitle (Arabic)')}</Label>
                           <Input
                             value={editSlideData.subtitle}
@@ -1157,7 +1397,7 @@ export default function AdminHomepageManager() {
                             placeholder="آلاف المنتجات من تجار موثوقين"
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 text-start">
                           <Label className="text-xs font-bold">{t('الوصف/العنوان الفرعي (الإنجليزية)', 'Subtitle (English)')}</Label>
                           <Input
                             value={editSlideData.subtitleEn}
@@ -1166,7 +1406,7 @@ export default function AdminHomepageManager() {
                             placeholder="Thousands of products from verified sellers"
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 text-start">
                           <Label className="text-xs font-bold">{t('الوصف/العنوان الفرعي (الفرنسية)', 'Subtitle (French)')}</Label>
                           <Input
                             value={editSlideData.subtitleFr}
@@ -1177,8 +1417,9 @@ export default function AdminHomepageManager() {
                         </div>
                       </div>
 
+                      {/* Badges & Buttons text */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                        <div className="space-y-2 text-start">
                           <Label className="text-xs font-bold">{t('شارة مميزة (العربية)', 'Badge text (Arabic)')}</Label>
                           <Input
                             value={editSlideData.badge}
@@ -1187,7 +1428,7 @@ export default function AdminHomepageManager() {
                             placeholder="🔥 عروض حصرية"
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 text-start">
                           <Label className="text-xs font-bold">{t('شارة مميزة (الفرنسية)', 'Badge text (French)')}</Label>
                           <Input
                             value={editSlideData.badgeFr}
@@ -1199,7 +1440,7 @@ export default function AdminHomepageManager() {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                        <div className="space-y-2 text-start">
                           <Label className="text-xs font-bold">{t('نص زر الشراء/الدعوة (العربية)', 'CTA Text (Arabic)')}</Label>
                           <Input
                             value={editSlideData.cta}
@@ -1208,7 +1449,7 @@ export default function AdminHomepageManager() {
                             placeholder="تسوق الآن"
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 text-start">
                           <Label className="text-xs font-bold">{t('نص زر الشراء/الدعوة (الفرنسية)', 'CTA Text (French)')}</Label>
                           <Input
                             value={editSlideData.ctaFr}
@@ -1219,7 +1460,8 @@ export default function AdminHomepageManager() {
                         </div>
                       </div>
 
-                      <div className="space-y-2">
+                      {/* Link & background setup */}
+                      <div className="space-y-2 text-start">
                         <Label className="text-xs font-bold">{t('رابط التوجيه المباشر (Link URL)', 'CTA Target Link URL')}</Label>
                         <Input
                           value={editSlideData.linkUrl}
@@ -1229,13 +1471,24 @@ export default function AdminHomepageManager() {
                         />
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="text-xs font-bold">{t('الخلفية المتدرجة (Gradient Background CSS Class)', 'Gradient Background CSS')}</Label>
+                      {/* Image Upload for Slide Background */}
+                      <div className="space-y-2 text-start pt-2 border-t border-border/40">
+                        <Label className="text-xs font-bold">{t('تحميل صورة خلفية البانر (اختياري)', 'Upload Slide Background Image (Optional)')}</Label>
+                        <ImageUploader
+                          value={editSlideData.imageUrl}
+                          onChange={url => setEditSlideData(prev => ({ ...prev, imageUrl: url }))}
+                          hint={t('ارفع صورة خلفية للسلايد. في حال رفعها، سيتم إخفاء الخلفية المتدرجة.', 'Upload background image. It takes precedence over CSS gradient.')}
+                        />
+                      </div>
+
+                      <div className="space-y-2 text-start pt-2">
+                        <Label className="text-xs font-bold">{t('أو اختر خلفية متدرجة (في حال عدم استخدام صورة)', 'Or Choose CSS Gradient Background (If no image uploaded)')}</Label>
                         <Input
                           value={editSlideData.bg}
                           onChange={e => setEditSlideData(prev => ({ ...prev, bg: e.target.value }))}
                           className="rounded-xl text-sm font-mono mb-2 text-start"
                           placeholder="from-blue-950 via-indigo-900 to-slate-900"
+                          disabled={!!editSlideData.imageUrl}
                         />
                         <div className="flex flex-wrap gap-2 select-none">
                           {[
@@ -1248,8 +1501,10 @@ export default function AdminHomepageManager() {
                           ].map(grad => (
                             <button
                               key={grad.val}
+                              type="button"
                               onClick={() => setEditSlideData(prev => ({ ...prev, bg: grad.val }))}
-                              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border ${editSlideData.bg === grad.val ? 'border-brand bg-brand/10 text-slate-900 dark:text-slate-100' : 'border-border bg-background text-muted-foreground hover:text-foreground'}`}
+                              disabled={!!editSlideData.imageUrl}
+                              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border ${editSlideData.bg === grad.val ? 'border-brand bg-brand/10 text-slate-900 dark:text-slate-100' : 'border-border bg-background text-muted-foreground hover:text-foreground'} ${editSlideData.imageUrl ? 'opacity-40 cursor-not-allowed' : ''}`}
                             >
                               <div className={`w-3.5 h-3.5 rounded-full bg-gradient-to-br ${grad.val}`} />
                               {grad.name}
@@ -1262,7 +1517,7 @@ export default function AdminHomepageManager() {
                         <Button variant="ghost" onClick={() => setEditingSlideIndex(null)} className="rounded-xl text-xs font-bold">
                           {t('إلغاء', 'Cancel')}
                         </Button>
-                        <Button onClick={handleSaveSlide} className="rounded-xl text-xs font-bold gap-1">
+                        <Button onClick={handleSaveSlide} className="rounded-xl text-xs font-bold gap-1 px-4">
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           {t('تأكيد السلايد وتحديث اللائحة', 'Confirm & Update list')}
                         </Button>

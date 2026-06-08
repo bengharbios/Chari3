@@ -711,7 +711,14 @@ export default function StorefrontHomepage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               {/* Main Banner Slider (9 Columns on Desktop) */}
               <div className="lg:col-span-9 relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-[28px] shadow-xl border border-white/5 h-[340px] md:h-[400px]">
-                <div className={`absolute inset-0 bg-gradient-to-br ${slideBg} opacity-90 transition-all duration-750 ease-in-out`} />
+                {slide.imageUrl ? (
+                  <>
+                    <img src={slide.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover transition-all duration-750 ease-in-out" />
+                    <div className="absolute inset-0 bg-slate-950/40 mix-blend-multiply" />
+                  </>
+                ) : (
+                  <div className={`absolute inset-0 bg-gradient-to-br ${slideBg} opacity-90 transition-all duration-750 ease-in-out`} />
+                )}
                 <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
                 <div className="h-full flex flex-col justify-center relative z-10 p-8 md:p-12 text-start">
                   <div className="max-w-xl">

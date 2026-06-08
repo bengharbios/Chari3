@@ -110,12 +110,31 @@ export default function Footer({ theme }: FooterProps) {
     }
   ];
 
+  const footerKeyFallback: Record<string, string> = {
+    'footer.my_account': locale === 'ar' ? 'حسابي' : 'My Account',
+    'footer.login': locale === 'ar' ? 'تسجيل الدخول' : 'Login',
+    'footer.register': locale === 'ar' ? 'إنشاء حساب' : 'Register',
+    'footer.help': locale === 'ar' ? 'المساعدة والدعم' : 'Help & Support',
+    'footer.help_center': locale === 'ar' ? 'مركز المساعدة' : 'Help Center',
+    'footer.faq': locale === 'ar' ? 'الأسئلة الشائعة' : 'FAQ',
+    'footer.desc': locale === 'ar' ? 'منصة التجارة الإلكترونية الأولى في المنطقة' : 'The leading e-commerce platform',
+    'footer.copyright': locale === 'ar' ? 'جميع الحقوق محفوظة' : 'All rights reserved',
+    'footer.brandName': locale === 'ar' ? 'شاري داي' : 'ChariDay',
+  };
+
+  const resolveKey = (key: string): string => {
+    if (key?.startsWith('footer.')) {
+      return footerKeyFallback[key] || globalT(key) || key.replace('footer.', '');
+    }
+    return key;
+  };
+
   const dbColumns = activeTheme?.footer?.columns || [];
   const mappedDbColumns = dbColumns.map((col: any) => ({
     id: col.id,
-    titleKey: col.titleKey?.startsWith('footer.') ? globalT(col.titleKey) : col.titleKey,
+    titleKey: resolveKey(col.titleKey),
     links: (col.links || []).map((link: any) => ({
-      textKey: link.textKey?.startsWith('footer.') ? globalT(link.textKey) : link.textKey,
+      textKey: resolveKey(link.textKey),
       url: link.url || '#'
     }))
   }));

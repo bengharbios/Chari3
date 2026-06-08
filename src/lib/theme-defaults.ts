@@ -63,18 +63,18 @@ export const defaultSellerTheme: ThemeSettings = {
     columns: [
       {
         id: 'col1',
-        titleKey: 'footer.my_account',
+        titleKey: 'حسابي',
         links: [
-          { textKey: 'footer.login', url: '#' },
-          { textKey: 'footer.register', url: '#' },
+          { textKey: 'تسجيل الدخول', url: '/auth/login' },
+          { textKey: 'إنشاء حساب', url: '/auth/register' },
         ],
       },
       {
         id: 'col2',
-        titleKey: 'footer.help',
+        titleKey: 'المساعدة والدعم',
         links: [
-          { textKey: 'footer.help_center', url: '#' },
-          { textKey: 'footer.faq', url: '#' },
+          { textKey: 'مركز المساعدة', url: '#' },
+          { textKey: 'الأسئلة الشائعة', url: '#' },
         ],
       },
     ],
