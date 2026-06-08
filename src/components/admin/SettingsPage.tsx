@@ -1,5 +1,5 @@
 'use client';
-
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useState, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
@@ -9,7 +9,8 @@ import { toast } from 'sonner';
 import { Settings, Save, Loader2 } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { locale, setAllowGuestCheckout, allowGuestCheckout } = useAppStore();
+  const { locale } = useTranslation();
+  const { setAllowGuestCheckout, allowGuestCheckout } = useAppStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
   const [isLoading, setIsLoading] = useState(true);

@@ -1,7 +1,7 @@
 'use client';
-
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useState, useMemo } from 'react';
-import { useAppStore } from '@/lib/store';
+
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +43,7 @@ const STATUS_CFG = {
 };
 
 export default function StoresPage() {
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');

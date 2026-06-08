@@ -5,7 +5,8 @@ import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { 
   Loader2, Save, ArrowRight, Home, LayoutGrid, Pin, Clock, 
-  ChevronUp, ChevronDown, Trash, Search, Plus, Eye, EyeOff, Sparkles, CheckCircle2
+  ChevronUp, ChevronDown, Trash, Search, Plus, Eye, EyeOff, Sparkles, CheckCircle2,
+  Edit, Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,8 +18,14 @@ import Link from 'next/link';
 
 interface SectionItem {
   id: string;
-  nameAr: string;
-  nameEn: string;
+  type: string;
+  titleAr?: string;
+  titleEn?: string;
+  categoryId?: string;
+  layoutStyle?: string;
+  imageArUrl?: string;
+  imageEnUrl?: string;
+  linkUrl?: string;
   visible: boolean;
 }
 
@@ -46,6 +53,20 @@ export default function AdminHomepageManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Categories list state for dynamic sections
+  const [categoriesList, setCategoriesList] = useState<any[]>([]);
+  const [editingSectId, setEditingSectId] = useState<string | null>(null);
+  const [editSectData, setEditSectData] = useState<any>({
+    titleAr: '',
+    titleEn: '',
+    categoryId: '',
+    layoutStyle: 'carousel',
+    imageArUrl: '',
+    imageEnUrl: '',
+    linkUrl: '',
+  });
+  const [newSectType, setNewSectType] = useState<string>('category_products');
+
   // Hero slides state
   const [heroSlides, setHeroSlides] = useState<any[]>([]);
   const [editingSlideIndex, setEditingSlideIndex] = useState<number | null>(null);
@@ -64,81 +85,7 @@ export default function AdminHomepageManager() {
     linkUrl: '',
   });
 
-  const handleStartAddSlide = () => {
-    setEditSlideData({
-      title: '',
-      titleEn: '',
-      titleFr: '',
-      subtitle: '',
-      subtitleEn: '',
-      subtitleFr: '',
-      bg: 'from-blue-950 via-indigo-900 to-slate-900',
-      badge: '',
-      badgeFr: '',
-      cta: 'تسوق الآن',
-      ctaFr: '',
-      linkUrl: '',
-    });
-    setEditingSlideIndex(heroSlides.length);
-  };
 
-  const handleStartEditSlide = (index: number) => {
-    const slide = heroSlides[index];
-    setEditSlideData({
-      title: slide.title || '',
-      titleEn: slide.titleEn || '',
-      titleFr: slide.titleFr || '',
-      subtitle: slide.subtitle || '',
-      subtitleEn: slide.subtitleEn || '',
-      subtitleFr: slide.subtitleFr || '',
-      bg: slide.bg || 'from-blue-950 via-indigo-900 to-slate-900',
-      badge: slide.badge || '',
-      badgeFr: slide.badgeFr || '',
-      cta: slide.cta || 'تسوق الآن',
-      ctaFr: slide.ctaFr || '',
-      linkUrl: slide.linkUrl || '',
-    });
-    setEditingSlideIndex(index);
-  };
-
-  const handleSaveSlide = () => {
-    if (editingSlideIndex === null) return;
-    const updated = [...heroSlides];
-    if (editingSlideIndex === heroSlides.length) {
-      updated.push({ ...editSlideData, id: String(Date.now()) });
-    } else {
-      updated[editingSlideIndex] = { ...updated[editingSlideIndex], ...editSlideData };
-    }
-    setHeroSlides(updated);
-    setEditingSlideIndex(null);
-    toast.success(t('تم تحديث السلايد مؤقتاً، اضغط حفظ في الأسفل لتأكيد الحفظ بالداتابيز', 'Slide updated locally. Press save below to confirm.'));
-  };
-
-  const handleDeleteSlide = (index: number) => {
-    const updated = heroSlides.filter((_, i) => i !== index);
-    setHeroSlides(updated);
-    if (editingSlideIndex === index) {
-      setEditingSlideIndex(null);
-    } else if (editingSlideIndex !== null && editingSlideIndex > index) {
-      setEditingSlideIndex(editingSlideIndex - 1);
-    }
-    toast.success(t('تم حذف السلايد مؤقتاً', 'Slide removed locally'));
-  };
-
-  const moveSlide = (index: number, direction: 'up' | 'down') => {
-    const nextIndex = direction === 'up' ? index - 1 : index + 1;
-    if (nextIndex < 0 || nextIndex >= heroSlides.length) return;
-    const updated = [...heroSlides];
-    const temp = updated[index];
-    updated[index] = updated[nextIndex]!;
-    updated[nextIndex] = temp!;
-    setHeroSlides(updated);
-    if (editingSlideIndex === index) {
-      setEditingSlideIndex(nextIndex);
-    } else if (editingSlideIndex === nextIndex) {
-      setEditingSlideIndex(index);
-    }
-  };
 
   // Layout state
   const [layout, setLayout] = useState<SectionItem[]>([]);
@@ -166,6 +113,14 @@ export default function AdminHomepageManager() {
 
   useEffect(() => {
     setIsMounted(true);
+    fetch('/api/categories')
+      .then(res => res.json())
+      .then(d => {
+        if (Array.isArray(d)) {
+          setCategoriesList(d.filter(c => c && c.id));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -192,14 +147,31 @@ export default function AdminHomepageManager() {
           cta: { ar: 'لوحة دعوة التجار للتسجيل (CTA)', en: 'Seller Invitation Panel' }
         };
 
-        const mappedLayout = (d.layout || []).map((sect: any) => {
-          const id = typeof sect === 'string' ? sect : sect.id;
-          const visible = typeof sect === 'string' ? true : sect.visible !== false;
+        const rawLayout = d.layout && d.layout.length > 0
+          ? d.layout
+          : ['hero', 'features', 'categories', 'bento_offers', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
+        const mappedLayout = rawLayout.map((sect: any) => {
+          if (typeof sect === 'string') {
+            const id = sect === 'mega_offers_timer' ? 'bento_offers' : sect;
+            return {
+              id,
+              type: id,
+              titleAr: sectionNames[id]?.ar || id,
+              titleEn: sectionNames[id]?.en || id,
+              visible: true,
+            };
+          }
           return {
-            id,
-            nameAr: sectionNames[id]?.ar || id,
-            nameEn: sectionNames[id]?.en || id,
-            visible,
+            id: sect.id,
+            type: sect.type || sect.id,
+            titleAr: sect.titleAr || sectionNames[sect.id]?.ar || sect.id,
+            titleEn: sect.titleEn || sectionNames[sect.id]?.en || sect.id,
+            categoryId: sect.categoryId || '',
+            layoutStyle: sect.layoutStyle || 'carousel',
+            imageArUrl: sect.imageArUrl || '',
+            imageEnUrl: sect.imageEnUrl || '',
+            linkUrl: sect.linkUrl || '',
+            visible: sect.visible !== false,
           };
         });
         setLayout(mappedLayout);
@@ -263,9 +235,145 @@ export default function AdminHomepageManager() {
     }
   };
 
-  const handlePinItem = (item: any) => {
+  const persistConfig = async (
+    updatedLayout = layout,
+    updatedPinned = pinned,
+    updatedCountdown = countdown,
+    updatedHeroSlides = heroSlides
+  ) => {
+    setIsSaving(true);
+    try {
+      const payload = {
+        layout: updatedLayout.map(sect => ({
+          id: sect.id,
+          type: sect.type,
+          titleAr: sect.titleAr || '',
+          titleEn: sect.titleEn || '',
+          categoryId: sect.categoryId || '',
+          layoutStyle: sect.layoutStyle || 'carousel',
+          imageArUrl: sect.imageArUrl || '',
+          imageEnUrl: sect.imageEnUrl || '',
+          linkUrl: sect.linkUrl || '',
+          visible: sect.visible,
+        })),
+        pinned: {
+          products: (updatedPinned.products || []).map((p: any, idx: number) => ({ id: p.id, order: idx + 1, name: p.name, price: p.price, image: p.image })),
+          stores: (updatedPinned.stores || []).map((s: any, idx: number) => ({ id: s.id, order: idx + 1, name: s.name, image: s.image })),
+          sellers: (updatedPinned.sellers || []).map((s: any, idx: number) => ({ id: s.id, order: idx + 1, name: s.name, image: s.image })),
+        },
+        countdown: {
+          enabled: updatedCountdown.enabled,
+          endDate: updatedCountdown.endDate ? new Date(updatedCountdown.endDate).toISOString() : '',
+          titleAr: updatedCountdown.titleAr,
+          titleEn: updatedCountdown.titleEn,
+        },
+        heroSlides: updatedHeroSlides,
+      };
+
+      const res = await fetch('/api/admin/homepage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const d = await res.json();
+      if (d.success) {
+        toast.success(t('تم حفظ التغييرات بنجاح في قاعدة البيانات', 'Changes saved successfully to database'), {
+          icon: <CheckCircle2 className="text-emerald-500 w-5 h-5" />
+        });
+      } else {
+        throw new Error(d.error);
+      }
+    } catch (err: any) {
+      toast.error(t('فشل حفظ التعديلات', 'Failed to save changes'));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Slides handlers
+  const handleStartAddSlide = () => {
+    setEditSlideData({
+      title: '',
+      titleEn: '',
+      titleFr: '',
+      subtitle: '',
+      subtitleEn: '',
+      subtitleFr: '',
+      bg: 'from-blue-950 via-indigo-900 to-slate-900',
+      badge: '',
+      badgeFr: '',
+      cta: 'تسوق الآن',
+      ctaFr: '',
+      linkUrl: '',
+    });
+    setEditingSlideIndex(heroSlides.length);
+  };
+
+  const handleStartEditSlide = (index: number) => {
+    const slide = heroSlides[index];
+    if (!slide) return;
+    setEditSlideData({
+      title: slide.title || '',
+      titleEn: slide.titleEn || '',
+      titleFr: slide.titleFr || '',
+      subtitle: slide.subtitle || '',
+      subtitleEn: slide.subtitleEn || '',
+      subtitleFr: slide.subtitleFr || '',
+      bg: slide.bg || 'from-blue-950 via-indigo-900 to-slate-900',
+      badge: slide.badge || '',
+      badgeFr: slide.badgeFr || '',
+      cta: slide.cta || 'تسوق الآن',
+      ctaFr: slide.ctaFr || '',
+      linkUrl: slide.linkUrl || '',
+    });
+    setEditingSlideIndex(index);
+  };
+
+  const handleSaveSlide = async () => {
+    if (editingSlideIndex === null) return;
+    const updated = [...heroSlides];
+    if (editingSlideIndex === heroSlides.length) {
+      updated.push({ ...editSlideData, id: String(Date.now()) });
+    } else {
+      updated[editingSlideIndex] = { ...updated[editingSlideIndex], ...editSlideData };
+    }
+    setHeroSlides(updated);
+    setEditingSlideIndex(null);
+    await persistConfig(layout, pinned, countdown, updated);
+  };
+
+  const handleDeleteSlide = async (index: number) => {
+    const updated = heroSlides.filter((_, i) => i !== index);
+    setHeroSlides(updated);
+    if (editingSlideIndex === index) {
+      setEditingSlideIndex(null);
+    } else if (editingSlideIndex !== null && editingSlideIndex > index) {
+      setEditingSlideIndex(editingSlideIndex - 1);
+    }
+    await persistConfig(layout, pinned, countdown, updated);
+  };
+
+  const moveSlide = async (index: number, direction: 'up' | 'down') => {
+    const nextIndex = direction === 'up' ? index - 1 : index + 1;
+    if (nextIndex < 0 || nextIndex >= heroSlides.length) return;
+    const updated = [...heroSlides];
+    const temp = updated[index];
+    updated[index] = updated[nextIndex]!;
+    updated[nextIndex] = temp!;
+    setHeroSlides(updated);
+    if (editingSlideIndex === index) {
+      setEditingSlideIndex(nextIndex);
+    } else if (editingSlideIndex === nextIndex) {
+      setEditingSlideIndex(index);
+    }
+    await persistConfig(layout, pinned, countdown, updated);
+  };
+
+  // Pinned items handlers
+  const handlePinItem = async (item: any) => {
     const listKey = searchType === 'product' ? 'products' : searchType === 'store' ? 'stores' : 'sellers';
-    const currentList = pinned[listKey];
+    const currentList = pinned[listKey] || [];
 
     if (currentList.some((i: any) => i.id === item.id)) {
       toast.error(t('هذا العنصر مثبت بالفعل!', 'This item is already pinned!'));
@@ -279,77 +387,136 @@ export default function AdminHomepageManager() {
       image: item.logo || item.user?.avatar || (Array.isArray(item.images) ? item.images[0] : null) || ''
     };
 
-    setPinned(prev => ({
-      ...prev,
-      [listKey]: [...prev[listKey], newItem]
-    }));
-    toast.success(t('تم تثبيت العنصر بنجاح', 'Item pinned successfully'));
+    const updatedPinned = {
+      ...pinned,
+      [listKey]: [...currentList, newItem]
+    };
+
+    setPinned(updatedPinned);
+    await persistConfig(layout, updatedPinned, countdown, heroSlides);
   };
 
-  const handleUnpinItem = (id: string, type: 'products' | 'stores' | 'sellers') => {
-    setPinned(prev => ({
-      ...prev,
-      [type]: prev[type].filter((i: any) => i.id !== id)
-    }));
+  const handleUnpinItem = async (id: string, type: 'products' | 'stores' | 'sellers') => {
+    const updatedPinned = {
+      ...pinned,
+      [type]: (pinned[type] || []).filter((i: any) => i.id !== id)
+    };
+    setPinned(updatedPinned);
+    await persistConfig(layout, updatedPinned, countdown, heroSlides);
   };
 
   // Section Layout order changes
-  const moveSection = (index: number, direction: 'up' | 'down') => {
+  const moveSection = async (index: number, direction: 'up' | 'down') => {
     const nextIndex = direction === 'up' ? index - 1 : index + 1;
     if (nextIndex < 0 || nextIndex >= layout.length) return;
 
     const updated = [...layout];
     const temp = updated[index];
-    updated[index] = updated[nextIndex];
+    updated[index] = updated[nextIndex]!;
     updated[nextIndex] = temp!;
     setLayout(updated);
+    await persistConfig(updated, pinned, countdown, heroSlides);
   };
 
-  const toggleSectionVisibility = (index: number) => {
+  const toggleSectionVisibility = async (index: number) => {
     const updated = [...layout];
     updated[index]!.visible = !updated[index]!.visible;
     setLayout(updated);
+    await persistConfig(updated, pinned, countdown, heroSlides);
   };
 
-  // Save Settings
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      const payload = {
-        layout: layout.map(sect => ({ id: sect.id, visible: sect.visible })),
-        pinned: {
-          products: pinned.products.map((p, idx) => ({ id: p.id, order: idx + 1, name: p.name, price: p.price, image: p.image })),
-          stores: pinned.stores.map((s, idx) => ({ id: s.id, order: idx + 1, name: s.name, image: s.image })),
-          sellers: pinned.sellers.map((s, idx) => ({ id: s.id, order: idx + 1, name: s.name, image: s.image })),
-        },
-        countdown: {
-          enabled: countdown.enabled,
-          endDate: countdown.endDate ? new Date(countdown.endDate).toISOString() : '',
-          titleAr: countdown.titleAr,
-          titleEn: countdown.titleEn,
-        },
-        heroSlides,
-      };
-
-      const res = await fetch('/api/admin/homepage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const d = await res.json();
-      if (d.success) {
-        toast.success(t('تم حفظ إعدادات الصفحة الرئيسية بنجاح', 'Homepage settings saved successfully'), {
-          icon: <CheckCircle2 className="text-emerald-500 w-5 h-5" />
-        });
-      } else {
-        throw new Error(d.error);
-      }
-    } catch (err: any) {
-      toast.error(t('فشل حفظ التعديلات', 'Failed to save changes'));
-    } finally {
-      setIsSaving(false);
+  const deleteSection = async (index: number) => {
+    const sectId = layout[index]?.id;
+    const updated = layout.filter((_, i) => i !== index);
+    setLayout(updated);
+    if (editingSectId === sectId) {
+      setEditingSectId(null);
     }
+    await persistConfig(updated, pinned, countdown, heroSlides);
+  };
+
+  const startEditSection = (index: number) => {
+    const sect = layout[index];
+    if (!sect) return;
+    setEditingSectId(sect.id);
+    setEditSectData({
+      titleAr: sect.titleAr || '',
+      titleEn: sect.titleEn || '',
+      categoryId: sect.categoryId || '',
+      layoutStyle: sect.layoutStyle || 'carousel',
+      imageArUrl: sect.imageArUrl || '',
+      imageEnUrl: sect.imageEnUrl || '',
+      linkUrl: sect.linkUrl || '',
+    });
+  };
+
+  const saveSectionSettings = async () => {
+    if (!editingSectId) return;
+    const updated = layout.map(sect => {
+      if (sect.id === editingSectId) {
+        return {
+          ...sect,
+          titleAr: editSectData.titleAr,
+          titleEn: editSectData.titleEn,
+          categoryId: editSectData.categoryId,
+          layoutStyle: editSectData.layoutStyle,
+          imageArUrl: editSectData.imageArUrl,
+          imageEnUrl: editSectData.imageEnUrl,
+          linkUrl: editSectData.linkUrl,
+        };
+      }
+      return sect;
+    });
+    setLayout(updated);
+    setEditingSectId(null);
+    await persistConfig(updated, pinned, countdown, heroSlides);
+  };
+
+  const addSection = async () => {
+    const sectionNames: Record<string, { ar: string; en: string }> = {
+      hero: { ar: 'البانر الترويجي الرئيسي (Slides)', en: 'Hero Promotion Slides' },
+      features: { ar: 'شريط الميزات والضمانات', en: 'Platform Features & Guarantees' },
+      categories: { ar: 'أيقونات التصنيفات الدائرية العامة', en: 'Circular Categories Icons' },
+      bento_offers: { ar: 'شبكة عروض ميجا والمكعبات الترويجية (Noon Bento)', en: 'Mega Offers & Bento Grid' },
+      featured_products: { ar: 'شبكة المنتجات المميزة الذكية', en: 'Featured Products Grid' },
+      top_sellers: { ar: 'سلايدر المتاجر الكبرى والتجار الموثقين', en: 'Top Stores & Verified Sellers' },
+      testimonials: { ar: 'آراء وتقييمات العملاء', en: 'Customer Testimonials' },
+      cta: { ar: 'لوحة دعوة التجار للتسجيل (CTA)', en: 'Seller Invitation Panel' },
+      category_products: { ar: 'منتجات تصنيف مخصصة', en: 'Category Showcase Products' },
+      category_circles: { ar: 'أيقونات تصنيفات فرعية دائرية', en: 'Category Subcategories Circles' },
+      banner: { ar: 'إعلان ترويجي مخصص', en: 'Custom Promo Banner' }
+    };
+
+    const newId = `sec_${Date.now()}`;
+    const newSect: SectionItem = {
+      id: newId,
+      type: newSectType,
+      titleAr: sectionNames[newSectType]?.ar || newSectType,
+      titleEn: sectionNames[newSectType]?.en || newSectType,
+      categoryId: '',
+      layoutStyle: 'carousel',
+      imageArUrl: '',
+      imageEnUrl: '',
+      linkUrl: '',
+      visible: true
+    };
+    const updated = [...layout, newSect];
+    setLayout(updated);
+    setEditingSectId(newId);
+    setEditSectData({
+      titleAr: newSect.titleAr || '',
+      titleEn: newSect.titleEn || '',
+      categoryId: '',
+      layoutStyle: 'carousel',
+      imageArUrl: '',
+      imageEnUrl: '',
+      linkUrl: '',
+    });
+    await persistConfig(updated, pinned, countdown, heroSlides);
+  };
+
+  const handleSave = async () => {
+    await persistConfig(layout, pinned, countdown, heroSlides);
   };
 
   if (!isMounted || !isAdminAuthenticated) return null;
@@ -400,45 +567,255 @@ export default function AdminHomepageManager() {
         <div className="space-y-6">
           {/* Layout Tab */}
           {activeTab === 'layout' && (
-            <Card className="card-surface rounded-[24px]">
-              <CardHeader>
-                <CardTitle className="text-lg font-bold">{t('هيكل وترتيب أقسام الصفحة الرئيسية', 'Homepage Section Order')}</CardTitle>
-                <CardDescription>
-                  {t('اسحب أو استخدم الأسهم لتغيير ترتيب ظهور الأقسام، واضغط على أيقونة العين لإخفاء/إظهار أي قسم.', 'Adjust the ordering indexes of sections and toggle visibility flags.')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="border border-border/80 rounded-[20px] divide-y overflow-hidden bg-background">
-                  {layout.map((sect, idx) => (
-                    <div key={sect.id} className={`flex items-center justify-between p-4 transition-colors ${sect.visible ? 'bg-background' : 'bg-muted/30 opacity-70'}`}>
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono text-xs text-muted-foreground w-6">#{idx + 1}</span>
-                        <div className="font-bold text-sm">
-                          {isAr ? sect.nameAr : sect.nameEn}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left Column: Sections List & Ordering */}
+              <Card className="lg:col-span-6 card-surface rounded-[24px]">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold">{t('ترتيب وهيكل أقسام الصفحة الرئيسية', 'Homepage Section Order')}</CardTitle>
+                  <CardDescription>
+                    {t('رتب أقسام الصفحة، تحكم بظهورها، أو احذفها وأضف أقساماً جديدة.', 'Reorder, toggle, or delete sections and append new ones.')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="border border-border/80 rounded-[20px] divide-y overflow-hidden bg-background">
+                    {layout.map((sect, idx) => {
+                      const sectionNames: Record<string, { ar: string; en: string }> = {
+                        hero: { ar: 'البانر الترويجي الرئيسي (Slides)', en: 'Hero Promotion Slides' },
+                        features: { ar: 'شريط الميزات والضمانات', en: 'Platform Features & Guarantees' },
+                        categories: { ar: 'أيقونات التصنيفات الدائرية العامة', en: 'Circular Categories Icons' },
+                        bento_offers: { ar: 'شبكة عروض ميجا والمكعبات الترويجية (Noon Bento)', en: 'Mega Offers & Bento Grid' },
+                        featured_products: { ar: 'شبكة المنتجات المميزة الذكية', en: 'Featured Products Grid' },
+                        top_sellers: { ar: 'سلايدر المتاجر الكبرى والتجار الموثقين', en: 'Top Stores & Verified Sellers' },
+                        testimonials: { ar: 'آراء وتقييمات العملاء', en: 'Customer Testimonials' },
+                        cta: { ar: 'لوحة دعوة التجار للتسجيل (CTA)', en: 'Seller Invitation Panel' }
+                      };
+
+                      const displayName = sect.titleAr && isAr 
+                        ? sect.titleAr 
+                        : sect.titleEn && !isAr 
+                          ? sect.titleEn 
+                          : sectionNames[sect.id]?.ar || sect.id;
+
+                      const getSectionBadge = (type: string) => {
+                        switch (type) {
+                          case 'hero': return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-[10px] font-bold">{t('سلايدر رئيسي', 'Hero Slider')}</Badge>;
+                          case 'features': return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] font-bold">{t('شريط الميزات', 'Features Bar')}</Badge>;
+                          case 'categories': return <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20 text-[10px] font-bold">{t('تصنيفات دائرية', 'Categories Circle')}</Badge>;
+                          case 'bento_offers': return <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px] font-bold">{t('عروض ميجا بانتو', 'Bento Offers')}</Badge>;
+                          case 'featured_products': return <Badge variant="outline" className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 text-[10px] font-bold">{t('منتجات مميزة', 'Featured Products')}</Badge>;
+                          case 'top_sellers': return <Badge variant="outline" className="bg-cyan-500/10 text-cyan-500 border-cyan-500/20 text-[10px] font-bold">{t('تجار ومتاجر', 'Sellers Slider')}</Badge>;
+                          case 'testimonials': return <Badge variant="outline" className="bg-teal-500/10 text-teal-500 border-teal-500/20 text-[10px] font-bold">{t('تقييمات', 'Testimonials')}</Badge>;
+                          case 'cta': return <Badge variant="outline" className="bg-rose-500/10 text-rose-500 border-rose-500/20 text-[10px] font-bold">{t('دعوة التسجيل', 'CTA Panel')}</Badge>;
+                          case 'category_products': return <Badge variant="outline" className="bg-pink-500/10 text-pink-500 border-pink-500/20 text-[10px] font-bold">{t('منتجات تصنيف', 'Category Showcase')}</Badge>;
+                          case 'category_circles': return <Badge variant="outline" className="bg-violet-500/10 text-violet-500 border-violet-500/20 text-[10px] font-bold">{t('أيقونات تصنيف', 'Subcategory Circles')}</Badge>;
+                          case 'banner': return <Badge variant="outline" className="bg-orange-500/10 text-orange-500 border-orange-500/20 text-[10px] font-bold">{t('إعلان مخصص', 'Custom Banner')}</Badge>;
+                          default: return <Badge variant="outline" className="text-[10px] font-bold">{type}</Badge>;
+                        }
+                      };
+
+                      return (
+                        <div key={sect.id} className={`flex items-center justify-between p-3.5 transition-colors ${sect.visible ? 'bg-background' : 'bg-muted/30 opacity-75'} ${editingSectId === sect.id ? 'border-l-4 border-l-brand bg-slate-50 dark:bg-slate-900/40' : ''}`}>
+                          <div className="min-w-0 flex items-center gap-3">
+                            <span className="font-mono text-xs text-muted-foreground w-6 shrink-0">#{idx + 1}</span>
+                            <div className="min-w-0">
+                              <p className="font-bold text-sm truncate text-slate-800 dark:text-slate-100">{displayName}</p>
+                              <div className="mt-1 flex items-center gap-1.5">
+                                {getSectionBadge(sect.type)}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button variant="ghost" size="icon" disabled={idx === 0} onClick={() => moveSection(idx, 'up')} className="rounded-full h-8 w-8">
+                              <ChevronUp className="w-4 h-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" disabled={idx === layout.length - 1} onClick={() => moveSection(idx, 'down')} className="rounded-full h-8 w-8">
+                              <ChevronDown className="w-4 h-4" />
+                            </Button>
+                            <Button variant="outline" size="icon" onClick={() => startEditSection(idx)} className={`rounded-full h-8 w-8 ${editingSectId === sect.id ? 'bg-brand/10 border-brand' : ''}`}>
+                              <Settings className="w-4 h-4 text-slate-600 dark:text-slate-450" />
+                            </Button>
+                            <Button variant="outline" size="icon" onClick={() => toggleSectionVisibility(idx)} className="rounded-full h-8 w-8">
+                              {sect.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-destructive" />}
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => deleteSection(idx)} className="rounded-full h-8 w-8 text-destructive hover:bg-destructive/10">
+                              <Trash className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Add New Section Block */}
+                  <div className="p-4 border border-dashed rounded-[20px] bg-slate-50/50 dark:bg-slate-900/10 space-y-3">
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('إضافة قسم مخصص جديد', 'Add Custom Section')}</Label>
+                    <div className="flex gap-2">
+                      <select
+                        value={newSectType}
+                        onChange={(e) => setNewSectType(e.target.value)}
+                        className="bg-background border border-border text-foreground px-3.5 py-2 rounded-xl text-sm font-bold grow"
+                      >
+                        <option value="category_products">📦 {t('منتجات تصنيف (Category Showcase Grid)', 'Category Showcase Products')}</option>
+                        <option value="category_circles">⭕ {t('أيقونات تصنيفات فرعية دائرية (Subcategory Circles)', 'Subcategory Circles Row')}</option>
+                        <option value="banner">🖼️ {t('إعلان ترويجي مخصص (Custom Ad Banner)', 'Inline Ad Banner')}</option>
+                        <option value="hero">🔥 {t('سلايدر البانر الرئيسي', 'Hero Slider')}</option>
+                        <option value="features">🛡️ {t('شريط الميزات والضمانات', 'Guarantee Badges')}</option>
+                        <option value="categories">🏷️ {t('أيقونات التصنيفات الدائرية العامة', 'Main Categories Circles')}</option>
+                        <option value="bento_offers">⚡ {t('عروض ميجا التنازلية (Noon Bento)', 'Mega Countdown Bento')}</option>
+                        <option value="featured_products">⭐ {t('شبكة المنتجات المميزة الذكية', 'Featured Products Grid')}</option>
+                        <option value="top_sellers">🏪 {t('سلايدر المتاجر والتجار', 'Sellers Carousel')}</option>
+                        <option value="testimonials">💬 {t('آراء وتقييمات العملاء', 'Customer Testimonials')}</option>
+                        <option value="cta">💼 {t('دعوة التجار للتسجيل (CTA)', 'Seller CTA Panel')}</option>
+                      </select>
+                      <Button onClick={addSection} className="rounded-xl font-bold gap-1">
+                        <Plus className="w-4 h-4" />
+                        {t('إضافة', 'Add')}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2 border-t">
+                    <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl">
+                      {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                      {t('حفظ ترتيب وهيكل الصفحة', 'Save Layout changes')}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Right Column: Edit Section Parameters */}
+              <Card className="lg:col-span-6 card-surface rounded-[24px]">
+                <CardHeader>
+                  <CardTitle className="text-lg font-bold flex items-center gap-1.5">
+                    <Edit className="w-5 h-5 text-brand" />
+                    {editingSectId 
+                      ? `${t('إعدادات وتهيئة القسم', 'Configure Section Settings')}`
+                      : t('اختر قسماً لتعديل إعداداته', 'Select a section to configure')}
+                  </CardTitle>
+                  <CardDescription>
+                    {editingSectId 
+                      ? t('املأ الحقول التالية لتخصيص محتوى وهيكل هذا القسم.', 'Provide parameters for the selected homepage block.')
+                      : t('اضغط على أيقونة الإعدادات (الترس) بجانب أي قسم للبدء.', 'Click the settings gear icon next to any section to start editing.')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {editingSectId === null ? (
+                    <div className="flex flex-col items-center justify-center py-24 text-muted-foreground border border-dashed rounded-[20px] bg-background">
+                      <Settings className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-3" />
+                      <p className="text-sm font-medium">{t('لم يتم تحديد أي قسم بعد لتخصيصه', 'No section selected for configuration')}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* Common Titles Fields */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold">{t('العنوان باللغة العربية', 'Title (Arabic)')}</Label>
+                          <Input
+                            value={editSectData.titleAr}
+                            onChange={e => setEditSectData(prev => ({ ...prev, titleAr: e.target.value }))}
+                            className="rounded-xl text-sm"
+                            placeholder="أجهزة إلكترونية مميزة"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-bold">{t('العنوان باللغة الإنجليزية', 'Title (English)')}</Label>
+                          <Input
+                            value={editSectData.titleEn}
+                            onChange={e => setEditSectData(prev => ({ ...prev, titleEn: e.target.value }))}
+                            className="rounded-xl text-sm"
+                            placeholder="Featured Electronics"
+                          />
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" disabled={idx === 0} onClick={() => moveSection(idx, 'up')} className="rounded-full">
-                          <ChevronUp className="w-4 h-4" />
+
+                      {/* Category Showcase Settings */}
+                      {(layout.find(s => s.id === editingSectId)?.type === 'category_products' || 
+                        layout.find(s => s.id === editingSectId)?.type === 'category_circles') && (
+                        <div className="space-y-4 pt-2 border-t">
+                          <div className="space-y-2">
+                            <Label className="text-xs font-bold">{t('اختر التصنيف الرئيسي المستهدف', 'Target Category')}</Label>
+                            <select
+                              value={editSectData.categoryId}
+                              onChange={(e) => setEditSectData(prev => ({ ...prev, categoryId: e.target.value }))}
+                              className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
+                            >
+                              <option value="">-- {t('اختر تصنيفاً للربط', 'Select Category')} --</option>
+                              {categoriesList.map(cat => (
+                                <option key={cat.id} value={cat.id}>
+                                  {isAr ? cat.name : (cat.nameEn || cat.name)} {cat.parentId ? `(${t('فرعي', 'Sub')})` : ''}
+                                </option>
+                              ))}
+                            </select>
+                            <p className="text-[10px] text-muted-foreground">
+                              {t('سيقوم النظام بتحميل المنتجات أو التصنيفات الفرعية تلقائياً بناءً على هذا التصنيف.', 'Systems will dynamically fetch catalog entities belonging to this parent key.')}
+                            </p>
+                          </div>
+
+                          {layout.find(s => s.id === editingSectId)?.type === 'category_products' && (
+                            <div className="space-y-2">
+                              <Label className="text-xs font-bold">{t('نمط التخطيط والهيكل', 'Layout Style')}</Label>
+                              <select
+                                value={editSectData.layoutStyle}
+                                onChange={(e) => setEditSectData(prev => ({ ...prev, layoutStyle: e.target.value }))}
+                                className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
+                              >
+                                <option value="carousel">🎠 {t('سلايدر متحرك أفقي (Slider Carousel)', 'Horizontal Sliding Carousel')}</option>
+                                <option value="grid">🔲 {t('شبكة منتجات ثابتة (Fixed Grid)', 'Responsive Products Grid')}</option>
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Custom Banner Showcase Settings */}
+                      {layout.find(s => s.id === editingSectId)?.type === 'banner' && (
+                        <div className="space-y-4 pt-2 border-t">
+                          <div className="space-y-2">
+                            <Label className="text-xs font-bold">{t('رابط الصورة الإعلانية باللغة العربية (Ar Banner Image URL)', 'Arabic Banner Graphic Image URL')}</Label>
+                            <Input
+                              value={editSectData.imageArUrl}
+                              onChange={e => setEditSectData(prev => ({ ...prev, imageArUrl: e.target.value }))}
+                              className="rounded-xl text-sm font-mono text-start"
+                              placeholder="https://example.com/ar-banner.png"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs font-bold">{t('رابط الصورة الإعلانية باللغة الإنجليزية (En Banner Image URL)', 'English Banner Graphic Image URL')}</Label>
+                            <Input
+                              value={editSectData.imageEnUrl}
+                              onChange={e => setEditSectData(prev => ({ ...prev, imageEnUrl: e.target.value }))}
+                              className="rounded-xl text-sm font-mono text-start"
+                              placeholder="https://example.com/en-banner.png"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-xs font-bold">{t('رابط التوجيه عند النقر (Target Link URL)', 'Redirect URL Link')}</Label>
+                            <Input
+                              value={editSectData.linkUrl}
+                              onChange={e => setEditSectData(prev => ({ ...prev, linkUrl: e.target.value }))}
+                              className="rounded-xl text-sm font-mono text-start"
+                              placeholder="/search?q=sunscreen"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end gap-2 pt-4 border-t border-border/60">
+                        <Button variant="ghost" onClick={() => setEditingSectId(null)} className="rounded-xl text-xs font-bold">
+                          {t('إلغاء', 'Cancel')}
                         </Button>
-                        <Button variant="ghost" size="icon" disabled={idx === layout.length - 1} onClick={() => moveSection(idx, 'down')} className="rounded-full">
-                          <ChevronDown className="w-4 h-4" />
-                        </Button>
-                        <Button variant="outline" size="icon" onClick={() => toggleSectionVisibility(idx)} className="rounded-full">
-                          {sect.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-destructive" />}
+                        <Button onClick={saveSectionSettings} className="rounded-xl text-xs font-bold gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          {t('تأكيد الإعدادات وحفظ محلي', 'Confirm Section Settings')}
                         </Button>
                       </div>
                     </div>
-                  ))}
-                </div>
-                <div className="flex justify-end pt-4">
-                  <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl">
-                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    {t('حفظ التعديلات', 'Save Layout Changes')}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           )}
 
           {/* Pinning Tab */}
@@ -573,7 +950,12 @@ export default function AdminHomepageManager() {
                   <select
                     id="timer_enabled"
                     value={countdown.enabled ? 'true' : 'false'}
-                    onChange={(e) => setCountdown(prev => ({ ...prev, enabled: e.target.value === 'true' }))}
+                    onChange={(e) => {
+                      const enabled = e.target.value === 'true';
+                      const updated = { ...countdown, enabled };
+                      setCountdown(updated);
+                      persistConfig(layout, pinned, updated, heroSlides);
+                    }}
                     className="bg-background border border-border text-foreground px-3 py-1.5 rounded-xl text-xs font-bold"
                   >
                     <option value="true">{t('نشط (يظهر العداد في الصفحة)', 'Active')}</option>

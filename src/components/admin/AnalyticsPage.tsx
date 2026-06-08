@@ -1,7 +1,7 @@
 'use client';
-
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useState, useMemo } from 'react';
-import { useAppStore } from '@/lib/store';
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -60,7 +60,7 @@ const RECENT_ACTIVITY = [
 type DateRange = '7d' | '30d' | '90d' | 'year';
 
 export default function AnalyticsPage() {
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const [dateRange, setDateRange] = useState<DateRange>('30d');
 

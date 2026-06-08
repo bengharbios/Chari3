@@ -1,8 +1,8 @@
 'use client';
-
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import React, { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { useAppStore } from '@/lib/store';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -81,7 +81,7 @@ function SwitchRow({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function BillingManager({ currency = 'DZD' }: BillingManagerProps) {
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
   const fmt = useCallback((n: number) => {

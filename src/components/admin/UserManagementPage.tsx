@@ -1,7 +1,7 @@
 'use client';
-
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAppStore } from '@/lib/store';
+
 import { toast } from 'sonner';
 import { MOCK_USERS } from '@/lib/mock-data';
 import type { UserRole, AccountStatus, Locale } from '@/types';
@@ -321,7 +321,7 @@ function TableSkeleton({ rows = 5 }: { rows?: number }) {
 // ============================================
 
 export default function UserManagementPage() {
-  const locale = useAppStore((s) => s.locale);
+  const { locale } = useTranslation();
   const isRTL = locale === 'ar';
   const dir = isRTL ? 'rtl' : 'ltr';
 

@@ -43,30 +43,95 @@ export default function Footer({ theme }: FooterProps) {
   };
 
   const [footerBlocks, setFooterBlocks] = useState<any[]>([]);
+  const [storefrontTheme, setStorefrontTheme] = useState<any>(null);
 
   useEffect(() => {
     fetch('/api/settings/public')
       .then(res => res.json())
       .then(data => {
-        if (data.success && data.settings?.footer_blocks) {
-          setFooterBlocks(JSON.parse(data.settings.footer_blocks));
+        if (data.success) {
+          if (data.settings?.footer_blocks) {
+            try {
+              setFooterBlocks(JSON.parse(data.settings.footer_blocks));
+            } catch (e) {}
+          }
+          if (data.settings?.theme_storefront) {
+            try {
+              setStorefrontTheme(JSON.parse(data.settings.theme_storefront));
+            } catch (e) {}
+          }
         }
       })
       .catch(() => {});
   }, []);
 
+  const activeTheme = theme || storefrontTheme;
+
+  const defaultFooterColumns = [
+    {
+      id: 'electronics',
+      titleKey: locale === 'ar' ? 'الإلكترونيات' : 'Electronics',
+      links: [
+        { textKey: locale === 'ar' ? 'الهواتف المحمولة' : 'Mobile Phones', url: '/search?q=phones' },
+        { textKey: locale === 'ar' ? 'أجهزة الكمبيوتر' : 'Laptops', url: '/search?q=laptops' },
+        { textKey: locale === 'ar' ? 'التلفزيونات' : 'Televisions', url: '/search?q=tvs' },
+        { textKey: locale === 'ar' ? 'ألعاب الفيديو' : 'Video Games', url: '/search?q=games' }
+      ]
+    },
+    {
+      id: 'fashion_beauty',
+      titleKey: locale === 'ar' ? 'الأزياء والجمال' : 'Fashion & Beauty',
+      links: [
+        { textKey: locale === 'ar' ? 'أزياء نسائية' : 'Women\'s Fashion', url: '/search?q=women' },
+        { textKey: locale === 'ar' ? 'أزياء رجالية' : 'Men\'s Fashion', url: '/search?q=men' },
+        { textKey: locale === 'ar' ? 'العطور' : 'Perfumes', url: '/search?q=perfume' },
+        { textKey: locale === 'ar' ? 'الساعات والمجوهرات' : 'Watches & Jewelry', url: '/search?q=watches' }
+      ]
+    },
+    {
+      id: 'home_kitchen',
+      titleKey: locale === 'ar' ? 'المنزل والمطبخ' : 'Home & Kitchen',
+      links: [
+        { textKey: locale === 'ar' ? 'أدوات المطبخ' : 'Kitchenware', url: '/search?q=kitchen' },
+        { textKey: locale === 'ar' ? 'الأثاث' : 'Furniture', url: '/search?q=furniture' },
+        { textKey: locale === 'ar' ? 'ديكور البيت' : 'Home Decor', url: '/search?q=decor' },
+        { textKey: locale === 'ar' ? 'أواني السفرة والتقديم' : 'Tableware & Dining', url: '/search?q=dining' }
+      ]
+    },
+    {
+      id: 'support_selling',
+      titleKey: locale === 'ar' ? 'بِع معنا والدعم' : 'Partnership & Support',
+      links: [
+        { textKey: locale === 'ar' ? 'بِع معنا على شاري داي' : 'Sell with us on ChariDay', url: '/auth/register?role=seller' },
+        { textKey: locale === 'ar' ? 'مركز المساعدة' : 'Help Center', url: '#' },
+        { textKey: locale === 'ar' ? 'تواصل معنا' : 'Contact Us', url: '#' },
+        { textKey: locale === 'ar' ? 'سياسة الشحن والضمان' : 'Shipping & Guarantee', url: '#' }
+      ]
+    }
+  ];
+
+  const dbColumns = activeTheme?.footer?.columns || [];
+  const mappedDbColumns = dbColumns.map((col: any) => ({
+    id: col.id,
+    titleKey: col.titleKey?.startsWith('footer.') ? globalT(col.titleKey) : col.titleKey,
+    links: (col.links || []).map((link: any) => ({
+      textKey: link.textKey?.startsWith('footer.') ? globalT(link.textKey) : link.textKey,
+      url: link.url || '#'
+    }))
+  }));
+
   const dynamicColumns = footerBlocks.length > 0 
     ? footerBlocks.map(b => ({
         id: b.id,
         titleKey: locale === 'ar' ? b.titleAr : b.titleEn,
-        links: b.links.map((l: any) => ({
+        links: (b.links || []).map((l: any) => ({
           textKey: locale === 'ar' ? l.labelAr : l.labelEn,
-          url: l.url
+          url: l.url || '#'
         }))
       }))
-    : theme?.footer.columns || [];
+    : (mappedDbColumns.length > 0 ? mappedDbColumns : defaultFooterColumns);
   
-  const socialConfig = theme?.footer.socialMedia;
+  const socialConfig = activeTheme?.footer?.socialMedia;
 
   return (
     <footer 

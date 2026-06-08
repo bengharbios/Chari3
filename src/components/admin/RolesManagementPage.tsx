@@ -1,7 +1,7 @@
 'use client';
-
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useAppStore } from '@/lib/store';
+
 import { toast } from 'sonner';
 import type { Locale } from '@/types';
 import { StatsCard, StatusBadge, EmptyState } from '@/components/shared/StatsCard';
@@ -398,7 +398,7 @@ function ColorSwatch({ color, size = 'sm' }: { color: string; size?: 'sm' | 'md'
 // ============================================
 
 export default function RolesManagementPage() {
-  const locale = useAppStore((s) => s.locale);
+  const { locale } = useTranslation();
   const isRTL = locale === 'ar';
   const dir = isRTL ? 'rtl' : 'ltr';
 

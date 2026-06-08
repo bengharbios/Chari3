@@ -1,8 +1,8 @@
 'use client';
-
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useAppStore } from '@/lib/store';
+
 import { toast } from 'sonner';
 import {
   formatCurrency,
@@ -126,7 +126,7 @@ const getStatusBarTrack = (status: string): string => {
 // ============================================
 
 export default function AdminDashboard() {
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const router = useRouter();
   const searchParams = useSearchParams();

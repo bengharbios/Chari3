@@ -244,6 +244,318 @@ const LEVEL_BADGE: Record<number, string> = {
   6: '💎', 7: '👑', 8: '🏆', 9: '🦅', 10: '🌠',
 };
 
+// Standalone reusable Product Card matching Noon/Temu visuals
+function ProductCard({ product, isOfferCard = false }: { product: any; isOfferCard?: boolean }) {
+  const { locale } = useAppStore();
+  const { items: cartItems, addItem } = useCartStore();
+  const router = useRouter();
+  const isAr = locale === 'ar';
+  
+  const isInCart = cartItems.some((item) => item.product.id === product.id);
+
+  let images: string[] = [];
+  if (Array.isArray(product.images)) {
+    images = product.images;
+  } else if (typeof product.images === 'string') {
+    try { images = JSON.parse(product.images); } catch {}
+  }
+  if (!Array.isArray(images)) images = [];
+
+  const sellerName = product.seller?.storeName || product.store?.name || '';
+  const sellerLevel = product.seller?.level || product.store?.level || 1;
+  const discount = product.comparePrice
+    ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
+    : 0;
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    addItem(product, 1);
+    toast.success(isAr ? 'تمت إضافة المنتج إلى السلة!' : 'Product added to cart!', {
+      icon: <CheckCircle2 className="text-emerald-500 w-5 h-5" />
+    });
+  };
+
+  const fmt = (amount: number) => {
+    return `${amount.toLocaleString(isAr ? 'ar-DZ' : 'en-US')} ${isAr ? 'د.ج' : 'DZD'}`;
+  };
+
+  return (
+    <Card 
+      className="overflow-hidden flex flex-col h-full group transition-all duration-300 cursor-pointer border border-slate-100 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 backdrop-blur-md rounded-[20px] shadow-[0_4px_12px_rgba(0,0,0,0.02),0_8px_24px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.08)] hover:-translate-y-1 relative"
+      onClick={() => {
+        useAppStore.getState().setSelectedProductId(product.id);
+        router.push(`/products/${product.id}`);
+      }}
+    >
+      <div className="relative aspect-square bg-slate-50 dark:bg-slate-950 overflow-hidden shrink-0">
+        {images[0] ? (
+          <img src={images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-primary/10 to-primary/5">
+            <ShoppingBag className="size-8 text-primary/30" />
+          </div>
+        )}
+        {discount > 0 && (
+          <Badge className="absolute top-2.5 start-2.5 bg-rose-600 text-white text-[9px] font-black py-0.5 px-2 rounded-full shadow-sm">-{discount}%</Badge>
+        )}
+      </div>
+      <CardContent className="p-3 flex flex-col grow text-start">
+        <p className="text-[9px] text-muted-foreground mb-0.5 truncate">{product.category?.name || ''}</p>
+        <h4 className="text-xs font-bold line-clamp-2 mb-1.5 text-slate-850 dark:text-slate-100 leading-tight min-h-[32px]">{isAr ? product.name : (product.nameEn || product.name)}</h4>
+        <div className="flex items-center gap-1 mb-2">
+          <StarRating rating={product.rating} />
+          <span className="text-[9px] text-muted-foreground font-bold">({product.soldCount || 8})</span>
+        </div>
+        <div className="mt-auto">
+          <div className="flex items-center justify-between gap-1">
+            <div className="w-full">
+              <p className="text-xs md:text-sm font-black text-amber-500 tracking-tight">{fmt(product.price)}</p>
+              {product.comparePrice && (
+                <p className="text-[9px] text-muted-foreground line-through font-semibold">{fmt(product.comparePrice)}</p>
+              )}
+            </div>
+            <Button 
+              size="icon" 
+              variant={isInCart ? "default" : "secondary"} 
+              className={`rounded-full shrink-0 size-7 shadow ${isInCart ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-100 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-850'}`}
+              onClick={handleAddToCart}
+            >
+              {isInCart ? <CheckCircle2 className="w-3.5 h-3.5" /> : <ShoppingCart className="w-3.5 h-3.5" />}
+            </Button>
+          </div>
+          
+          {sellerName && !isOfferCard && (
+            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 gap-1 text-[9px] text-muted-foreground">
+              <div className="flex items-center gap-1 min-w-0">
+                <span className="text-xs shrink-0">{LEVEL_BADGE[sellerLevel] || '🌱'}</span>
+                <span className="font-bold text-foreground/80 truncate">{sellerName}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Category Showcase Products carousel/grid
+function CategoryProductsRow({ categoryId, titleAr, titleEn, layoutStyle = 'carousel' }: any) {
+  const { locale } = useAppStore();
+  const isAr = locale === 'ar';
+  const [products, setProducts] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [selectedSubcatId, setSelectedSubcatId] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!categoryId) return;
+    setLoading(true);
+
+    fetch(`/api/categories?parentId=${categoryId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setSubcategories(data);
+        }
+      })
+      .catch(() => {});
+
+    fetch(`/api/products?categoryId=${categoryId}&status=active&limit=10`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.products) {
+          setProducts(data.products);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [categoryId]);
+
+  const handleSubcatClick = (subcatId: string) => {
+    const targetId = selectedSubcatId === subcatId ? '' : subcatId;
+    setSelectedSubcatId(targetId);
+    setLoading(true);
+    
+    const fetchId = targetId || categoryId;
+    fetch(`/api/products?categoryId=${fetchId}&status=active&limit=10`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.products) {
+          setProducts(data.products);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  };
+
+  if (!categoryId) return null;
+
+  return (
+    <section className="container-platform py-6 text-start">
+      {/* Category Section Title Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+        <div>
+          <h3 className="text-lg font-black text-slate-800 dark:text-white">
+            {isAr ? titleAr : titleEn}
+          </h3>
+        </div>
+      </div>
+
+      {/* Subcategory Circular Badges Row (Noon/Temu Style) */}
+      {subcategories.length > 0 && (
+        <div className="flex gap-4 md:gap-5 overflow-x-auto py-3 scrollbar-none snap-x snap-mandatory mb-5 select-none">
+          {/* "All" button */}
+          <div 
+            className="flex flex-col items-center gap-2 shrink-0 snap-start cursor-pointer group w-20"
+            onClick={() => handleSubcatClick('')}
+          >
+            <div className={`w-14 h-14 rounded-full border bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 ${
+              selectedSubcatId === '' 
+                ? 'border-amber-500 ring-2 ring-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)] bg-amber-500/5 dark:bg-amber-500/10 scale-105' 
+                : 'border-slate-100 dark:border-slate-800 hover:shadow-[0_10px_20px_rgba(0,0,0,0.06)]'
+            }`}>
+              <span className={`text-xl ${selectedSubcatId === '' ? 'scale-110' : ''}`}>📦</span>
+            </div>
+            <p className={`text-[10px] font-bold text-center leading-tight transition-colors ${
+              selectedSubcatId === '' ? 'text-amber-500 font-extrabold' : 'text-slate-700 dark:text-slate-350 group-hover:text-amber-500'
+            }`}>
+              {isAr ? 'الكل' : 'All'}
+            </p>
+          </div>
+
+          {subcategories.slice(0, 10).map((sub: any) => {
+            const isActive = selectedSubcatId === sub.id;
+            return (
+              <div 
+                key={sub.id} 
+                className="flex flex-col items-center gap-2 shrink-0 snap-start cursor-pointer group w-20"
+                onClick={() => handleSubcatClick(sub.id)}
+              >
+                <div className={`w-14 h-14 rounded-full border bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 ${
+                  isActive 
+                    ? 'border-amber-500 ring-2 ring-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)] bg-amber-500/5 dark:bg-amber-500/10 scale-105' 
+                    : 'border-slate-100 dark:border-slate-800 hover:shadow-[0_10px_20px_rgba(0,0,0,0.06)]'
+                }`}>
+                  {sub.image ? (
+                    <img src={sub.image} className="w-full h-full object-cover" alt="" />
+                  ) : (
+                    <span className="text-xl">{sub.icon || '🏷️'}</span>
+                  )}
+                </div>
+                <p className={`text-[10px] font-bold text-center line-clamp-2 leading-tight transition-colors ${
+                  isActive ? 'text-amber-500 font-extrabold' : 'text-slate-700 dark:text-slate-350 group-hover:text-amber-500'
+                }`}>
+                  {isAr ? sub.name : (sub.nameEn || sub.name)}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Product Display Block */}
+      {loading ? (
+        <ProductSliderSkeleton />
+      ) : products.length === 0 ? (
+        <div className="text-center py-10 text-muted-foreground border border-dashed rounded-[20px] bg-slate-50/50 dark:bg-slate-900/10">
+          <p className="text-xs font-bold">{isAr ? 'لا توجد منتجات متاحة حالياً.' : 'No products available.'}</p>
+        </div>
+      ) : layoutStyle === 'grid' ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {products.map((p) => (
+            <ProductCard key={p.id} product={p} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
+          {products.map((p) => (
+            <div key={p.id} className="w-[170px] md:w-[200px] shrink-0 snap-start">
+              <ProductCard product={p} />
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// Category Subcategories circular badges carousel
+function CategoryCirclesRow({ categoryId, titleAr, titleEn }: any) {
+  const { locale } = useAppStore();
+  const isAr = locale === 'ar';
+  const router = useRouter();
+  const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!categoryId) return;
+    setLoading(true);
+    fetch(`/api/categories?parentId=${categoryId}`)
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          setSubcategories(data);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [categoryId]);
+
+  if (!categoryId || (!loading && subcategories.length === 0)) return null;
+
+  return (
+    <section className="container-platform py-6 text-start">
+      <h3 className="text-base font-black text-slate-800 dark:text-white mb-4">
+        {isAr ? titleAr : titleEn}
+      </h3>
+      {loading ? (
+        <CategoryCirclesSkeleton />
+      ) : (
+        <div className="flex gap-5 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
+          {subcategories.map((sub: any) => (
+            <div 
+              key={sub.id} 
+              className="flex flex-col items-center gap-2 shrink-0 snap-start cursor-pointer group select-none w-20"
+              onClick={() => {
+                useAppStore.getState().setCurrentPage('search');
+                router.push(`/search?categoryId=${sub.id}`);
+              }}
+            >
+              <div className="w-14 h-14 rounded-full border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_10px_20px_rgba(0,0,0,0.06)]">
+                {sub.image ? (
+                  <img src={sub.image} className="w-full h-full object-cover" alt="" />
+                ) : (
+                  <span className="text-xl">{sub.icon || '🏷️'}</span>
+                )}
+              </div>
+              <p className="text-[10px] font-bold text-center text-slate-700 dark:text-slate-350 line-clamp-2 leading-tight group-hover:text-amber-500 transition-colors">
+                {isAr ? sub.name : (sub.nameEn || sub.name)}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// Inline dynamic full-width banner
+function CustomBannerBlock({ imageArUrl, imageEnUrl, linkUrl }: any) {
+  const { locale } = useAppStore();
+  const isAr = locale === 'ar';
+  
+  const imgUrl = isAr ? imageArUrl : (imageEnUrl || imageArUrl);
+  if (!imgUrl) return null;
+
+  return (
+    <section className="container-platform py-4">
+      <a href={linkUrl || '#'} className="block rounded-[20px] overflow-hidden border border-slate-100 dark:border-slate-800 shadow-[0_4px_20px_-1px_rgba(0,0,0,0.02)] hover:scale-[1.01] transition-transform duration-300">
+        <img src={imgUrl} className="w-full h-auto object-cover max-h-[140px] md:max-h-[180px]" alt="Promo Banner" />
+      </a>
+    </section>
+  );
+}
+
 export default function StorefrontHomepage() {
   const router = useRouter();
   const { t: globalT } = useTranslation();
@@ -388,163 +700,106 @@ export default function StorefrontHomepage() {
   const slideTitle = locale === 'ar' ? (slide?.title || '') : locale === 'fr' ? (slide?.titleFr || slide?.titleEn || slide?.title || '') : (slide?.titleEn || slide?.title || '');
   const slideSubtitle = locale === 'ar' ? (slide?.subtitle || '') : locale === 'fr' ? (slide?.subtitleFr || slide?.subtitleEn || slide?.subtitle || '') : (slide?.subtitleEn || slide?.subtitle || '');
 
-  // Render product card helper with 3D shadows and quick-add to cart
-  const renderProductCard = (product: any, isOfferCard: boolean = false) => {
-    if (!product || !product.id) return null;
-    const isInCart = cartItems.some((item) => item.product.id === product.id);
 
-    let images: string[] = [];
-    if (Array.isArray(product.images)) {
-      images = product.images;
-    } else if (typeof product.images === 'string') {
-      try { images = JSON.parse(product.images); } catch {}
-    }
-    if (!Array.isArray(images)) images = [];
 
-    const sellerName = product.seller?.storeName || product.store?.name || '';
-    const sellerLevel = product.seller?.level || product.store?.level || 1;
-    const discount = product.comparePrice
-      ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
-      : 0;
-
-    const handleAddToCart = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      addItem(product, 1);
-      toast.success(isAr ? 'تمت إضافة المنتج إلى السلة!' : 'Product added to cart!', {
-        icon: <CheckCircle2 className="text-emerald-500 w-5 h-5" />
-      });
-    };
-
-    return (
-      <Card 
-        key={product.id}
-        className="overflow-hidden flex flex-col group transition-all duration-300 cursor-pointer border border-border/80 bg-white/70 dark:bg-slate-950/70 backdrop-blur-md rounded-[24px] shadow-[0_4px_10px_-1px_rgba(0,0,0,0.03),0_15px_30px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_45px_rgba(0,0,0,0.12)] hover:-translate-y-1.5 hover:rotate-[0.5deg] relative"
-        onClick={() => {
-          useAppStore.getState().setSelectedProductId(product.id);
-          router.push(`/products/${product.id}`);
-        }}
-      >
-        <div className="relative aspect-square bg-muted/40 overflow-hidden shrink-0">
-          {images[0] ? (
-            <img src={images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-primary/10 to-primary/5">
-              <ShoppingBag className="size-10 text-primary/30" />
-            </div>
-          )}
-          {discount > 0 && (
-            <Badge className="absolute top-3.5 start-3.5 bg-rose-600 text-white text-[10px] font-black tracking-wider py-1 px-2.5 rounded-full shadow-md">-{discount}%</Badge>
-          )}
-        </div>
-        <CardContent className="p-3.5 flex flex-col grow">
-          <p className="text-[10px] text-muted-foreground mb-1 truncate">{product.category?.name || ''}</p>
-          <h4 className="text-xs md:text-sm font-black line-clamp-2 mb-1.5 text-navy dark:text-white leading-tight min-h-[36px]">{isAr ? product.name : (product.nameEn || product.name)}</h4>
-          <div className="flex items-center gap-1.5 mb-2.5">
-            <StarRating rating={product.rating} />
-            <span className="text-[10px] text-muted-foreground font-bold">({product.soldCount || 10})</span>
-          </div>
-          <div className="mt-auto">
-            <div className="flex items-end justify-between gap-1">
-              <div className="w-full">
-                <p className="text-sm md:text-base font-black text-amber-500 tracking-tight">{fmt(product.price)}</p>
-                {product.comparePrice && (
-                  <p className="text-[10px] text-muted-foreground line-through font-semibold">{fmt(product.comparePrice)}</p>
-                )}
-              </div>
-              <Button 
-                size="icon" 
-                variant={isInCart ? "default" : "secondary"} 
-                className={`rounded-full shrink-0 size-8 shadow ${isInCart ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-100 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-800'}`}
-                onClick={handleAddToCart}
-              >
-                {isInCart ? <CheckCircle2 className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
-              </Button>
-            </div>
-            
-            {sellerName && !isOfferCard && (
-              <div className="flex items-center justify-between mt-2.5 pt-2.5 border-t border-border/60 gap-1.5 text-[10px] text-muted-foreground">
-                <div className="flex items-center gap-1 min-w-0">
-                  <span className="text-sm shrink-0">{LEVEL_BADGE[sellerLevel] || '🌱'}</span>
-                  <span className="font-bold text-foreground/80 truncate">{sellerName}</span>
-                </div>
-                {(product.seller?.rating || product.store?.rating) !== undefined && (
-                  <div className="flex items-center gap-0.5 shrink-0 text-amber-500 font-black">
-                    <Star className="size-3 fill-amber-400 text-amber-400" />
-                    <span>{(product.seller?.rating || product.store?.rating || 0).toFixed(1)}</span>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  const renderSection = (sectionName: string) => {
-    switch (sectionName) {
+  const renderSection = (section: any) => {
+    if (!section || !section.type) return null;
+    switch (section.type) {
       case 'hero':
         return (
           <section key="hero" className="container-platform py-4">
-            <div className={`relative overflow-hidden bg-gradient-to-br ${slideBg} text-white rounded-[28px] shadow-xl border border-white/5`}>
-              <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
-              <div className="container-platform py-16 md:py-24 relative z-10 p-8 md:p-12">
-                <div className="max-w-2xl">
-                  {slideBadge && (
-                    <Badge className="mb-4 bg-white/10 text-white border-white/10 text-xs px-3.5 py-1.5 rounded-full select-none">
-                      {slideBadge}
-                    </Badge>
-                  )}
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-4 leading-tight tracking-tight">
-                    {slideTitle}
-                  </h1>
-                  <p className="text-sm sm:text-base md:text-lg text-white/80 mb-6 md:mb-8 font-medium">
-                    {slideSubtitle}
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    {slide.linkUrl ? (
-                      <Link href={slide.linkUrl} className="inline-block">
-                        <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-8 rounded-xl shadow-lg shadow-amber-500/20 w-full sm:w-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              {/* Main Banner Slider (9 Columns on Desktop) */}
+              <div className="lg:col-span-9 relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-[28px] shadow-xl border border-white/5 h-[340px] md:h-[400px]">
+                <div className={`absolute inset-0 bg-gradient-to-br ${slideBg} opacity-90 transition-all duration-750 ease-in-out`} />
+                <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
+                <div className="h-full flex flex-col justify-center relative z-10 p-8 md:p-12 text-start">
+                  <div className="max-w-xl">
+                    {slideBadge && (
+                      <Badge className="mb-3.5 bg-white/10 text-white border-white/10 text-[10px] font-bold px-3 py-1 rounded-full select-none">
+                        {slideBadge}
+                      </Badge>
+                    )}
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-3 leading-tight tracking-tight">
+                      {slideTitle}
+                    </h1>
+                    <p className="text-xs sm:text-sm md:text-base text-white/80 mb-6 font-medium">
+                      {slideSubtitle}
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      {slide.linkUrl ? (
+                        <Link href={slide.linkUrl} className="inline-block">
+                          <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-6 py-2 rounded-xl text-xs md:text-sm shadow-lg shadow-amber-500/20 w-full sm:w-auto">
+                            {locale === 'ar' ? (slide.cta || 'تسوق الآن') : locale === 'fr' ? (slide.ctaFr || slide.cta || 'Acheter maintenant') : (slide.cta || 'Shop Now')}
+                            {isAr ? <ArrowLeft className="ms-2 size-4" /> : <ArrowRight className="ms-2 size-4" />}
+                          </Button>
+                        </Link>
+                      ) : (
+                        <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-6 py-2 rounded-xl text-xs md:text-sm shadow-lg shadow-amber-500/20 w-full sm:w-auto">
                           {locale === 'ar' ? (slide.cta || 'تسوق الآن') : locale === 'fr' ? (slide.ctaFr || slide.cta || 'Acheter maintenant') : (slide.cta || 'Shop Now')}
-                          {isAr ? <ArrowLeft className="ms-2 size-5" /> : <ArrowRight className="ms-2 size-5" />}
+                          {isAr ? <ArrowLeft className="ms-2 size-4" /> : <ArrowRight className="ms-2 size-4" />}
                         </Button>
-                      </Link>
-                    ) : (
-                      <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-8 rounded-xl shadow-lg shadow-amber-500/20">
-                        {locale === 'ar' ? (slide.cta || 'تسوق الآن') : locale === 'fr' ? (slide.ctaFr || slide.cta || 'Acheter maintenant') : (slide.cta || 'Shop Now')}
-                        {isAr ? <ArrowLeft className="ms-2 size-5" /> : <ArrowRight className="ms-2 size-5" />}
-                      </Button>
-                    )}
-                    {!isAuthenticated && (
-                      <Link href="/auth/register?role=seller" className="inline-block">
-                        <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-xl w-full sm:w-auto">
-                          {t('سجل متجرك', 'Start Selling')}
-                        </Button>
-                      </Link>
-                    )}
+                      )}
+                      {!isAuthenticated && (
+                        <Link href="/auth/register?role=seller" className="inline-block">
+                          <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-xl text-xs md:text-sm w-full sm:w-auto">
+                            {t('سجل متجرك', 'Start Selling')}
+                          </Button>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                {currentHeroSlides.length > 1 && (
+                  <div className="absolute bottom-6 start-1/2 -translate-x-1/2 flex gap-2 z-10 select-none">
+                    {currentHeroSlides.map((_, i) => (
+                      <button key={i} onClick={() => setHeroIndex(i)}
+                        className={`h-2 rounded-full transition-all duration-300 ${i === heroIndex ? 'w-6 bg-amber-500 shadow-md' : 'w-2 bg-white/20'}`} />
+                    ))}
+                  </div>
+                )}
+                {currentHeroSlides.length > 1 && (
+                  <>
+                    <button onClick={() => setHeroIndex((i) => (i - 1 + currentHeroSlides.length) % currentHeroSlides.length)}
+                      className="absolute start-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white z-10 hidden md:block">
+                      {isAr ? <ChevronRight className="size-4.5" /> : <ChevronLeft className="size-4.5" />}
+                    </button>
+                    <button onClick={() => setHeroIndex((i) => (i + 1) % currentHeroSlides.length)}
+                      className="absolute end-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white z-10 hidden md:block">
+                      {isAr ? <ChevronLeft className="size-4.5" /> : <ChevronRight className="size-4.5" />}
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Side stack banners (3 Columns on Desktop, hidden on Mobile) */}
+              <div className="hidden lg:flex lg:col-span-3 flex-col gap-4 h-[340px] md:h-[400px]">
+                {/* Banner Side 1: Yellow/Orange accent */}
+                <div className="flex-1 rounded-[24px] bg-gradient-to-br from-amber-400 to-orange-500 p-5 text-slate-950 flex flex-col justify-between border border-amber-400/20 shadow-lg relative overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer" onClick={() => router.push('/search?q=electronics')}>
+                  <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
+                  <div className="z-10 text-start">
+                    <Badge className="bg-slate-950 text-white text-[8px] font-bold py-0.5 px-2 mb-1.5 select-none">{t('أحدث الهواتف', 'Latest Mobiles')}</Badge>
+                    <h4 className="text-sm font-black leading-snug">{t('وفر حتى 50% على أجهزة شاومي وآيفون', 'Save up to 50% on iPhone & Xiaomi')}</h4>
+                  </div>
+                  <div className="z-10 flex justify-between items-center mt-3">
+                    <span className="text-[10px] font-black underline">{t('تسوق الأجهزة', 'Shop Devices')}</span>
+                    <ShoppingCart className="w-4 h-4" />
+                  </div>
+                </div>
+
+                {/* Banner Side 2: Dark indigo glassmorphism */}
+                <div className="flex-1 rounded-[24px] bg-gradient-to-br from-slate-900 to-indigo-950 p-5 text-white flex flex-col justify-between border border-white/5 shadow-lg relative overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer" onClick={() => router.push('/search?q=perfumes')}>
+                  <div className="absolute inset-0 bg-white/5 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
+                  <div className="z-10 text-start">
+                    <Badge className="bg-white/10 text-white border-white/10 text-[8px] font-bold py-0.5 px-2 mb-1.5 select-none">{t('الجمال والعطور', 'Beauty Deals')}</Badge>
+                    <h4 className="text-sm font-black leading-snug">{t('روائح تسحر الجميع بأسعار لا تقاوم', 'Fragrances that captivate at unbeatable prices')}</h4>
+                  </div>
+                  <div className="z-10 flex justify-between items-center mt-3">
+                    <span className="text-[10px] font-black underline text-amber-400">{t('اكتشف العطور', 'Explore Now')}</span>
+                    <Sparkles className="w-4 h-4 text-amber-400" />
                   </div>
                 </div>
               </div>
-              {currentHeroSlides.length > 1 && (
-                <div className="absolute bottom-6 start-1/2 -translate-x-1/2 flex gap-2 z-10 select-none">
-                  {currentHeroSlides.map((_, i) => (
-                    <button key={i} onClick={() => setHeroIndex(i)}
-                      className={`h-2.5 rounded-full transition-all duration-300 ${i === heroIndex ? 'w-8 bg-amber-500 shadow-md' : 'w-2.5 bg-white/20'}`} />
-                  ))}
-                </div>
-              )}
-              {currentHeroSlides.length > 1 && (
-                <>
-                  <button onClick={() => setHeroIndex((i) => (i - 1 + currentHeroSlides.length) % currentHeroSlides.length)}
-                    className="absolute start-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white z-10 hidden md:block">
-                    {isAr ? <ChevronRight className="size-5" /> : <ChevronLeft className="size-5" />}
-                  </button>
-                  <button onClick={() => setHeroIndex((i) => (i + 1) % currentHeroSlides.length)}
-                    className="absolute end-4 top-1/2 -translate-y-1/2 p-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white z-10 hidden md:block">
-                    {isAr ? <ChevronLeft className="size-5" /> : <ChevronRight className="size-5" />}
-                  </button>
-                </>
-              )}
             </div>
           </section>
         );
@@ -653,13 +908,14 @@ export default function StorefrontHomepage() {
               </div>
 
               {/* Center Column: Mega Offers countdown timer */}
-              <div className="lg:col-span-6 h-[450px] rounded-[24px] bg-white/70 dark:bg-slate-950/70 border border-border/80 backdrop-blur-md shadow-xl p-5 flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all">
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-3 border-b border-border/50 pb-4 mb-3">
+              <div className="lg:col-span-6 h-[450px] rounded-[24px] bg-slate-950 text-white border-2 border-rose-600/30 shadow-2xl p-5 flex flex-col justify-between hover:shadow-[0_20px_45px_rgba(244,63,94,0.15)] transition-all relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-36 h-36 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-3 border-b border-white/10 pb-4 mb-3 z-10">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-xl bg-red-500/10 text-red-500 animate-pulse">
+                    <div className="p-1.5 rounded-xl bg-rose-600/20 text-rose-500 animate-pulse">
                       <Flame className="w-5 h-5 fill-current" />
                     </div>
-                    <h3 className="text-base font-black text-navy dark:text-white">
+                    <h3 className="text-base font-black text-white">
                       {isAr ? (data?.countdownConfig?.titleAr || 'عروض ميجا') : (data?.countdownConfig?.titleEn || 'Mega Offers')}
                     </h3>
                   </div>
@@ -676,7 +932,7 @@ export default function StorefrontHomepage() {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-4 grow">
-                    {timerProducts.map((p) => renderProductCard(p, true))}
+                    {timerProducts.map((p: any) => <ProductCard key={p.id} product={p} isOfferCard={true} />)}
                   </div>
                 )}
               </div>
@@ -814,9 +1070,9 @@ export default function StorefrontHomepage() {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                 {productsToShow
-                  .filter((product) => product && product.id)
+                  .filter((product: any) => product && product.id)
                   .slice(0, displayCount)
-                  .map((product) => renderProductCard(product))}
+                  .map((product: any) => <ProductCard key={product.id} product={product} />)}
               </div>
             )}
             
@@ -1044,6 +1300,37 @@ export default function StorefrontHomepage() {
           </section>
         );
 
+      case 'category_products':
+        return (
+          <CategoryProductsRow
+            key={section.id}
+            categoryId={section.categoryId}
+            titleAr={section.titleAr}
+            titleEn={section.titleEn}
+            layoutStyle={section.layoutStyle}
+          />
+        );
+
+      case 'category_circles':
+        return (
+          <CategoryCirclesRow
+            key={section.id}
+            categoryId={section.categoryId}
+            titleAr={section.titleAr}
+            titleEn={section.titleEn}
+          />
+        );
+
+      case 'banner':
+        return (
+          <CustomBannerBlock
+            key={section.id}
+            imageArUrl={section.imageArUrl}
+            imageEnUrl={section.imageEnUrl}
+            linkUrl={section.linkUrl}
+          />
+        );
+
       default:
         return null;
     }
@@ -1051,8 +1338,30 @@ export default function StorefrontHomepage() {
 
   const defaultLayout = ['hero', 'features', 'categories', 'bento_offers', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
   const activeLayout = Array.isArray(data?.layout) && data.layout.length > 0
-    ? data.layout.map(section => section === 'mega_offers_timer' ? 'bento_offers' : section)
-    : defaultLayout;
+    ? data.layout
+        .filter((sect: any) => {
+          if (!sect) return false;
+          return typeof sect === 'string' ? true : sect.visible !== false;
+        })
+        .map((sect: any) => {
+          if (typeof sect === 'string') {
+            const id = sect === 'mega_offers_timer' ? 'bento_offers' : sect;
+            return { id, type: id, visible: true };
+          }
+          return {
+            id: sect.id,
+            type: sect.type || sect.id,
+            titleAr: sect.titleAr,
+            titleEn: sect.titleEn,
+            categoryId: sect.categoryId || '',
+            layoutStyle: sect.layoutStyle || 'carousel',
+            imageArUrl: sect.imageArUrl || '',
+            imageEnUrl: sect.imageEnUrl || '',
+            linkUrl: sect.linkUrl || '',
+            visible: sect.visible !== false
+          };
+        })
+    : defaultLayout.map(id => ({ id, type: id, visible: true }));
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] dark:bg-slate-950 font-cairo">
@@ -1062,7 +1371,7 @@ export default function StorefrontHomepage() {
           <AdBanner ads={data.advertisements.banner_top} className="h-full rounded-none" />
         </div>
       )}
-
+ 
       {/* ── TRENDING SEARCH SUGGESTIONS ── */}
       <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-none border-b border-border/80 bg-slate-50/50 dark:bg-slate-900/10 px-4 md:px-8 select-none snap-x snap-mandatory">
         <span className="text-[10px] md:text-xs font-black text-slate-500 shrink-0 flex items-center gap-1.5 snap-start">
@@ -1082,7 +1391,7 @@ export default function StorefrontHomepage() {
           </button>
         ))}
       </div>
-
+ 
       {/* Render Dynamic Order of Sections */}
       {isLoading ? (
         <div className="container-platform py-6 space-y-10">
@@ -1092,7 +1401,7 @@ export default function StorefrontHomepage() {
         </div>
       ) : (
         <div className="space-y-4 py-4">
-          {activeLayout.map((sectionName) => renderSection(sectionName))}
+          {activeLayout.map((section) => renderSection(section))}
         </div>
       )}
 
