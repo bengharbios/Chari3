@@ -41,6 +41,8 @@
     "dist",
     "examples",
     ".next",
-    "scratch"
+    "scratch",
+    "skills",
+    ".agent"
   ]
 }

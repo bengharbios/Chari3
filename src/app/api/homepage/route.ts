@@ -6,8 +6,41 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     await ensureDbConnection();
-    // Fetch data for the homepage in parallel
-    const [categories, rawProducts, topSellers, topStores, advertisements, testimonials, layoutSetting, heroSlidesSetting, maintenanceSetting, allowGuestCheckoutSetting, globalCoupons] = await Promise.all([
+
+    // 1. Fetch pinned settings first to modify downstream queries
+    const [pinnedItemsSetting, countdownSetting] = await Promise.all([
+      db.setting.findUnique({ where: { key: 'homepage_pinned_items' } }),
+      db.setting.findUnique({ where: { key: 'homepage_countdown' } }),
+    ]);
+
+    let pinnedProductIds: string[] = [];
+    let pinnedStoreIds: string[] = [];
+    let pinnedSellerIds: string[] = [];
+    let pinnedData: any = null;
+
+    try {
+      if (pinnedItemsSetting?.value) {
+        pinnedData = JSON.parse(pinnedItemsSetting.value);
+        pinnedProductIds = pinnedData?.products?.map((p: any) => p.id) || [];
+        pinnedStoreIds = pinnedData?.stores?.map((s: any) => s.id) || [];
+        pinnedSellerIds = pinnedData?.sellers?.map((s: any) => s.id) || [];
+      }
+    } catch {}
+
+    // 2. Fetch all other storefront data in parallel
+    const [
+      categories,
+      rawProducts,
+      topSellers,
+      topStores,
+      advertisements,
+      testimonials,
+      layoutSetting,
+      heroSlidesSetting,
+      maintenanceSetting,
+      allowGuestCheckoutSetting,
+      globalCoupons
+    ] = await Promise.all([
       // Active categories with product counts
       db.category.findMany({
         where: { isActive: true, parentId: null },
@@ -15,14 +48,23 @@ export async function GET() {
         take: 12,
       }),
 
-      // Featured and recent products (fetching up to 100 for dynamic scoring)
+      // Featured, recent, or pinned products
       db.product.findMany({
         where: { 
           status: 'active',
           OR: [
-            { store: { isActive: true } },
-            { seller: { user: { isActive: true } } },
-            { storeId: null, sellerId: null }
+            { id: { in: pinnedProductIds } },
+            {
+              AND: [
+                {
+                  OR: [
+                    { store: { isActive: true } },
+                    { seller: { user: { isActive: true } } },
+                    { storeId: null, sellerId: null }
+                  ]
+                }
+              ]
+            }
           ]
         },
         include: {
@@ -48,10 +90,10 @@ export async function GET() {
             },
           },
         },
-        take: 40,
+        take: 100, // Fetch more to accommodate pinned items & score regular ones
       }),
 
-      // Top sellers by rating and level
+      // Top sellers
       db.sellerProfile.findMany({
         where: { isVerified: true },
         include: {
@@ -63,10 +105,10 @@ export async function GET() {
           { rating: 'desc' },
           { totalSales: 'desc' },
         ],
-        take: 8,
+        take: 20,
       }),
 
-      // Top stores by rating and level
+      // Top stores
       db.store.findMany({
         where: { isActive: true },
         include: {
@@ -78,10 +120,10 @@ export async function GET() {
           { rating: 'desc' },
           { totalSales: 'desc' },
         ],
-        take: 8,
+        take: 20,
       }),
 
-      // Active advertisements for the homepage
+      // Active advertisements
       db.advertisement.findMany({
         where: {
           isActive: true,
@@ -101,22 +143,12 @@ export async function GET() {
         orderBy: [{ sortOrder: 'asc' }],
       }),
 
-      // Testimonials from settings (stored as JSON)
       db.setting.findUnique({ where: { key: 'homepage_testimonials' } }),
-      
-      // Dynamic Homepage Layout
       db.setting.findUnique({ where: { key: 'homepage_layout' } }),
-
-      // Dynamic Hero Slides
       db.setting.findUnique({ where: { key: 'homepage_hero_slides' } }),
-
-      // Maintenance mode flag
       db.setting.findUnique({ where: { key: 'flag_maintenance_mode' } }),
-
-      // Guest checkout flag
       db.setting.findUnique({ where: { key: 'allow_guest_checkout' } }),
 
-      // Global Active Coupons
       db.coupon.findMany({
         where: { 
           isGlobal: true, 
@@ -133,29 +165,22 @@ export async function GET() {
       })
     ]);
 
-    // Rank products dynamically in memory
+    // 3. Rank products dynamically in memory
     const rankedProducts = rawProducts.map((product: any) => {
       const merchant = product.seller || product.store;
       const isFeaturedBoost = product.isFeatured ? 50 : 0;
       
-      // Freshness boost: declines over 30 days
       const ageInDays = (Date.now() - new Date(product.createdAt).getTime()) / (1000 * 60 * 60 * 24);
-      const freshnessBoost = Math.max(0, 30 - ageInDays) * 1.5; // Up to 45 points
+      const freshnessBoost = Math.max(0, 30 - ageInDays) * 1.5;
       
-      // Level boost
-      const levelBoost = (merchant?.level || 1) * 3; // Up to 30 points
+      const levelBoost = (merchant?.level || 1) * 3;
+      const ratingBoost = (merchant?.rating || 0) * 5;
+      const salesBoost = Math.min(20, (product.soldCount || 0) * 0.5);
+      const viewsBoost = Math.min(10, (product.viewCount || 0) * 0.05);
+      const productRatingBoost = (product.rating || 0) * 2;
       
-      // Rating boost
-      const ratingBoost = (merchant?.rating || 0) * 5; // Up to 25 points
-      
-      // Organic metrics
-      const salesBoost = Math.min(20, (product.soldCount || 0) * 0.5); // Up to 20 points
-      const viewsBoost = Math.min(10, (product.viewCount || 0) * 0.05); // Up to 10 points
-      const productRatingBoost = (product.rating || 0) * 2; // Up to 10 points
-      
-      // Package price boost
       const packagePrice = merchant?.package?.price || 0;
-      const packageBoost = Math.min(30, packagePrice * 0.02); // Up to 30 points
+      const packageBoost = Math.min(30, packagePrice * 0.02);
       
       const score = 
         isFeaturedBoost + 
@@ -170,11 +195,31 @@ export async function GET() {
       return { ...product, score };
     });
     
-    // Sort in-memory
+    // Sort regular ranked list
     rankedProducts.sort((a, b) => b.score - a.score);
-    const featuredProducts = rankedProducts.slice(0, 50);
 
-    // Track impressions for ads (fire and forget)
+    // Sort by pinned configurations (pinned items are forced to the top)
+    const pinnedProductMap = new Map(pinnedProductIds.map((id, index) => [id, index]));
+    const pinnedList = rankedProducts.filter(p => pinnedProductMap.has(p.id))
+      .sort((a, b) => pinnedProductMap.get(a.id)! - pinnedProductMap.get(b.id)!);
+    const regularList = rankedProducts.filter(p => !pinnedProductMap.has(p.id));
+    const featuredProducts = [...pinnedList, ...regularList].slice(0, 50);
+
+    // Apply pinning for stores
+    const pinnedStoreMap = new Map(pinnedStoreIds.map((id, index) => [id, index]));
+    const storePinned = topStores.filter(s => pinnedStoreMap.has(s.id))
+      .sort((a, b) => pinnedStoreMap.get(a.id)! - pinnedStoreMap.get(b.id)!);
+    const storeRegular = topStores.filter(s => !pinnedStoreMap.has(s.id));
+    const finalStores = [...storePinned, ...storeRegular].slice(0, 8);
+
+    // Apply pinning for sellers
+    const pinnedSellerMap = new Map(pinnedSellerIds.map((id, index) => [id, index]));
+    const sellerPinned = topSellers.filter(s => pinnedSellerMap.has(s.id))
+      .sort((a, b) => pinnedSellerMap.get(a.id)! - pinnedSellerMap.get(b.id)!);
+    const sellerRegular = topSellers.filter(s => !pinnedSellerMap.has(s.id));
+    const finalSellers = [...sellerPinned, ...sellerRegular].slice(0, 8);
+
+    // Track impressions for ads
     if (advertisements.length > 0) {
       const ids = advertisements.map((a) => a.id);
       db.advertisement
@@ -220,6 +265,14 @@ export async function GET() {
       }
     } catch {}
 
+    // Parse countdown configuration
+    let parsedCountdown: any = { enabled: false };
+    try {
+      if (countdownSetting?.value) {
+        parsedCountdown = JSON.parse(countdownSetting.value);
+      }
+    } catch {}
+
     // Process Global Coupons to extract participating products
     let globalCouponCampaigns: any[] = [];
     if (globalCoupons && globalCoupons.length > 0) {
@@ -243,12 +296,13 @@ export async function GET() {
       success: true,
       categories,
       featuredProducts,
-      topSellers,
-      topStores,
+      topSellers: finalSellers,
+      topStores: finalStores,
       advertisements: adsByZone,
       testimonials: parsedTestimonials,
       layout: parsedLayout,
       heroSlides: parsedHeroSlides,
+      countdownConfig: parsedCountdown,
       globalCouponCampaigns,
       isMaintenance: maintenanceSetting?.value === 'true',
       allowGuestCheckout: allowGuestCheckoutSetting?.value === 'true',

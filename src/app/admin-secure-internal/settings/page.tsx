@@ -310,6 +310,23 @@ export default function AdminSettingsPage() {
               </Button>
             </CardContent>
           </Card>
+
+          <Card className="card-surface md:col-span-2">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">{t('إدارة وتصميم الصفحة الرئيسية', 'Homepage Manager & Designer')}</CardTitle>
+              <CardDescription>
+                {t('تحكم في ترتيب أقسام الصفحة الرئيسية، وثبّت منتجات أو متاجر معينة، واضبط العداد التنازلي الترويجي.', 'Manage section order, pin items, and configure countdown timer deals.')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href={getAdminPath('settings/homepage')}>
+                <Button className="w-full font-bold gap-2">
+                  <SettingsIcon className="h-4 w-4" />
+                  {t('الدخول لمدير الصفحة الرئيسية', 'Open Homepage Manager')}
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>
