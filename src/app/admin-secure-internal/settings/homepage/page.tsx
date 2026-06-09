@@ -330,6 +330,9 @@ export default function AdminHomepageManager() {
             imageEnUrl: sect.imageEnUrl || '',
             linkUrl: sect.linkUrl || '',
             visible: sect.visible !== false,
+            filterType: sect.filterType || 'smart',
+            limit: sect.limit || 10,
+            metadata: sect.metadata || null,
           };
         });
         // Ensure ALL core sections exist - append missing ones
@@ -398,6 +401,7 @@ export default function AdminHomepageManager() {
           visible: sect.visible,
           filterType: sect.filterType || 'smart',
           limit: sect.limit || 10,
+          metadata: sect.metadata || null,
         })),
         pinned: {
           products: (updatedPinned.products || []).map((p: any, idx: number) => ({ id: p.id, order: idx + 1, name: p.name, price: p.price, image: p.image })),
