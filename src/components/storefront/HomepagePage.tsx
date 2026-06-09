@@ -146,6 +146,8 @@ const FEATURES = [
 interface HomepageData {
   categories: { id: string; name: string; nameEn?: string; icon?: string; image?: string }[];
   featuredProducts: any[];
+  bentoRightProducts?: any[];
+  bentoLeftProducts?: any[];
   topSellers: any[];
   topStores: any[];
   advertisements: Record<string, any[]>;
@@ -884,22 +886,45 @@ export default function StorefrontHomepage() {
 
       case 'bento_offers':
         // Noon-style Bento Promo grid with countdown timer
-        const hasCountdown = data?.countdownConfig?.enabled || false;
-        const productsList = (data?.featuredProducts || []).slice(0, section.limit || 10);
-        const timerProducts = productsList.slice(0, 2);
+        const hasCountdown = section.metadata?.enableTimer || data?.countdownConfig?.enabled || false;
+        const bentoLimit = section.limit || 8;
+        const timerProducts = (data?.featuredProducts || []).slice(0, bentoLimit);
+        
+        const rightCardProducts = (data?.bentoRightProducts?.length ?? 0) > 0 
+          ? data!.bentoRightProducts!.slice(0, 4) 
+          : (data?.featuredProducts || []).slice(2, 6);
+          
+        const leftCardProducts = (data?.bentoLeftProducts?.length ?? 0) > 0 
+          ? data!.bentoLeftProducts!.slice(0, 2) 
+          : (data?.featuredProducts || []).slice(6, 8);
+
+        const customText1 = isAr 
+          ? (section.metadata?.customText1Ar || globalT('homepage.noonItMore') || 'نوّنها أكثر ووفّر أكثر على كل اللي تحبّه')
+          : (section.metadata?.customText1En || 'Shop more & save on what you love');
+          
+        const customText2 = isAr 
+          ? (section.metadata?.customText2Ar || globalT('homepage.onSale') || 'عليها العين')
+          : (section.metadata?.customText2En || 'Hot Deals');
+
+        const sectionBadge = isAr ? section.metadata?.badgeAr : section.metadata?.badgeEn;
 
         return (
-          <section key="bento_offers" className="container-platform py-6 font-cairo">
+          <section key={`bento_offers_${section.id}`} className="container-platform py-6 font-cairo">
+            {sectionBadge && (
+              <div className="flex justify-center mb-4">
+                <Badge className="bg-amber-500 text-white text-xs font-bold py-1 px-3 shadow-md border-0">{sectionBadge}</Badge>
+              </div>
+            )}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Right Column: "نوّنها أكثر ووفر أكثر" 4x4 Promos */}
               <div className="lg:col-span-3 h-[450px] rounded-[24px] bg-gradient-to-br from-amber-500 to-amber-600 border border-amber-500/20 shadow-xl p-5 text-slate-950 flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all group relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
                 <div className="z-10">
                   <Badge className="bg-slate-950 text-white text-[9px] font-bold py-0.5 px-2 mb-2 select-none">عروض حصرية</Badge>
-                  <h3 className="text-lg font-black leading-snug">{globalT('homepage.noonItMore') || 'نوّنها أكثر ووفّر أكثر على كل اللي تحبّه'}</h3>
+                  <h3 className="text-lg font-black leading-snug">{customText1}</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-3 z-10 grow mt-4">
-                  {productsList.slice(5, 9).map((p, i) => {
+                  {rightCardProducts.map((p: any, i: number) => {
                     let imgs: string[] = [];
                     try { imgs = Array.isArray(p.images) ? p.images : JSON.parse(p.images || '[]'); } catch {}
                     return (
@@ -926,8 +951,8 @@ export default function StorefrontHomepage() {
                       {isAr ? (data?.countdownConfig?.titleAr || 'عروض ميجا') : (data?.countdownConfig?.titleEn || 'Mega Offers')}
                     </h3>
                   </div>
-                  {hasCountdown && data?.countdownConfig?.endDate && (
-                    <CountdownTimer targetDate={data.countdownConfig.endDate} />
+                  {hasCountdown && (section.metadata?.timerEndDate || data?.countdownConfig?.endDate) && (
+                    <CountdownTimer targetDate={section.metadata?.timerEndDate || data?.countdownConfig?.endDate} />
                   )}
                 </div>
                 {isLoading ? (
@@ -950,12 +975,12 @@ export default function StorefrontHomepage() {
                 <div className="z-10 flex justify-between items-center">
                   <h3 className="text-base font-black flex items-center gap-1.5">
                     <Sparkles className="w-4 h-4 text-amber-400" />
-                    {globalT('homepage.onSale') || 'عليها العين'}
+                    {customText2}
                   </h3>
                   <Badge variant="secondary" className="bg-white/10 text-white hover:bg-white/15 cursor-pointer text-[9px] py-0.5 px-2" onClick={() => router.push('/search')}>{globalT('homepage.viewAll') || 'عرض الكل'}</Badge>
                 </div>
                 <div className="grid grid-cols-1 gap-3 z-10 grow mt-4">
-                  {productsList.slice(2, 4).map((p, i) => {
+                  {leftCardProducts.map((p: any, i: number) => {
                     let imgs: string[] = [];
                     try { imgs = Array.isArray(p.images) ? p.images : JSON.parse(p.images || '[]'); } catch {}
                     const discount = p.comparePrice ? Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100) : 0;

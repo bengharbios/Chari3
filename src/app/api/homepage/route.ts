@@ -240,10 +240,44 @@ export async function GET() {
 
     // Sort by pinned configurations (pinned items are forced to the top)
     const pinnedProductMap = new Map(pinnedProductIds.map((id, index) => [id, index]));
+    
+    // Helper function to apply specific filters to a copied list
+    const applyFilter = (filter: string, list: any[]) => {
+      const copy = [...list];
+      if (filter === 'most_sold') copy.sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0));
+      else if (filter === 'most_viewed') copy.sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0));
+      else if (filter === 'highest_rated') copy.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      else if (filter === 'newest') copy.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      else if (filter === 'lowest_price') copy.sort((a, b) => (a.price || 0) - (b.price || 0));
+      else if (filter === 'has_coupons') {
+        // Simple mock for has_coupons: items with comparePrice > price 
+        copy.sort((a, b) => {
+          const aHasDiscount = (a.comparePrice && a.comparePrice > a.price) ? 1 : 0;
+          const bHasDiscount = (b.comparePrice && b.comparePrice > b.price) ? 1 : 0;
+          return bHasDiscount - aHasDiscount || b.score - a.score;
+        });
+      }
+      else copy.sort((a, b) => b.score - a.score);
+      return copy;
+    };
+
+    const regularList = applyFilter(featuredProductsFilter, rankedProducts.filter(p => !pinnedProductMap.has(p.id)));
     const pinnedList = rankedProducts.filter(p => pinnedProductMap.has(p.id))
       .sort((a, b) => pinnedProductMap.get(a.id)! - pinnedProductMap.get(b.id)!);
-    const regularList = rankedProducts.filter(p => !pinnedProductMap.has(p.id));
+    
     const featuredProducts = [...pinnedList, ...regularList].slice(0, 50);
+
+    // Generate Bento specific lists if Bento is active
+    let bentoRightProducts: any[] = [];
+    let bentoLeftProducts: any[] = [];
+    const bentoSection = parsedLayout.find((s: any) => s.type === 'bento_offers');
+    if (bentoSection) {
+      const subFilter1 = bentoSection.metadata?.subFilter1 || 'smart';
+      const subFilter2 = bentoSection.metadata?.subFilter2 || 'smart';
+      // Right card gets 4 items (we take 10 to ensure we have enough after excluding pinned)
+      bentoRightProducts = [...pinnedList, ...applyFilter(subFilter1, rankedProducts.filter(p => !pinnedProductMap.has(p.id)))].slice(0, 10);
+      bentoLeftProducts = [...pinnedList, ...applyFilter(subFilter2, rankedProducts.filter(p => !pinnedProductMap.has(p.id)))].slice(0, 10);
+    }
 
     // Apply pinning for stores
     const pinnedStoreMap = new Map(pinnedStoreIds.map((id, index) => [id, index]));
@@ -340,6 +374,8 @@ export async function GET() {
       success: true,
       categories,
       featuredProducts,
+      bentoRightProducts,
+      bentoLeftProducts,
       topSellers: finalSellers,
       topStores: finalStores,
       advertisements: adsByZone,

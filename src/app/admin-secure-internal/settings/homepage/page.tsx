@@ -30,6 +30,18 @@ interface SectionItem {
   visible: boolean;
   filterType?: string;
   limit?: number;
+  metadata?: {
+    customText1Ar?: string;
+    customText1En?: string;
+    customText2Ar?: string;
+    customText2En?: string;
+    badgeAr?: string;
+    badgeEn?: string;
+    enableTimer?: boolean;
+    timerEndDate?: string;
+    subFilter1?: string;
+    subFilter2?: string;
+  };
 }
 
 // -------------------------------------------------------------
@@ -627,6 +639,13 @@ export default function AdminHomepageManager() {
       linkUrl: sect.linkUrl || '',
       filterType: sect.filterType || 'smart',
       limit: sect.limit || 10,
+      metadata: sect.metadata || {
+        customText1Ar: '', customText1En: '',
+        customText2Ar: '', customText2En: '',
+        badgeAr: '', badgeEn: '',
+        enableTimer: false, timerEndDate: '',
+        subFilter1: 'smart', subFilter2: 'smart',
+      },
     });
   };
 
@@ -645,6 +664,7 @@ export default function AdminHomepageManager() {
           linkUrl: editSectData.linkUrl,
           filterType: editSectData.filterType,
           limit: editSectData.limit,
+          metadata: editSectData.metadata,
         };
       }
       return sect;
@@ -682,7 +702,14 @@ export default function AdminHomepageManager() {
       linkUrl: '',
       visible: true,
       filterType: 'smart',
-      limit: 10
+      limit: 10,
+      metadata: {
+        customText1Ar: '', customText1En: '',
+        customText2Ar: '', customText2En: '',
+        badgeAr: '', badgeEn: '',
+        enableTimer: false, timerEndDate: '',
+        subFilter1: 'smart', subFilter2: 'smart',
+      },
     };
     const updated = [...layout, newSect];
     setLayout(updated);
@@ -1072,6 +1099,117 @@ export default function AdminHomepageManager() {
                           </div>
                         </div>
                       )}
+
+                      {/* Advanced Customization (Metadata) */}
+                      <div className="space-y-4 pt-4 border-t">
+                        <h4 className="text-xs font-bold text-indigo-500 uppercase flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5" />
+                          {t('تخصيصات متقدمة (نصوص وشارات ومؤقتات)', 'Advanced Customization (Texts, Badges & Timers)')}
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Universal Badge */}
+                          <div className="space-y-2 text-start">
+                            <Label className="text-xs font-bold">{t('الشارة / الهاشتاغ (عربي)', 'Badge / Hashtag (Arabic)')}</Label>
+                            <Input
+                              value={editSectData.metadata?.badgeAr || ''}
+                              onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, badgeAr: e.target.value } }))}
+                              className="rounded-xl text-sm"
+                              placeholder={t('مثال: عروض حصرية', 'e.g. Exclusive Deals')}
+                            />
+                          </div>
+                          <div className="space-y-2 text-start">
+                            <Label className="text-xs font-bold">{t('الشارة / الهاشتاغ (إنجليزي)', 'Badge / Hashtag (English)')}</Label>
+                            <Input
+                              value={editSectData.metadata?.badgeEn || ''}
+                              onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, badgeEn: e.target.value } }))}
+                              className="rounded-xl text-sm"
+                              placeholder={t('مثال: Exclusive Deals', 'e.g. Exclusive Deals')}
+                            />
+                          </div>
+
+                          {/* Universal Timer */}
+                          <div className="space-y-2 text-start">
+                            <Label className="text-xs font-bold">{t('تفعيل مؤقت تنازلي؟', 'Enable Countdown Timer?')}</Label>
+                            <select
+                              value={editSectData.metadata?.enableTimer ? 'true' : 'false'}
+                              onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, enableTimer: e.target.value === 'true' } }))}
+                              className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
+                            >
+                              <option value="false">{t('لا، معطل', 'No, Disabled')}</option>
+                              <option value="true">{t('نعم، مفعل', 'Yes, Enabled')}</option>
+                            </select>
+                          </div>
+                          {editSectData.metadata?.enableTimer && (
+                            <div className="space-y-2 text-start">
+                              <Label className="text-xs font-bold">{t('تاريخ ووقت الانتهاء', 'Timer End Date & Time')}</Label>
+                              <Input
+                                type="datetime-local"
+                                value={editSectData.metadata?.timerEndDate || ''}
+                                onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, timerEndDate: e.target.value } }))}
+                                className="rounded-xl text-sm"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Bento Specific Metadata */}
+                        {layout.find(s => s.id === editingSectId)?.type === 'bento_offers' && (
+                          <div className="mt-4 p-4 rounded-xl bg-muted/50 border border-border space-y-4">
+                            <h5 className="text-xs font-bold">{t('نصوص ومصادر بطاقات عروض ميجا (Bento Cards)', 'Bento Cards Texts & Sources')}</h5>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2 text-start">
+                                <Label className="text-xs font-bold text-amber-600">{t('النص الترويجي للبطاقة اليمنى (عربي)', 'Right Card Promo Text (Arabic)')}</Label>
+                                <Input
+                                  value={editSectData.metadata?.customText1Ar || ''}
+                                  onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, customText1Ar: e.target.value } }))}
+                                  className="rounded-xl text-sm"
+                                  placeholder="نوّنها أكثر ووفّر أكثر على كل اللي تحبّه"
+                                />
+                              </div>
+                              <div className="space-y-2 text-start">
+                                <Label className="text-xs font-bold text-amber-600">{t('معيار فرز البطاقة اليمنى', 'Right Card Sort Filter')}</Label>
+                                <select
+                                  value={editSectData.metadata?.subFilter1 || 'smart'}
+                                  onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, subFilter1: e.target.value } }))}
+                                  className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
+                                >
+                                  <option value="smart">🤖 {t('تلقائي', 'Auto')}</option>
+                                  <option value="most_sold">🔥 {t('الأكثر مبيعاً', 'Most Sold')}</option>
+                                  <option value="newest">🆕 {t('الأحدث', 'Newest')}</option>
+                                  <option value="has_coupons">🎟️ {t('عروض الكوبونات', 'Coupon Offers')}</option>
+                                  <option value="lowest_price">💰 {t('الأقل سعراً', 'Lowest Price')}</option>
+                                </select>
+                              </div>
+
+                              <div className="space-y-2 text-start">
+                                <Label className="text-xs font-bold text-indigo-400">{t('النص الترويجي للبطاقة اليسرى (عربي)', 'Left Card Promo Text (Arabic)')}</Label>
+                                <Input
+                                  value={editSectData.metadata?.customText2Ar || ''}
+                                  onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, customText2Ar: e.target.value } }))}
+                                  className="rounded-xl text-sm"
+                                  placeholder="عليها العين"
+                                />
+                              </div>
+                              <div className="space-y-2 text-start">
+                                <Label className="text-xs font-bold text-indigo-400">{t('معيار فرز البطاقة اليسرى', 'Left Card Sort Filter')}</Label>
+                                <select
+                                  value={editSectData.metadata?.subFilter2 || 'smart'}
+                                  onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, subFilter2: e.target.value } }))}
+                                  className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
+                                >
+                                  <option value="smart">🤖 {t('تلقائي', 'Auto')}</option>
+                                  <option value="most_sold">🔥 {t('الأكثر مبيعاً', 'Most Sold')}</option>
+                                  <option value="most_viewed">👁️ {t('الأكثر مشاهدة', 'Most Viewed')}</option>
+                                  <option value="has_coupons">🎟️ {t('عروض الكوبونات', 'Coupon Offers')}</option>
+                                  <option value="lowest_price">💰 {t('الأقل سعراً', 'Lowest Price')}</option>
+                                </select>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
                       <div className="flex justify-end gap-2 pt-4 border-t border-border/60">
                         <Button variant="ghost" onClick={() => setEditingSectId(null)} className="rounded-xl text-xs font-bold">
