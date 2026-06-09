@@ -148,6 +148,7 @@ interface HomepageData {
   featuredProducts: any[];
   bentoRightProducts?: any[];
   bentoLeftProducts?: any[];
+  bentoCenterProducts?: any[];
   topSellers: any[];
   topStores: any[];
   advertisements: Record<string, any[]>;
@@ -341,7 +342,7 @@ function ProductCard({ product, isOfferCard = false }: { product: any; isOfferCa
 }
 
 // Category Showcase Products carousel/grid
-function CategoryProductsRow({ categoryId, titleAr, titleEn, layoutStyle = 'carousel' }: any) {
+function CategoryProductsRow({ categoryId, titleAr, titleEn, layoutStyle = 'carousel', storeId, sellerId }: any) {
   const { locale } = useAppStore();
   const isAr = locale === 'ar';
   const [products, setProducts] = useState<any[]>([]);
@@ -350,19 +351,28 @@ function CategoryProductsRow({ categoryId, titleAr, titleEn, layoutStyle = 'caro
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!categoryId) return;
+    if (!categoryId && !storeId && !sellerId) return;
     setLoading(true);
 
-    fetch(`/api/categories?parentId=${categoryId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setSubcategories(data);
-        }
-      })
-      .catch(() => {});
+    if (categoryId) {
+      fetch(`/api/categories?parentId=${categoryId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setSubcategories(data);
+          }
+        })
+        .catch(() => {});
+    } else {
+      setSubcategories([]);
+    }
 
-    fetch(`/api/products?categoryId=${categoryId}&status=active&limit=10`)
+    let url = `/api/products?status=active&limit=10`;
+    if (categoryId) url += `&categoryId=${categoryId}`;
+    if (storeId) url += `&storeId=${storeId}`;
+    if (sellerId) url += `&sellerId=${sellerId}`;
+
+    fetch(url)
       .then(res => res.json())
       .then(data => {
         if (data.products) {
@@ -371,7 +381,7 @@ function CategoryProductsRow({ categoryId, titleAr, titleEn, layoutStyle = 'caro
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [categoryId]);
+  }, [categoryId, storeId, sellerId]);
 
   const handleSubcatClick = (subcatId: string) => {
     const targetId = selectedSubcatId === subcatId ? '' : subcatId;
@@ -379,7 +389,12 @@ function CategoryProductsRow({ categoryId, titleAr, titleEn, layoutStyle = 'caro
     setLoading(true);
     
     const fetchId = targetId || categoryId;
-    fetch(`/api/products?categoryId=${fetchId}&status=active&limit=10`)
+    let url = `/api/products?status=active&limit=10`;
+    if (fetchId) url += `&categoryId=${fetchId}`;
+    if (storeId) url += `&storeId=${storeId}`;
+    if (sellerId) url += `&sellerId=${sellerId}`;
+
+    fetch(url)
       .then(res => res.json())
       .then(data => {
         if (data.products) {
@@ -390,7 +405,7 @@ function CategoryProductsRow({ categoryId, titleAr, titleEn, layoutStyle = 'caro
       .finally(() => setLoading(false));
   };
 
-  if (!categoryId) return null;
+  if (!categoryId && !storeId && !sellerId) return null;
 
   return (
     <section className="container-platform py-6 text-start">
@@ -555,6 +570,29 @@ function CustomBannerBlock({ imageArUrl, imageEnUrl, linkUrl }: any) {
         <img src={imgUrl} className="w-full h-auto object-cover max-h-[140px] md:max-h-[180px]" alt="Promo Banner" />
       </a>
     </section>
+  );
+}
+
+// Unified Section Header for dynamic titles, badges, and countdown timers
+function SectionHeader({ section, isAr, locale, t, children }: { section: any; isAr: boolean; locale: string; t: (ar: string, en: string) => string; children?: React.ReactNode }) {
+  const badge = isAr ? section.metadata?.badgeAr : section.metadata?.badgeEn;
+  return (
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+      <div className="flex items-center gap-2">
+        <h3 className="text-xl font-black text-navy dark:text-white">
+          {isAr ? (section.titleAr || section.type) : (section.titleEn || section.titleAr || section.type)}
+        </h3>
+        {badge && (
+          <Badge className="bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[10px] font-bold">{badge}</Badge>
+        )}
+      </div>
+      <div className="flex items-center gap-3">
+        {section.metadata?.enableTimer && section.metadata?.timerEndDate && (
+          <CountdownTimer targetDate={section.metadata.timerEndDate} />
+        )}
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -838,18 +876,14 @@ export default function StorefrontHomepage() {
         const displayCats = (data?.categories ?? []).filter((c) => c && c.id).slice(0, 12);
         return (
           <section key="categories" className="container-platform py-6">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h3 className="text-xl font-black text-navy dark:text-white">{t('تسوق حسب الفئة', 'Shop by Category')}</h3>
-                <p className="text-xs text-muted-foreground mt-1">{t('اكتشف آلاف المنتجات مرتبة بعناية', 'Discover thousands of curated products')}</p>
-              </div>
+            <SectionHeader section={section} isAr={isAr} locale={locale} t={t}>
               {filterCategory && (
                 <Button variant="ghost" size="sm" className="text-destructive gap-1 text-xs" onClick={() => setFilterCategory('')}>
                   <X className="size-3" />
                   {t('إلغاء الفلتر', 'Clear Filter')}
                 </Button>
               )}
-            </div>
+            </SectionHeader>
             {isLoading ? (
               <CategoryCirclesSkeleton />
             ) : displayCats.length === 0 ? (
@@ -888,7 +922,9 @@ export default function StorefrontHomepage() {
         // Noon-style Bento Promo grid with countdown timer
         const hasCountdown = section.metadata?.enableTimer || data?.countdownConfig?.enabled || false;
         const bentoLimit = section.limit || 8;
-        const timerProducts = (data?.featuredProducts || []).slice(0, bentoLimit);
+        const timerProducts = (data?.bentoCenterProducts?.length ?? 0) > 0 
+          ? data!.bentoCenterProducts!.slice(0, bentoLimit)
+          : (data?.featuredProducts || []).slice(0, bentoLimit);
         
         const rightCardProducts = (data?.bentoRightProducts?.length ?? 0) > 0 
           ? data!.bentoRightProducts!.slice(0, 4) 
@@ -948,7 +984,9 @@ export default function StorefrontHomepage() {
                       <Flame className="w-5 h-5 fill-current" />
                     </div>
                     <h3 className="text-base font-black text-white">
-                      {isAr ? (data?.countdownConfig?.titleAr || 'عروض ميجا') : (data?.countdownConfig?.titleEn || 'Mega Offers')}
+                      {isAr 
+                        ? (section.metadata?.customTextCenterAr || data?.countdownConfig?.titleAr || 'عروض ميجا') 
+                        : (section.metadata?.customTextCenterEn || data?.countdownConfig?.titleEn || 'Mega Offers')}
                     </h3>
                   </div>
                   {hasCountdown && (section.metadata?.timerEndDate || data?.countdownConfig?.endDate) && (
@@ -1011,7 +1049,9 @@ export default function StorefrontHomepage() {
           <section key="featured_products" className="container-platform py-6">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="text-xl font-black text-navy dark:text-white">{t('منتجات مميزة', 'Featured Products')}</h3>
+                <h3 className="text-xl font-black text-navy dark:text-white">
+                  {isAr ? (section.titleAr || t('منتجات مميزة', 'Featured Products')) : (section.titleEn || t('منتجات مميزة', 'Featured Products'))}
+                </h3>
                 <p className="text-xs text-muted-foreground mt-1">{t('اختيارات حصرية من أفضل التجار', 'Exclusive picks from top sellers')}</p>
               </div>
               <Button
@@ -1140,10 +1180,10 @@ export default function StorefrontHomepage() {
             <div className="container-platform relative z-10">
               <div className="text-center mb-10 px-4 max-w-2xl mx-auto">
                 <Badge className="mb-3.5 bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs px-3.5 py-1.5 rounded-full select-none">
-                  ⭐ {t('تجار شاري داي المميزين', 'ChariDay Top Merchants')}
+                  ⭐ {isAr ? (section.metadata?.badgeAr || t('تجار شاري داي المميزين', 'ChariDay Top Merchants')) : (section.metadata?.badgeEn || t('تجار شاري داي المميزين', 'ChariDay Top Merchants'))}
                 </Badge>
                 <h3 className="text-2xl md:text-4xl font-black mb-3.5 leading-tight tracking-tight font-cairo">
-                  {t('تسوق من الشركاء الموثوقين', 'Shop from Our Certified Partners')}
+                  {isAr ? (section.titleAr || t('تسوق من الشركاء الموثوقين', 'Shop from Our Certified Partners')) : (section.titleEn || t('تسوق من الشركاء الموثوقين', 'Shop from Our Certified Partners'))}
                 </h3>
                 <p className="text-xs md:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed font-medium">
                   {t('نوفر لك نخبة من كبرى المتاجر الجزائرية والتجار الأحرار الموثقين بشارات الجودة والمستويات الاحترافية.', 'We connect you with premier Algerian stores and verified independent merchants possessing professional badges.')}
@@ -1275,12 +1315,8 @@ export default function StorefrontHomepage() {
 
       case 'testimonials':
         return (
-          <section key="testimonials" className="container-platform py-14">
-            <div className="text-center mb-10">
-              <Badge className="mb-3 bg-amber-500/10 text-amber-500 border-amber-500/20 text-xs px-3.5 py-1 rounded-full">{t('آراء عملائنا', 'Customer Reviews')}</Badge>
-              <h3 className="text-2xl md:text-3xl font-black mb-2 text-navy dark:text-white leading-tight">{t('ماذا قالوا عنا؟', 'What They Said About Us?')}</h3>
-              <p className="text-xs text-muted-foreground mt-1 font-medium">{t('آراء حقيقية من مشترين حقيقيين', 'Real reviews from real buyers')}</p>
-            </div>
+          <section key="testimonials" className="container-platform py-14 text-start">
+            <SectionHeader section={section} isAr={isAr} locale={locale} t={t} />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {(data?.testimonials?.length ? data.testimonials : DEFAULT_TESTIMONIALS)
                 .filter((t2) => t2 && typeof t2 === 'object')
@@ -1337,6 +1373,8 @@ export default function StorefrontHomepage() {
           <CategoryProductsRow
             key={section.id}
             categoryId={section.categoryId}
+            storeId={section.storeId}
+            sellerId={section.sellerId}
             titleAr={section.titleAr}
             titleEn={section.titleEn}
             layoutStyle={section.layoutStyle}

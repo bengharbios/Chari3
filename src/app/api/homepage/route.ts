@@ -267,16 +267,55 @@ export async function GET() {
     
     const featuredProducts = [...pinnedList, ...regularList].slice(0, 50);
 
+    // Helper: filter products by category/store/seller entity IDs
+    const applyEntityFilter = (products: any[], categoryId?: string, storeId?: string, sellerId?: string) => {
+      let filtered = [...products];
+      if (categoryId) filtered = filtered.filter(p => p.categoryId === categoryId);
+      if (storeId) filtered = filtered.filter(p => p.storeId === storeId);
+      if (sellerId) filtered = filtered.filter(p => p.sellerId === sellerId);
+      return filtered;
+    };
+
     // Generate Bento specific lists if Bento is active
     let bentoRightProducts: any[] = [];
+    let bentoCenterProducts: any[] = [];
     let bentoLeftProducts: any[] = [];
     const bentoSection = parsedLayout.find((s: any) => s.type === 'bento_offers');
     if (bentoSection) {
       const subFilter1 = bentoSection.metadata?.subFilter1 || 'smart';
       const subFilter2 = bentoSection.metadata?.subFilter2 || 'smart';
-      // Right card gets 4 items (we take 10 to ensure we have enough after excluding pinned)
-      bentoRightProducts = [...pinnedList, ...applyFilter(subFilter1, rankedProducts.filter(p => !pinnedProductMap.has(p.id)))].slice(0, 10);
-      bentoLeftProducts = [...pinnedList, ...applyFilter(subFilter2, rankedProducts.filter(p => !pinnedProductMap.has(p.id)))].slice(0, 10);
+
+      // Right card: apply entity filters then sort
+      const rightCategory = bentoSection.metadata?.rightCategory;
+      const rightStore = bentoSection.metadata?.rightStore;
+      const rightSeller = bentoSection.metadata?.rightSeller;
+      const rightBaseProducts = applyEntityFilter(rankedProducts, rightCategory, rightStore, rightSeller);
+      bentoRightProducts = [...pinnedList.filter(p => rightBaseProducts.some(rp => rp.id === p.id) || (!rightCategory && !rightStore && !rightSeller)), ...applyFilter(subFilter1, rightBaseProducts.filter(p => !pinnedProductMap.has(p.id)))].slice(0, 10);
+
+      // Center card: apply entity filters (no sub-sort, uses default ranking)
+      const centerCategory = bentoSection.metadata?.centerCategory;
+      const centerStore = bentoSection.metadata?.centerStore;
+      const centerSeller = bentoSection.metadata?.centerSeller;
+      if (centerCategory || centerStore || centerSeller) {
+        bentoCenterProducts = applyEntityFilter(rankedProducts, centerCategory, centerStore, centerSeller).slice(0, 10);
+      } else {
+        bentoCenterProducts = rankedProducts.slice(0, 10);
+      }
+
+      // Left card: apply entity filters then sort
+      const leftCategory = bentoSection.metadata?.leftCategory;
+      const leftStore = bentoSection.metadata?.leftStore;
+      const leftSeller = bentoSection.metadata?.leftSeller;
+      const leftBaseProducts = applyEntityFilter(rankedProducts, leftCategory, leftStore, leftSeller);
+      bentoLeftProducts = [...pinnedList.filter(p => leftBaseProducts.some(lp => lp.id === p.id) || (!leftCategory && !leftStore && !leftSeller)), ...applyFilter(subFilter2, leftBaseProducts.filter(p => !pinnedProductMap.has(p.id)))].slice(0, 10);
+    }
+
+    // Apply section-level entity filtering for featured_products
+    const featuredSection = parsedLayout.find((s: any) => s.type === 'featured_products');
+    if (featuredSection?.categoryId || featuredSection?.storeId || featuredSection?.sellerId) {
+      const filtered = applyEntityFilter(featuredProducts, featuredSection.categoryId, featuredSection.storeId, featuredSection.sellerId);
+      featuredProducts.length = 0;
+      featuredProducts.push(...filtered);
     }
 
     // Apply pinning for stores
@@ -375,6 +414,7 @@ export async function GET() {
       categories,
       featuredProducts,
       bentoRightProducts,
+      bentoCenterProducts,
       bentoLeftProducts,
       topSellers: finalSellers,
       topStores: finalStores,
@@ -500,6 +540,9 @@ export async function GET() {
       success: true,
       categories: fallbackCategories,
       featuredProducts: fallbackProducts,
+      bentoRightProducts: [],
+      bentoCenterProducts: [],
+      bentoLeftProducts: [],
       topSellers: fallbackSellers,
       topStores: fallbackStores,
       advertisements: {},

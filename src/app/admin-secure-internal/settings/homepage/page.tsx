@@ -6,7 +6,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { 
   Loader2, Save, ArrowRight, Home, LayoutGrid, Pin, Clock, 
   ChevronUp, ChevronDown, Trash, Search, Plus, Eye, EyeOff, Sparkles, CheckCircle2,
-  Edit, Settings, Sparkle
+  Edit, Settings, Sparkle, Monitor
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -23,6 +23,8 @@ interface SectionItem {
   titleAr?: string;
   titleEn?: string;
   categoryId?: string;
+  storeId?: string;
+  sellerId?: string;
   layoutStyle?: string;
   imageArUrl?: string;
   imageEnUrl?: string;
@@ -35,12 +37,23 @@ interface SectionItem {
     customText1En?: string;
     customText2Ar?: string;
     customText2En?: string;
+    customTextCenterAr?: string;
+    customTextCenterEn?: string;
     badgeAr?: string;
     badgeEn?: string;
     enableTimer?: boolean;
     timerEndDate?: string;
     subFilter1?: string;
     subFilter2?: string;
+    rightCategory?: string;
+    rightStore?: string;
+    rightSeller?: string;
+    leftCategory?: string;
+    leftStore?: string;
+    leftSeller?: string;
+    centerCategory?: string;
+    centerStore?: string;
+    centerSeller?: string;
   };
 }
 
@@ -325,6 +338,8 @@ export default function AdminHomepageManager() {
             titleAr: sect.titleAr || sectionNames[sect.type || sect.id]?.ar || sect.id,
             titleEn: sect.titleEn || sectionNames[sect.type || sect.id]?.en || sect.id,
             categoryId: sect.categoryId || '',
+            storeId: sect.storeId || '',
+            sellerId: sect.sellerId || '',
             layoutStyle: sect.layoutStyle || 'carousel',
             imageArUrl: sect.imageArUrl || '',
             imageEnUrl: sect.imageEnUrl || '',
@@ -394,6 +409,8 @@ export default function AdminHomepageManager() {
           titleAr: sect.titleAr || '',
           titleEn: sect.titleEn || '',
           categoryId: sect.categoryId || '',
+          storeId: sect.storeId || '',
+          sellerId: sect.sellerId || '',
           layoutStyle: sect.layoutStyle || 'carousel',
           imageArUrl: sect.imageArUrl || '',
           imageEnUrl: sect.imageEnUrl || '',
@@ -623,9 +640,6 @@ export default function AdminHomepageManager() {
     }
     const updated = layout.filter((_, i) => i !== index);
     setLayout(updated);
-    if (editingSectId === sect.id) {
-      setEditingSectId(null);
-    }
     await persistConfig(updated, pinned, countdown, heroSlides);
   };
 
@@ -637,6 +651,8 @@ export default function AdminHomepageManager() {
       titleAr: sect.titleAr || '',
       titleEn: sect.titleEn || '',
       categoryId: sect.categoryId || '',
+      storeId: sect.storeId || '',
+      sellerId: sect.sellerId || '',
       layoutStyle: sect.layoutStyle || 'carousel',
       imageArUrl: sect.imageArUrl || '',
       imageEnUrl: sect.imageEnUrl || '',
@@ -648,12 +664,23 @@ export default function AdminHomepageManager() {
         customText1En: sect.metadata?.customText1En || '',
         customText2Ar: sect.metadata?.customText2Ar || '',
         customText2En: sect.metadata?.customText2En || '',
+        customTextCenterAr: sect.metadata?.customTextCenterAr || '',
+        customTextCenterEn: sect.metadata?.customTextCenterEn || '',
         badgeAr: sect.metadata?.badgeAr || '',
         badgeEn: sect.metadata?.badgeEn || '',
         enableTimer: sect.metadata?.enableTimer || false,
         timerEndDate: sect.metadata?.timerEndDate || '',
         subFilter1: sect.metadata?.subFilter1 || 'smart',
         subFilter2: sect.metadata?.subFilter2 || 'smart',
+        rightCategory: sect.metadata?.rightCategory || '',
+        rightStore: sect.metadata?.rightStore || '',
+        rightSeller: sect.metadata?.rightSeller || '',
+        leftCategory: sect.metadata?.leftCategory || '',
+        leftStore: sect.metadata?.leftStore || '',
+        leftSeller: sect.metadata?.leftSeller || '',
+        centerCategory: sect.metadata?.centerCategory || '',
+        centerStore: sect.metadata?.centerStore || '',
+        centerSeller: sect.metadata?.centerSeller || '',
       },
     });
   };
@@ -667,6 +694,8 @@ export default function AdminHomepageManager() {
           titleAr: editSectData.titleAr,
           titleEn: editSectData.titleEn,
           categoryId: editSectData.categoryId,
+          storeId: editSectData.storeId,
+          sellerId: editSectData.sellerId,
           layoutStyle: editSectData.layoutStyle,
           imageArUrl: editSectData.imageArUrl,
           imageEnUrl: editSectData.imageEnUrl,
@@ -705,6 +734,8 @@ export default function AdminHomepageManager() {
       titleAr: sectionNames[newSectType]?.ar || newSectType,
       titleEn: sectionNames[newSectType]?.en || newSectType,
       categoryId: '',
+      storeId: '',
+      sellerId: '',
       layoutStyle: 'carousel',
       imageArUrl: '',
       imageEnUrl: '',
@@ -715,9 +746,13 @@ export default function AdminHomepageManager() {
       metadata: {
         customText1Ar: '', customText1En: '',
         customText2Ar: '', customText2En: '',
+        customTextCenterAr: '', customTextCenterEn: '',
         badgeAr: '', badgeEn: '',
         enableTimer: false, timerEndDate: '',
         subFilter1: 'smart', subFilter2: 'smart',
+        rightCategory: '', rightStore: '', rightSeller: '',
+        leftCategory: '', leftStore: '', leftSeller: '',
+        centerCategory: '', centerStore: '', centerSeller: '',
       },
     };
     const updated = [...layout, newSect];
@@ -727,12 +762,15 @@ export default function AdminHomepageManager() {
       titleAr: newSect.titleAr || '',
       titleEn: newSect.titleEn || '',
       categoryId: '',
+      storeId: '',
+      sellerId: '',
       layoutStyle: 'carousel',
       imageArUrl: '',
       imageEnUrl: '',
       linkUrl: '',
       filterType: 'smart',
       limit: 10,
+      metadata: { ...newSect.metadata },
     });
     await persistConfig(updated, pinned, countdown, heroSlides);
   };
@@ -770,24 +808,40 @@ export default function AdminHomepageManager() {
     subText: s.user?.name || '',
   }));
 
+  const categoryOptions: SelectorOption[] = categoriesList.map(c => ({
+    id: c.id,
+    name: isAr ? c.name : (c.nameEn || c.name),
+    subText: c.parentId ? t('تصنيف فرعي', 'Subcategory') : t('تصنيف رئيسي', 'Main Category'),
+  }));
+
   if (!isMounted || !isAdminAuthenticated) return null;
 
   return (
     <div dir={dir} className="max-w-[1750px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6 text-start font-cairo">
-      <div className="flex items-center gap-4 mb-6">
-        <Link href={getAdminPath('/settings')}>
-          <Button variant="outline" size="icon" className="rounded-full">
-            <ArrowRight className={`h-5 w-5 ${locale === 'ar' ? '' : 'rotate-180'}`} />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-black text-foreground flex items-center gap-2">
-            <Home className="h-6 w-6 text-brand" />
-            {t('إدارة وتصميم الصفحة الرئيسية', 'Homepage Manager & Designer')}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {t('تحكم في هيكل الصفحة الرئيسية، تثبيت المنتجات، وتفعيل عروض ميجا التنازلية', 'Control homepage layout, pin entities, and adjust Mega countdown deals')}
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <Link href={getAdminPath('/settings')}>
+            <Button variant="outline" size="icon" className="rounded-full">
+              <ArrowRight className={`h-5 w-5 ${locale === 'ar' ? '' : 'rotate-180'}`} />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-black text-foreground flex items-center gap-2">
+              <Home className="h-6 w-6 text-brand" />
+              {t('إدارة وتصميم الصفحة الرئيسية', 'Homepage Manager & Designer')}
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {t('تحكم في هيكل الصفحة الرئيسية، تثبيت المنتجات، وتفعيل عروض ميجا التنازلية', 'Control homepage layout, pin entities, and adjust Mega countdown deals')}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0 select-none">
+          <Link href={getAdminPath('advertisements')}>
+            <Button variant="outline" className="font-bold rounded-xl gap-2 border-brand/35 hover:border-brand hover:bg-brand/5 text-brand">
+              <Monitor className="h-4 w-4" />
+              {t('إدارة الإعلانات والبنرات العامة', 'Global Ads & Banners')}
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -985,42 +1039,18 @@ export default function AdminHomepageManager() {
                         </div>
                       </div>
 
-                      {/* Category Showcase Settings */}
-                      {(layout.find(s => s.id === editingSectId)?.type === 'category_products' || 
-                        layout.find(s => s.id === editingSectId)?.type === 'category_circles') && (
-                        <div className="space-y-4 pt-2 border-t">
-                          <div className="space-y-2 text-start">
-                            <Label className="text-xs font-bold">{t('اختر التصنيف الرئيسي المستهدف', 'Target Category')}</Label>
-                            <select
-                              value={editSectData.categoryId}
-                              onChange={(e) => setEditSectData(prev => ({ ...prev, categoryId: e.target.value }))}
-                              className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
-                            >
-                              <option value="">-- {t('اختر تصنيفاً للربط', 'Select Category')} --</option>
-                              {categoriesList.map(cat => (
-                                <option key={cat.id} value={cat.id}>
-                                  {isAr ? cat.name : (cat.nameEn || cat.name)} {cat.parentId ? `(${t('فرعي', 'Sub')})` : ''}
-                                </option>
-                              ))}
-                            </select>
-                            <p className="text-[10px] text-muted-foreground">
-                              {t('سيقوم النظام بتحميل المنتجات أو التصنيفات الفرعية تلقائياً بناءً على هذا التصنيف.', 'Systems will dynamically fetch catalog entities belonging to this parent key.')}
-                            </p>
-                          </div>
-
-                          {layout.find(s => s.id === editingSectId)?.type === 'category_products' && (
-                            <div className="space-y-2 text-start">
-                              <Label className="text-xs font-bold">{t('نمط التخطيط والهيكل', 'Layout Style')}</Label>
-                              <select
-                                value={editSectData.layoutStyle}
-                                onChange={(e) => setEditSectData(prev => ({ ...prev, layoutStyle: e.target.value }))}
-                                className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
-                              >
-                                <option value="carousel">🎠 {t('سلايدر متحرك أفقي (Slider Carousel)', 'Horizontal Sliding Carousel')}</option>
-                                <option value="grid">🔲 {t('شبكة منتجات ثابتة (Fixed Grid)', 'Responsive Products Grid')}</option>
-                              </select>
-                            </div>
-                          )}
+                      {/* Layout style for category products */}
+                      {layout.find(s => s.id === editingSectId)?.type === 'category_products' && (
+                        <div className="space-y-4 pt-2 border-t text-start">
+                          <Label className="text-xs font-bold">{t('نمط التخطيط والهيكل', 'Layout Style')}</Label>
+                          <select
+                            value={editSectData.layoutStyle}
+                            onChange={(e) => setEditSectData(prev => ({ ...prev, layoutStyle: e.target.value }))}
+                            className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
+                          >
+                            <option value="carousel">🎠 {t('سلايدر متحرك أفقي (Slider Carousel)', 'Horizontal Sliding Carousel')}</option>
+                            <option value="grid">🔲 {t('شبكة منتجات ثابتة (Fixed Grid)', 'Responsive Products Grid')}</option>
+                          </select>
                         </div>
                       )}
 
@@ -1162,14 +1192,72 @@ export default function AdminHomepageManager() {
                           )}
                         </div>
 
+                      {/* Data Source Selection for ALL product-showcasing sections (except slides, features, testimonials, cta, banner) */}
+                      {editingSectId && !['hero', 'features', 'testimonials', 'cta', 'banner'].includes(layout.find(s => s.id === editingSectId)?.type || '') && (
+                        <div className="space-y-4 pt-4 border-t border-border/60">
+                          <h4 className="text-xs font-bold text-amber-500 uppercase flex items-center gap-1.5">
+                            <Sparkle className="w-3.5 h-3.5" />
+                            {t('تحديد مصدر البيانات والفلترة (تصنيف / متجر / تاجر)', 'Data Source & Filtering (Category / Store / Seller)')}
+                          </h4>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Category Filter */}
+                            <div className="space-y-1.5 text-start">
+                              <Label className="text-xs font-bold text-slate-500">{t('فلترة حسب الفئة/التصنيف (اختياري)', 'Filter by Category (Optional)')}</Label>
+                              <SearchableSelector
+                                items={categoryOptions}
+                                selectedValue={editSectData.categoryId || ''}
+                                onSelect={val => setEditSectData(prev => ({ ...prev, categoryId: val }))}
+                                placeholder={t('اختر تصنيفاً للربط...', 'Select Category to link...')}
+                                emptyText={t('لا توجد تصنيفات مطابقة', 'No matching categories')}
+                                isAr={isAr}
+                              />
+                            </div>
+
+                            {/* Store Filter */}
+                            <div className="space-y-1.5 text-start">
+                              <Label className="text-xs font-bold text-slate-500">{t('فلترة حسب المتجر الكبير (اختياري)', 'Filter by Store (Optional)')}</Label>
+                              <SearchableSelector
+                                items={storeOptions}
+                                selectedValue={editSectData.storeId || ''}
+                                onSelect={val => setEditSectData(prev => ({ ...prev, storeId: val }))}
+                                placeholder={t('اختر متجراً للربط...', 'Select Store to link...')}
+                                emptyText={t('لا توجد متاجر مطابقة', 'No matching stores')}
+                                isAr={isAr}
+                              />
+                            </div>
+
+                            {/* Seller Filter */}
+                            <div className="space-y-1.5 text-start">
+                              <Label className="text-xs font-bold text-slate-500">{t('فلترة حسب التاجر المستقل (اختياري)', 'Filter by Seller (Optional)')}</Label>
+                              <SearchableSelector
+                                items={sellerOptions}
+                                selectedValue={editSectData.sellerId || ''}
+                                onSelect={val => setEditSectData(prev => ({ ...prev, sellerId: val }))}
+                                placeholder={t('اختر تاجراً للربط...', 'Select Seller to link...')}
+                                emptyText={t('لا توجد تجار مطابقة', 'No matching sellers')}
+                                isAr={isAr}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                         {/* Bento Specific Metadata */}
                         {layout.find(s => s.id === editingSectId)?.type === 'bento_offers' && (
-                          <div className="mt-4 p-4 rounded-xl bg-muted/50 border border-border space-y-4">
-                            <h5 className="text-xs font-bold">{t('نصوص ومصادر بطاقات عروض ميجا (Bento Cards)', 'Bento Cards Texts & Sources')}</h5>
+                          <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-border space-y-6">
+                            <h5 className="text-xs font-bold text-indigo-500 border-b pb-2 flex items-center gap-1.5">
+                              <span>⚡</span>
+                              {t('نصوص ومصادر بطاقات شبكة عروض ميجا (Bento Cards)', 'Bento Cards Texts & Sources')}
+                            </h5>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2 text-start">
-                                <Label className="text-xs font-bold text-amber-600">{t('النص الترويجي للبطاقة اليمنى (عربي)', 'Right Card Promo Text (Arabic)')}</Label>
+                            {/* Right Card */}
+                            <div className="space-y-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-border/80">
+                              <Label className="text-xs font-black text-amber-600 block mb-1">
+                                {t('👉 إعدادات البطاقة اليمنى', '👉 Right Card Settings')}
+                              </Label>
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-bold text-slate-400">{t('العنوان الترويجي للبطاقة اليمنى', 'Promo Title')}</Label>
                                 <Input
                                   value={editSectData.metadata?.customText1Ar || ''}
                                   onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, customText1Ar: e.target.value } }))}
@@ -1177,23 +1265,129 @@ export default function AdminHomepageManager() {
                                   placeholder="نوّنها أكثر ووفّر أكثر على كل اللي تحبّه"
                                 />
                               </div>
-                              <div className="space-y-2 text-start">
-                                <Label className="text-xs font-bold text-amber-600">{t('معيار فرز البطاقة اليمنى', 'Right Card Sort Filter')}</Label>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-slate-400">{t('معيار الفرز', 'Sort Filter')}</Label>
+                                  <select
+                                    value={editSectData.metadata?.subFilter1 || 'smart'}
+                                    onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, subFilter1: e.target.value } }))}
+                                    className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                                  >
+                                    <option value="smart">🤖 {t('تلقائي', 'Auto')}</option>
+                                    <option value="most_sold">🔥 {t('الأكثر مبيعاً', 'Most Sold')}</option>
+                                    <option value="newest">🆕 {t('الأحدث', 'Newest')}</option>
+                                    <option value="has_coupons">🎟️ {t('عروض الكوبونات', 'Coupon Offers')}</option>
+                                    <option value="lowest_price">💰 {t('الأقل سعراً', 'Lowest Price')}</option>
+                                  </select>
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-slate-400">{t('الفئة/التصنيف المستهدف', 'Target Category')}</Label>
+                                  <select
+                                    value={editSectData.metadata?.rightCategory || ''}
+                                    onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, rightCategory: e.target.value } }))}
+                                    className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                                  >
+                                    <option value="">-- {t('الكل', 'All')} --</option>
+                                    {categoriesList.map(c => (
+                                      <option key={c.id} value={c.id}>{isAr ? c.name : (c.nameEn || c.name)}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-slate-400">{t('المتجر الكبير المستهدف', 'Target Store')}</Label>
+                                  <select
+                                    value={editSectData.metadata?.rightStore || ''}
+                                    onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, rightStore: e.target.value } }))}
+                                    className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                                  >
+                                    <option value="">-- {t('الكل', 'All')} --</option>
+                                    {allStores.map(s => (
+                                      <option key={s.id} value={s.id}>{isAr ? s.name : (s.nameEn || s.name)}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-slate-400">{t('التاجر المستهدف', 'Target Seller')}</Label>
+                                  <select
+                                    value={editSectData.metadata?.rightSeller || ''}
+                                    onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, rightSeller: e.target.value } }))}
+                                    className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                                  >
+                                    <option value="">-- {t('الكل', 'All')} --</option>
+                                    {allSellers.map(s => (
+                                      <option key={s.id} value={s.id}>{s.storeName || s.user?.name || s.id}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Center Card */}
+                            <div className="space-y-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-border/80">
+                              <Label className="text-xs font-black text-rose-600 block mb-1">
+                                {t('🎯 إعدادات البطاقة الوسطى (العروض التنازلية)', '🎯 Center Card Settings (Countdown Deals)')}
+                              </Label>
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-bold text-slate-400">{t('عنوان البطاقة الوسطى', 'Center Card Title')}</Label>
+                                <Input
+                                  value={editSectData.metadata?.customTextCenterAr || ''}
+                                  onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, customTextCenterAr: e.target.value } }))}
+                                  className="rounded-xl text-sm"
+                                  placeholder="عروض ميجا"
+                                />
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-slate-400">{t('الفئة/التصنيف المستهدف', 'Target Category')}</Label>
+                                  <select
+                                    value={editSectData.metadata?.centerCategory || ''}
+                                    onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, centerCategory: e.target.value } }))}
+                                    className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                                  >
+                                    <option value="">-- {t('الكل', 'All')} --</option>
+                                    {categoriesList.map(c => (
+                                      <option key={c.id} value={c.id}>{isAr ? c.name : (c.nameEn || c.name)}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-slate-400">{t('المتجر الكبير المستهدف', 'Target Store')}</Label>
+                                  <select
+                                    value={editSectData.metadata?.centerStore || ''}
+                                    onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, centerStore: e.target.value } }))}
+                                    className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                                  >
+                                    <option value="">-- {t('الكل', 'All')} --</option>
+                                    {allStores.map(s => (
+                                      <option key={s.id} value={s.id}>{isAr ? s.name : (s.nameEn || s.name)}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-[10px] font-bold text-slate-400">{t('التاجر المستهدف', 'Target Seller')}</Label>
                                 <select
-                                  value={editSectData.metadata?.subFilter1 || 'smart'}
-                                  onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, subFilter1: e.target.value } }))}
-                                  className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
+                                  value={editSectData.metadata?.centerSeller || ''}
+                                  onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, centerSeller: e.target.value } }))}
+                                  className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                 >
-                                  <option value="smart">🤖 {t('تلقائي', 'Auto')}</option>
-                                  <option value="most_sold">🔥 {t('الأكثر مبيعاً', 'Most Sold')}</option>
-                                  <option value="newest">🆕 {t('الأحدث', 'Newest')}</option>
-                                  <option value="has_coupons">🎟️ {t('عروض الكوبونات', 'Coupon Offers')}</option>
-                                  <option value="lowest_price">💰 {t('الأقل سعراً', 'Lowest Price')}</option>
+                                  <option value="">-- {t('الكل', 'All')} --</option>
+                                  {allSellers.map(s => (
+                                    <option key={s.id} value={s.id}>{s.storeName || s.user?.name || s.id}</option>
+                                  ))}
                                 </select>
                               </div>
+                            </div>
 
-                              <div className="space-y-2 text-start">
-                                <Label className="text-xs font-bold text-indigo-400">{t('النص الترويجي للبطاقة اليسرى (عربي)', 'Left Card Promo Text (Arabic)')}</Label>
+                            {/* Left Card */}
+                            <div className="space-y-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-border/80">
+                              <Label className="text-xs font-black text-indigo-600 block mb-1">
+                                {t('👈 إعدادات البطاقة اليسرى', '👈 Left Card Settings')}
+                              </Label>
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-bold text-slate-400">{t('العنوان الترويجي للبطاقة اليسرى', 'Promo Title')}</Label>
                                 <Input
                                   value={editSectData.metadata?.customText2Ar || ''}
                                   onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, customText2Ar: e.target.value } }))}
@@ -1201,19 +1395,62 @@ export default function AdminHomepageManager() {
                                   placeholder="عليها العين"
                                 />
                               </div>
-                              <div className="space-y-2 text-start">
-                                <Label className="text-xs font-bold text-indigo-400">{t('معيار فرز البطاقة اليسرى', 'Left Card Sort Filter')}</Label>
-                                <select
-                                  value={editSectData.metadata?.subFilter2 || 'smart'}
-                                  onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, subFilter2: e.target.value } }))}
-                                  className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
-                                >
-                                  <option value="smart">🤖 {t('تلقائي', 'Auto')}</option>
-                                  <option value="most_sold">🔥 {t('الأكثر مبيعاً', 'Most Sold')}</option>
-                                  <option value="most_viewed">👁️ {t('الأكثر مشاهدة', 'Most Viewed')}</option>
-                                  <option value="has_coupons">🎟️ {t('عروض الكوبونات', 'Coupon Offers')}</option>
-                                  <option value="lowest_price">💰 {t('الأقل سعراً', 'Lowest Price')}</option>
-                                </select>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-slate-400">{t('معيار الفرز', 'Sort Filter')}</Label>
+                                  <select
+                                    value={editSectData.metadata?.subFilter2 || 'smart'}
+                                    onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, subFilter2: e.target.value } }))}
+                                    className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                                  >
+                                    <option value="smart">🤖 {t('تلقائي', 'Auto')}</option>
+                                    <option value="most_sold">🔥 {t('الأكثر مبيعاً', 'Most Sold')}</option>
+                                    <option value="most_viewed">👁️ {t('الأكثر مشاهدة', 'Most Viewed')}</option>
+                                    <option value="has_coupons">🎟️ {t('عروض الكوبونات', 'Coupon Offers')}</option>
+                                    <option value="lowest_price">💰 {t('الأقل سعراً', 'Lowest Price')}</option>
+                                  </select>
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-slate-400">{t('الفئة/التصنيف المستهدف', 'Target Category')}</Label>
+                                  <select
+                                    value={editSectData.metadata?.leftCategory || ''}
+                                    onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, leftCategory: e.target.value } }))}
+                                    className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                                  >
+                                    <option value="">-- {t('الكل', 'All')} --</option>
+                                    {categoriesList.map(c => (
+                                      <option key={c.id} value={c.id}>{isAr ? c.name : (c.nameEn || c.name)}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-slate-400">{t('المتجر الكبير المستهدف', 'Target Store')}</Label>
+                                  <select
+                                    value={editSectData.metadata?.leftStore || ''}
+                                    onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, leftStore: e.target.value } }))}
+                                    className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                                  >
+                                    <option value="">-- {t('الكل', 'All')} --</option>
+                                    {allStores.map(s => (
+                                      <option key={s.id} value={s.id}>{isAr ? s.name : (s.nameEn || s.name)}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="space-y-1">
+                                  <Label className="text-[10px] font-bold text-slate-400">{t('التاجر المستهدف', 'Target Seller')}</Label>
+                                  <select
+                                    value={editSectData.metadata?.leftSeller || ''}
+                                    onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, leftSeller: e.target.value } }))}
+                                    className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                                  >
+                                    <option value="">-- {t('الكل', 'All')} --</option>
+                                    {allSellers.map(s => (
+                                      <option key={s.id} value={s.id}>{s.storeName || s.user?.name || s.id}</option>
+                                    ))}
+                                  </select>
+                                </div>
                               </div>
                             </div>
                           </div>
