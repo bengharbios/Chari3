@@ -277,7 +277,7 @@ export default function AdminHomepageManager() {
   const fetchHomepageConfig = useCallback(async () => {
     try {
       const [homeRes, prodRes, storeRes, sellerRes] = await Promise.all([
-        fetch('/api/admin/homepage'),
+        fetch(`/api/admin/homepage?t=${Date.now()}`, { cache: 'no-store' }),
         fetch('/api/products?limit=200'),
         fetch('/api/stores'),
         fetch('/api/sellers'),
@@ -643,12 +643,17 @@ export default function AdminHomepageManager() {
       linkUrl: sect.linkUrl || '',
       filterType: sect.filterType || 'smart',
       limit: sect.limit || 10,
-      metadata: sect.metadata || {
-        customText1Ar: '', customText1En: '',
-        customText2Ar: '', customText2En: '',
-        badgeAr: '', badgeEn: '',
-        enableTimer: false, timerEndDate: '',
-        subFilter1: 'smart', subFilter2: 'smart',
+      metadata: {
+        customText1Ar: sect.metadata?.customText1Ar || '',
+        customText1En: sect.metadata?.customText1En || '',
+        customText2Ar: sect.metadata?.customText2Ar || '',
+        customText2En: sect.metadata?.customText2En || '',
+        badgeAr: sect.metadata?.badgeAr || '',
+        badgeEn: sect.metadata?.badgeEn || '',
+        enableTimer: sect.metadata?.enableTimer || false,
+        timerEndDate: sect.metadata?.timerEndDate || '',
+        subFilter1: sect.metadata?.subFilter1 || 'smart',
+        subFilter2: sect.metadata?.subFilter2 || 'smart',
       },
     });
   };

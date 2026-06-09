@@ -146,7 +146,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   }, [isDark]);
 
   useEffect(() => {
-    fetch('/api/homepage')
+    fetch(`/api/homepage?t=${Date.now()}`, { cache: 'no-store' })
       .then(r => r.json())
       .catch(() => ({}))
       .then((homepageData) => {

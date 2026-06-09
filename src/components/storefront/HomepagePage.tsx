@@ -637,7 +637,7 @@ export default function StorefrontHomepage() {
   const [displayCount, setDisplayCount] = useState(20);
 
   useEffect(() => {
-    fetch('/api/homepage')
+    fetch(`/api/homepage?t=${Date.now()}`, { cache: 'no-store' })
       .then((r) => r.json())
       .then((d) => { 
         if (d.success) { 
@@ -1396,7 +1396,10 @@ export default function StorefrontHomepage() {
           imageArUrl: sect.imageArUrl || '',
           imageEnUrl: sect.imageEnUrl || '',
           linkUrl: sect.linkUrl || '',
-          visible: sect.visible !== false
+          visible: sect.visible !== false,
+          filterType: sect.filterType || 'smart',
+          limit: sect.limit || 10,
+          metadata: sect.metadata || null,
         };
       });
     // Ensure all core sections exist - append missing ones at the end
