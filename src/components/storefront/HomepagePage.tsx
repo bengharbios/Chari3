@@ -746,6 +746,36 @@ export default function StorefrontHomepage() {
     if (!section || !section.type) return null;
     switch (section.type) {
       case 'hero':
+        // Retrieve custom settings for Side Card 1
+        const card1Badge = isAr 
+          ? (section.metadata?.card1BadgeAr || t('أحدث الهواتف', 'Latest Mobiles')) 
+          : (section.metadata?.card1BadgeEn || section.metadata?.card1BadgeAr || t('أحدث الهواتف', 'Latest Mobiles'));
+        
+        const card1Title = isAr 
+          ? (section.metadata?.card1TitleAr || t('وفر حتى 50% على أجهزة شاومي وآيفون', 'Save up to 50% on iPhone & Xiaomi')) 
+          : (section.metadata?.card1TitleEn || section.metadata?.card1TitleAr || t('وفر حتى 50% على أجهزة شاومي وآيفون', 'Save up to 50% on iPhone & Xiaomi'));
+        
+        const card1Cta = isAr 
+          ? (section.metadata?.card1CtaAr || t('تسوق الأجهزة', 'Shop Devices')) 
+          : (section.metadata?.card1CtaEn || section.metadata?.card1CtaAr || t('تسوق الأجهزة', 'Shop Devices'));
+        
+        const card1Link = section.metadata?.card1Link || '/search?q=electronics';
+
+        // Retrieve custom settings for Side Card 2
+        const card2Badge = isAr 
+          ? (section.metadata?.card2BadgeAr || t('الجمال والعطور', 'Beauty Deals')) 
+          : (section.metadata?.card2BadgeEn || section.metadata?.card2BadgeAr || t('الجمال والعطور', 'Beauty Deals'));
+        
+        const card2Title = isAr 
+          ? (section.metadata?.card2TitleAr || t('روائح تسحر الجميع بأسعار لا تقاوم', 'Fragrances that captivate at unbeatable prices')) 
+          : (section.metadata?.card2TitleEn || section.metadata?.card2TitleAr || t('روائح تسحر الجميع بأسعار لا تقاوم', 'Fragrances that captivate at unbeatable prices'));
+        
+        const card2Cta = isAr 
+          ? (section.metadata?.card2CtaAr || t('اكتشف العطور', 'Explore Now')) 
+          : (section.metadata?.card2CtaEn || section.metadata?.card2CtaAr || t('اكتشف العطور', 'Explore Now'));
+        
+        const card2Link = section.metadata?.card2Link || '/search?q=perfumes';
+
         return (
           <section key="hero" className="container-platform py-4">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -822,27 +852,27 @@ export default function StorefrontHomepage() {
               {/* Side stack banners (3 Columns on Desktop, hidden on Mobile) */}
               <div className="hidden lg:flex lg:col-span-3 flex-col gap-4 h-[340px] md:h-[400px]">
                 {/* Banner Side 1: Yellow/Orange accent */}
-                <div className="flex-1 rounded-[24px] bg-gradient-to-br from-amber-400 to-orange-500 p-5 text-slate-950 flex flex-col justify-between border border-amber-400/20 shadow-lg relative overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer" onClick={() => router.push('/search?q=electronics')}>
+                <div className="flex-1 rounded-[24px] bg-gradient-to-br from-amber-400 to-orange-500 p-5 text-slate-950 flex flex-col justify-between border border-amber-400/20 shadow-lg relative overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer" onClick={() => router.push(card1Link)}>
                   <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
                   <div className="z-10 text-start">
-                    <Badge className="bg-slate-950 text-white text-[8px] font-bold py-0.5 px-2 mb-1.5 select-none">{t('أحدث الهواتف', 'Latest Mobiles')}</Badge>
-                    <h4 className="text-sm font-black leading-snug">{t('وفر حتى 50% على أجهزة شاومي وآيفون', 'Save up to 50% on iPhone & Xiaomi')}</h4>
+                    <Badge className="bg-slate-950 text-white text-[8px] font-bold py-0.5 px-2 mb-1.5 select-none">{card1Badge}</Badge>
+                    <h4 className="text-sm font-black leading-snug">{card1Title}</h4>
                   </div>
                   <div className="z-10 flex justify-between items-center mt-3">
-                    <span className="text-[10px] font-black underline">{t('تسوق الأجهزة', 'Shop Devices')}</span>
+                    <span className="text-[10px] font-black underline">{card1Cta}</span>
                     <ShoppingCart className="w-4 h-4" />
                   </div>
                 </div>
 
                 {/* Banner Side 2: Dark indigo glassmorphism */}
-                <div className="flex-1 rounded-[24px] bg-gradient-to-br from-slate-900 to-indigo-950 p-5 text-white flex flex-col justify-between border border-white/5 shadow-lg relative overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer" onClick={() => router.push('/search?q=perfumes')}>
+                <div className="flex-1 rounded-[24px] bg-gradient-to-br from-slate-900 to-indigo-950 p-5 text-white flex flex-col justify-between border border-white/5 shadow-lg relative overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer" onClick={() => router.push(card2Link)}>
                   <div className="absolute inset-0 bg-white/5 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
                   <div className="z-10 text-start">
-                    <Badge className="bg-white/10 text-white border-white/10 text-[8px] font-bold py-0.5 px-2 mb-1.5 select-none">{t('الجمال والعطور', 'Beauty Deals')}</Badge>
-                    <h4 className="text-sm font-black leading-snug">{t('روائح تسحر الجميع بأسعار لا تقاوم', 'Fragrances that captivate at unbeatable prices')}</h4>
+                    <Badge className="bg-white/10 text-white border-white/10 text-[8px] font-bold py-0.5 px-2 mb-1.5 select-none">{card2Badge}</Badge>
+                    <h4 className="text-sm font-black leading-snug">{card2Title}</h4>
                   </div>
                   <div className="z-10 flex justify-between items-center mt-3">
-                    <span className="text-[10px] font-black underline text-amber-400">{t('اكتشف العطور', 'Explore Now')}</span>
+                    <span className="text-[10px] font-black underline text-amber-400">{card2Cta}</span>
                     <Sparkles className="w-4 h-4 text-amber-400" />
                   </div>
                 </div>
