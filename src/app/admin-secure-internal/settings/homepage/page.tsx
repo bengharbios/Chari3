@@ -3,7 +3,6 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { useTranslation } from '@/lib/i18n/useTranslation';
-import { useTranslationStore } from '@/lib/store/translation-store';
 import { 
   Loader2, Save, ArrowRight, Home, LayoutGrid, Pin, Clock, 
   ChevronUp, ChevronDown, Trash, Search, Plus, Eye, EyeOff, Sparkles, CheckCircle2,
@@ -33,9 +32,7 @@ interface SectionItem {
   visible: boolean;
   filterType?: string;
   limit?: number;
-  [key: string]: any;
   metadata?: {
-    [key: string]: any;
     customText1Ar?: string;
     customText1En?: string;
     customText2Ar?: string;
@@ -231,8 +228,6 @@ export default function AdminHomepageManager() {
   const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const isAr = locale === 'ar';
-  const { languages: activeLanguages } = useTranslationStore();
-  const capLocale = (code: string) => code.charAt(0).toUpperCase() + code.slice(1);
 
   const getAdminPath = (subPath: string = '') => {
     if (typeof window === 'undefined') return '/super-admin';
@@ -404,22 +399,19 @@ export default function AdminHomepageManager() {
         const mappedLayout = rawLayout.map((sect: any) => {
           if (typeof sect === 'string') {
             const id = sect === 'mega_offers_timer' ? 'bento_offers' : sect;
-            const item: any = {
+            return {
               id,
               type: id,
+              titleAr: sectionNames[id]?.ar || id,
+              titleEn: sectionNames[id]?.en || id,
               visible: true,
             };
-            activeLanguages.forEach(lang => {
-              const cap = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
-              const key = `title${cap}`;
-              item[key] = sectionNames[id]?.[lang.code as 'ar' | 'en'] || id;
-            });
-            return item;
           }
-          const item = {
-            ...sect,
+          return {
             id: sect.id,
             type: sect.type || sect.id,
+            titleAr: sect.titleAr || sectionNames[sect.type || sect.id]?.ar || sect.id,
+            titleEn: sect.titleEn || sectionNames[sect.type || sect.id]?.en || sect.id,
             categoryId: sect.categoryId || '',
             storeId: sect.storeId || '',
             sellerId: sect.sellerId || '',
@@ -432,16 +424,6 @@ export default function AdminHomepageManager() {
             limit: sect.limit || 10,
             metadata: sect.metadata || null,
           };
-          
-          activeLanguages.forEach(lang => {
-            const cap = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
-            const key = `title${cap}`;
-            if (!item[key]) {
-              item[key] = sectionNames[item.type]?.[lang.code as 'ar' | 'en'] || item.id;
-            }
-          });
-          
-          return item;
         });
         // Ensure ALL core sections exist - append missing ones
         const coreSections = ['hero', 'features', 'categories', 'bento_offers', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
@@ -466,9 +448,10 @@ export default function AdminHomepageManager() {
         });
 
         setCountdown({
-          ...d.countdown,
           enabled: d.countdown?.enabled || false,
           endDate: d.countdown?.endDate ? d.countdown.endDate.substring(0, 16) : '',
+          titleAr: d.countdown?.titleAr || '',
+          titleEn: d.countdown?.titleEn || '',
         });
 
         setHeroSlides(d.heroSlides || []);
@@ -495,29 +478,33 @@ export default function AdminHomepageManager() {
     setIsSaving(true);
     try {
       const payload = {
-        layout: updatedLayout.map(sect => {
-          const cleanSect = { ...sect };
-          cleanSect.categoryId = cleanSect.categoryId || '';
-          cleanSect.storeId = cleanSect.storeId || '';
-          cleanSect.sellerId = cleanSect.sellerId || '';
-          cleanSect.layoutStyle = cleanSect.layoutStyle || 'carousel';
-          cleanSect.imageArUrl = cleanSect.imageArUrl || '';
-          cleanSect.imageEnUrl = cleanSect.imageEnUrl || '';
-          cleanSect.linkUrl = cleanSect.linkUrl || '';
-          cleanSect.filterType = cleanSect.filterType || 'smart';
-          cleanSect.limit = cleanSect.limit || 10;
-          cleanSect.metadata = cleanSect.metadata || null;
-          return cleanSect;
-        }),
+        layout: updatedLayout.map(sect => ({
+          id: sect.id,
+          type: sect.type,
+          titleAr: sect.titleAr || '',
+          titleEn: sect.titleEn || '',
+          categoryId: sect.categoryId || '',
+          storeId: sect.storeId || '',
+          sellerId: sect.sellerId || '',
+          layoutStyle: sect.layoutStyle || 'carousel',
+          imageArUrl: sect.imageArUrl || '',
+          imageEnUrl: sect.imageEnUrl || '',
+          linkUrl: sect.linkUrl || '',
+          visible: sect.visible,
+          filterType: sect.filterType || 'smart',
+          limit: sect.limit || 10,
+          metadata: sect.metadata || null,
+        })),
         pinned: {
           products: (updatedPinned.products || []).map((p: any, idx: number) => ({ id: p.id, order: idx + 1, name: p.name, price: p.price, image: p.image })),
           stores: (updatedPinned.stores || []).map((s: any, idx: number) => ({ id: s.id, order: idx + 1, name: s.name, image: s.image })),
           sellers: (updatedPinned.sellers || []).map((s: any, idx: number) => ({ id: s.id, order: idx + 1, name: s.name, image: s.image })),
         },
         countdown: {
-          ...updatedCountdown,
           enabled: updatedCountdown.enabled,
           endDate: updatedCountdown.endDate ? new Date(updatedCountdown.endDate).toISOString() : '',
+          titleAr: updatedCountdown.titleAr,
+          titleEn: updatedCountdown.titleEn,
         },
         heroSlides: updatedHeroSlides,
       };
@@ -743,7 +730,6 @@ export default function AdminHomepageManager() {
       setSourceSelectType('all');
     }
     setEditSectData({
-      ...sect,
       titleAr: sect.titleAr || '',
       titleEn: sect.titleEn || '',
       categoryId: sect.categoryId || '',
@@ -799,7 +785,6 @@ export default function AdminHomepageManager() {
         leftCardAdImageEn: sect.metadata?.leftCardAdImageEn || '',
         leftCardAdLink: sect.metadata?.leftCardAdLink || '',
         adZone: sect.metadata?.adZone || 'banner_mid',
-        ...sect.metadata
       },
     });
   };
@@ -810,7 +795,18 @@ export default function AdminHomepageManager() {
       if (sect.id === editingSectId) {
         return {
           ...sect,
-          ...editSectData,
+          titleAr: editSectData.titleAr,
+          titleEn: editSectData.titleEn,
+          categoryId: editSectData.categoryId,
+          storeId: editSectData.storeId,
+          sellerId: editSectData.sellerId,
+          layoutStyle: editSectData.layoutStyle,
+          imageArUrl: editSectData.imageArUrl,
+          imageEnUrl: editSectData.imageEnUrl,
+          linkUrl: editSectData.linkUrl,
+          filterType: editSectData.filterType,
+          limit: editSectData.limit,
+          metadata: editSectData.metadata,
         };
       }
       return sect;
@@ -840,6 +836,8 @@ export default function AdminHomepageManager() {
     const newSect: SectionItem = {
       id: newId,
       type: newSectType,
+      titleAr: sectionNames[newSectType]?.ar || newSectType,
+      titleEn: sectionNames[newSectType]?.en || newSectType,
       categoryId: '',
       storeId: '',
       sellerId: '',
@@ -868,20 +866,23 @@ export default function AdminHomepageManager() {
         adZone: 'banner_mid',
       },
     };
-
-    activeLanguages.forEach(lang => {
-      const cap = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
-      const key = `title${cap}`;
-      newSect[key] = sectionNames[newSectType]?.[lang.code as 'ar' | 'en'] || newSectType;
-    });
-
     const updated = [...layout, newSect];
     setLayout(updated);
     setEditingSectId(newId);
     setSourceSelectType('all');
     setEditSectData({
-      ...newSect,
-      metadata: { ...newSect.metadata }
+      titleAr: newSect.titleAr || '',
+      titleEn: newSect.titleEn || '',
+      categoryId: '',
+      storeId: '',
+      sellerId: '',
+      layoutStyle: 'carousel',
+      imageArUrl: '',
+      imageEnUrl: '',
+      linkUrl: '',
+      filterType: 'smart',
+      limit: 10,
+      metadata: { ...newSect.metadata },
     });
     await persistConfig(updated, pinned, countdown, heroSlides);
   };
@@ -889,8 +890,6 @@ export default function AdminHomepageManager() {
   const handleSave = async () => {
     await persistConfig(layout, pinned, countdown, heroSlides);
   };
-
-
 
   // Adapt lists for searchable selectors
   const productOptions: SelectorOption[] = allProducts.map(p => {
@@ -1131,28 +1130,25 @@ export default function AdminHomepageManager() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {/* Dynamic Titles per language */}
-                      <div className="space-y-3">
-                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t('عناوين القسم (لكل لغة)', 'Section Titles (per language)')}</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {activeLanguages.map(lang => {
-                            const fieldKey = `title${capLocale(lang.code)}`;
-                            return (
-                              <div key={lang.code} className="space-y-1.5 text-start">
-                                <Label className="text-xs font-bold flex items-center gap-1.5">
-                                  <span>{lang.flag}</span>
-                                  {lang.nameEn} ({lang.code.toUpperCase()})
-                                </Label>
-                                <Input
-                                  dir={lang.direction}
-                                  value={editSectData[fieldKey] || ''}
-                                  onChange={e => setEditSectData((prev: any) => ({ ...prev, [fieldKey]: e.target.value }))}
-                                  className="rounded-xl text-sm"
-                                  placeholder={lang.code === 'ar' ? 'أجهزة إلكترونية مميزة' : lang.code === 'fr' ? 'Électronique vedette' : 'Featured Electronics'}
-                                />
-                              </div>
-                            );
-                          })}
+                      {/* Common Titles Fields */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2 text-start">
+                          <Label className="text-xs font-bold">{t('العنوان باللغة العربية', 'Title (Arabic)')}</Label>
+                          <Input
+                            value={editSectData.titleAr}
+                            onChange={e => setEditSectData(prev => ({ ...prev, titleAr: e.target.value }))}
+                            className="rounded-xl text-sm"
+                            placeholder="أجهزة إلكترونية مميزة"
+                          />
+                        </div>
+                        <div className="space-y-2 text-start">
+                          <Label className="text-xs font-bold">{t('العنوان باللغة الإنجليزية', 'Title (English)')}</Label>
+                          <Input
+                            value={editSectData.titleEn}
+                            onChange={e => setEditSectData(prev => ({ ...prev, titleEn: e.target.value }))}
+                            className="rounded-xl text-sm"
+                            placeholder="Featured Electronics"
+                          />
                         </div>
                       </div>
 
@@ -1175,22 +1171,23 @@ export default function AdminHomepageManager() {
                       {layout.find(s => s.id === editingSectId)?.type === 'banner' && (
                         <div className="space-y-4 pt-2 border-t">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {activeLanguages.map(lang => {
-                              const fieldKey = `image${capLocale(lang.code)}Url`;
-                              return (
-                                <div key={lang.code} className="space-y-2 text-start">
-                                  <Label className="text-xs font-bold flex items-center gap-1.5">
-                                    <span>{lang.flag}</span>
-                                    {t(`صورة الإعلان (${lang.nameAr || lang.nameEn || lang.code.toUpperCase()})`, `Banner Image (${lang.nameEn})`)}
-                                  </Label>
-                                  <ImageUploader
-                                    value={editSectData[fieldKey] || ''}
-                                    onChange={url => setEditSectData(prev => ({ ...prev, [fieldKey]: url }))}
-                                    hint={t(`الصورة الإعلانية التي ستظهر للمتصفح بـ ${lang.nameAr || lang.nameEn}.`, `Uploaded banner displayed in ${lang.nameEn} locale.`)}
-                                  />
-                                </div>
-                              );
-                            })}
+                            <div className="space-y-2 text-start">
+                              <Label className="text-xs font-bold">{t('صورة الإعلان باللغة العربية', 'Arabic Banner Image')}</Label>
+                              <ImageUploader
+                                value={editSectData.imageArUrl}
+                                onChange={url => setEditSectData(prev => ({ ...prev, imageArUrl: url }))}
+                                hint={t('الصورة الإعلانية التي ستظهر للمتصفح العربي.', 'Uploaded banner displayed in Arabic locale.')}
+                              />
+                            </div>
+
+                            <div className="space-y-2 text-start">
+                              <Label className="text-xs font-bold">{t('صورة الإعلان باللغة الإنجليزية', 'English Banner Image')}</Label>
+                              <ImageUploader
+                                value={editSectData.imageEnUrl}
+                                onChange={url => setEditSectData(prev => ({ ...prev, imageEnUrl: url }))}
+                                hint={t('الصورة الإعلانية التي ستظهر للمتصفح الإنجليزي.', 'Uploaded banner displayed in English locale.')}
+                              />
+                            </div>
                           </div>
 
                           <div className="space-y-2 text-start">
@@ -1286,31 +1283,25 @@ export default function AdminHomepageManager() {
                         </h4>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Universal Badge per language */}
-                          {activeLanguages.map(lang => {
-                            const fieldKey = `badge${capLocale(lang.code)}`;
-                            return (
-                              <div key={lang.code} className="space-y-2 text-start">
-                                <Label className="text-xs font-bold flex items-center gap-1.5">
-                                  <span>{lang.flag}</span>
-                                  {t(`الشارة / الهاشتاغ (${lang.nameAr || lang.nameEn || lang.code.toUpperCase()})`, `Badge / Hashtag (${lang.nameEn})`)}
-                                </Label>
-                                <Input
-                                  dir={lang.direction}
-                                  value={editSectData.metadata?.[fieldKey] || ''}
-                                  onChange={e => setEditSectData((prev: any) => ({
-                                    ...prev,
-                                    metadata: {
-                                      ...prev.metadata,
-                                      [fieldKey]: e.target.value
-                                    }
-                                  }))}
-                                  className="rounded-xl text-sm"
-                                  placeholder={lang.code === 'ar' ? 'مثال: عروض حصرية' : 'e.g. Exclusive Deals'}
-                                />
-                              </div>
-                            );
-                          })}
+                          {/* Universal Badge */}
+                          <div className="space-y-2 text-start">
+                            <Label className="text-xs font-bold">{t('الشارة / الهاشتاغ (عربي)', 'Badge / Hashtag (Arabic)')}</Label>
+                            <Input
+                              value={editSectData.metadata?.badgeAr || ''}
+                              onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, badgeAr: e.target.value } }))}
+                              className="rounded-xl text-sm"
+                              placeholder={t('مثال: عروض حصرية', 'e.g. Exclusive Deals')}
+                            />
+                          </div>
+                          <div className="space-y-2 text-start">
+                            <Label className="text-xs font-bold">{t('الشارة / الهاشتاغ (إنجليزي)', 'Badge / Hashtag (English)')}</Label>
+                            <Input
+                              value={editSectData.metadata?.badgeEn || ''}
+                              onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, badgeEn: e.target.value } }))}
+                              className="rounded-xl text-sm"
+                              placeholder={t('مثال: Exclusive Deals', 'e.g. Exclusive Deals')}
+                            />
+                          </div>
 
                           {/* Universal Timer */}
                           <div className="space-y-2 text-start">
@@ -1414,12 +1405,14 @@ export default function AdminHomepageManager() {
                             </div>
                           </div>
 
-                          {/* Live Validation Alert */}
+                                                    {/* Live Validation Alert */}
                           {(() => {
-                            const showWarning = (sourceSelectType === 'store' && editSectData.storeId) ||
-                                               (sourceSelectType === 'seller' && editSectData.sellerId) ||
-                                               editSectData.categoryId;
+                            const showWarning = (sourceSelectType === 'store' && editSectData.storeId) || 
+                                                 (sourceSelectType === 'seller' && editSectData.sellerId) || 
+                                                 editSectData.categoryId;
+                            
                             if (!showWarning) return null;
+
                             return (
                               <div className="flex flex-col gap-2">
                                 <p className="text-[10px] text-muted-foreground font-bold flex items-center gap-1.5">
@@ -1434,9 +1427,263 @@ export default function AdminHomepageManager() {
                                 </p>
                                 {!isValidatingCount && liveMatchingCount === 0 && (
                                   <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-500 text-xs font-bold flex items-center gap-2">
-                                    ⚠️ {t('تحذير: لا توجد منتجات مطابقة للمعايير المحددة. قد يظهر القسم فارغاً.', 'Warning: No matching products found. This section may appear empty.')}
+                                    <span>⚠️</span>
+                                    <span>{t('تنبيه: لا توجد منتجات نشطة حالياً تطابق هذا التحديد. قد يظهر القسم فارغاً للمشترين.', 'Warning: No active products currently match this filter. The section might appear empty to buyers.')}</span>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+
+                        {/* Hero Specific Metadata */}
+                        {layout.find(s => s.id === editingSectId)?.type === 'hero' && (
+                          <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-border space-y-6">
+                            <h5 className="text-xs font-bold text-indigo-500 border-b pb-2 flex items-center gap-1.5">
+                              <span>⚡</span>
+                              {t('إعدادات البطاقات الجانبية الترويجية (Side Promo Cards)', 'Side Promo Cards Settings')}
+                            </h5>
+                            
+                            {/* Side Card 1 */}
+                            <div className="space-y-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-border/80 text-start">
+                              <Label className="text-xs font-black text-amber-600 block mb-1">
+                                {t('👉 إعدادات البطاقة الجانبية الأولى', '👉 First Side Card Settings')}
+                              </Label>
+                              
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-bold text-slate-400">{t('نوع البطاقة الجانبية', 'Side Card Type')}</Label>
+                                <select
+                                  value={editSectData.metadata?.card1Type || 'text'}
+                                  onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1Type: e.target.value } }))}
+                                  className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                                >
+                                  <option value="text">✍️ {t('نصوص ومؤثر متدرج', 'Text & Gradient')}</option>
+                                  <option value="ad">🖼️ {t('إعلان ترويجي مصمم (صورة كاملة)', 'Full Promotion Image')}</option>
+                                </select>
+                              </div>
+
+                              {editSectData.metadata?.card1Type === 'ad' ? (
+                                <div className="space-y-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة العربية', 'Arabic Banner Image')}</Label>
+                                      <ImageUploader
+                                        value={editSectData.metadata?.card1AdImageAr || ''}
+                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1AdImageAr: url } }))}
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة الإنجليزية', 'English Banner Image')}</Label>
+                                      <ImageUploader
+                                        value={editSectData.metadata?.card1AdImageEn || ''}
+                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1AdImageEn: url } }))}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
+                                    <Input
+                                      value={editSectData.metadata?.card1AdLink || ''}
+                                      onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1AdLink: e.target.value } }))}
+                                      className="rounded-xl text-xs"
+                                      placeholder="/search?q=electronics"
+                                    />
                                   </div>
                                 </div>
+                              ) : (
+                                <>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('الشارة بالعربية', 'Badge (Arabic)')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card1BadgeAr || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1BadgeAr: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="أحدث الهواتف"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('الشارة بالإنجليزية', 'Badge (English)')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card1BadgeEn || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1BadgeEn: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="Latest Mobiles"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('العنوان بالعربية', 'Title (Arabic)')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card1TitleAr || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1TitleAr: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="وفر حتى 50% على أجهزة شاومي وآيفون"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('العنوان بالإنجليزية', 'Title (English)')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card1TitleEn || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1TitleEn: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="Save up to 50% on iPhone & Xiaomi"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div className="space-y-1 col-span-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('نص الزر بالعربية', 'CTA Text (Arabic)')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card1CtaAr || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1CtaAr: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="تسوق الأجهزة"
+                                      />
+                                    </div>
+                                    <div className="space-y-1 col-span-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('نص الزر بالإنجليزية', 'CTA Text (English)')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card1CtaEn || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1CtaEn: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="Shop Devices"
+                                      />
+                                    </div>
+                                    <div className="space-y-1 col-span-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card1Link || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1Link: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="/search?q=electronics"
+                                      />
+                                    </div>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                            
+                            {/* Side Card 2 */}
+                            <div className="space-y-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-border/80 text-start">
+                              <Label className="text-xs font-black text-rose-600 block mb-1">
+                                {t('👉 إعدادات البطاقة الجانبية الثانية', '👉 Second Side Card Settings')}
+                              </Label>
+                              
+                              <div className="space-y-2">
+                                <Label className="text-[10px] font-bold text-slate-400">{t('نوع البطاقة الجانبية', 'Side Card Type')}</Label>
+                                <select
+                                  value={editSectData.metadata?.card2Type || 'text'}
+                                  onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2Type: e.target.value } }))}
+                                  className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                                >
+                                  <option value="text">✍️ {t('نصوص ومؤثر متدرج', 'Text & Gradient')}</option>
+                                  <option value="ad">🖼️ {t('إعلان ترويجي مصمم (صورة كاملة)', 'Full Promotion Image')}</option>
+                                </select>
+                              </div>
+
+                              {editSectData.metadata?.card2Type === 'ad' ? (
+                                <div className="space-y-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة العربية', 'Arabic Banner Image')}</Label>
+                                      <ImageUploader
+                                        value={editSectData.metadata?.card2AdImageAr || ''}
+                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2AdImageAr: url } }))}
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة الإنجليزية', 'English Banner Image')}</Label>
+                                      <ImageUploader
+                                        value={editSectData.metadata?.card2AdImageEn || ''}
+                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2AdImageEn: url } }))}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
+                                    <Input
+                                      value={editSectData.metadata?.card2AdLink || ''}
+                                      onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2AdLink: e.target.value } }))}
+                                      className="rounded-xl text-xs"
+                                      placeholder="/search?q=perfumes"
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('الشارة بالعربية', 'Badge (Arabic)')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card2BadgeAr || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2BadgeAr: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="الجمال والعطور"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('الشارة بالإنجليزية', 'Badge (English)')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card2BadgeEn || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2BadgeEn: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="Beauty Deals"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('العنوان بالعربية', 'Title (Arabic)')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card2TitleAr || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2TitleAr: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="روائح تسحر الجميع بأسعار لا تقاوم"
+                                      />
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('العنوان بالإنجليزية', 'Title (English)')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card2TitleEn || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2TitleEn: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="Fragrances that captivate at unbeatable prices"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <div className="space-y-1 col-span-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('نص الزر بالعربية', 'CTA Text (Arabic)')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card2CtaAr || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2CtaAr: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="اكتشف العطور"
+                                      />
+                                    </div>
+                                    <div className="space-y-1 col-span-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('نص الزر بالإنجليزية', 'CTA Text (English)')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card2CtaEn || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2CtaEn: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="Explore Now"
+                                      />
+                                    </div>
+                                    <div className="space-y-1 col-span-1">
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
+                                      <Input
+                                        value={editSectData.metadata?.card2Link || ''}
+                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2Link: e.target.value } }))}
+                                        className="rounded-xl text-xs"
+                                        placeholder="/search?q=perfumes"
+                                      />
+                                    </div>
+                                  </div>
+                                </>
                               )}
                             </div>
                           </div>
