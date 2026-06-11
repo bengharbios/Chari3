@@ -98,6 +98,49 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
     const body = await req.json();
     const slug = body.name?.toLowerCase().replace(/\s+/g, '-') || `product-${Date.now()}`;
 
+    let storeId = body.storeId || undefined;
+    let sellerId = body.sellerId || undefined;
+
+    const lookupId = body.storeId || body.sellerId;
+    if (lookupId) {
+      const store = await db.store.findFirst({
+        where: {
+          OR: [
+            { id: lookupId },
+            { managerId: lookupId }
+          ]
+        }
+      });
+      const seller = await db.sellerProfile.findFirst({
+        where: {
+          OR: [
+            { id: lookupId },
+            { userId: lookupId }
+          ]
+        }
+      });
+
+      if (store) {
+        storeId = store.id;
+      }
+      if (seller) {
+        sellerId = seller.id;
+      }
+
+      if (store && !seller) {
+        const crossSeller = await db.sellerProfile.findUnique({
+          where: { userId: store.managerId }
+        });
+        if (crossSeller) sellerId = crossSeller.id;
+      }
+      if (seller && !store) {
+        const crossStore = await db.store.findUnique({
+          where: { managerId: seller.userId }
+        });
+        if (crossStore) storeId = crossStore.id;
+      }
+    }
+
     const product = await db.product.update({
       where: { id },
       data: {
@@ -113,6 +156,8 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         status: body.status || 'draft',
         categoryId: body.categoryId,
         brandId: body.brandId || null,
+        storeId,
+        sellerId,
         images: JSON.stringify(body.images || []),
         specifications: JSON.stringify(body.specifications || {}),
         volumeDiscounts: body.volumeDiscounts ? (typeof body.volumeDiscounts === 'string' ? body.volumeDiscounts : JSON.stringify(body.volumeDiscounts)) : null,

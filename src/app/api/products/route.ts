@@ -20,25 +20,78 @@ export async function GET(request: Request) {
   const where: Record<string, any> = {};
   if (category) where.categoryId = category;
   if (status) where.status = status;
-  if (storeId) where.storeId = storeId;
-  if (sellerId) where.sellerId = sellerId;
+
+  // Resolve store and seller IDs to support polymorphic querying
+  if (storeId) {
+    const storeResolvedIds: string[] = [storeId];
+    try {
+      const store = await db.store.findUnique({
+        where: { id: storeId },
+        include: {
+          manager: {
+            include: {
+              sellerProfile: { select: { id: true } }
+            }
+          }
+        }
+      });
+      if (store) {
+        if (store.managerId) storeResolvedIds.push(store.managerId);
+        if (store.manager?.sellerProfile?.id) storeResolvedIds.push(store.manager.sellerProfile.id);
+      }
+    } catch (e) {
+      console.error('Failed to resolve store IDs:', e);
+    }
+    where.OR = [
+      { storeId: { in: storeResolvedIds } },
+      { sellerId: { in: storeResolvedIds } }
+    ];
+  } else if (sellerId) {
+    const sellerResolvedIds: string[] = [sellerId];
+    try {
+      const seller = await db.sellerProfile.findUnique({
+        where: { id: sellerId },
+        include: {
+          user: {
+            include: {
+              store: { select: { id: true } }
+            }
+          }
+        }
+      });
+      if (seller) {
+        if (seller.userId) sellerResolvedIds.push(seller.userId);
+        if (seller.user?.store?.id) sellerResolvedIds.push(seller.user.store.id);
+      }
+    } catch (e) {
+      console.error('Failed to resolve seller IDs:', e);
+    }
+    where.OR = [
+      { storeId: { in: sellerResolvedIds } },
+      { sellerId: { in: sellerResolvedIds } }
+    ];
+  }
 
   // Ensure products are only listed for active stores/sellers in the storefront
   if (status === 'active') {
-    where.AND = [
-      {
-        OR: [
-          { store: { isActive: true } },
-          { seller: { user: { isActive: true } } },
-          { storeId: null, sellerId: null }
-        ]
-      }
-    ];
+    const activeConditions = {
+      OR: [
+        { store: { isActive: true } },
+        { seller: { user: { isActive: true } } },
+        { storeId: null, sellerId: null }
+      ]
+    };
+    if (where.AND) {
+      where.AND.push(activeConditions);
+    } else {
+      where.AND = [activeConditions];
+    }
   }
 
   // Search across name and nameEn
   if (search) {
     where.OR = [
+      ...(where.OR || []),
       { name: { contains: search } },
       { nameEn: { contains: search } },
       { description: { contains: search } },
@@ -90,6 +143,49 @@ export async function POST(request: Request) {
     const body = await request.json();
     const slug = body.name?.toLowerCase().replace(/\s+/g, '-') || `product-${Date.now()}`;
 
+    let storeId = body.storeId || null;
+    let sellerId = body.sellerId || null;
+
+    const lookupId = body.storeId || body.sellerId;
+    if (lookupId) {
+      const store = await db.store.findFirst({
+        where: {
+          OR: [
+            { id: lookupId },
+            { managerId: lookupId }
+          ]
+        }
+      });
+      const seller = await db.sellerProfile.findFirst({
+        where: {
+          OR: [
+            { id: lookupId },
+            { userId: lookupId }
+          ]
+        }
+      });
+
+      if (store) {
+        storeId = store.id;
+      }
+      if (seller) {
+        sellerId = seller.id;
+      }
+
+      if (store && !seller) {
+        const crossSeller = await db.sellerProfile.findUnique({
+          where: { userId: store.managerId }
+        });
+        if (crossSeller) sellerId = crossSeller.id;
+      }
+      if (seller && !store) {
+        const crossStore = await db.store.findUnique({
+          where: { managerId: seller.userId }
+        });
+        if (crossStore) storeId = crossStore.id;
+      }
+    }
+
     const product = await db.product.create({
       data: {
         name: body.name,
@@ -104,8 +200,8 @@ export async function POST(request: Request) {
         status: body.status || 'draft',
         categoryId: body.categoryId,
         brandId: body.brandId || null,
-        storeId: body.storeId,
-        sellerId: body.sellerId,
+        storeId,
+        sellerId,
         images: JSON.stringify(body.images || []),
         specifications: JSON.stringify(body.specifications || {}),
         volumeDiscounts: body.volumeDiscounts ? (typeof body.volumeDiscounts === 'string' ? body.volumeDiscounts : JSON.stringify(body.volumeDiscounts)) : null,

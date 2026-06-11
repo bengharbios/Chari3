@@ -307,6 +307,41 @@ export default function AdminHomepageManager() {
     titleEn: '',
   });
 
+  // Live Validation Matching Products Count State
+  const [liveMatchingCount, setLiveMatchingCount] = useState(null);
+  const [isValidatingCount, setIsValidatingCount] = useState(false);
+
+  useEffect(() => {
+    const showWarning = (sourceSelectType === 'store' && editSectData.storeId) || 
+                         (sourceSelectType === 'seller' && editSectData.sellerId) || 
+                         editSectData.categoryId;
+    if (!showWarning) {
+      setLiveMatchingCount(null);
+      return;
+    }
+
+    setIsValidatingCount(true);
+    let url = `/api/products?limit=1&status=active`;
+    if (sourceSelectType === 'store' && editSectData.storeId) {
+      url += `&storeId=${editSectData.storeId}`;
+    } else if (sourceSelectType === 'seller' && editSectData.sellerId) {
+      url += `&sellerId=${editSectData.sellerId}`;
+    }
+    if (editSectData.categoryId) {
+      url += `&categoryId=${editSectData.categoryId}`;
+    }
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        if (data && typeof data.total === 'number') {
+          setLiveMatchingCount(data.total);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setIsValidatingCount(false));
+  }, [editSectData.storeId, editSectData.sellerId, editSectData.categoryId, sourceSelectType]);
+
   useEffect(() => {
     setIsMounted(true);
     fetch('/api/categories')
@@ -1370,42 +1405,34 @@ export default function AdminHomepageManager() {
                             </div>
                           </div>
 
-                          {/* Live Validation Alert */}
+                                                    {/* Live Validation Alert */}
                           {(() => {
                             const showWarning = (sourceSelectType === 'store' && editSectData.storeId) || 
-                                                (sourceSelectType === 'seller' && editSectData.sellerId) || 
-                                                editSectData.categoryId;
+                                                 (sourceSelectType === 'seller' && editSectData.sellerId) || 
+                                                 editSectData.categoryId;
                             
-                            let matchingCount = 0;
-                            if (showWarning) {
-                              let filtered = allProducts;
-                              if (sourceSelectType === 'store' && editSectData.storeId) {
-                                filtered = filtered.filter(p => p.storeId === editSectData.storeId);
-                              } else if (sourceSelectType === 'seller' && editSectData.sellerId) {
-                                filtered = filtered.filter(p => p.sellerId === editSectData.sellerId);
-                              }
-                              if (editSectData.categoryId) {
-                                filtered = filtered.filter(p => p.categoryId === editSectData.categoryId);
-                              }
-                              matchingCount = filtered.length;
-                            }
+                            if (!showWarning) return null;
 
-                            return showWarning ? (
+                            return (
                               <div className="flex flex-col gap-2">
-                                <p className="text-[10px] text-muted-foreground font-bold">
-                                  {t('المنتجات المطابقة المتوفرة حالياً:', 'Currently matching available products:')}{' '}
-                                  <span className={`font-mono text-xs font-black ${matchingCount > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                                    {matchingCount}
-                                  </span>
+                                <p className="text-[10px] text-muted-foreground font-bold flex items-center gap-1.5">
+                                  <span>{t('المنتجات المطابقة المتوفرة حالياً:', 'Currently matching available products:')}</span>
+                                  {isValidatingCount ? (
+                                    <span className="text-[10px] text-slate-400 animate-pulse">...</span>
+                                  ) : (
+                                    <span className={`font-mono text-xs font-black ${(liveMatchingCount || 0) > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                      {liveMatchingCount ?? 0}
+                                    </span>
+                                  )}
                                 </p>
-                                {matchingCount === 0 && (
+                                {!isValidatingCount && liveMatchingCount === 0 && (
                                   <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-500 text-xs font-bold flex items-center gap-2">
                                     <span>⚠️</span>
                                     <span>{t('تنبيه: لا توجد منتجات نشطة حالياً تطابق هذا التحديد. قد يظهر القسم فارغاً للمشترين.', 'Warning: No active products currently match this filter. The section might appear empty to buyers.')}</span>
                                   </div>
                                 )}
                               </div>
-                            ) : null;
+                            );
                           })()}
                         </div>
                       )}
