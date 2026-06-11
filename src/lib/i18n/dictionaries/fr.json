@@ -196,7 +196,21 @@
     "delivery60min": "Livré en 60 minutes",
     "hours": "h",
     "minutes": "min",
-    "seconds": "sec"
+    "seconds": "sec",
+    "sections": {
+      "hero": "Diapositives de promotion en vedette",
+      "features": "Caractéristiques et garanties de la plateforme",
+      "categories": "Icônes de catégories circulaires",
+      "bento_offers": "Mégas offres et grille bento",
+      "featured_products": "Grille des produits vedettes",
+      "top_sellers": "Top boutiques et vendeurs vérifiés",
+      "testimonials": "Témoignages clients",
+      "cta": "Panneau d'invitation des vendeurs",
+      "category_products": "Produits de catégorie personnalisés",
+      "category_circles": "Icônes de sous-catégories circulaires",
+      "banner": "Bannière publicitaire personnalisée",
+      "ad_zone": "Zone publicitaire générale"
+    }
   },
   "notifications": {
     "newOrderTitle": "Nouvelle commande ! 🛍️",

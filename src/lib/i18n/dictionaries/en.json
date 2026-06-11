@@ -196,7 +196,21 @@
     "delivery60min": "Delivered in 60 minutes",
     "hours": "hr",
     "minutes": "min",
-    "seconds": "sec"
+    "seconds": "sec",
+    "sections": {
+      "hero": "Hero Promotion Slides",
+      "features": "Platform Features & Guarantees",
+      "categories": "Circular Categories Icons",
+      "bento_offers": "Mega Offers & Bento Grid",
+      "featured_products": "Featured Products Grid",
+      "top_sellers": "Top Stores & Verified Sellers",
+      "testimonials": "Customer Testimonials",
+      "cta": "Seller Invitation Panel",
+      "category_products": "Category Showcase Products",
+      "category_circles": "Subcategory Circles Row",
+      "banner": "Custom Ad Banner",
+      "ad_zone": "Ad Zone Banner"
+    }
   },
   "notifications": {
     "newOrderTitle": "New Order! 🛍️",

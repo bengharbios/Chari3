@@ -196,7 +196,21 @@
     "delivery60min": "يوصلك في 60 دقيقة",
     "hours": "ساعة",
     "minutes": "دقيقة",
-    "seconds": "ثانية"
+    "seconds": "ثانية",
+    "sections": {
+      "hero": "البانر الترويجي الرئيسي (Slides)",
+      "features": "شريط الميزات والضمانات",
+      "categories": "أيقونات التصنيفات الدائرية",
+      "bento_offers": "شبكة عروض ميجا والمكعبات الترويجية (Noon Bento)",
+      "featured_products": "شبكة المنتجات المتميزة",
+      "top_sellers": "سلايدر المتاجر الكبرى والتجار الموثقين",
+      "testimonials": "آراء وتقييمات العملاء",
+      "cta": "لوحة دعوة التجار للتسجيل (CTA)",
+      "category_products": "منتجات تصنيف مخصصة",
+      "category_circles": "أيقونات تصنيفات فرعية دائرية",
+      "banner": "إعلان ترويجي مخصص",
+      "ad_zone": "منطقة إعلانية عامة"
+    }
   },
   "notifications": {
     "newOrderTitle": "طلب جديد! 🛍️",

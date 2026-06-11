@@ -572,14 +572,38 @@ function CustomBannerBlock({ imageArUrl, imageEnUrl, linkUrl }: any) {
   );
 }
 
+// Helper: get localized field from section metadata or section root
+// Supports: Ar (ar), En (en), Fr (fr), and any other locale code with a capitalized suffix
+function getLocalizedField(section: any, field: string, locale: string, fallbackField?: string): string {
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+  // Try locale-specific field first (e.g. titleFr, badgeFr)
+  const localeField = `${field}${cap(locale)}`;
+  if (section?.[localeField]) return section[localeField];
+  if (section?.metadata?.[localeField]) return section.metadata[localeField];
+  // Fallback to English
+  const enField = `${field}En`;
+  if (locale !== 'ar') {
+    if (section?.[enField]) return section[enField];
+    if (section?.metadata?.[enField]) return section.metadata[enField];
+  }
+  // Fallback to Arabic
+  const arField = `${field}Ar`;
+  if (section?.[arField]) return section[arField];
+  if (section?.metadata?.[arField]) return section.metadata[arField];
+  // fallbackField (e.g. section.type)
+  if (fallbackField && section?.[fallbackField]) return section[fallbackField];
+  return '';
+}
+
 // Unified Section Header for dynamic titles, badges, and countdown timers
 function SectionHeader({ section, isAr, locale, t, children }: { section: any; isAr: boolean; locale: string; t: (ar: string, en: string) => string; children?: React.ReactNode }) {
-  const badge = isAr ? section.metadata?.badgeAr : section.metadata?.badgeEn;
+  const title = getLocalizedField(section, 'title', locale, 'type');
+  const badge = getLocalizedField(section, 'badge', locale);
   return (
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 border-b border-slate-100 dark:border-slate-800/80 pb-3">
       <div className="flex items-center gap-2">
         <h3 className="text-xl font-black text-navy dark:text-white">
-          {isAr ? (section.titleAr || section.type) : (section.titleEn || section.titleAr || section.type)}
+          {title || section?.type}
         </h3>
         {badge && (
           <Badge className="bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[10px] font-bold">{badge}</Badge>
@@ -1017,15 +1041,13 @@ export default function StorefrontHomepage() {
           : (section.metadata?.leftCardAdImageEn || section.metadata?.leftCardAdImageAr);
         const leftCardAdLink = section.metadata?.leftCardAdLink || '#';
 
-        const customText1 = isAr 
-          ? (section.metadata?.customText1Ar || globalT('homepage.noonItMore') || 'نوّنها أكثر ووفّر أكثر على كل اللي تحبّه')
-          : (section.metadata?.customText1En || 'Shop more & save on what you love');
+        const customText1 = getLocalizedField(section, 'customText1', locale)
+          || (locale === 'ar' ? (globalT('homepage.noonItMore') || 'نوّنها أكثر ووفّر أكثر على كل اللي تحبّه') : 'Shop more & save on what you love');
           
-        const customText2 = isAr 
-          ? (section.metadata?.customText2Ar || globalT('homepage.onSale') || 'عليها العين')
-          : (section.metadata?.customText2En || 'Hot Deals');
+        const customText2 = getLocalizedField(section, 'customText2', locale)
+          || (locale === 'ar' ? (globalT('homepage.onSale') || 'عليها العين') : 'Hot Deals');
 
-        const sectionBadge = isAr ? section.metadata?.badgeAr : section.metadata?.badgeEn;
+        const sectionBadge = getLocalizedField(section, 'badge', locale);
 
         return (
           <section key={`bento_offers_${section.id}`} className="container-platform py-6 font-cairo">
@@ -1034,9 +1056,10 @@ export default function StorefrontHomepage() {
                 <Badge className="bg-amber-500 text-white text-xs font-bold py-1 px-3 shadow-md border-0">{sectionBadge}</Badge>
               </div>
             )}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Responsive grid: stack on mobile, 3-column on desktop */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6">
               {/* Right Column: "نوّنها أكثر ووفر أكثر" 4x4 Promos */}
-              <div className="lg:col-span-3 h-[450px] rounded-[24px] bg-gradient-to-br from-amber-500 to-amber-600 border border-amber-500/20 shadow-xl p-5 text-slate-950 flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all group relative overflow-hidden">
+              <div className="md:col-span-1 lg:col-span-3 min-h-[300px] md:min-h-[380px] lg:h-[480px] rounded-[24px] bg-gradient-to-br from-amber-500 to-amber-600 border border-amber-500/20 shadow-xl p-5 text-slate-950 flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all group relative overflow-hidden">
                 {rightCardType === 'ad' && rightCardAdImage ? (
                   <Link href={rightCardAdLink} className="absolute inset-0 w-full h-full block">
                     <img src={rightCardAdImage} className="w-full h-full object-cover" alt="" />
@@ -1048,18 +1071,18 @@ export default function StorefrontHomepage() {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
                     <div className="z-10 text-start">
                       <Badge className="bg-slate-950 text-white text-[9px] font-bold py-0.5 px-2 mb-2 select-none">عروض حصرية</Badge>
-                      <h3 className="text-lg font-black leading-snug">{customText1}</h3>
+                      <h3 className="text-base md:text-lg font-black leading-snug">{customText1}</h3>
                     </div>
-                    <div className="grid grid-cols-2 gap-3 z-10 grow mt-4">
-                      {rightCardProducts.map((p: any, i: number) => {
+                    <div className="grid grid-cols-2 gap-2 md:gap-3 z-10 grow mt-4">
+                      {rightCardProducts.slice(0, 4).map((p: any, i: number) => {
                         let imgs: string[] = [];
                         try { imgs = Array.isArray(p.images) ? p.images : JSON.parse(p.images || '[]'); } catch {}
                         return (
-                          <div key={i} className="bg-white/80 backdrop-blur rounded-[16px] p-2 flex flex-col justify-between border border-white/25 shadow-sm hover:scale-[1.04] transition-transform cursor-pointer" onClick={() => router.push(`/products/${p.id}`)}>
+                          <div key={i} className="bg-white/80 backdrop-blur rounded-[12px] md:rounded-[16px] p-1.5 md:p-2 flex flex-col justify-between border border-white/25 shadow-sm hover:scale-[1.04] transition-transform cursor-pointer" onClick={() => router.push(`/products/${p.id}`)}>
                             <div className="aspect-square bg-muted/20 rounded-lg overflow-hidden mb-1">
-                              {imgs[0] ? <img src={imgs[0]} className="w-full h-full object-cover" alt="" /> : <div className="text-xs text-center mt-4 text-muted-foreground">📦</div>}
+                              {imgs[0] ? <img src={imgs[0]} className="w-full h-full object-cover" alt="" /> : <div className="flex items-center justify-center h-full text-lg">📦</div>}
                             </div>
-                            <p className="text-[10px] font-black text-slate-800 line-clamp-1 text-center">{isAr ? p.name : (p.nameEn || p.name)}</p>
+                            <p className="text-[9px] md:text-[10px] font-black text-slate-800 line-clamp-1 text-center">{locale === 'ar' ? p.name : (p.nameEn || p.name)}</p>
                           </div>
                         );
                       })}
@@ -1068,8 +1091,8 @@ export default function StorefrontHomepage() {
                 )}
               </div>
 
-              {/* Center Column: Mega Offers countdown timer */}
-              <div className="lg:col-span-6 h-[450px] rounded-[24px] bg-slate-950 text-white border-2 border-rose-600/30 shadow-2xl p-5 flex flex-col justify-between hover:shadow-[0_20px_45px_rgba(244,63,94,0.15)] transition-all relative overflow-hidden">
+              {/* Center Column: Mega Offers countdown timer — spans full width on mobile */}
+              <div className="md:col-span-2 lg:col-span-6 min-h-[340px] md:min-h-[420px] lg:h-[480px] rounded-[24px] bg-slate-950 text-white border-2 border-rose-600/30 shadow-2xl p-5 flex flex-col justify-between hover:shadow-[0_20px_45px_rgba(244,63,94,0.15)] transition-all relative overflow-hidden order-first md:order-none">
                 {centerCardType === 'ad' && centerCardAdImage ? (
                   <Link href={centerCardAdLink} className="absolute inset-0 w-full h-full block">
                     <img src={centerCardAdImage} className="w-full h-full object-cover" alt="" />
@@ -1079,15 +1102,13 @@ export default function StorefrontHomepage() {
                 ) : (
                   <>
                     <div className="absolute top-0 left-0 w-36 h-36 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-                    <div className="flex flex-col sm:flex-row justify-between items-center gap-3 border-b border-white/10 pb-4 mb-3 z-10">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/10 pb-4 mb-3 z-10">
                       <div className="flex items-center gap-2">
                         <div className="p-1.5 rounded-xl bg-rose-600/20 text-rose-500 animate-pulse">
                           <Flame className="w-5 h-5 fill-current" />
                         </div>
                         <h3 className="text-base font-black text-white">
-                          {isAr 
-                            ? (section.metadata?.customTextCenterAr || data?.countdownConfig?.titleAr || 'عروض ميجا') 
-                            : (section.metadata?.customTextCenterEn || data?.countdownConfig?.titleEn || 'Mega Offers')}
+                          {getLocalizedField(section, 'customTextCenter', locale) || (locale === 'ar' ? (data?.countdownConfig?.titleAr || 'عروض ميجا') : (data?.countdownConfig?.titleEn || 'Mega Offers'))}
                         </h3>
                       </div>
                       {hasCountdown && (section.metadata?.timerEndDate || data?.countdownConfig?.endDate) && (
@@ -1095,14 +1116,14 @@ export default function StorefrontHomepage() {
                       )}
                     </div>
                     {isLoading ? (
-                      <div className="h-64 bg-muted animate-pulse rounded-xl w-full" />
+                      <div className="h-48 md:h-64 bg-muted animate-pulse rounded-xl w-full" />
                     ) : timerProducts.length === 0 ? (
                       <div className="text-center py-12 text-muted-foreground text-sm grow flex flex-col items-center justify-center">
                         <Flame className="w-10 h-10 mb-2 opacity-20" />
-                        {isAr ? 'لا توجد عروض تنازلية نشطة حالياً.' : 'No active discount deals at the moment.'}
+                        {locale === 'ar' ? 'لا توجد عروض تنازلية نشطة حالياً.' : 'No active discount deals at the moment.'}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 gap-4 grow">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 grow">
                         {timerProducts.map((p: any) => <ProductCard key={p.id} product={p} isOfferCard={true} />)}
                       </div>
                     )}
@@ -1111,7 +1132,7 @@ export default function StorefrontHomepage() {
               </div>
 
               {/* Left Column: "عليها العين" vertical 2x2 promo */}
-              <div className="lg:col-span-3 h-[450px] rounded-[24px] bg-gradient-to-br from-slate-900 to-indigo-950 border border-white/5 shadow-xl p-5 text-white flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all group relative overflow-hidden">
+              <div className="md:col-span-1 lg:col-span-3 min-h-[300px] md:min-h-[380px] lg:h-[480px] rounded-[24px] bg-gradient-to-br from-slate-900 to-indigo-950 border border-white/5 shadow-xl p-5 text-white flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all group relative overflow-hidden">
                 {leftCardType === 'ad' && leftCardAdImage ? (
                   <Link href={leftCardAdLink} className="absolute inset-0 w-full h-full block">
                     <img src={leftCardAdImage} className="w-full h-full object-cover" alt="" />
@@ -1128,18 +1149,18 @@ export default function StorefrontHomepage() {
                       </h3>
                       <Badge variant="secondary" className="bg-white/10 text-white hover:bg-white/15 cursor-pointer text-[9px] py-0.5 px-2" onClick={() => router.push('/search')}>{globalT('homepage.viewAll') || 'عرض الكل'}</Badge>
                     </div>
-                    <div className="grid grid-cols-1 gap-3 z-10 grow mt-4">
+                    <div className="flex flex-col gap-3 z-10 grow mt-4 overflow-y-auto">
                       {leftCardProducts.map((p: any, i: number) => {
                         let imgs: string[] = [];
                         try { imgs = Array.isArray(p.images) ? p.images : JSON.parse(p.images || '[]'); } catch {}
                         const discount = p.comparePrice ? Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100) : 0;
                         return (
-                          <div key={i} className="bg-white/5 border border-white/10 hover:border-white/20 rounded-[18px] p-3 flex items-center gap-3 cursor-pointer hover:scale-[1.03] transition-all" onClick={() => router.push(`/products/${p.id}`)}>
-                            <div className="w-14 h-14 bg-white/10 rounded-lg overflow-hidden shrink-0">
-                              {imgs[0] ? <img src={imgs[0]} className="w-full h-full object-cover" alt="" /> : <div className="text-xs text-center mt-4 text-white/40">📦</div>}
+                          <div key={i} className="bg-white/5 border border-white/10 hover:border-white/20 rounded-[18px] p-3 flex items-center gap-3 cursor-pointer hover:scale-[1.03] transition-all shrink-0" onClick={() => router.push(`/products/${p.id}`)}>
+                            <div className="w-12 h-12 md:w-14 md:h-14 bg-white/10 rounded-lg overflow-hidden shrink-0">
+                              {imgs[0] ? <img src={imgs[0]} className="w-full h-full object-cover" alt="" /> : <div className="flex items-center justify-center h-full text-lg">📦</div>}
                             </div>
                             <div className="min-w-0 grow text-start">
-                              <h4 className="text-xs font-bold truncate">{isAr ? p.name : (p.nameEn || p.name)}</h4>
+                              <h4 className="text-xs font-bold truncate">{locale === 'ar' ? p.name : (p.nameEn || p.name)}</h4>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className="text-xs font-black text-amber-400">{fmt(p.price)}</span>
                                 {discount > 0 && <span className="text-[9px] bg-red-600 px-1 py-0.5 rounded font-black">-{discount}%</span>}
@@ -1164,7 +1185,7 @@ export default function StorefrontHomepage() {
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h3 className="text-xl font-black text-navy dark:text-white">
-                  {isAr ? (section.titleAr || t('منتجات مميزة', 'Featured Products')) : (section.titleEn || t('منتجات مميزة', 'Featured Products'))}
+                  {getLocalizedField(section, 'title', locale) || t('منتجات مميزة', 'Featured Products')}
                 </h3>
                 <p className="text-xs text-muted-foreground mt-1">{t('اختيارات حصرية من أفضل التجار', 'Exclusive picks from top sellers')}</p>
               </div>
@@ -1294,10 +1315,10 @@ export default function StorefrontHomepage() {
             <div className="container-platform relative z-10">
               <div className="text-center mb-10 px-4 max-w-2xl mx-auto">
                 <Badge className="mb-3.5 bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs px-3.5 py-1.5 rounded-full select-none">
-                  ⭐ {isAr ? (section.metadata?.badgeAr || t('تجار شاري داي المميزين', 'ChariDay Top Merchants')) : (section.metadata?.badgeEn || t('تجار شاري داي المميزين', 'ChariDay Top Merchants'))}
+                  ⭐ {getLocalizedField(section, 'badge', locale) || t('تجار شاري داي المميزين', 'ChariDay Top Merchants')}
                 </Badge>
                 <h3 className="text-2xl md:text-4xl font-black mb-3.5 leading-tight tracking-tight font-cairo">
-                  {isAr ? (section.titleAr || t('تسوق من الشركاء الموثوقين', 'Shop from Our Certified Partners')) : (section.titleEn || t('تسوق من الشركاء الموثوقين', 'Shop from Our Certified Partners'))}
+                  {getLocalizedField(section, 'title', locale) || t('تسوق من الشركاء الموثوقين', 'Shop from Our Certified Partners')}
                 </h3>
                 <p className="text-xs md:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed font-medium">
                   {t('نوفر لك نخبة من كبرى المتاجر الجزائرية والتجار الأحرار الموثقين بشارات الجودة والمستويات الاحترافية.', 'We connect you with premier Algerian stores and verified independent merchants possessing professional badges.')}
