@@ -1436,36 +1436,6 @@ export default function AdminHomepageManager() {
                                   <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-500 text-xs font-bold flex items-center gap-2">
                                     ⚠️ {t('تحذير: لا توجد منتجات مطابقة للمعايير المحددة. قد يظهر القسم فارغاً.', 'Warning: No matching products found. This section may appear empty.')}
                                   </div>
-                                              className="rounded-lg text-xs"
-                                              placeholder={lang.code === 'ar' ? 'روائح تسحر الجميع' : 'Fragrances that captivate'}
-                                            />
-                                          </div>
-                                          <div className="space-y-1">
-                                            <Label className="text-[9px] font-bold text-slate-400">{t('نص الزر (CTA)', 'CTA Text')}</Label>
-                                            <Input
-                                              dir={lang.direction}
-                                              value={editSectData.metadata?.[ctaKey] || ''}
-                                              onChange={e => setEditSectData((prev: any) => ({
-                                                ...prev,
-                                                metadata: { ...prev.metadata, [ctaKey]: e.target.value }
-                                              }))}
-                                              className="rounded-lg text-xs"
-                                              placeholder={lang.code === 'ar' ? 'اكتشف العطور' : 'Explore Now'}
-                                            />
-                                          </div>
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                  <div className="space-y-1">
-                                    <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
-                                    <Input
-                                      value={editSectData.metadata?.card2Link || ''}
-                                      onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2Link: e.target.value } }))}
-                                      className="rounded-xl text-xs"
-                                      placeholder="/search?q=perfumes"
-                                    />
-                                  </div>
                                 </div>
                               )}
                             </div>
