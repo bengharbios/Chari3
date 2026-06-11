@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
+import { useTranslationStore } from '@/lib/store/translation-store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { 
   Loader2, Save, ArrowRight, Home, LayoutGrid, Pin, Clock, 
@@ -225,6 +226,7 @@ function SearchableSelector({
 
 export default function AdminHomepageManager() {
   const { isAdminAuthenticated } = useAdminAuthStore();
+  const languages = useTranslationStore(state => state.languages);
   const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const isAr = locale === 'ar';
@@ -479,20 +481,7 @@ export default function AdminHomepageManager() {
     try {
       const payload = {
         layout: updatedLayout.map(sect => ({
-          id: sect.id,
-          type: sect.type,
-          titleAr: sect.titleAr || '',
-          titleEn: sect.titleEn || '',
-          categoryId: sect.categoryId || '',
-          storeId: sect.storeId || '',
-          sellerId: sect.sellerId || '',
-          layoutStyle: sect.layoutStyle || 'carousel',
-          imageArUrl: sect.imageArUrl || '',
-          imageEnUrl: sect.imageEnUrl || '',
-          linkUrl: sect.linkUrl || '',
-          visible: sect.visible,
-          filterType: sect.filterType || 'smart',
-          limit: sect.limit || 10,
+          ...sect,
           metadata: sect.metadata || null,
         })),
         pinned: {
@@ -729,64 +718,7 @@ export default function AdminHomepageManager() {
     } else {
       setSourceSelectType('all');
     }
-    setEditSectData({
-      titleAr: sect.titleAr || '',
-      titleEn: sect.titleEn || '',
-      categoryId: sect.categoryId || '',
-      storeId: sect.storeId || '',
-      sellerId: sect.sellerId || '',
-      layoutStyle: sect.layoutStyle || 'carousel',
-      imageArUrl: sect.imageArUrl || '',
-      imageEnUrl: sect.imageEnUrl || '',
-      linkUrl: sect.linkUrl || '',
-      filterType: sect.filterType || 'smart',
-      limit: sect.limit || 10,
-      metadata: {
-        customText1Ar: sect.metadata?.customText1Ar || '',
-        customText1En: sect.metadata?.customText1En || '',
-        customText2Ar: sect.metadata?.customText2Ar || '',
-        customText2En: sect.metadata?.customText2En || '',
-        customTextCenterAr: sect.metadata?.customTextCenterAr || '',
-        customTextCenterEn: sect.metadata?.customTextCenterEn || '',
-        badgeAr: sect.metadata?.badgeAr || '',
-        badgeEn: sect.metadata?.badgeEn || '',
-        enableTimer: sect.metadata?.enableTimer || false,
-        timerEndDate: sect.metadata?.timerEndDate || '',
-        subFilter1: sect.metadata?.subFilter1 || 'smart',
-        subFilter2: sect.metadata?.subFilter2 || 'smart',
-        subFilterCenter: sect.metadata?.subFilterCenter || 'smart',
-        rightCategory: sect.metadata?.rightCategory || '',
-        rightStore: sect.metadata?.rightStore || '',
-        rightSeller: sect.metadata?.rightSeller || '',
-        leftCategory: sect.metadata?.leftCategory || '',
-        leftStore: sect.metadata?.leftStore || '',
-        leftSeller: sect.metadata?.leftSeller || '',
-        centerCategory: sect.metadata?.centerCategory || '',
-        centerStore: sect.metadata?.centerStore || '',
-        centerSeller: sect.metadata?.centerSeller || '',
-        card1Type: sect.metadata?.card1Type || 'text',
-        card1AdImageAr: sect.metadata?.card1AdImageAr || '',
-        card1AdImageEn: sect.metadata?.card1AdImageEn || '',
-        card1AdLink: sect.metadata?.card1AdLink || '',
-        card2Type: sect.metadata?.card2Type || 'text',
-        card2AdImageAr: sect.metadata?.card2AdImageAr || '',
-        card2AdImageEn: sect.metadata?.card2AdImageEn || '',
-        card2AdLink: sect.metadata?.card2AdLink || '',
-        rightCardType: sect.metadata?.rightCardType || 'products',
-        rightCardAdImageAr: sect.metadata?.rightCardAdImageAr || '',
-        rightCardAdImageEn: sect.metadata?.rightCardAdImageEn || '',
-        rightCardAdLink: sect.metadata?.rightCardAdLink || '',
-        centerCardType: sect.metadata?.centerCardType || 'products',
-        centerCardAdImageAr: sect.metadata?.centerCardAdImageAr || '',
-        centerCardAdImageEn: sect.metadata?.centerCardAdImageEn || '',
-        centerCardAdLink: sect.metadata?.centerCardAdLink || '',
-        leftCardType: sect.metadata?.leftCardType || 'products',
-        leftCardAdImageAr: sect.metadata?.leftCardAdImageAr || '',
-        leftCardAdImageEn: sect.metadata?.leftCardAdImageEn || '',
-        leftCardAdLink: sect.metadata?.leftCardAdLink || '',
-        adZone: sect.metadata?.adZone || 'banner_mid',
-      },
-    });
+    setEditSectData({ ...sect, metadata: { ...sect.metadata } });
   };
 
   const saveSectionSettings = async () => {
@@ -795,18 +727,7 @@ export default function AdminHomepageManager() {
       if (sect.id === editingSectId) {
         return {
           ...sect,
-          titleAr: editSectData.titleAr,
-          titleEn: editSectData.titleEn,
-          categoryId: editSectData.categoryId,
-          storeId: editSectData.storeId,
-          sellerId: editSectData.sellerId,
-          layoutStyle: editSectData.layoutStyle,
-          imageArUrl: editSectData.imageArUrl,
-          imageEnUrl: editSectData.imageEnUrl,
-          linkUrl: editSectData.linkUrl,
-          filterType: editSectData.filterType,
-          limit: editSectData.limit,
-          metadata: editSectData.metadata,
+          ...editSectData,
         };
       }
       return sect;

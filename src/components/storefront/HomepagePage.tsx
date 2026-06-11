@@ -341,262 +341,7 @@ function ProductCard({ product, isOfferCard = false }: { product: any; isOfferCa
   );
 }
 
-function CategoryProductsRow({ categoryId, titleAr, titleEn, layoutStyle = 'carousel', storeId, sellerId, filterType = 'newest' }: any) {
-  const { locale } = useAppStore();
-  const isAr = locale === 'ar';
-  const [products, setProducts] = useState<any[]>([]);
-  const [subcategories, setSubcategories] = useState<any[]>([]);
-  const [selectedSubcatId, setSelectedSubcatId] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!categoryId && !storeId && !sellerId) return;
-    setLoading(true);
-
-    if (categoryId) {
-      fetch(`/api/categories?parentId=${categoryId}`)
-        .then(res => res.json())
-        .then(data => {
-          if (Array.isArray(data)) {
-            setSubcategories(data);
-          }
-        })
-        .catch(() => {});
-    } else {
-      setSubcategories([]);
-    }
-
-    let url = `/api/products?status=active&limit=10&sort=${filterType}`;
-    if (categoryId) url += `&categoryId=${categoryId}`;
-    if (storeId) url += `&storeId=${storeId}`;
-    if (sellerId) url += `&sellerId=${sellerId}`;
-
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        if (data.products) {
-          setProducts(data.products);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [categoryId, storeId, sellerId, filterType]);
-
-  const handleSubcatClick = (subcatId: string) => {
-    const targetId = selectedSubcatId === subcatId ? '' : subcatId;
-    setSelectedSubcatId(targetId);
-    setLoading(true);
-    
-    const fetchId = targetId || categoryId;
-    let url = `/api/products?status=active&limit=10&sort=${filterType}`;
-    if (fetchId) url += `&categoryId=${fetchId}`;
-    if (storeId) url += `&storeId=${storeId}`;
-    if (sellerId) url += `&sellerId=${sellerId}`;
-
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        if (data.products) {
-          setProducts(data.products);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  };
-
-  if (!categoryId && !storeId && !sellerId) return null;
-
-  return (
-    <section className="container-platform py-6 text-start">
-      {/* Category Section Title Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 border-b border-slate-100 dark:border-slate-800/80 pb-3">
-        <div>
-          <h3 className="text-lg font-black text-slate-800 dark:text-white">
-            {isAr ? titleAr : titleEn}
-          </h3>
-        </div>
-      </div>
-
-      {/* Subcategory Circular Badges Row (Noon/Temu Style) */}
-      {subcategories.length > 0 && (
-        <div className="flex gap-4 md:gap-5 overflow-x-auto py-3 scrollbar-none snap-x snap-mandatory mb-5 select-none">
-          {/* "All" button */}
-          <div 
-            className="flex flex-col items-center gap-2 shrink-0 snap-start cursor-pointer group w-20"
-            onClick={() => handleSubcatClick('')}
-          >
-            <div className={`w-14 h-14 rounded-full border bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 ${
-              selectedSubcatId === '' 
-                ? 'border-amber-500 ring-2 ring-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)] bg-amber-500/5 dark:bg-amber-500/10 scale-105' 
-                : 'border-slate-100 dark:border-slate-800 hover:shadow-[0_10px_20px_rgba(0,0,0,0.06)]'
-            }`}>
-              <span className={`text-xl ${selectedSubcatId === '' ? 'scale-110' : ''}`}>📦</span>
-            </div>
-            <p className={`text-[10px] font-bold text-center leading-tight transition-colors ${
-              selectedSubcatId === '' ? 'text-amber-500 font-extrabold' : 'text-slate-700 dark:text-slate-350 group-hover:text-amber-500'
-            }`}>
-              {isAr ? 'الكل' : 'All'}
-            </p>
-          </div>
-
-          {subcategories.slice(0, 10).map((sub: any) => {
-            const isActive = selectedSubcatId === sub.id;
-            return (
-              <div 
-                key={sub.id} 
-                className="flex flex-col items-center gap-2 shrink-0 snap-start cursor-pointer group w-20"
-                onClick={() => handleSubcatClick(sub.id)}
-              >
-                <div className={`w-14 h-14 rounded-full border bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 ${
-                  isActive 
-                    ? 'border-amber-500 ring-2 ring-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.3)] bg-amber-500/5 dark:bg-amber-500/10 scale-105' 
-                    : 'border-slate-100 dark:border-slate-800 hover:shadow-[0_10px_20px_rgba(0,0,0,0.06)]'
-                }`}>
-                  {sub.image ? (
-                    <img src={sub.image} className="w-full h-full object-cover" alt="" />
-                  ) : (
-                    <span className="text-xl">{sub.icon || '🏷️'}</span>
-                  )}
-                </div>
-                <p className={`text-[10px] font-bold text-center line-clamp-2 leading-tight transition-colors ${
-                  isActive ? 'text-amber-500 font-extrabold' : 'text-slate-700 dark:text-slate-350 group-hover:text-amber-500'
-                }`}>
-                  {isAr ? sub.name : (sub.nameEn || sub.name)}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Product Display Block */}
-      {loading ? (
-        <ProductSliderSkeleton />
-      ) : products.length === 0 ? (
-        <div className="text-center py-10 text-muted-foreground border border-dashed rounded-[20px] bg-slate-50/50 dark:bg-slate-900/10">
-          <p className="text-xs font-bold">{isAr ? 'لا توجد منتجات متاحة حالياً.' : 'No products available.'}</p>
-        </div>
-      ) : layoutStyle === 'grid' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      ) : (
-        <div className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
-          {products.map((p) => (
-            <div key={p.id} className="w-[170px] md:w-[200px] shrink-0 snap-start">
-              <ProductCard product={p} />
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-// Category Subcategories circular badges carousel
-function CategoryCirclesRow({ categoryId, titleAr, titleEn }: any) {
-  const { locale } = useAppStore();
-  const isAr = locale === 'ar';
-  const router = useRouter();
-  const [subcategories, setSubcategories] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!categoryId) return;
-    setLoading(true);
-    fetch(`/api/categories?parentId=${categoryId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setSubcategories(data);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [categoryId]);
-
-  if (!categoryId || (!loading && subcategories.length === 0)) return null;
-
-  return (
-    <section className="container-platform py-6 text-start">
-      <h3 className="text-base font-black text-slate-800 dark:text-white mb-4">
-        {isAr ? titleAr : titleEn}
-      </h3>
-      {loading ? (
-        <CategoryCirclesSkeleton />
-      ) : (
-        <div className="flex gap-5 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
-          {subcategories.map((sub: any) => (
-            <div 
-              key={sub.id} 
-              className="flex flex-col items-center gap-2 shrink-0 snap-start cursor-pointer group select-none w-20"
-              onClick={() => {
-                useAppStore.getState().setCurrentPage('search');
-                router.push(`/search?categoryId=${sub.id}`);
-              }}
-            >
-              <div className="w-14 h-14 rounded-full border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-105 group-hover:shadow-[0_10px_20px_rgba(0,0,0,0.06)]">
-                {sub.image ? (
-                  <img src={sub.image} className="w-full h-full object-cover" alt="" />
-                ) : (
-                  <span className="text-xl">{sub.icon || '🏷️'}</span>
-                )}
-              </div>
-              <p className="text-[10px] font-bold text-center text-slate-700 dark:text-slate-350 line-clamp-2 leading-tight group-hover:text-amber-500 transition-colors">
-                {isAr ? sub.name : (sub.nameEn || sub.name)}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-// Inline dynamic full-width banner
-function CustomBannerBlock({ imageArUrl, imageEnUrl, linkUrl }: any) {
-  const { locale } = useAppStore();
-  const isAr = locale === 'ar';
-  
-  const imgUrl = isAr ? imageArUrl : (imageEnUrl || imageArUrl);
-  if (!imgUrl) return null;
-
-  return (
-    <section className="container-platform py-4">
-      <a href={linkUrl || '#'} className="block rounded-[20px] overflow-hidden border border-slate-100 dark:border-slate-800 shadow-[0_4px_20px_-1px_rgba(0,0,0,0.02)] hover:scale-[1.01] transition-transform duration-300">
-        <img src={imgUrl} className="w-full h-auto object-cover max-h-[140px] md:max-h-[180px]" alt="Promo Banner" />
-      </a>
-    </section>
-  );
-}
-
-// Helper: get localized field from section metadata or section root
-// Supports: Ar (ar), En (en), Fr (fr), and any other locale code with a capitalized suffix
-function getLocalizedField(section: any, field: string, locale: string, fallbackField?: string): string {
-  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-  // Try locale-specific field first (e.g. titleFr, badgeFr)
-  const localeField = `${field}${cap(locale)}`;
-  if (section?.[localeField]) return section[localeField];
-  if (section?.metadata?.[localeField]) return section.metadata[localeField];
-  // Fallback to English
-  const enField = `${field}En`;
-  if (locale !== 'ar') {
-    if (section?.[enField]) return section[enField];
-    if (section?.metadata?.[enField]) return section.metadata[enField];
-  }
-  // Fallback to Arabic
-  const arField = `${field}Ar`;
-  if (section?.[arField]) return section[arField];
-  if (section?.metadata?.[arField]) return section.metadata[arField];
-  // fallbackField (e.g. section.type)
-  if (fallbackField && section?.[fallbackField]) return section[fallbackField];
-  return '';
-}
-
-// Unified Section Header for dynamic titles, badges, and countdown timers
-function SectionHeader({ section, isAr, locale, t, children }: { section: any; isAr: boolean; locale: string; t: (ar: string, en: string) => string; children?: React.ReactNode }) {
+function CategoryProductsRow({ categoryId, section, locale, layoutStyle = 'carousel', storeId, sellerId, filterType = 'newest' }: any) {
   const title = getLocalizedField(section, 'title', locale, 'type');
   const badge = getLocalizedField(section, 'badge', locale);
   return (
@@ -1059,7 +804,7 @@ export default function StorefrontHomepage() {
             {/* Responsive grid: stack on mobile, 3-column on desktop */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6">
               {/* Right Column: "نوّنها أكثر ووفر أكثر" 4x4 Promos */}
-              <div className="md:col-span-1 lg:col-span-3 min-h-[300px] md:min-h-[380px] lg:h-[480px] rounded-[24px] bg-gradient-to-br from-amber-500 to-amber-600 border border-amber-500/20 shadow-xl p-5 text-slate-950 flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all group relative overflow-hidden">
+              <div className="md:col-span-1 lg:col-span-3 min-h-[300px] md:min-h-[380px] lg:min-h-[480px] rounded-[24px] bg-gradient-to-br from-amber-500 to-amber-600 border border-amber-500/20 shadow-xl p-5 text-slate-950 flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all group relative overflow-hidden">
                 {rightCardType === 'ad' && rightCardAdImage ? (
                   <Link href={rightCardAdLink} className="absolute inset-0 w-full h-full block">
                     <img src={rightCardAdImage} className="w-full h-full object-cover" alt="" />
@@ -1092,7 +837,7 @@ export default function StorefrontHomepage() {
               </div>
 
               {/* Center Column: Mega Offers countdown timer — spans full width on mobile */}
-              <div className="md:col-span-2 lg:col-span-6 min-h-[340px] md:min-h-[420px] lg:h-[480px] rounded-[24px] bg-slate-950 text-white border-2 border-rose-600/30 shadow-2xl p-5 flex flex-col justify-between hover:shadow-[0_20px_45px_rgba(244,63,94,0.15)] transition-all relative overflow-hidden order-first md:order-none">
+              <div className="md:col-span-2 lg:col-span-6 min-h-[340px] md:min-h-[420px] lg:min-h-[480px] rounded-[24px] bg-slate-950 text-white border-2 border-rose-600/30 shadow-2xl p-5 flex flex-col justify-between hover:shadow-[0_20px_45px_rgba(244,63,94,0.15)] transition-all relative overflow-hidden order-first md:order-none">
                 {centerCardType === 'ad' && centerCardAdImage ? (
                   <Link href={centerCardAdLink} className="absolute inset-0 w-full h-full block">
                     <img src={centerCardAdImage} className="w-full h-full object-cover" alt="" />
@@ -1123,7 +868,7 @@ export default function StorefrontHomepage() {
                         {locale === 'ar' ? 'لا توجد عروض تنازلية نشطة حالياً.' : 'No active discount deals at the moment.'}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 grow">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 grow h-full max-h-[350px] lg:max-h-none overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent pr-1">
                         {timerProducts.map((p: any) => <ProductCard key={p.id} product={p} isOfferCard={true} />)}
                       </div>
                     )}
@@ -1132,7 +877,7 @@ export default function StorefrontHomepage() {
               </div>
 
               {/* Left Column: "عليها العين" vertical 2x2 promo */}
-              <div className="md:col-span-1 lg:col-span-3 min-h-[300px] md:min-h-[380px] lg:h-[480px] rounded-[24px] bg-gradient-to-br from-slate-900 to-indigo-950 border border-white/5 shadow-xl p-5 text-white flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all group relative overflow-hidden">
+              <div className="md:col-span-1 lg:col-span-3 min-h-[300px] md:min-h-[380px] lg:min-h-[480px] rounded-[24px] bg-gradient-to-br from-slate-900 to-indigo-950 border border-white/5 shadow-xl p-5 text-white flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all group relative overflow-hidden">
                 {leftCardType === 'ad' && leftCardAdImage ? (
                   <Link href={leftCardAdLink} className="absolute inset-0 w-full h-full block">
                     <img src={leftCardAdImage} className="w-full h-full object-cover" alt="" />
@@ -1149,7 +894,7 @@ export default function StorefrontHomepage() {
                       </h3>
                       <Badge variant="secondary" className="bg-white/10 text-white hover:bg-white/15 cursor-pointer text-[9px] py-0.5 px-2" onClick={() => router.push('/search')}>{globalT('homepage.viewAll') || 'عرض الكل'}</Badge>
                     </div>
-                    <div className="flex flex-col gap-3 z-10 grow mt-4 overflow-y-auto">
+                    <div className="flex flex-col gap-3 z-10 grow mt-4 overflow-y-auto h-full max-h-[350px] lg:max-h-[390px] scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent pr-1">
                       {leftCardProducts.map((p: any, i: number) => {
                         let imgs: string[] = [];
                         try { imgs = Array.isArray(p.images) ? p.images : JSON.parse(p.images || '[]'); } catch {}
@@ -1510,8 +1255,8 @@ export default function StorefrontHomepage() {
             categoryId={section.categoryId}
             storeId={section.storeId}
             sellerId={section.sellerId}
-            titleAr={section.titleAr}
-            titleEn={section.titleEn}
+            section={section}
+            locale={locale}
             layoutStyle={section.layoutStyle}
             filterType={section.filterType || 'newest'}
           />
@@ -1522,8 +1267,8 @@ export default function StorefrontHomepage() {
           <CategoryCirclesRow
             key={section.id}
             categoryId={section.categoryId}
-            titleAr={section.titleAr}
-            titleEn={section.titleEn}
+            section={section}
+            locale={locale}
           />
         );
 
