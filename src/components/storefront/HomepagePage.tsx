@@ -341,8 +341,7 @@ function ProductCard({ product, isOfferCard = false }: { product: any; isOfferCa
   );
 }
 
-// Category Showcase Products carousel/grid
-function CategoryProductsRow({ categoryId, titleAr, titleEn, layoutStyle = 'carousel', storeId, sellerId }: any) {
+function CategoryProductsRow({ categoryId, titleAr, titleEn, layoutStyle = 'carousel', storeId, sellerId, filterType = 'newest' }: any) {
   const { locale } = useAppStore();
   const isAr = locale === 'ar';
   const [products, setProducts] = useState<any[]>([]);
@@ -367,7 +366,7 @@ function CategoryProductsRow({ categoryId, titleAr, titleEn, layoutStyle = 'caro
       setSubcategories([]);
     }
 
-    let url = `/api/products?status=active&limit=10`;
+    let url = `/api/products?status=active&limit=10&sort=${filterType}`;
     if (categoryId) url += `&categoryId=${categoryId}`;
     if (storeId) url += `&storeId=${storeId}`;
     if (sellerId) url += `&sellerId=${sellerId}`;
@@ -381,7 +380,7 @@ function CategoryProductsRow({ categoryId, titleAr, titleEn, layoutStyle = 'caro
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [categoryId, storeId, sellerId]);
+  }, [categoryId, storeId, sellerId, filterType]);
 
   const handleSubcatClick = (subcatId: string) => {
     const targetId = selectedSubcatId === subcatId ? '' : subcatId;
@@ -389,7 +388,7 @@ function CategoryProductsRow({ categoryId, titleAr, titleEn, layoutStyle = 'caro
     setLoading(true);
     
     const fetchId = targetId || categoryId;
-    let url = `/api/products?status=active&limit=10`;
+    let url = `/api/products?status=active&limit=10&sort=${filterType}`;
     if (fetchId) url += `&categoryId=${fetchId}`;
     if (storeId) url += `&storeId=${storeId}`;
     if (sellerId) url += `&sellerId=${sellerId}`;
@@ -761,6 +760,12 @@ export default function StorefrontHomepage() {
         
         const card1Link = section.metadata?.card1Link || '/search?q=electronics';
 
+        const card1Type = section.metadata?.card1Type || 'text';
+        const card1AdImage = isAr 
+          ? (section.metadata?.card1AdImageAr || section.metadata?.card1AdImageEn) 
+          : (section.metadata?.card1AdImageEn || section.metadata?.card1AdImageAr);
+        const card1AdLink = section.metadata?.card1AdLink || '#';
+
         // Retrieve custom settings for Side Card 2
         const card2Badge = isAr 
           ? (section.metadata?.card2BadgeAr || t('الجمال والعطور', 'Beauty Deals')) 
@@ -775,6 +780,12 @@ export default function StorefrontHomepage() {
           : (section.metadata?.card2CtaEn || section.metadata?.card2CtaAr || t('اكتشف العطور', 'Explore Now'));
         
         const card2Link = section.metadata?.card2Link || '/search?q=perfumes';
+
+        const card2Type = section.metadata?.card2Type || 'text';
+        const card2AdImage = isAr 
+          ? (section.metadata?.card2AdImageAr || section.metadata?.card2AdImageEn) 
+          : (section.metadata?.card2AdImageEn || section.metadata?.card2AdImageAr);
+        const card2AdLink = section.metadata?.card2AdLink || '#';
 
         return (
           <section key="hero" className="container-platform py-4">
@@ -852,29 +863,53 @@ export default function StorefrontHomepage() {
               {/* Side stack banners (3 Columns on Desktop, hidden on Mobile) */}
               <div className="hidden lg:flex lg:col-span-3 flex-col gap-4 h-[340px] md:h-[400px]">
                 {/* Banner Side 1: Yellow/Orange accent */}
-                <div className="flex-1 rounded-[24px] bg-gradient-to-br from-amber-400 to-orange-500 p-5 text-slate-950 flex flex-col justify-between border border-amber-400/20 shadow-lg relative overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer" onClick={() => router.push(card1Link)}>
-                  <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
-                  <div className="z-10 text-start">
-                    <Badge className="bg-slate-950 text-white text-[8px] font-bold py-0.5 px-2 mb-1.5 select-none">{card1Badge}</Badge>
-                    <h4 className="text-sm font-black leading-snug">{card1Title}</h4>
-                  </div>
-                  <div className="z-10 flex justify-between items-center mt-3">
-                    <span className="text-[10px] font-black underline">{card1Cta}</span>
-                    <ShoppingCart className="w-4 h-4" />
-                  </div>
+                <div 
+                  className="flex-1 rounded-[24px] bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950 flex flex-col justify-between border border-amber-400/20 shadow-lg relative overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer" 
+                  onClick={() => router.push(card1Type === 'ad' ? card1AdLink : card1Link)}
+                >
+                  {card1Type === 'ad' && card1AdImage ? (
+                    <>
+                      <img src={card1AdImage} className="absolute inset-0 w-full h-full object-cover" alt="" />
+                      <div className="absolute inset-0 bg-black/10 hover:bg-black/25 transition-colors" />
+                    </>
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
+                      <div className="z-10 p-5 text-start">
+                        <Badge className="bg-slate-950 text-white text-[8px] font-bold py-0.5 px-2 mb-1.5 select-none">{card1Badge}</Badge>
+                        <h4 className="text-sm font-black leading-snug">{card1Title}</h4>
+                      </div>
+                      <div className="z-10 flex justify-between items-center p-5 mt-3">
+                        <span className="text-[10px] font-black underline">{card1Cta}</span>
+                        <ShoppingCart className="w-4 h-4" />
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* Banner Side 2: Dark indigo glassmorphism */}
-                <div className="flex-1 rounded-[24px] bg-gradient-to-br from-slate-900 to-indigo-950 p-5 text-white flex flex-col justify-between border border-white/5 shadow-lg relative overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer" onClick={() => router.push(card2Link)}>
-                  <div className="absolute inset-0 bg-white/5 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
-                  <div className="z-10 text-start">
-                    <Badge className="bg-white/10 text-white border-white/10 text-[8px] font-bold py-0.5 px-2 mb-1.5 select-none">{card2Badge}</Badge>
-                    <h4 className="text-sm font-black leading-snug">{card2Title}</h4>
-                  </div>
-                  <div className="z-10 flex justify-between items-center mt-3">
-                    <span className="text-[10px] font-black underline text-amber-400">{card2Cta}</span>
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                  </div>
+                <div 
+                  className="flex-1 rounded-[24px] bg-gradient-to-br from-slate-900 to-indigo-950 text-white flex flex-col justify-between border border-white/5 shadow-lg relative overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer" 
+                  onClick={() => router.push(card2Type === 'ad' ? card2AdLink : card2Link)}
+                >
+                  {card2Type === 'ad' && card2AdImage ? (
+                    <>
+                      <img src={card2AdImage} className="absolute inset-0 w-full h-full object-cover" alt="" />
+                      <div className="absolute inset-0 bg-black/10 hover:bg-black/25 transition-colors" />
+                    </>
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 bg-white/5 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
+                      <div className="z-10 p-5 text-start">
+                        <Badge className="bg-white/10 text-white border-white/10 text-[8px] font-bold py-0.5 px-2 mb-1.5 select-none">{card2Badge}</Badge>
+                        <h4 className="text-sm font-black leading-snug">{card2Title}</h4>
+                      </div>
+                      <div className="z-10 flex justify-between items-center p-5 mt-3">
+                        <span className="text-[10px] font-black underline text-amber-400">{card2Cta}</span>
+                        <Sparkles className="w-4 h-4 text-amber-400" />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -964,6 +999,24 @@ export default function StorefrontHomepage() {
           ? data!.bentoLeftProducts!.slice(0, 2) 
           : (data?.featuredProducts || []).slice(6, 8);
 
+        const rightCardType = section.metadata?.rightCardType || 'products';
+        const rightCardAdImage = isAr 
+          ? (section.metadata?.rightCardAdImageAr || section.metadata?.rightCardAdImageEn) 
+          : (section.metadata?.rightCardAdImageEn || section.metadata?.rightCardAdImageAr);
+        const rightCardAdLink = section.metadata?.rightCardAdLink || '#';
+
+        const centerCardType = section.metadata?.centerCardType || 'products';
+        const centerCardAdImage = isAr 
+          ? (section.metadata?.centerCardAdImageAr || section.metadata?.centerCardAdImageEn) 
+          : (section.metadata?.centerCardAdImageEn || section.metadata?.centerCardAdImageAr);
+        const centerCardAdLink = section.metadata?.centerCardAdLink || '#';
+
+        const leftCardType = section.metadata?.leftCardType || 'products';
+        const leftCardAdImage = isAr 
+          ? (section.metadata?.leftCardAdImageAr || section.metadata?.leftCardAdImageEn) 
+          : (section.metadata?.leftCardAdImageEn || section.metadata?.leftCardAdImageAr);
+        const leftCardAdLink = section.metadata?.leftCardAdLink || '#';
+
         const customText1 = isAr 
           ? (section.metadata?.customText1Ar || globalT('homepage.noonItMore') || 'نوّنها أكثر ووفّر أكثر على كل اللي تحبّه')
           : (section.metadata?.customText1En || 'Shop more & save on what you love');
@@ -984,94 +1037,125 @@ export default function StorefrontHomepage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Right Column: "نوّنها أكثر ووفر أكثر" 4x4 Promos */}
               <div className="lg:col-span-3 h-[450px] rounded-[24px] bg-gradient-to-br from-amber-500 to-amber-600 border border-amber-500/20 shadow-xl p-5 text-slate-950 flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all group relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-                <div className="z-10">
-                  <Badge className="bg-slate-950 text-white text-[9px] font-bold py-0.5 px-2 mb-2 select-none">عروض حصرية</Badge>
-                  <h3 className="text-lg font-black leading-snug">{customText1}</h3>
-                </div>
-                <div className="grid grid-cols-2 gap-3 z-10 grow mt-4">
-                  {rightCardProducts.map((p: any, i: number) => {
-                    let imgs: string[] = [];
-                    try { imgs = Array.isArray(p.images) ? p.images : JSON.parse(p.images || '[]'); } catch {}
-                    return (
-                      <div key={i} className="bg-white/80 backdrop-blur rounded-[16px] p-2 flex flex-col justify-between border border-white/25 shadow-sm hover:scale-[1.04] transition-transform cursor-pointer" onClick={() => router.push(`/products/${p.id}`)}>
-                        <div className="aspect-square bg-muted/20 rounded-lg overflow-hidden mb-1">
-                          {imgs[0] ? <img src={imgs[0]} className="w-full h-full object-cover" alt="" /> : <div className="text-xs text-center mt-4 text-muted-foreground">📦</div>}
-                        </div>
-                        <p className="text-[10px] font-black text-slate-800 line-clamp-1 text-center">{isAr ? p.name : (p.nameEn || p.name)}</p>
-                      </div>
-                    );
-                  })}
-                </div>
+                {rightCardType === 'ad' && rightCardAdImage ? (
+                  <Link href={rightCardAdLink} className="absolute inset-0 w-full h-full block">
+                    <img src={rightCardAdImage} className="w-full h-full object-cover" alt="" />
+                    <div className="absolute inset-0 bg-black/10 hover:bg-black/20 transition-colors" />
+                    <Badge className="absolute top-3 end-3 bg-white/10 text-white border-white/10 text-[10px]">إعلان</Badge>
+                  </Link>
+                ) : (
+                  <>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="z-10 text-start">
+                      <Badge className="bg-slate-950 text-white text-[9px] font-bold py-0.5 px-2 mb-2 select-none">عروض حصرية</Badge>
+                      <h3 className="text-lg font-black leading-snug">{customText1}</h3>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 z-10 grow mt-4">
+                      {rightCardProducts.map((p: any, i: number) => {
+                        let imgs: string[] = [];
+                        try { imgs = Array.isArray(p.images) ? p.images : JSON.parse(p.images || '[]'); } catch {}
+                        return (
+                          <div key={i} className="bg-white/80 backdrop-blur rounded-[16px] p-2 flex flex-col justify-between border border-white/25 shadow-sm hover:scale-[1.04] transition-transform cursor-pointer" onClick={() => router.push(`/products/${p.id}`)}>
+                            <div className="aspect-square bg-muted/20 rounded-lg overflow-hidden mb-1">
+                              {imgs[0] ? <img src={imgs[0]} className="w-full h-full object-cover" alt="" /> : <div className="text-xs text-center mt-4 text-muted-foreground">📦</div>}
+                            </div>
+                            <p className="text-[10px] font-black text-slate-800 line-clamp-1 text-center">{isAr ? p.name : (p.nameEn || p.name)}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Center Column: Mega Offers countdown timer */}
               <div className="lg:col-span-6 h-[450px] rounded-[24px] bg-slate-950 text-white border-2 border-rose-600/30 shadow-2xl p-5 flex flex-col justify-between hover:shadow-[0_20px_45px_rgba(244,63,94,0.15)] transition-all relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-36 h-36 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-3 border-b border-white/10 pb-4 mb-3 z-10">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-xl bg-rose-600/20 text-rose-500 animate-pulse">
-                      <Flame className="w-5 h-5 fill-current" />
-                    </div>
-                    <h3 className="text-base font-black text-white">
-                      {isAr 
-                        ? (section.metadata?.customTextCenterAr || data?.countdownConfig?.titleAr || 'عروض ميجا') 
-                        : (section.metadata?.customTextCenterEn || data?.countdownConfig?.titleEn || 'Mega Offers')}
-                    </h3>
-                  </div>
-                  {hasCountdown && (section.metadata?.timerEndDate || data?.countdownConfig?.endDate) && (
-                    <CountdownTimer targetDate={section.metadata?.timerEndDate || data?.countdownConfig?.endDate} />
-                  )}
-                </div>
-                {isLoading ? (
-                  <div className="h-64 bg-muted animate-pulse rounded-xl w-full" />
-                ) : timerProducts.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground text-sm grow flex flex-col items-center justify-center">
-                    <Flame className="w-10 h-10 mb-2 opacity-20" />
-                    {isAr ? 'لا توجد عروض تنازلية نشطة حالياً.' : 'No active discount deals at the moment.'}
-                  </div>
+                {centerCardType === 'ad' && centerCardAdImage ? (
+                  <Link href={centerCardAdLink} className="absolute inset-0 w-full h-full block">
+                    <img src={centerCardAdImage} className="w-full h-full object-cover" alt="" />
+                    <div className="absolute inset-0 bg-black/10 hover:bg-black/20 transition-colors" />
+                    <Badge className="absolute top-3 end-3 bg-white/10 text-white border-white/10 text-[10px]">إعلان</Badge>
+                  </Link>
                 ) : (
-                  <div className="grid grid-cols-2 gap-4 grow">
-                    {timerProducts.map((p: any) => <ProductCard key={p.id} product={p} isOfferCard={true} />)}
-                  </div>
+                  <>
+                    <div className="absolute top-0 left-0 w-36 h-36 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-3 border-b border-white/10 pb-4 mb-3 z-10">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-xl bg-rose-600/20 text-rose-500 animate-pulse">
+                          <Flame className="w-5 h-5 fill-current" />
+                        </div>
+                        <h3 className="text-base font-black text-white">
+                          {isAr 
+                            ? (section.metadata?.customTextCenterAr || data?.countdownConfig?.titleAr || 'عروض ميجا') 
+                            : (section.metadata?.customTextCenterEn || data?.countdownConfig?.titleEn || 'Mega Offers')}
+                        </h3>
+                      </div>
+                      {hasCountdown && (section.metadata?.timerEndDate || data?.countdownConfig?.endDate) && (
+                        <CountdownTimer targetDate={section.metadata?.timerEndDate || data?.countdownConfig?.endDate} />
+                      )}
+                    </div>
+                    {isLoading ? (
+                      <div className="h-64 bg-muted animate-pulse rounded-xl w-full" />
+                    ) : timerProducts.length === 0 ? (
+                      <div className="text-center py-12 text-muted-foreground text-sm grow flex flex-col items-center justify-center">
+                        <Flame className="w-10 h-10 mb-2 opacity-20" />
+                        {isAr ? 'لا توجد عروض تنازلية نشطة حالياً.' : 'No active discount deals at the moment.'}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-4 grow">
+                        {timerProducts.map((p: any) => <ProductCard key={p.id} product={p} isOfferCard={true} />)}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
               {/* Left Column: "عليها العين" vertical 2x2 promo */}
               <div className="lg:col-span-3 h-[450px] rounded-[24px] bg-gradient-to-br from-slate-900 to-indigo-950 border border-white/5 shadow-xl p-5 text-white flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all group relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
-                <div className="z-10 flex justify-between items-center">
-                  <h3 className="text-base font-black flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    {customText2}
-                  </h3>
-                  <Badge variant="secondary" className="bg-white/10 text-white hover:bg-white/15 cursor-pointer text-[9px] py-0.5 px-2" onClick={() => router.push('/search')}>{globalT('homepage.viewAll') || 'عرض الكل'}</Badge>
-                </div>
-                <div className="grid grid-cols-1 gap-3 z-10 grow mt-4">
-                  {leftCardProducts.map((p: any, i: number) => {
-                    let imgs: string[] = [];
-                    try { imgs = Array.isArray(p.images) ? p.images : JSON.parse(p.images || '[]'); } catch {}
-                    const discount = p.comparePrice ? Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100) : 0;
-                    return (
-                      <div key={i} className="bg-white/5 border border-white/10 hover:border-white/20 rounded-[18px] p-3 flex items-center gap-3 cursor-pointer hover:scale-[1.03] transition-all" onClick={() => router.push(`/products/${p.id}`)}>
-                        <div className="w-14 h-14 bg-white/10 rounded-lg overflow-hidden shrink-0">
-                          {imgs[0] ? <img src={imgs[0]} className="w-full h-full object-cover" alt="" /> : <div className="text-xs text-center mt-4 text-white/40">📦</div>}
-                        </div>
-                        <div className="min-w-0 grow">
-                          <h4 className="text-xs font-bold truncate">{isAr ? p.name : (p.nameEn || p.name)}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs font-black text-amber-400">{fmt(p.price)}</span>
-                            {discount > 0 && <span className="text-[9px] bg-red-600 px-1 py-0.5 rounded font-black">-{discount}%</span>}
+                {leftCardType === 'ad' && leftCardAdImage ? (
+                  <Link href={leftCardAdLink} className="absolute inset-0 w-full h-full block">
+                    <img src={leftCardAdImage} className="w-full h-full object-cover" alt="" />
+                    <div className="absolute inset-0 bg-black/10 hover:bg-black/20 transition-colors" />
+                    <Badge className="absolute top-3 end-3 bg-white/10 text-white border-white/10 text-[10px]">إعلان</Badge>
+                  </Link>
+                ) : (
+                  <>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+                    <div className="z-10 flex justify-between items-center text-start">
+                      <h3 className="text-base font-black flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-amber-400" />
+                        {customText2}
+                      </h3>
+                      <Badge variant="secondary" className="bg-white/10 text-white hover:bg-white/15 cursor-pointer text-[9px] py-0.5 px-2" onClick={() => router.push('/search')}>{globalT('homepage.viewAll') || 'عرض الكل'}</Badge>
+                    </div>
+                    <div className="grid grid-cols-1 gap-3 z-10 grow mt-4">
+                      {leftCardProducts.map((p: any, i: number) => {
+                        let imgs: string[] = [];
+                        try { imgs = Array.isArray(p.images) ? p.images : JSON.parse(p.images || '[]'); } catch {}
+                        const discount = p.comparePrice ? Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100) : 0;
+                        return (
+                          <div key={i} className="bg-white/5 border border-white/10 hover:border-white/20 rounded-[18px] p-3 flex items-center gap-3 cursor-pointer hover:scale-[1.03] transition-all" onClick={() => router.push(`/products/${p.id}`)}>
+                            <div className="w-14 h-14 bg-white/10 rounded-lg overflow-hidden shrink-0">
+                              {imgs[0] ? <img src={imgs[0]} className="w-full h-full object-cover" alt="" /> : <div className="text-xs text-center mt-4 text-white/40">📦</div>}
+                            </div>
+                            <div className="min-w-0 grow text-start">
+                              <h4 className="text-xs font-bold truncate">{isAr ? p.name : (p.nameEn || p.name)}</h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className="text-xs font-black text-amber-400">{fmt(p.price)}</span>
+                                {discount > 0 && <span className="text-[9px] bg-red-600 px-1 py-0.5 rounded font-black">-{discount}%</span>}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </section>
         );
+
 
       case 'featured_products':
         const productsToShow = filteredProducts.length > 0 ? filteredProducts : (data?.featuredProducts ?? []);
@@ -1408,6 +1492,7 @@ export default function StorefrontHomepage() {
             titleAr={section.titleAr}
             titleEn={section.titleEn}
             layoutStyle={section.layoutStyle}
+            filterType={section.filterType || 'newest'}
           />
         );
 
@@ -1429,6 +1514,16 @@ export default function StorefrontHomepage() {
             imageEnUrl={section.imageEnUrl}
             linkUrl={section.linkUrl}
           />
+        );
+
+      case 'ad_zone':
+        const zoneKey = section.metadata?.adZone || 'banner_mid';
+        const zoneAds = data?.advertisements?.[zoneKey] || [];
+        if (zoneAds.length === 0) return null;
+        return (
+          <section key={`ad_zone_${section.id}`} className="container-platform py-4 animate-in fade-in">
+            <AdBanner ads={zoneAds} className="h-32 md:h-36" />
+          </section>
         );
 
       default:

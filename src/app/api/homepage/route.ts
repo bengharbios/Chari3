@@ -292,15 +292,13 @@ export async function GET() {
       const rightBaseProducts = applyEntityFilter(rankedProducts, rightCategory, rightStore, rightSeller);
       bentoRightProducts = [...pinnedList.filter(p => rightBaseProducts.some(rp => rp.id === p.id) || (!rightCategory && !rightStore && !rightSeller)), ...applyFilter(subFilter1, rightBaseProducts.filter(p => !pinnedProductMap.has(p.id)))].slice(0, 10);
 
-      // Center card: apply entity filters (no sub-sort, uses default ranking)
+      // Center card: apply entity filters and sort
       const centerCategory = bentoSection.metadata?.centerCategory;
       const centerStore = bentoSection.metadata?.centerStore;
       const centerSeller = bentoSection.metadata?.centerSeller;
-      if (centerCategory || centerStore || centerSeller) {
-        bentoCenterProducts = applyEntityFilter(rankedProducts, centerCategory, centerStore, centerSeller).slice(0, 10);
-      } else {
-        bentoCenterProducts = rankedProducts.slice(0, 10);
-      }
+      const subFilterCenter = bentoSection.metadata?.subFilterCenter || 'smart';
+      const centerBaseProducts = applyEntityFilter(rankedProducts, centerCategory, centerStore, centerSeller);
+      bentoCenterProducts = [...pinnedList.filter(p => centerBaseProducts.some(cp => cp.id === p.id) || (!centerCategory && !centerStore && !centerSeller)), ...applyFilter(subFilterCenter, centerBaseProducts.filter(p => !pinnedProductMap.has(p.id)))].slice(0, 10);
 
       // Left card: apply entity filters then sort
       const leftCategory = bentoSection.metadata?.leftCategory;
