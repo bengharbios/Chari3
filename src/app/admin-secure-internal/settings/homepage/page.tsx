@@ -226,7 +226,8 @@ function SearchableSelector({
 
 export default function AdminHomepageManager() {
   const { isAdminAuthenticated } = useAdminAuthStore();
-  const languages = useTranslationStore(state => state.languages);
+  const rawLanguages = useTranslationStore(state => state.languages);
+  const languages = rawLanguages.filter((l: any) => l.isActive !== false);
   const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const isAr = locale === 'ar';

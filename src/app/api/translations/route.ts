@@ -29,9 +29,11 @@ export async function GET(req: NextRequest) {
       where: { key: 'i18n_languages' },
     });
 
-    const languages: any[] = langSetting?.value
+    const rawLanguages: any[] = langSetting?.value
       ? (langSetting.value as any)
       : builtinLanguages;
+
+    const languages = rawLanguages.filter((l: any) => l.isActive !== false);
 
     // --- Get requested locale dictionary ---
     const dictSetting = await db.systemSetting.findUnique({

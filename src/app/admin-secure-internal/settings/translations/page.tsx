@@ -492,7 +492,7 @@ export default function TranslationsManagerPage() {
                       </div>
                       <span className="text-[10px] text-slate-400 shrink-0">{pct}%</span>
                     </div>
-                    <div className="flex items-center gap-1 mt-0.5">
+                    <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                       <span className="text-[10px] text-slate-400 font-mono uppercase">{lang.code}</span>
                       <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5">
                         {lang.direction.toUpperCase()}
@@ -500,6 +500,15 @@ export default function TranslationsManagerPage() {
                       {lang.isBuiltin && (
                         <Badge className="text-[9px] px-1 py-0 h-3.5 bg-blue-50 text-blue-600 border-blue-200">
                           مدمج
+                        </Badge>
+                      )}
+                      {lang.isActive === false ? (
+                        <Badge className="text-[9px] px-1.5 py-0 h-3.5 bg-red-50 text-red-650 border-red-200 font-bold">
+                          معطلة
+                        </Badge>
+                      ) : (
+                        <Badge className="text-[9px] px-1.5 py-0 h-3.5 bg-emerald-50 text-emerald-650 border-emerald-200 font-bold">
+                          نشطة
                         </Badge>
                       )}
                     </div>
@@ -983,31 +992,63 @@ export default function TranslationsManagerPage() {
                 )}
               </div>
 
-              <div className="space-y-1">
-                <label className="text-xs font-semibold text-slate-600">اتجاه الكتابة</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingLang(prev => prev ? ({ ...prev, direction: 'ltr' }) : null)}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-all ${
-                      editingLang.direction === 'ltr'
-                        ? 'border-[#1ABB9C] bg-[#1ABB9C]/10 text-[#1ABB9C]'
-                        : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
-                    }`}
-                  >
-                    <AlignLeft className="h-4 w-4" /> LTR (يسار لليمين)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditingLang(prev => prev ? ({ ...prev, direction: 'rtl' }) : null)}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-sm font-medium transition-all ${
-                      editingLang.direction === 'rtl'
-                        ? 'border-[#1ABB9C] bg-[#1ABB9C]/10 text-[#1ABB9C]'
-                        : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
-                    }`}
-                  >
-                    <AlignRight className="h-4 w-4" /> RTL (يمين لليسار)
-                  </button>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <label className="text-xs font-semibold text-slate-600">اتجاه الكتابة</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditingLang(prev => prev ? ({ ...prev, direction: 'ltr' }) : null)}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-xs font-medium transition-all ${
+                        editingLang.direction === 'ltr'
+                          ? 'border-[#1ABB9C] bg-[#1ABB9C]/10 text-[#1ABB9C]'
+                          : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                      }`}
+                    >
+                      <AlignLeft className="h-4 w-4" /> LTR
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingLang(prev => prev ? ({ ...prev, direction: 'rtl' }) : null)}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg border text-xs font-medium transition-all ${
+                        editingLang.direction === 'rtl'
+                          ? 'border-[#1ABB9C] bg-[#1ABB9C]/10 text-[#1ABB9C]'
+                          : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                      }`}
+                    >
+                      <AlignRight className="h-4 w-4" /> RTL
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1 col-span-2 sm:col-span-1">
+                  <label className="text-xs font-semibold text-slate-600">حالة اللغة</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      disabled={editingLang.code === 'ar'}
+                      onClick={() => setEditingLang(prev => prev ? ({ ...prev, isActive: true }) : null)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border text-xs font-medium transition-all ${
+                        editingLang.isActive !== false
+                          ? 'border-emerald-500 bg-emerald-50 text-emerald-600'
+                          : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                      } ${editingLang.code === 'ar' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <Check className="h-3.5 w-3.5" /> نشطة
+                    </button>
+                    <button
+                      type="button"
+                      disabled={editingLang.code === 'ar'}
+                      onClick={() => setEditingLang(prev => prev ? ({ ...prev, isActive: false }) : null)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg border text-xs font-medium transition-all ${
+                        editingLang.isActive === false
+                          ? 'border-red-500 bg-red-50 text-red-600'
+                          : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300'
+                      } ${editingLang.code === 'ar' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      <X className="h-3.5 w-3.5" /> معطلة
+                    </button>
+                  </div>
                 </div>
               </div>
 
