@@ -5,14 +5,12 @@ import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { useAppStore } from '@/lib/store';
 import { 
   LayoutDashboard, Settings, Sliders, ToggleRight, ChevronRight, ChevronLeft,
-  Menu, FolderTree, Tag, TrendingUp, ShoppingCart, Users, Store, Wallet,
+  FolderTree, Tag, TrendingUp, ShoppingCart, Users, Store, Wallet,
   Boxes, Banknote, Palette, ChevronDown, Monitor, KeyRound, LogOut, Globe
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useTheme } from 'next-themes';
 
 import { useTranslation } from '@/lib/i18n/useTranslation';
 
@@ -20,7 +18,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
   const { adminUser, logout } = useAdminAuthStore();
   const { isSidebarOpen, setSidebarOpen } = useAppStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [activeGroup, setActiveGroup] = useState<number | null>(null);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { t, locale } = useTranslation();
@@ -34,9 +32,9 @@ export default function AdminSidebar({ className }: { className?: string }) {
     return () => window.removeEventListener('toggleAdminSidebar', handleToggle);
   }, []);
 
-  const toggleGroup = (idx: number) => {
+  const toggleSection = (sectionTitle: string) => {
     if (isCollapsed) return;
-    setActiveGroup(prev => prev === idx ? null : idx);
+    setCollapsedSections(prev => ({ ...prev, [sectionTitle]: !prev[sectionTitle] }));
   };
 
   const getIsActive = (path: string) => {
@@ -103,9 +101,10 @@ export default function AdminSidebar({ className }: { className?: string }) {
   ];
 
   useEffect(() => {
-    const idx = navGroups.findIndex(g => g.items.some(i => getIsActive(i.path)));
-    if (idx !== -1) {
-      setActiveGroup(idx);
+    const activeGroupIndex = navGroups.findIndex(g => g.items.some(i => getIsActive(i.path)));
+    if (activeGroupIndex !== -1) {
+      const activeGroupTitle = navGroups[activeGroupIndex].title;
+      setCollapsedSections(prev => ({ ...prev, [activeGroupTitle]: false }));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, currentTab]);
@@ -133,6 +132,8 @@ export default function AdminSidebar({ className }: { className?: string }) {
     }
   };
 
+  const CloseIcon = isRTL ? ChevronRight : ChevronLeft;
+
   return (
     <>
       {isSidebarOpen && (
@@ -148,148 +149,159 @@ export default function AdminSidebar({ className }: { className?: string }) {
           'fixed top-0 bottom-0 z-[9999] lg:z-auto flex flex-col font-sans',
           'transition-all duration-300 ease-in-out',
           'lg:sticky lg:h-screen text-[#94a3b8]',
-          isSidebarOpen ? 'start-0 w-[260px]' : '-start-[260px] w-[260px]',
+          isSidebarOpen ? 'start-0 w-[var(--sidebar-width)]' : '-start-[280px] w-[var(--sidebar-width)]',
           'lg:start-0',
-          isCollapsed ? 'lg:w-[76px]' : 'lg:w-[260px]',
+          isCollapsed ? 'lg:w-[80px]' : 'lg:w-[var(--sidebar-width)]',
           className
         )}
         style={{ backgroundColor: themeBg }}
       >
-      {/* Logo Section */}
-      <div className="flex items-center gap-3 px-6 h-[72px] shrink-0 border-b border-white/5 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
-        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#1ABB9C] text-white font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(26,187,156,0.3)]">
-          A
+        {/* Logo Section */}
+        <div className="flex items-center gap-3 px-6 h-[72px] shrink-0 border-b border-white/5 cursor-pointer" onClick={() => setIsCollapsed(!isCollapsed)}>
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#1ABB9C] text-white font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(26,187,156,0.3)]">
+            A
+          </div>
+          <div className={cn("flex flex-col transition-opacity duration-300", isCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+            <span className="text-white text-lg font-bold tracking-wide">
+              {t('admin.title')}
+            </span>
+          </div>
         </div>
-        <div className={cn("flex flex-col transition-opacity duration-300", isCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-          <span className="text-white text-lg font-bold tracking-wide">
-            {t('admin.title')}
-          </span>
-        </div>
-      </div>
 
-      <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
-
-        {/* User Profile Info */}
-        <div className={cn("flex items-center gap-3 p-4", isCollapsed ? "justify-center" : "")}>
-          <div className="relative shrink-0">
-            <div className={cn("rounded-full flex items-center justify-center text-white font-bold border-2 border-white/20", isCollapsed ? "h-10 w-10" : "h-14 w-14", "bg-[#1ABB9C]")}>
-              {initials}
+        <div className="flex flex-1 flex-col overflow-y-auto overflow-x-hidden no-scrollbar">
+          {/* User Profile Info */}
+          <div className={cn("flex items-center gap-3 p-4", isCollapsed ? "justify-center" : "")}>
+            <div className="relative shrink-0">
+              <div className={cn("rounded-full flex items-center justify-center text-white font-bold border-2 border-white/20", isCollapsed ? "h-10 w-10" : "h-14 w-14", "bg-[#1ABB9C]")}>
+                {initials}
+              </div>
             </div>
+            <div className={cn("flex flex-col flex-1 min-w-0 transition-opacity", isCollapsed ? "hidden opacity-0" : "opacity-100")}>
+              <span className="text-[13px] text-[#BAB8B8]">{t('common.welcome')}</span>
+              <span className="text-[15px] font-semibold text-[#E7E7E7] truncate">{adminUser?.name || 'Admin'}</span>
+            </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="lg:hidden p-1 rounded hover:bg-white/10 shrink-0"
+              aria-label={isRTL ? 'إغلاق' : 'Close'}
+            >
+              <CloseIcon className="h-4 w-4" />
+            </button>
           </div>
-          <div className={cn("flex flex-col flex-1 min-w-0 transition-opacity", isCollapsed ? "hidden opacity-0" : "opacity-100")}>
-            <span className="text-[13px] text-[#BAB8B8]">{t('common.welcome')}</span>
-            <span className="text-[15px] font-semibold text-[#E7E7E7] truncate">{adminUser?.name || 'Admin'}</span>
-          </div>
-        </div>
-        <div className="w-full h-px bg-white/5 mb-2" />
+          <div className="w-full h-px bg-white/5 mb-2" />
 
-        {/* Sidebar Menu */}
-        <div className="flex-1 py-2">
-          <nav className="flex flex-col w-full">
-            {navGroups.map((group, gIdx) => {
-              const isOpen = activeGroup === gIdx;
-              return (
-                <div key={gIdx} className="mb-4">
-                  <div 
-                    className={cn("px-6 mb-2 transition-opacity cursor-pointer flex justify-between items-center", isCollapsed ? "opacity-0 hidden" : "opacity-100")}
-                    onClick={() => toggleGroup(gIdx)}
+          {/* Sidebar Menu */}
+          <div className="flex-1 py-4">
+            <nav className={cn("flex flex-col w-full space-y-1.5", isCollapsed ? "px-2" : "px-3")}>
+              {navGroups.flatMap((group, gIdx) => {
+                const isSectionCollapsed = collapsedSections[group.title] ?? false;
+
+                const headerButton = (
+                  <button
+                    key={`section-${gIdx}`}
+                    onClick={() => toggleSection(group.title)}
+                    className={cn(
+                      "w-full flex items-center justify-between px-4 py-2 mt-4 first:mt-0 transition-opacity duration-300 group hover:bg-white/5 rounded-md text-start",
+                      isCollapsed ? "opacity-0 hidden" : "opacity-100"
+                    )}
                   >
-                    <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-widest select-none hover:text-[#94a3b8] transition-colors">
+                    <span className="text-[10px] font-bold text-[#94a3b8]/50 uppercase tracking-wider group-hover:text-[#94a3b8]/85 transition-colors">
                       {group.title}
-
                     </span>
-                    <ChevronDown className={cn("h-3 w-3 text-[#64748b] transition-transform", !isOpen && (isRTL ? "rotate-90" : "-rotate-90"))} />
-                  </div>
-                  
-                    <ul className={cn("flex flex-col px-3 gap-0.5 overflow-hidden transition-all duration-300 ease-in-out", (!isOpen && !isCollapsed) ? "max-h-0 opacity-0" : "max-h-[1000px] opacity-100")}>
-                      {group.items.map((item) => {
-                        const isActive = getIsActive(item.path);
-                        const label = item.label;
-                        const Icon = item.icon;
+                    {isSectionCollapsed ? (
+                      <ChevronLeft className={cn("h-3 w-3 text-[#94a3b8]/50", isRTL ? "" : "-rotate-90")} />
+                    ) : (
+                      <ChevronDown className="h-3 w-3 text-[#94a3b8]/50" />
+                    )}
+                  </button>
+                );
 
-                        return (
-                        <li key={item.path} className="relative group">
-                          <Link
-                            dir={isRTL ? 'rtl' : 'ltr'}
-                            href={getAdminPath(item.path)}
-                            className={cn(
-                              'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] font-medium transition-all duration-200 outline-none relative',
-                              isActive
-                                ? 'bg-white/10 text-white' 
-                                : 'text-[#94a3b8] hover:bg-white/5 hover:text-white',
-                              isCollapsed && 'justify-center px-0'
-                            )}
-                          >
-                            {/* Horizontal line connector for active item to mimic gentelella v4 */}
-                            {isActive && !isCollapsed && (
-                              <div className={cn(
-                                "absolute top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#1ABB9C] rounded-full",
-                                isRTL ? "right-0" : "left-0"
-                              )} />
-                            )}
-                            
-                            <Icon className={cn(
-                              "h-[20px] w-[20px] shrink-0 transition-colors", 
-                              isActive ? "text-[#1ABB9C]" : "group-hover:text-[#1ABB9C]"
-                            )} strokeWidth={isActive ? 2.5 : 2} />
-                            
-                            <span className={cn("text-start transition-opacity truncate", isCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                              {label}
-                            </span>
-                            
-                            {/* Hover tooltip for collapsed state */}
-                            {isCollapsed && (
-                              <div className={cn(
-                                "absolute top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover:opacity-100 transition-all z-[100]",
-                                isRTL ? "right-[110%] -translate-x-2 group-hover:translate-x-0" : "left-[110%] translate-x-2 group-hover:translate-x-0"
-                              )}>
-                                <div className="bg-white text-[#1e293b] text-xs font-bold px-3 py-2 rounded-md whitespace-nowrap shadow-xl">
-                                  {label}
-                                </div>
-                              </div>
-                            )}
-                          </Link>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              );
-            })}
-          </nav>
+                if (isSectionCollapsed && !isCollapsed) {
+                  return [headerButton];
+                }
+
+                const items = group.items.map((item) => {
+                  const isActive = getIsActive(item.path);
+                  const label = item.label;
+                  const Icon = item.icon;
+
+                  return (
+                    <Link
+                      key={item.path}
+                      dir={isRTL ? 'rtl' : 'ltr'}
+                      href={getAdminPath(item.path)}
+                      className={cn(
+                        'w-full flex items-center gap-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative',
+                        isCollapsed ? 'justify-center px-0' : 'px-3',
+                        isActive
+                          ? 'bg-white/10 text-white font-semibold shadow-sm'
+                          : 'text-[#94a3b8]/70 hover:bg-white/5 hover:text-white'
+                      )}
+                      title={isCollapsed ? label : undefined}
+                    >
+                      {/* Active indicator line like gentelella v4 */}
+                      {isActive && !isCollapsed && (
+                        <div className={cn(
+                          "absolute top-1/2 -translate-y-1/2 w-1 h-5 bg-[#1ABB9C] rounded-full",
+                          isRTL ? "right-0" : "left-0"
+                        )} />
+                      )}
+
+                      <Icon className={cn(
+                        "h-5 w-5 shrink-0 transition-colors",
+                        isActive ? "text-[#1ABB9C]" : "group-hover:text-[#1ABB9C]"
+                      )} strokeWidth={isActive ? 2.5 : 2} />
+
+                      <span className={cn("text-start transition-opacity truncate", isCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+                        {label}
+                      </span>
+
+                      {/* Tooltip for collapsed state */}
+                      {isCollapsed && (
+                        <div className="absolute start-14 opacity-0 invisible group-hover:opacity-100 group-hover:visible bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 transition-all shadow-lg pointer-events-none">
+                          {label}
+                        </div>
+                      )}
+                    </Link>
+                  );
+                });
+
+                return [headerButton, ...items];
+              })}
+            </nav>
+          </div>
         </div>
-      </div>
 
-      {/* Gentelella Footer Icons */}
-      <div className={cn(
-        "shrink-0 bg-[#171f2d] flex mt-auto",
-        isCollapsed ? "hidden" : ""
-      )}>
-        <Link 
-          href={getAdminPath('settings')}
-          className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
-        >
-          <Settings className="h-[18px] w-[18px]" />
-        </Link>
-        <button 
-          className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
-          onClick={toggleFullScreen}
-        >
-          <Monitor className="h-[18px] w-[18px]" />
-        </button>
-        <button 
-          className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
-        >
-          <KeyRound className="h-[18px] w-[18px]" />
-        </button>
-        <button 
-          onClick={() => { logout(); window.location.reload(); }}
-          className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-red-400 transition-colors hover:bg-[#1a2332]"
-        >
-          <LogOut className="h-[18px] w-[18px]" />
-        </button>
-      </div>
-    </aside>
+        {/* Gentelella Footer Icons */}
+        <div className={cn(
+          "shrink-0 bg-[#171f2d] flex mt-auto",
+          isCollapsed ? "hidden" : ""
+        )}>
+          <Link 
+            href={getAdminPath('settings')}
+            className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
+          >
+            <Settings className="h-[18px] w-[18px]" />
+          </Link>
+          <button 
+            className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
+            onClick={toggleFullScreen}
+          >
+            <Monitor className="h-[18px] w-[18px]" />
+          </button>
+          <button 
+            className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-white transition-colors hover:bg-[#1a2332]"
+          >
+            <KeyRound className="h-[18px] w-[18px]" />
+          </button>
+          <button 
+            onClick={() => { logout(); window.location.reload(); }}
+            className="flex-1 py-3 flex justify-center text-[#5A738E] hover:text-red-400 transition-colors hover:bg-[#1a2332]"
+          >
+            <LogOut className="h-[18px] w-[18px]" />
+          </button>
+        </div>
+      </aside>
     </>
   );
 }
