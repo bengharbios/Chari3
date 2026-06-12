@@ -1,6 +1,7 @@
 'use client';
 
-import { Star, ShoppingCart } from 'lucide-react';
+import { useState } from 'react';
+import { Star, ShoppingCart, Heart } from 'lucide-react';
 import { useAppStore, useCartStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -34,6 +35,7 @@ function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md
 export default function ProductCard({ product }: { product: any }) {
   const { locale, setCurrentPage } = useAppStore();
   const isInCart = useCartStore((s) => s.items.some((i) => i.product.id === product?.id));
+  const [isFavorite, setIsFavorite] = useState(false);
   
   const t = (ar: string, en: string) => locale === 'ar' ? ar : en;
   
@@ -45,24 +47,47 @@ export default function ProductCard({ product }: { product: any }) {
     toast.success(t('تمت الإضافة للسلة', 'Added to cart'));
   };
 
+  const handleToggleFavorite = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsFavorite(!isFavorite);
+    if (!isFavorite) {
+      toast.success(t('تمت الإضافة للمفضلة', 'Added to wishlist'));
+    } else {
+      toast.success(t('تمت الإزالة من المفضلة', 'Removed from wishlist'));
+    }
+  };
+
   return (
     <div 
-      className="group bg-surface rounded-2xl border border-border/40 overflow-hidden hover:shadow-xl hover:shadow-brand/5 hover:border-brand/20 transition-all duration-300 cursor-pointer flex flex-col h-full"
+      className="group bg-surface rounded-[24px] border border-border/60 overflow-hidden hover:shadow-2xl hover:shadow-brand/5 hover:border-brand/30 transition-all duration-500 cursor-pointer flex flex-col h-full relative"
       onClick={() => setCurrentPage(`product:${product.id}` as any)}
     >
       {/* Image */}
-      <div className="relative aspect-square bg-muted/30 overflow-hidden">
+      <div className="relative aspect-square bg-muted/10 overflow-hidden">
         {product.mainImage ? (
           <img 
             src={`/api/files/${product.mainImage}`}
             alt={locale === 'ar' ? product.titleAr : product.titleEn}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-muted/20 text-muted-foreground text-xs">
             No Image
           </div>
         )}
+        
+        {/* Favorite/Wishlist Button */}
+        <button 
+          onClick={handleToggleFavorite}
+          className={`absolute top-3 end-3 p-2 rounded-full border shadow-md backdrop-blur-md z-20 transition-all duration-300 ${
+            isFavorite 
+              ? 'bg-rose-50 dark:bg-rose-950/80 text-rose-500 border-rose-200 dark:border-rose-900 fill-rose-500 scale-110' 
+              : 'bg-white/80 dark:bg-slate-900/80 text-slate-500 border-white/20 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50/80 hover:scale-110'
+          }`}
+          aria-label="Toggle favorite"
+        >
+          <Heart className="w-4 h-4 transition-transform active:scale-90" />
+        </button>
         
         {/* Discount Badge */}
         {product.compareAtPrice && product.compareAtPrice > product.price && (
@@ -72,7 +97,11 @@ export default function ProductCard({ product }: { product: any }) {
         )}
         
         {/* Hover Action */}
-        <div className={`absolute inset-x-0 bottom-0 p-3 transition-transform duration-300 bg-gradient-to-t from-black/50 to-transparent ${isInCart ? 'translate-y-0' : 'translate-y-full group-hover:translate-y-0'}`}>
+        <div className={`absolute inset-x-0 bottom-0 p-3 transition-all duration-500 bg-gradient-to-t from-black/60 via-black/25 to-transparent ${
+          isInCart 
+            ? 'translate-y-0 opacity-100' 
+            : 'translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100'
+        }`}>
           <Button 
             size="sm" 
             className={`w-full font-bold shadow-lg backdrop-blur-sm transition-colors ${

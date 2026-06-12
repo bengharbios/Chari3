@@ -857,3 +857,52 @@ html[data-template="gentelella"] .tremor-Text-root {
 html[data-template="gentelella"] .tremor-Metric-root {
   color: var(--gentelella-heading) !important;
 }
+
+/* ============================================
+   PREMIUM CUSTOM GLASSMORPHISM & ANIMATIONS
+   ============================================ */
+@keyframes heartBeat {
+  0% { transform: scale(1); }
+  14% { transform: scale(1.25); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.25); }
+  70% { transform: scale(1); }
+}
+
+.animate-heartBeat {
+  animation: heartBeat 0.6s ease-in-out;
+}
+
+.glass-premium {
+  backdrop-filter: blur(16px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(190%) !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.06) !important;
+}
+
+.dark .glass-premium {
+  background: rgba(10, 10, 26, 0.65) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+.ambient-glow {
+  position: relative;
+}
+
+.ambient-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, var(--brand), var(--hot));
+  filter: blur(24px);
+  opacity: 0.12;
+  transition: opacity 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: inherit;
+}
+
+.ambient-glow:hover::after {
+  opacity: 0.22;
+}

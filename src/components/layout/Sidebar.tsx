@@ -24,83 +24,156 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 
-const STORE_NAV: NavItem[] = [
-  { id: 'section-store', labelAr: 'المتجر', labelEn: 'Store', isSection: true },
-  { id: 'store', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
-  { id: 'store-products', labelAr: 'المنتجات', labelEn: 'Products', icon: 'Boxes', badge: 5 },
-  { id: 'store-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 12 },
-  { id: 'store-coupons', labelAr: 'الكوبونات والخصومات', labelEn: 'Coupons', icon: 'CreditCard' },
-  { id: 'store-staff', labelAr: 'الفريق', labelEn: 'Team', icon: 'Users' },
-  { id: 'store-analytics', labelAr: 'التحليلات', labelEn: 'Analytics', icon: 'BarChart3' },
-  { id: 'section-billing', labelAr: 'المالية والاشتراكات', labelEn: 'Billing & Subscriptions', isSection: true },
-  { id: 'store-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice', icon: 'Receipt' },
-  { id: 'store-billing-plans', labelAr: 'اختر باقة', labelEn: 'Choose Plan', icon: 'Package' },
-  { id: 'store-billing-addons', labelAr: 'الميزات الإضافية', labelEn: 'Add-ons', icon: 'Sparkles' },
-  { id: 'store-billing-pay', labelAr: 'الدفع والتسديد', labelEn: 'Payment', icon: 'CreditCard' },
-  { id: 'store-billing-history', labelAr: 'سجل الفواتير', labelEn: 'Invoice History', icon: 'FileText' },
-  { id: 'section-settings', labelAr: 'الإعدادات', labelEn: 'Settings', isSection: true },
-  { id: 'store-settings', labelAr: 'إعدادات المتجر', labelEn: 'Store Settings', icon: 'Settings' },
+export interface NavGroup {
+  id: string;
+  labelAr: string;
+  labelEn: string;
+  icon: string;
+  items: NavItem[];
+}
+
+const STORE_NAV_GROUPS: NavGroup[] = [
+  {
+    id: 'store-group',
+    labelAr: 'المتجر',
+    labelEn: 'Store',
+    icon: 'Store',
+    items: [
+      { id: 'store', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
+      { id: 'store-products', labelAr: 'المنتجات', labelEn: 'Products', icon: 'Boxes', badge: 5 },
+      { id: 'store-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 12 },
+      { id: 'store-coupons', labelAr: 'الكوبونات والخصومات', labelEn: 'Coupons', icon: 'CreditCard' },
+      { id: 'store-staff', labelAr: 'الفريق', labelEn: 'Team', icon: 'Users' },
+      { id: 'store-analytics', labelAr: 'التحليلات', labelEn: 'Analytics', icon: 'BarChart3' },
+    ]
+  },
+  {
+    id: 'billing-group',
+    labelAr: 'المالية والاشتراكات',
+    labelEn: 'Billing & Subscriptions',
+    icon: 'Wallet',
+    items: [
+      { id: 'store-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice', icon: 'Receipt' },
+      { id: 'store-billing-plans', labelAr: 'اختر باقة', labelEn: 'Choose Plan', icon: 'Package' },
+      { id: 'store-billing-addons', labelAr: 'الميزات الإضافية', labelEn: 'Add-ons', icon: 'Sparkles' },
+      { id: 'store-billing-pay', labelAr: 'الدفع والتسديد', labelEn: 'Payment', icon: 'CreditCard' },
+      { id: 'store-billing-history', labelAr: 'سجل الفواتير', labelEn: 'Invoice History', icon: 'FileText' },
+    ]
+  },
+  {
+    id: 'settings-group',
+    labelAr: 'الإعدادات',
+    labelEn: 'Settings',
+    icon: 'Settings',
+    items: [
+      { id: 'store-settings', labelAr: 'إعدادات المتجر', labelEn: 'Store Settings', icon: 'Settings' },
+    ]
+  }
 ];
 
-const SELLER_NAV: NavItem[] = [
-  { id: 'section-seller', labelAr: 'التاجر', labelEn: 'Seller', isSection: true },
-  { id: 'seller', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
-  { id: 'seller-products', labelAr: 'منتجاتي', labelEn: 'My Products', icon: 'Boxes' },
-  { id: 'seller-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 4 },
-  { id: 'section-billing', labelAr: 'المالية والاشتراكات', labelEn: 'Billing & Subscriptions', isSection: true },
-  { id: 'seller-wallet', labelAr: 'محفظتي والأرباح', labelEn: 'Wallet & Payouts', icon: 'Wallet' },
-  { id: 'seller-debts', labelAr: 'سداد المديونية', labelEn: 'Pay Debts', icon: 'Receipt' },
-  { id: 'seller-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice', icon: 'Receipt' },
-  { id: 'seller-billing-plans', labelAr: 'اختر باقة', labelEn: 'Choose Plan', icon: 'Package' },
-  { id: 'seller-billing-addons', labelAr: 'الميزات الإضافية', labelEn: 'Add-ons', icon: 'Sparkles' },
-  { id: 'seller-billing-pay', labelAr: 'الدفع والتسديد', labelEn: 'Payment', icon: 'CreditCard' },
-  { id: 'seller-billing-history', labelAr: 'سجل الفواتير', labelEn: 'Invoice History', icon: 'FileText' },
-  { id: 'section-settings', labelAr: 'الإعدادات', labelEn: 'Settings', isSection: true },
-  { id: 'seller-settings', labelAr: 'الإعدادات', labelEn: 'Settings', icon: 'Settings' },
-  { id: 'seller-upgrade', labelAr: 'ترقية لمتجر', labelEn: 'Upgrade to Store', icon: 'TrendingUp' },
+const SELLER_NAV_GROUPS: NavGroup[] = [
+  {
+    id: 'seller-group',
+    labelAr: 'التاجر',
+    labelEn: 'Seller',
+    icon: 'UserCircle',
+    items: [
+      { id: 'seller', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
+      { id: 'seller-products', labelAr: 'منتجاتي', labelEn: 'My Products', icon: 'Boxes' },
+      { id: 'seller-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 4 },
+    ]
+  },
+  {
+    id: 'billing-group',
+    labelAr: 'المالية والاشتراكات',
+    labelEn: 'Billing & Subscriptions',
+    icon: 'Wallet',
+    items: [
+      { id: 'seller-wallet', labelAr: 'محفظتي والأرباح', labelEn: 'Wallet & Payouts', icon: 'Wallet' },
+      { id: 'seller-debts', labelAr: 'سداد المديونية', labelEn: 'Pay Debts', icon: 'Receipt' },
+      { id: 'seller-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice', icon: 'Receipt' },
+      { id: 'seller-billing-plans', labelAr: 'اختر باقة', labelEn: 'Choose Plan', icon: 'Package' },
+      { id: 'seller-billing-addons', labelAr: 'الميزات الإضافية', labelEn: 'Add-ons', icon: 'Sparkles' },
+      { id: 'seller-billing-pay', labelAr: 'الدفع والتسديد', labelEn: 'Payment', icon: 'CreditCard' },
+      { id: 'seller-billing-history', labelAr: 'سجل الفواتير', labelEn: 'Invoice History', icon: 'FileText' },
+    ]
+  },
+  {
+    id: 'settings-group',
+    labelAr: 'الإعدادات',
+    labelEn: 'Settings',
+    icon: 'Settings',
+    items: [
+      { id: 'seller-settings', labelAr: 'الإعدادات', labelEn: 'Settings', icon: 'Settings' },
+      { id: 'seller-upgrade', labelAr: 'ترقية لمتجر', labelEn: 'Upgrade to Store', icon: 'TrendingUp' },
+    ]
+  }
 ];
 
 // Helper to filter nav items based on payment model
-const getSellerNav = (paymentModel: string): NavItem[] => {
-  return SELLER_NAV.filter(item => {
-    if (item.id === 'seller-wallet' && paymentModel === 'decentralized') return false; // Hide wallet for decentralized
-    if (item.id === 'seller-debts' && paymentModel === 'centralized') return false; // Hide debts for centralized
-    return true;
+const getSellerNavGroups = (paymentModel: string): NavGroup[] => {
+  return SELLER_NAV_GROUPS.map(group => {
+    if (group.id === 'billing-group') {
+      return {
+        ...group,
+        items: group.items.filter(item => {
+          if (item.id === 'seller-wallet' && paymentModel === 'decentralized') return false; // Hide wallet for decentralized
+          if (item.id === 'seller-debts' && paymentModel === 'centralized') return false; // Hide debts for centralized
+          return true;
+        })
+      };
+    }
+    return group;
   });
 };
 
-const SUPPLIER_NAV: NavItem[] = [
-  { id: 'supplier', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
-  { id: 'supplier-products', labelAr: 'المنتجات', labelEn: 'Products', icon: 'Boxes' },
-  { id: 'supplier-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 3 },
-  { id: 'supplier-inventory', labelAr: 'المخزون', labelEn: 'Inventory', icon: 'Layers' },
+const SUPPLIER_NAV_GROUPS: NavGroup[] = [
+  {
+    id: 'supplier-group',
+    labelAr: 'المورد',
+    labelEn: 'Supplier',
+    icon: 'Store',
+    items: [
+      { id: 'supplier', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
+      { id: 'supplier-products', labelAr: 'المنتجات', labelEn: 'Products', icon: 'Boxes' },
+      { id: 'supplier-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 3 },
+      { id: 'supplier-inventory', labelAr: 'المخزون', labelEn: 'Inventory', icon: 'Layers' },
+    ]
+  }
 ];
 
-const LOGISTICS_NAV: NavItem[] = [
-  { id: 'logistics', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
-  { id: 'logistics-active', labelAr: 'الشحنات النشطة', labelEn: 'Active Shipments', icon: 'Navigation', badge: 7 },
-  { id: 'logistics-deliveries', labelAr: 'التوصيلات', labelEn: 'Deliveries', icon: 'MapPin' },
-  { id: 'logistics-history', labelAr: 'السجل', labelEn: 'History', icon: 'FileText' },
-  { id: 'logistics-earnings', labelAr: 'الأرباح', labelEn: 'Earnings', icon: 'Wallet' },
+const LOGISTICS_NAV_GROUPS: NavGroup[] = [
+  {
+    id: 'logistics-group',
+    labelAr: 'مندوب الشحن',
+    labelEn: 'Logistics',
+    icon: 'Truck',
+    items: [
+      { id: 'logistics', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
+      { id: 'logistics-active', labelAr: 'الشحنات النشطة', labelEn: 'Active Shipments', icon: 'Navigation', badge: 7 },
+      { id: 'logistics-deliveries', labelAr: 'التوصيلات', labelEn: 'Deliveries', icon: 'MapPin' },
+      { id: 'logistics-history', labelAr: 'السجل', labelEn: 'History', icon: 'FileText' },
+      { id: 'logistics-earnings', labelAr: 'الأرباح', labelEn: 'Earnings', icon: 'Wallet' },
+    ]
+  }
 ];
 
-const BUYER_NAV: NavItem[] = [
-  { id: 'buyer', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
-  { id: 'buyer-orders', labelAr: 'طلباتي', labelEn: 'My Orders', icon: 'Package', badge: 2 },
-  { id: 'buyer-wishlist', labelAr: 'المفضلة', labelEn: 'Wishlist', icon: 'Heart' },
-  { id: 'buyer-addresses', labelAr: 'العناوين', labelEn: 'Addresses', icon: 'MapPin' },
-  { id: 'buyer-wallet', labelAr: 'المحفظة', labelEn: 'Wallet', icon: 'Wallet' },
-  { id: 'buyer-reviews', labelAr: 'التقييمات', labelEn: 'Reviews', icon: 'Star' },
+const BUYER_NAV_GROUPS: NavGroup[] = [
+  {
+    id: 'buyer-group',
+    labelAr: 'المشتري',
+    labelEn: 'Buyer',
+    icon: 'UserCircle',
+    items: [
+      { id: 'buyer', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
+      { id: 'buyer-orders', labelAr: 'طلباتي', labelEn: 'My Orders', icon: 'Package', badge: 2 },
+      { id: 'buyer-wishlist', labelAr: 'المفضلة', labelEn: 'Wishlist', icon: 'Heart' },
+      { id: 'buyer-addresses', labelAr: 'العناوين', labelEn: 'Addresses', icon: 'MapPin' },
+      { id: 'buyer-wallet', labelAr: 'المحفظة', labelEn: 'Wallet', icon: 'Wallet' },
+      { id: 'buyer-reviews', labelAr: 'التقييمات', labelEn: 'Reviews', icon: 'Star' },
+    ]
+  }
 ];
-
-const NAV_ITEMS: Record<UserRole, NavItem[]> = {
-  admin: BUYER_NAV,
-  store_manager: STORE_NAV,
-  seller: SELLER_NAV,
-  supplier: SUPPLIER_NAV,
-  logistics: LOGISTICS_NAV,
-  buyer: BUYER_NAV,
-};
 
 interface SidebarProps {
   className?: string;
@@ -201,36 +274,57 @@ interface SidebarProps {
   };
 
   useEffect(() => {
-      if (user?.role === 'seller' && !isBuyerMode) {
-        // 1. Fetch Global Settings First
-        fetch('/api/settings/public')
-          .then(res => res.json())
-          .then(pub => {
-            let model = 'mixed';
-            if (pub.success && pub.settings?.platform_payment_model) {
-              model = pub.settings.platform_payment_model;
-            }
-            
-            // 2. Fetch Seller Profile Override
-            fetch(`/api/seller/settings?userId=${user.id}`)
-              .then(res => res.json())
-              .then(data => {
-                if (data.success && data.settings?.paymentModel && data.settings.paymentModel !== 'default') {
-                  setPaymentModel(data.settings.paymentModel);
-                } else {
-                  setPaymentModel(model); // fallback to global
-                }
-              })
-              .catch(() => setPaymentModel(model)); // fallback to global
-          })
-          .catch(() => {});
-      }
-    }, [user, isBuyerMode]);
-  
-    if (!user) return null;
-  
-    const navItems = isBuyerMode ? BUYER_NAV : (user.role === 'seller' ? getSellerNav(paymentModel) : NAV_ITEMS[user.role]);
-    const CloseIcon = isRTL ? ChevronRight : ChevronLeft;
+    if (user?.role === 'seller' && !isBuyerMode) {
+      // 1. Fetch Global Settings First
+      fetch('/api/settings/public')
+        .then(res => res.json())
+        .then(pub => {
+          let model = 'mixed';
+          if (pub.success && pub.settings?.platform_payment_model) {
+            model = pub.settings.platform_payment_model;
+          }
+          
+          // 2. Fetch Seller Profile Override
+          fetch(`/api/seller/settings?userId=${user.id}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data.success && data.settings?.paymentModel && data.settings.paymentModel !== 'default') {
+                setPaymentModel(data.settings.paymentModel);
+              } else {
+                setPaymentModel(model); // fallback to global
+              }
+            })
+            .catch(() => setPaymentModel(model)); // fallback to global
+        })
+        .catch(() => {});
+    }
+  }, [user, isBuyerMode]);
+
+  const navGroups = isBuyerMode
+    ? BUYER_NAV_GROUPS
+    : user.role === 'store_manager'
+    ? STORE_NAV_GROUPS
+    : user.role === 'seller'
+    ? getSellerNavGroups(paymentModel)
+    : user.role === 'supplier'
+    ? SUPPLIER_NAV_GROUPS
+    : user.role === 'logistics'
+    ? LOGISTICS_NAV_GROUPS
+    : BUYER_NAV_GROUPS;
+
+  // Auto-expand active group on mount or page change
+  useEffect(() => {
+    const activeGroup = navGroups.find(group => 
+      group.items.some(item => item.id === currentPage)
+    );
+    if (activeGroup) {
+      setCollapsedSections(prev => ({ ...prev, [activeGroup.id]: false }));
+    }
+  }, [currentPage, navGroups]);
+
+  if (!user) return null;
+
+  const CloseIcon = isRTL ? ChevronRight : ChevronLeft;
   
     return (
       <>
@@ -299,81 +393,130 @@ interface SidebarProps {
           {/* Navigation */}
           <div className="flex-1 py-4 overflow-y-auto overflow-x-hidden">
             <div className={cn("space-y-1.5", isDesktopSidebarCollapsed ? "px-2" : "px-3")}>
-              {(() => {
-                let currentSectionId = 'default';
-                return navItems.map((item, index) => {
-                  if (item.isSection) {
-                    currentSectionId = item.id;
-                    const isCollapsed = collapsedSections[item.id];
-                    return (
-                      <button 
-                        key={`section-${item.id}-${index}`} 
-                        onClick={() => toggleSection(item.id)}
-                        className={cn("w-full flex items-center justify-between px-4 py-2 mt-4 first:mt-0 transition-opacity duration-300 group hover:bg-sidebar-accent/5 rounded-md", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}
-                      >
-                        <p className="text-[10px] font-bold text-sidebar-foreground/50 uppercase tracking-wider group-hover:text-sidebar-foreground/80 transition-colors">
-                          {t(locale, item.labelAr, item.labelEn, item.id)}
-                        </p>
-                        {isCollapsed ? (
-                          <ChevronLeft className={cn("h-3 w-3 text-sidebar-foreground/50", isRTL ? "" : "-rotate-90")} />
-                        ) : (
-                          <ChevronDown className="h-3 w-3 text-sidebar-foreground/50" />
-                        )}
-                      </button>
-                    );
-                  }
+              {navGroups.map((group) => {
+                const isSectionCollapsed = collapsedSections[group.id] ?? true;
+                const isOpen = !isSectionCollapsed;
+                const isGroupActive = group.items.some(item => currentPage === item.id);
+                const GroupIcon = iconMap[group.icon] || Store;
 
-                  // If the current section is collapsed, don't render this item (unless sidebar is fully collapsed, then show all or hide? Hide makes sense)
-                  if (collapsedSections[currentSectionId] && !isDesktopSidebarCollapsed) {
-                    return null;
-                  }
-
-                  const Icon = iconMap[item.icon || 'LayoutDashboard'] || LayoutDashboard;
-                  const isActive = currentPage === item.id;
-
-                  return (
+                return (
+                  <div key={group.id} className="relative group">
                     <button
-                      key={item.id + item.labelAr}
                       dir={isRTL ? 'rtl' : 'ltr'}
-                      onClick={() => {
-                        setCurrentPage(item.id as PageType);
-                        if (window.innerWidth < 1024) setSidebarOpen(false);
-                      }}
+                      onClick={() => toggleSection(group.id)}
                       className={cn(
-                        'w-full flex items-center gap-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative',
-                        isDesktopSidebarCollapsed ? 'justify-center px-0' : 'px-3',
-                        isActive
-                          ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm'
-                          : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
+                        'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 outline-none relative text-start',
+                        isGroupActive
+                          ? 'text-brand font-bold bg-sidebar-accent/10' 
+                          : isOpen && !isDesktopSidebarCollapsed
+                            ? 'text-white'
+                            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/10 hover:text-white',
+                        isDesktopSidebarCollapsed && 'justify-center px-0'
                       )}
-                      title={isDesktopSidebarCollapsed ? t(locale, item.labelAr, item.labelEn, item.id) : undefined}
+                      title={isDesktopSidebarCollapsed ? t(locale, group.labelAr, group.labelEn, group.id) : undefined}
                     >
-                      <Icon className="h-5 w-5 shrink-0" />
-                      
-                      <span className={cn("flex-1 truncate text-start transition-opacity duration-300", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                        {t(locale, item.labelAr, item.labelEn, item.id)}
-                      </span>
-                      
-                      {item.badge && item.badge > 0 && (
-                        <Badge className={cn("h-5 min-w-[20px] flex items-center justify-center px-1.5 text-[10px] bg-brand text-navy border-0 shrink-0", isDesktopSidebarCollapsed ? "absolute -top-1 -end-1 shadow-sm border border-white" : "")}>
-                          {item.badge}
-                        </Badge>
+                      <div className="flex items-center gap-3">
+                        <GroupIcon className={cn(
+                          "h-5 w-5 shrink-0 transition-colors",
+                          isGroupActive ? "text-brand" : "group-hover:text-brand"
+                        )} />
+                        <span className={cn("text-start transition-opacity truncate", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+                          {t(locale, group.labelAr, group.labelEn, group.id)}
+                        </span>
+                      </div>
+
+                      {!isDesktopSidebarCollapsed && (
+                        <ChevronDown className={cn(
+                          "h-4 w-4 transition-transform duration-200 opacity-50",
+                          isOpen && (isRTL ? "rotate-90" : "-rotate-90")
+                        )} />
                       )}
-                      
-                      {/* Tooltip for collapsed state */}
-                      {isDesktopSidebarCollapsed && (
-                        <div className="absolute start-14 opacity-0 invisible group-hover:opacity-100 group-hover:visible bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 transition-all shadow-lg pointer-events-none">
-                          {t(locale, item.labelAr, item.labelEn, item.id)}
-                        </div>
+
+                      {/* Active indicator line when collapsed */}
+                      {isGroupActive && isDesktopSidebarCollapsed && (
+                        <div className={cn(
+                          "absolute top-1/2 -translate-y-1/2 w-1.5 h-6 bg-brand rounded-full",
+                          isRTL ? "right-0" : "left-0"
+                        )} />
                       )}
                     </button>
-                  );
-                });
-              })()}
-            </div>
-        </div>
 
-        {/* Logout */}
+                    {/* Nested Children Accordion */}
+                    {!isDesktopSidebarCollapsed && (
+                      <div className={cn(
+                        "overflow-hidden transition-all duration-300 ease-in-out",
+                        isOpen ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0"
+                      )}>
+                        <ul className={cn(
+                          "relative flex flex-col gap-1 py-1",
+                          isRTL ? "pr-9" : "pl-9"
+                        )}>
+                          {/* Vertical line connector */}
+                          <div className={cn(
+                            "absolute top-0 bottom-0 w-px bg-white/10",
+                            isRTL ? "right-5" : "left-5"
+                          )} />
+
+                          {group.items.map((item) => {
+                            const isActive = currentPage === item.id;
+                            const SubIcon = iconMap[item.icon || 'LayoutDashboard'] || LayoutDashboard;
+                            
+                            return (
+                              <li key={item.id} className="relative">
+                                <button
+                                  dir={isRTL ? 'rtl' : 'ltr'}
+                                  onClick={() => {
+                                    setCurrentPage(item.id as PageType);
+                                    if (window.innerWidth < 1024) setSidebarOpen(false);
+                                  }}
+                                  className={cn(
+                                    "w-full flex items-center gap-3 py-2 px-3 rounded-lg text-[13px] transition-colors relative text-start",
+                                    isActive 
+                                      ? "text-brand font-semibold bg-sidebar-accent/5" 
+                                      : "text-sidebar-foreground/70 hover:text-white hover:bg-sidebar-accent/5"
+                                  )}
+                                >
+                                  {/* Horizontal line connector for active item */}
+                                  {isActive && (
+                                    <div className={cn(
+                                      "absolute top-1/2 -translate-y-1/2 w-3 h-px bg-brand",
+                                      isRTL ? "-right-4" : "-left-4"
+                                    )} />
+                                  )}
+                                  <SubIcon className="h-4 w-4 shrink-0 opacity-70" />
+                                  <span>{t(locale, item.labelAr, item.labelEn, item.id)}</span>
+
+                                  {item.badge && item.badge > 0 && (
+                                    <Badge className="h-4 min-w-[16px] flex items-center justify-center px-1 text-[9px] bg-brand text-navy border-0 shrink-0 ms-auto">
+                                      {item.badge}
+                                    </Badge>
+                                  )}
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Hover tooltip for collapsed state */}
+                    {isDesktopSidebarCollapsed && (
+                      <div className={cn(
+                        "absolute top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover:opacity-100 transition-all z-[100]",
+                        isRTL ? "right-[110%] -translate-x-2 group-hover:translate-x-0" : "left-[110%] translate-x-2 group-hover:translate-x-0"
+                      )}>
+                        <div className="bg-slate-800 text-white text-xs font-bold px-3 py-2 rounded-md whitespace-nowrap shadow-xl">
+                          {t(locale, group.labelAr, group.labelEn, group.id)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Logout */}
         <div className="p-3 border-t border-sidebar-border">
           <button
             onClick={logout}

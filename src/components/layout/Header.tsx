@@ -142,6 +142,20 @@ export default function Header() {
   // Dynamic Header CMS Blocks
   const [headerBlocks, setHeaderBlocks] = useState<any[]>([]);
 
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [searchVal, setSearchVal] = useState('');
+  const searchRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
   // Keep city in sync with selectedState for backward compat with shipping calc
   const city = selectedState;
 
@@ -548,19 +562,71 @@ export default function Header() {
           </div>
 
           {/* Search Bar — Desktop only */}
-          <div className="hidden md:flex flex-1 max-w-2xl mx-4">
+          <div ref={searchRef} className="hidden md:flex flex-1 max-w-2xl mx-4 relative z-50">
             <div className="relative w-full">
-              <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground" />
               <Input
+                value={searchVal}
+                onChange={(e) => setSearchVal(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
                 placeholder={t('ابحث عن منتجات، ماركات، وأكثر...', 'Search for products, brands, and more...')}
-                className="ps-10 pe-4 h-10 rounded-full border-border bg-surface focus:ring-2 focus:ring-brand"
+                className="ps-10 pe-4 h-10 rounded-full border-border bg-surface focus:ring-2 focus:ring-brand w-full focus:bg-background transition-all duration-300 shadow-sm"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                    setSearchFocused(false);
                     useAppStore.getState().setCurrentPage('search' as PageType);
                     router.push(`/?view=search&q=${encodeURIComponent(e.currentTarget.value.trim())}`);
                   }
                 }}
               />
+              
+              {/* Smart Search Suggestions Dropdown */}
+              {searchFocused && (
+                <div className="absolute top-full start-0 end-0 mt-2 p-4 rounded-2xl glass-premium z-50 text-start animate-in fade-in slide-in-from-top-2 duration-200">
+                  {searchVal.trim() === '' ? (
+                    <div>
+                      <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2.5 px-1">
+                        {t('الأكثر بحثاً الآن', 'Trending Searches')}
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {TRENDING_SEARCHES.map((query, index) => (
+                          <button
+                            key={index}
+                            onClick={() => {
+                              setSearchVal(query);
+                              setSearchFocused(false);
+                              useAppStore.getState().setCurrentPage('search' as PageType);
+                              router.push(`/?view=search&q=${encodeURIComponent(query)}`);
+                            }}
+                            className="text-xs py-1.5 px-3 rounded-xl bg-muted/40 hover:bg-brand/10 hover:text-brand-foreground border border-border/40 transition-colors"
+                          >
+                            {query}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2.5 px-1">
+                        {t('بحث مقترح عن', 'Suggested Search for')} "{searchVal}"
+                      </h4>
+                      <div className="flex flex-col gap-1">
+                        <button
+                          onClick={() => {
+                            setSearchFocused(false);
+                            useAppStore.getState().setCurrentPage('search' as PageType);
+                            router.push(`/?view=search&q=${encodeURIComponent(searchVal)}`);
+                          }}
+                          className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-muted/40 text-xs font-bold transition-colors text-start"
+                        >
+                          <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>{t('ابحث عن', 'Search for')} "{searchVal}"</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -695,12 +761,14 @@ export default function Header() {
 
         {/* Mobile Search (only when toggled) */}
         {mobileSearchOpen && (
-          <div className="md:hidden pb-3 animate-fade-in">
+          <div className="md:hidden pb-3 animate-fade-in relative z-50">
             <div className="relative">
-              <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground" />
               <Input
+                value={searchVal}
+                onChange={(e) => setSearchVal(e.target.value)}
                 placeholder={t('ابحث عن منتجات...', 'Search for products...')}
-                className="ps-10 pe-4 h-10 rounded-full border-border bg-surface"
+                className="ps-10 pe-4 h-10 rounded-full border-border bg-surface w-full focus:bg-background transition-all duration-300 shadow-sm"
                 autoFocus
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && e.currentTarget.value.trim()) {
@@ -710,6 +778,52 @@ export default function Header() {
                   }
                 }}
               />
+              
+              {/* Mobile Search Suggestions Dropdown */}
+              <div className="absolute top-full start-0 end-0 mt-1.5 p-3 rounded-2xl glass-premium z-50 text-start shadow-lg border border-border/40">
+                {searchVal.trim() === '' ? (
+                  <div>
+                    <h4 className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider mb-2 px-1">
+                      {t('الأكثر بحثاً الآن', 'Trending Searches')}
+                    </h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {TRENDING_SEARCHES.slice(0, 6).map((query, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            setSearchVal(query);
+                            setMobileSearchOpen(false);
+                            useAppStore.getState().setCurrentPage('search' as PageType);
+                            router.push(`/?view=search&q=${encodeURIComponent(query)}`);
+                          }}
+                          className="text-[11px] py-1 px-2.5 rounded-xl bg-muted/40 hover:bg-brand/10 hover:text-brand-foreground border border-border/40 transition-colors"
+                        >
+                          {query}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <h4 className="text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider mb-2 px-1">
+                      {t('بحث مقترح عن', 'Suggested Search for')} "{searchVal}"
+                    </h4>
+                    <div className="flex flex-col gap-1">
+                      <button
+                        onClick={() => {
+                          setMobileSearchOpen(false);
+                          useAppStore.getState().setCurrentPage('search' as PageType);
+                          router.push(`/?view=search&q=${encodeURIComponent(searchVal)}`);
+                        }}
+                        className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-muted/40 text-[11px] font-bold transition-colors text-start"
+                      >
+                        <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>{t('ابحث عن', 'Search for')} "{searchVal}"</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

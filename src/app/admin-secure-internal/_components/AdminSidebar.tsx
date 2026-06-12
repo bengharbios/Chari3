@@ -32,10 +32,6 @@ export default function AdminSidebar({ className }: { className?: string }) {
     return () => window.removeEventListener('toggleAdminSidebar', handleToggle);
   }, []);
 
-  const toggleSection = (sectionTitle: string) => {
-    if (isCollapsed) return;
-    setCollapsedSections(prev => ({ ...prev, [sectionTitle]: !prev[sectionTitle] }));
-  };
 
   const getIsActive = (path: string) => {
     const isBasePage = pathname.split('/').filter(Boolean).length === 1;
@@ -112,12 +108,30 @@ export default function AdminSidebar({ className }: { className?: string }) {
 
   useEffect(() => {
     const activeGroupIndex = navGroups.findIndex(g => g.items.some(i => getIsActive(i.path)));
+    const initialCollapsed: Record<string, boolean> = {};
+    navGroups.forEach(g => {
+      initialCollapsed[g.title] = true;
+    });
     if (activeGroupIndex !== -1) {
       const activeGroupTitle = navGroups[activeGroupIndex].title;
-      setCollapsedSections(prev => ({ ...prev, [activeGroupTitle]: false }));
+      initialCollapsed[activeGroupTitle] = false;
     }
+    setCollapsedSections(initialCollapsed);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, currentTab]);
+
+  const toggleSection = (sectionTitle: string) => {
+    if (isCollapsed) return;
+    setCollapsedSections(prev => {
+      const isCurrentlyCollapsed = prev[sectionTitle] ?? true;
+      const newCollapsed: Record<string, boolean> = {};
+      navGroups.forEach(g => {
+        newCollapsed[g.title] = true;
+      });
+      newCollapsed[sectionTitle] = !isCurrentlyCollapsed;
+      return newCollapsed;
+    });
+  };
 
   const getAdminPath = (subPath: string) => {
     if (typeof window === 'undefined') return '';
@@ -204,7 +218,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
           <div className="flex-1 py-4">
             <nav className={cn("flex flex-col w-full space-y-1.5", isCollapsed ? "px-2" : "px-3")}>
               {navGroups.map((group, gIdx) => {
-                const isSectionCollapsed = collapsedSections[group.title] ?? false;
+                const isSectionCollapsed = collapsedSections[group.title] ?? true;
                 const isOpen = !isSectionCollapsed;
                 const isGroupActive = group.items.some(item => getIsActive(item.path));
                 const Icon = group.icon;

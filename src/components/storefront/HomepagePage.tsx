@@ -788,69 +788,90 @@ export default function StorefrontHomepage() {
           <section key="hero" className="container-platform py-4">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
               {/* Main Banner Slider (9 Columns on Desktop) */}
-              <div className="lg:col-span-9 relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-[28px] shadow-xl border border-white/5 h-[340px] md:h-[400px]">
-                {slide.imageUrl ? (
-                  <>
-                    <img src={slide.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover transition-all duration-750 ease-in-out" />
-                    <div className="absolute inset-0 bg-slate-950/40 mix-blend-multiply" />
-                  </>
-                ) : (
-                  <div className={`absolute inset-0 bg-gradient-to-br ${slideBg} opacity-90 transition-all duration-750 ease-in-out`} />
-                )}
-                <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
-                <div className="h-full flex flex-col justify-center relative z-10 p-8 md:p-12 text-start">
-                  <div className="max-w-xl">
-                    {slideBadge && (
-                      <Badge className="mb-3.5 bg-white/10 text-white border-white/10 text-[10px] font-bold px-3 py-1 rounded-full select-none">
-                        {slideBadge}
-                      </Badge>
-                    )}
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-3 leading-tight tracking-tight">
-                      {slideTitle}
-                    </h1>
-                    <p className="text-xs sm:text-sm md:text-base text-white/80 mb-6 font-medium">
-                      {slideSubtitle}
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      {slide.linkUrl ? (
-                        <Link href={slide.linkUrl} className="inline-block">
-                          <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-6 py-2 rounded-xl text-xs md:text-sm shadow-lg shadow-amber-500/20 w-full sm:w-auto">
-                            {slideCta}
-                            {isAr ? <ArrowLeft className="ms-2 size-4" /> : <ArrowRight className="ms-2 size-4" />}
-                          </Button>
-                        </Link>
+              <div className="lg:col-span-9 relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-[28px] shadow-xl border border-white/5 h-[340px] md:h-[400px] group">
+                <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none z-20" />
+                
+                {currentHeroSlides.map((s: any, idx: number) => {
+                  const isSlideActive = idx === heroIndex;
+                  const sTitle = getLocalizedField(s, 'title', locale) || (locale === 'ar' ? s.titleAr : s.titleEn);
+                  const sSubtitle = getLocalizedField(s, 'subtitle', locale) || (locale === 'ar' ? s.subtitleAr : s.subtitleEn);
+                  const sBadge = getLocalizedField(s, 'badge', locale);
+                  const sCta = getLocalizedField(s, 'ctaText', locale) || (locale === 'ar' ? s.ctaTextAr : s.ctaTextEn) || t('تسوق الآن', 'Shop Now');
+                  const sBg = s.bgGradient || 'from-indigo-600 to-purple-800';
+
+                  return (
+                    <div
+                      key={s.id || idx}
+                      className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                        isSlideActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                      }`}
+                    >
+                      {s.imageUrl ? (
+                        <>
+                          <img src={s.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-[8000ms] ease-out scale-100 group-hover:scale-105" />
+                          <div className="absolute inset-0 bg-slate-950/45 mix-blend-multiply" />
+                        </>
                       ) : (
-                        <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-6 py-2 rounded-xl text-xs md:text-sm shadow-lg shadow-amber-500/20 w-full sm:w-auto">
-                          {slideCta}
-                          {isAr ? <ArrowLeft className="ms-2 size-4" /> : <ArrowRight className="ms-2 size-4" />}
-                        </Button>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${sBg} opacity-90`} />
                       )}
-                      {!isAuthenticated && (
-                        <Link href="/auth/register?role=seller" className="inline-block">
-                          <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-xl text-xs md:text-sm w-full sm:w-auto">
-                            {t('سجل متجرك', 'Start Selling')}
-                          </Button>
-                        </Link>
-                      )}
+                      
+                      <div className="h-full flex flex-col justify-center relative z-10 p-8 md:p-12 text-start">
+                        <div className="max-w-xl">
+                          {sBadge && (
+                            <Badge className="mb-3.5 bg-white/10 text-white border-white/10 text-[10px] font-bold px-3 py-1 rounded-full select-none">
+                              {sBadge}
+                            </Badge>
+                          )}
+                          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-3 leading-tight tracking-tight">
+                            {sTitle}
+                          </h1>
+                          <p className="text-xs sm:text-sm md:text-base text-white/80 mb-6 font-medium">
+                            {sSubtitle}
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            {s.linkUrl ? (
+                              <Link href={s.linkUrl} className="inline-block" onClick={(e) => e.stopPropagation()}>
+                                <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-6 py-2 rounded-xl text-xs md:text-sm shadow-lg shadow-amber-500/20 w-full sm:w-auto">
+                                  {sCta}
+                                  {isAr ? <ArrowLeft className="ms-2 size-4" /> : <ArrowRight className="ms-2 size-4" />}
+                                </Button>
+                              </Link>
+                            ) : (
+                              <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-6 py-2 rounded-xl text-xs md:text-sm shadow-lg shadow-amber-500/20 w-full sm:w-auto">
+                                {sCta}
+                                {isAr ? <ArrowLeft className="ms-2 size-4" /> : <ArrowRight className="ms-2 size-4" />}
+                              </Button>
+                            )}
+                            {!isAuthenticated && (
+                              <Link href="/auth/register?role=seller" className="inline-block" onClick={(e) => e.stopPropagation()}>
+                                <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-xl text-xs md:text-sm w-full sm:w-auto">
+                                  {t('سجل متجرك', 'Start Selling')}
+                                </Button>
+                              </Link>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })}
+
                 {currentHeroSlides.length > 1 && (
-                  <div className="absolute bottom-6 start-1/2 -translate-x-1/2 flex gap-2 z-10 select-none">
+                  <div className="absolute bottom-6 start-1/2 -translate-x-1/2 flex gap-2 z-20 select-none">
                     {currentHeroSlides.map((_, i) => (
-                      <button key={i} onClick={() => setHeroIndex(i)}
+                      <button key={i} onClick={(e) => { e.stopPropagation(); setHeroIndex(i); }}
                         className={`h-2 rounded-full transition-all duration-300 ${i === heroIndex ? 'w-6 bg-amber-500 shadow-md' : 'w-2 bg-white/20'}`} />
                     ))}
                   </div>
                 )}
                 {currentHeroSlides.length > 1 && (
                   <>
-                    <button onClick={() => setHeroIndex((i) => (i - 1 + currentHeroSlides.length) % currentHeroSlides.length)}
-                      className="absolute start-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white z-10 hidden md:block">
+                    <button onClick={(e) => { e.stopPropagation(); setHeroIndex((i) => (i - 1 + currentHeroSlides.length) % currentHeroSlides.length); }}
+                      className="absolute start-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white z-20 hidden md:block">
                       {isAr ? <ChevronRight className="size-4.5" /> : <ChevronLeft className="size-4.5" />}
                     </button>
-                    <button onClick={() => setHeroIndex((i) => (i + 1) % currentHeroSlides.length)}
-                      className="absolute end-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white z-10 hidden md:block">
+                    <button onClick={(e) => { e.stopPropagation(); setHeroIndex((i) => (i + 1) % currentHeroSlides.length); }}
+                      className="absolute end-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white z-20 hidden md:block">
                       {isAr ? <ChevronLeft className="size-4.5" /> : <ChevronRight className="size-4.5" />}
                     </button>
                   </>
