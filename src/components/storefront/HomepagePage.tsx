@@ -1040,12 +1040,16 @@ export default function StorefrontHomepage() {
                       <Badge className="bg-slate-950 text-white text-[9px] font-bold py-0.5 px-2 mb-2 select-none">عروض حصرية</Badge>
                       <h3 className="text-base md:text-lg font-black leading-snug">{customText1}</h3>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 md:gap-3 z-10 grow mt-4">
+                    <div className={`grid gap-2 md:gap-3 z-10 grow mt-4 items-start ${
+                      rightCardProducts.length === 1 
+                        ? "grid-cols-1 justify-items-center max-w-[140px] mx-auto" 
+                        : "grid-cols-2"
+                    }`}>
                       {rightCardProducts.slice(0, 4).map((p: any, i: number) => {
                         let imgs: string[] = [];
                         try { imgs = Array.isArray(p.images) ? p.images : JSON.parse(p.images || '[]'); } catch {}
                         return (
-                          <div key={i} className="bg-white/80 backdrop-blur rounded-[12px] md:rounded-[16px] p-1.5 md:p-2 flex flex-col justify-between border border-white/25 shadow-sm hover:scale-[1.04] transition-transform cursor-pointer" onClick={() => router.push(`/products/${p.id}`)}>
+                          <div key={i} className="bg-white/80 backdrop-blur rounded-[12px] md:rounded-[16px] p-1.5 md:p-2 flex flex-col justify-between border border-white/25 shadow-sm hover:scale-[1.04] transition-transform cursor-pointer w-full" onClick={() => router.push(`/products/${p.id}`)}>
                             <div className="aspect-square bg-muted/20 rounded-lg overflow-hidden mb-1">
                               {imgs[0] ? <img src={imgs[0]} className="w-full h-full object-cover" alt="" /> : <div className="flex items-center justify-center h-full text-lg">📦</div>}
                             </div>
@@ -1090,7 +1094,13 @@ export default function StorefrontHomepage() {
                         {locale === 'ar' ? 'لا توجد عروض تنازلية نشطة حالياً.' : 'No active discount deals at the moment.'}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 grow h-full max-h-[350px] lg:max-h-none overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent pr-1">
+                      <div className={`grid gap-3 md:gap-4 grow h-full max-h-[350px] lg:max-h-none overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent pr-1 items-start ${
+                        timerProducts.length === 1 
+                          ? "grid-cols-1 justify-items-center max-w-[220px] mx-auto w-full" 
+                          : timerProducts.length === 2 
+                            ? "grid-cols-2 justify-items-center max-w-[440px] mx-auto w-full" 
+                            : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3"
+                      }`}>
                         {timerProducts.map((p: any) => <ProductCard key={p.id} product={p} isOfferCard={true} />)}
                       </div>
                     )}
