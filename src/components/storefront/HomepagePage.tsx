@@ -341,26 +341,269 @@ function ProductCard({ product, isOfferCard = false }: { product: any; isOfferCa
   );
 }
 
-function CategoryProductsRow({ categoryId, section, locale, layoutStyle = 'carousel', storeId, sellerId, filterType = 'newest' }: any) {
+function getLocalizedField(obj: any, fieldName: string, locale: string, fallbackField?: string): string {
+  if (!obj) return '';
+
+  const suffix = locale.charAt(0).toUpperCase() + locale.slice(1);
+  const localizedKey = `${fieldName}${suffix}`;
+
+  if (obj[localizedKey] !== undefined && obj[localizedKey] !== null && obj[localizedKey] !== '') {
+    return String(obj[localizedKey]);
+  }
+
+  if (obj.metadata && typeof obj.metadata === 'object') {
+    if (obj.metadata[localizedKey] !== undefined && obj.metadata[localizedKey] !== null && obj.metadata[localizedKey] !== '') {
+      return String(obj.metadata[localizedKey]);
+    }
+  }
+
+  if (locale === 'fr') {
+    const enKey = `${fieldName}En`;
+    if (obj[enKey] !== undefined && obj[enKey] !== null && obj[enKey] !== '') {
+      return String(obj[enKey]);
+    }
+    if (obj.metadata && typeof obj.metadata === 'object') {
+      if (obj.metadata[enKey] !== undefined && obj.metadata[enKey] !== null && obj.metadata[enKey] !== '') {
+        return String(obj.metadata[enKey]);
+      }
+    }
+  }
+
+  const arKey = `${fieldName}Ar`;
+  if (obj[arKey] !== undefined && obj[arKey] !== null && obj[arKey] !== '') {
+    return String(obj[arKey]);
+  }
+  if (obj.metadata && typeof obj.metadata === 'object') {
+    if (obj.metadata[arKey] !== undefined && obj.metadata[arKey] !== null && obj.metadata[arKey] !== '') {
+      return String(obj.metadata[arKey]);
+    }
+  }
+
+  if (obj[fieldName] !== undefined && obj[fieldName] !== null && obj[fieldName] !== '') {
+    return String(obj[fieldName]);
+  }
+  if (obj.metadata && typeof obj.metadata === 'object') {
+    if (obj.metadata[fieldName] !== undefined && obj.metadata[fieldName] !== null && obj.metadata[fieldName] !== '') {
+      return String(obj.metadata[fieldName]);
+    }
+  }
+
+  if (fallbackField && obj[fallbackField] !== undefined && obj[fallbackField] !== null && obj[fallbackField] !== '') {
+    return String(obj[fallbackField]);
+  }
+
+  return '';
+}
+
+interface SectionHeaderProps {
+  section: any;
+  isAr: boolean;
+  locale: string;
+  t: (ar: string, en: string) => string;
+  children?: React.ReactNode;
+}
+
+function SectionHeader({ section, isAr, locale, t, children }: SectionHeaderProps) {
+  const title = getLocalizedField(section, 'title', locale) || section?.type;
+  const badge = getLocalizedField(section, 'badge', locale);
+  const desc = getLocalizedField(section, 'description', locale);
+
+  return (
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
+      <div>
+        <div className="flex items-center gap-2">
+          <h3 className="text-xl font-black text-navy dark:text-white font-cairo">
+            {title}
+          </h3>
+          {badge && (
+            <Badge className="bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[10px] font-bold">
+              {badge}
+            </Badge>
+          )}
+        </div>
+        {desc && (
+          <p className="text-xs text-muted-foreground mt-1">{desc}</p>
+        )}
+      </div>
+      {children && <div className="flex items-center gap-2">{children}</div>}
+    </div>
+  );
+}
+
+function CategoryProductsRow({
+  categoryId,
+  section,
+  locale,
+  layoutStyle = 'carousel',
+  storeId,
+  sellerId,
+  filterType = 'newest',
+  children
+}: any) {
+  const [products, setProducts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const title = getLocalizedField(section, 'title', locale, 'type');
   const badge = getLocalizedField(section, 'badge', locale);
+  const isAr = locale === 'ar';
+
+  useEffect(() => {
+    let isMounted = true;
+    setIsLoading(true);
+
+    const params = new URLSearchParams({
+      status: 'active',
+      limit: '10',
+      sort: filterType
+    });
+    if (categoryId) params.set('categoryId', categoryId);
+    if (storeId) params.set('storeId', storeId);
+    if (sellerId) params.set('sellerId', sellerId);
+
+    fetch(`/api/products?${params.toString()}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (isMounted && d.products) {
+          setProducts(d.products);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [categoryId, storeId, sellerId, filterType]);
+
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 border-b border-slate-100 dark:border-slate-800/80 pb-3">
-      <div className="flex items-center gap-2">
-        <h3 className="text-xl font-black text-navy dark:text-white">
-          {title || section?.type}
-        </h3>
-        {badge && (
-          <Badge className="bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[10px] font-bold">{badge}</Badge>
-        )}
+    <div className="container-platform py-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-xl font-black text-navy dark:text-white font-cairo">
+            {title || section?.type}
+          </h3>
+          {badge && (
+            <Badge className="bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[10px] font-bold">{badge}</Badge>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          {section?.metadata?.enableTimer && section?.metadata?.timerEndDate && (
+            <CountdownTimer targetDate={section.metadata.timerEndDate} />
+          )}
+          {children}
+        </div>
       </div>
-      <div className="flex items-center gap-3">
-        {section.metadata?.enableTimer && section.metadata?.timerEndDate && (
-          <CountdownTimer targetDate={section.metadata.timerEndDate} />
-        )}
-        {children}
-      </div>
+
+      {isLoading ? (
+        <ProductSliderSkeleton />
+      ) : products.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground text-xs bg-white/40 dark:bg-slate-900/40 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
+          {isAr ? 'لا توجد منتجات حالياً في هذا القسم' : 'No products available in this section'}
+        </div>
+      ) : layoutStyle === 'grid' ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {products.map((p: any) => (
+            <ProductCard key={p.id} product={p} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
+          {products.map((p: any) => (
+            <div key={p.id} className="w-[180px] md:w-[220px] shrink-0 snap-start">
+              <ProductCard product={p} />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
+  );
+}
+
+function CategoryCirclesRow({ categoryId, section, locale }: any) {
+  const [categories, setCategories] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const isAr = locale === 'ar';
+
+  useEffect(() => {
+    if (!categoryId) return;
+    let isMounted = true;
+    setIsLoading(true);
+    fetch(`/api/categories?parentId=${categoryId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (isMounted && d.success) {
+          setCategories(d.categories || []);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [categoryId]);
+
+  if (!categoryId) return null;
+  const title = getLocalizedField(section, 'title', locale) || (isAr ? 'التصنيفات الفرعية' : 'Subcategories');
+
+  return (
+    <section className="container-platform py-6">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-xl font-black text-navy dark:text-white font-cairo">{title}</h3>
+      </div>
+      {isLoading ? (
+        <CategoryCirclesSkeleton />
+      ) : categories.length === 0 ? (
+        <p className="text-xs text-muted-foreground">{isAr ? 'لا توجد تصنيفات فرعية' : 'No subcategories available'}</p>
+      ) : (
+        <div className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
+          {categories.map((cat) => (
+            <Link
+              key={cat.id}
+              href={`/search?categoryId=${cat.id}`}
+              className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-[22px] bg-white/70 dark:bg-slate-950/70 border border-border/80 hover:border-amber-500/30 hover:scale-105 hover:bg-white dark:hover:bg-slate-900 transition-all duration-300 shrink-0 snap-start select-none"
+              style={{ minWidth: '92px' }}
+            >
+              <span className="text-2xl drop-shadow-sm select-none">{cat.icon || '📦'}</span>
+              <span className="text-[10px] font-bold text-center leading-tight line-clamp-1 max-w-[80px]">
+                {isAr ? cat.name : (cat.nameEn || cat.name)}
+              </span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function CustomBannerBlock({ imageArUrl, imageEnUrl, linkUrl, locale }: any) {
+  const isAr = locale === 'ar';
+  const imageUrl = isAr ? (imageArUrl || imageEnUrl) : (imageEnUrl || imageArUrl);
+
+  if (!imageUrl) return null;
+
+  const content = (
+    <div className="relative w-full overflow-hidden rounded-[24px] shadow-lg border border-slate-100 dark:border-slate-800/80">
+      <img src={imageUrl} alt="Banner" className="w-full h-auto object-cover hover:scale-[1.01] transition-transform duration-500" />
+    </div>
+  );
+
+  if (linkUrl) {
+    return (
+      <section className="container-platform py-4">
+        <Link href={linkUrl} className="block">
+          {content}
+        </Link>
+      </section>
+    );
+  }
+
+  return (
+    <section className="container-platform py-4">
+      {content}
+    </section>
   );
 }
 
