@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Star, ShoppingCart, Heart } from 'lucide-react';
 import { useAppStore, useCartStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
