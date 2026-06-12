@@ -51,51 +51,61 @@ export default function AdminSidebar({ className }: { className?: string }) {
 
   const navGroups = [
     {
+      id: 'overview',
       title: t('admin.overview'),
+      icon: LayoutDashboard,
       items: [
-        { icon: LayoutDashboard, label: t('admin.dashboardOverview'), path: '' },
-        { icon: TrendingUp, label: t('admin.topProducts'), path: '?tab=products' },
+        { label: t('admin.dashboardOverview'), path: '' },
+        { label: t('admin.topProducts'), path: '?tab=products' },
       ]
     },
     {
+      id: 'orders',
       title: t('admin.ordersControl'),
+      icon: ShoppingCart,
       items: [
-        { icon: ShoppingCart, label: t('admin.fulfilledOrders'), path: '?tab=orders' },
-        { icon: Sliders, label: t('admin.orderStatuses'), path: '?tab=order-statuses' },
+        { label: t('admin.fulfilledOrders'), path: '?tab=orders' },
+        { label: t('admin.orderStatuses'), path: '?tab=order-statuses' },
       ]
     },
     {
+      id: 'accounts',
       title: t('admin.accounts'),
+      icon: Users,
       items: [
-        { icon: Users, label: t('admin.userAccounts'), path: '?tab=users' },
-        { icon: Store, label: t('admin.storesSellers'), path: '?tab=stores-sellers' },
+        { label: t('admin.userAccounts'), path: '?tab=users' },
+        { label: t('admin.storesSellers'), path: '?tab=stores-sellers' },
       ]
     },
     {
+      id: 'finance',
       title: t('admin.financeSubscriptions'),
+      icon: Wallet,
       items: [
-        { icon: Settings, label: t('admin.commissionSettings'), path: 'billing/settings' },
-        { icon: Tag, label: t('admin.subscriptionPackages'), path: 'billing/packages' },
-        { icon: Users, label: t('admin.merchantsSubscriptions'), path: 'billing/merchants' },
-        { icon: Wallet, label: t('admin.walletsDebts'), path: 'billing/wallets' },
-        { icon: Banknote, label: t('admin.payoutRequests'), path: 'billing/withdrawals' },
-        { icon: Sliders, label: t('admin.reviewReceipts'), path: 'billing/receipts' },
-        { icon: TrendingUp, label: t('admin.revenueReports'), path: 'billing/revenue' },
+        { label: t('admin.commissionSettings'), path: 'billing/settings' },
+        { label: t('admin.subscriptionPackages'), path: 'billing/packages' },
+        { label: t('admin.merchantsSubscriptions'), path: 'billing/merchants' },
+        { label: t('admin.walletsDebts'), path: 'billing/wallets' },
+        { label: t('admin.payoutRequests'), path: 'billing/withdrawals' },
+        { label: t('admin.reviewReceipts'), path: 'billing/receipts' },
+        { label: t('admin.revenueReports'), path: 'billing/revenue' },
       ]
     },
     {
+      id: 'platform',
       title: t('admin.platformSettings'),
+      icon: Settings,
       items: [
-        { icon: Tag, label: t('admin.globalCoupons'), path: 'coupons' },
-        { icon: FolderTree, label: t('admin.manageCategories'), path: 'categories' },
-        { icon: Boxes, label: t('admin.manageBrands'), path: 'brands' },
-        { icon: Sliders, label: t('admin.storefrontCMS'), path: 'cms' },
-        { icon: Settings, label: t('admin.homepageSettings'), path: 'settings/homepage' },
-        { icon: Monitor, label: t('admin.manageAdvertisements'), path: 'advertisements' },
-        { icon: ToggleRight, label: t('admin.featureFlags'), path: 'flags' },
-        { icon: Globe, label: t('admin.manageTranslations'), path: 'settings/translations' },
-        { icon: Settings, label: t('admin.generalSettings'), path: 'settings' },
-        { icon: Palette, label: t('admin.themeDesign'), path: 'settings/theme' },
+        { label: t('admin.globalCoupons'), path: 'coupons' },
+        { label: t('admin.manageCategories'), path: 'categories' },
+        { label: t('admin.manageBrands'), path: 'brands' },
+        { label: t('admin.storefrontCMS'), path: 'cms' },
+        { label: t('admin.homepageSettings'), path: 'settings/homepage' },
+        { label: t('admin.manageAdvertisements'), path: 'advertisements' },
+        { label: t('admin.featureFlags'), path: 'flags' },
+        { label: t('admin.manageTranslations'), path: 'settings/translations' },
+        { label: t('admin.generalSettings'), path: 'settings' },
+        { label: t('admin.themeDesign'), path: 'settings/theme' },
       ]
     }
   ];
@@ -193,80 +203,111 @@ export default function AdminSidebar({ className }: { className?: string }) {
           {/* Sidebar Menu */}
           <div className="flex-1 py-4">
             <nav className={cn("flex flex-col w-full space-y-1.5", isCollapsed ? "px-2" : "px-3")}>
-              {navGroups.flatMap((group, gIdx) => {
+              {navGroups.map((group, gIdx) => {
                 const isSectionCollapsed = collapsedSections[group.title] ?? false;
+                const isOpen = !isSectionCollapsed;
+                const isGroupActive = group.items.some(item => getIsActive(item.path));
+                const Icon = group.icon;
 
-                const headerButton = (
-                  <button
-                    key={`section-${gIdx}`}
-                    onClick={() => toggleSection(group.title)}
-                    className={cn(
-                      "w-full flex items-center justify-between px-4 py-2 mt-4 first:mt-0 transition-opacity duration-300 group hover:bg-white/5 rounded-md text-start",
-                      isCollapsed ? "opacity-0 hidden" : "opacity-100"
-                    )}
-                  >
-                    <span className="text-[10px] font-bold text-[#94a3b8]/50 uppercase tracking-wider group-hover:text-[#94a3b8]/85 transition-colors">
-                      {group.title}
-                    </span>
-                    {isSectionCollapsed ? (
-                      <ChevronLeft className={cn("h-3 w-3 text-[#94a3b8]/50", isRTL ? "" : "-rotate-90")} />
-                    ) : (
-                      <ChevronDown className="h-3 w-3 text-[#94a3b8]/50" />
-                    )}
-                  </button>
-                );
-
-                if (isSectionCollapsed && !isCollapsed) {
-                  return [headerButton];
-                }
-
-                const items = group.items.map((item) => {
-                  const isActive = getIsActive(item.path);
-                  const label = item.label;
-                  const Icon = item.icon;
-
-                  return (
-                    <Link
-                      key={item.path}
+                return (
+                  <div key={group.id} className="relative group">
+                    <button
                       dir={isRTL ? 'rtl' : 'ltr'}
-                      href={getAdminPath(item.path)}
+                      onClick={() => toggleSection(group.title)}
                       className={cn(
-                        'w-full flex items-center gap-3 py-2.5 rounded-lg text-sm transition-all duration-200 group relative',
-                        isCollapsed ? 'justify-center px-0' : 'px-3',
-                        isActive
-                          ? 'bg-white/10 text-white font-semibold shadow-sm'
-                          : 'text-[#94a3b8]/70 hover:bg-white/5 hover:text-white'
+                        'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[14px] font-medium transition-all duration-200 outline-none relative text-start',
+                        isGroupActive
+                          ? 'text-white font-semibold' 
+                          : isOpen && !isCollapsed
+                            ? 'text-white'
+                            : 'text-[#94a3b8] hover:bg-white/5 hover:text-white',
+                        isCollapsed && 'justify-center px-0'
                       )}
-                      title={isCollapsed ? label : undefined}
+                      title={isCollapsed ? group.title : undefined}
                     >
-                      {/* Active indicator line like gentelella v4 */}
-                      {isActive && !isCollapsed && (
-                        <div className={cn(
-                          "absolute top-1/2 -translate-y-1/2 w-1 h-5 bg-[#1ABB9C] rounded-full",
-                          isRTL ? "right-0" : "left-0"
+                      <div className="flex items-center gap-3">
+                        <Icon className={cn(
+                          "h-[20px] w-[20px] shrink-0 transition-colors",
+                          isGroupActive ? "text-[#1ABB9C]" : "group-hover:text-[#1ABB9C]"
+                        )} strokeWidth={isGroupActive ? 2.5 : 2} />
+                        <span className={cn("text-start transition-opacity truncate", isCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+                          {group.title}
+                        </span>
+                      </div>
+
+                      {!isCollapsed && (
+                        <ChevronDown className={cn(
+                          "h-4 w-4 transition-transform duration-200 opacity-50",
+                          isOpen && (isRTL ? "rotate-90" : "-rotate-90")
                         )} />
                       )}
 
-                      <Icon className={cn(
-                        "h-5 w-5 shrink-0 transition-colors",
-                        isActive ? "text-[#1ABB9C]" : "group-hover:text-[#1ABB9C]"
-                      )} strokeWidth={isActive ? 2.5 : 2} />
-
-                      <span className={cn("text-start transition-opacity truncate", isCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                        {label}
-                      </span>
-
-                      {/* Tooltip for collapsed state */}
-                      {isCollapsed && (
-                        <div className="absolute start-14 opacity-0 invisible group-hover:opacity-100 group-hover:visible bg-slate-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap z-50 transition-all shadow-lg pointer-events-none">
-                          {label}
-                        </div>
+                      {/* Active indicator line like gentelella v4 */}
+                      {isGroupActive && isCollapsed && (
+                        <div className={cn(
+                          "absolute top-1/2 -translate-y-1/2 w-1.5 h-6 bg-[#1ABB9C] rounded-full",
+                          isRTL ? "right-0" : "left-0"
+                        )} />
                       )}
-                    </Link>
-                  );
-                });
+                    </button>
 
-                return [headerButton, ...items];
+                    {/* Nested Children Accordion */}
+                    {!isCollapsed && (
+                      <div className={cn(
+                        "overflow-hidden transition-all duration-300 ease-in-out",
+                        isOpen ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0"
+                      )}>
+                        <ul className={cn(
+                          "relative flex flex-col gap-1 py-1",
+                          isRTL ? "pr-9" : "pl-9"
+                        )}>
+                          {/* Vertical line connector */}
+                          <div className={cn(
+                            "absolute top-0 bottom-0 w-px bg-white/10",
+                            isRTL ? "right-5" : "left-5"
+                          )} />
+
+                          {group.items.map((item) => {
+                            const isActive = getIsActive(item.path);
+                            return (
+                              <li key={item.path} className="relative">
+                                <Link
+                                  dir={isRTL ? 'rtl' : 'ltr'}
+                                  href={getAdminPath(item.path)}
+                                  className={cn(
+                                    "w-full flex items-center justify-between py-2 px-3 rounded-lg text-[13px] transition-colors relative text-start",
+                                    isActive ? "text-white font-semibold" : "text-[#94a3b8]/70 hover:text-white hover:bg-white/5"
+                                  )}
+                                >
+                                  {/* Horizontal line connector for active item */}
+                                  {isActive && (
+                                    <div className={cn(
+                                      "absolute top-1/2 -translate-y-1/2 w-3 h-px bg-[#1ABB9C]",
+                                      isRTL ? "-right-4" : "-left-4"
+                                    )} />
+                                  )}
+                                  <span>{item.label}</span>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Hover tooltip for collapsed state */}
+                    {isCollapsed && (
+                      <div className={cn(
+                        "absolute top-1/2 -translate-y-1/2 opacity-0 pointer-events-none group-hover:opacity-100 transition-all z-[100]",
+                        isRTL ? "right-[110%] -translate-x-2 group-hover:translate-x-0" : "left-[110%] translate-x-2 group-hover:translate-x-0"
+                      )}>
+                        <div className="bg-white text-[#1e293b] text-xs font-bold px-3 py-2 rounded-md whitespace-nowrap shadow-xl">
+                          {group.title}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
               })}
             </nav>
           </div>
