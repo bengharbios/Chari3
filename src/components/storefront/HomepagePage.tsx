@@ -747,9 +747,10 @@ export default function StorefrontHomepage() {
 
   const slide = currentHeroSlides[heroIndex] || currentHeroSlides[0] || DEFAULT_HERO_SLIDES[0];
   const slideBg = slide?.bg || 'from-slate-900 via-indigo-950 to-slate-900';
-  const slideBadge = locale === 'ar' ? (slide?.badge || '') : locale === 'fr' ? (slide?.badgeFr || slide?.badge || '') : (slide?.badge || '');
-  const slideTitle = locale === 'ar' ? (slide?.title || '') : locale === 'fr' ? (slide?.titleFr || slide?.titleEn || slide?.title || '') : (slide?.titleEn || slide?.title || '');
-  const slideSubtitle = locale === 'ar' ? (slide?.subtitle || '') : locale === 'fr' ? (slide?.subtitleFr || slide?.subtitleEn || slide?.subtitle || '') : (slide?.subtitleEn || slide?.subtitle || '');
+  const slideBadge = getLocalizedField(slide, 'badge', locale);
+  const slideTitle = getLocalizedField(slide, 'title', locale);
+  const slideSubtitle = getLocalizedField(slide, 'subtitle', locale);
+  const slideCta = getLocalizedField(slide, 'cta', locale) || (locale === 'ar' ? 'تسوق الآن' : 'Shop Now');
 
 
 
@@ -758,45 +759,29 @@ export default function StorefrontHomepage() {
     switch (section.type) {
       case 'hero':
         // Retrieve custom settings for Side Card 1
-        const card1Badge = isAr 
-          ? (section.metadata?.card1BadgeAr || t('أحدث الهواتف', 'Latest Mobiles')) 
-          : (section.metadata?.card1BadgeEn || section.metadata?.card1BadgeAr || t('أحدث الهواتف', 'Latest Mobiles'));
+        const card1Badge = getLocalizedField(section, 'card1Badge', locale) || t('أحدث الهواتف', 'Latest Mobiles');
         
-        const card1Title = isAr 
-          ? (section.metadata?.card1TitleAr || t('وفر حتى 50% على أجهزة شاومي وآيفون', 'Save up to 50% on iPhone & Xiaomi')) 
-          : (section.metadata?.card1TitleEn || section.metadata?.card1TitleAr || t('وفر حتى 50% على أجهزة شاومي وآيفون', 'Save up to 50% on iPhone & Xiaomi'));
+        const card1Title = getLocalizedField(section, 'card1Title', locale) || t('وفر حتى 50% على أجهزة شاومي وآيفون', 'Save up to 50% on iPhone & Xiaomi');
         
-        const card1Cta = isAr 
-          ? (section.metadata?.card1CtaAr || t('تسوق الأجهزة', 'Shop Devices')) 
-          : (section.metadata?.card1CtaEn || section.metadata?.card1CtaAr || t('تسوق الأجهزة', 'Shop Devices'));
+        const card1Cta = getLocalizedField(section, 'card1Cta', locale) || t('تسوق الأجهزة', 'Shop Devices');
         
         const card1Link = section.metadata?.card1Link || '/search?q=electronics';
 
         const card1Type = section.metadata?.card1Type || 'text';
-        const card1AdImage = isAr 
-          ? (section.metadata?.card1AdImageAr || section.metadata?.card1AdImageEn) 
-          : (section.metadata?.card1AdImageEn || section.metadata?.card1AdImageAr);
+        const card1AdImage = getLocalizedField(section, 'card1AdImage', locale);
         const card1AdLink = section.metadata?.card1AdLink || '#';
 
         // Retrieve custom settings for Side Card 2
-        const card2Badge = isAr 
-          ? (section.metadata?.card2BadgeAr || t('الجمال والعطور', 'Beauty Deals')) 
-          : (section.metadata?.card2BadgeEn || section.metadata?.card2BadgeAr || t('الجمال والعطور', 'Beauty Deals'));
+        const card2Badge = getLocalizedField(section, 'card2Badge', locale) || t('الجمال والعطور', 'Beauty Deals');
         
-        const card2Title = isAr 
-          ? (section.metadata?.card2TitleAr || t('روائح تسحر الجميع بأسعار لا تقاوم', 'Fragrances that captivate at unbeatable prices')) 
-          : (section.metadata?.card2TitleEn || section.metadata?.card2TitleAr || t('روائح تسحر الجميع بأسعار لا تقاوم', 'Fragrances that captivate at unbeatable prices'));
+        const card2Title = getLocalizedField(section, 'card2Title', locale) || t('روائح تسحر الجميع بأسعار لا تقاوم', 'Fragrances that captivate at unbeatable prices');
         
-        const card2Cta = isAr 
-          ? (section.metadata?.card2CtaAr || t('اكتشف العطور', 'Explore Now')) 
-          : (section.metadata?.card2CtaEn || section.metadata?.card2CtaAr || t('اكتشف العطور', 'Explore Now'));
+        const card2Cta = getLocalizedField(section, 'card2Cta', locale) || t('اكتشف العطور', 'Explore Now');
         
         const card2Link = section.metadata?.card2Link || '/search?q=perfumes';
 
         const card2Type = section.metadata?.card2Type || 'text';
-        const card2AdImage = isAr 
-          ? (section.metadata?.card2AdImageAr || section.metadata?.card2AdImageEn) 
-          : (section.metadata?.card2AdImageEn || section.metadata?.card2AdImageAr);
+        const card2AdImage = getLocalizedField(section, 'card2AdImage', locale);
         const card2AdLink = section.metadata?.card2AdLink || '#';
 
         return (
@@ -830,13 +815,13 @@ export default function StorefrontHomepage() {
                       {slide.linkUrl ? (
                         <Link href={slide.linkUrl} className="inline-block">
                           <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-6 py-2 rounded-xl text-xs md:text-sm shadow-lg shadow-amber-500/20 w-full sm:w-auto">
-                            {locale === 'ar' ? (slide.cta || 'تسوق الآن') : locale === 'fr' ? (slide.ctaFr || slide.cta || 'Acheter maintenant') : (slide.cta || 'Shop Now')}
+                            {slideCta}
                             {isAr ? <ArrowLeft className="ms-2 size-4" /> : <ArrowRight className="ms-2 size-4" />}
                           </Button>
                         </Link>
                       ) : (
                         <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-6 py-2 rounded-xl text-xs md:text-sm shadow-lg shadow-amber-500/20 w-full sm:w-auto">
-                          {locale === 'ar' ? (slide.cta || 'تسوق الآن') : locale === 'fr' ? (slide.ctaFr || slide.cta || 'Acheter maintenant') : (slide.cta || 'Shop Now')}
+                          {slideCta}
                           {isAr ? <ArrowLeft className="ms-2 size-4" /> : <ArrowRight className="ms-2 size-4" />}
                         </Button>
                       )}
@@ -1012,21 +997,15 @@ export default function StorefrontHomepage() {
           : (data?.featuredProducts || []).slice(6, 8);
 
         const rightCardType = section.metadata?.rightCardType || 'products';
-        const rightCardAdImage = isAr 
-          ? (section.metadata?.rightCardAdImageAr || section.metadata?.rightCardAdImageEn) 
-          : (section.metadata?.rightCardAdImageEn || section.metadata?.rightCardAdImageAr);
+        const rightCardAdImage = getLocalizedField(section, 'rightCardAdImage', locale);
         const rightCardAdLink = section.metadata?.rightCardAdLink || '#';
 
         const centerCardType = section.metadata?.centerCardType || 'products';
-        const centerCardAdImage = isAr 
-          ? (section.metadata?.centerCardAdImageAr || section.metadata?.centerCardAdImageEn) 
-          : (section.metadata?.centerCardAdImageEn || section.metadata?.centerCardAdImageAr);
+        const centerCardAdImage = getLocalizedField(section, 'centerCardAdImage', locale);
         const centerCardAdLink = section.metadata?.centerCardAdLink || '#';
 
         const leftCardType = section.metadata?.leftCardType || 'products';
-        const leftCardAdImage = isAr 
-          ? (section.metadata?.leftCardAdImageAr || section.metadata?.leftCardAdImageEn) 
-          : (section.metadata?.leftCardAdImageEn || section.metadata?.leftCardAdImageAr);
+        const leftCardAdImage = getLocalizedField(section, 'leftCardAdImage', locale);
         const leftCardAdLink = section.metadata?.leftCardAdLink || '#';
 
         const customText1 = getLocalizedField(section, 'customText1', locale)

@@ -302,11 +302,9 @@ export default function AdminHomepageManager() {
   }>({ products: [], stores: [], sellers: [] });
 
   // Countdown state
-  const [countdown, setCountdown] = useState({
+  const [countdown, setCountdown] = useState<any>({
     enabled: false,
     endDate: '',
-    titleAr: '',
-    titleEn: '',
   });
 
   // Live Validation Matching Products Count State
@@ -450,10 +448,9 @@ export default function AdminHomepageManager() {
         });
 
         setCountdown({
+          ...d.countdown,
           enabled: d.countdown?.enabled || false,
           endDate: d.countdown?.endDate ? d.countdown.endDate.substring(0, 16) : '',
-          titleAr: d.countdown?.titleAr || '',
-          titleEn: d.countdown?.titleEn || '',
         });
 
         setHeroSlides(d.heroSlides || []);
@@ -490,10 +487,9 @@ export default function AdminHomepageManager() {
           sellers: (updatedPinned.sellers || []).map((s: any, idx: number) => ({ id: s.id, order: idx + 1, name: s.name, image: s.image })),
         },
         countdown: {
+          ...updatedCountdown,
           enabled: updatedCountdown.enabled,
           endDate: updatedCountdown.endDate ? new Date(updatedCountdown.endDate).toISOString() : '',
-          titleAr: updatedCountdown.titleAr,
-          titleEn: updatedCountdown.titleEn,
         },
         heroSlides: updatedHeroSlides,
       };
@@ -521,42 +517,51 @@ export default function AdminHomepageManager() {
 
   // Slides handlers
   const handleStartAddSlide = () => {
-    setEditSlideData({
-      title: '',
-      titleEn: '',
-      titleFr: '',
-      subtitle: '',
-      subtitleEn: '',
-      subtitleFr: '',
+    const initialSlide: any = {
       bg: 'from-blue-950 via-indigo-900 to-slate-900',
-      badge: '',
-      badgeFr: '',
-      cta: 'تسوق الآن',
-      ctaFr: '',
       linkUrl: '',
       imageUrl: '',
+    };
+    languages.forEach((lang: any) => {
+      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+      initialSlide[`title${codeSuffix}`] = '';
+      initialSlide[`subtitle${codeSuffix}`] = '';
+      initialSlide[`badge${codeSuffix}`] = '';
+      initialSlide[`cta${codeSuffix}`] = '';
+      if (lang.code === 'ar') {
+        initialSlide.title = '';
+        initialSlide.subtitle = '';
+        initialSlide.badge = '';
+        initialSlide.cta = 'تسوق الآن';
+      }
     });
+    setEditSlideData(initialSlide);
     setEditingSlideIndex(heroSlides.length);
   };
 
   const handleStartEditSlide = (index: number) => {
     const slide = heroSlides[index];
     if (!slide) return;
-    setEditSlideData({
-      title: slide.title || '',
-      titleEn: slide.titleEn || '',
-      titleFr: slide.titleFr || '',
-      subtitle: slide.subtitle || '',
-      subtitleEn: slide.subtitleEn || '',
-      subtitleFr: slide.subtitleFr || '',
+    const initialSlide: any = {
       bg: slide.bg || 'from-blue-950 via-indigo-900 to-slate-900',
-      badge: slide.badge || '',
-      badgeFr: slide.badgeFr || '',
-      cta: slide.cta || 'تسوق الآن',
-      ctaFr: slide.ctaFr || '',
       linkUrl: slide.linkUrl || '',
       imageUrl: slide.imageUrl || '',
+    };
+    languages.forEach((lang: any) => {
+      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+      const isArabic = lang.code === 'ar';
+      initialSlide[`title${codeSuffix}`] = slide[`title${codeSuffix}`] || (isArabic ? slide.title : '') || '';
+      initialSlide[`subtitle${codeSuffix}`] = slide[`subtitle${codeSuffix}`] || (isArabic ? slide.subtitle : '') || '';
+      initialSlide[`badge${codeSuffix}`] = slide[`badge${codeSuffix}`] || (isArabic ? slide.badge : '') || '';
+      initialSlide[`cta${codeSuffix}`] = slide[`cta${codeSuffix}`] || (isArabic ? slide.cta : '') || '';
+      if (isArabic) {
+        initialSlide.title = slide.title || '';
+        initialSlide.subtitle = slide.subtitle || '';
+        initialSlide.badge = slide.badge || '';
+        initialSlide.cta = slide.cta || 'تسوق الآن';
+      }
     });
+    setEditSlideData(initialSlide);
     setEditingSlideIndex(index);
   };
 
@@ -1051,26 +1056,24 @@ export default function AdminHomepageManager() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {/* Common Titles Fields */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2 text-start">
-                          <Label className="text-xs font-bold">{t('العنوان باللغة العربية', 'Title (Arabic)')}</Label>
-                          <Input
-                            value={editSectData.titleAr}
-                            onChange={e => setEditSectData(prev => ({ ...prev, titleAr: e.target.value }))}
-                            className="rounded-xl text-sm"
-                            placeholder="أجهزة إلكترونية مميزة"
-                          />
-                        </div>
-                        <div className="space-y-2 text-start">
-                          <Label className="text-xs font-bold">{t('العنوان باللغة الإنجليزية', 'Title (English)')}</Label>
-                          <Input
-                            value={editSectData.titleEn}
-                            onChange={e => setEditSectData(prev => ({ ...prev, titleEn: e.target.value }))}
-                            className="rounded-xl text-sm"
-                            placeholder="Featured Electronics"
-                          />
-                        </div>
+                      {/* Dynamic Title Fields based on active languages */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {languages.map((lang: any) => {
+                          const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                          const keyName = `title${codeSuffix}`;
+                          const inputLabel = `${t('العنوان باللغة', 'Title in')} ${lang.name}`;
+                          return (
+                            <div key={lang.code} className="space-y-2 text-start">
+                              <Label className="text-xs font-bold">{inputLabel}</Label>
+                              <Input
+                                value={editSectData[keyName] || ''}
+                                onChange={e => setEditSectData(prev => ({ ...prev, [keyName]: e.target.value }))}
+                                className="rounded-xl text-sm"
+                                placeholder={lang.code === 'ar' ? 'أجهزة إلكترونية مميزة' : lang.code === 'en' ? 'Featured Electronics' : `Featured (${lang.name})`}
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
 
                       {/* Layout style for category products */}
@@ -1091,24 +1094,23 @@ export default function AdminHomepageManager() {
                       {/* Custom Banner Showcase Settings - Direct Image Upload */}
                       {layout.find(s => s.id === editingSectId)?.type === 'banner' && (
                         <div className="space-y-4 pt-2 border-t">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2 text-start">
-                              <Label className="text-xs font-bold">{t('صورة الإعلان باللغة العربية', 'Arabic Banner Image')}</Label>
-                              <ImageUploader
-                                value={editSectData.imageArUrl}
-                                onChange={url => setEditSectData(prev => ({ ...prev, imageArUrl: url }))}
-                                hint={t('الصورة الإعلانية التي ستظهر للمتصفح العربي.', 'Uploaded banner displayed in Arabic locale.')}
-                              />
-                            </div>
-
-                            <div className="space-y-2 text-start">
-                              <Label className="text-xs font-bold">{t('صورة الإعلان باللغة الإنجليزية', 'English Banner Image')}</Label>
-                              <ImageUploader
-                                value={editSectData.imageEnUrl}
-                                onChange={url => setEditSectData(prev => ({ ...prev, imageEnUrl: url }))}
-                                hint={t('الصورة الإعلانية التي ستظهر للمتصفح الإنجليزي.', 'Uploaded banner displayed in English locale.')}
-                              />
-                            </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {languages.map((lang: any) => {
+                              const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                              const keyName = `image${codeSuffix}Url`;
+                              const inputLabel = `${t('صورة الإعلان باللغة', 'Banner Image in')} ${lang.name}`;
+                              const hintText = `${t('الصورة الإعلانية التي ستظهر للمتصفح بـ', 'Uploaded banner displayed in')} ${lang.name}.`;
+                              return (
+                                <div key={lang.code} className="space-y-2 text-start">
+                                  <Label className="text-xs font-bold">{inputLabel}</Label>
+                                  <ImageUploader
+                                    value={editSectData[keyName] || ''}
+                                    onChange={url => setEditSectData(prev => ({ ...prev, [keyName]: url }))}
+                                    hint={hintText}
+                                  />
+                                </div>
+                              );
+                            })}
                           </div>
 
                           <div className="space-y-2 text-start">
@@ -1204,25 +1206,26 @@ export default function AdminHomepageManager() {
                         </h4>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Universal Badge */}
-                          <div className="space-y-2 text-start">
-                            <Label className="text-xs font-bold">{t('الشارة / الهاشتاغ (عربي)', 'Badge / Hashtag (Arabic)')}</Label>
-                            <Input
-                              value={editSectData.metadata?.badgeAr || ''}
-                              onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, badgeAr: e.target.value } }))}
-                              className="rounded-xl text-sm"
-                              placeholder={t('مثال: عروض حصرية', 'e.g. Exclusive Deals')}
-                            />
-                          </div>
-                          <div className="space-y-2 text-start">
-                            <Label className="text-xs font-bold">{t('الشارة / الهاشتاغ (إنجليزي)', 'Badge / Hashtag (English)')}</Label>
-                            <Input
-                              value={editSectData.metadata?.badgeEn || ''}
-                              onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, badgeEn: e.target.value } }))}
-                              className="rounded-xl text-sm"
-                              placeholder={t('مثال: Exclusive Deals', 'e.g. Exclusive Deals')}
-                            />
-                          </div>
+                          {/* Dynamic Universal Badge based on active languages */}
+                          {languages.map((lang: any) => {
+                            const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                            const keyName = `badge${codeSuffix}`;
+                            const inputLabel = `${t('الشارة / الهاشتاغ باللغة', 'Badge / Hashtag in')} ${lang.name}`;
+                            return (
+                              <div key={lang.code} className="space-y-2 text-start">
+                                <Label className="text-xs font-bold">{inputLabel}</Label>
+                                <Input
+                                  value={editSectData.metadata?.[keyName] || ''}
+                                  onChange={e => setEditSectData((prev: any) => ({
+                                    ...prev,
+                                    metadata: { ...prev.metadata, [keyName]: e.target.value }
+                                  }))}
+                                  className="rounded-xl text-sm"
+                                  placeholder={lang.code === 'ar' ? 'مثال: عروض حصرية' : `e.g. Exclusive Deals (${lang.nameEn})`}
+                                />
+                              </div>
+                            );
+                          })}
 
                           {/* Universal Timer */}
                           <div className="space-y-2 text-start">
@@ -1386,21 +1389,21 @@ export default function AdminHomepageManager() {
 
                               {editSectData.metadata?.card1Type === 'ad' ? (
                                 <div className="space-y-3">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة العربية', 'Arabic Banner Image')}</Label>
-                                      <ImageUploader
-                                        value={editSectData.metadata?.card1AdImageAr || ''}
-                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1AdImageAr: url } }))}
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة الإنجليزية', 'English Banner Image')}</Label>
-                                      <ImageUploader
-                                        value={editSectData.metadata?.card1AdImageEn || ''}
-                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1AdImageEn: url } }))}
-                                      />
-                                    </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `card1AdImage${codeSuffix}`;
+                                      const inputLabel = `${t('صورة الإعلان باللغة', 'Banner Image in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <ImageUploader
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: url } }))}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
@@ -1414,65 +1417,59 @@ export default function AdminHomepageManager() {
                                 </div>
                               ) : (
                                 <>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('الشارة بالعربية', 'Badge (Arabic)')}</Label>
-                                      <Input
-                                        value={editSectData.metadata?.card1BadgeAr || ''}
-                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1BadgeAr: e.target.value } }))}
-                                        className="rounded-xl text-xs"
-                                        placeholder="أحدث الهواتف"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('الشارة بالإنجليزية', 'Badge (English)')}</Label>
-                                      <Input
-                                        value={editSectData.metadata?.card1BadgeEn || ''}
-                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1BadgeEn: e.target.value } }))}
-                                        className="rounded-xl text-xs"
-                                        placeholder="Latest Mobiles"
-                                      />
-                                    </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `card1Badge${codeSuffix}`;
+                                      const inputLabel = `${t('الشارة بـ', 'Badge in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <Input
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
+                                            className="rounded-xl text-xs"
+                                            placeholder={lang.code === 'ar' ? 'أحدث الهواتف' : 'Latest Mobiles'}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('العنوان بالعربية', 'Title (Arabic)')}</Label>
-                                      <Input
-                                        value={editSectData.metadata?.card1TitleAr || ''}
-                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1TitleAr: e.target.value } }))}
-                                        className="rounded-xl text-xs"
-                                        placeholder="وفر حتى 50% على أجهزة شاومي وآيفون"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('العنوان بالإنجليزية', 'Title (English)')}</Label>
-                                      <Input
-                                        value={editSectData.metadata?.card1TitleEn || ''}
-                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1TitleEn: e.target.value } }))}
-                                        className="rounded-xl text-xs"
-                                        placeholder="Save up to 50% on iPhone & Xiaomi"
-                                      />
-                                    </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `card1Title${codeSuffix}`;
+                                      const inputLabel = `${t('العنوان بـ', 'Title in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <Input
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
+                                            className="rounded-xl text-xs"
+                                            placeholder={lang.code === 'ar' ? 'وفر حتى 50% على أجهزة شاومي وآيفون' : 'Save up to 50% on iPhone & Xiaomi'}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <div className="space-y-1 col-span-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('نص الزر بالعربية', 'CTA Text (Arabic)')}</Label>
-                                      <Input
-                                        value={editSectData.metadata?.card1CtaAr || ''}
-                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1CtaAr: e.target.value } }))}
-                                        className="rounded-xl text-xs"
-                                        placeholder="تسوق الأجهزة"
-                                      />
-                                    </div>
-                                    <div className="space-y-1 col-span-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('نص الزر بالإنجليزية', 'CTA Text (English)')}</Label>
-                                      <Input
-                                        value={editSectData.metadata?.card1CtaEn || ''}
-                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1CtaEn: e.target.value } }))}
-                                        className="rounded-xl text-xs"
-                                        placeholder="Shop Devices"
-                                      />
-                                    </div>
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `card1Cta${codeSuffix}`;
+                                      const inputLabel = `${t('نص الزر بـ', 'CTA Text in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1 col-span-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <Input
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
+                                            className="rounded-xl text-xs"
+                                            placeholder={lang.code === 'ar' ? 'تسوق الأجهزة' : 'Shop Devices'}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                     <div className="space-y-1 col-span-1">
                                       <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
                                       <Input
@@ -1507,21 +1504,21 @@ export default function AdminHomepageManager() {
 
                               {editSectData.metadata?.card2Type === 'ad' ? (
                                 <div className="space-y-3">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة العربية', 'Arabic Banner Image')}</Label>
-                                      <ImageUploader
-                                        value={editSectData.metadata?.card2AdImageAr || ''}
-                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2AdImageAr: url } }))}
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة الإنجليزية', 'English Banner Image')}</Label>
-                                      <ImageUploader
-                                        value={editSectData.metadata?.card2AdImageEn || ''}
-                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2AdImageEn: url } }))}
-                                      />
-                                    </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `card2AdImage${codeSuffix}`;
+                                      const inputLabel = `${t('صورة الإعلان باللغة', 'Banner Image in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <ImageUploader
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: url } }))}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
@@ -1535,65 +1532,59 @@ export default function AdminHomepageManager() {
                                 </div>
                               ) : (
                                 <>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('الشارة بالعربية', 'Badge (Arabic)')}</Label>
-                                      <Input
-                                        value={editSectData.metadata?.card2BadgeAr || ''}
-                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2BadgeAr: e.target.value } }))}
-                                        className="rounded-xl text-xs"
-                                        placeholder="الجمال والعطور"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('الشارة بالإنجليزية', 'Badge (English)')}</Label>
-                                      <Input
-                                        value={editSectData.metadata?.card2BadgeEn || ''}
-                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2BadgeEn: e.target.value } }))}
-                                        className="rounded-xl text-xs"
-                                        placeholder="Beauty Deals"
-                                      />
-                                    </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `card2Badge${codeSuffix}`;
+                                      const inputLabel = `${t('الشارة بـ', 'Badge in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <Input
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
+                                            className="rounded-xl text-xs"
+                                            placeholder={lang.code === 'ar' ? 'الجمال والعطور' : 'Beauty Deals'}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('العنوان بالعربية', 'Title (Arabic)')}</Label>
-                                      <Input
-                                        value={editSectData.metadata?.card2TitleAr || ''}
-                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2TitleAr: e.target.value } }))}
-                                        className="rounded-xl text-xs"
-                                        placeholder="روائح تسحر الجميع بأسعار لا تقاوم"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('العنوان بالإنجليزية', 'Title (English)')}</Label>
-                                      <Input
-                                        value={editSectData.metadata?.card2TitleEn || ''}
-                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2TitleEn: e.target.value } }))}
-                                        className="rounded-xl text-xs"
-                                        placeholder="Fragrances that captivate at unbeatable prices"
-                                      />
-                                    </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `card2Title${codeSuffix}`;
+                                      const inputLabel = `${t('العنوان بـ', 'Title in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <Input
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
+                                            className="rounded-xl text-xs"
+                                            placeholder={lang.code === 'ar' ? 'روائح تسحر الجميع بأسعار لا تقاوم' : 'Fragrances that captivate at unbeatable prices'}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <div className="space-y-1 col-span-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('نص الزر بالعربية', 'CTA Text (Arabic)')}</Label>
-                                      <Input
-                                        value={editSectData.metadata?.card2CtaAr || ''}
-                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2CtaAr: e.target.value } }))}
-                                        className="rounded-xl text-xs"
-                                        placeholder="اكتشف العطور"
-                                      />
-                                    </div>
-                                    <div className="space-y-1 col-span-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('نص الزر بالإنجليزية', 'CTA Text (English)')}</Label>
-                                      <Input
-                                        value={editSectData.metadata?.card2CtaEn || ''}
-                                        onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2CtaEn: e.target.value } }))}
-                                        className="rounded-xl text-xs"
-                                        placeholder="Explore Now"
-                                      />
-                                    </div>
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `card2Cta${codeSuffix}`;
+                                      const inputLabel = `${t('نص الزر بـ', 'CTA Text in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1 col-span-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <Input
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
+                                            className="rounded-xl text-xs"
+                                            placeholder={lang.code === 'ar' ? 'اكتشف العطور' : 'Explore Now'}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                     <div className="space-y-1 col-span-1">
                                       <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
                                       <Input
@@ -1638,21 +1629,21 @@ export default function AdminHomepageManager() {
 
                               {editSectData.metadata?.rightCardType === 'ad' ? (
                                 <div className="space-y-3">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة العربية', 'Arabic Banner Image')}</Label>
-                                      <ImageUploader
-                                        value={editSectData.metadata?.rightCardAdImageAr || ''}
-                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, rightCardAdImageAr: url } }))}
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة الإنجليزية', 'English Banner Image')}</Label>
-                                      <ImageUploader
-                                        value={editSectData.metadata?.rightCardAdImageEn || ''}
-                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, rightCardAdImageEn: url } }))}
-                                      />
-                                    </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `rightCardAdImage${codeSuffix}`;
+                                      const inputLabel = `${t('صورة الإعلان باللغة', 'Banner Image in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <ImageUploader
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: url } }))}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
@@ -1666,14 +1657,23 @@ export default function AdminHomepageManager() {
                                 </div>
                               ) : (
                                 <>
-                                  <div className="space-y-2">
-                                    <Label className="text-[10px] font-bold text-slate-400">{t('العنوان الترويجي للبطاقة اليمنى', 'Promo Title')}</Label>
-                                    <Input
-                                      value={editSectData.metadata?.customText1Ar || ''}
-                                      onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, customText1Ar: e.target.value } }))}
-                                      className="rounded-xl text-sm"
-                                      placeholder="نوّنها أكثر ووفّر أكثر على كل اللي تحبّه"
-                                    />
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `customText1${codeSuffix}`;
+                                      const inputLabel = `${t('العنوان الترويجي باللغة', 'Promo Title in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <Input
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
+                                            className="rounded-xl text-sm"
+                                            placeholder={lang.code === 'ar' ? 'نوّنها أكثر ووفّر أكثر على كل اللي تحبّه' : 'Shop more & save on what you love'}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="space-y-1">
@@ -1756,21 +1756,21 @@ export default function AdminHomepageManager() {
 
                               {editSectData.metadata?.centerCardType === 'ad' ? (
                                 <div className="space-y-3">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة العربية', 'Arabic Banner Image')}</Label>
-                                      <ImageUploader
-                                        value={editSectData.metadata?.centerCardAdImageAr || ''}
-                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, centerCardAdImageAr: url } }))}
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة الإنجليزية', 'English Banner Image')}</Label>
-                                      <ImageUploader
-                                        value={editSectData.metadata?.centerCardAdImageEn || ''}
-                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, centerCardAdImageEn: url } }))}
-                                      />
-                                    </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `centerCardAdImage${codeSuffix}`;
+                                      const inputLabel = `${t('صورة الإعلان باللغة', 'Banner Image in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <ImageUploader
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: url } }))}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
@@ -1784,14 +1784,23 @@ export default function AdminHomepageManager() {
                                 </div>
                               ) : (
                                 <>
-                                  <div className="space-y-2">
-                                    <Label className="text-[10px] font-bold text-slate-400">{t('عنوان البطاقة الوسطى', 'Center Card Title')}</Label>
-                                    <Input
-                                      value={editSectData.metadata?.customTextCenterAr || ''}
-                                      onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, customTextCenterAr: e.target.value } }))}
-                                      className="rounded-xl text-sm"
-                                      placeholder="عروض ميجا"
-                                    />
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `customTextCenter${codeSuffix}`;
+                                      const inputLabel = `${t('عنوان البطاقة الوسطى باللغة', 'Center Card Title in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <Input
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
+                                            className="rounded-xl text-sm"
+                                            placeholder={lang.code === 'ar' ? 'عروض ميجا' : 'Mega Offers'}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="space-y-1">
@@ -1874,21 +1883,21 @@ export default function AdminHomepageManager() {
 
                               {editSectData.metadata?.leftCardType === 'ad' ? (
                                 <div className="space-y-3">
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة العربية', 'Arabic Banner Image')}</Label>
-                                      <ImageUploader
-                                        value={editSectData.metadata?.leftCardAdImageAr || ''}
-                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, leftCardAdImageAr: url } }))}
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('صورة الإعلان باللغة الإنجليزية', 'English Banner Image')}</Label>
-                                      <ImageUploader
-                                        value={editSectData.metadata?.leftCardAdImageEn || ''}
-                                        onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, leftCardAdImageEn: url } }))}
-                                      />
-                                    </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `leftCardAdImage${codeSuffix}`;
+                                      const inputLabel = `${t('صورة الإعلان باللغة', 'Banner Image in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <ImageUploader
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: url } }))}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   <div className="space-y-1">
                                     <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
@@ -1902,14 +1911,23 @@ export default function AdminHomepageManager() {
                                 </div>
                               ) : (
                                 <>
-                                  <div className="space-y-2">
-                                    <Label className="text-[10px] font-bold text-slate-400">{t('العنوان الترويجي للبطاقة اليسرى', 'Promo Title')}</Label>
-                                    <Input
-                                      value={editSectData.metadata?.customText2Ar || ''}
-                                      onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, customText2Ar: e.target.value } }))}
-                                      className="rounded-xl text-sm"
-                                      placeholder="عليها العين"
-                                    />
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      const keyName = `customText2${codeSuffix}`;
+                                      const inputLabel = `${t('العنوان الترويجي للبطاقة اليسرى بـ', 'Promo Title in')} ${lang.name}`;
+                                      return (
+                                        <div key={lang.code} className="space-y-1">
+                                          <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
+                                          <Input
+                                            value={editSectData.metadata?.[keyName] || ''}
+                                            onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
+                                            className="rounded-xl text-sm"
+                                            placeholder={lang.code === 'ar' ? 'عليها العين' : 'Hot Deals'}
+                                          />
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="space-y-1">
@@ -2183,27 +2201,24 @@ export default function AdminHomepageManager() {
                 </div>
 
                 <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2 text-start">
-                      <Label htmlFor="titleAr" className="text-xs font-bold">{t('عنوان الحملة بالعربية', 'Campaign Title (Arabic)')}</Label>
-                      <Input
-                        id="titleAr"
-                        value={countdown.titleAr}
-                        onChange={e => setCountdown(prev => ({ ...prev, titleAr: e.target.value }))}
-                        className="rounded-xl text-sm"
-                        placeholder="عروض ميجا"
-                      />
-                    </div>
-                    <div className="space-y-2 text-start">
-                      <Label htmlFor="titleEn" className="text-xs font-bold">{t('عنوان الحملة بالإنجليزية', 'Campaign Title (English)')}</Label>
-                      <Input
-                        id="titleEn"
-                        value={countdown.titleEn}
-                        onChange={e => setCountdown(prev => ({ ...prev, titleEn: e.target.value }))}
-                        className="rounded-xl text-sm"
-                        placeholder="Mega Offers"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {languages.map((lang: any) => {
+                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                      const keyName = `title${codeSuffix}`;
+                      const inputLabel = `${t('عنوان الحملة باللغة', 'Campaign Title in')} ${lang.name}`;
+                      return (
+                        <div key={lang.code} className="space-y-2 text-start">
+                          <Label htmlFor={`countdown_${lang.code}`} className="text-xs font-bold">{inputLabel}</Label>
+                          <Input
+                            id={`countdown_${lang.code}`}
+                            value={countdown[keyName] || ''}
+                            onChange={e => setCountdown(prev => ({ ...prev, [keyName]: e.target.value }))}
+                            className="rounded-xl text-sm"
+                            placeholder={lang.code === 'ar' ? 'عروض ميجا' : lang.code === 'en' ? 'Mega Offers' : `Mega Offers (${lang.name})`}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
 
                   <div className="space-y-2 text-start">
@@ -2325,134 +2340,154 @@ export default function AdminHomepageManager() {
                   ) : (
                     <div className="space-y-4">
                       {/* Live preview */}
-                      <div className="border border-border/80 rounded-[20px] overflow-hidden p-6 text-white relative h-40 flex items-center bg-slate-950">
-                        {editSlideData.imageUrl ? (
-                          <>
-                            <img src={editSlideData.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-80" />
-                            <div className="absolute inset-0 bg-slate-950/40 mix-blend-multiply" />
-                          </>
-                        ) : (
-                          <div className={`absolute inset-0 bg-gradient-to-br ${editSlideData.bg || 'from-blue-950 to-slate-900'} opacity-90`} />
-                        )}
-                        <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
-                        <div className="relative z-10 space-y-2 text-start">
-                          {editSlideData.badge && (
-                            <Badge className="bg-white/10 text-white border-white/10 text-[9px] px-2 py-0.5 rounded">
-                              {editSlideData.badge}
-                            </Badge>
-                          )}
-                          <h4 className="text-lg font-black">{editSlideData.title || t('عنوان السلايد الرئيسي', 'Slide Title')}</h4>
-                          <p className="text-[10px] text-white/70 max-w-sm line-clamp-2">{editSlideData.subtitle || t('العنوان الفرعي للسلايد أو وصف العرض الترويجي المتاح للمشترين', 'Slide Subtitle or promotion description')}</p>
-                          <Button size="sm" className="bg-amber-500 text-slate-950 font-black rounded-lg pointer-events-none mt-1 h-7 text-[10px]">
-                            {editSlideData.cta || t('تسوق الآن', 'Shop Now')}
-                          </Button>
-                        </div>
-                        <span className="absolute bottom-2 end-3 text-[9px] font-mono text-white/40 tracking-wider uppercase select-none">{t('معاينة حية', 'Live Preview')}</span>
-                      </div>
+                      {(() => {
+                        const codeSuffix = locale.charAt(0).toUpperCase() + locale.slice(1);
+                        const previewTitle = editSlideData[`title${codeSuffix}`] || editSlideData.title || t('عنوان السلايد الرئيسي', 'Slide Title');
+                        const previewSubtitle = editSlideData[`subtitle${codeSuffix}`] || editSlideData.subtitle || t('العنوان الفرعي للسلايد أو وصف العرض الترويجي المتاح للمشترين', 'Slide Subtitle or promotion description');
+                        const previewBadge = editSlideData[`badge${codeSuffix}`] || editSlideData.badge || '';
+                        const previewCta = editSlideData[`cta${codeSuffix}`] || editSlideData.cta || t('تسوق الآن', 'Shop Now');
+
+                        return (
+                          <div className="border border-border/80 rounded-[20px] overflow-hidden p-6 text-white relative h-40 flex items-center bg-slate-950">
+                            {editSlideData.imageUrl ? (
+                              <>
+                                <img src={editSlideData.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-80" />
+                                <div className="absolute inset-0 bg-slate-950/40 mix-blend-multiply" />
+                              </>
+                            ) : (
+                              <div className={`absolute inset-0 bg-gradient-to-br ${editSlideData.bg || 'from-blue-950 to-slate-900'} opacity-90`} />
+                            )}
+                            <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
+                            <div className="relative z-10 space-y-2 text-start">
+                              {previewBadge && (
+                                <Badge className="bg-white/10 text-white border-white/10 text-[9px] px-2 py-0.5 rounded">
+                                  {previewBadge}
+                                </Badge>
+                              )}
+                              <h4 className="text-lg font-black">{previewTitle}</h4>
+                              <p className="text-[10px] text-white/70 max-w-sm line-clamp-2">{previewSubtitle}</p>
+                              <Button size="sm" className="bg-amber-500 text-slate-950 font-black rounded-lg pointer-events-none mt-1 h-7 text-[10px]">
+                                {previewCta}
+                              </Button>
+                            </div>
+                            <span className="absolute bottom-2 end-3 text-[9px] font-mono text-white/40 tracking-wider uppercase select-none">{t('معاينة حية', 'Live Preview')}</span>
+                          </div>
+                        );
+                      })()}
 
                       {/* Title inputs */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2 text-start">
-                          <Label className="text-xs font-bold">{t('العنوان الرئيسي (العربية)', 'Title (Arabic)')}</Label>
-                          <Input
-                            value={editSlideData.title}
-                            onChange={e => setEditSlideData(prev => ({ ...prev, title: e.target.value }))}
-                            className="rounded-xl text-sm"
-                            placeholder="تسوق بثقة"
-                          />
-                        </div>
-                        <div className="space-y-2 text-start">
-                          <Label className="text-xs font-bold">{t('العنوان الرئيسي (الإنجليزية)', 'Title (English)')}</Label>
-                          <Input
-                            value={editSlideData.titleEn}
-                            onChange={e => setEditSlideData(prev => ({ ...prev, titleEn: e.target.value }))}
-                            className="rounded-xl text-sm"
-                            placeholder="Shop with Confidence"
-                          />
-                        </div>
-                        <div className="space-y-2 text-start">
-                          <Label className="text-xs font-bold">{t('العنوان الرئيسي (الفرنسية)', 'Title (French)')}</Label>
-                          <Input
-                            value={editSlideData.titleFr}
-                            onChange={e => setEditSlideData(prev => ({ ...prev, titleFr: e.target.value }))}
-                            className="rounded-xl text-sm"
-                            placeholder="Achetez en toute confiance"
-                          />
-                        </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {languages.map((lang: any) => {
+                          const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                          const keyName = `title${codeSuffix}`;
+                          const inputLabel = `${t('العنوان الرئيسي باللغة', 'Main Title in')} ${lang.name}`;
+                          return (
+                            <div key={lang.code} className="space-y-2 text-start">
+                              <Label className="text-xs font-bold">{inputLabel}</Label>
+                              <Input
+                                value={editSlideData[keyName] || ''}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setEditSlideData((prev: any) => {
+                                    const updated = { ...prev, [keyName]: val };
+                                    if (lang.code === 'ar') {
+                                      updated.title = val;
+                                    }
+                                    return updated;
+                                  });
+                                }}
+                                className="rounded-xl text-sm"
+                                placeholder={lang.code === 'ar' ? 'تسوق بثقة' : lang.code === 'en' ? 'Shop with Confidence' : `Title (${lang.name})`}
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
 
                       {/* Subtitle inputs */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2 text-start">
-                          <Label className="text-xs font-bold">{t('الوصف/العنوان الفرعي (العربية)', 'Subtitle (Arabic)')}</Label>
-                          <Input
-                            value={editSlideData.subtitle}
-                            onChange={e => setEditSlideData(prev => ({ ...prev, subtitle: e.target.value }))}
-                            className="rounded-xl text-sm"
-                            placeholder="آلاف المنتجات من تجار موثوقين"
-                          />
-                        </div>
-                        <div className="space-y-2 text-start">
-                          <Label className="text-xs font-bold">{t('الوصف/العنوان الفرعي (الإنجليزية)', 'Subtitle (English)')}</Label>
-                          <Input
-                            value={editSlideData.subtitleEn}
-                            onChange={e => setEditSlideData(prev => ({ ...prev, subtitleEn: e.target.value }))}
-                            className="rounded-xl text-sm"
-                            placeholder="Thousands of products from verified sellers"
-                          />
-                        </div>
-                        <div className="space-y-2 text-start">
-                          <Label className="text-xs font-bold">{t('الوصف/العنوان الفرعي (الفرنسية)', 'Subtitle (French)')}</Label>
-                          <Input
-                            value={editSlideData.subtitleFr}
-                            onChange={e => setEditSlideData(prev => ({ ...prev, subtitleFr: e.target.value }))}
-                            className="rounded-xl text-sm"
-                            placeholder="Des milliers de produits de vendeurs vérifiés"
-                          />
-                        </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {languages.map((lang: any) => {
+                          const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                          const keyName = `subtitle${codeSuffix}`;
+                          const inputLabel = `${t('الوصف/العنوان الفرعي باللغة', 'Description/Subtitle in')} ${lang.name}`;
+                          return (
+                            <div key={lang.code} className="space-y-2 text-start">
+                              <Label className="text-xs font-bold">{inputLabel}</Label>
+                              <Input
+                                value={editSlideData[keyName] || ''}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setEditSlideData((prev: any) => {
+                                    const updated = { ...prev, [keyName]: val };
+                                    if (lang.code === 'ar') {
+                                      updated.subtitle = val;
+                                    }
+                                    return updated;
+                                  });
+                                }}
+                                className="rounded-xl text-sm"
+                                placeholder={lang.code === 'ar' ? 'آلاف المنتجات من تجار موثوقين' : lang.code === 'en' ? 'Thousands of products from verified sellers' : `Subtitle (${lang.name})`}
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
 
                       {/* Badges & Buttons text */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2 text-start">
-                          <Label className="text-xs font-bold">{t('شارة مميزة (العربية)', 'Badge text (Arabic)')}</Label>
-                          <Input
-                            value={editSlideData.badge}
-                            onChange={e => setEditSlideData(prev => ({ ...prev, badge: e.target.value }))}
-                            className="rounded-xl text-sm"
-                            placeholder="🔥 عروض حصرية"
-                          />
-                        </div>
-                        <div className="space-y-2 text-start">
-                          <Label className="text-xs font-bold">{t('شارة مميزة (الفرنسية)', 'Badge text (French)')}</Label>
-                          <Input
-                            value={editSlideData.badgeFr}
-                            onChange={e => setEditSlideData(prev => ({ ...prev, badgeFr: e.target.value }))}
-                            className="rounded-xl text-sm"
-                            placeholder="🔥 Offres exclusives"
-                          />
-                        </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {languages.map((lang: any) => {
+                          const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                          const keyName = `badge${codeSuffix}`;
+                          const inputLabel = `${t('شارة مميزة باللغة', 'Badge text in')} ${lang.name}`;
+                          return (
+                            <div key={lang.code} className="space-y-2 text-start">
+                              <Label className="text-xs font-bold">{inputLabel}</Label>
+                              <Input
+                                value={editSlideData[keyName] || ''}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setEditSlideData((prev: any) => {
+                                    const updated = { ...prev, [keyName]: val };
+                                    if (lang.code === 'ar') {
+                                      updated.badge = val;
+                                    }
+                                    return updated;
+                                  });
+                                }}
+                                className="rounded-xl text-sm"
+                                placeholder={lang.code === 'ar' ? '🔥 عروض حصرية' : lang.code === 'en' ? '🔥 Exclusive Deals' : `Badge (${lang.name})`}
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2 text-start">
-                          <Label className="text-xs font-bold">{t('نص زر الشراء/الدعوة (العربية)', 'CTA Text (Arabic)')}</Label>
-                          <Input
-                            value={editSlideData.cta}
-                            onChange={e => setEditSlideData(prev => ({ ...prev, cta: e.target.value }))}
-                            className="rounded-xl text-sm"
-                            placeholder="تسوق الآن"
-                          />
-                        </div>
-                        <div className="space-y-2 text-start">
-                          <Label className="text-xs font-bold">{t('نص زر الشراء/الدعوة (الفرنسية)', 'CTA Text (French)')}</Label>
-                          <Input
-                            value={editSlideData.ctaFr}
-                            onChange={e => setEditSlideData(prev => ({ ...prev, ctaFr: e.target.value }))}
-                            className="rounded-xl text-sm"
-                            placeholder="Acheter maintenant"
-                          />
-                        </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {languages.map((lang: any) => {
+                          const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                          const keyName = `cta${codeSuffix}`;
+                          const inputLabel = `${t('نص زر الشراء/الدعوة باللغة', 'CTA Text in')} ${lang.name}`;
+                          return (
+                            <div key={lang.code} className="space-y-2 text-start">
+                              <Label className="text-xs font-bold">{inputLabel}</Label>
+                              <Input
+                                value={editSlideData[keyName] || ''}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setEditSlideData((prev: any) => {
+                                    const updated = { ...prev, [keyName]: val };
+                                    if (lang.code === 'ar') {
+                                      updated.cta = val;
+                                    }
+                                    return updated;
+                                  });
+                                }}
+                                className="rounded-xl text-sm"
+                                placeholder={lang.code === 'ar' ? 'تسوق الآن' : lang.code === 'en' ? 'Shop Now' : `CTA (${lang.name})`}
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
 
                       {/* Link & background setup */}
