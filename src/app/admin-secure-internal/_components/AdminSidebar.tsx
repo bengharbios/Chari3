@@ -96,6 +96,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { label: t('admin.manageCategories'), path: 'categories' },
         { label: t('admin.manageBrands'), path: 'brands' },
         { label: t('admin.storefrontCMS'), path: 'cms' },
+        { label: 'SAADA Builder', path: 'cms/saada-builder' },
         { label: t('admin.homepageSettings'), path: 'settings/homepage' },
         { label: t('admin.manageAdvertisements'), path: 'advertisements' },
         { label: t('admin.featureFlags'), path: 'flags' },
