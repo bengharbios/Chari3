@@ -7,6 +7,24 @@ import {
   ArrowLeft, ArrowRight, ShoppingBag, Award, Quote, SlidersHorizontal, 
   X, Search, Tag, ShoppingCart, Flame, Sparkles, CheckCircle2 
 } from 'lucide-react';
+
+const safeImageSrc = (img: any): string => {
+  if (!img) return '';
+  if (Array.isArray(img)) return img[0] || '';
+  if (typeof img === 'string') {
+    if (img.trim().startsWith('[')) {
+      try {
+        const parsed = JSON.parse(img);
+        return Array.isArray(parsed) ? parsed[0] || '' : img;
+      } catch (e) {
+        return img;
+      }
+    }
+    return img;
+  }
+  return '';
+};
+
 import { useAppStore, useAuthStore, useCartStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,284 +47,6 @@ export interface SectionProps {
   locale: string;
 }
 
-const CURRENCY = { symbol: 'د.ج', code: 'DZD' };
-
-const TRENDING_SEARCHES = [
-  "واقيات الشمس", "العطور", "آيفون", "التلفزيونات", "بلايستيشن 5", 
-  "بطاقات هدايا", "قلايات هوائية", "أواني السفرة والتقديم", 
-  "أطقم القهوة والشاي", "ديكور البيت", "الأحذية"
-];
-
-function fmt(amount: number) {
-  return `${amount.toLocaleString('ar-DZ')} ${CURRENCY.symbol}`;
-}
-
-const DEFAULT_HERO_SLIDES = [
-  {
-    id: '1',
-    title: 'تسوق بثقة',
-    titleEn: 'Shop with Confidence',
-    titleFr: 'Achetez en toute confiance',
-    subtitle: 'آلاف المنتجات من تجار موثوقين في الجزائر',
-    subtitleEn: 'Thousands of products from verified Algerian sellers',
-    subtitleFr: 'Des milliers de produits de vendeurs algériens vérifiés',
-    bg: 'from-blue-950 via-indigo-900 to-slate-900',
-    badge: '🔥 العروض الحصرية',
-    badgeFr: '🔥 Offres exclusives',
-    cta: 'تسوق الآن',
-    ctaFr: 'Acheter maintenant',
-  },
-  {
-    id: '2',
-    title: 'توصيل سريع',
-    titleEn: 'Fast Delivery',
-    titleFr: 'Livraison rapide',
-    subtitle: 'نوصل لجميع ولايات الجزائر خلال 24-72 ساعة',
-    subtitleEn: 'Delivery to all wilayas within 24-72 hours',
-    subtitleFr: 'Livraison dans toutes les wilayas en 24-72 heures',
-    bg: 'from-emerald-950 via-teal-900 to-slate-900',
-    badge: '🚀 توصيل سريع',
-    badgeFr: '🚀 Livraison rapide',
-    cta: 'اكتشف المزيد',
-    ctaFr: 'Découvrir plus',
-  },
-  {
-    id: '3',
-    title: 'ضمان الجودة',
-    titleEn: 'Quality Guarantee',
-    titleFr: 'Garantie de qualité',
-    subtitle: 'جميع المنتجات مضمونة وقابلة للإرجاع',
-    subtitleEn: 'All products are guaranteed with easy returns',
-    subtitleFr: 'Tous les produits sont garantis avec retour facile',
-    bg: 'from-purple-950 via-violet-900 to-slate-900',
-    badge: '✅ ضمان الجودة',
-    badgeFr: '✅ Garantie de qualité',
-    cta: 'ابدأ التسوق',
-    ctaFr: 'Commencer vos achats',
-  },
-];
-
-const DEFAULT_TESTIMONIALS = [
-  { 
-    name: 'فاطمة بن علي', 
-    nameEn: 'Fatima Ben Ali', 
-    nameFr: 'Fatima Ben Ali',
-    text: 'خدمة ممتازة وتوصيل سريع، أنصح الجميع بالتسوق من هنا!', 
-    textEn: 'Excellent service and fast delivery, highly recommend shopping here!',
-    textFr: 'Excellent service et livraison rapide, je recommande vivement !',
-    rating: 5, 
-    city: 'الجزائر العاصمة',
-    cityEn: 'Algiers',
-    cityFr: 'Alger'
-  },
-  { 
-    name: 'محمد الأمين', 
-    nameEn: 'Mohamed Lamine',
-    nameFr: 'Mohamed Lamine',
-    text: 'منصة رائعة، المنتجات أصلية والأسعار معقولة جداً', 
-    textEn: 'Great platform, original products and very reasonable prices',
-    textFr: 'Excellente plateforme, produits authentiques et prix très raisonnables',
-    rating: 5, 
-    city: 'وهران',
-    cityEn: 'Oran',
-    cityFr: 'Oran'
-  },
-];
-
-const FEATURES = [
-  { 
-    icon: Shield, 
-    title: 'توثيق كامل', 
-    titleEn: 'Full Verification',
-    titleFr: 'Vérification complète',
-    desc: 'جميع التجار موثقون رسمياً',
-    descEn: 'All merchants are officially verified',
-    descFr: 'Tous les vendeurs sont officiellement vérifiés'
-  },
-  { 
-    icon: Truck, 
-    title: 'توصيل لكل ولاية', 
-    titleEn: 'Delivery to All Wilayas',
-    titleFr: 'Livraison à toutes les wilayas',
-    desc: '58 ولاية مغطاة في الجزائر',
-    descEn: '58 wilayas covered in Algeria',
-    descFr: '58 wilayas couvertes en Algérie'
-  },
-  { 
-    icon: Award, 
-    title: 'ضمان الجودة', 
-    titleEn: 'Quality Guarantee',
-    titleFr: 'Garantie de qualité',
-    desc: 'إرجاع مجاني خلال 14 يوم',
-    descEn: 'Free return within 14 days',
-    descFr: 'Retour gratuit sous 14 jours'
-  },
-  { 
-    icon: TrendingUp, 
-    title: 'أفضل الأسعار', 
-    titleEn: 'Best Prices',
-    titleFr: 'Meilleurs prix',
-    desc: 'مقارنة أسعار فورية بين التجار',
-    descEn: 'Instant price comparison between sellers',
-    descFr: 'Comparaison instantanée des prix entre vendeurs'
-  },
-];
-
-interface HomepageData {
-  categories: { id: string; name: string; nameEn?: string; icon?: string; image?: string }[];
-  featuredProducts: any[];
-  bentoRightProducts?: any[];
-  bentoLeftProducts?: any[];
-  bentoCenterProducts?: any[];
-  topSellers: any[];
-  topStores: any[];
-  advertisements: Record<string, any[]>;
-  testimonials: any[];
-  layout?: string[];
-  heroSlides?: any[];
-  globalCouponCampaigns?: any[];
-  countdownConfig?: { enabled: boolean; endDate: string; titleAr: string; titleEn: string };
-}
-
-function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md' }) {
-  return (
-    <div className="flex items-center gap-0.5">
-      {[1, 2, 3, 4, 5].map((s) => (
-        <Star key={s} className={`${size === 'sm' ? 'size-3' : 'size-4'} ${s <= Math.round(rating) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
-      ))}
-    </div>
-  );
-}
-
-function CountdownTimer({ targetDate }: { targetDate: string }) {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const { locale } = useAppStore();
-  const isAr = locale === 'ar';
-
-  useEffect(() => {
-    const target = new Date(targetDate).getTime();
-    const update = () => {
-      const now = Date.now();
-      const diff = target - now;
-      if (diff <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        return;
-      }
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
-      setTimeLeft({ days, hours, minutes, seconds });
-    };
-    update();
-    const timer = setInterval(update, 1000);
-    return () => clearInterval(timer);
-  }, [targetDate]);
-
-  return (
-    <div className="flex items-center gap-2 font-mono direction-ltr justify-center select-none" dir="ltr">
-      {timeLeft.days > 0 && (
-        <div className="flex flex-col items-center">
-          <div className="bg-amber-500 text-slate-950 font-black text-sm md:text-base px-2.5 py-1.5 rounded-lg shadow-inner min-w-[34px] text-center">
-            {timeLeft.days}
-          </div>
-          <span className="text-[10px] text-muted-foreground font-bold mt-1">{isAr ? 'يوم' : 'd'}</span>
-        </div>
-      )}
-      <div className="flex flex-col items-center">
-        <div className="bg-slate-900 text-amber-400 border border-amber-500/20 font-black text-sm md:text-base px-2.5 py-1.5 rounded-lg shadow-inner min-w-[34px] text-center">
-          {String(timeLeft.hours).padStart(2, '0')}
-        </div>
-        <span className="text-[10px] text-muted-foreground font-bold mt-1">{isAr ? 'ساعة' : 'h'}</span>
-      </div>
-      <span className="text-amber-500 font-bold mb-5">:</span>
-      <div className="flex flex-col items-center">
-        <div className="bg-slate-900 text-amber-400 border border-amber-500/20 font-black text-sm md:text-base px-2.5 py-1.5 rounded-lg shadow-inner min-w-[34px] text-center">
-          {String(timeLeft.minutes).padStart(2, '0')}
-        </div>
-        <span className="text-[10px] text-muted-foreground font-bold mt-1">{isAr ? 'دقيقة' : 'm'}</span>
-      </div>
-      <span className="text-amber-500 font-bold mb-5">:</span>
-      <div className="flex flex-col items-center">
-        <div className="bg-slate-900 text-amber-400 border border-amber-500/20 font-black text-sm md:text-base px-2.5 py-1.5 rounded-lg shadow-inner min-w-[34px] text-center animate-pulse">
-          {String(timeLeft.seconds).padStart(2, '0')}
-        </div>
-        <span className="text-[10px] text-muted-foreground font-bold mt-1">{isAr ? 'ثانية' : 's'}</span>
-      </div>
-    </div>
-  );
-}
-
-function AdBanner({ ads, className = '' }: { ads?: any[]; className?: string }) {
-  if (!ads || ads.length === 0 || !ads[0]) return null;
-  const ad = ads[0];
-  return (
-    <a href={ad.linkUrl || '#'} className={`block overflow-hidden rounded-[24px] ${className}`} onClick={() => fetch(`/api/admin/advertisements`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: ad.id, clicks: 1 }) }).catch(() => {})}>
-      <div className="relative w-full h-full bg-gradient-to-r from-stone-900 via-stone-850 to-indigo-950 flex items-center justify-center p-6 border border-white/5 shadow-2xl">
-        <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
-        <p className="text-amber-400 font-black text-base md:text-lg tracking-wider text-center">{ad.title}</p>
-        <Badge className="absolute top-3 end-3 bg-white/10 text-white border-white/10 text-[10px]">إعلان</Badge>
-      </div>
-    </a>
-  );
-}
-
-const LEVEL_BADGE: Record<number, string> = {
-  1: '🌱', 2: '⭐', 3: '🌟', 4: '💫', 5: '🔥',
-  6: '💎', 7: '👑', 8: '🏆', 9: '🦅', 10: '🌠',
-};
-
-// Standalone reusable Product Card matching Noon/Temu visuals
-function ProductCard({ product, isOfferCard = false }: { product: any; isOfferCard?: boolean }) {
-  const { locale } = useAppStore();
-  const { items: cartItems, addItem } = useCartStore();
-  const router = useRouter();
-  const isAr = locale === 'ar';
-  
-  const isInCart = cartItems.some((item) => item.product.id === product.id);
-
-  let images: string[] = [];
-  if (Array.isArray(product.images)) {
-    images = product.images;
-  } else if (typeof product.images === 'string') {
-    try { images = JSON.parse(product.images); } catch {}
-  }
-  if (!Array.isArray(images)) images = [];
-
-  const sellerName = product.seller?.storeName || product.store?.name || '';
-  const sellerLevel = product.seller?.level || product.store?.level || 1;
-  const discount = product.comparePrice
-    ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
-    : 0;
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    addItem(product, 1);
-    toast.success(isAr ? 'تمت إضافة المنتج إلى السلة!' : 'Product added to cart!', {
-      icon: <CheckCircle2 className="text-emerald-500 w-5 h-5" />
-    });
-  };
-
-  const fmt = (amount: number) => {
-    return `${amount.toLocaleString(isAr ? 'ar-DZ' : 'en-US')} ${isAr ? 'د.ج' : 'DZD'}`;
-  };
-
-  return (
-    <Card 
-      className="overflow-hidden flex flex-col h-full group transition-all duration-300 cursor-pointer border border-slate-100 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 backdrop-blur-md rounded-[20px] shadow-[0_4px_12px_rgba(0,0,0,0.02),0_8px_24px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.08)] hover:-translate-y-1 relative"
-      onClick={() => {
-        useAppStore.getState().setSelectedProductId(product.id);
-        router.push(`/products/${product.id}`);
-      }}
-    >
-      <div className="relative aspect-square bg-slate-50 dark:bg-slate-950 overflow-hidden shrink-0">
-        {images[0] ? (
-          <img src={images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-primary/10 to-primary/5">
-            <ShoppingBag className="size-8 text-primary/30" />
-          </div>
-        )}
         {discount > 0 && (
           <Badge className="absolute top-2.5 start-2.5 bg-rose-600 text-white text-[9px] font-black py-0.5 px-2 rounded-full shadow-sm">-{discount}%</Badge>
         )}
@@ -584,7 +324,7 @@ export function HeroSliderBlock({ section, data, locale }: SectionProps) {
         <div className={`absolute inset-0 bg-gradient-to-br ${slide.bg || 'from-slate-900 to-indigo-950'} opacity-100 transition-colors duration-1000`} />
         {slide.image && (
           <div className="absolute inset-0 opacity-40 mix-blend-overlay">
-            <img src={slide.image} alt="" className="w-full h-full object-cover" />
+            <img src={safeImageSrc(slide.image)} alt="" className="w-full h-full object-cover" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
@@ -781,14 +521,14 @@ export function BentoOffersBlock({ section, data, locale }: SectionProps) {
             onClick={() => router.push(rightCardType === 'ad' ? rightCardAdLink : '#')}
           >
             {rightCardType === 'ad' && rightCardAdImage ? (
-              <img src={rightCardAdImage} className="w-full h-full object-cover" alt="" />
+              <img src={safeImageSrc(rightCardAdImage)} className="w-full h-full object-cover" alt="" />
             ) : (
               <div className="p-4 text-center">
                 <h4 className="text-xl font-black uppercase tracking-wider">{customText2}</h4>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   {rightCardProducts.slice(0,4).map((p: any) => (
                     <div key={p.id} className="bg-white rounded-xl p-1 shadow-sm aspect-square">
-                      <img src={(Array.isArray(p.images) ? p.images[0] : p.images) || ''} className="w-full h-full object-cover rounded-lg" alt="" />
+                      <img src={safeImageSrc(p.images)} className="w-full h-full object-cover rounded-lg" alt="" />
                     </div>
                   ))}
                 </div>
@@ -832,7 +572,7 @@ export function BentoOffersBlock({ section, data, locale }: SectionProps) {
           >
             {leftCardType === 'ad' && leftCardAdImage ? (
               <>
-                <img src={leftCardAdImage} className="absolute inset-0 w-full h-full object-cover" alt="" />
+                <img src={safeImageSrc(leftCardAdImage)} className="absolute inset-0 w-full h-full object-cover" alt="" />
                 <div className="absolute inset-0 bg-black/10 hover:bg-black/25 transition-colors" />
               </>
             ) : (
@@ -942,7 +682,7 @@ export function TopSellersBlock({ section, data, locale }: SectionProps) {
             <Link key={item.id} href={`/${activeTab === 'stores' ? 'store' : 'seller'}/${item.slug}`} className="group block">
               <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-md hover:bg-white/10 transition-all hover:-translate-y-1 h-full flex flex-col items-center text-center relative overflow-hidden">
                 <div className="w-16 h-16 rounded-full bg-slate-800 border-2 border-amber-500 p-0.5 mb-3">
-                  <img src={item.logo || item.image || ''} alt="" className="w-full h-full rounded-full object-cover" />
+                  <img src={safeImageSrc(item.logo || item.image)} alt="" className="w-full h-full rounded-full object-cover" />
                 </div>
                 <h4 className="font-bold text-sm text-white mb-1 line-clamp-1">{item.name || item.storeName}</h4>
                 <div className="flex items-center gap-1.5 mb-2 bg-black/20 px-2 py-0.5 rounded-full">
@@ -1021,7 +761,7 @@ export function CustomBannerBlock({ section, data, locale }: SectionProps) {
   return (
     <section className="container-platform py-4">
       <Link href={section.linkUrl || '#'} className="block rounded-2xl overflow-hidden group">
-        <img src={imgUrl} className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-500" alt="" />
+        <img src={safeImageSrc(imgUrl)} className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-500" alt="" />
       </Link>
     </section>
   );

@@ -24,11 +24,27 @@ export default function SaadaBuilderPage() {
     'saada_seller_default'
   ]);
   const { t, locale } = useTranslation();
-  const { languages } = useTranslationStore();
+  const { languages, loadTranslations } = useTranslationStore();
   const activeLanguages = languages && languages.length > 0 ? languages : [{code: 'ar', nameAr: 'العربية'}, {code: 'en', nameAr: 'English'}];
   const saadaConfig = useMemo(() => getSaadaConfig(locale, storeData, activeLanguages), [locale, storeData, activeLanguages]);
   const router = useRouter();
   const isRTL = locale === 'ar';
+
+  useEffect(() => {
+    if (!languages || languages.length === 0) {
+      loadTranslations();
+    }
+  }, [languages, loadTranslations]);
+
+  const getTemplateName = (key: string) => {
+    const map: Record<string, string> = {
+      'saada_homepage_layout': isRTL ? 'تصميم الواجهة الرئيسية (الأساسي)' : 'Homepage Default Layout',
+      'saada_modern_template': isRTL ? 'القالب الحديث' : 'Modern Template',
+      'saada_store_default': isRTL ? 'قالب المتجر الافتراضي' : 'Store Default Template',
+      'saada_seller_default': isRTL ? 'قالب البائع الافتراضي' : 'Seller Default Template',
+    };
+    return map[key] || key;
+  };
 
   useEffect(() => {
     fetch('/api/admin/saada-homepage?action=list_templates')
@@ -89,7 +105,7 @@ export default function SaadaBuilderPage() {
               </SelectTrigger>
               <SelectContent>
                 {availableTemplates.map((tk) => (
-                  <SelectItem key={tk} value={tk}>{tk}</SelectItem>
+                  <SelectItem key={tk} value={tk}>{getTemplateName(tk)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
