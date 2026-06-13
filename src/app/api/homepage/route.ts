@@ -8,9 +8,10 @@ export async function GET() {
     await ensureDbConnection();
 
     // 1. Fetch pinned settings first to modify downstream queries
-    const [pinnedItemsSetting, countdownSetting] = await Promise.all([
+    const [pinnedItemsSetting, countdownSetting, activeTemplateSetting] = await Promise.all([
       db.setting.findUnique({ where: { key: 'homepage_pinned_items' } }),
       db.setting.findUnique({ where: { key: 'homepage_countdown' } }),
+      db.setting.findUnique({ where: { key: 'active_homepage_template' } }),
     ]);
 
     let pinnedProductIds: string[] = [];
@@ -39,7 +40,8 @@ export async function GET() {
       heroSlidesSetting,
       maintenanceSetting,
       allowGuestCheckoutSetting,
-      globalCoupons
+      globalCoupons,
+      saadaLayoutSetting
     ] = await Promise.all([
       // Active categories with product counts
       db.category.findMany({
@@ -162,15 +164,26 @@ export async function GET() {
           optInStores: { select: { id: true } },
           optInSellers: { select: { id: true } },
         }
-      })
+      }),
+      
+      // Fetch SAADA layout directly if it's the active template
+      (activeTemplateSetting?.value && activeTemplateSetting.value !== 'homepage_layout') 
+        ? db.setting.findUnique({ where: { key: activeTemplateSetting.value } })
+        : Promise.resolve(null)
     ]);
 
     // Parse dynamic layout - always ensure core sections exist
     const coreDefaultOrder = ['hero', 'features', 'categories', 'bento_offers', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
     const coreSectionTypes = new Set(coreDefaultOrder);
-    let parsedLayout: any[] = coreDefaultOrder;
+    let parsedLayout: any = coreDefaultOrder;
     try {
-      if (layoutSetting?.value) {
+      if (saadaLayoutSetting?.value) {
+        const val = JSON.parse(saadaLayoutSetting.value);
+        if (val && typeof val === 'object' && val.content) {
+          // This is a Puck JSON layout!
+          parsedLayout = val;
+        }
+      } else if (layoutSetting?.value) {
         const val = JSON.parse(layoutSetting.value);
         if (Array.isArray(val) && val.length > 0) {
           const savedCoreTypes = new Set<string>();
@@ -190,9 +203,11 @@ export async function GET() {
 
     let featuredProductsFilter = 'smart';
     let topSellersFilter = 'smart';
-    for (const item of parsedLayout) {
-      if (item.type === 'featured_products' && item.filterType) featuredProductsFilter = item.filterType;
-      if (item.type === 'top_sellers' && item.filterType) topSellersFilter = item.filterType;
+    if (Array.isArray(parsedLayout)) {
+      for (const item of parsedLayout) {
+        if (item.type === 'featured_products' && item.filterType) featuredProductsFilter = item.filterType;
+        if (item.type === 'top_sellers' && item.filterType) topSellersFilter = item.filterType;
+      }
     }
 
     // 3. Rank products dynamically in memory
@@ -280,8 +295,9 @@ export async function GET() {
     let bentoRightProducts: any[] = [];
     let bentoCenterProducts: any[] = [];
     let bentoLeftProducts: any[] = [];
-    const bentoSection = parsedLayout.find((s: any) => s.type === 'bento_offers');
-    if (bentoSection) {
+    if (Array.isArray(parsedLayout)) {
+      const bentoSection = parsedLayout.find((s: any) => s.type === 'bento_offers');
+      if (bentoSection) {
       const subFilter1 = bentoSection.metadata?.subFilter1 || 'smart';
       const subFilter2 = bentoSection.metadata?.subFilter2 || 'smart';
 
@@ -306,14 +322,17 @@ export async function GET() {
       const leftSeller = bentoSection.metadata?.leftSeller;
       const leftBaseProducts = applyEntityFilter(rankedProducts, leftCategory, leftStore, leftSeller);
       bentoLeftProducts = [...pinnedList.filter(p => leftBaseProducts.some(lp => lp.id === p.id) || (!leftCategory && !leftStore && !leftSeller)), ...applyFilter(subFilter2, leftBaseProducts.filter(p => !pinnedProductMap.has(p.id)))].slice(0, 10);
+      }
     }
 
     // Apply section-level entity filtering for featured_products
-    const featuredSection = parsedLayout.find((s: any) => s.type === 'featured_products');
-    if (featuredSection?.categoryId || featuredSection?.storeId || featuredSection?.sellerId) {
-      const filtered = applyEntityFilter(featuredProducts, featuredSection.categoryId, featuredSection.storeId, featuredSection.sellerId);
-      featuredProducts.length = 0;
-      featuredProducts.push(...filtered);
+    if (Array.isArray(parsedLayout)) {
+      const featuredSection = parsedLayout.find((s: any) => s.type === 'featured_products');
+      if (featuredSection?.categoryId || featuredSection?.storeId || featuredSection?.sellerId) {
+        const filtered = applyEntityFilter(featuredProducts, featuredSection.categoryId, featuredSection.storeId, featuredSection.sellerId);
+        featuredProducts.length = 0;
+        featuredProducts.push(...filtered);
+      }
     }
 
     // Apply pinning for stores

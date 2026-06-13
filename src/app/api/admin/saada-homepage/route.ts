@@ -46,3 +46,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  try {
+    await ensureDbConnection();
+    const body = await req.json();
+    
+    if (body.action === 'set_active_template' && body.templateKey) {
+      await db.setting.upsert({
+        where: { key: 'active_homepage_template' },
+        update: { value: body.templateKey },
+        create: { key: 'active_homepage_template', value: body.templateKey, type: 'string', group: 'homepage' },
+      });
+      return NextResponse.json({ success: true, message: 'Active template updated' });
+    }
+
+    return NextResponse.json({ success: false, error: 'Invalid action' }, { status: 400 });
+  } catch (error) {
+    console.error('[admin saada-homepage PATCH]', error);
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
+  }
+}

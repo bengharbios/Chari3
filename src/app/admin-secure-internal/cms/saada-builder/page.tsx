@@ -5,7 +5,7 @@ import { Puck } from "@measured/puck";
 import "@measured/puck/puck.css";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from '@/lib/i18n/useTranslation';
-import { getSaadaConfig } from './_components/PuckConfig';
+import { saadaConfig } from '@/lib/puck/PuckConfig';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SaadaBuilderPage() {
@@ -14,8 +14,6 @@ export default function SaadaBuilderPage() {
   const [templateKey, setTemplateKey] = useState('saada_homepage_layout');
   const { t, locale } = useTranslation();
   const isRTL = locale === 'ar';
-
-  const config = useMemo(() => getSaadaConfig(t, isRTL), [t, isRTL]);
 
   useEffect(() => {
     setData(null); // Show loader while fetching
@@ -58,11 +56,25 @@ export default function SaadaBuilderPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="saada_homepage_layout">{t('saada.templates.homepage') || 'Global Homepage'}</SelectItem>
+                <SelectItem value="saada_modern_template">SAADA Modern Template</SelectItem>
                 <SelectItem value="saada_store_default">{t('saada.templates.store_default') || 'Store Default Template'}</SelectItem>
                 <SelectItem value="saada_seller_default">{t('saada.templates.seller_default') || 'Seller Default Template'}</SelectItem>
               </SelectContent>
             </Select>
           </div>
+          <Button 
+            variant="outline" 
+            onClick={async () => {
+              await fetch(`/api/admin/saada-homepage`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'set_active_template', templateKey })
+              });
+              alert('تم تعيين القالب النشط للواجهة الرئيسية بنجاح!');
+            }}
+          >
+            تعيين كقالب نشط للواجهة
+          </Button>
         </div>
         {isSaving && <Loader2 className="w-5 h-5 animate-spin text-brand" />}
       </div>
@@ -78,14 +90,20 @@ export default function SaadaBuilderPage() {
             <Loader2 className="w-8 h-8 animate-spin text-brand" />
           </div>
         ) : (
-          <Puck 
-            config={config as any} 
-            data={data} 
-            onPublish={save}
-            headerTitle={t('saada.editorTitle') || "SAADA Page Builder"}
-          />
+          <div className="puck-rtl-preview-wrapper h-full">
+            <Puck 
+              config={saadaConfig as any} 
+              data={data} 
+              onPublish={save}
+              headerTitle={t('saada.editorTitle') || "SAADA Page Builder"}
+            />
+          </div>
         )}
       </div>
     </div>
   );
 }
+
+/* 
+.puck-rtl-preview-wrapper [data-puck-preview] { direction: rtl; } 
+*/

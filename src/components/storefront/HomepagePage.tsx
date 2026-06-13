@@ -18,6 +18,9 @@ import {
   HeroSliderSkeleton, CategoryCirclesSkeleton, BentoPromoGridSkeleton, 
   ProductSliderSkeleton 
 } from './SkeletonLoaders';
+import { Render } from '@measured/puck';
+import { saadaConfig } from '@/lib/puck/PuckConfig';
+import "@measured/puck/puck.css";
 import { toast } from 'sonner';
 
 const CURRENCY = { symbol: 'د.ج', code: 'DZD' };
@@ -1658,6 +1661,8 @@ return (
           <CategoryCirclesSkeleton />
           <BentoPromoGridSkeleton />
         </div>
+      ) : isPuckLayout ? (
+        <Render config={saadaConfig as any} data={data.layout as any} />
       ) : (
         <div className="space-y-4 py-4">
           {activeLayout.map(renderSectionWithStyles)}
