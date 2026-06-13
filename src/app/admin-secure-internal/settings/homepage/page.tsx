@@ -980,7 +980,8 @@ export default function AdminHomepageManager() {
                       };
 
                       return (
-                        <div key={sect.id} className={`flex items-center justify-between p-3.5 transition-colors ${sect.visible ? 'bg-background hover:bg-slate-50/50 dark:hover:bg-slate-800/10' : 'bg-muted/40 opacity-70'} ${editingSectId === sect.id ? 'border-l-4 border-l-brand bg-slate-50 dark:bg-slate-900/40' : ''}`}>
+                        <SortableSectionItem key={sect.id} id={sect.id}>
+                          <div className={`flex items-center justify-between p-3.5 transition-colors ${sect.visible ? 'bg-background hover:bg-slate-50/50 dark:hover:bg-slate-800/10' : 'bg-muted/40 opacity-70'} ${editingSectId === sect.id ? 'border-l-4 border-l-brand bg-slate-50 dark:bg-slate-900/40' : ''}`}>
                           <div className="min-w-0 flex items-center gap-3">
                             <span className="font-mono text-xs text-muted-foreground w-6 shrink-0">#{idx + 1}</span>
                             <div className="min-w-0">
@@ -1014,8 +1015,11 @@ export default function AdminHomepageManager() {
                             )}
                           </div>
                         </div>
+                        </SortableSectionItem>
                       );
                     })}
+                      </SortableContext>
+                    </DndContext>
                   </div>
 
                   {/* Add New Section Block */}

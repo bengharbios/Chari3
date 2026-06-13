@@ -1606,7 +1606,7 @@ export default function StorefrontHomepage() {
     const paddingBottom = section.metadata?.paddingBottom || '';
     const backgroundColor = section.metadata?.backgroundColor || '';
 
-    let classes = [];
+    let classes: string[] = [];
     if (isMobileHidden) classes.push('hidden md:block');
     if (isDesktopHidden) classes.push('md:hidden');
     if (paddingTop) classes.push(paddingTop);
