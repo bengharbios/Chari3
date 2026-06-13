@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+if (typeof window !== 'undefined') { (window as any).React = React; }
 import { Puck } from "@measured/puck";
 import "@measured/puck/puck.css";
 import { Loader2 } from "lucide-react";
