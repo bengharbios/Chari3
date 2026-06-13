@@ -72,7 +72,7 @@ export default function SaadaBuilderPage() {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="h-[calc(100vh-80px)] w-full flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Top Bar for Template Selection */}
       <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-[#1a2332] border-b border-gray-200 dark:border-white/10 shrink-0">
         <div className="flex items-center gap-4">

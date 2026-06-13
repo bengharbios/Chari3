@@ -682,14 +682,14 @@ export function CategoryCirclesRowBlock({ section, data, locale }: SectionProps)
         {filterCategory && (
           <Button variant="ghost" size="sm" className="text-destructive gap-1 text-xs" onClick={() => setFilterCategory('')}>
             <X className="size-3" />
-            {t('مسح التصفية', 'Clear Filter')}
+            {(locale === 'ar' ? 'مسح التصفية' : 'Clear Filter')}
           </Button>
         )}
       </SectionHeader>
       {displayCats.length === 0 ? (
         <div className="text-center py-10 text-muted-foreground bg-card rounded-[24px] border border-border/60">
           <ShoppingBag className="size-10 mx-auto mb-2 opacity-25" />
-          <p className="text-sm">{t('لا توجد أقسام متاحة حتى الآن', 'No categories available yet')}</p>
+          <p className="text-sm">{(locale === 'ar' ? 'لا توجد أقسام متاحة حتى الآن' : 'No categories available yet')}</p>
         </div>
       ) : (
         <div className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
@@ -912,10 +912,10 @@ export function TopSellersBlock({ section, data, locale }: SectionProps) {
       <div className="container-platform relative z-10">
         <div className="text-center mb-10 px-4 max-w-2xl mx-auto">
           <Badge className="mb-3.5 bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs px-3.5 py-1.5 rounded-full select-none">
-            {getLocalizedField(section, 'badge', locale) || t('أفضل المتاجر', 'Top Stores')}
+            {getLocalizedField(section, 'badge', locale) || (locale === 'ar' ? 'أفضل المتاجر' : 'Top Stores')}
           </Badge>
           <h3 className="text-2xl md:text-4xl font-black mb-3.5 leading-tight tracking-tight font-cairo">
-            {getLocalizedField(section, 'title', locale) || t('تسوق من شركائنا', 'Shop from Partners')}
+            {getLocalizedField(section, 'title', locale) || (locale === 'ar' ? 'تسوق من شركائنا' : 'Shop from Partners')}
           </h3>
           <div className="inline-flex p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 mt-8 gap-1.5 font-cairo select-none">
             <button
@@ -924,7 +924,7 @@ export function TopSellersBlock({ section, data, locale }: SectionProps) {
                 activeTab === 'stores' ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]' : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
             >
-              🏢 {t('المتاجر', 'Stores')}
+              🏢 {(locale === 'ar' ? 'المتاجر' : 'Stores')}
             </button>
             <button
               onClick={() => setActiveTab('sellers')}
@@ -932,7 +932,7 @@ export function TopSellersBlock({ section, data, locale }: SectionProps) {
                 activeTab === 'sellers' ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]' : 'text-white/70 hover:text-white hover:bg-white/5'
               }`}
             >
-              👤 {t('التجار', 'Sellers')}
+              👤 {(locale === 'ar' ? 'التجار' : 'Sellers')}
             </button>
           </div>
         </div>
@@ -1000,12 +1000,12 @@ export function CtaBlock({ section, data, locale }: SectionProps) {
         <div className="relative z-10 text-slate-950 md:w-2/3">
           <h3 className="text-3xl md:text-4xl font-black mb-4">{isAr ? section.titleAr || 'ابدأ البيع الآن!' : section.titleEn || 'Start Selling Now!'}</h3>
           <p className="text-sm md:text-base font-medium opacity-80 max-w-xl">
-            {t('انضم إلى آلاف البائعين', 'Join thousands of sellers')}
+            {(locale === 'ar' ? 'انضم إلى آلاف البائعين' : 'Join thousands of sellers')}
           </p>
         </div>
         <div className="relative z-10 flex gap-4 w-full md:w-auto">
           <Button size="lg" className="bg-slate-950 text-white hover:bg-slate-800 rounded-xl w-full md:w-auto">
-            {t('سجل الآن', 'Register Now')}
+            {(locale === 'ar' ? 'سجل الآن' : 'Register Now')}
           </Button>
         </div>
       </div>

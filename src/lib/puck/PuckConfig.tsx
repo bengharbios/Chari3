@@ -22,12 +22,17 @@ const distributionToClass: Record<string, string> = {
   "1fr": "grid-cols-1",
   "1fr 1fr": "grid-cols-1 md:grid-cols-2",
   "1fr 1fr 1fr": "grid-cols-1 md:grid-cols-3",
+  "1fr 1fr 1fr 1fr": "grid-cols-1 sm:grid-cols-2 md:grid-cols-4",
+  "1fr 1fr 1fr 1fr 1fr": "grid-cols-2 md:grid-cols-5",
+  "1fr 1fr 1fr 1fr 1fr 1fr": "grid-cols-2 md:grid-cols-3 lg:grid-cols-6",
+  "auto": "grid-cols-1 sm:grid-cols-2 md:grid-cols-auto-fit",
 };
 
 // Common fields shared across legacy components
 const getCommonFields = (isAr: boolean) => ({
   titleAr: { type: "text", label: isAr ? "العنوان (عربي)" : "Title (Ar)" },
   titleEn: { type: "text", label: isAr ? "العنوان (إنجليزي)" : "Title (En)" },
+  titleFr: { type: "text", label: isAr ? "العنوان (فرنسي)" : "Title (Fr)" },
   metadata_paddingTop: { type: "text", label: isAr ? "المسافة العلوية (Tailwind Classes)" : "Padding Top", default: "py-6" },
   metadata_paddingBottom: { type: "text", label: isAr ? "المسافة السفلية" : "Padding Bottom", default: "" },
   metadata_backgroundColor: { 
@@ -135,7 +140,30 @@ export const getSaadaConfig = (locale: string, storeData: any = {}) => {
         )
       },
       Columns: {
-        fields: { distribution: { type: "text" }, gap: { type: "text" } },
+        fields: { 
+          distribution: { 
+            type: "radio", 
+            options: [
+              { value: "1fr", label: "1" },
+              { value: "1fr 1fr", label: "2" },
+              { value: "1fr 1fr 1fr", label: "3" },
+              { value: "1fr 1fr 1fr 1fr", label: "4" },
+              { value: "1fr 1fr 1fr 1fr 1fr", label: "5" },
+              { value: "1fr 1fr 1fr 1fr 1fr 1fr", label: "6" },
+            ]
+          }, 
+          gap: { 
+            type: "select",
+            options: [
+              { value: "gap-0", label: "0" },
+              { value: "gap-2", label: "2" },
+              { value: "gap-4", label: "4" },
+              { value: "gap-6", label: "6" },
+              { value: "gap-8", label: "8" },
+              { value: "gap-12", label: "12" },
+            ]
+          } 
+        },
         defaultProps: { distribution: "1fr 1fr", gap: "gap-4" },
         render: ({ distribution, gap, puck: { renderDropZone } }: any) => {
           const gridClass = distributionToClass[distribution] || "grid-cols-1";
