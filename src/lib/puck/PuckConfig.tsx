@@ -3,6 +3,11 @@
 import React from 'react';
 import { DynamicProductGrid, DynamicCategoryCircles } from '@/components/storefront/SaadaBlocks';
 
+// Prevent Next.js tree-shaking from removing React which is needed by Puck internally
+if (typeof window !== 'undefined') {
+  (window as any).React = React;
+}
+
 const distributionToClass: Record<string, string> = {
   "1fr": "grid-cols-1",
   "1fr 1fr": "grid-cols-1 md:grid-cols-2",
