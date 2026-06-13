@@ -617,6 +617,7 @@ export default function StorefrontHomepage() {
   const { isAuthenticated } = useAuthStore();
   const { items: cartItems, addItem } = useCartStore();
   const isAr = locale === 'ar';
+  const saadaConfig = useMemo(() => getSaadaConfig(locale), [locale]);
   
   const t = (ar: string, en: string) => {
     const arKeyMap: Record<string, string> = {
@@ -1657,7 +1658,6 @@ return (
       {/* Render Dynamic Order of Sections */}
       {(() => {
         const isPuckLayout = data?.layout && !Array.isArray(data.layout) && data.layout.content;
-        const saadaConfig = getSaadaConfig(locale);
         return isLoading ? (
         <div className="container-platform py-6 space-y-10">
           <HeroSliderSkeleton />

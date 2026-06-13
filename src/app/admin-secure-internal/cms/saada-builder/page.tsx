@@ -15,7 +15,7 @@ export default function SaadaBuilderPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [templateKey, setTemplateKey] = useState('saada_homepage_layout');
   const { t, locale } = useTranslation();
-  const saadaConfig = getSaadaConfig(locale);
+  const saadaConfig = useMemo(() => getSaadaConfig(locale), [locale]);
   const router = useRouter();
   const isRTL = locale === 'ar';
 
