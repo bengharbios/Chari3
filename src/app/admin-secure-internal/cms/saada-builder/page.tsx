@@ -12,14 +12,21 @@ import { useRouter } from 'next/navigation';
 
 export default function SaadaBuilderPage() {
   const [data, setData] = useState<any>(null);
+  const [storeData, setStoreData] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
   const [templateKey, setTemplateKey] = useState('saada_homepage_layout');
   const { t, locale } = useTranslation();
-  const saadaConfig = useMemo(() => getSaadaConfig(locale), [locale]);
+  const saadaConfig = useMemo(() => getSaadaConfig(locale, storeData), [locale, storeData]);
   const router = useRouter();
   const isRTL = locale === 'ar';
 
   useEffect(() => {
+    // Fetch real store data for previews
+    fetch(`/api/homepage?t=${Date.now()}`, { cache: 'no-store' })
+      .then(r => r.json())
+      .then(d => { if (d.success) setStoreData(d); })
+      .catch(() => {});
+      
     setData(null); // Show loader while fetching
     fetch(`/api/admin/saada-homepage?templateKey=${templateKey}`)
       .then(res => res.json())

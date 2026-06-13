@@ -1,25 +1,254 @@
 'use client';
-
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ShoppingBag, ShoppingCart, CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
+import { 
+  ChevronLeft, ChevronRight, Star, TrendingUp, Shield, Truck, 
+  ArrowLeft, ArrowRight, ShoppingBag, Award, Quote, SlidersHorizontal, 
+  X, Search, Tag, ShoppingCart, Flame, Sparkles, CheckCircle2 
+} from 'lucide-react';
+import { useAppStore, useAuthStore, useCartStore } from '@/lib/store';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useAppStore, useCartStore } from '@/lib/store';
+import { Input } from '@/components/ui/input';
+import { useTranslation } from '@/lib/i18n/useTranslation';
+import { 
+  HeroSliderSkeleton, CategoryCirclesSkeleton, BentoPromoGridSkeleton, 
+  ProductSliderSkeleton 
+} from './SkeletonLoaders';
+import "@measured/puck/puck.css";
 
-// Helper for Star Rating
-export function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md' }) {
-  const stars = [];
-  for (let s = 1; s <= 5; s++) {
-    stars.push(
-      <svg key={s} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={s <= Math.round(rating) ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`${size === 'sm' ? 'w-3 h-3' : 'w-4 h-4'} ${s <= Math.round(rating) ? 'text-amber-400' : 'text-gray-300'}`}>
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-      </svg>
-    );
-  }
-  return <div className="flex items-center gap-0.5">{stars}</div>;
+
+
+
+
+export interface SectionProps {
+  section: any;
+  data: any;
+  locale: string;
+}
+
+const CURRENCY = { symbol: 'د.ج', code: 'DZD' };
+
+const TRENDING_SEARCHES = [
+  "واقيات الشمس", "العطور", "آيفون", "التلفزيونات", "بلايستيشن 5", 
+  "بطاقات هدايا", "قلايات هوائية", "أواني السفرة والتقديم", 
+  "أطقم القهوة والشاي", "ديكور البيت", "الأحذية"
+];
+
+function fmt(amount: number) {
+  return `${amount.toLocaleString('ar-DZ')} ${CURRENCY.symbol}`;
+}
+
+const DEFAULT_HERO_SLIDES = [
+  {
+    id: '1',
+    title: 'تسوق بثقة',
+    titleEn: 'Shop with Confidence',
+    titleFr: 'Achetez en toute confiance',
+    subtitle: 'آلاف المنتجات من تجار موثوقين في الجزائر',
+    subtitleEn: 'Thousands of products from verified Algerian sellers',
+    subtitleFr: 'Des milliers de produits de vendeurs algériens vérifiés',
+    bg: 'from-blue-950 via-indigo-900 to-slate-900',
+    badge: '🔥 العروض الحصرية',
+    badgeFr: '🔥 Offres exclusives',
+    cta: 'تسوق الآن',
+    ctaFr: 'Acheter maintenant',
+  },
+  {
+    id: '2',
+    title: 'توصيل سريع',
+    titleEn: 'Fast Delivery',
+    titleFr: 'Livraison rapide',
+    subtitle: 'نوصل لجميع ولايات الجزائر خلال 24-72 ساعة',
+    subtitleEn: 'Delivery to all wilayas within 24-72 hours',
+    subtitleFr: 'Livraison dans toutes les wilayas en 24-72 heures',
+    bg: 'from-emerald-950 via-teal-900 to-slate-900',
+    badge: '🚀 توصيل سريع',
+    badgeFr: '🚀 Livraison rapide',
+    cta: 'اكتشف المزيد',
+    ctaFr: 'Découvrir plus',
+  },
+  {
+    id: '3',
+    title: 'ضمان الجودة',
+    titleEn: 'Quality Guarantee',
+    titleFr: 'Garantie de qualité',
+    subtitle: 'جميع المنتجات مضمونة وقابلة للإرجاع',
+    subtitleEn: 'All products are guaranteed with easy returns',
+    subtitleFr: 'Tous les produits sont garantis avec retour facile',
+    bg: 'from-purple-950 via-violet-900 to-slate-900',
+    badge: '✅ ضمان الجودة',
+    badgeFr: '✅ Garantie de qualité',
+    cta: 'ابدأ التسوق',
+    ctaFr: 'Commencer vos achats',
+  },
+];
+
+const DEFAULT_TESTIMONIALS = [
+  { 
+    name: 'فاطمة بن علي', 
+    nameEn: 'Fatima Ben Ali', 
+    nameFr: 'Fatima Ben Ali',
+    text: 'خدمة ممتازة وتوصيل سريع، أنصح الجميع بالتسوق من هنا!', 
+    textEn: 'Excellent service and fast delivery, highly recommend shopping here!',
+    textFr: 'Excellent service et livraison rapide, je recommande vivement !',
+    rating: 5, 
+    city: 'الجزائر العاصمة',
+    cityEn: 'Algiers',
+    cityFr: 'Alger'
+  },
+  { 
+    name: 'محمد الأمين', 
+    nameEn: 'Mohamed Lamine',
+    nameFr: 'Mohamed Lamine',
+    text: 'منصة رائعة، المنتجات أصلية والأسعار معقولة جداً', 
+    textEn: 'Great platform, original products and very reasonable prices',
+    textFr: 'Excellente plateforme, produits authentiques et prix très raisonnables',
+    rating: 5, 
+    city: 'وهران',
+    cityEn: 'Oran',
+    cityFr: 'Oran'
+  },
+];
+
+const FEATURES = [
+  { 
+    icon: Shield, 
+    title: 'توثيق كامل', 
+    titleEn: 'Full Verification',
+    titleFr: 'Vérification complète',
+    desc: 'جميع التجار موثقون رسمياً',
+    descEn: 'All merchants are officially verified',
+    descFr: 'Tous les vendeurs sont officiellement vérifiés'
+  },
+  { 
+    icon: Truck, 
+    title: 'توصيل لكل ولاية', 
+    titleEn: 'Delivery to All Wilayas',
+    titleFr: 'Livraison à toutes les wilayas',
+    desc: '58 ولاية مغطاة في الجزائر',
+    descEn: '58 wilayas covered in Algeria',
+    descFr: '58 wilayas couvertes en Algérie'
+  },
+  { 
+    icon: Award, 
+    title: 'ضمان الجودة', 
+    titleEn: 'Quality Guarantee',
+    titleFr: 'Garantie de qualité',
+    desc: 'إرجاع مجاني خلال 14 يوم',
+    descEn: 'Free return within 14 days',
+    descFr: 'Retour gratuit sous 14 jours'
+  },
+  { 
+    icon: TrendingUp, 
+    title: 'أفضل الأسعار', 
+    titleEn: 'Best Prices',
+    titleFr: 'Meilleurs prix',
+    desc: 'مقارنة أسعار فورية بين التجار',
+    descEn: 'Instant price comparison between sellers',
+    descFr: 'Comparaison instantanée des prix entre vendeurs'
+  },
+];
+
+interface HomepageData {
+  categories: { id: string; name: string; nameEn?: string; icon?: string; image?: string }[];
+  featuredProducts: any[];
+  bentoRightProducts?: any[];
+  bentoLeftProducts?: any[];
+  bentoCenterProducts?: any[];
+  topSellers: any[];
+  topStores: any[];
+  advertisements: Record<string, any[]>;
+  testimonials: any[];
+  layout?: string[];
+  heroSlides?: any[];
+  globalCouponCampaigns?: any[];
+  countdownConfig?: { enabled: boolean; endDate: string; titleAr: string; titleEn: string };
+}
+
+function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md' }) {
+  return (
+    <div className="flex items-center gap-0.5">
+      {[1, 2, 3, 4, 5].map((s) => (
+        <Star key={s} className={`${size === 'sm' ? 'size-3' : 'size-4'} ${s <= Math.round(rating) ? 'fill-amber-400 text-amber-400' : 'text-gray-300'}`} />
+      ))}
+    </div>
+  );
+}
+
+function CountdownTimer({ targetDate }: { targetDate: string }) {
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const { locale } = useAppStore();
+  const isAr = locale === 'ar';
+
+  useEffect(() => {
+    const target = new Date(targetDate).getTime();
+    const update = () => {
+      const now = Date.now();
+      const diff = target - now;
+      if (diff <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+      setTimeLeft({ days, hours, minutes, seconds });
+    };
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [targetDate]);
+
+  return (
+    <div className="flex items-center gap-2 font-mono direction-ltr justify-center select-none" dir="ltr">
+      {timeLeft.days > 0 && (
+        <div className="flex flex-col items-center">
+          <div className="bg-amber-500 text-slate-950 font-black text-sm md:text-base px-2.5 py-1.5 rounded-lg shadow-inner min-w-[34px] text-center">
+            {timeLeft.days}
+          </div>
+          <span className="text-[10px] text-muted-foreground font-bold mt-1">{isAr ? 'يوم' : 'd'}</span>
+        </div>
+      )}
+      <div className="flex flex-col items-center">
+        <div className="bg-slate-900 text-amber-400 border border-amber-500/20 font-black text-sm md:text-base px-2.5 py-1.5 rounded-lg shadow-inner min-w-[34px] text-center">
+          {String(timeLeft.hours).padStart(2, '0')}
+        </div>
+        <span className="text-[10px] text-muted-foreground font-bold mt-1">{isAr ? 'ساعة' : 'h'}</span>
+      </div>
+      <span className="text-amber-500 font-bold mb-5">:</span>
+      <div className="flex flex-col items-center">
+        <div className="bg-slate-900 text-amber-400 border border-amber-500/20 font-black text-sm md:text-base px-2.5 py-1.5 rounded-lg shadow-inner min-w-[34px] text-center">
+          {String(timeLeft.minutes).padStart(2, '0')}
+        </div>
+        <span className="text-[10px] text-muted-foreground font-bold mt-1">{isAr ? 'دقيقة' : 'm'}</span>
+      </div>
+      <span className="text-amber-500 font-bold mb-5">:</span>
+      <div className="flex flex-col items-center">
+        <div className="bg-slate-900 text-amber-400 border border-amber-500/20 font-black text-sm md:text-base px-2.5 py-1.5 rounded-lg shadow-inner min-w-[34px] text-center animate-pulse">
+          {String(timeLeft.seconds).padStart(2, '0')}
+        </div>
+        <span className="text-[10px] text-muted-foreground font-bold mt-1">{isAr ? 'ثانية' : 's'}</span>
+      </div>
+    </div>
+  );
+}
+
+function AdBanner({ ads, className = '' }: { ads?: any[]; className?: string }) {
+  if (!ads || ads.length === 0 || !ads[0]) return null;
+  const ad = ads[0];
+  return (
+    <a href={ad.linkUrl || '#'} className={`block overflow-hidden rounded-[24px] ${className}`} onClick={() => fetch(`/api/admin/advertisements`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: ad.id, clicks: 1 }) }).catch(() => {})}>
+      <div className="relative w-full h-full bg-gradient-to-r from-stone-900 via-stone-850 to-indigo-950 flex items-center justify-center p-6 border border-white/5 shadow-2xl">
+        <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
+        <p className="text-amber-400 font-black text-base md:text-lg tracking-wider text-center">{ad.title}</p>
+        <Badge className="absolute top-3 end-3 bg-white/10 text-white border-white/10 text-[10px]">إعلان</Badge>
+      </div>
+    </a>
+  );
 }
 
 const LEVEL_BADGE: Record<number, string> = {
@@ -27,8 +256,8 @@ const LEVEL_BADGE: Record<number, string> = {
   6: '💎', 7: '👑', 8: '🏆', 9: '🦅', 10: '🌠',
 };
 
-// Reusable Product Card
-export function ProductCard({ product, isOfferCard = false }: { product: any; isOfferCard?: boolean }) {
+// Standalone reusable Product Card matching Noon/Temu visuals
+function ProductCard({ product, isOfferCard = false }: { product: any; isOfferCard?: boolean }) {
   const { locale } = useAppStore();
   const { items: cartItems, addItem } = useCartStore();
   const router = useRouter();
@@ -37,8 +266,9 @@ export function ProductCard({ product, isOfferCard = false }: { product: any; is
   const isInCart = cartItems.some((item) => item.product.id === product.id);
 
   let images: string[] = [];
-  if (Array.isArray(product.images)) images = product.images;
-  else if (typeof product.images === 'string') {
+  if (Array.isArray(product.images)) {
+    images = product.images;
+  } else if (typeof product.images === 'string') {
     try { images = JSON.parse(product.images); } catch {}
   }
   if (!Array.isArray(images)) images = [];
@@ -52,6 +282,9 @@ export function ProductCard({ product, isOfferCard = false }: { product: any; is
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     addItem(product, 1);
+    toast.success(isAr ? 'تمت إضافة المنتج إلى السلة!' : 'Product added to cart!', {
+      icon: <CheckCircle2 className="text-emerald-500 w-5 h-5" />
+    });
   };
 
   const fmt = (amount: number) => {
@@ -65,14 +298,13 @@ export function ProductCard({ product, isOfferCard = false }: { product: any; is
         useAppStore.getState().setSelectedProductId(product.id);
         router.push(`/products/${product.id}`);
       }}
-      dir={isAr ? 'rtl' : 'ltr'}
     >
       <div className="relative aspect-square bg-slate-50 dark:bg-slate-950 overflow-hidden shrink-0">
         {images[0] ? (
           <img src={images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-primary/10 to-primary/5">
-            <ShoppingBag className="w-8 h-8 text-primary/30" />
+            <ShoppingBag className="size-8 text-primary/30" />
           </div>
         )}
         {discount > 0 && (
@@ -97,7 +329,7 @@ export function ProductCard({ product, isOfferCard = false }: { product: any; is
             <Button 
               size="icon" 
               variant={isInCart ? "default" : "secondary"} 
-              className={`rounded-full shrink-0 w-7 h-7 shadow ${isInCart ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-100 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-850'}`}
+              className={`rounded-full shrink-0 size-7 shadow ${isInCart ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-100 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-850'}`}
               onClick={handleAddToCart}
             >
               {isInCart ? <CheckCircle2 className="w-3.5 h-3.5" /> : <ShoppingCart className="w-3.5 h-3.5" />}
@@ -118,11 +350,82 @@ export function ProductCard({ product, isOfferCard = false }: { product: any; is
   );
 }
 
-// Dynamic Product Grid Block
-export function DynamicProductGrid({ title, filterType, categoryId, layoutStyle, limit = 10 }: any) {
+function getLocalizedField(obj: any, fieldName: string, locale: string, fallbackField?: string): string {
+  if (!obj) return '';
+
+  const suffix = locale.charAt(0).toUpperCase() + locale.slice(1);
+  const localizedKey = `${fieldName}${suffix}`;
+
+  if (obj[localizedKey] !== undefined && obj[localizedKey] !== null && obj[localizedKey] !== '') {
+    return String(obj[localizedKey]);
+  }
+
+  if (obj.metadata && typeof obj.metadata === 'object') {
+    if (obj.metadata[localizedKey] !== undefined && obj.metadata[localizedKey] !== null && obj.metadata[localizedKey] !== '') {
+      return String(obj.metadata[localizedKey]);
+    }
+  }
+
+  if (locale === 'fr') {
+    const enKey = `${fieldName}En`;
+    if (obj[enKey] !== undefined && obj[enKey] !== null && obj[enKey] !== '') {
+      return String(obj[enKey]);
+    }
+    if (obj.metadata && typeof obj.metadata === 'object') {
+      if (obj.metadata[enKey] !== undefined && obj.metadata[enKey] !== null && obj.metadata[enKey] !== '') {
+        return String(obj.metadata[enKey]);
+      }
+    }
+  }
+
+  const arKey = `${fieldName}Ar`;
+  if (obj[arKey] !== undefined && obj[arKey] !== null && obj[arKey] !== '') {
+    return String(obj[arKey]);
+  }
+  if (obj.metadata && typeof obj.metadata === 'object') {
+    if (obj.metadata[arKey] !== undefined && obj.metadata[arKey] !== null && obj.metadata[arKey] !== '') {
+      return String(obj.metadata[arKey]);
+    }
+  }
+
+  if (obj[fieldName] !== undefined && obj[fieldName] !== null && obj[fieldName] !== '') {
+    return String(obj[fieldName]);
+  }
+  if (obj.metadata && typeof obj.metadata === 'object') {
+    if (obj.metadata[fieldName] !== undefined && obj.metadata[fieldName] !== null && obj.metadata[fieldName] !== '') {
+      return String(obj.metadata[fieldName]);
+    }
+  }
+
+  if (fallbackField && obj[fallbackField] !== undefined && obj[fallbackField] !== null && obj[fallbackField] !== '') {
+    return String(obj[fallbackField]);
+  }
+
+  return '';
+}
+
+interface SectionHeaderProps {
+  section: any;
+  isAr: boolean;
+  locale: string;
+  t: (ar: string, en: string) => string;
+  children?: React.ReactNode;
+}
+
+function CategoryProductsRow({
+  categoryId,
+  section,
+  locale,
+  layoutStyle = 'carousel',
+  storeId,
+  sellerId,
+  filterType = 'newest',
+  children
+}: any) {
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { locale } = useAppStore();
+  const title = getLocalizedField(section, 'title', locale, 'type');
+  const badge = getLocalizedField(section, 'badge', locale);
   const isAr = locale === 'ar';
 
   useEffect(() => {
@@ -131,10 +434,12 @@ export function DynamicProductGrid({ title, filterType, categoryId, layoutStyle,
 
     const params = new URLSearchParams({
       status: 'active',
-      limit: String(limit),
-      sort: filterType || 'newest'
+      limit: '10',
+      sort: filterType
     });
-    if (categoryId && categoryId !== 'all') params.set('categoryId', categoryId);
+    if (categoryId) params.set('categoryId', categoryId);
+    if (storeId) params.set('storeId', storeId);
+    if (sellerId) params.set('sellerId', sellerId);
 
     fetch(`/api/products?${params.toString()}`)
       .then((r) => r.json())
@@ -151,20 +456,32 @@ export function DynamicProductGrid({ title, filterType, categoryId, layoutStyle,
     return () => {
       isMounted = false;
     };
-  }, [categoryId, filterType, limit]);
+  }, [categoryId, storeId, sellerId, filterType]);
 
   return (
-    <div className="w-full py-4" dir={isAr ? 'rtl' : 'ltr'}>
-      <h3 className="text-xl font-black text-navy dark:text-white font-cairo mb-4 border-b border-slate-100 dark:border-slate-800/80 pb-3">{title}</h3>
-      {isLoading ? (
-        <div className="flex gap-4 overflow-x-auto py-2">
-          {[1, 2, 3, 4].map(i => (
-             <div key={i} className="w-[180px] h-[250px] bg-slate-100 dark:bg-slate-800 animate-pulse rounded-[20px] shrink-0" />
-          ))}
+    <div className="container-platform py-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-5 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+        <div className="flex items-center gap-2">
+          <h3 className="text-xl font-black text-navy dark:text-white font-cairo">
+            {title || section?.type}
+          </h3>
+          {badge && (
+            <Badge className="bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[10px] font-bold">{badge}</Badge>
+          )}
         </div>
+        <div className="flex items-center gap-3">
+          {section?.metadata?.enableTimer && section?.metadata?.timerEndDate && (
+            <CountdownTimer targetDate={section.metadata.timerEndDate} />
+          )}
+          {children}
+        </div>
+      </div>
+
+      {isLoading ? (
+        <ProductSliderSkeleton />
       ) : products.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground text-xs bg-slate-50 dark:bg-slate-900/40 rounded-xl">
-          {isAr ? 'لا توجد منتجات حالياً' : 'No products available'}
+        <div className="text-center py-8 text-muted-foreground text-xs bg-white/40 dark:bg-slate-900/40 rounded-xl p-4 border border-slate-100 dark:border-slate-800">
+          {isAr ? 'لا توجد منتجات حالياً في هذا القسم' : 'No products available in this section'}
         </div>
       ) : layoutStyle === 'grid' ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -185,207 +502,20 @@ export function DynamicProductGrid({ title, filterType, categoryId, layoutStyle,
   );
 }
 
-export function FeaturesBlock({ features }: any) {
-  const { locale } = useAppStore();
-  const isAr = locale === 'ar';
-  
-  if (!features || features.length === 0) return null;
-  
-  return (
-    <section className="w-full py-2" dir={isAr ? 'rtl' : 'ltr'}>
-      <div className="bg-white/50 dark:bg-slate-900/50 border border-border/80 rounded-[24px] backdrop-blur-md p-5 shadow-sm">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {features.map((f: any, i: number) => (
-            <div key={i} className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-500 shrink-0 text-2xl">
-                {f.icon || '✨'}
-              </div>
-              <div>
-                <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{f.title}</p>
-                <p className="hidden md:block text-[10px] text-muted-foreground mt-0.5">{f.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-export function TopSellersBlock({ title, limit = 5 }: any) {
-  const [sellers, setSellers] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { locale } = useAppStore();
-  const isAr = locale === 'ar';
-
-  useEffect(() => {
-    let isMounted = true;
-    fetch(`/api/sellers?sort=sales&limit=${limit}`)
-      .then(r => r.json())
-      .then(d => {
-        if (isMounted) setSellers(d.sellers || []);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
-    return () => { isMounted = false; };
-  }, [limit]);
-
-  return (
-    <div className="w-full py-4" dir={isAr ? 'rtl' : 'ltr'}>
-      <h3 className="text-xl font-black text-navy dark:text-white font-cairo mb-4 border-b border-slate-100 dark:border-slate-800/80 pb-3">{title}</h3>
-      {isLoading ? (
-        <div className="flex gap-4 overflow-x-auto py-2">
-          {[1, 2, 3].map(i => <div key={i} className="w-[200px] h-[100px] bg-slate-100 dark:bg-slate-800 animate-pulse rounded-[16px] shrink-0" />)}
-        </div>
-      ) : (
-        <div className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
-          {sellers.map(seller => (
-            <Link key={seller.id} href={`/store/${seller.slug || seller.id}`} className="bg-white dark:bg-slate-900 border border-border/60 rounded-[16px] p-3 flex items-center gap-3 min-w-[200px] shrink-0 hover:border-amber-500/50 transition-all snap-start shadow-sm">
-              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xl overflow-hidden shrink-0">
-                {seller.logo ? <img src={seller.logo} className="w-full h-full object-cover" alt=""/> : '🏪'}
-              </div>
-              <div>
-                <p className="font-bold text-sm line-clamp-1 text-slate-800 dark:text-slate-100">{seller.storeName}</p>
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1">
-                  <StarRating rating={seller.rating || 5} /> <span className="font-bold">({seller.reviewCount || 0})</span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-export function CountdownPromoBlock({ title, subtitle, targetDate, bgOverlay = "bg-rose-600", imageUrl }: any) {
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const { locale } = useAppStore();
-  const isAr = locale === 'ar';
-
-  useEffect(() => {
-    const target = new Date(targetDate).getTime();
-    if (isNaN(target)) return;
-    const update = () => {
-      const now = Date.now();
-      const diff = target - now;
-      if (diff <= 0) {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-        return;
-      }
-      setTimeLeft({
-        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((diff / (1000 * 60)) % 60),
-        seconds: Math.floor((diff / 1000) % 60)
-      });
-    };
-    update();
-    const timer = setInterval(update, 1000);
-    return () => clearInterval(timer);
-  }, [targetDate]);
-
-  return (
-    <div className="w-full py-4 relative rounded-[24px] overflow-hidden my-4 group flex flex-col md:flex-row items-center justify-between p-6 md:p-10 shadow-lg" dir={isAr ? 'rtl' : 'ltr'}>
-      <div className="absolute inset-0 bg-slate-950">
-        {imageUrl && <img src={imageUrl} alt="Promo" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-50" />}
-        <div className={`absolute inset-0 ${bgOverlay} mix-blend-multiply opacity-80`} />
-      </div>
-      <div className="relative z-10 text-white mb-6 md:mb-0 text-center md:text-start flex-1">
-        <h3 className="text-2xl md:text-4xl font-black mb-2 drop-shadow-md font-cairo">{title}</h3>
-        <p className="text-white/80 text-sm md:text-base font-bold">{subtitle || 'عروض حصرية تنتهي قريباً، تسوق الآن!'}</p>
-      </div>
-      <div className="relative z-10 flex items-center gap-2 md:gap-4 font-mono direction-ltr shrink-0" dir="ltr">
-        {[
-          { label: isAr ? 'يوم' : 'd', value: timeLeft.days },
-          { label: isAr ? 'ساعة' : 'h', value: timeLeft.hours },
-          { label: isAr ? 'دقيقة' : 'm', value: timeLeft.minutes },
-          { label: isAr ? 'ثانية' : 's', value: timeLeft.seconds }
-        ].map((t, i) => (
-          <div key={i} className="flex flex-col items-center">
-            <div className="bg-white text-slate-950 font-black text-lg md:text-2xl px-3 py-2 rounded-xl shadow-inner min-w-[50px] text-center">
-              {String(t.value).padStart(2, '0')}
-            </div>
-            <span className="text-[10px] text-white/90 font-bold mt-1">{t.label}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function BentoPromoGridBlock({ badge, title1, link1, image1, title2, link2, image2, title3, link3, image3 }: any) {
-  const { locale } = useAppStore();
-  const isAr = locale === 'ar';
-  return (
-    <div className="w-full py-4 font-cairo" dir={isAr ? 'rtl' : 'ltr'}>
-      {badge && (
-        <div className="flex justify-center mb-4">
-          <Badge className="bg-amber-500 text-white text-xs font-bold py-1 px-3 shadow-md border-0">{badge}</Badge>
-        </div>
-      )}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[
-          { title: title1, link: link1, image: image1, bg: "from-amber-500 to-amber-600" },
-          { title: title2, link: link2, image: image2, bg: "from-slate-900 to-indigo-950" },
-          { title: title3, link: link3, image: image3, bg: "from-emerald-500 to-teal-600" }
-        ].filter(c => c.title || c.image).map((card, i) => (
-          <Link key={i} href={card.link || '#'} className={`relative min-h-[200px] md:min-h-[250px] rounded-[24px] bg-gradient-to-br ${card.bg} text-white p-5 flex flex-col justify-end overflow-hidden group hover:shadow-xl transition-all`}>
-            {card.image && <img src={card.image} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="" />}
-            <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
-            <div className="relative z-10">
-              <h3 className="text-xl font-black drop-shadow-md">{card.title}</h3>
-            </div>
-          </Link>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function TestimonialsBlock({ title, testimonials }: any) {
-  const { locale } = useAppStore();
-  const isAr = locale === 'ar';
-  if (!testimonials || testimonials.length === 0) return null;
-  
-  return (
-    <div className="w-full py-8" dir={isAr ? 'rtl' : 'ltr'}>
-      {title && <h3 className="text-2xl font-black text-center mb-8 font-cairo text-slate-800 dark:text-white">{title}</h3>}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {testimonials.map((t: any, i: number) => (
-          <div key={i} className="bg-white/80 dark:bg-slate-900/80 border border-border/50 rounded-[24px] p-6 shadow-sm hover:shadow-md transition-all text-center">
-            <div className="flex justify-center mb-4 text-amber-400">
-              {'★'.repeat(t.rating || 5)}{'☆'.repeat(5 - (t.rating || 5))}
-            </div>
-            <p className="text-sm text-slate-600 dark:text-slate-300 italic mb-4">"{t.content}"</p>
-            <div className="font-bold text-xs text-slate-900 dark:text-white">{t.author}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// Category Circles Block
-export function DynamicCategoryCircles({ title, parentId }: any) {
+function CategoryCirclesRow({ categoryId, section, locale }: any) {
   const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { locale } = useAppStore();
   const isAr = locale === 'ar';
 
   useEffect(() => {
+    if (!categoryId) return;
     let isMounted = true;
     setIsLoading(true);
-    let url = '/api/categories';
-    if (parentId && parentId !== 'main') url += `?parentId=${parentId}`;
-    
-    fetch(url)
+    fetch(`/api/categories?parentId=${categoryId}`)
       .then((r) => r.json())
       .then((d) => {
         if (isMounted && d.success) {
-          setCategories((d.categories || []).filter((c: any) => parentId === 'main' ? !c.parentId : true));
+          setCategories(d.categories || []);
         }
       })
       .catch(() => {})
@@ -395,17 +525,18 @@ export function DynamicCategoryCircles({ title, parentId }: any) {
     return () => {
       isMounted = false;
     };
-  }, [parentId]);
+  }, [categoryId]);
+
+  if (!categoryId) return null;
+  const title = getLocalizedField(section, 'title', locale) || (isAr ? 'التصنيفات الفرعية' : 'Subcategories');
 
   return (
-    <div className="w-full py-4" dir={isAr ? 'rtl' : 'ltr'}>
-      <h3 className="text-xl font-black text-navy dark:text-white font-cairo mb-4">{title}</h3>
+    <section className="container-platform py-6">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-xl font-black text-navy dark:text-white font-cairo">{title}</h3>
+      </div>
       {isLoading ? (
-        <div className="flex gap-4 overflow-x-auto">
-          {[1,2,3,4,5,6].map(i => (
-             <div key={i} className="w-[92px] h-[92px] rounded-[22px] bg-slate-100 dark:bg-slate-800 animate-pulse shrink-0" />
-          ))}
-        </div>
+        <CategoryCirclesSkeleton />
       ) : categories.length === 0 ? (
         <p className="text-xs text-muted-foreground">{isAr ? 'لا توجد تصنيفات فرعية' : 'No subcategories available'}</p>
       ) : (
@@ -414,7 +545,8 @@ export function DynamicCategoryCircles({ title, parentId }: any) {
             <Link
               key={cat.id}
               href={`/search?categoryId=${cat.id}`}
-              className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-[22px] bg-white/70 dark:bg-slate-950/70 border border-border/80 hover:border-amber-500/30 hover:scale-105 hover:bg-white dark:hover:bg-slate-900 transition-all duration-300 shrink-0 snap-start select-none min-w-[92px]"
+              className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-[22px] bg-white/70 dark:bg-slate-950/70 border border-border/80 hover:border-amber-500/30 hover:scale-105 hover:bg-white dark:hover:bg-slate-900 transition-all duration-300 shrink-0 snap-start select-none"
+              style={{ minWidth: '92px' }}
             >
               <span className="text-2xl drop-shadow-sm select-none">{cat.icon || '📦'}</span>
               <span className="text-[10px] font-bold text-center leading-tight line-clamp-1 max-w-[80px]">
@@ -424,7 +556,473 @@ export function DynamicCategoryCircles({ title, parentId }: any) {
           ))}
         </div>
       )}
+    </section>
+  );
+}
+
+export function HeroSliderBlock({ section, data, locale }: SectionProps) {
+  const isAr = locale === 'ar';
+  const rawSlides = data?.heroSlides ?? [];
+  const validSlides = Array.isArray(rawSlides)
+    ? rawSlides.filter((s: any) => s && typeof s === 'object' && (s.title || s.titleEn))
+    : [];
+  const currentHeroSlides = validSlides.length > 0 ? validSlides : DEFAULT_HERO_SLIDES;
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  useEffect(() => {
+    if (!currentHeroSlides.length) return;
+    const interval = setInterval(() => setHeroIndex((i) => (i + 1) % currentHeroSlides.length), 6000);
+    return () => clearInterval(interval);
+  }, [currentHeroSlides]);
+
+  if (currentHeroSlides.length === 0) return null;
+  const slide = currentHeroSlides[heroIndex];
+  
+  return (
+    <section className="container-platform py-6 overflow-hidden relative font-cairo">
+      <div className="relative w-full h-[400px] md:h-[500px] rounded-[32px] overflow-hidden group shadow-2xl">
+        <div className={`absolute inset-0 bg-gradient-to-br ${slide.bg || 'from-slate-900 to-indigo-950'} opacity-100 transition-colors duration-1000`} />
+        {slide.image && (
+          <div className="absolute inset-0 opacity-40 mix-blend-overlay">
+            <img src={slide.image} alt="" className="w-full h-full object-cover" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+        
+        <div className="relative h-full flex flex-col justify-center px-8 md:px-16 md:w-2/3">
+          <Badge className="w-fit mb-6 bg-white/10 text-white hover:bg-white/20 border-white/20 px-4 py-1.5 text-xs md:text-sm shadow-xl backdrop-blur-md">
+            {locale === 'ar' ? slide.badge : (slide.badgeFr || slide.badgeEn || slide.badge)}
+          </Badge>
+          <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight drop-shadow-lg tracking-tight">
+            {locale === 'ar' ? slide.title : (slide.titleFr || slide.titleEn || slide.title)}
+          </h2>
+          <p className="text-base md:text-2xl text-slate-200 mb-10 max-w-xl font-medium leading-relaxed drop-shadow">
+            {locale === 'ar' ? slide.subtitle : (slide.subtitleFr || slide.subtitleEn || slide.subtitle)}
+          </p>
+          <div className="flex gap-4">
+            <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-8 py-6 rounded-2xl shadow-[0_0_40px_rgba(245,158,11,0.3)] hover:shadow-[0_0_60px_rgba(245,158,11,0.5)] transition-all hover:-translate-y-1 text-base">
+              {locale === 'ar' ? slide.cta : (slide.ctaFr || slide.ctaEn || slide.cta)}
+              <ArrowLeft className="ml-2 size-5 rtl:hidden" />
+              <ArrowRight className="mr-2 size-5 ltr:hidden" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2.5 z-20">
+          {currentHeroSlides.map((_: any, idx: number) => (
+            <button
+              key={idx}
+              onClick={() => setHeroIndex(idx)}
+              className={`h-1.5 rounded-full transition-all duration-500 ${idx === heroIndex ? 'w-8 bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]' : 'w-2 bg-white/30 hover:bg-white/50'}`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function FeaturesBlock({ section, data, locale }: SectionProps) {
+  return (
+    <section className="container-platform py-2">
+      <div className="bg-white/50 dark:bg-slate-900/50 border border-border/80 rounded-[24px] backdrop-blur-md p-5 shadow-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {FEATURES.map((f) => (
+            <div key={f.title} className="flex items-center gap-3">
+              <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-500 shrink-0">
+                <f.icon className="size-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{locale === 'ar' ? f.title : locale === 'fr' ? (f.titleFr || f.titleEn || f.title) : (f.titleEn || f.title)}</p>
+                <p className="hidden md:block text-[10px] text-muted-foreground mt-0.5">{locale === 'ar' ? f.desc : locale === 'fr' ? (f.descFr || f.descEn || f.desc) : (f.descEn || f.desc)}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+export function SectionHeader({ section, isAr, locale, t, children }: any) {
+  const title = isAr ? section.titleAr : (section.titleEn || section.titleAr);
+  const metadata = section.metadata || {};
+  const hasBackground = metadata.backgroundColor && metadata.backgroundColor !== 'transparent';
+  return (
+    <div className="flex justify-between items-end mb-5">
+      <div className="flex items-center gap-3">
+        {hasBackground && (
+          <div className="w-1.5 h-8 bg-amber-500 rounded-full" />
+        )}
+        <div>
+          <h2 className="text-xl md:text-2xl font-black text-slate-850 dark:text-slate-100 flex items-center gap-2">
+            {title}
+          </h2>
+          {metadata.subtitle && (
+            <p className="text-sm text-muted-foreground mt-1">{metadata.subtitle}</p>
+          )}
+        </div>
+      </div>
+      {children}
     </div>
   );
 }
 
+export function CategoryCirclesRowBlock({ section, data, locale }: SectionProps) {
+  const { t } = useTranslation();
+  const isAr = locale === 'ar';
+  const displayCats = (data?.categories ?? []).filter((c: any) => c && c.id).slice(0, 12);
+  const [filterCategory, setFilterCategory] = useState('');
+
+  return (
+    <section className="container-platform py-6">
+      <SectionHeader section={section} isAr={isAr} locale={locale} t={t}>
+        {filterCategory && (
+          <Button variant="ghost" size="sm" className="text-destructive gap-1 text-xs" onClick={() => setFilterCategory('')}>
+            <X className="size-3" />
+            {t('مسح التصفية', 'Clear Filter')}
+          </Button>
+        )}
+      </SectionHeader>
+      {displayCats.length === 0 ? (
+        <div className="text-center py-10 text-muted-foreground bg-card rounded-[24px] border border-border/60">
+          <ShoppingBag className="size-10 mx-auto mb-2 opacity-25" />
+          <p className="text-sm">{t('لا توجد أقسام متاحة حتى الآن', 'No categories available yet')}</p>
+        </div>
+      ) : (
+        <div className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
+          {displayCats.map((cat: any) => {
+            const isActive = filterCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setFilterCategory(isActive ? '' : cat.id)}
+                className={`flex flex-col items-center justify-center gap-2 p-3.5 rounded-[22px] transition-all duration-300 shrink-0 snap-start select-none ${
+                  isActive
+                    ? 'bg-amber-500 text-slate-950 scale-105 shadow-md font-bold'
+                    : 'bg-white/70 dark:bg-slate-950/70 border border-border/80 hover:border-amber-500/30 hover:scale-105 hover:bg-white dark:hover:bg-slate-900'
+                }`}
+                style={{ minWidth: '92px' }}
+              >
+                <span className="text-2xl drop-shadow-sm select-none">{cat.icon || '📦'}</span>
+                <span className="text-[10px] font-bold text-center leading-tight line-clamp-1 max-w-[80px]">
+                  {isAr ? cat.name : (cat.nameEn || cat.name)}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function BentoOffersBlock({ section, data, locale }: SectionProps) {
+  const { t: globalT } = useTranslation();
+  const isAr = locale === 'ar';
+  const router = useRouter();
+
+  const getLocalizedField = (section: any, field: string, locale: string) => {
+    if (!section?.metadata) return null;
+    if (locale === 'ar') return section.metadata[`${field}Ar`] || section.metadata[field];
+    if (locale === 'fr') return section.metadata[`${field}Fr`] || section.metadata[`${field}En`] || section.metadata[field];
+    return section.metadata[`${field}En`] || section.metadata[field];
+  };
+
+  const hasCountdown = section.metadata?.enableTimer || data?.countdownConfig?.enabled || false;
+  const bentoLimit = section.limit || 8;
+  const timerProducts = (data?.bentoCenterProducts?.length ?? 0) > 0 
+    ? data!.bentoCenterProducts!.slice(0, bentoLimit)
+    : (data?.featuredProducts || []).slice(0, bentoLimit);
+  
+  const rightCardProducts = (data?.bentoRightProducts?.length ?? 0) > 0 
+    ? data!.bentoRightProducts!.slice(0, 4) 
+    : (data?.featuredProducts || []).slice(2, 6);
+    
+  const leftCardProducts = (data?.bentoLeftProducts?.length ?? 0) > 0 
+    ? data!.bentoLeftProducts!.slice(0, 2) 
+    : (data?.featuredProducts || []).slice(6, 8);
+
+  const rightCardType = section.metadata?.rightCardType || 'products';
+  const rightCardAdImage = getLocalizedField(section, 'rightCardAdImage', locale);
+  const rightCardAdLink = section.metadata?.rightCardAdLink || '#';
+
+  const centerCardType = section.metadata?.centerCardType || 'products';
+  const centerCardAdImage = getLocalizedField(section, 'centerCardAdImage', locale);
+  const centerCardAdLink = section.metadata?.centerCardAdLink || '#';
+
+  const leftCardType = section.metadata?.leftCardType || 'products';
+  const leftCardAdImage = getLocalizedField(section, 'leftCardAdImage', locale);
+  const leftCardAdLink = section.metadata?.leftCardAdLink || '#';
+
+  const customText1 = getLocalizedField(section, 'customText1', locale)
+    || (locale === 'ar' ? (globalT('homepage.noonItMore') || 'نزلنا الأسعار وتوفر أكثر! تسوق من تشكيلة واسعة') : 'Shop more & save on what you love');
+    
+  const customText2 = getLocalizedField(section, 'customText2', locale)
+    || (locale === 'ar' ? (globalT('homepage.onSale') || 'تنزيلات كبرى') : 'Hot Deals');
+
+  const sectionBadge = getLocalizedField(section, 'badge', locale);
+
+  return (
+    <section className="container-platform py-6 font-cairo">
+      {sectionBadge && (
+        <div className="flex justify-center mb-4">
+          <Badge className="bg-amber-500 text-white text-xs font-bold py-1 px-3 shadow-md border-0">{sectionBadge}</Badge>
+        </div>
+      )}
+
+      <div className="flex flex-col xl:flex-row gap-5 h-auto xl:h-[460px]">
+        {/* Banner Side 1: Yellow/Amber */}
+        <div className="w-full xl:w-[260px] flex flex-row xl:flex-col gap-4 shrink-0">
+          <div 
+            className="flex-1 rounded-[24px] bg-amber-300 flex items-center justify-center text-amber-900 border border-amber-400 overflow-hidden relative group hover:scale-[1.02] transition-transform cursor-pointer"
+            onClick={() => router.push(rightCardType === 'ad' ? rightCardAdLink : '#')}
+          >
+            {rightCardType === 'ad' && rightCardAdImage ? (
+              <img src={rightCardAdImage} className="w-full h-full object-cover" alt="" />
+            ) : (
+              <div className="p-4 text-center">
+                <h4 className="text-xl font-black uppercase tracking-wider">{customText2}</h4>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  {rightCardProducts.slice(0,4).map((p: any) => (
+                    <div key={p.id} className="bg-white rounded-xl p-1 shadow-sm aspect-square">
+                      <img src={(Array.isArray(p.images) ? p.images[0] : p.images) || ''} className="w-full h-full object-cover rounded-lg" alt="" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Center Mega Offers with Timer */}
+        <div className="flex-1 rounded-[24px] bg-white dark:bg-slate-900 border border-border overflow-hidden flex flex-col xl:flex-row">
+          <div className="w-full xl:w-[280px] bg-amber-50 dark:bg-slate-950 p-6 flex flex-col justify-center border-b xl:border-b-0 xl:border-e border-border/60">
+            <h3 className="text-2xl font-black mb-2 text-slate-800 dark:text-slate-100">{isAr ? section.titleAr || 'عروض ميجا' : section.titleEn || 'Mega Offers'}</h3>
+            <p className="text-sm text-muted-foreground mb-6 font-medium">{customText1}</p>
+            {hasCountdown && data?.countdownConfig?.endDate && (
+              <div className="mb-6">
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 mb-3 flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-rose-500 animate-pulse" />
+                  {isAr ? data.countdownConfig.titleAr : data.countdownConfig.titleEn}
+                </p>
+                <CountdownTimer targetDate={data.countdownConfig.endDate} />
+              </div>
+            )}
+            <Button className="w-full bg-slate-900 text-white dark:bg-amber-500 dark:text-slate-950 rounded-xl font-bold">
+              {isAr ? 'عرض الكل' : 'View All'}
+            </Button>
+          </div>
+          <div className="flex-1 p-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 h-full">
+              {timerProducts.map((product: any) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Banner Side 2: Dark indigo glassmorphism */}
+        <div className="w-full xl:w-[260px] flex flex-row xl:flex-col gap-4 shrink-0">
+          <div 
+            className="flex-1 rounded-[24px] bg-gradient-to-br from-slate-900 to-indigo-950 text-white flex flex-col justify-between border border-white/5 shadow-lg relative overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer" 
+            onClick={() => router.push(leftCardType === 'ad' ? leftCardAdLink : '#')}
+          >
+            {leftCardType === 'ad' && leftCardAdImage ? (
+              <>
+                <img src={leftCardAdImage} className="absolute inset-0 w-full h-full object-cover" alt="" />
+                <div className="absolute inset-0 bg-black/10 hover:bg-black/25 transition-colors" />
+              </>
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-white/5 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
+                <div className="z-10 p-5 text-start">
+                  <Badge className="bg-white/10 text-white border-white/10 text-[8px] font-bold py-0.5 px-2 mb-1.5 select-none">{sectionBadge}</Badge>
+                  <h4 className="text-sm font-black leading-snug">{customText2}</h4>
+                </div>
+                <div className="z-10 flex justify-between items-center p-5 mt-3">
+                  <span className="text-[10px] font-black underline text-amber-400">{isAr ? 'تسوق الآن' : 'Shop Now'}</span>
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function CategoryProductsRowBlock({ section, data, locale, categoryId, storeId, sellerId, filterType, layoutStyle }: any) {
+  const { t } = useTranslation();
+  const isAr = locale === 'ar';
+  
+  // Logic to fetch and show products based on props, fallback to data.featuredProducts
+  const products = data?.featuredProducts || [];
+  
+  return (
+    <section className="container-platform py-6">
+      <SectionHeader section={section} isAr={isAr} locale={locale} t={t} />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+        {products.slice(0, section.limit || 10).map((product: any) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function FeaturedProductsGridBlock({ section, data, locale }: SectionProps) {
+  const { t } = useTranslation();
+  const isAr = locale === 'ar';
+  const products = data?.featuredProducts || [];
+  
+  return (
+    <section className="container-platform py-6">
+      <SectionHeader section={section} isAr={isAr} locale={locale} t={t} />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+        {products.slice(0, section.limit || 10).map((product: any) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function TopSellersBlock({ section, data, locale }: SectionProps) {
+  const { t } = useTranslation();
+  const isAr = locale === 'ar';
+  const stores = (data?.topStores || []).slice(0, section.limit || 8);
+  const sellers = (data?.topSellers || []).slice(0, section.limit || 8);
+  const [activeTab, setActiveTab] = useState<'stores'|'sellers'>('stores');
+  
+  const getLocalizedField = (s: any, field: string, l: string) => {
+    if (!s?.metadata) return null;
+    return s.metadata[`${field}${l === 'ar' ? 'Ar' : 'En'}`] || s.metadata[field];
+  };
+
+  return (
+    <section className="bg-gradient-to-br from-stone-950 via-slate-900 to-indigo-950 text-white py-16 mt-12 relative overflow-hidden border-y border-white/5">
+      <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+        <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary rounded-full blur-[120px]" />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-primary rounded-full blur-[120px]" />
+      </div>
+      <div className="container-platform relative z-10">
+        <div className="text-center mb-10 px-4 max-w-2xl mx-auto">
+          <Badge className="mb-3.5 bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs px-3.5 py-1.5 rounded-full select-none">
+            {getLocalizedField(section, 'badge', locale) || t('أفضل المتاجر', 'Top Stores')}
+          </Badge>
+          <h3 className="text-2xl md:text-4xl font-black mb-3.5 leading-tight tracking-tight font-cairo">
+            {getLocalizedField(section, 'title', locale) || t('تسوق من شركائنا', 'Shop from Partners')}
+          </h3>
+          <div className="inline-flex p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 mt-8 gap-1.5 font-cairo select-none">
+            <button
+              onClick={() => setActiveTab('stores')}
+              className={`px-5 py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${
+                activeTab === 'stores' ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]' : 'text-white/70 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              🏢 {t('المتاجر', 'Stores')}
+            </button>
+            <button
+              onClick={() => setActiveTab('sellers')}
+              className={`px-5 py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${
+                activeTab === 'sellers' ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]' : 'text-white/70 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              👤 {t('التجار', 'Sellers')}
+            </button>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-6 font-cairo">
+          {(activeTab === 'stores' ? stores : sellers).map((item: any) => (
+            <Link key={item.id} href={`/${activeTab === 'stores' ? 'store' : 'seller'}/${item.slug}`} className="group block">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-5 backdrop-blur-md hover:bg-white/10 transition-all hover:-translate-y-1 h-full flex flex-col items-center text-center relative overflow-hidden">
+                <div className="w-16 h-16 rounded-full bg-slate-800 border-2 border-amber-500 p-0.5 mb-3">
+                  <img src={item.logo || item.image || ''} alt="" className="w-full h-full rounded-full object-cover" />
+                </div>
+                <h4 className="font-bold text-sm text-white mb-1 line-clamp-1">{item.name || item.storeName}</h4>
+                <div className="flex items-center gap-1.5 mb-2 bg-black/20 px-2 py-0.5 rounded-full">
+                  <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                  <span className="text-xs font-bold">{item.rating?.toFixed(1) || '5.0'}</span>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function TestimonialsBlock({ section, data, locale }: SectionProps) {
+  const { t } = useTranslation();
+  const isAr = locale === 'ar';
+  const testimonials = data?.testimonials?.length > 0 ? data.testimonials : DEFAULT_TESTIMONIALS;
+  
+  return (
+    <section className="container-platform py-12">
+      <SectionHeader section={section} isAr={isAr} locale={locale} t={t} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {testimonials.slice(0, 3).map((item: any, idx: number) => (
+          <div key={idx} className="bg-white dark:bg-slate-900 border border-border/80 rounded-2xl p-6 shadow-sm">
+            <Quote className="w-8 h-8 text-amber-500/30 mb-4" />
+            <p className="text-sm font-medium mb-6 text-slate-700 dark:text-slate-300">
+              {isAr ? item.text : item.textEn || item.text}
+            </p>
+            <div className="flex items-center gap-3 mt-auto">
+              <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 font-bold">
+                {(isAr ? item.name : item.nameEn || item.name).charAt(0)}
+              </div>
+              <div>
+                <h5 className="font-bold text-sm">{isAr ? item.name : item.nameEn || item.name}</h5>
+                <StarRating rating={item.rating || 5} />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function CtaBlock({ section, data, locale }: SectionProps) {
+  const { t } = useTranslation();
+  const isAr = locale === 'ar';
+  
+  return (
+    <section className="container-platform py-8">
+      <div className="bg-amber-500 rounded-[32px] p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+        <div className="relative z-10 text-slate-950 md:w-2/3">
+          <h3 className="text-3xl md:text-4xl font-black mb-4">{isAr ? section.titleAr || 'ابدأ البيع الآن!' : section.titleEn || 'Start Selling Now!'}</h3>
+          <p className="text-sm md:text-base font-medium opacity-80 max-w-xl">
+            {t('انضم إلى آلاف البائعين', 'Join thousands of sellers')}
+          </p>
+        </div>
+        <div className="relative z-10 flex gap-4 w-full md:w-auto">
+          <Button size="lg" className="bg-slate-950 text-white hover:bg-slate-800 rounded-xl w-full md:w-auto">
+            {t('سجل الآن', 'Register Now')}
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function CustomBannerBlock({ section, data, locale }: SectionProps) {
+  const isAr = locale === 'ar';
+  const imgUrl = isAr ? section.imageArUrl : (section.imageEnUrl || section.imageArUrl);
+  if (!imgUrl) return null;
+  
+  return (
+    <section className="container-platform py-4">
+      <Link href={section.linkUrl || '#'} className="block rounded-2xl overflow-hidden group">
+        <img src={imgUrl} className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-500" alt="" />
+      </Link>
+    </section>
+  );
+}

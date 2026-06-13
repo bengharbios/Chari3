@@ -616,8 +616,9 @@ export default function StorefrontHomepage() {
   const { locale } = useAppStore();
   const { isAuthenticated } = useAuthStore();
   const { items: cartItems, addItem } = useCartStore();
+  const [data, setData] = useState<any>(null);
   const isAr = locale === 'ar';
-  const saadaConfig = useMemo(() => getSaadaConfig(locale), [locale]);
+  const saadaConfig = useMemo(() => getSaadaConfig(locale, data || {}), [locale, data]);
   
   const t = (ar: string, en: string) => {
     const arKeyMap: Record<string, string> = {
@@ -673,7 +674,6 @@ export default function StorefrontHomepage() {
     return isAr ? ar : en;
   };
 
-  const [data, setData] = useState<HomepageData | null>(null);
   const [heroIndex, setHeroIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [activeMerchantTab, setActiveMerchantTab] = useState<'stores' | 'sellers'>('stores');
