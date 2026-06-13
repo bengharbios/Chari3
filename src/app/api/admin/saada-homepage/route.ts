@@ -6,7 +6,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     await ensureDbConnection();
-    const layoutSetting = await db.setting.findUnique({ where: { key: 'saada_homepage_layout' } });
+    const url = new URL(req.url);
+    const templateKey = url.searchParams.get('templateKey') || 'saada_homepage_layout';
+
+    const layoutSetting = await db.setting.findUnique({ where: { key: templateKey } });
     
     // Default empty Puck layout
     const defaultLayout = {
@@ -27,12 +30,14 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     await ensureDbConnection();
+    const url = new URL(req.url);
+    const templateKey = url.searchParams.get('templateKey') || 'saada_homepage_layout';
     const body = await req.json();
     
     await db.setting.upsert({
-      where: { key: 'saada_homepage_layout' },
+      where: { key: templateKey },
       update: { value: JSON.stringify(body) },
-      create: { key: 'saada_homepage_layout', value: JSON.stringify(body), type: 'string', group: 'homepage' },
+      create: { key: templateKey, value: JSON.stringify(body), type: 'string', group: 'saada_templates' },
     });
 
     return NextResponse.json({ success: true, message: 'Saved successfully' });

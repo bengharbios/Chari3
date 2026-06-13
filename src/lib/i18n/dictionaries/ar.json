@@ -218,5 +218,37 @@
     "orderShippedTitle": "تم شحن طلبك 📦",
     "orderDeliveredTitle": "تم تسليم طلبك 📦",
     "orderCancelledTitle": "تم إلغاء طلبك 📦"
+  },
+  "saada": {
+    "editorTitle": "منشئ صفحات SAADA",
+    "selectTemplate": "اختر القالب",
+    "templates": {
+      "homepage": "الصفحة الرئيسية العامة",
+      "store_default": "قالب المتجر الافتراضي",
+      "seller_default": "قالب التاجر الافتراضي"
+    },
+    "blocks": {
+      "hero": "بانر رئيسي",
+      "columns": "أعمدة متجاوبة",
+      "text": "نص حر",
+      "heading": "عنوان",
+      "customBanner": "بانر إعلاني مخصص",
+      "productGrid": "شبكة منتجات"
+    },
+    "fields": {
+      "title": "العنوان",
+      "subtitle": "العنوان الفرعي",
+      "ctaText": "نص الزر",
+      "ctaLink": "رابط الزر",
+      "imageUrl": "رابط الصورة",
+      "alignment": "المحاذاة",
+      "content": "المحتوى",
+      "distribution": "توزيع الأعمدة",
+      "category": "التصنيف",
+      "limit": "عدد المنتجات",
+      "right": "يمين",
+      "center": "وسط",
+      "left": "يسار"
+    }
   }
 }

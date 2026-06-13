@@ -218,5 +218,37 @@
     "orderShippedTitle": "Your order has been shipped 📦",
     "orderDeliveredTitle": "Your order has been delivered 📦",
     "orderCancelledTitle": "Your order has been cancelled 📦"
+  },
+  "saada": {
+    "editorTitle": "SAADA Builder",
+    "selectTemplate": "Select Template",
+    "templates": {
+      "homepage": "Global Homepage",
+      "store_default": "Store Default Template",
+      "seller_default": "Seller Default Template"
+    },
+    "blocks": {
+      "hero": "Hero Banner",
+      "columns": "Responsive Columns",
+      "text": "Text Block",
+      "heading": "Heading",
+      "customBanner": "Custom Banner",
+      "productGrid": "Product Grid"
+    },
+    "fields": {
+      "title": "Title",
+      "subtitle": "Subtitle",
+      "ctaText": "Button Text",
+      "ctaLink": "Button Link",
+      "imageUrl": "Image URL",
+      "alignment": "Alignment",
+      "content": "Content",
+      "distribution": "Column Distribution",
+      "category": "Category",
+      "limit": "Product Limit",
+      "right": "Right",
+      "center": "Center",
+      "left": "Left"
+    }
   }
 }

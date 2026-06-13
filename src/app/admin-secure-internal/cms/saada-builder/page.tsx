@@ -1,102 +1,25 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Puck } from "@measured/puck";
 import "@measured/puck/puck.css";
-import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-
-// SAADA Configuration (Blocks definition)
-const config = {
-  components: {
-    Columns: {
-      fields: {
-        distribution: {
-          type: "radio",
-          options: [
-            { label: "1 Column (100%)", value: "1fr" },
-            { label: "2 Columns (50/50)", value: "1fr 1fr" },
-            { label: "3 Columns (33/33/33)", value: "1fr 1fr 1fr" },
-            { label: "1/4 + 3/4", value: "1fr 3fr" },
-            { label: "3/4 + 1/4", value: "3fr 1fr" },
-          ],
-        },
-      },
-      defaultProps: {
-        distribution: "1fr 1fr",
-      },
-      render: ({ distribution, puck: { renderDropZone } }: any) => {
-        return (
-          <div className="w-full max-w-7xl mx-auto my-4">
-            <div 
-              style={{ display: "grid", gridTemplateColumns: distribution, gap: "16px" }}
-              className="w-full"
-            >
-              {distribution.split(" ").map((_: any, i: number) => (
-                <div key={i} className="min-h-[100px] border-2 border-dashed border-gray-200 rounded-lg p-2 bg-gray-50/50">
-                  {renderDropZone({ zone: `column-${i}` })}
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-      },
-    },
-    Heading: {
-      fields: {
-        title: { type: "text" },
-        alignment: {
-          type: "radio",
-          options: [
-            { label: "Right", value: "text-right" },
-            { label: "Center", value: "text-center" },
-            { label: "Left", value: "text-left" },
-          ]
-        }
-      },
-      defaultProps: {
-        title: "عنوان جديد",
-        alignment: "text-right"
-      },
-      render: ({ title, alignment }: any) => (
-        <h2 className={`text-2xl font-bold text-slate-800 dark:text-white ${alignment} my-4`}>{title}</h2>
-      ),
-    },
-    CustomBanner: {
-      fields: {
-        imageUrl: { type: "text" },
-        link: { type: "text" },
-      },
-      defaultProps: {
-        imageUrl: "https://via.placeholder.com/1200x300?text=Banner+Placeholder",
-        link: "#"
-      },
-      render: ({ imageUrl, link }: any) => (
-        <a href={link} className="block w-full rounded-2xl overflow-hidden my-4 hover:opacity-90 transition">
-          <img src={imageUrl} alt="banner" className="w-full h-auto object-cover" />
-        </a>
-      )
-    },
-    Text: {
-      fields: {
-        content: { type: "textarea" },
-      },
-      defaultProps: {
-        content: "أدخل النص هنا...",
-      },
-      render: ({ content }: any) => (
-        <p className="text-gray-600 dark:text-gray-300 my-2 whitespace-pre-wrap">{content}</p>
-      ),
-    }
-  },
-};
+import { useTranslation } from '@/lib/i18n/useTranslation';
+import { getSaadaConfig } from './_components/PuckConfig';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SaadaBuilderPage() {
   const [data, setData] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [templateKey, setTemplateKey] = useState('saada_homepage_layout');
+  const { t, locale } = useTranslation();
+  const isRTL = locale === 'ar';
+
+  const config = useMemo(() => getSaadaConfig(t, isRTL), [t, isRTL]);
 
   useEffect(() => {
-    fetch('/api/admin/saada-homepage')
+    setData(null); // Show loader while fetching
+    fetch(`/api/admin/saada-homepage?templateKey=${templateKey}`)
       .then(res => res.json())
       .then(res => {
         if (res.success && res.data) {
@@ -105,12 +28,12 @@ export default function SaadaBuilderPage() {
           setData({ content: [], root: {}, zones: {} });
         }
       });
-  }, []);
+  }, [templateKey]);
 
   const save = async (newData: any) => {
     setIsSaving(true);
     try {
-      await fetch('/api/admin/saada-homepage', {
+      await fetch(`/api/admin/saada-homepage?templateKey=${templateKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newData)
@@ -120,26 +43,49 @@ export default function SaadaBuilderPage() {
     }
   };
 
-  if (!data) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-brand" />
-      </div>
-    );
-  }
-
   return (
-    <div className="h-screen w-full" dir="ltr">
-      {/* 
-        Note: Puck is currently best supported in LTR, 
-        so we force LTR for the editor wrapper itself. 
-      */}
-      <Puck 
-        config={config as any} 
-        data={data} 
-        onPublish={save}
-        headerTitle="SAADA Page Builder"
-      />
+    <div className="h-screen w-full flex flex-col" dir={isRTL ? 'rtl' : 'ltr'}>
+      {/* Top Bar for Template Selection */}
+      <div className="flex items-center justify-between px-6 py-3 bg-white dark:bg-[#1a2332] border-b border-gray-200 dark:border-white/10 shrink-0">
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold text-gray-800 dark:text-white">
+            {t('saada.editorTitle') || 'SAADA Builder'}
+          </h1>
+          <div className="w-[250px]">
+            <Select value={templateKey} onValueChange={setTemplateKey}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('saada.selectTemplate') || 'Select Template'} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="saada_homepage_layout">{t('saada.templates.homepage') || 'Global Homepage'}</SelectItem>
+                <SelectItem value="saada_store_default">{t('saada.templates.store_default') || 'Store Default Template'}</SelectItem>
+                <SelectItem value="saada_seller_default">{t('saada.templates.seller_default') || 'Seller Default Template'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {isSaving && <Loader2 className="w-5 h-5 animate-spin text-brand" />}
+      </div>
+
+      <div className="flex-1 overflow-hidden" dir="ltr">
+        {/* 
+          Note: Puck is currently best supported in LTR, 
+          so we force LTR for the editor wrapper itself. 
+          But the generated components inside respect isRTL correctly!
+        */}
+        {!data ? (
+          <div className="h-full w-full flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+            <Loader2 className="w-8 h-8 animate-spin text-brand" />
+          </div>
+        ) : (
+          <Puck 
+            config={config as any} 
+            data={data} 
+            onPublish={save}
+            headerTitle={t('saada.editorTitle') || "SAADA Page Builder"}
+          />
+        )}
+      </div>
     </div>
   );
 }
