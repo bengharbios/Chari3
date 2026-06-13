@@ -19,7 +19,7 @@ import {
   ProductSliderSkeleton 
 } from './SkeletonLoaders';
 import { Render } from '@measured/puck';
-import { saadaConfig } from '@/lib/puck/PuckConfig';
+import { getSaadaConfig } from '@/lib/puck/PuckConfig';
 import "@measured/puck/puck.css";
 import { toast } from 'sonner';
 
@@ -1657,6 +1657,7 @@ return (
       {/* Render Dynamic Order of Sections */}
       {(() => {
         const isPuckLayout = data?.layout && !Array.isArray(data.layout) && data.layout.content;
+        const saadaConfig = getSaadaConfig(locale);
         return isLoading ? (
         <div className="container-platform py-6 space-y-10">
           <HeroSliderSkeleton />

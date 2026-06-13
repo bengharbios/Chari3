@@ -5,15 +5,18 @@ import { Puck } from "@measured/puck";
 import "@measured/puck/puck.css";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from '@/lib/i18n/useTranslation';
-import { saadaConfig } from '@/lib/puck/PuckConfig';
+import { getSaadaConfig } from '@/lib/puck/PuckConfig';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { useRouter } from 'next/navigation';
 
 export default function SaadaBuilderPage() {
   const [data, setData] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [templateKey, setTemplateKey] = useState('saada_homepage_layout');
   const { t, locale } = useTranslation();
+  const saadaConfig = getSaadaConfig(locale);
+  const router = useRouter();
   const isRTL = locale === 'ar';
 
   useEffect(() => {
