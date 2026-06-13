@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { Puck } from "@measured/puck";
 import "@measured/puck/puck.css";
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 
 // SAADA Configuration (Blocks definition)
@@ -35,7 +34,7 @@ const config = {
             >
               {distribution.split(" ").map((_: any, i: number) => (
                 <div key={i} className="min-h-[100px] border-2 border-dashed border-gray-200 rounded-lg p-2 bg-gray-50/50">
-                  {renderDropZone({ zone: \`column-\${i}\` })}
+                  {renderDropZone({ zone: `column-${i}` })}
                 </div>
               ))}
             </div>
@@ -60,7 +59,7 @@ const config = {
         alignment: "text-right"
       },
       render: ({ title, alignment }: any) => (
-        <h2 className={\`text-2xl font-bold text-slate-800 dark:text-white \${alignment} my-4\`}>{title}</h2>
+        <h2 className={`text-2xl font-bold text-slate-800 dark:text-white ${alignment} my-4`}>{title}</h2>
       ),
     },
     CustomBanner: {
@@ -95,7 +94,6 @@ const config = {
 export default function SaadaBuilderPage() {
   const [data, setData] = useState<any>(null);
   const [isSaving, setIsSaving] = useState(false);
-  const { t } = useTranslation();
 
   useEffect(() => {
     fetch('/api/admin/saada-homepage')
