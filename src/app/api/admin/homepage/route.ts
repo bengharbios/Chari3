@@ -7,11 +7,12 @@ export async function GET(req: NextRequest) {
   try {
     await ensureDbConnection();
 
-    const [layoutSetting, pinnedSetting, countdownSetting, heroSlidesSetting] = await Promise.all([
+    const [layoutSetting, pinnedSetting, countdownSetting, heroSlidesSetting, adsResult] = await Promise.all([
       db.setting.findUnique({ where: { key: 'homepage_layout' } }),
       db.setting.findUnique({ where: { key: 'homepage_pinned_items' } }),
       db.setting.findUnique({ where: { key: 'homepage_countdown' } }),
       db.setting.findUnique({ where: { key: 'homepage_hero_slides' } }),
+      db.advertisement.findMany({ orderBy: [{ zone: 'asc' }, { sortOrder: 'asc' }] }),
     ]);
 
     const defaultLayout = ['hero', 'features', 'categories', 'mega_offers_timer', 'featured_products', 'top_sellers', 'testimonials', 'cta'];
@@ -20,12 +21,22 @@ export async function GET(req: NextRequest) {
     const countdown = countdownSetting?.value ? JSON.parse(countdownSetting.value) : { enabled: false, endDate: '', titleAr: '', titleEn: '' };
     const heroSlides = heroSlidesSetting?.value ? JSON.parse(heroSlidesSetting.value) : [];
 
+    const adsByZone: Record<string, any[]> = {};
+    if (adsResult) {
+      for (const ad of adsResult) {
+        if (!adsByZone[ad.zone]) adsByZone[ad.zone] = [];
+        adsByZone[ad.zone].push(ad);
+      }
+    }
+
+
     return NextResponse.json({
       success: true,
       layout,
       pinned,
       countdown,
       heroSlides,
+      advertisements: adsByZone,
     });
   } catch (error) {
     console.error('[admin homepage GET]', error);
