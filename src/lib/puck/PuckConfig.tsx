@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
 import { DynamicProductGrid, DynamicCategoryCircles } from '@/components/storefront/SaadaBlocks';
 
 const distributionToClass: Record<string, string> = {
@@ -138,9 +137,9 @@ export const saadaConfig = {
             </p>
             {ctaText && (
               <a href={ctaLink}>
-                <Button size="lg" className="text-lg px-8 py-6 rounded-full bg-brand hover:bg-brand/90 text-white shadow-xl hover:shadow-2xl transition-all">
+                <button className="text-lg px-8 py-4 rounded-full bg-amber-500 hover:bg-amber-600 text-white shadow-xl hover:shadow-2xl transition-all font-bold">
                   {ctaText}
-                </Button>
+                </button>
               </a>
             )}
           </div>
