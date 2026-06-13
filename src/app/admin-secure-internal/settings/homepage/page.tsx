@@ -2020,6 +2020,83 @@ export default function AdminHomepageManager() {
                         )}
                       </div>
 
+                      {/* Advanced Styling & Visibility Control */}
+                      <div className="space-y-4 pt-4 border-t border-border/60">
+                        <h4 className="text-xs font-bold text-teal-500 uppercase flex items-center gap-1.5">
+                          {t('إعدادات مظهر القسم والظهور (Styling & Visibility)', 'Section Styling & Visibility')}
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2 text-start">
+                            <Label className="text-[10px] font-bold text-slate-400">{t('المسافة العلوية (Padding Top)', 'Padding Top')}</Label>
+                            <select
+                              value={editSectData.metadata?.paddingTop || 'pt-8'}
+                              onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, paddingTop: e.target.value } }))}
+                              className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                            >
+                              <option value="pt-0">بدون مسافة (0px)</option>
+                              <option value="pt-4">صغيرة (16px)</option>
+                              <option value="pt-8">متوسطة (32px)</option>
+                              <option value="pt-12">كبيرة (48px)</option>
+                              <option value="pt-16">كبيرة جداً (64px)</option>
+                            </select>
+                          </div>
+                          <div className="space-y-2 text-start">
+                            <Label className="text-[10px] font-bold text-slate-400">{t('المسافة السفلية (Padding Bottom)', 'Padding Bottom')}</Label>
+                            <select
+                              value={editSectData.metadata?.paddingBottom || 'pb-8'}
+                              onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, paddingBottom: e.target.value } }))}
+                              className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                            >
+                              <option value="pb-0">بدون مسافة (0px)</option>
+                              <option value="pb-4">صغيرة (16px)</option>
+                              <option value="pb-8">متوسطة (32px)</option>
+                              <option value="pb-12">كبيرة (48px)</option>
+                              <option value="pb-16">كبيرة جداً (64px)</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-2 text-start">
+                            <Label className="text-[10px] font-bold text-slate-400">{t('لون الخلفية', 'Background Color')}</Label>
+                            <select
+                              value={editSectData.metadata?.backgroundColor || 'transparent'}
+                              onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, backgroundColor: e.target.value } }))}
+                              className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                            >
+                              <option value="transparent">شفاف (الافتراضي)</option>
+                              <option value="bg-slate-50 dark:bg-slate-900/50">رمادي فاتح (Section BG)</option>
+                              <option value="bg-brand/5">لون الهوية (خفيف)</option>
+                            </select>
+                          </div>
+                          
+                          <div className="space-y-2 text-start">
+                            <Label className="text-[10px] font-bold text-slate-400">{t('الظهور في الجوال', 'Mobile Visibility')}</Label>
+                            <select
+                              value={editSectData.metadata?.isMobileHidden ? 'hidden' : 'visible'}
+                              onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, isMobileHidden: e.target.value === 'hidden' } }))}
+                              className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                            >
+                              <option value="visible">ظاهر (مرئي)</option>
+                              <option value="hidden">مخفي في الجوال</option>
+                            </select>
+                          </div>
+
+                          <div className="space-y-2 text-start">
+                            <Label className="text-[10px] font-bold text-slate-400">{t('الظهور في الكمبيوتر', 'Desktop Visibility')}</Label>
+                            <select
+                              value={editSectData.metadata?.isDesktopHidden ? 'hidden' : 'visible'}
+                              onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, isDesktopHidden: e.target.value === 'hidden' } }))}
+                              className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
+                            >
+                              <option value="visible">ظاهر (مرئي)</option>
+                              <option value="hidden">مخفي في الكمبيوتر</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="flex justify-end gap-2 pt-4 border-t border-border/60">
                         <Button variant="ghost" onClick={() => setEditingSectId(null)} className="rounded-xl text-xs font-bold">
                           {t('إلغاء', 'Cancel')}
