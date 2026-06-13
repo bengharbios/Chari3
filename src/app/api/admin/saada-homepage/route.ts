@@ -7,6 +7,16 @@ export async function GET(req: NextRequest) {
   try {
     await ensureDbConnection();
     const url = new URL(req.url);
+    const action = url.searchParams.get('action');
+
+    if (action === 'list_templates') {
+      const templates = await db.setting.findMany({ 
+        where: { group: 'saada_templates' },
+        select: { key: true }
+      });
+      return NextResponse.json({ success: true, data: templates.map(t => t.key) });
+    }
+
     const templateKey = url.searchParams.get('templateKey') || 'saada_homepage_layout';
 
     const layoutSetting = await db.setting.findUnique({ where: { key: templateKey } });
@@ -18,7 +28,15 @@ export async function GET(req: NextRequest) {
       zones: {}
     };
 
-    const data = layoutSetting?.value ? JSON.parse(layoutSetting.value) : defaultLayout;
+    let data = defaultLayout;
+    if (layoutSetting?.value) {
+      try {
+        data = JSON.parse(layoutSetting.value);
+        if (!data || typeof data !== 'object') data = defaultLayout;
+      } catch(e) {
+        data = defaultLayout;
+      }
+    }
 
     return NextResponse.json({ success: true, data });
   } catch (error) {

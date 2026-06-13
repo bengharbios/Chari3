@@ -16,10 +16,28 @@ export default function SaadaBuilderPage() {
   const [storeData, setStoreData] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
   const [templateKey, setTemplateKey] = useState('saada_homepage_layout');
+  const [availableTemplates, setAvailableTemplates] = useState<string[]>([
+    'saada_homepage_layout',
+    'saada_modern_template',
+    'saada_store_default',
+    'saada_seller_default'
+  ]);
   const { t, locale } = useTranslation();
   const saadaConfig = useMemo(() => getSaadaConfig(locale, storeData), [locale, storeData]);
   const router = useRouter();
   const isRTL = locale === 'ar';
+
+  useEffect(() => {
+    fetch('/api/admin/saada-homepage?action=list_templates')
+      .then(r => r.json())
+      .then(res => {
+        if (res.success && res.data) {
+          // Merge default with fetched so we don't lose the standard ones
+          setAvailableTemplates((prev) => Array.from(new Set([...prev, ...res.data])));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     // Fetch real store data for previews
@@ -67,13 +85,25 @@ export default function SaadaBuilderPage() {
                 <SelectValue placeholder={t('saada.selectTemplate') || 'Select Template'} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="saada_homepage_layout">{t('saada.templates.homepage') || 'Global Homepage'}</SelectItem>
-                <SelectItem value="saada_modern_template">SAADA Modern Template</SelectItem>
-                <SelectItem value="saada_store_default">{t('saada.templates.store_default') || 'Store Default Template'}</SelectItem>
-                <SelectItem value="saada_seller_default">{t('saada.templates.seller_default') || 'Seller Default Template'}</SelectItem>
+                {availableTemplates.map((tk) => (
+                  <SelectItem key={tk} value={tk}>{tk}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
+          <Button 
+            variant="outline"
+            onClick={() => {
+              const newKey = window.prompt("أدخل اسم القالب الجديد باللغة الإنجليزية (مثال: my_custom_template):");
+              if (newKey && newKey.trim()) {
+                const formattedKey = newKey.trim().replace(/\s+/g, '_').toLowerCase();
+                setAvailableTemplates(prev => Array.from(new Set([...prev, formattedKey])));
+                setTemplateKey(formattedKey);
+              }
+            }}
+          >
+            إنشاء قالب جديد
+          </Button>
           <Button 
             variant="outline" 
             onClick={async () => {
