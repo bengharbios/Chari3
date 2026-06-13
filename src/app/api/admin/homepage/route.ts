@@ -92,6 +92,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Always set active template back to legacy when saving from this old settings page
+    upsertQueries.push(
+      db.setting.upsert({
+        where: { key: 'active_homepage_template' },
+        update: { value: 'homepage_layout' },
+        create: { key: 'active_homepage_template', value: 'homepage_layout', type: 'string', group: 'homepage' },
+      })
+    );
+
     await Promise.all(upsertQueries);
 
     return NextResponse.json({

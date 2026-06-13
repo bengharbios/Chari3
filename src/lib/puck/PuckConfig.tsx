@@ -29,13 +29,20 @@ const distributionToClass: Record<string, string> = {
 };
 
 // Common fields shared across legacy components
-const getCommonFields = (isAr: boolean) => ({
-  titleAr: { type: "text", label: isAr ? "العنوان (عربي)" : "Title (Ar)" },
-  titleEn: { type: "text", label: isAr ? "العنوان (إنجليزي)" : "Title (En)" },
-  titleFr: { type: "text", label: isAr ? "العنوان (فرنسي)" : "Title (Fr)" },
-  metadata_paddingTop: { type: "text", label: isAr ? "المسافة العلوية (Tailwind Classes)" : "Padding Top", default: "py-6" },
-  metadata_paddingBottom: { type: "text", label: isAr ? "المسافة السفلية" : "Padding Bottom", default: "" },
-  metadata_backgroundColor: { 
+const getCommonFields = (isAr: boolean, activeLanguages: any[] = [{code: 'ar', nameAr: 'العربية'}, {code: 'en', nameAr: 'English'}]) => {
+  const fields: any = {};
+  
+  activeLanguages.forEach(l => {
+    const capitalized = l.code.charAt(0).toUpperCase() + l.code.slice(1);
+    fields[`title${capitalized}`] = { 
+      type: "text", 
+      label: isAr ? `العنوان (${l.nameAr || l.code})` : `Title (${l.code})` 
+    };
+  });
+
+  fields.metadata_paddingTop = { type: "text", label: isAr ? "المسافة العلوية" : "Padding Top", default: "py-6" };
+  fields.metadata_paddingBottom = { type: "text", label: isAr ? "المسافة السفلية" : "Padding Bottom", default: "" };
+  fields.metadata_backgroundColor = { 
     type: "radio", 
     label: isAr ? "لون الخلفية" : "Background",
     options: [
@@ -43,24 +50,25 @@ const getCommonFields = (isAr: boolean) => ({
       { label: isAr ? "أبيض" : "White", value: "bg-white dark:bg-slate-900" },
       { label: isAr ? "رمادي" : "Gray", value: "bg-slate-50 dark:bg-slate-950" }
     ]
-  },
-  metadata_isMobileHidden: { type: "radio", options: [{label: "Yes", value: "true"}, {label: "No", value: "false"}], label: isAr ? "إخفاء في الجوال" : "Hidden Mobile" },
-  metadata_isDesktopHidden: { type: "radio", options: [{label: "Yes", value: "true"}, {label: "No", value: "false"}], label: isAr ? "إخفاء في الكمبيوتر" : "Hidden Desktop" },
-});
-
-// Helper to construct section object from Puck props to match legacy section format
-const constructSection = (props: any) => {
-  return {
-    ...props,
-    metadata: {
-      ...props.metadata,
-      paddingTop: props.metadata_paddingTop,
-      paddingBottom: props.metadata_paddingBottom,
-      backgroundColor: props.metadata_backgroundColor,
-      isMobileHidden: props.metadata_isMobileHidden === 'true',
-      isDesktopHidden: props.metadata_isDesktopHidden === 'true',
-    }
   };
+  fields.metadata_isMobileHidden = { type: "radio", options: [{label: "Yes", value: "true"}, {label: "No", value: "false"}], label: isAr ? "إخفاء في الجوال" : "Hidden Mobile" };
+  fields.metadata_isDesktopHidden = { type: "radio", options: [{label: "Yes", value: "true"}, {label: "No", value: "false"}], label: isAr ? "إخفاء في الكمبيوتر" : "Hidden Desktop" };
+  
+  return fields;
+};
+
+const constructSection = (props: any) => {
+  const metadata: any = { ...props.metadata };
+  for (const key in props) {
+    if (key.startsWith('metadata_')) {
+      const actualKey = key.replace('metadata_', '');
+      let val = props[key];
+      if (val === 'true') val = true;
+      if (val === 'false') val = false;
+      metadata[actualKey] = val;
+    }
+  }
+  return { ...props, metadata };
 };
 
 export const getSaadaConfig = (locale: string, storeData: any = {}) => {
@@ -90,28 +98,70 @@ export const getSaadaConfig = (locale: string, storeData: any = {}) => {
         render: (props: any) => <CategoryCirclesRowBlock section={constructSection(props)} data={storeData} locale={locale} />
       },
       BentoOffers: {
-        fields: { ...commonFields, badge: { type: "text" }, limit: { type: "number" } },
+        fields: { 
+          ...commonFields, 
+          limit: { type: "number", label: "Limit" },
+          metadata_badgeAr: { type: "text", label: "Badge (Ar)" },
+          metadata_badgeEn: { type: "text", label: "Badge (En)" },
+          metadata_enableTimer: { type: "radio", options: [{label: "Yes", value: "true"}, {label: "No", value: "false"}], label: "Enable Timer" },
+          metadata_timerEndDate: { type: "text", label: "Timer End Date (YYYY-MM-DD)" },
+          metadata_rightCategory: { type: "text", label: "Right Card Category ID" },
+          metadata_rightStore: { type: "text", label: "Right Card Store ID" },
+          metadata_rightSeller: { type: "text", label: "Right Card Seller ID" },
+          metadata_customText1Ar: { type: "text", label: "Right Card Text (Ar)" },
+          metadata_customText1En: { type: "text", label: "Right Card Text (En)" },
+          metadata_subFilter1: { type: "radio", options: [{label: "Smart", value: "smart"}, {label: "Most Sold", value: "most_sold"}, {label: "Highest Rated", value: "highest_rated"}, {label: "Newest", value: "newest"}], label: "Right Card Filter" },
+          metadata_centerCategory: { type: "text", label: "Center Card Category ID" },
+          metadata_centerStore: { type: "text", label: "Center Card Store ID" },
+          metadata_centerSeller: { type: "text", label: "Center Card Seller ID" },
+          metadata_customTextCenterAr: { type: "text", label: "Center Card Text (Ar)" },
+          metadata_customTextCenterEn: { type: "text", label: "Center Card Text (En)" },
+          metadata_subFilterCenter: { type: "radio", options: [{label: "Smart", value: "smart"}, {label: "Most Sold", value: "most_sold"}, {label: "Highest Rated", value: "highest_rated"}, {label: "Newest", value: "newest"}], label: "Center Card Filter" },
+          metadata_leftCategory: { type: "text", label: "Left Card Category ID" },
+          metadata_leftStore: { type: "text", label: "Left Card Store ID" },
+          metadata_leftSeller: { type: "text", label: "Left Card Seller ID" },
+          metadata_customText2Ar: { type: "text", label: "Left Card Text (Ar)" },
+          metadata_customText2En: { type: "text", label: "Left Card Text (En)" },
+          metadata_subFilter2: { type: "radio", options: [{label: "Smart", value: "smart"}, {label: "Most Sold", value: "most_sold"}, {label: "Highest Rated", value: "highest_rated"}, {label: "Newest", value: "newest"}], label: "Left Card Filter" }
+        },
         defaultProps: { titleAr: "", titleEn: "", metadata_backgroundColor: "transparent", limit: 8 },
         render: (props: any) => <BentoOffersBlock section={constructSection(props)} data={storeData} locale={locale} />
       },
       CategoryProducts: {
         fields: { 
           ...commonFields, 
-          categoryId: { type: "text" }, 
-          layoutStyle: { type: "radio", options: [{label: "Carousel", value: "carousel"}, {label: "Grid", value: "grid"}] },
-          filterType: { type: "radio", options: [{label: "Newest", value: "newest"}, {label: "Top", value: "top_rated"}] }
+          categoryId: { type: "text", label: "Category ID" }, 
+          storeId: { type: "text", label: "Store ID" },
+          sellerId: { type: "text", label: "Seller ID" },
+          layoutStyle: { type: "radio", options: [{label: "Carousel", value: "carousel"}, {label: "Grid", value: "grid"}], label: "Layout Style" },
+          filterType: { type: "radio", options: [{label: "Smart", value: "smart"}, {label: "Newest", value: "newest"}, {label: "Top Rated", value: "top_rated"}, {label: "Most Sold", value: "most_sold"}, {label: "Highest Rated", value: "highest_rated"}, {label: "Has Coupons", value: "has_coupons"}], label: "Filter Type" },
+          limit: { type: "number", label: "Limit" }
         },
-        defaultProps: { titleAr: "أفضل الإلكترونيات", titleEn: "Top Electronics", categoryId: "", layoutStyle: "carousel", filterType: "newest", metadata_backgroundColor: "transparent" },
+        defaultProps: { titleAr: "أفضل الإلكترونيات", titleEn: "Top Electronics", categoryId: "", layoutStyle: "carousel", filterType: "newest", limit: 10, metadata_backgroundColor: "transparent" },
         render: (props: any) => <CategoryProductsRowBlock section={constructSection(props)} data={storeData} locale={locale} />
       },
       FeaturedProducts: {
-        fields: { ...commonFields, limit: { type: "number" } },
-        defaultProps: { titleAr: "منتجات مميزة", titleEn: "Featured Products", limit: 10, metadata_backgroundColor: "transparent" },
+        fields: { 
+          ...commonFields, 
+          categoryId: { type: "text", label: "Category ID" },
+          storeId: { type: "text", label: "Store ID" },
+          sellerId: { type: "text", label: "Seller ID" },
+          filterType: { type: "radio", options: [{label: "Smart", value: "smart"}, {label: "Newest", value: "newest"}, {label: "Most Sold", value: "most_sold"}, {label: "Most Viewed", value: "most_viewed"}], label: "Filter Type" },
+          limit: { type: "number", label: "Limit" },
+          metadata_badgeAr: { type: "text", label: "Badge (Ar)" },
+          metadata_badgeEn: { type: "text", label: "Badge (En)" }
+        },
+        defaultProps: { titleAr: "منتجات مميزة", titleEn: "Featured Products", limit: 10, filterType: "smart", metadata_backgroundColor: "transparent" },
         render: (props: any) => <FeaturedProductsGridBlock section={constructSection(props)} data={storeData} locale={locale} />
       },
       TopSellers: {
-        fields: { ...commonFields, limit: { type: "number" }, badge: { type: "text" } },
-        defaultProps: { titleAr: "أفضل التجار", titleEn: "Top Sellers", limit: 8, metadata_backgroundColor: "transparent" },
+        fields: { 
+          ...commonFields, 
+          limit: { type: "number", label: "Limit" },
+          metadata_badgeAr: { type: "text", label: "Badge (Ar)" },
+          metadata_badgeEn: { type: "text", label: "Badge (En)" }
+        },
+        defaultProps: { titleAr: "أفضل البائعين", titleEn: "Top Sellers", limit: 8, metadata_backgroundColor: "transparent" },
         render: (props: any) => <TopSellersBlock section={constructSection(props)} data={storeData} locale={locale} />
       },
       Testimonials: {
@@ -131,10 +181,15 @@ export const getSaadaConfig = (locale: string, storeData: any = {}) => {
       },
       // Layout Wrappers
       PaddingWrapper: {
-        fields: { padding: { type: "text" }, bgColor: { type: "text" } },
-        defaultProps: { padding: "py-8", bgColor: "bg-transparent" },
-        render: ({ padding, bgColor, puck: { renderDropZone } }: any) => (
-          <div className={`w-full ${padding} ${bgColor}`}>
+        fields: { 
+          padding: { type: "text", label: "Padding (Y)" }, 
+          bgColor: { type: "radio", options: [{label: "Transparent", value: "bg-transparent"}, {label: "White", value: "bg-white dark:bg-slate-900"}, {label: "Gray", value: "bg-slate-50 dark:bg-slate-950"}], label: "Background" },
+          borderRadius: { type: "radio", options: [{label: "None", value: "rounded-none"}, {label: "Medium", value: "rounded-md"}, {label: "Large", value: "rounded-xl"}, {label: "2XL", value: "rounded-2xl"}], label: "Border Radius" },
+          shadow: { type: "radio", options: [{label: "None", value: "shadow-none"}, {label: "Small", value: "shadow-sm"}, {label: "Medium", value: "shadow-md"}, {label: "Large", value: "shadow-lg"}], label: "Shadow" }
+        },
+        defaultProps: { padding: "py-8", bgColor: "bg-transparent", borderRadius: "rounded-none", shadow: "shadow-none" },
+        render: ({ padding, bgColor, borderRadius, shadow, puck: { renderDropZone } }: any) => (
+          <div className={`w-full ${padding} ${bgColor} ${borderRadius} ${shadow}`}>
             <div className="container-platform">{renderDropZone({ zone: "content" })}</div>
           </div>
         )
@@ -144,40 +199,44 @@ export const getSaadaConfig = (locale: string, storeData: any = {}) => {
           distribution: { 
             type: "radio", 
             options: [
-              { value: "1fr", label: "1" },
-              { value: "1fr 1fr", label: "2" },
-              { value: "1fr 1fr 1fr", label: "3" },
-              { value: "1fr 1fr 1fr 1fr", label: "4" },
-              { value: "1fr 1fr 1fr 1fr 1fr", label: "5" },
-              { value: "1fr 1fr 1fr 1fr 1fr 1fr", label: "6" },
+              { value: "1fr", label: "1 Col" },
+              { value: "1fr 1fr", label: "2 Cols" },
+              { value: "1fr 1fr 1fr", label: "3 Cols" },
+              { value: "1fr 1fr 1fr 1fr", label: "4 Cols" },
+              { value: "1fr 1fr 1fr 1fr 1fr", label: "5 Cols" },
+              { value: "1fr 1fr 1fr 1fr 1fr 1fr", label: "6 Cols" },
+              { value: "auto", label: "Auto Fit" },
             ]
-          }, 
+          },
           gap: { 
-            type: "select",
+            type: "radio", 
             options: [
-              { value: "gap-0", label: "0" },
-              { value: "gap-2", label: "2" },
-              { value: "gap-4", label: "4" },
-              { value: "gap-6", label: "6" },
-              { value: "gap-8", label: "8" },
-              { value: "gap-12", label: "12" },
-            ]
-          } 
+              { value: "gap-0", label: "None" },
+              { value: "gap-2", label: "Small" },
+              { value: "gap-4", label: "Medium" },
+              { value: "gap-6", label: "Large" },
+              { value: "gap-8", label: "X-Large" }
+            ],
+            label: "Gap Size"
+          },
+          alignItems: {
+            type: "radio",
+            options: [{label: "Start", value: "items-start"}, {label: "Center", value: "items-center"}, {label: "Stretch", value: "items-stretch"}],
+            label: "Align Items"
+          }
         },
-        defaultProps: { distribution: "1fr 1fr", gap: "gap-4" },
-        render: ({ distribution, gap, puck: { renderDropZone } }: any) => {
-          const gridClass = distributionToClass[distribution] || "grid-cols-1";
-          return (
-            <div className={`w-full grid ${gridClass} ${gap} my-4`}>
-              {distribution.split(" ").map((_: any, i: number) => (
-                <div key={i} className="min-h-[120px] rounded-lg p-2 bg-slate-50/50 outline-dashed outline-2 outline-transparent hover:outline-slate-200 transition-all">
-                  {renderDropZone({ zone: `column-${i}` })}
-                </div>
-              ))}
-            </div>
-          );
-        },
-      },
-    },
+        defaultProps: { distribution: "1fr 1fr", gap: "gap-4", alignItems: "items-start" },
+        render: ({ distribution, gap, alignItems, puck: { renderDropZone } }: any) => (
+          <div className={`grid ${distributionToClass[distribution] || "grid-cols-1"} ${gap} ${alignItems}`}>
+            {distribution.split(" ").map((_: any, idx: number) => (
+              <div key={idx}>{renderDropZone({ zone: `col-${idx}` })}</div>
+            ))}
+            {distribution === "auto" && (
+               <div key="auto">{renderDropZone({ zone: `col-auto` })}</div>
+            )}
+          </div>
+        )
+      }
+    }
   };
 };
