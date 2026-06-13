@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { saadaConfig } from '@/lib/puck/PuckConfig';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 export default function SaadaBuilderPage() {
   const [data, setData] = useState<any>(null);

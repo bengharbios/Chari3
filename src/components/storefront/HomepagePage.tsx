@@ -1655,7 +1655,9 @@ return (
       </div>
  
       {/* Render Dynamic Order of Sections */}
-      {isLoading ? (
+      {(() => {
+        const isPuckLayout = data?.layout && !Array.isArray(data.layout) && data.layout.content;
+        return isLoading ? (
         <div className="container-platform py-6 space-y-10">
           <HeroSliderSkeleton />
           <CategoryCirclesSkeleton />
@@ -1667,7 +1669,8 @@ return (
         <div className="space-y-4 py-4">
           {activeLayout.map(renderSectionWithStyles)}
         </div>
-      )}
+      );
+      })()}
 
       {/* ── BOTTOM AD ── */}
       {data?.advertisements?.banner_bottom && (
