@@ -17,6 +17,9 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { ImageUploader } from '@/components/ui/ImageUploader';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableSectionItem } from './_components/SortableSectionItem';
 
 interface SectionItem {
   id: string;
@@ -240,6 +243,23 @@ export default function AdminHomepageManager() {
   };
 
   const t = (ar: string, en: string) => (isAr ? ar : en);
+
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = layout.findIndex((item) => item.id === active.id);
+      const newIndex = layout.findIndex((item) => item.id === over.id);
+      const updatedLayout = arrayMove(layout, oldIndex, newIndex);
+      setLayout(updatedLayout);
+      await persistConfig(updatedLayout, pinned, countdown, heroSlides);
+    }
+  };
 
   const [isMounted, setIsMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'layout' | 'pinning' | 'timer' | 'slides'>('layout');
@@ -921,7 +941,9 @@ export default function AdminHomepageManager() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="border border-border/85 rounded-[20px] divide-y overflow-hidden bg-background shadow-inner">
+                  <div className="border border-border/85 rounded-[20px] overflow-hidden bg-background shadow-inner">
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <SortableContext items={layout.map(s => s.id)} strategy={verticalListSortingStrategy}>
                     {layout.map((sect, idx) => {
                       const sectionNames: Record<string, { ar: string; en: string }> = {
                         hero: { ar: 'البانر الترويجي الرئيسي (Slides)', en: 'Hero Promotion Slides' },
