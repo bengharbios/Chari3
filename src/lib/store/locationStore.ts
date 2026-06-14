@@ -6,6 +6,7 @@ export interface LocationState {
   city: string;
   lat: number | null;
   lng: number | null;
+  isAutoDetected: boolean;
   setLocation: (location: Partial<LocationState>) => void;
   resetLocation: () => void;
 }
@@ -13,12 +14,13 @@ export interface LocationState {
 export const useLocationStore = create<LocationState>()(
   persist(
     (set) => ({
-      country: 'SA', // Default to Saudi Arabia for example
-      city: 'الرياض',
+      country: '',
+      city: '',
       lat: null,
       lng: null,
+      isAutoDetected: false,
       setLocation: (location) => set((state) => ({ ...state, ...location })),
-      resetLocation: () => set({ country: 'SA', city: 'الرياض', lat: null, lng: null })
+      resetLocation: () => set({ country: '', city: '', lat: null, lng: null, isAutoDetected: false })
     }),
     {
       name: 'user-delivery-location',

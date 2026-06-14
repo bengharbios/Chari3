@@ -25,7 +25,7 @@ const COUNTRIES = [
 ];
 
 export default function DeliverTo() {
-  const { country, city, setLocation } = useLocationStore();
+  const { country, city, isAutoDetected, setLocation } = useLocationStore();
   const { locale } = useAppStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const t = (ar: string, en: string) => locale === 'ar' ? ar : en;
@@ -54,12 +54,29 @@ export default function DeliverTo() {
           const defaultAddr = data.addresses.find((a: any) => a.isDefault) || data.addresses[0];
           setUserAddress(defaultAddr);
           if (!city && defaultAddr.city) {
-            setLocation({ country: defaultAddr.country || 'DZ', city: defaultAddr.city });
+            setLocation({ country: defaultAddr.country || 'DZ', city: defaultAddr.city, isAutoDetected: true });
           }
+        } else if (!isAutoDetected) {
+          autoDetectLocation();
         }
       }).catch(() => {});
+    } else if (!isAutoDetected) {
+      autoDetectLocation();
     }
-  }, [isAuthenticated, user, city, setLocation]);
+  }, [isAuthenticated, user, city, setLocation, isAutoDetected]);
+
+  const autoDetectLocation = () => {
+    fetch('https://ipapi.co/json/')
+      .then(res => res.json())
+      .then(data => {
+        if (data.country_code && data.city) {
+          setLocation({ country: data.country_code, city: data.city, isAutoDetected: true });
+        }
+      })
+      .catch(() => {
+        setLocation({ isAutoDetected: true }); // Prevent infinite retries on failure
+      });
+  };
 
   if (!mounted) return null; // Prevent hydration mismatch
 
