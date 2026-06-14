@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 
 import { useMemo, useState, useEffect } from 'react';
 import { Clock, CheckCircle, XCircle, AlertTriangle, ShieldCheck, Lock, FileText, Phone, Mail, ArrowLeft, ArrowRight, Edit2, ExternalLink, Building2, UserCircle } from 'lucide-react';

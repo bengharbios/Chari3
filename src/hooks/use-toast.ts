@@ -1,4 +1,5 @@
 "use client"
+import React from 'react';
 
 // Inspired by react-hot-toast library
 import * as React from "react"

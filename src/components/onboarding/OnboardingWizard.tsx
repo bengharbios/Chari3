@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useOnboardingStore } from '@/lib/store/onboarding';

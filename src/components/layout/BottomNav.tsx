@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 
 import { useAppStore, useAuthStore, useCartStore } from '@/lib/store';
 import { cn } from '@/lib/utils';

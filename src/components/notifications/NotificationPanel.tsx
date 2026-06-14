@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 
 import { useEffect, useMemo } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
