@@ -25,7 +25,8 @@ export default function SaadaBuilderPage() {
   ]);
   const { t, locale } = useTranslation();
   const { languages, loadTranslations } = useTranslationStore();
-  const activeLanguages = languages && languages.length > 0 ? languages : [{code: 'ar', nameAr: 'العربية'}, {code: 'en', nameAr: 'English'}];
+  const DEFAULT_LANGUAGES = useMemo(() => [{code: 'ar', nameAr: 'العربية'}, {code: 'en', nameAr: 'English'}], []);
+  const activeLanguages = languages && languages.length > 0 ? languages : DEFAULT_LANGUAGES;
   const saadaConfig = useMemo(() => getSaadaConfig(locale, storeData, activeLanguages), [locale, storeData, activeLanguages]);
   const router = useRouter();
   const isRTL = locale === 'ar';
