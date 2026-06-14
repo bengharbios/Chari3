@@ -441,7 +441,8 @@ export default function SinglePageCheckout() {
                 <Button className="w-full mt-2 font-bold h-12" onClick={() => setIsEditingAddress(false)} disabled={!fullName || !phone || !selectedState || !address}>
                   {t('حفظ والمتابعة', 'Save & Continue')}
                 </Button>
-                </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="p-5">
