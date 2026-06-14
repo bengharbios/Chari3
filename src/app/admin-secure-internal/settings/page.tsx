@@ -35,6 +35,7 @@ export default function AdminSettingsPage() {
     enable_volume_discounts: 'true',
     enable_product_qa: 'true',
     seller_dashboard_template: 'default',
+    google_maps_api_key: '',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -77,6 +78,7 @@ export default function AdminSettingsPage() {
               ? String(data.settings.enable_product_qa)
               : 'true',
             seller_dashboard_template: data.settings.seller_dashboard_template || 'default',
+            google_maps_api_key: data.settings.google_maps_api_key || '',
           }));
         }
       } catch (err) {
@@ -297,6 +299,22 @@ export default function AdminSettingsPage() {
                 </select>
                 <p className="text-xs text-muted-foreground mt-1">
                   {t('اختر التصميم الذي سيظهر للتجار في لوحات التحكم الخاصة بهم.', 'Select the design template for the seller dashboards.')}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="google_maps_api_key">{t('مفتاح Google Maps API', 'Google Maps API Key')}</Label>
+                <Input
+                  id="google_maps_api_key"
+                  name="google_maps_api_key"
+                  type="text"
+                  value={settings.google_maps_api_key}
+                  onChange={handleChange}
+                  placeholder={t('أدخل مفتاح API هنا...', 'Enter API key here...')}
+                  className="bg-background text-foreground"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('مطلوب لتشغيل الخرائط في المتجر وتحديد مواقع المشترين.', 'Required to enable maps and location selection for buyers.')}
                 </p>
               </div>
               

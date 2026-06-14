@@ -33,8 +33,9 @@ interface Address {
 }
 
 export default function BuyerAddresses() {
-  const { t, locale } = useTranslation();
+  const { locale } = useAppStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
+  const t = (loc: string, ar: string, en: string) => loc === 'ar' ? ar : en;
   const { user } = useAuthStore();
   
   const [addresses, setAddresses] = useState<Address[]>([]);

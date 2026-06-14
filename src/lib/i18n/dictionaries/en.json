@@ -55,7 +55,8 @@
     "addons": "Add-ons",
     "payment": "Payment",
     "history": "History",
-    "upgrade": "Upgrade"
+    "upgrade": "Upgrade",
+    "buyer-group": "Buyer"
   },
   "admin": {
     "title": "Admin Panel",

@@ -55,7 +55,8 @@
     "addons": "الإضافات",
     "payment": "الدفع",
     "history": "سجل الفواتير",
-    "upgrade": "ترقية"
+    "upgrade": "ترقية",
+    "buyer-group": "المشتري"
   },
   "admin": {
     "title": "الإدارة العامة",
