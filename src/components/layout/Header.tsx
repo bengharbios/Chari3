@@ -563,7 +563,7 @@ export default function Header() {
               </div>
             </button>
             {enableDeliverTo && (
-              <div className="hidden sm:block ms-2 border-l border-border/50 pl-4 ml-4 rtl:border-l-0 rtl:border-r rtl:pl-0 rtl:pr-4 rtl:mr-4">
+              <div className="block ms-2 border-l border-border/50 pl-4 ml-4 rtl:border-l-0 rtl:border-r rtl:pl-0 rtl:pr-4 rtl:mr-4">
                 <DeliverTo />
               </div>
             )}
