@@ -208,8 +208,23 @@ export default function SinglePageCheckout() {
         }),
       });
       const data = await res.json();
-      if (data.success) {
-        setDiscountAmount(data.discountAmount);
+      if (data.success && data.coupon) {
+        const coupon = data.coupon;
+        let discount = 0;
+        
+        const applicableItems = items.filter(item => 
+          coupon.applicableProductIds.includes(item.product.id)
+        );
+        
+        const applicableSubtotal = applicableItems.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
+
+        if (coupon.type === 'percentage') {
+          discount = (applicableSubtotal * coupon.value) / 100;
+        } else if (coupon.type === 'fixed') {
+          discount = Math.min(coupon.value, applicableSubtotal);
+        }
+
+        setDiscountAmount(discount);
         toast.success(t('تم تفعيل الكوبون بنجاح!', 'Coupon applied successfully!'));
       } else {
         toast.error(data.errorAr || data.errorEn || data.error || t('الكوبون غير صالح', 'Invalid coupon'));
