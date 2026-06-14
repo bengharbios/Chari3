@@ -80,17 +80,17 @@
 :root {
   --radius: 0.75rem;
   --background: #FFFFFF;
-  --foreground: #1A1A2E;
+  --foreground: #000000;
   --card: #FFFFFF;
-  --card-foreground: #1A1A2E;
+  --card-foreground: #000000;
   --popover: #FFFFFF;
-  --popover-foreground: #1A1A2E;
+  --popover-foreground: #000000;
   --primary: #1B1464;
   --primary-foreground: #FFFFFF;
   --secondary: #F5F5F7;
-  --secondary-foreground: #1A1A2E;
+  --secondary-foreground: #111827;
   --muted: #F5F5F7;
-  --muted-foreground: #6B7280;
+  --muted-foreground: #4B5563;
   --accent: #FEEE00;
   --accent-foreground: #1B1464;
   --destructive: #EF4444;

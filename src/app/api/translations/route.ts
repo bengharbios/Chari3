@@ -20,8 +20,6 @@ const builtinLanguages = [
 
 export async function GET(req: NextRequest) {
   try {
-    await ensureDbConnection();
-
     const locale = req.nextUrl.searchParams.get('locale') || 'ar';
 
     // --- Get active language list ---

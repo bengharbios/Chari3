@@ -201,14 +201,18 @@ export default function SinglePageCheckout() {
       const res = await fetch('/api/coupons/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: couponCode, subtotal: getSubtotal() }),
+        body: JSON.stringify({ 
+          code: couponCode, 
+          subtotal: getSubtotal(),
+          items: items.map(i => ({ productId: i.product.id }))
+        }),
       });
       const data = await res.json();
       if (data.success) {
         setDiscountAmount(data.discountAmount);
         toast.success(t('تم تفعيل الكوبون بنجاح!', 'Coupon applied successfully!'));
       } else {
-        toast.error(data.error || t('الكوبون غير صالح', 'Invalid coupon'));
+        toast.error(data.errorAr || data.errorEn || data.error || t('الكوبون غير صالح', 'Invalid coupon'));
         setDiscountAmount(0);
       }
     } catch (error) {
