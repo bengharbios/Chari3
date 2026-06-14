@@ -23,6 +23,7 @@ import { Input } from '@/components/ui/input';
 import NotificationPanel from '@/components/notifications/NotificationPanel';
 import type { PageType } from '@/types';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import DeliverTo from '@/components/storefront/DeliverTo';
 import { localeDirections } from '@/lib/i18n/config';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 
@@ -102,6 +103,7 @@ export default function Header() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { locale, setLocale, toggleMobileMenu, setSidebarOpen, isSidebarOpen, allowGuestCheckout, setAllowGuestCheckout } = useAppStore();
+  const [enableDeliverTo, setEnableDeliverTo] = useState(true);
   const { user, isAuthenticated, logout, isBuyerMode } = useAuthStore();
   const {
     itemCount,
@@ -317,6 +319,7 @@ export default function Header() {
       .then(data => {
         if (data.success && data.flags) {
           setAllowGuestCheckout(data.flags.flag_allow_guest_checkout ?? true);
+          setEnableDeliverTo(data.flags.flag_enable_deliver_to ?? true);
         }
       })
       .catch(() => {});
@@ -559,6 +562,11 @@ export default function Header() {
                 {t('شاري داي', 'CharyDay')}
               </div>
             </button>
+            {enableDeliverTo && (
+              <div className="hidden lg:block ms-2 border-l border-border/50 pl-4 ml-4 rtl:border-l-0 rtl:border-r rtl:pl-0 rtl:pr-4 rtl:mr-4">
+                <DeliverTo />
+              </div>
+            )}
           </div>
 
           {/* Search Bar — Desktop only */}
