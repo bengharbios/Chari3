@@ -17,13 +17,20 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [localGuestCheckout, setLocalGuestCheckout] = useState(allowGuestCheckout);
   const [localCurrency, setLocalCurrency] = useState('DZD');
+  const [localMapsEnabled, setLocalMapsEnabled] = useState(false);
+  const [localMapsKey, setLocalMapsKey] = useState('');
 
   useEffect(() => {
     const fetchSettings = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch('/api/admin/settings');
-        const data = await res.json();
+        const [settingsRes, flagsRes] = await Promise.all([
+          fetch('/api/admin/settings'),
+          fetch('/api/admin/flags')
+        ]);
+        const data = await settingsRes.json();
+        const flagsData = await flagsRes.json();
+
         if (data.success && data.settings) {
           if (data.settings.allow_guest_checkout !== undefined) {
             const guestEnabled = data.settings.allow_guest_checkout === 'true';
@@ -33,6 +40,12 @@ export default function SettingsPage() {
           if (data.settings.currency !== undefined) {
             setLocalCurrency(data.settings.currency);
           }
+          if (data.settings.google_maps_api_key !== undefined) {
+            setLocalMapsKey(data.settings.google_maps_api_key);
+          }
+        }
+        if (flagsData.success && flagsData.flags) {
+          setLocalMapsEnabled(flagsData.flags.flag_enable_google_maps ?? false);
         }
       } catch (error) {
         console.error('Failed to load settings:', error);
@@ -53,12 +66,24 @@ export default function SettingsPage() {
           settings: {
             allow_guest_checkout: localGuestCheckout.toString(),
             currency: localCurrency,
+            google_maps_api_key: localMapsKey,
+          },
+        }),
+      });
+
+      const flagsRes = await fetch('/api/admin/flags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          flags: {
+            flag_enable_google_maps: localMapsEnabled,
           },
         }),
       });
       
       const data = await res.json();
-      if (data.success) {
+      const flagsData = await flagsRes.json();
+      if (data.success && flagsData.success) {
         toast.success(
           locale === 'ar' 
             ? 'تم حفظ الإعدادات بنجاح' 
@@ -163,6 +188,60 @@ export default function SettingsPage() {
                   <option value="EUR">{locale === 'ar' ? '€ (اليورو)' : 'EUR (Euro)'}</option>
                 </select>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Integrations Settings */}
+        <Card className="card-surface">
+          <CardHeader>
+            <CardTitle className="text-lg font-bold">
+              {locale === 'ar' ? 'الربط والخدمات الخارجية' : 'Integrations'}
+            </CardTitle>
+            <CardDescription>
+              {locale === 'ar' 
+                ? 'إعدادات ربط المنصة مع خدمات الطرف الثالث مثل خرائط جوجل' 
+                : 'Configure platform integration with third-party services like Google Maps'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border">
+              <div>
+                <p className="font-bold text-foreground">
+                  {locale === 'ar' ? 'تفعيل خرائط جوجل (تحديد الموقع الدقيق)' : 'Enable Google Maps Location'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1 max-w-[80%]">
+                  {locale === 'ar' 
+                    ? 'يسمح للمشترين بتحديد موقعهم على الخريطة لتسهيل التوصيل.' 
+                    : 'Allows buyers to pin their exact location on the map for delivery.'}
+                </p>
+              </div>
+              <Switch 
+                checked={localMapsEnabled} 
+                onCheckedChange={setLocalMapsEnabled} 
+                className="data-[state=checked]:bg-brand"
+              />
+            </div>
+
+            <div className="p-4 bg-muted/30 rounded-xl border space-y-3">
+              <div>
+                <p className="font-bold text-foreground">
+                  {locale === 'ar' ? 'مفتاح واجهة برمجة خرائط جوجل (API Key)' : 'Google Maps API Key'}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {locale === 'ar' 
+                    ? 'أدخل مفتاح الـ API الخاص بخرائط جوجل. في حال تركه فارغاً، ستستخدم المنصة واجهة محاكاة للتجربة.' 
+                    : 'Enter your Google Maps API Key. If empty, the platform will use a simulated map.'}
+                </p>
+              </div>
+              <input
+                type="text"
+                dir="ltr"
+                placeholder="AIzaSy..."
+                value={localMapsKey}
+                onChange={(e) => setLocalMapsKey(e.target.value)}
+                className="w-full bg-surface text-foreground text-sm font-bold border border-border/80 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-brand focus:outline-none"
+              />
             </div>
 
             <div className="flex justify-end pt-4">

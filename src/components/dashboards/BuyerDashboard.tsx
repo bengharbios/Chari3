@@ -10,7 +10,6 @@ import {
   getOrderStatusText,
   MOCK_PRODUCTS,
   MOCK_WALLET,
-  MOCK_ADDRESSES
 } from '@/lib/mock-data';
 import { StatsCard, PageHeader } from '@/components/shared/StatsCard';
 import {
@@ -63,6 +62,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import type { Order, OrderStatus, Locale } from '@/types';
+import BuyerAddresses from './BuyerAddresses';
 
 // ============================================
 // TRANSLATION HELPER
@@ -517,48 +517,7 @@ export default function BuyerDashboard() {
         {/* TAB: SAVED ADDRESSES                     */}
         {/* ======================================== */}
         <TabsContent value="addresses" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {MOCK_ADDRESSES.map((addr) => (
-              <TremorCard key={addr.id} className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-primary" />
-                      <Badge variant="secondary" className="font-medium">
-                        {addr.label}
-                      </Badge>
-                      {addr.isDefault && (
-                        <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                          {t(locale, 'الافتراضي', 'Default')}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <Separator />
-                  <div className="space-y-1.5 text-sm">
-                    <p className="font-medium">{addr.fullName}</p>
-                    <p className="text-muted-foreground direction-ltr">{addr.phone}</p>
-                    <p className="text-muted-foreground leading-relaxed">
-                      {addr.street}، {addr.city}
-                      {addr.state && `، ${addr.state}`}
-                      {addr.zipCode && ` - ${addr.zipCode}`}
-                    </p>
-                  </div>
-                  <Separator />
-                  <div className="flex items-center gap-2 pt-1">
-                    <Button size="sm" variant="outline" className="gap-1.5 flex-1">
-                      <Edit className="h-3.5 w-3.5" />
-                      {t(locale, 'تعديل', 'Edit')}
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-destructive hover:text-destructive gap-1.5 flex-1">
-                      <Trash2 className="h-3.5 w-3.5" />
-                      {t(locale, 'حذف', 'Delete')}
-                    </Button>
-                  </div>
-                </div>
-              </TremorCard>
-            ))}
-          </div>
+          <BuyerAddresses />
         </TabsContent>
       </Tabs>
     </div>

@@ -23,6 +23,7 @@ export async function GET() {
       flag_disable_auctions: false,
       flag_allow_guest_checkout: true,
       flag_enable_deliver_to: true,
+      flag_enable_google_maps: false,
     };
 
     return NextResponse.json({
