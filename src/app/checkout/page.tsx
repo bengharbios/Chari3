@@ -40,6 +40,9 @@ export default function SinglePageCheckout() {
   const isRTL = locale === 'ar';
   const t = (ar: string, en: string) => (isRTL ? ar : en);
 
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => { setIsMounted(true); }, []);
+
   // States list & dynamic payment methods
   const [dynamicWilayas, setDynamicWilayas] = useState<any[]>([]);
   const [customCities, setCustomCities] = useState<any[]>([]);
@@ -88,15 +91,15 @@ export default function SinglePageCheckout() {
       fetch('/api/buyer/addresses')
         .then(res => res.json())
         .then(data => {
-          if (data.success && data.addresses && data.addresses.length > 0) {
-            setSavedAddresses(data.addresses);
+          if (data.success && data.data && data.data.length > 0) {
+            setSavedAddresses(data.data);
             setIsEditingAddress(true);
             setIsAddingNewAddress(false);
             
             // Auto-select the default or first address
-            const defAddr = data.addresses.find((a: any) => a.isDefault) || data.addresses[0];
+            const defAddr = data.data.find((a: any) => a.isDefault) || data.data[0];
             setSelectedSavedAddressId(defAddr.id);
-            setFullName(defAddr.fullName);
+            setFullName(defAddr.fullName || user.name || '');
             setPhone(defAddr.phone);
             setSelectedState(defAddr.wilayaCode || defAddr.state || '');
             setSelectedCity(defAddr.city || '');
@@ -147,6 +150,11 @@ export default function SinglePageCheckout() {
           if (data.success && data.methods.length > 0) {
             setPaymentMethods(data.methods);
             setSelectedPaymentMethodId(data.methods[0].id);
+          } else {
+            // Fallback to COD if no methods configured
+            const codMethod = { id: 'cod', type: 'cod', name: 'الدفع عند الاستلام', nameEn: 'Cash on Delivery', icon: 'Banknote', isActive: true, fee: 0 };
+            setPaymentMethods([codMethod]);
+            setSelectedPaymentMethodId('cod');
           }
         });
     }
@@ -280,7 +288,29 @@ export default function SinglePageCheckout() {
         items: orderItems,
       };
 
-      if (isAuthenticated && user?.id) payload.buyerId = user.id;
+      if (isAuthenticated && user?.id) {
+        payload.buyerId = user.id;
+        
+        // Save new address if added
+        if (isAddingNewAddress || savedAddresses.length === 0) {
+          fetch('/api/buyer/addresses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              label: 'عنوان التوصيل',
+              fullName,
+              phone,
+              street: address,
+              city: selectedCity,
+              state: selectedState,
+              country: 'DZ',
+              lat: mapLat,
+              lng: mapLng,
+              isDefault: true
+            })
+          }).catch(console.error);
+        }
+      }
 
       const res = await fetch('/api/orders', {
         method: 'POST',
@@ -314,6 +344,14 @@ export default function SinglePageCheckout() {
           </div>
           <Button className="w-full h-12" onClick={() => router.push('/')}>{t('العودة للتسوق', 'Continue Shopping')}</Button>
         </div>
+      </div>
+    );
+  }
+
+  if (!isMounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="size-10 animate-spin text-brand" />
       </div>
     );
   }
