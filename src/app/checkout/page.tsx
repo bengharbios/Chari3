@@ -59,8 +59,12 @@ export default function SinglePageCheckout() {
   
   // Selections
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string>('');
-  const [isDonating, setIsDonating] = useState(false);
   const [isEditingAddress, setIsEditingAddress] = useState(true);
+  
+  // Coupons
+  const [couponCode, setCouponCode] = useState('');
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
   // Order submission states
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -158,7 +162,31 @@ export default function SinglePageCheckout() {
   };
 
   const getGrandTotal = () => {
-    return getSubtotal() + getShippingCost() + getPaymentFee() + (isDonating ? 1.30 : 0);
+    return Math.max(0, getSubtotal() + getShippingCost() + getPaymentFee() - discountAmount);
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setIsApplyingCoupon(true);
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode, subtotal: getSubtotal() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDiscountAmount(data.discountAmount);
+        toast.success(t('تم تفعيل الكوبون بنجاح!', 'Coupon applied successfully!'));
+      } else {
+        toast.error(data.error || t('الكوبون غير صالح', 'Invalid coupon'));
+        setDiscountAmount(0);
+      }
+    } catch (error) {
+      toast.error(t('حدث خطأ أثناء التحقق من الكوبون', 'Error validating coupon'));
+    } finally {
+      setIsApplyingCoupon(false);
+    }
   };
 
   const handlePlaceOrder = async () => {
@@ -196,7 +224,7 @@ export default function SinglePageCheckout() {
         subtotal: getSubtotal(),
         shippingCost: getShippingCost(),
         tax: 0,
-        discount: 0,
+        discount: discountAmount,
         total: getGrandTotal(),
         currency: countryCurrency,
         address: { fullName, phone, street: address, wilayaCode: selectedState, city: selectedCity, country: 'DZ', lat: mapLat, lng: mapLng },
@@ -470,10 +498,10 @@ export default function SinglePageCheckout() {
                     <span>+{getPaymentFee().toFixed(2)} {countryCurrency}</span>
                   </div>
                 )}
-                {isDonating && (
-                  <div className="flex justify-between text-green-600">
-                    <span>{t('تبرع لزراعة شجرة', 'Donation (Plant a tree)')}</span>
-                    <span>+1.30 {countryCurrency}</span>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-green-600 font-bold">
+                    <span>{t('الخصم (كوبون)', 'Discount (Coupon)')}</span>
+                    <span>-{discountAmount.toFixed(2)} {countryCurrency}</span>
                   </div>
                 )}
               </div>
@@ -496,17 +524,22 @@ export default function SinglePageCheckout() {
                 {t('بالمتابعة، فإنك توافق على شروط الاستخدام وسياسة الخصوصية الخاصة بـ ChariDay.', 'By placing order, you agree to ChariDay Privacy & Terms.')}
               </div>
             </div>
-
-            {/* Donation Block */}
-            <div className="bg-green-50 p-4 rounded-xl border border-green-200 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg"><Gift className="text-green-600 size-5" /></div>
-                <div>
-                  <span className="text-sm font-bold text-green-900 block">{t('التبرع مع المتجر', 'Donate with Store')}</span>
-                  <span className="text-[10px] text-green-700">{t('زرع شجرة مقابل 1.30 د.إ', 'Plant a tree for 1.30 AED')}</span>
-                </div>
-              </div>
-              <Switch checked={isDonating} onCheckedChange={setIsDonating} className="data-[state=checked]:bg-green-600" />
+            {/* Coupon Block */}
+            <div className="bg-white p-4 rounded-xl border flex gap-2">
+              <Input 
+                placeholder={t('أدخل رمز الكوبون', 'Enter coupon code')} 
+                value={couponCode} 
+                onChange={e => setCouponCode(e.target.value)} 
+                className="bg-gray-50"
+                disabled={discountAmount > 0}
+              />
+              <Button 
+                variant="secondary" 
+                onClick={handleApplyCoupon} 
+                disabled={!couponCode || isApplyingCoupon || discountAmount > 0}
+              >
+                {isApplyingCoupon ? <Loader2 className="animate-spin size-4" /> : (discountAmount > 0 ? t('مُفعل', 'Applied') : t('تطبيق', 'Apply'))}
+              </Button>
             </div>
 
             {/* Product Summary Collapse */}
