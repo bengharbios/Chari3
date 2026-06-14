@@ -88,7 +88,9 @@
     "manageTranslations": "Manage Translations",
     "themeDesign": "Theme & Design",
     "homepageSettings": "Homepage Settings",
-    "manageAdvertisements": "Manage Advertisements"
+    "manageAdvertisements": "Manage Advertisements",
+    "paymentMethods": "Payment Methods",
+    "mapSettings": "Map Settings"
   },
   "header": {
     "browseAsBuyerNote": "You are currently browsing the platform as a buyer.",
