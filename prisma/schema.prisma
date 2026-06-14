@@ -335,6 +335,25 @@ model ShippingMethod {
 }
 
 // ============================================
+// PAYMENT METHOD MODEL
+// ============================================
+
+model GlobalPaymentMethod {
+  id            String   @id @default(cuid())
+  name          String                          // "الدفع عند الاستلام", "Tabby"
+  nameEn        String?
+  description   String?
+  type          String                          // cod, credit_card, tabby, baridimob, bank_transfer, wallet
+  icon          String   @default("CreditCard")
+  isActive      Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  fee           Float    @default(0)            // E.g., COD fee
+  configSchema  String?  @db.LongText           // JSON config
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ============================================
 // WITHDRAWAL REQUEST MODEL
 // ============================================
 
