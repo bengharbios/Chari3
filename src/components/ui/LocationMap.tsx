@@ -12,8 +12,9 @@ interface LocationMapProps {
 }
 
 export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng = 3.0588, onLocationSelect, className = '' }: LocationMapProps) {
-  const { t, locale } = useTranslation();
+  const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
+  const translate = (ar: string, en: string) => locale === 'ar' ? ar : en;
   const mapRef = useRef<HTMLDivElement>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
@@ -148,7 +149,7 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
         },
         () => {
           setIsLocating(false);
-          alert(t(locale, 'فشل في تحديد موقعك. يرجى تفعيل إذن الموقع.', 'Failed to locate you. Please enable location permissions.'));
+          alert(translate('فشل في تحديد موقعك. يرجى تفعيل إذن الموقع.', 'Failed to locate you. Please enable location permissions.'));
         }
       );
     } else {
@@ -164,7 +165,7 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
           <Search className="w-4 h-4 text-muted-foreground mx-3 shrink-0" />
           <input
             type="text"
-            placeholder={t(locale, 'ابحث عن عنوان أو شارع...', 'Search for address or street...')}
+            placeholder={translate('ابحث عن عنوان أو شارع...', 'Search for address or street...')}
             className="flex-1 bg-transparent border-0 outline-none py-2.5 text-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -174,7 +175,7 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
           onClick={locateMe}
           disabled={isLocating}
           className="bg-background/90 backdrop-blur-md border border-border shadow-sm w-10 h-10 rounded-lg flex items-center justify-center text-brand hover:bg-background transition-colors shrink-0"
-          title={t(locale, 'موقعي الحالي', 'My Current Location')}
+          title={translate('موقعي الحالي', 'My Current Location')}
         >
           {isLocating ? <Loader2 className="w-5 h-5 animate-spin" /> : <LocateFixed className="w-5 h-5" />}
         </button>
@@ -208,10 +209,10 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
           <div className="absolute bottom-4 left-4 right-4 bg-background/80 backdrop-blur p-3 rounded-lg border text-center shadow-lg pointer-events-none">
             <Navigation className="w-5 h-5 text-brand mx-auto mb-1 opacity-50" />
             <p className="text-xs font-bold text-foreground">
-              {t(locale, 'وضع المحاكاة (Google Maps API غير متوفر)', 'Simulation Mode (Google Maps API not provided)')}
+              {translate('وضع المحاكاة (Google Maps API غير متوفر)', 'Simulation Mode (Google Maps API not provided)')}
             </p>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              {t(locale, 'انقر في أي مكان لمحاكاة تحديد الموقع.', 'Click anywhere to simulate location selection.')}
+              {translate('انقر في أي مكان لمحاكاة تحديد الموقع.', 'Click anywhere to simulate location selection.')}
             </p>
             <p className="text-[10px] font-mono mt-1 opacity-60">
               Lat: {simulatedLat.toFixed(4)}, Lng: {simulatedLng.toFixed(4)}
