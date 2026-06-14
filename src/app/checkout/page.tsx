@@ -15,6 +15,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { useTranslation } from '@/lib/i18n/useTranslation';
+import dynamic from 'next/dynamic';
+
+const AddressMap = dynamic(() => import('@/components/maps/AddressMap'), {
+  ssr: false,
+  loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse"></div>
+});
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   CreditCard: <CreditCard className="h-5 w-5" />,
@@ -47,6 +54,8 @@ export default function SinglePageCheckout() {
   const [address, setAddress] = useState('');
   const [selectedState, setSelectedState] = useState('');
   const [selectedCity, setSelectedCity] = useState('');
+  const [mapLat, setMapLat] = useState<number | undefined>();
+  const [mapLng, setMapLng] = useState<number | undefined>();
   
   // Selections
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string>('');
@@ -190,7 +199,7 @@ export default function SinglePageCheckout() {
         discount: 0,
         total: getGrandTotal(),
         currency: countryCurrency,
-        address: { fullName, phone, street: address, wilayaCode: selectedState, city: selectedCity, country: 'DZ' },
+        address: { fullName, phone, street: address, wilayaCode: selectedState, city: selectedCity, country: 'DZ', lat: mapLat, lng: mapLng },
         shippingMethod: 'standard',
         items: orderItems,
       };
@@ -311,6 +320,23 @@ export default function SinglePageCheckout() {
                     </select>
                   </div>
                 </div>
+                
+                {/* Dynamic Map Component */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-brand block mb-1">
+                    {t('حدد موقعك على الخريطة (اختياري لجلب اسم الشارع)', 'Pin your location on the map (optional)')}
+                  </label>
+                  <AddressMap 
+                    onLocationSelect={(lat, lng, streetName) => {
+                      setMapLat(lat);
+                      setMapLng(lng);
+                      if (streetName && !address) {
+                        setAddress(streetName);
+                      }
+                    }} 
+                  />
+                </div>
+
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-muted-foreground">{t('العنوان التفصيلي (الشارع والمنزل) *', 'Street Address *')}</label>
                   <Input value={address} onChange={(e) => setAddress(e.target.value)} required />
