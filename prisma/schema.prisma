@@ -1096,3 +1096,20 @@ model BillingAddon {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+// ============================================
+// DOCUMENTATION MODEL (Dynamic Docs)
+// ============================================
+model DocArticle {
+  id          String   @id @default(cuid())
+  title       String
+  titleEn     String?
+  slug        String   @unique
+  content     String   @db.LongText
+  contentEn   String?  @db.LongText
+  category    String   @default("general") // general, sellers, buyers, developers
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
