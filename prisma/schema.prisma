@@ -578,6 +578,9 @@ model OrderItem {
   price       Float
   quantity    Int
   total       Float
+  status          String    @default("pending") // pending, shipped, delivered, cancelled, returned
+  cancelReason    String?
+  cancelledAt     DateTime?
 }
 
 model Shipment {

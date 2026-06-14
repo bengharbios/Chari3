@@ -2,8 +2,6 @@
 import React from 'react';
 
 import { useState, useEffect } from 'react';
-
-import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAppStore, useAuthStore, useCartStore } from '@/lib/store';
 import {

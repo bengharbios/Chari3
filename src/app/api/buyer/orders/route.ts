@@ -1,25 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-export const dynamic = 'force-dynamic';
-
-// GET /api/buyer/orders?buyerId=xxx
-export async function GET(req: NextRequest) {
+export async function GET(request: Request) {
   try {
-    const buyerId = req.nextUrl.searchParams.get('buyerId');
-    if (!buyerId) return NextResponse.json({ success: false, error: 'buyerId required' }, { status: 400 });
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const filter = searchParams.get('filter') || '3months';
+
+    let dateFilter = new Date();
+    if (filter === '3months') {
+      dateFilter.setMonth(dateFilter.getMonth() - 3);
+    } else if (filter === '6months') {
+      dateFilter.setMonth(dateFilter.getMonth() - 6);
+    } else {
+      dateFilter.setFullYear(2000); // effectively all time
+    }
 
     const orders = await db.order.findMany({
-      where: { buyerId },
-      include: {
-        items: {
-          include: {
-            product: { select: { name: true, nameEn: true, images: true } }
-          }
-        },
-        statusHistory: { orderBy: { createdAt: 'asc' } },
+      where: {
+        buyerId: session.user.id,
+        createdAt: { gte: dateFilter }
       },
-      orderBy: { createdAt: 'desc' },
+      include: {
+        items: true,
+      },
+      orderBy: { createdAt: 'desc' }
     });
 
     return NextResponse.json({ success: true, orders });
