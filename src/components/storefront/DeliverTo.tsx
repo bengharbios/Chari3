@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import LocationMap from '@/components/ui/LocationMap';
-import { useAppStore } from '@/lib/store';
+import { useAppStore, useAuthStore } from '@/lib/store';
 
 // Mock list of countries, ideally fetched from DB or i18n
 const COUNTRIES = [
@@ -34,6 +34,9 @@ export default function DeliverTo() {
   const [flags, setFlags] = useState<any>({});
   const [settings, setSettings] = useState<any>({});
 
+  const { user, isAuthenticated } = useAuthStore();
+  const [userAddress, setUserAddress] = useState<any>(null);
+
   useEffect(() => {
     setMounted(true);
     // Fetch flags and settings
@@ -44,11 +47,23 @@ export default function DeliverTo() {
       if (flagsData.success) setFlags(flagsData.flags);
       if (settingsData.success) setSettings(settingsData.settings);
     }).catch(console.error);
-  }, []);
+
+    if (isAuthenticated && user) {
+      fetch('/api/buyer/addresses').then(res => res.json()).then(data => {
+        if (data.success && data.addresses?.length > 0) {
+          const defaultAddr = data.addresses.find((a: any) => a.isDefault) || data.addresses[0];
+          setUserAddress(defaultAddr);
+          if (!city && defaultAddr.city) {
+            setLocation({ country: defaultAddr.country || 'DZ', city: defaultAddr.city });
+          }
+        }
+      }).catch(() => {});
+    }
+  }, [isAuthenticated, user, city, setLocation]);
 
   if (!mounted) return null; // Prevent hydration mismatch
 
-  const currentCountry = COUNTRIES.find((c) => c.code === country) || COUNTRIES[0];
+  const currentCountry = COUNTRIES.find((c) => c.code === country) || COUNTRIES.find((c) => c.code === 'DZ');
 
   const handleSelect = (code: string, name: string) => {
     setLocation({ country: code, city: name }); // Simplified, sets city to country name initially
@@ -65,11 +80,13 @@ export default function DeliverTo() {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="flex items-center gap-1 hover:border-white border border-transparent p-1 rounded transition-colors text-sm text-white">
+        <button className="flex items-center gap-1 hover:border-border border border-transparent p-1 rounded transition-colors text-sm text-foreground">
           <MapPin className="w-4 h-4" />
           <div className="flex flex-col items-start leading-tight">
-            <span className="text-[10px] text-white/80">{t('التوصيل إلى', 'Deliver to')}</span>
-            <span className="font-bold">{city || currentCountry?.name || t('اختر موقعك', 'Choose location')}</span>
+            <span className="text-[10px] text-muted-foreground">{t('التوصيل إلى', 'Deliver to')}</span>
+            <span className="font-bold max-w-[120px] truncate">
+              {userAddress?.street ? userAddress.street : (city || currentCountry?.name || t('اختر موقعك', 'Choose location'))}
+            </span>
           </div>
         </button>
       </DialogTrigger>
