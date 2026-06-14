@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import LocationMap from '@/components/ui/LocationMap';
-import { useTranslation } from '@/lib/i18n/useTranslation';
+import { useAppStore } from '@/lib/store';
 
 // Mock list of countries, ideally fetched from DB or i18n
 const COUNTRIES = [
@@ -26,8 +26,9 @@ const COUNTRIES = [
 
 export default function DeliverTo() {
   const { country, city, setLocation } = useLocationStore();
-  const { t, locale } = useTranslation();
+  const { locale } = useAppStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
+  const t = (ar: string, en: string) => locale === 'ar' ? ar : en;
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [flags, setFlags] = useState<any>({});
@@ -67,17 +68,17 @@ export default function DeliverTo() {
         <button className="flex items-center gap-1 hover:border-white border border-transparent p-1 rounded transition-colors text-sm text-white">
           <MapPin className="w-4 h-4" />
           <div className="flex flex-col items-start leading-tight">
-            <span className="text-[10px] text-white/80">{t(locale, 'التوصيل إلى', 'Deliver to')}</span>
-            <span className="font-bold">{city || currentCountry?.name || t(locale, 'اختر موقعك', 'Choose location')}</span>
+            <span className="text-[10px] text-white/80">{t('التوصيل إلى', 'Deliver to')}</span>
+            <span className="font-bold">{city || currentCountry?.name || t('اختر موقعك', 'Choose location')}</span>
           </div>
         </button>
       </DialogTrigger>
       
       <DialogContent className={showMap ? "sm:max-w-[700px] h-[80vh] flex flex-col" : "sm:max-w-[425px]"} dir={dir}>
         <DialogHeader>
-          <DialogTitle>{t(locale, 'اختر موقعك', 'Choose your location')}</DialogTitle>
+          <DialogTitle>{t('اختر موقعك', 'Choose your location')}</DialogTitle>
           <DialogDescription>
-            {t(locale, 'تحديد موقعك يتيح لنا عرض خيارات التوصيل والمنتجات المتاحة في منطقتك بدقة.', 'Setting your location allows us to accurately show delivery options and products available in your area.')}
+            {t('تحديد موقعك يتيح لنا عرض خيارات التوصيل والمنتجات المتاحة في منطقتك بدقة.', 'Setting your location allows us to accurately show delivery options and products available in your area.')}
           </DialogDescription>
         </DialogHeader>
         
