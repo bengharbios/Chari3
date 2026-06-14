@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import dynamic from 'next/dynamic';
+import { Plus } from 'lucide-react';
 
 const AddressMap = dynamic(() => import('@/components/maps/AddressMap'), {
   ssr: false,
@@ -56,6 +57,9 @@ export default function SinglePageCheckout() {
   const [selectedCity, setSelectedCity] = useState('');
   const [mapLat, setMapLat] = useState<number | undefined>();
   const [mapLng, setMapLng] = useState<number | undefined>();
+  const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+  const [isAddingNewAddress, setIsAddingNewAddress] = useState(false);
+  const [selectedSavedAddressId, setSelectedSavedAddressId] = useState<string>('');
   
   // Selections
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<string>('');
@@ -75,11 +79,36 @@ export default function SinglePageCheckout() {
   const [ccExpiry, setCcExpiry] = useState('');
   const [ccCvv, setCcCvv] = useState('');
 
-  // Pre-fill user information
+  // Pre-fill user information and fetch saved addresses
   useEffect(() => {
     if (user) {
       setFullName(user.name || '');
       setPhone(user.phone || '');
+      
+      fetch('/api/buyer/addresses')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.addresses && data.addresses.length > 0) {
+            setSavedAddresses(data.addresses);
+            setIsEditingAddress(true);
+            setIsAddingNewAddress(false);
+            
+            // Auto-select the default or first address
+            const defAddr = data.addresses.find((a: any) => a.isDefault) || data.addresses[0];
+            setSelectedSavedAddressId(defAddr.id);
+            setFullName(defAddr.fullName);
+            setPhone(defAddr.phone);
+            setSelectedState(defAddr.wilayaCode || defAddr.state || '');
+            setSelectedCity(defAddr.city || '');
+            setAddress(defAddr.street || '');
+            if (defAddr.lat && defAddr.lng) {
+               setMapLat(defAddr.lat);
+               setMapLng(defAddr.lng);
+            }
+          } else {
+            setIsAddingNewAddress(true);
+          }
+        });
     }
   }, [user]);
 
@@ -312,8 +341,48 @@ export default function SinglePageCheckout() {
 
             {isEditingAddress ? (
               <div className="p-5 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
+                {savedAddresses.length > 0 && !isAddingNewAddress && (
+                  <div className="space-y-3 mb-4">
+                    <p className="text-sm font-bold text-muted-foreground">{t('اختر عنوان توصيل', 'Select a shipping address')}</p>
+                    {savedAddresses.map(addr => (
+                      <div 
+                        key={addr.id} 
+                        onClick={() => {
+                          setSelectedSavedAddressId(addr.id);
+                          setFullName(addr.fullName || '');
+                          setPhone(addr.phone || '');
+                          setSelectedState(addr.wilayaCode || addr.state || '');
+                          setSelectedCity(addr.city || '');
+                          setAddress(addr.street || '');
+                          if (addr.lat && addr.lng) { setMapLat(addr.lat); setMapLng(addr.lng); }
+                        }}
+                        className={`p-3 border rounded-xl cursor-pointer transition-colors ${selectedSavedAddressId === addr.id ? 'border-brand bg-brand/5' : 'hover:bg-gray-50'}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <p className="font-bold text-sm">{addr.fullName} <span className="text-xs text-muted-foreground ml-2">{addr.phone}</span></p>
+                          {selectedSavedAddressId === addr.id && <CheckCircle2 className="size-4 text-brand" />}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">{addr.street}, {addr.wilayaCode || addr.state}</p>
+                      </div>
+                    ))}
+                    <Button variant="outline" className="w-full mt-2 border-dashed" onClick={() => { setIsAddingNewAddress(true); setSelectedSavedAddressId(''); setAddress(''); }}>
+                      <Plus className="size-4 mr-2" /> {t('إضافة عنوان جديد', 'Add new address')}
+                    </Button>
+                    <Button className="w-full mt-4 font-bold h-12" onClick={() => setIsEditingAddress(false)} disabled={!selectedSavedAddressId}>
+                      {t('المتابعة بهذا العنوان', 'Continue with this address')}
+                    </Button>
+                  </div>
+                )}
+
+                {(isAddingNewAddress || savedAddresses.length === 0) && (
+                  <div className="space-y-4">
+                    {savedAddresses.length > 0 && (
+                      <Button variant="ghost" onClick={() => setIsAddingNewAddress(false)} className="mb-2 text-xs h-8 text-muted-foreground hover:text-foreground">
+                        {isRTL ? '← العودة للعناوين المحفوظة' : '← Back to saved addresses'}
+                      </Button>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
                     <label className="text-xs font-bold text-muted-foreground">{t('الاسم الكامل *', 'Full Name *')}</label>
                     <Input value={fullName} onChange={(e) => setFullName(e.target.value)} required />
                   </div>
@@ -369,9 +438,10 @@ export default function SinglePageCheckout() {
                   <label className="text-xs font-bold text-muted-foreground">{t('العنوان التفصيلي (الشارع والمنزل) *', 'Street Address *')}</label>
                   <Input value={address} onChange={(e) => setAddress(e.target.value)} required />
                 </div>
-                <Button className="w-full mt-2 font-bold" onClick={() => setIsEditingAddress(false)} disabled={!fullName || !phone || !selectedState || !address}>
+                <Button className="w-full mt-2 font-bold h-12" onClick={() => setIsEditingAddress(false)} disabled={!fullName || !phone || !selectedState || !address}>
                   {t('حفظ والمتابعة', 'Save & Continue')}
                 </Button>
+                </div>
               </div>
             ) : (
               <div className="p-5">
