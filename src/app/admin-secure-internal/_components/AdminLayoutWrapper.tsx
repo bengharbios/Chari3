@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import { useSession, signOut } from 'next-auth/react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import AdminSidebar from './AdminSidebar';
 import { Button } from '@/components/ui/button';
@@ -88,7 +89,9 @@ export default function AdminLayoutWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  const { adminLocale, setAdminLocale, logout, adminUser, isAdminAuthenticated } = useAdminAuthStore();
+  const { data: session, status } = useSession();
+  const { adminLocale, setAdminLocale } = useAdminAuthStore();
+  const isAdminAuthenticated = status === 'authenticated' && (session?.user as any)?.role === 'admin' || (session?.user as any)?.role === 'SUPER_ADMIN';
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   const { theme: globalTheme, setTheme: setGlobalTheme } = useTheme();
@@ -130,9 +133,9 @@ export default function AdminLayoutWrapper({
     setGlobalTheme(globalTheme === 'dark' ? 'light' : 'dark');
   };
 
-  const handleLogout = () => {
-    logout();
-    window.location.reload();
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    window.location.href = getAdminPath('login');
   };
 
   if (!isMounted) {
@@ -149,12 +152,23 @@ export default function AdminLayoutWrapper({
     return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
   };
 
-  if (!isAdminAuthenticated || isLoginPage) {
-    return (
-      <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-background">
-        {children}
-      </div>
-    );
+  if (status === 'loading') {
+    return <div className="min-h-screen bg-background flex items-center justify-center">جاري التحميل...</div>;
+  }
+
+  if (!isAdminAuthenticated) {
+    if (isLoginPage) {
+      return (
+        <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-background">
+          {children}
+        </div>
+      );
+    }
+    // Security Fix: Redirect immediately if not authenticated
+    if (typeof window !== 'undefined') {
+      window.location.href = getAdminPath('login');
+    }
+    return <div className="min-h-screen bg-background flex items-center justify-center">جاري التحويل للوحة الدخول...</div>;
   }
 
   const themeMode = globalTheme === 'dark' ? 'dark' : 'light';
