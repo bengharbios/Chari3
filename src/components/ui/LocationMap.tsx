@@ -83,7 +83,10 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
         let route = '';
         let streetNumber = '';
 
-        results[0].address_components.forEach((component: any) => {
+        // Find the best result that is not just a plus code
+        const bestResult = results.find((r: any) => !r.types.includes('plus_code')) || results[0];
+
+        bestResult.address_components.forEach((component: any) => {
           if (component.types.includes('locality')) city = component.long_name;
           if (component.types.includes('administrative_area_level_1')) state = component.long_name;
           if (component.types.includes('country')) country = component.short_name;
@@ -92,7 +95,7 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
           if (component.types.includes('street_number')) streetNumber = component.long_name;
         });
 
-        const fullAddress = results[0].formatted_address;
+        const fullAddress = bestResult.formatted_address;
 
         if (onLocationSelect) {
           onLocationSelect({
