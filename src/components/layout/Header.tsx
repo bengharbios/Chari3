@@ -670,7 +670,24 @@ export default function Header() {
               variant="ghost"
               size="icon"
               className="relative"
-              onClick={() => setCartOpen(true)}
+              onClick={() => {
+                const auth = useAuthStore.getState();
+                if (auth.isAuthenticated && auth.user && auth.user.role !== 'admin' && auth.user.role !== 'buyer' && !auth.isBuyerMode) {
+                  toast(t('تنبيه', 'Notice'), {
+                    description: t('الرجاء التبديل إلى وضع المشتري لعرض سلة التسوق وإتمام الطلب', 'Please switch to buyer mode to view the cart and checkout'),
+                    action: {
+                      label: t('التبديل الآن', 'Switch Now'),
+                      onClick: () => {
+                        auth.setBuyerMode(true);
+                        navigateToDashboard('home');
+                        setTimeout(() => setCartOpen(true), 100);
+                      }
+                    }
+                  });
+                  return;
+                }
+                setCartOpen(true);
+              }}
             >
               <ShoppingCart className="h-5 w-5" />
               {itemCount > 0 && (

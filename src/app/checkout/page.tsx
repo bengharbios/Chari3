@@ -117,8 +117,13 @@ export default function SinglePageCheckout() {
 
   useEffect(() => {
     if (items.length === 0 && !checkoutSuccess) {
-      toast.error(t('سلتك فارغة', 'Your cart is empty'));
-      router.push('/');
+      const timer = setTimeout(() => {
+        if (useCartStore.getState().items.length === 0) {
+          toast.error(t('سلتك فارغة', 'Your cart is empty'));
+          router.push('/');
+        }
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [items, checkoutSuccess]);
 
