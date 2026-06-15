@@ -191,11 +191,7 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
       </div>
 
       {/* Map Container */}
-      {!isLoaded ? (
-        <div className="flex-1 flex items-center justify-center bg-muted/50">
-          <Loader2 className="w-8 h-8 animate-spin text-brand" />
-        </div>
-      ) : (!apiKey || mapError) ? (
+      {(!apiKey || mapError) ? (
         // Simulated Map Fallback
         <div 
           className="flex-1 relative bg-[#e5e3df] flex items-center justify-center cursor-crosshair overflow-hidden"
@@ -229,7 +225,14 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
           </div>
         </div>
       ) : (
-        <div ref={mapRef} className="flex-1 w-full h-full" />
+        <div className="flex-1 w-full h-full relative">
+          {!isLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center bg-muted/50 z-10">
+              <Loader2 className="w-8 h-8 animate-spin text-brand" />
+            </div>
+          )}
+          <div ref={mapRef} className="w-full h-full" />
+        </div>
       )}
     </div>
   );
