@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     const settings = await db.setting.findMany({
       where: {
         key: {
-          in: ['map_enabled', 'map_default_lat', 'map_default_lng', 'map_default_zoom']
+          in: ['map_enabled', 'map_provider', 'map_default_lat', 'map_default_lng', 'map_default_zoom']
         }
       }
     });
@@ -37,10 +37,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { map_enabled, map_default_lat, map_default_lng, map_default_zoom } = body;
+    const { map_enabled, map_provider, map_default_lat, map_default_lng, map_default_zoom } = body;
 
     const updates = [
       { key: 'map_enabled', value: String(map_enabled) },
+      { key: 'map_provider', value: String(map_provider || 'osm') },
       { key: 'map_default_lat', value: String(map_default_lat || '25.2048') }, // Dubai default
       { key: 'map_default_lng', value: String(map_default_lng || '55.2708') },
       { key: 'map_default_zoom', value: String(map_default_zoom || '12') },
