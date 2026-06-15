@@ -94,14 +94,28 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
         const detailedStreetParts = [streetNumber, route, neighborhood].filter(Boolean).join('، ');
         const fallbackAddress = results[0].formatted_address;
 
-        onLocationSelect({
-          lat,
-          lng,
-          address: detailedStreetParts || fallbackAddress,
-          city: city || state || '',
-          state: state || '',
-          country
-        });
+        if (onLocationSelect) {
+          onLocationSelect({
+            lat,
+            lng,
+            address: detailedStreetParts || fallbackAddress,
+            city: city || state || '',
+            state: state || '',
+            country
+          });
+        }
+      } else {
+        console.error('Google Maps Geocoding failed with status:', status);
+        if (onLocationSelect) {
+          onLocationSelect({
+            lat,
+            lng,
+            address: '',
+            city: '',
+            state: '',
+            country: 'DZ'
+          });
+        }
       }
     });
   };
