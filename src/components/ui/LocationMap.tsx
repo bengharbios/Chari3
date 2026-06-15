@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Search, LocateFixed, Loader2, Navigation } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { toast } from 'sonner';
 
 interface LocationMapProps {
   apiKey?: string;
@@ -189,6 +190,7 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
     
     const geocoder = new window.google.maps.Geocoder();
     geocoder.geocode({ address: searchQuery }, (results: any, status: any) => {
+      console.log('Geocoder search results:', status, results);
       if (status === 'OK' && results[0]) {
         const lat = results[0].geometry.location.lat();
         const lng = results[0].geometry.location.lng();
@@ -200,7 +202,7 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
           handleReverseGeocode(lat, lng);
         }
       } else {
-        alert(translate('لم يتم العثور على الموقع', 'Location not found'));
+        toast.error(translate('لم يتم العثور على الموقع', 'Location not found'));
       }
     });
   };
