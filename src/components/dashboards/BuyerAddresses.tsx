@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import dynamic from 'next/dynamic';
 
-const AddressMap = dynamic(() => import('@/components/maps/AddressMap'), {
+const UnifiedMap = dynamic(() => import('@/components/maps/UnifiedMap'), {
   ssr: false,
   loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse"></div>
 });
@@ -239,7 +239,7 @@ export default function BuyerAddresses() {
                 {t(locale, 'حدد موقعك الدقيق على الخريطة', 'Pin your exact location on the map')}
               </div>
               <div className="flex-1 w-full relative">
-                <AddressMap 
+                <UnifiedMap 
                   initialLat={formData.lat || undefined}
                   initialLng={formData.lng || undefined}
                   onLocationSelect={handleLocationSelect}

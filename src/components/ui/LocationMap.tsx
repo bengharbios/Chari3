@@ -77,17 +77,26 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
         let city = '';
         let state = '';
         let country = 'DZ';
+        let neighborhood = '';
+        let route = '';
+        let streetNumber = '';
 
         results[0].address_components.forEach((component: any) => {
           if (component.types.includes('locality')) city = component.long_name;
           if (component.types.includes('administrative_area_level_1')) state = component.long_name;
           if (component.types.includes('country')) country = component.short_name;
+          if (component.types.includes('sublocality') || component.types.includes('neighborhood')) neighborhood = component.long_name;
+          if (component.types.includes('route')) route = component.long_name;
+          if (component.types.includes('street_number')) streetNumber = component.long_name;
         });
+
+        const detailedStreetParts = [streetNumber, route, neighborhood].filter(Boolean).join('، ');
+        const fallbackAddress = results[0].formatted_address;
 
         onLocationSelect({
           lat,
           lng,
-          address: results[0].formatted_address,
+          address: detailedStreetParts || fallbackAddress,
           city: city || state || '',
           state: state || '',
           country

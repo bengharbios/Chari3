@@ -19,7 +19,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import dynamic from 'next/dynamic';
 import { Plus } from 'lucide-react';
 
-const AddressMap = dynamic(() => import('@/components/maps/AddressMap'), {
+const UnifiedMap = dynamic(() => import('@/components/maps/UnifiedMap'), {
   ssr: false,
   loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse"></div>
 });
@@ -480,7 +480,7 @@ export default function SinglePageCheckout() {
                   <label className="text-xs font-bold text-brand block mb-1">
                     {t('حدد موقعك على الخريطة (اختياري لجلب اسم الشارع)', 'Pin your location on the map (optional)')}
                   </label>
-                  <AddressMap 
+                  <UnifiedMap 
                     onLocationSelect={(lat, lng, streetName) => {
                       setMapLat(lat);
                       setMapLng(lng);

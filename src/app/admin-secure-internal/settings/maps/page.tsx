@@ -20,6 +20,7 @@ export default function MapsSettingsPage() {
   
   const [settings, setSettings] = useState({
     map_enabled: 'false',
+    map_provider: 'osm',
     map_default_lat: '25.2048',
     map_default_lng: '55.2708',
     map_default_zoom: '12',
@@ -104,6 +105,19 @@ export default function MapsSettingsPage() {
                 checked={settings.map_enabled === 'true'}
                 onCheckedChange={(c) => setSettings({ ...settings, map_enabled: String(c) })}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-bold text-base">مزود الخرائط (Map Provider)</Label>
+              <p className="text-sm text-muted-foreground mb-2">اختر نظام الخرائط الذي تفضله للمتجر.</p>
+              <select
+                value={settings.map_provider || 'osm'}
+                onChange={(e) => setSettings({ ...settings, map_provider: e.target.value })}
+                className="w-full border p-2 rounded-md bg-background focus:ring-1 focus:ring-brand outline-none"
+              >
+                <option value="osm">OpenStreetMap (مجاني 100٪)</option>
+                <option value="google">Google Maps (دقة فائقة - يتطلب مفتاح API في الإعدادات العامة)</option>
+              </select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

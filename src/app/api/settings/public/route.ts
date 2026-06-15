@@ -17,6 +17,7 @@ export async function GET() {
       'theme_seller_dashboard',
       'theme_storefront',
       'footer_blocks',
+      'google_maps_api_key',
     ];
 
     const settings = await db.systemSetting.findMany({
@@ -24,7 +25,7 @@ export async function GET() {
     });
 
     const mapSettings = await db.setting.findMany({
-      where: { key: { in: ['map_enabled', 'map_default_lat', 'map_default_lng', 'map_default_zoom'] } }
+      where: { key: { in: ['map_enabled', 'map_provider', 'map_default_lat', 'map_default_lng', 'map_default_zoom'] } }
     });
 
     const settingsMap = settings.reduce((acc: any, curr: any) => {
@@ -49,7 +50,9 @@ export async function GET() {
         theme_seller_dashboard: settingsMap.theme_seller_dashboard || null,
         theme_storefront: settingsMap.theme_storefront || null,
         footer_blocks: settingsMap.footer_blocks || null,
+        google_maps_api_key: settingsMap.google_maps_api_key || null,
         map_enabled: settingsMap.map_enabled || 'false',
+        map_provider: settingsMap.map_provider || 'osm',
         map_default_lat: settingsMap.map_default_lat || '25.2048',
         map_default_lng: settingsMap.map_default_lng || '55.2708',
         map_default_zoom: settingsMap.map_default_zoom || '12',
