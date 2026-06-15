@@ -484,7 +484,7 @@ export default function SinglePageCheckout() {
                     onLocationSelect={(lat, lng, streetName) => {
                       setMapLat(lat);
                       setMapLng(lng);
-                      if (streetName && !address) {
+                      if (streetName) {
                         setAddress(streetName);
                       }
                     }} 

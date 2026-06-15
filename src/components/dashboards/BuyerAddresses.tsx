@@ -15,7 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import LocationMap from '@/components/ui/LocationMap';
+import AddressMap from '@/components/maps/AddressMap';
 
 interface Address {
   id: string;
@@ -89,15 +89,12 @@ export default function BuyerAddresses() {
     }
   };
 
-  const handleLocationSelect = (location: any) => {
+  const handleLocationSelect = (lat: number, lng: number, addressText: string) => {
     setFormData(prev => ({
       ...prev,
-      lat: location.lat,
-      lng: location.lng,
-      street: location.address,
-      city: location.city,
-      state: location.state,
-      country: location.country
+      lat,
+      lng,
+      street: addressText
     }));
   };
 
@@ -237,10 +234,9 @@ export default function BuyerAddresses() {
                 {t(locale, 'حدد موقعك الدقيق على الخريطة', 'Pin your exact location on the map')}
               </div>
               <div className="flex-1 w-full relative">
-                <LocationMap 
-                  apiKey={mapsApiKey}
-                  defaultLat={formData.lat || undefined}
-                  defaultLng={formData.lng || undefined}
+                <AddressMap 
+                  initialLat={formData.lat || undefined}
+                  initialLng={formData.lng || undefined}
                   onLocationSelect={handleLocationSelect}
                 />
               </div>
