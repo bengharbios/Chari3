@@ -359,9 +359,9 @@ export default function SinglePageCheckout() {
   const BackIcon = isRTL ? ArrowRight : ArrowLeft;
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5] pb-12" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-muted/20 text-foreground pb-12" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Upper Navigation Header */}
-      <div className="bg-white border-b sticky top-0 z-[50]">
+      <div className="bg-background border-b sticky top-0 z-[50]">
         <div className="max-w-5xl mx-auto h-14 flex items-center justify-between px-4">
           <button onClick={() => router.back()} className="flex items-center gap-1 font-bold text-muted-foreground">
             <BackIcon className="size-5" />
@@ -377,14 +377,14 @@ export default function SinglePageCheckout() {
         <div className="lg:col-span-8 space-y-4">
           
           {/* Trust Banner */}
-          <div className="bg-white p-3 rounded-xl border flex items-center justify-center gap-2 shadow-sm">
+          <div className="bg-background text-foreground p-3 rounded-xl border flex items-center justify-center gap-2 shadow-sm">
             <ShieldCheck className="h-5 w-5 text-green-600" />
             <span className="text-sm font-bold">{t('جميع البيانات مؤمنة ومشفرة تماماً', 'All transactions are secure and encrypted')}</span>
           </div>
 
           {/* Shipping Address Section */}
-          <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-            <div className="p-4 border-b bg-gray-50 flex items-center justify-between">
+          <div className="bg-background rounded-xl border shadow-sm overflow-hidden">
+            <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
               <h3 className="font-black flex items-center gap-2 text-lg">
                 <MapPin className="text-brand size-5" />
                 {t('عنوان الشحن', 'Shipping Address')}
@@ -413,10 +413,10 @@ export default function SinglePageCheckout() {
                           setAddress(addr.street || '');
                           if (addr.lat && addr.lng) { setMapLat(addr.lat); setMapLng(addr.lng); }
                         }}
-                        className={`p-3 border rounded-xl cursor-pointer transition-colors ${selectedSavedAddressId === addr.id ? 'border-brand bg-brand/5' : 'hover:bg-gray-50'}`}
+                        className={`p-3 border rounded-xl cursor-pointer transition-colors ${selectedSavedAddressId === addr.id ? 'border-brand bg-brand/5' : 'hover:bg-muted/50'}`}
                       >
                         <div className="flex items-center justify-between">
-                          <p className="font-bold text-sm">{addr.fullName} <span className="text-xs text-muted-foreground ml-2">{addr.phone}</span></p>
+                          <p className="font-bold text-sm text-foreground">{addr.fullName} <span className="text-xs text-muted-foreground ml-2">{addr.phone}</span></p>
                           {selectedSavedAddressId === addr.id && <CheckCircle2 className="size-4 text-brand" />}
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">{addr.street}, {addr.wilayaCode || addr.state}</p>
@@ -503,15 +503,15 @@ export default function SinglePageCheckout() {
               </div>
             ) : (
               <div className="p-5">
-                <p className="font-bold text-base">{fullName} <span className="text-muted-foreground font-normal ml-2">{phone}</span></p>
+                <p className="font-bold text-base text-foreground">{fullName} <span className="text-muted-foreground font-normal ml-2">{phone}</span></p>
                 <p className="text-sm text-muted-foreground mt-1">{address}, {customCities.find(c => c.id === selectedCity)?.nameAr} - {selectedState}</p>
               </div>
             )}
           </div>
 
           {/* Dynamic Payment Methods Section */}
-          <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-            <div className="p-4 border-b bg-gray-50">
+          <div className="bg-background rounded-xl border shadow-sm overflow-hidden">
+            <div className="p-4 border-b bg-muted/30">
               <h3 className="font-black text-lg">{t('طُرق الدفع', 'Payment Methods')}</h3>
             </div>
             
@@ -522,13 +522,13 @@ export default function SinglePageCheckout() {
                 return (
                   <div key={method.id} className={`border-2 rounded-xl overflow-hidden transition-all ${isSelected ? 'border-brand' : 'border-border/50'}`}>
                     <div 
-                      className={`p-4 flex items-center gap-3 cursor-pointer ${isSelected ? 'bg-brand/5' : 'hover:bg-gray-50'}`}
+                      className={`p-4 flex items-center gap-3 cursor-pointer ${isSelected ? 'bg-brand/5' : 'hover:bg-muted/50'}`}
                       onClick={() => setSelectedPaymentMethodId(method.id)}
                     >
                       <div className={`size-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-brand' : 'border-muted-foreground'}`}>
                         {isSelected && <div className="size-2.5 bg-brand rounded-full"></div>}
                       </div>
-                      <div className="p-2 bg-white rounded-md border shadow-sm shrink-0">
+                      <div className="p-2 bg-background rounded-md border shadow-sm shrink-0">
                         {ICON_MAP[method.icon] || <CreditCard className="size-5" />}
                       </div>
                       <div className="flex-1 font-bold text-sm">
@@ -556,10 +556,10 @@ export default function SinglePageCheckout() {
 
                         {/* Type: Installments (Tabby style) */}
                         {method.type === 'installments' && (
-                          <div className="mt-3 bg-white p-4 rounded-xl border border-gray-200">
+                          <div className="mt-3 bg-background p-4 rounded-xl border border-border">
                             <p className="text-sm font-bold mb-3">{t('قسمها حتى 4 دفعات بدون فوائد', 'Split into 4 interest-free payments')}</p>
                             <div className="flex justify-between text-center relative">
-                              <div className="absolute top-3 left-6 right-6 h-0.5 bg-gray-200 z-0"></div>
+                              <div className="absolute top-3 left-6 right-6 h-0.5 bg-muted z-0"></div>
                               {[t('اليوم', 'Today'), t('خلال شهر', '1 Month'), t('خلال شهرين', '2 Months'), t('خلال 3 أشهر', '3 Months')].map((label, i) => (
                                 <div key={i} className="z-10 flex flex-col items-center">
                                   <div className="size-6 rounded-full bg-[#3eefaa] text-black font-bold text-xs flex items-center justify-center border-2 border-white shadow-sm">
@@ -604,7 +604,7 @@ export default function SinglePageCheckout() {
           <div className="sticky top-20 space-y-4">
             
             {/* Order Summary Box */}
-            <div className="bg-white p-5 rounded-xl border shadow-sm">
+            <div className="bg-background text-foreground p-5 rounded-xl border shadow-sm">
               <h3 className="font-black text-lg mb-4">{t('إجمالي الطلب', 'Order Summary')}</h3>
               
               <div className="space-y-3 text-sm">
@@ -653,12 +653,12 @@ export default function SinglePageCheckout() {
               </div>
             </div>
             {/* Coupon Block */}
-            <div className="bg-white p-4 rounded-xl border flex gap-2">
+            <div className="bg-background p-4 rounded-xl border flex gap-2">
               <Input 
                 placeholder={t('أدخل رمز الكوبون', 'Enter coupon code')} 
                 value={couponCode} 
                 onChange={e => setCouponCode(e.target.value)} 
-                className="bg-gray-50"
+                className="bg-muted/50"
                 disabled={discountAmount > 0}
               />
               <Button 
@@ -671,8 +671,8 @@ export default function SinglePageCheckout() {
             </div>
 
             {/* Product Summary Collapse */}
-            <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-              <div className="p-4 bg-gray-50 border-b text-sm font-bold">
+            <div className="bg-background rounded-xl border shadow-sm overflow-hidden">
+              <div className="p-4 bg-muted/30 border-b text-sm font-bold text-foreground">
                 {t('المنتجات في طلبك', 'Items in your order')}
               </div>
               <div className="max-h-64 overflow-y-auto p-4 space-y-3 custom-scrollbar">
