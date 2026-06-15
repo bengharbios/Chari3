@@ -28,6 +28,7 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
   // Actual Google Maps instances
   const googleMapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!apiKey) {
@@ -132,6 +133,22 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
       handleReverseGeocode(event.latLng.lat(), event.latLng.lng());
     });
 
+    if (searchInputRef.current && window.google.maps.places) {
+      const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
+        fields: ['geometry', 'name']
+      });
+      
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) return;
+        
+        googleMapRef.current.panTo(place.geometry.location);
+        googleMapRef.current.setZoom(17);
+        markerRef.current.setPosition(place.geometry.location);
+        handleReverseGeocode(place.geometry.location.lat(), place.geometry.location.lng());
+      });
+    }
+
     setIsLoaded(true);
     handleReverseGeocode(defaultLat, defaultLng);
   };
@@ -197,6 +214,7 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
         <form onSubmit={handleSearch} className="relative flex-1 bg-background/90 backdrop-blur-md rounded-lg shadow-sm border border-border flex items-center overflow-hidden">
           <Search className="w-4 h-4 text-muted-foreground mx-3 shrink-0" />
           <input
+            ref={searchInputRef}
             type="text"
             placeholder={translate('ابحث عن عنوان أو شارع...', 'Search for address or street...')}
             className="flex-1 bg-transparent border-0 outline-none py-2.5 text-sm"
