@@ -15,7 +15,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import AddressMap from '@/components/maps/AddressMap';
+import dynamic from 'next/dynamic';
+
+const AddressMap = dynamic(() => import('@/components/maps/AddressMap'), {
+  ssr: false,
+  loading: () => <div className="h-64 bg-gray-100 rounded-xl animate-pulse"></div>
+});
 
 interface Address {
   id: string;
