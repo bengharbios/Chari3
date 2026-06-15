@@ -23,10 +23,18 @@ export async function GET() {
       where: { key: { in: publicKeys } }
     });
 
+    const mapSettings = await db.setting.findMany({
+      where: { key: { in: ['map_enabled', 'map_default_lat', 'map_default_lng', 'map_default_zoom'] } }
+    });
+
     const settingsMap = settings.reduce((acc: any, curr: any) => {
       acc[curr.key] = curr.value;
       return acc;
     }, {});
+
+    mapSettings.forEach((s: any) => {
+      settingsMap[s.key] = s.value;
+    });
 
     // Provide safe defaults if not configured
     return NextResponse.json({
@@ -41,6 +49,10 @@ export async function GET() {
         theme_seller_dashboard: settingsMap.theme_seller_dashboard || null,
         theme_storefront: settingsMap.theme_storefront || null,
         footer_blocks: settingsMap.footer_blocks || null,
+        map_enabled: settingsMap.map_enabled || 'false',
+        map_default_lat: settingsMap.map_default_lat || '25.2048',
+        map_default_lng: settingsMap.map_default_lng || '55.2708',
+        map_default_zoom: settingsMap.map_default_zoom || '12',
       }
     });
   } catch (error) {
