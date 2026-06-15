@@ -225,13 +225,13 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
           </div>
         </div>
       ) : (
-        <div className="flex-1 w-full h-full relative">
+        <div className="flex-1 w-full relative min-h-[300px]">
           {!isLoaded && (
             <div className="absolute inset-0 flex items-center justify-center bg-muted/50 z-10">
               <Loader2 className="w-8 h-8 animate-spin text-brand" />
             </div>
           )}
-          <div ref={mapRef} className="w-full h-full" />
+          <div ref={mapRef} className="absolute inset-0" />
         </div>
       )}
     </div>
