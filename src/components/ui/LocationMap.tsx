@@ -92,14 +92,13 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
           if (component.types.includes('street_number')) streetNumber = component.long_name;
         });
 
-        const detailedStreetParts = [streetNumber, route, neighborhood].filter(Boolean).join('، ');
-        const fallbackAddress = results[0].formatted_address;
+        const fullAddress = results[0].formatted_address;
 
         if (onLocationSelect) {
           onLocationSelect({
             lat,
             lng,
-            address: detailedStreetParts || fallbackAddress,
+            address: fullAddress,
             city: city || state || '',
             state: state || '',
             country
