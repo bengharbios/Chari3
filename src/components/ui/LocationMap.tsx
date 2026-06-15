@@ -43,7 +43,7 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
     }
 
     const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&language=${locale}`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&language=${locale}`;
     script.async = true;
     script.defer = true;
     script.onload = initMap;
@@ -146,22 +146,6 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
       markerRef.current.setPosition(event.latLng);
       handleReverseGeocode(event.latLng.lat(), event.latLng.lng());
     });
-
-    if (searchInputRef.current && window.google.maps.places) {
-      const autocomplete = new window.google.maps.places.Autocomplete(searchInputRef.current, {
-        fields: ['geometry', 'name']
-      });
-      
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (!place.geometry || !place.geometry.location) return;
-        
-        googleMapRef.current.panTo(place.geometry.location);
-        googleMapRef.current.setZoom(17);
-        markerRef.current.setPosition(place.geometry.location);
-        handleReverseGeocode(place.geometry.location.lat(), place.geometry.location.lng());
-      });
-    }
 
     setIsLoaded(true);
     handleReverseGeocode(defaultLat, defaultLng);
