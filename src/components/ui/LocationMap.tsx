@@ -147,6 +147,7 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
           if (googleMapRef.current && markerRef.current) {
             const pos = new window.google.maps.LatLng(lat, lng);
             googleMapRef.current.panTo(pos);
+            googleMapRef.current.setZoom(17);
             markerRef.current.setPosition(pos);
             handleReverseGeocode(lat, lng);
           } else {
@@ -159,18 +160,41 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
         () => {
           setIsLocating(false);
           alert(translate('فشل في تحديد موقعك. يرجى تفعيل إذن الموقع.', 'Failed to locate you. Please enable location permissions.'));
-        }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
       setIsLocating(false);
     }
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim() || !window.google) return;
+    
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ address: searchQuery }, (results: any, status: any) => {
+      if (status === 'OK' && results[0]) {
+        const lat = results[0].geometry.location.lat();
+        const lng = results[0].geometry.location.lng();
+        
+        if (googleMapRef.current && markerRef.current) {
+          googleMapRef.current.panTo(results[0].geometry.location);
+          googleMapRef.current.setZoom(17);
+          markerRef.current.setPosition(results[0].geometry.location);
+          handleReverseGeocode(lat, lng);
+        }
+      } else {
+        alert(translate('لم يتم العثور على الموقع', 'Location not found'));
+      }
+    });
+  };
+
   return (
     <div className={`relative flex flex-col w-full h-full min-h-[300px] rounded-xl overflow-hidden border border-border bg-muted/20 ${className}`} dir={dir}>
       {/* Search & Actions Overlay */}
       <div className="absolute top-3 left-3 right-3 z-10 flex gap-2">
-        <div className="relative flex-1 bg-background/90 backdrop-blur-md rounded-lg shadow-sm border border-border flex items-center overflow-hidden">
+        <form onSubmit={handleSearch} className="relative flex-1 bg-background/90 backdrop-blur-md rounded-lg shadow-sm border border-border flex items-center overflow-hidden">
           <Search className="w-4 h-4 text-muted-foreground mx-3 shrink-0" />
           <input
             type="text"
@@ -179,7 +203,7 @@ export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng =
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-        </div>
+        </form>
         <button 
           onClick={locateMe}
           disabled={isLocating}
