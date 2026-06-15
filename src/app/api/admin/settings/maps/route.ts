@@ -6,7 +6,7 @@ import { authOptions } from '@/lib/auth';
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (session?.user?.role !== 'SUPER_ADMIN') {
+    if (session?.user?.role !== 'SUPER_ADMIN' && session?.user?.role !== 'admin') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (session?.user?.role !== 'SUPER_ADMIN') {
+    if (session?.user?.role !== 'SUPER_ADMIN' && session?.user?.role !== 'admin') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
