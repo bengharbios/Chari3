@@ -111,7 +111,7 @@ export async function POST(request: Request) {
 
       // ── Check if merchant registration is disabled by admin ──
       if (role !== 'buyer') {
-        const regFlag = await db.setting.findUnique({
+        const regFlag = await db.systemSetting.findUnique({
           where: { key: 'flag_disable_registration' }
         });
         if (regFlag?.value === 'true') {

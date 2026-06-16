@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     // Only fetch public-facing settings
-    const settings = await db.setting.findMany({
+    const settings = await db.systemSetting.findMany({
       where: {
         key: { in: ['auth_captcha_enabled', 'auth_captcha_site_key', 'auth_allow_phone_skip'] }
       }
