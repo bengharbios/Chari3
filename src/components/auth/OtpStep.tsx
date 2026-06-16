@@ -188,9 +188,9 @@ export default function OtpStep() {
         // New user
         setIsNewUserResult(true);
         toast.success(t(locale, 'تم التحقق! أكمل التسجيل', 'Verified! Complete your registration'));
-        // Auto-advance to register step after 1s
+        // Auto-advance to phone step after 1s
         setTimeout(() => {
-          setStep('register');
+          setStep('phone');
         }, 1000);
       }
     } else {

@@ -269,8 +269,7 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
           }
           return { verified: true, isNewUser: false, user: data.user as User };
         } else {
-          // New user — go to phone step
-          set({ step: 'phone' });
+          // New user — let OtpStep handle the navigation after showing success
           return { verified: true, isNewUser: true };
         }
       } else {
