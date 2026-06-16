@@ -103,6 +103,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { label: t('admin.manageAdvertisements'), path: 'advertisements' },
         { label: t('admin.featureFlags'), path: 'flags' },
         { label: 'إعدادات الخرائط', path: 'settings/maps' },
+        { label: locale === 'ar' ? 'إعدادات التوثيق والدخول' : 'Auth & OTP', path: 'settings/otp' },
         { label: t('admin.manageTranslations'), path: 'settings/translations' },
         { label: t('admin.generalSettings'), path: 'settings' },
         { label: t('admin.themeDesign'), path: 'settings/theme' },
@@ -273,7 +274,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
                     {!isCollapsed && (
                       <div className={cn(
                         "overflow-hidden transition-all duration-300 ease-in-out",
-                        isOpen ? "max-h-[500px] opacity-100 mt-1" : "max-h-0 opacity-0"
+                        isOpen ? "max-h-[1000px] opacity-100 mt-1" : "max-h-0 opacity-0"
                       )}>
                         <ul className={cn(
                           "relative flex flex-col gap-1 py-1",
