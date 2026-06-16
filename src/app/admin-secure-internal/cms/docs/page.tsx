@@ -180,17 +180,31 @@ export default function AdminDocsPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>المحتوى (عربي) - Markdown مدعوم</Label>
-              <div className="border rounded-md min-h-[300px] overflow-hidden bg-white" dir="ltr">
-                {/* Fallback to simple textarea if dynamic import fails or for simplicity if mdxeditor needs more plugins */}
-                <textarea 
-                  className="w-full h-[300px] p-4 outline-none resize-y text-sm font-mono"
-                  value={formData.content}
-                  onChange={e => setFormData({ ...formData, content: e.target.value })}
-                  placeholder="# اكتب الشرح هنا..."
-                  dir="rtl"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>المحتوى (عربي) - Markdown مدعوم</Label>
+                <div className="border rounded-md min-h-[300px] overflow-hidden bg-white" dir="ltr">
+                  <textarea 
+                    className="w-full h-[300px] p-4 outline-none resize-y text-sm font-mono"
+                    value={formData.content}
+                    onChange={e => setFormData({ ...formData, content: e.target.value })}
+                    placeholder="# اكتب الشرح هنا..."
+                    dir="rtl"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>المحتوى (إنجليزي) - اختياري</Label>
+                <div className="border rounded-md min-h-[300px] overflow-hidden bg-white" dir="ltr">
+                  <textarea 
+                    className="w-full h-[300px] p-4 outline-none resize-y text-sm font-mono"
+                    value={formData.contentEn}
+                    onChange={e => setFormData({ ...formData, contentEn: e.target.value })}
+                    placeholder="# Write documentation here..."
+                    dir="ltr"
+                  />
+                </div>
               </div>
             </div>
 
