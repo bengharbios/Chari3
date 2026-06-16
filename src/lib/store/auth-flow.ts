@@ -104,7 +104,7 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
 
   // ── Navigation setters ──
   setStep: (step) => set({ step }),
-  setMethod: (method) => set({ method, phone: '', email: '', error: null }),
+  setMethod: (method) => set({ method, error: null }),
   setPhone: (phone) => set({ phone }),
   setEmail: (email) => set({ email }),
   setCountryCode: (countryCode) => set({ countryCode }),
@@ -124,8 +124,10 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
     const { method, phone, email, countryCode } = get();
     set({ isLoading: true, error: null });
 
+    const isPhoneMethod = ['phone', 'whatsapp', 'telegram'].includes(method);
+
     // Client-side validation
-    if (method === 'phone') {
+    if (isPhoneMethod) {
       const digits = phone.replace(/\D/g, '');
       if (digits.length < 9) {
         const locale = useAppStore.getState().locale;
@@ -151,7 +153,7 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
       }
     }
 
-    const value = method === 'phone' ? phone : email;
+    const value = isPhoneMethod ? phone : email;
     const { captchaToken } = get();
 
     try {
