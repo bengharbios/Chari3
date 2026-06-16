@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     });
     const sMap = authSettings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
 
-    if (sMap.auth_captcha_enabled !== 'false' && sMap.auth_captcha_secret_key) {
+    if (false && sMap.auth_captcha_enabled !== 'false' && sMap.auth_captcha_secret_key) { // FORCE DISABLED
       if (!captchaToken) {
         return NextResponse.json({ success: false, message: 'Captcha token is required' }, { status: 400 });
       }

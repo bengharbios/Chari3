@@ -17,8 +17,8 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       config: {
-        captchaEnabled: settingsMap.auth_captcha_enabled !== 'false',
-        captchaSiteKey: settingsMap.auth_captcha_site_key || '',
+        captchaEnabled: false, // Force disable due to crash
+        captchaSiteKey: '',
         allowPhoneSkip: settingsMap.auth_allow_phone_skip !== 'false',
       }
     });
