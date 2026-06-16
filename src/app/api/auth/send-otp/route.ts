@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     }
 
     // ── Verify Captcha (Cloudflare Turnstile) ──
-    const authSettings = await db.setting.findMany({
+    const authSettings = await db.systemSetting.findMany({
       where: {
         key: { in: [
           'auth_captcha_enabled', 'auth_captcha_secret_key', 
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
     // ── Send OTP based on Method & Admin Settings ──
     if (method === 'email') {
       // Fetch Email Settings
-      const settings = await db.setting.findMany({
+      const settings = await db.systemSetting.findMany({
         where: {
           key: { in: ['otp_email_enabled', 'otp_smtp_host', 'otp_smtp_port', 'otp_smtp_user', 'otp_smtp_pass', 'otp_smtp_from'] }
         }
