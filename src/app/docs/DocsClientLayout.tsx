@@ -3,13 +3,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { BookOpen, Menu, X, ArrowRight, ArrowLeft } from 'lucide-react';
-import { useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { localeDirections } from '@/lib/i18n/config';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
 export default function DocsClientLayout({ children, allDocs }: { children: React.ReactNode, allDocs: any[] }) {
-  const { locale } = useAppStore();
+  const { locale } = useTranslation();
   const isRTL = localeDirections[locale] === 'rtl';
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 

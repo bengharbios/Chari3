@@ -51,7 +51,7 @@ export function isAdminPath(pathname: string | null): boolean {
   // Check if it's NOT a storefront/seller/buyer/etc. path
   const nonAdminSegments = [
     'seller', 'buyer', 'store', 'supplier', 'logistics', 
-    'verification', 'search', 'login', 'api', '_next'
+    'verification', 'search', 'login', 'api', '_next', 'docs'
   ];
   
   return !nonAdminSegments.includes(firstSegment);
