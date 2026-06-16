@@ -6,6 +6,7 @@ import { BookOpen, Menu, X, ArrowRight, ArrowLeft } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { localeDirections } from '@/lib/i18n/config';
 import { Button } from '@/components/ui/button';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
 export default function DocsClientLayout({ children, allDocs }: { children: React.ReactNode, allDocs: any[] }) {
   const { locale } = useAppStore();
@@ -72,6 +73,7 @@ export default function DocsClientLayout({ children, allDocs }: { children: Reac
           
           <div className="flex flex-1 items-center justify-end">
             <nav className="flex items-center gap-4 text-sm font-medium">
+              <LanguageSwitcher className="h-9 px-2" />
               <Link href="/" className="flex items-center gap-1.5 hover:text-brand transition-colors">
                 {isRTL ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
                 {isRTL ? 'العودة للمتجر' : 'Back to Store'}
