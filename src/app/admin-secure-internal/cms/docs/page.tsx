@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Loader2, Plus, Edit, Trash, Eye, Globe } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { useTranslationStore } from '@/lib/store/translation-store';
 
 // Dynamically import MDXEditor to prevent SSR issues
 const MDXEditor = dynamic(
@@ -31,8 +32,12 @@ export default function AdminDocsPage() {
     sortOrder: '0',
     isPublished: true,
     content: '',
-    contentEn: ''
+    contentEn: '',
+    translations: {} as Record<string, { title: string, content: string }>
   });
+
+  const { languages } = useTranslationStore();
+  const activeLanguages = languages.filter((l: any) => l.isActive !== false);
 
   useEffect(() => {
     fetchDocs();
@@ -77,7 +82,7 @@ export default function AdminDocsPage() {
       if (json.success) {
         toast.success('تم الحفظ بنجاح');
         setEditingDoc(null);
-        setFormData({ title: '', titleEn: '', slug: '', category: 'general', sortOrder: '0', isPublished: true, content: '', contentEn: '' });
+        setFormData({ title: '', titleEn: '', slug: '', category: 'general', sortOrder: '0', isPublished: true, content: '', contentEn: '', translations: {} });
         fetchDocs();
       } else {
         toast.error(json.error || 'Failed to save');
@@ -112,8 +117,34 @@ export default function AdminDocsPage() {
       sortOrder: String(doc.sortOrder || 0),
       isPublished: doc.isPublished,
       content: doc.content,
-      contentEn: doc.contentEn || ''
+      contentEn: doc.contentEn || '',
+      translations: doc.translations || {}
     });
+  };
+
+  const updateTranslation = (code: string, field: 'title' | 'content', value: string) => {
+    if (code === 'ar') {
+      setFormData(prev => ({ ...prev, [field === 'title' ? 'title' : 'content']: value }));
+    } else if (code === 'en') {
+      setFormData(prev => ({ ...prev, [field === 'title' ? 'titleEn' : 'contentEn']: value }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        translations: {
+          ...prev.translations,
+          [code]: {
+            ...(prev.translations[code] || { title: '', content: '' }),
+            [field]: value
+          }
+        }
+      }));
+    }
+  };
+
+  const getTranslation = (code: string, field: 'title' | 'content') => {
+    if (code === 'ar') return field === 'title' ? formData.title : formData.content;
+    if (code === 'en') return field === 'title' ? formData.titleEn : formData.contentEn;
+    return formData.translations?.[code]?.[field] || '';
   };
 
   return (
@@ -127,7 +158,7 @@ export default function AdminDocsPage() {
           <Link href="/docs" target="_blank">
             <Button variant="outline"><Globe className="w-4 h-4 ml-2" /> معاينة الموقع العام</Button>
           </Link>
-          <Button onClick={() => { setEditingDoc(null); setFormData({ title: '', titleEn: '', slug: '', category: 'general', sortOrder: '0', isPublished: true, content: '', contentEn: '' }); }}>
+          <Button onClick={() => { setEditingDoc(null); setFormData({ title: '', titleEn: '', slug: '', category: 'general', sortOrder: '0', isPublished: true, content: '', contentEn: '', translations: {} }); }}>
             <Plus className="w-4 h-4 ml-2" /> مقال جديد
           </Button>
         </div>
@@ -141,15 +172,17 @@ export default function AdminDocsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>العنوان (عربي)</Label>
-                <Input value={formData.title} onChange={e => setFormData({ ...formData, title: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>العنوان (إنجليزي) - اختياري</Label>
-                <Input value={formData.titleEn} onChange={e => setFormData({ ...formData, titleEn: e.target.value })} dir="ltr" />
-              </div>
-              <div className="space-y-2">
+              {activeLanguages.map((lang: any) => (
+                <div className="space-y-2" key={`title-${lang.code}`}>
+                  <Label>العنوان ({lang.nameAr})</Label>
+                  <Input 
+                    value={getTranslation(lang.code, 'title')} 
+                    onChange={e => updateTranslation(lang.code, 'title', e.target.value)} 
+                    dir={lang.direction === 'rtl' ? 'rtl' : 'ltr'} 
+                  />
+                </div>
+              ))}
+              <div className="space-y-2 col-span-2">
                 <Label>الرابط (Slug)</Label>
                 <Input value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} dir="ltr" placeholder="example-article" />
               </div>
@@ -181,31 +214,20 @@ export default function AdminDocsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>المحتوى (عربي) - Markdown مدعوم</Label>
-                <div className="border rounded-md min-h-[300px] overflow-hidden bg-white" dir="ltr">
-                  <textarea 
-                    className="w-full h-[300px] p-4 outline-none resize-y text-sm font-mono"
-                    value={formData.content}
-                    onChange={e => setFormData({ ...formData, content: e.target.value })}
-                    placeholder="# اكتب الشرح هنا..."
-                    dir="rtl"
-                  />
+              {activeLanguages.map((lang: any) => (
+                <div className="space-y-2" key={`content-${lang.code}`}>
+                  <Label>المحتوى ({lang.nameAr}) - Markdown مدعوم</Label>
+                  <div className="border rounded-md min-h-[300px] overflow-hidden bg-white" dir={lang.direction === 'rtl' ? 'rtl' : 'ltr'}>
+                    <textarea 
+                      className="w-full h-[300px] p-4 outline-none resize-y text-sm font-mono"
+                      value={getTranslation(lang.code, 'content')}
+                      onChange={e => updateTranslation(lang.code, 'content', e.target.value)}
+                      placeholder={`# Write documentation here... (${lang.nameAr})`}
+                      dir={lang.direction === 'rtl' ? 'rtl' : 'ltr'}
+                    />
+                  </div>
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>المحتوى (إنجليزي) - اختياري</Label>
-                <div className="border rounded-md min-h-[300px] overflow-hidden bg-white" dir="ltr">
-                  <textarea 
-                    className="w-full h-[300px] p-4 outline-none resize-y text-sm font-mono"
-                    value={formData.contentEn}
-                    onChange={e => setFormData({ ...formData, contentEn: e.target.value })}
-                    placeholder="# Write documentation here..."
-                    dir="ltr"
-                  />
-                </div>
-              </div>
+              ))}
             </div>
 
             <Button onClick={handleSave} disabled={isSaving} className="w-full mt-4">

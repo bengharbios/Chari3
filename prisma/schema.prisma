@@ -1129,6 +1129,7 @@ model DocArticle {
   slug        String   @unique
   content     String   @db.LongText
   contentEn   String?  @db.LongText
+  translations Json?   @default("{}")
   category    String   @default("general") // general, sellers, buyers, developers
   sortOrder   Int      @default(0)
   isPublished Boolean  @default(false)

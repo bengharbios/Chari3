@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { title, titleEn, slug, content, contentEn, category, sortOrder, isPublished } = body;
+    const { title, titleEn, slug, content, contentEn, category, sortOrder, isPublished, translations } = body;
 
     if (!title || !slug || !content) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
@@ -51,6 +51,7 @@ export async function POST(req: Request) {
         slug,
         content,
         contentEn,
+        translations: translations || {},
         category: category || 'general',
         sortOrder: sortOrder || 0,
         isPublished: isPublished ?? false

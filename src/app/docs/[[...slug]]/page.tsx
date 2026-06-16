@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { cookies } from 'next/headers';
+import { localeDirections } from '@/lib/i18n/config';
 
 export default async function DocPage({ params }: { params: Promise<{ slug?: string[] }> }) {
   const resolvedParams = await params;
@@ -38,12 +40,30 @@ export default async function DocPage({ params }: { params: Promise<{ slug?: str
     return notFound();
   }
 
+  const cookieStore = await cookies();
+  const locale = cookieStore.get('NEXT_LOCALE')?.value || 'ar';
+  const isRTL = localeDirections[locale] === 'rtl';
+
+  let titleToRender = doc.title;
+  let contentToRender = doc.content;
+
+  if (locale === 'en' && doc.titleEn && doc.contentEn) {
+    titleToRender = doc.titleEn;
+    contentToRender = doc.contentEn;
+  } else if (locale !== 'ar' && locale !== 'en') {
+    const translations = doc.translations as Record<string, { title: string, content: string }> | null;
+    if (translations && translations[locale]) {
+      titleToRender = translations[locale].title || doc.title;
+      contentToRender = translations[locale].content || doc.content;
+    }
+  }
+
   return (
     <div className="prose prose-slate dark:prose-invert max-w-none">
-      <h1 className="text-4xl font-extrabold tracking-tight mb-2">{doc.title}</h1>
+      <h1 className="text-4xl font-extrabold tracking-tight mb-2">{titleToRender}</h1>
       <hr className="my-6 border-slate-200 dark:border-slate-800" />
       
-      <div className="markdown-body" dir="rtl">
+      <div className="markdown-body" dir={isRTL ? 'rtl' : 'ltr'}>
         <ReactMarkdown
           components={{
             code({node, inline, className, children, ...props}: any) {
@@ -69,14 +89,14 @@ export default async function DocPage({ params }: { params: Promise<{ slug?: str
             h2: ({node, ...props}) => <h2 className="text-2xl font-semibold mt-8 mb-4 pb-2 border-b text-slate-900 dark:text-slate-100" {...props} />,
             h3: ({node, ...props}) => <h3 className="text-xl font-semibold mt-6 mb-3 text-slate-900 dark:text-slate-100" {...props} />,
             p: ({node, ...props}) => <p className="leading-7 [&:not(:first-child)]:mt-6 text-slate-700 dark:text-slate-300" {...props} />,
-            ul: ({node, ...props}) => <ul className="my-6 ml-6 list-disc [&>li]:mt-2" {...props} />,
-            ol: ({node, ...props}) => <ol className="my-6 ml-6 list-decimal [&>li]:mt-2" {...props} />,
+            ul: ({node, ...props}) => <ul className={`my-6 ${isRTL ? 'mr-6' : 'ml-6'} list-disc [&>li]:mt-2`} {...props} />,
+            ol: ({node, ...props}) => <ol className={`my-6 ${isRTL ? 'mr-6' : 'ml-6'} list-decimal [&>li]:mt-2`} {...props} />,
             li: ({node, ...props}) => <li className="text-slate-700 dark:text-slate-300" {...props} />,
             a: ({node, ...props}) => <a className="font-medium text-primary underline underline-offset-4 hover:text-blue-600" {...props} />,
-            blockquote: ({node, ...props}) => <blockquote className="mt-6 border-r-2 border-slate-300 pr-6 italic text-slate-800 dark:text-slate-200" {...props} />,
+            blockquote: ({node, ...props}) => <blockquote className={`mt-6 ${isRTL ? 'border-r-2 pr-6' : 'border-l-2 pl-6'} border-slate-300 italic text-slate-800 dark:text-slate-200`} {...props} />,
           }}
         >
-          {doc.content}
+          {contentToRender}
         </ReactMarkdown>
       </div>
     </div>
