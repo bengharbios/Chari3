@@ -1136,3 +1136,15 @@ model DocArticle {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+// ============================================
+// VERIFICATION TOKEN (OTP)
+// ============================================
+
+model VerificationToken {
+  identifier String   // email or phone
+  token      String   // the 6-digit OTP
+  expires    DateTime
+  @@unique([identifier, token])
+}
+

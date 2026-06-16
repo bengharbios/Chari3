@@ -9,7 +9,9 @@ import { cn } from '@/lib/utils';
 import type { Locale } from '@/types';
 import ContactStep from './ContactStep';
 import OtpStep from './OtpStep';
+import PhoneStep from './PhoneStep';
 import RegisterStep from './RegisterStep';
+import PasswordLoginStep from './PasswordLoginStep';
 
 // ============================================
 // HELPERS
@@ -23,7 +25,7 @@ function t(locale: Locale, ar: string, en: string) {
 // STEP INDICATOR
 // ============================================
 
-const FLOW_STEPS: AuthStep[] = ['contact', 'otp', 'register'];
+const FLOW_STEPS: AuthStep[] = ['contact', 'verify-email', 'phone', 'verify-phone', 'password-setup'];
 
 function StepIndicator({ step }: { step: AuthStep }) {
   const currentIdx = FLOW_STEPS.indexOf(step);
@@ -172,8 +174,10 @@ export default function AuthPage() {
 
             {/* Step Content */}
             {activeStep === 'contact' && <ContactStep />}
-            {activeStep === 'otp' && <OtpStep />}
-            {activeStep === 'register' && <RegisterStep />}
+            {(activeStep === 'verify-email' || activeStep === 'verify-phone') && <OtpStep />}
+            {activeStep === 'phone' && <PhoneStep />}
+            {activeStep === 'password-setup' && <RegisterStep />}
+            {activeStep === 'password-login' && <PasswordLoginStep />}
             {activeStep === 'success' && <SuccessStep />}
           </CardContent>
 

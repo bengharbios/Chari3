@@ -169,6 +169,31 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
               Google
             </Button>
 
+            <div className="flex flex-col gap-2 pt-2">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                className="w-full text-xs font-bold text-[var(--navy)] hover:bg-[var(--navy)]/5"
+                onClick={() => {
+                  onClose();
+                  useAppStore.getState().setCurrentPage('login');
+                }}
+              >
+                {t('تسجيل الدخول باستخدام رمز OTP الآمن', 'Login securely with OTP')}
+              </Button>
+              <Button 
+                type="button" 
+                variant="ghost" 
+                className="w-full text-xs font-bold text-brand hover:bg-brand/10"
+                onClick={() => {
+                  onClose();
+                  useAppStore.getState().setCurrentPage('login');
+                }}
+              >
+                {t('ليس لديك حساب؟ أنشئ حسابك الآن', 'Don\'t have an account? Register now')}
+              </Button>
+            </div>
+
             <p className="text-[10px] text-center text-muted-foreground px-4 leading-relaxed">
               {t('بالمتابعة، فإنك توافق على شروط الاستخدام وسياسة الخصوصية الخاصة بـ ChariDay.', 'By continuing, you agree to ChariDay\'s Terms of Use and Privacy Policy.')}
             </p>

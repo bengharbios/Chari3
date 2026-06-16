@@ -81,6 +81,96 @@ As of March 2025, Google formally restricted new projects from using the legacy 
       `,
       sortOrder: 1,
       isPublished: true
+    },
+    {
+      title: 'دليل إعداد التوثيق (OTP) وبوابات SMS و WhatsApp',
+      titleEn: 'OTP Authentication, SMS & WhatsApp Gateway Guide',
+      slug: 'otp-whatsapp-setup',
+      category: 'settings',
+      content: `
+# 🔐 الدليل الشامل لنظام التوثيق المتعدد (OTP)
+
+منصة **ChariDay** تعتمد على نظام تسجيل دخول ذكي (Passwordless/OTP) يقلل التكاليف ويزيد الأمان من خلال التسلسل التالي:
+**الإيميل ⬅️ كود الإيميل ⬅️ الهاتف ⬅️ كود الهاتف ⬅️ كلمة المرور**
+
+---
+
+## ⚙️ بوابات الاتصال المخصصة (Custom Gateways)
+
+بدلاً من إجبارك على الدفع لشركات باهظة الثمن مثل Twilio، قمنا ببناء نظام **Webhooks** مرن يسمح لك بربط المنصة بأي سيرفر أو تطبيق مجاني:
+
+### 1. بوابة الواتساب المجانية (WhatsApp via n8n)
+يمكنك ربط المنصة برقم هاتفك الشخصي لإرسال رسائل WhatsApp مجاناً 100% باستخدام سيرفر **n8n**.
+* **الخطوات:** 
+  1. قم بتثبيت أتمتة الواتساب عبر n8n أو Evolution API.
+  2. ستحصل على رابط Webhook (مثال: \`https://your-n8n.com/webhook/whatsapp\`).
+  3. ضع الرابط في حقل **(API URL)** في إعدادات الواتساب بلوحة الإدارة.
+  4. استخدم المتغير \`{otp}\` في حقل **صيغة الرسالة (Template)**.
+
+### 2. بوابة SMS المجانية (عبر هاتف أندرويد)
+يمكنك استخدام تطبيق أندرويد مخصص يحول هاتفك إلى سيرفر يرسل رسائل SMS من باقة خطك غير المحدودة.
+* ضع رابط السيرفر المحلي لهاتفك في حقل **Custom SMS Gateway URL**.
+
+### 3. بوابة تليجرام (Telegram Bot)
+الطريقة الأكثر أماناً ومجانية تماماً. قم بإنشاء بوت عبر \`BotFather\` في تليجرام، وضع الـ Token واسم البوت في الإعدادات. سيقوم النظام بتوليد روابط ذكية لتوثيق المستخدمين عبر تليجرام بنقرة واحدة.
+
+---
+
+## 🛡️ حماية المنصة (Cloudflare Turnstile Captcha)
+
+لمنع هجمات (SMS Bombing) التي قد تستنزف رصيد رسائلك، قمنا بدمج نظام **Cloudflare Turnstile** وهو أفضل بديل لـ Google reCAPTCHA، حيث يعمل في الخلفية دون إزعاج المستخدم باختيار صور إشارات المرور!
+* **التفعيل:** احصل على \`Site Key\` و \`Secret Key\` مجاناً من حسابك في Cloudflare وضعها في الإعدادات.
+
+---
+
+## 🏃 تخطي الهاتف (Phone Skip Logic)
+
+في حال تعطلت بوابات الـ SMS أو الواتساب، قمنا بتوفير ميزة **(تخطي مؤقتاً)**. 
+إذا قمت بتفعيلها، سيتمكن العميل من تخطي خطوة الهاتف وإنشاء حسابه، ولكن حسابه سيبقى بعلامة (غير موثق برقم هاتف) حتى يوثقه لاحقاً من لوحة تحكمه.
+      `,
+      contentEn: `
+# 🔐 Comprehensive Guide to Multi-Step OTP Authentication
+
+**ChariDay** utilizes a smart passwordless-hybrid login system that minimizes SMS costs and maximizes security through the following flow:
+**Email ⬅️ Email OTP ⬅️ Phone ⬅️ Phone OTP ⬅️ Password Setup**
+
+---
+
+## ⚙️ Custom Delivery Gateways
+
+Instead of forcing expensive providers like Twilio, we've built a flexible **Webhook** system that lets you connect to ANY free API:
+
+### 1. Free WhatsApp Gateway (via n8n)
+Connect your personal/business WhatsApp number to send OTPs 100% free using an **n8n** server.
+* **Steps:** 
+  1. Deploy a WhatsApp automation using n8n (e.g., Evolution API or Baileys).
+  2. Obtain your Webhook URL (e.g., \`https://your-n8n.com/webhook/whatsapp\`).
+  3. Paste it into the **API URL** field in the WhatsApp Settings of the Admin Dashboard.
+  4. Use the \`{otp}\` variable in the **WhatsApp Template** field.
+
+### 2. Free Custom SMS Gateway (Android App)
+Turn your Android phone into an SMS server to send OTPs using your unlimited cellular plan.
+* Paste your phone's local/public server URL into the **Custom SMS Gateway URL** field.
+
+### 3. Telegram Bot Gateway
+The safest and completely free method. Create a bot via \`BotFather\` on Telegram, paste the Token and Username. The system will generate deep links for 1-click OTP verification.
+
+---
+
+## 🛡️ Bot Protection (Cloudflare Turnstile Captcha)
+
+To prevent SMS Bombing attacks that drain your balance, we integrated **Cloudflare Turnstile**. It's the best alternative to Google reCAPTCHA, working silently without annoying users with image puzzles!
+* **Setup:** Get a free \`Site Key\` and \`Secret Key\` from Cloudflare and paste them into the settings.
+
+---
+
+## 🏃 Phone Verification Skip Logic
+
+If your SMS or WhatsApp gateways experience downtime, we built a **(Skip for now)** feature. 
+When enabled by the admin, users can skip phone verification during registration. Their account will be flagged as "Phone Unverified" until they complete it from their dashboard.
+      `,
+      sortOrder: 2,
+      isPublished: true
     }
   ];
 

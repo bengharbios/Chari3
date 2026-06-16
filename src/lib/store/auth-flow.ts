@@ -8,8 +8,8 @@ import type { UserRole, Locale, User } from '@/types';
 // AUTH FLOW TYPES
 // ============================================
 
-export type AuthStep = 'contact' | 'otp' | 'register' | 'success';
-export type ContactMethod = 'phone' | 'email';
+export type AuthStep = 'contact' | 'verify-email' | 'phone' | 'verify-phone' | 'password-setup' | 'password-login' | 'success';
+export type ContactMethod = 'phone' | 'email' | 'telegram' | 'whatsapp';
 
 interface VerifiedContact {
   method: ContactMethod;
@@ -37,9 +37,18 @@ interface AuthFlowState {
   fullName: string;
   storeName: string;
   selectedRole: UserRole | null;
+  passwordSetup: string;
 
   // Verified contact (set after OTP success)
   verifiedContact: VerifiedContact | null;
+
+  // Captcha
+  captchaToken: string | null;
+  setCaptchaToken: (token: string | null) => void;
+
+  // Skip Phone Flag
+  skipPhone: boolean;
+  setSkipPhone: (skip: boolean) => void;
 
   // Navigation setters
   setStep: (step: AuthStep) => void;
@@ -51,6 +60,7 @@ interface AuthFlowState {
   setFullName: (name: string) => void;
   setStoreName: (name: string) => void;
   setSelectedRole: (role: UserRole | null) => void;
+  setPasswordSetup: (password: string) => void;
   setError: (error: string | null) => void;
   setLoading: (loading: boolean) => void;
   reset: () => void;
@@ -79,7 +89,10 @@ const INITIAL_STATE = {
   fullName: '',
   storeName: '',
   selectedRole: null as UserRole | null,
+  passwordSetup: '',
   verifiedContact: null as VerifiedContact | null,
+  captchaToken: null as string | null,
+  skipPhone: false,
 };
 
 // ============================================
@@ -99,6 +112,9 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
   setFullName: (fullName) => set({ fullName }),
   setStoreName: (storeName) => set({ storeName }),
   setSelectedRole: (selectedRole) => set({ selectedRole }),
+  setPasswordSetup: (passwordSetup) => set({ passwordSetup }),
+  setCaptchaToken: (captchaToken) => set({ captchaToken }),
+  setSkipPhone: (skipPhone) => set({ skipPhone }),
   setError: (error) => set({ error }),
   setLoading: (isLoading) => set({ isLoading }),
   reset: () => set({ ...INITIAL_STATE }),
@@ -136,20 +152,31 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
     }
 
     const value = method === 'phone' ? phone : email;
+    const { captchaToken } = get();
 
     try {
       const res = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method, value, countryCode }),
+        body: JSON.stringify({ method, value, countryCode, captchaToken }),
       });
 
       const data = await res.json();
 
       if (data.success) {
-        // Move to OTP step
+        if (data.userExistsWithPassword) {
+          // User exists and has a password -> Skip OTP and go straight to password login
+          set({
+            step: 'password-login',
+            isLoading: false,
+            error: null,
+          });
+          return true;
+        }
+
+        // Move to OTP step (verify-email if method is email, verify-phone if method is phone)
         set({
-          step: 'otp',
+          step: method === 'email' ? 'verify-email' : 'verify-phone',
           isLoading: false,
           error: null,
           otpResendTimer: 60,
@@ -165,7 +192,7 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
     } catch {
       // Network error — still proceed for demo mode
       set({
-        step: 'otp',
+        step: method === 'email' ? 'verify-email' : 'verify-phone',
         isLoading: false,
         error: null,
         otpResendTimer: 60,
@@ -234,11 +261,16 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
           const { loginWithUser } = useAuthStore.getState();
           loginWithUser(data.user as unknown as User);
 
-          set({ step: 'success' });
+          if (data.user.password) {
+            // Should not usually hit this if sendOtp caught it, but just in case
+            set({ step: 'password-login' });
+          } else {
+            set({ step: 'success' });
+          }
           return { verified: true, isNewUser: false, user: data.user as User };
         } else {
-          // New user — go to register step
-          set({ step: 'register' });
+          // New user — go to phone step
+          set({ step: 'phone' });
           return { verified: true, isNewUser: true };
         }
       } else {
@@ -265,6 +297,7 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
       fullName,
       selectedRole,
       storeName,
+      passwordSetup,
       verifiedContact,
     } = get();
 
@@ -276,6 +309,15 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
       set({
         isLoading: false,
         error: locale === 'ar' ? 'الاسم مطلوب' : 'Name is required',
+      });
+      return false;
+    }
+
+    if (!passwordSetup || passwordSetup.length < 6) {
+      const locale = useAppStore.getState().locale;
+      set({
+        isLoading: false,
+        error: locale === 'ar' ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' : 'Password must be at least 6 characters',
       });
       return false;
     }
@@ -314,6 +356,7 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
           fullName: fullName.trim(),
           role: selectedRole,
           storeName: storeName.trim() || undefined,
+          password: passwordSetup,
           locale,
         }),
         signal: controller.signal,

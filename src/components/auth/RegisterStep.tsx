@@ -123,12 +123,13 @@ export default function RegisterStep() {
     setStoreName,
     setEmail,
     setSelectedRole,
+    setPasswordSetup,
     setError,
     register,
     setStep,
   } = useAuthFlowStore();
 
-  const [errors, setErrors] = useState<{ name?: string; store?: string; role?: string }>({});
+  const [errors, setErrors] = useState<{ name?: string; store?: string; role?: string; password?: string }>({});
 
   const showStoreField = selectedRole !== null && selectedRole !== 'buyer';
   const displayPhone = verifiedContact?.method === 'phone'
@@ -142,7 +143,7 @@ export default function RegisterStep() {
 
   const handleCreateAccount = async () => {
     // Validate
-    const newErrors: { name?: string; store?: string; role?: string } = {};
+    const newErrors: { name?: string; store?: string; role?: string; password?: string } = {};
 
     if (!fullName.trim()) {
       newErrors.name = t(locale, 'الاسم مطلوب', 'Name is required');
@@ -153,6 +154,11 @@ export default function RegisterStep() {
     if (showStoreField && !storeName.trim()) {
       newErrors.store = t(locale, 'اسم المتجر مطلوب', 'Store name is required');
     }
+    const { passwordSetup } = useAuthFlowStore.getState();
+    if (!passwordSetup || passwordSetup.length < 6) {
+      newErrors.password = t(locale, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل', 'Password must be at least 6 characters');
+    }
+
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
@@ -280,6 +286,25 @@ export default function RegisterStep() {
           )}
         </div>
       )}
+
+      {/* Password Setup */}
+      <div className="space-y-1.5 animate-fade-in">
+        <label className="text-sm font-medium text-[var(--foreground)]">
+          {t(locale, 'كلمة المرور', 'Password')}{' '}
+          <span className="text-[var(--destructive)]">*</span>
+        </label>
+        <Input
+          type="password"
+          dir="ltr"
+          placeholder="••••••••"
+          onChange={(e) => { setPasswordSetup(e.target.value); setErrors((p) => ({ ...p, password: undefined })); setError(null); }}
+          className={cn('h-11', errors.password && 'border-[var(--destructive)]')}
+          onKeyDown={(e) => e.key === 'Enter' && handleCreateAccount()}
+        />
+        {errors.password && (
+          <p className="text-xs text-[var(--destructive)]">{errors.password}</p>
+        )}
+      </div>
 
       {/* Phone (read-only, masked) */}
       {(method === 'phone' || verifiedContact?.method === 'phone') && displayPhone && (
