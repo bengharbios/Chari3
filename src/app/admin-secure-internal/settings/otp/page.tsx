@@ -143,7 +143,28 @@ export default function OtpSettingsPage() {
   };
 
   const handleTestEmail = async () => {
-    toast.info('سيتم إرسال إيميل تجريبي قريباً (قيد التطوير)');
+    const toastId = toast.loading(locale === 'ar' ? 'جاري فحص الاتصال بالخادم...' : 'Testing SMTP connection...');
+    try {
+      const res = await fetch('/api/admin/settings/test-smtp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          host: smtpHost,
+          port: smtpPort,
+          user: smtpUser,
+          pass: smtpPass,
+          from: smtpFrom
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(locale === 'ar' ? 'نجاح! الاتصال يعمل وتم إرسال رسالة تجريبية للإيميل' : 'Success! Connection works and test email sent', { id: toastId });
+      } else {
+        toast.error(data.error || 'Failed to connect', { id: toastId });
+      }
+    } catch (error: any) {
+      toast.error('Network Error: ' + error.message, { id: toastId });
+    }
   };
 
   const handleTestTelegram = async () => {
