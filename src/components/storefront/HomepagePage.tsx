@@ -847,7 +847,7 @@ export default function StorefrontHomepage() {
                               </Button>
                             )}
                             {!isAuthenticated && (
-                              <Link href="/auth/register?role=seller" className="inline-block" onClick={(e) => e.stopPropagation()}>
+                              <Link href="/?view=login&role=seller" className="inline-block" onClick={(e) => e.stopPropagation()}>
                                 <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-xl text-xs md:text-sm w-full sm:w-auto">
                                   {t('سجل متجرك', 'Start Selling')}
                                 </Button>

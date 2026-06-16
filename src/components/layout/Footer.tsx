@@ -102,7 +102,7 @@ export default function Footer({ theme }: FooterProps) {
       id: 'support_selling',
       titleKey: locale === 'ar' ? 'بِع معنا والدعم' : 'Partnership & Support',
       links: [
-        { textKey: locale === 'ar' ? 'بِع معنا على شاري داي' : 'Sell with us on ChariDay', url: '/auth/register?role=seller' },
+        { textKey: locale === 'ar' ? 'بِع معنا على شاري داي' : 'Sell with us on ChariDay', url: '/?view=login&role=seller' },
         { textKey: locale === 'ar' ? 'مركز المساعدة' : 'Help Center', url: '#' },
         { textKey: locale === 'ar' ? 'تواصل معنا' : 'Contact Us', url: '#' },
         { textKey: locale === 'ar' ? 'سياسة الشحن والضمان' : 'Shipping & Guarantee', url: '#' }

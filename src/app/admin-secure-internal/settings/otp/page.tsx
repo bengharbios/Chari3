@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '@/components/ui/tooltip';
 import { ShieldCheck, Save, Loader2, Mail, Send, MessageSquare, Smartphone, Info } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function OtpSettingsPage() {
   const { locale } = useTranslation();

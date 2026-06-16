@@ -65,8 +65,8 @@ export const defaultSellerTheme: ThemeSettings = {
         id: 'col1',
         titleKey: 'حسابي',
         links: [
-          { textKey: 'تسجيل الدخول', url: '/auth/login' },
-          { textKey: 'إنشاء حساب', url: '/auth/register' },
+          { textKey: 'تسجيل الدخول', url: '/?view=login' },
+          { textKey: 'إنشاء حساب', url: '/?view=login' },
         ],
       },
       {
