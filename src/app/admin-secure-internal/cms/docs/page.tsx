@@ -174,7 +174,7 @@ export default function AdminDocsPage() {
             <div className="grid grid-cols-2 gap-4">
               {activeLanguages.map((lang: any) => (
                 <div className="space-y-2" key={`title-${lang.code}`}>
-                  <Label>العنوان ({lang.nameAr})</Label>
+                  <Label>العنوان ({lang.name})</Label>
                   <Input 
                     value={getTranslation(lang.code, 'title')} 
                     onChange={e => updateTranslation(lang.code, 'title', e.target.value)} 
@@ -216,13 +216,13 @@ export default function AdminDocsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeLanguages.map((lang: any) => (
                 <div className="space-y-2" key={`content-${lang.code}`}>
-                  <Label>المحتوى ({lang.nameAr}) - Markdown مدعوم</Label>
+                  <Label>المحتوى ({lang.name}) - Markdown مدعوم</Label>
                   <div className="border rounded-md min-h-[300px] overflow-hidden bg-white" dir={lang.direction === 'rtl' ? 'rtl' : 'ltr'}>
                     <textarea 
                       className="w-full h-[300px] p-4 outline-none resize-y text-sm font-mono"
                       value={getTranslation(lang.code, 'content')}
                       onChange={e => updateTranslation(lang.code, 'content', e.target.value)}
-                      placeholder={`# Write documentation here... (${lang.nameAr})`}
+                      placeholder={`# Write documentation here... (${lang.name})`}
                       dir={lang.direction === 'rtl' ? 'rtl' : 'ltr'}
                     />
                   </div>

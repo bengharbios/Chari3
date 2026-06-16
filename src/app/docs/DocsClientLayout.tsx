@@ -56,7 +56,7 @@ export default function DocsClientLayout({ children, allDocs }: { children: Reac
     <div className="flex min-h-screen flex-col bg-background" dir={isRTL ? 'rtl' : 'ltr'}>
       {/* Docs Header */}
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-14 items-center px-4 gap-4">
+        <div className="w-full px-4 flex h-14 items-center gap-4">
           <Button 
             variant="ghost" 
             size="icon" 
@@ -83,7 +83,7 @@ export default function DocsClientLayout({ children, allDocs }: { children: Reac
         </div>
       </header>
 
-      <div className="container flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10 px-4 py-8 relative">
+      <div className="w-full max-w-[1400px] mx-auto flex-1 items-start md:grid md:grid-cols-[220px_minmax(0,1fr)] md:gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-10 px-4 py-8 relative">
         
         {/* Desktop Sidebar */}
         <aside className="fixed top-14 z-30 hidden h-[calc(100vh-3.5rem)] w-full shrink-0 md:sticky md:block overflow-y-auto border-border">

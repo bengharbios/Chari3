@@ -65,12 +65,17 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const handleSelect = (newLocale: string) => {
     loadTranslations(newLocale);
     
+    // Update cookies
+    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`;
+
     if (isAdmin) {
       setAdminLocale(newLocale as any);
-      // Decouple: do NOT call setLocale(newLocale) here so the seller/buyer language remains unaffected!
     } else {
       setLocale(newLocale as any);
     }
+    
+    // Force a hard reload so that server components (like Docs) get the new NEXT_LOCALE cookie
+    window.location.reload();
   };
 
   const isDark = mounted && (theme === 'dark' || (theme === 'system' && systemTheme === 'dark'));
