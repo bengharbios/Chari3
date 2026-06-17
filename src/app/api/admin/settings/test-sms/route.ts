@@ -21,7 +21,9 @@ export async function POST(req: NextRequest) {
 
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers['Authorization'] = token.startsWith('Basic ') || token.startsWith('Bearer ')
+        ? token
+        : `Bearer ${token}`;
     }
 
     const urlObj = new URL(url);
@@ -36,7 +38,8 @@ export async function POST(req: NextRequest) {
         phone: phone, // For Capcom6
         message: smsText,
         otp: otpCode,
-        type: 'SMS Test'
+        type: 'SMS Test',
+        phoneNumbers: [phone] // Capcom6 new spec
       })
     });
 

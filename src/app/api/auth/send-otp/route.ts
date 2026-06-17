@@ -185,7 +185,9 @@ export async function POST(request: Request) {
           // Fire and forget to the custom gateway
           const headers: Record<string, string> = { 'Content-Type': 'application/json' };
           if (sMap.otp_custom_gateway_token) {
-            headers['Authorization'] = `Bearer ${sMap.otp_custom_gateway_token}`;
+            headers['Authorization'] = sMap.otp_custom_gateway_token.startsWith('Basic ') || sMap.otp_custom_gateway_token.startsWith('Bearer ')
+              ? sMap.otp_custom_gateway_token
+              : `Bearer ${sMap.otp_custom_gateway_token}`;
           }
 
           // Don't await if you don't want to block the response, but waiting is safer to catch errors
@@ -202,10 +204,11 @@ export async function POST(request: Request) {
             headers,
             body: JSON.stringify({
               to: `${countryCode}${value}`,
-              phone: `${countryCode}${value}`, // Added for Capcom6 SMS Gateway App
+              phone: `${countryCode}${value}`, // For Capcom6
               message: smsText,
               otp: otpCode,
-              type: 'SMS'
+              type: 'SMS',
+              phoneNumbers: [`${countryCode}${value}`] // Capcom6 new spec
             })
           });
 
