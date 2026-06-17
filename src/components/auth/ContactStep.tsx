@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Mail, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mail, Phone, Loader2, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,17 +12,9 @@ import Turnstile from 'react-turnstile';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import type { Locale } from '@/types';
 
-// ============================================
-// HELPERS
-// ============================================
-
 function t(locale: Locale, ar: string, en: string) {
   return locale === 'ar' ? ar : en;
 }
-
-// ============================================
-// COUNTRY CODES
-// ============================================
 
 const COUNTRY_CODES = [
   { code: '+213', label: 'DZ', flag: '🇩🇿' },
@@ -38,33 +30,43 @@ const COUNTRY_CODES = [
   { code: '+33', label: 'FR', flag: '🇫🇷' },
 ];
 
-// ============================================
-// CONTACT STEP COMPONENT
-// ============================================
-
 export default function ContactStep() {
   const { t: translateApi } = useTranslation();
   const locale = useAppStore((s) => s.locale);
   const {
+    method,
     email,
+    phone,
+    countryCode,
     isLoading,
     error,
     setMethod,
     setEmail,
+    setPhone,
+    setCountryCode,
     sendOtp,
     setError,
     captchaToken,
     setCaptchaToken,
   } = useAuthFlowStore();
 
-  React.useEffect(() => {
-    setMethod('email'); // Force email method for the first step
-  }, [setMethod]);
-
+  const [activeTab, setActiveTab] = useState<'email' | 'phone'>('email');
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [captchaConfig, setCaptchaConfig] = useState({ enabled: false, siteKey: '' });
   const [configLoaded, setConfigLoaded] = useState(false);
+  const [availableMethods, setAvailableMethods] = useState({
+    sms: true,
+    whatsapp: false,
+    telegram: false,
+  });
 
-  React.useEffect(() => {
+  useEffect(() => {
+    // Sync active tab with global method initially or when tab changes
+    setMethod(activeTab);
+    setError(null);
+  }, [activeTab, setMethod, setError]);
+
+  useEffect(() => {
     fetch('/api/auth/config')
       .then(res => res.json())
       .then(data => {
@@ -73,13 +75,25 @@ export default function ContactStep() {
             enabled: data.config.captchaEnabled,
             siteKey: data.config.captchaSiteKey,
           });
+          setAvailableMethods({
+            sms: data.config.smsEnabled !== false, 
+            whatsapp: data.config.whatsappEnabled === true,
+            telegram: data.config.telegramEnabled === true,
+          });
         }
         setConfigLoaded(true);
       })
       .catch(() => setConfigLoaded(true));
   }, []);
 
-  const handleSend = async () => {
+  const selectedCountry = COUNTRY_CODES.find((c) => c.code === countryCode) ?? COUNTRY_CODES[0];
+
+  const handleSend = async (overrideMethod?: 'email' | 'phone' | 'whatsapp') => {
+    if (overrideMethod) {
+      setMethod(overrideMethod);
+    } else {
+      setMethod(activeTab);
+    }
     const ok = await sendOtp();
     if (ok) {
       toast.success(
@@ -87,6 +101,13 @@ export default function ContactStep() {
       );
     }
   };
+
+  const isEmailValid = email.trim().length > 3 && email.includes('@');
+  const isPhoneValid = phone.trim().length >= 9;
+  
+  const canSend = captchaConfig.enabled && captchaConfig.siteKey 
+    ? !!captchaToken 
+    : true;
 
   return (
     <div className="animate-fade-in space-y-5">
@@ -96,27 +117,111 @@ export default function ContactStep() {
           {t(locale, 'تسجيل الدخول', 'Sign In')}
         </h2>
         <p className="text-sm text-[var(--muted-foreground)]">
-          {t(locale, 'أدخل بريدك الإلكتروني للبدء', 'Enter your email to get started')}
+          {t(locale, 'أدخل بريدك الإلكتروني أو رقم هاتفك للبدء', 'Enter your email or phone to get started')}
         </p>
       </div>
 
-      {/* Email Input */}
-      <div>
-        <label className="block text-sm font-medium mb-1.5 px-1">{t(locale, 'البريد الإلكتروني', 'Email Address')}</label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--muted-foreground)]" />
-          <Input
-            type="email"
-            dir="ltr"
-            placeholder="name@example.com"
-            value={email}
-            onChange={(e) => { setEmail(e.target.value); setError(null); }}
-            className="text-start h-11 pl-10"
-            autoFocus
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          />
-        </div>
+      {/* Tabs */}
+      <div className="flex p-1 bg-[var(--surface)] rounded-lg">
+        <button
+          className={cn(
+            "flex-1 py-2 text-sm font-medium rounded-md transition-all",
+            activeTab === 'email' ? "bg-[var(--card)] shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => setActiveTab('email')}
+        >
+          {t(locale, 'البريد الإلكتروني', 'Email')}
+        </button>
+        <button
+          className={cn(
+            "flex-1 py-2 text-sm font-medium rounded-md transition-all",
+            activeTab === 'phone' ? "bg-[var(--card)] shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={() => setActiveTab('phone')}
+        >
+          {t(locale, 'رقم الهاتف', 'Phone')}
+        </button>
       </div>
+
+      {/* Input Area */}
+      {activeTab === 'email' ? (
+        <div className="animate-fade-in">
+          <label className="block text-sm font-medium mb-1.5 px-1">{t(locale, 'البريد الإلكتروني', 'Email Address')}</label>
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[var(--muted-foreground)]" />
+            <Input
+              type="email"
+              dir="ltr"
+              placeholder="name@example.com"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setError(null); }}
+              className="text-start h-11 pl-10"
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && isEmailValid && canSend && handleSend('email')}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="animate-fade-in">
+          <label className="block text-sm font-medium mb-1.5 px-1">{t(locale, 'رقم الهاتف', 'Phone Number')}</label>
+          <div className="flex gap-2">
+            {/* Country Code Selector */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowCountryPicker(!showCountryPicker)}
+                className="flex items-center gap-1.5 h-11 px-3 rounded-lg border border-[var(--input)] bg-transparent text-sm font-medium hover:bg-[var(--surface)] transition-colors"
+              >
+                <span>{selectedCountry.flag}</span>
+                <span className="text-xs text-[var(--muted-foreground)]" dir="ltr">{countryCode}</span>
+                <svg className="size-3 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showCountryPicker && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowCountryPicker(false)} />
+                  <div className="absolute top-full mt-1 start-0 z-50 w-48 rounded-lg border border-[var(--border)] bg-[var(--card)] shadow-lg py-1 animate-fade-in max-h-64 overflow-y-auto no-scrollbar">
+                    {COUNTRY_CODES.map((c) => (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => {
+                          setCountryCode(c.code);
+                          setShowCountryPicker(false);
+                        }}
+                        className={cn(
+                          'flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-[var(--surface)] transition-colors',
+                          c.code === countryCode && 'bg-[var(--surface)] font-medium',
+                        )}
+                      >
+                        <span>{c.flag}</span>
+                        <span dir="ltr">{c.code}</span>
+                        <span className="text-[var(--muted-foreground)]">{c.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            <Input
+              type="tel"
+              dir="ltr"
+              placeholder="5XXXXXXXX"
+              value={phone}
+              onChange={(e) => { 
+                // Remove leading zeroes
+                const raw = e.target.value.replace(/\D/g, '').replace(/^0+/, '');
+                setPhone(raw.slice(0, 15)); 
+                setError(null); 
+              }}
+              className="flex-1 text-start font-mono tracking-wider h-11"
+              autoFocus
+              onKeyDown={(e) => e.key === 'Enter' && isPhoneValid && canSend && handleSend('phone')}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Error */}
       {error && (
@@ -136,25 +241,64 @@ export default function ContactStep() {
         </div>
       )}
 
-      {/* Send Code Button */}
-      <Button
-        onClick={handleSend}
-        disabled={
-          isLoading || 
-          (!email.trim()) ||
-          (captchaConfig.enabled && captchaConfig.siteKey ? !captchaToken : false)
-        }
-        className="w-full h-11 gradient-navy text-[var(--navy-foreground)] font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
-      >
-        {isLoading ? (
-          <span className="flex items-center gap-2">
-            <Loader2 className="size-4 animate-spin" />
-            {t(locale, 'جاري الإرسال...', 'Sending...')}
-          </span>
+      {/* Send Code Button(s) */}
+      <div className="pt-2 grid gap-2">
+        {activeTab === 'email' ? (
+          <Button
+            onClick={() => handleSend('email')}
+            disabled={isLoading || !isEmailValid || !canSend}
+            className="w-full h-11 gradient-navy text-[var(--navy-foreground)] font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {isLoading && method === 'email' ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="size-4 animate-spin" />
+                {t(locale, 'جاري الإرسال...', 'Sending...')}
+              </span>
+            ) : (
+              t(locale, 'المتابعة عبر البريد', 'Continue with Email')
+            )}
+          </Button>
         ) : (
-          t(locale, 'إرسال رمز التحقق', 'Send Verification Code')
+          <>
+            {configLoaded && availableMethods.whatsapp && (
+              <Button
+                onClick={() => handleSend('whatsapp')}
+                disabled={isLoading || !isPhoneValid || !canSend}
+                className="w-full h-11 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-lg transition-colors disabled:opacity-50"
+              >
+                {isLoading && method === 'whatsapp' ? (
+                  <Loader2 className="size-4 animate-spin mr-2" />
+                ) : (
+                  <MessageSquare className="size-4 mr-2" />
+                )}
+                {t(locale, 'المتابعة عبر واتساب', 'Continue with WhatsApp')}
+              </Button>
+            )}
+
+            <Button
+              variant={configLoaded && availableMethods.whatsapp ? "outline" : "default"}
+              onClick={() => handleSend('phone')}
+              disabled={isLoading || !isPhoneValid || !canSend}
+              className={cn(
+                "w-full h-11 font-semibold rounded-lg disabled:opacity-50",
+                (!configLoaded || !availableMethods.whatsapp) && "gradient-navy text-[var(--navy-foreground)] hover:opacity-90"
+              )}
+            >
+              {isLoading && method === 'phone' ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="size-4 animate-spin" />
+                  {t(locale, 'جاري الإرسال...', 'Sending...')}
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Phone className="size-4" />
+                  {t(locale, 'المتابعة عبر رسالة (SMS)', 'Continue with SMS')}
+                </span>
+              )}
+            </Button>
+          </>
         )}
-      </Button>
+      </div>
 
       {/* Social Login Placeholders */}
       <div className="relative my-6">

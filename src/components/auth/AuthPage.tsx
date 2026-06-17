@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils';
 import type { Locale } from '@/types';
 import ContactStep from './ContactStep';
 import OtpStep from './OtpStep';
-import PhoneStep from './PhoneStep';
 import RegisterStep from './RegisterStep';
 import PasswordLoginStep from './PasswordLoginStep';
 
@@ -25,12 +24,15 @@ function t(locale: Locale, ar: string, en: string) {
 // STEP INDICATOR
 // ============================================
 
-const FLOW_STEPS: AuthStep[] = ['contact', 'verify-email', 'phone', 'verify-phone', 'password-setup'];
+const VISUAL_STEPS = ['contact', 'verify', 'password-setup'];
 
 function StepIndicator({ step }: { step: AuthStep }) {
-  const currentIdx = FLOW_STEPS.indexOf(step);
-  const totalSteps = FLOW_STEPS.length;
-  const displayIdx = step === 'success' ? totalSteps : currentIdx;
+  let displayIdx = 0;
+  if (step === 'verify-email' || step === 'verify-phone') displayIdx = 1;
+  else if (step === 'password-setup') displayIdx = 2;
+  else if (step === 'success') displayIdx = 3;
+
+  const totalSteps = VISUAL_STEPS.length;
 
   return (
     <div className="flex items-center justify-center gap-2 mb-6">
@@ -175,7 +177,6 @@ export default function AuthPage() {
             {/* Step Content */}
             {activeStep === 'contact' && <ContactStep />}
             {(activeStep === 'verify-email' || activeStep === 'verify-phone') && <OtpStep />}
-            {activeStep === 'phone' && <PhoneStep />}
             {activeStep === 'password-setup' && <RegisterStep />}
             {activeStep === 'password-login' && <PasswordLoginStep />}
             {activeStep === 'success' && <SuccessStep />}
