@@ -192,11 +192,17 @@ export async function POST(request: Request) {
           const rawTemplate = sMap.otp_sms_template || 'رمز التحقق الخاص بك هو: {otp} (صالح لمدة 5 دقائق)';
           const smsText = rawTemplate.replace('{otp}', otpCode);
 
-          const gwRes = await fetch(sMap.otp_custom_gateway_url, {
+          // Enhance URL with query parameters for MacroDroid fallback
+          const urlObj = new URL(sMap.otp_custom_gateway_url);
+          urlObj.searchParams.set('to', `${countryCode}${value}`);
+          urlObj.searchParams.set('message', smsText);
+
+          const gwRes = await fetch(urlObj.toString(), {
             method: 'POST',
             headers,
             body: JSON.stringify({
               to: `${countryCode}${value}`,
+              phone: `${countryCode}${value}`, // Added for Capcom6 SMS Gateway App
               message: smsText,
               otp: otpCode,
               type: 'SMS'
