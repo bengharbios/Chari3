@@ -167,6 +167,37 @@ export default function OtpSettingsPage() {
     }
   };
 
+  const handleTestSms = async () => {
+    if (!customGatewayUrl) {
+      toast.error(locale === 'ar' ? 'الرجاء إدخال رابط الـ Webhook أولاً' : 'Please enter the Webhook URL first');
+      return;
+    }
+    const phone = window.prompt(locale === 'ar' ? 'أدخل رقم الهاتف لتجربة استلام الرسالة (بما في ذلك رمز الدولة، مثلاً +971501234567)' : 'Enter phone number to receive test SMS (e.g., +971501234567)');
+    if (!phone) return;
+
+    const toastId = toast.loading(locale === 'ar' ? 'جاري إرسال رسالة تجريبية...' : 'Sending test SMS...');
+    try {
+      const res = await fetch('/api/admin/settings/test-sms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: customGatewayUrl,
+          token: customGatewayToken,
+          template: smsTemplate,
+          phone: phone
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(locale === 'ar' ? 'نجاح! تم إرسال الطلب لبوابة الهاتف' : 'Success! Request sent to SMS Gateway', { id: toastId });
+      } else {
+        toast.error(data.error || 'Failed to send SMS', { id: toastId });
+      }
+    } catch (error: any) {
+      toast.error('Network Error: ' + error.message, { id: toastId });
+    }
+  };
+
   const handleTestTelegram = async () => {
     toast.info('سيتم إرسال رسالة تجريبية لتليجرام قريباً (قيد التطوير)');
   };
@@ -500,7 +531,7 @@ export default function OtpSettingsPage() {
               </div>
             </div>
             {customGatewayEnabled && (
-              <Button variant="outline" onClick={() => toast.info('جاري إرسال طلب تجريبي')} className="mt-2 w-full md:w-auto text-orange-500 border-orange-200">
+              <Button variant="outline" onClick={handleTestSms} className="mt-2 w-full md:w-auto text-orange-500 border-orange-200">
                 <Send className="w-4 h-4 mx-2" />
                 {locale === 'ar' ? 'اختبار بوابة SMS' : 'Test SMS Gateway'}
               </Button>
