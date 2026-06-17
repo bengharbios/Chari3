@@ -47,6 +47,11 @@ export default function OtpSettingsPage() {
   // General Auth Options
   const [allowPhoneSkip, setAllowPhoneSkip] = useState(true);
 
+  // Rate Limits
+  const [rateLimitMinute, setRateLimitMinute] = useState('3');
+  const [rateLimitPhoneDaily, setRateLimitPhoneDaily] = useState('5');
+  const [rateLimitIpDaily, setRateLimitIpDaily] = useState('20');
+
   useEffect(() => {
     const fetchSettings = async () => {
       setIsLoading(true);
@@ -81,7 +86,13 @@ export default function OtpSettingsPage() {
           setCaptchaSiteKey(s.auth_captcha_site_key || '');
           setCaptchaSecretKey(s.auth_captcha_secret_key || '');
 
+          setCaptchaSecretKey(s.auth_captcha_secret_key || '');
+
           setAllowPhoneSkip(s.auth_allow_phone_skip !== 'false');
+
+          setRateLimitMinute(s.otp_rate_limit_minute || '3');
+          setRateLimitPhoneDaily(s.otp_rate_limit_phone_daily || '5');
+          setRateLimitIpDaily(s.otp_rate_limit_ip_daily || '20');
         }
       } catch (error) {
         console.error('Failed to load OTP settings:', error);
@@ -121,6 +132,9 @@ export default function OtpSettingsPage() {
             auth_captcha_site_key: captchaSiteKey,
             auth_captcha_secret_key: captchaSecretKey,
             auth_allow_phone_skip: allowPhoneSkip.toString(),
+            otp_rate_limit_minute: rateLimitMinute,
+            otp_rate_limit_phone_daily: rateLimitPhoneDaily,
+            otp_rate_limit_ip_daily: rateLimitIpDaily,
           },
         }),
       });
@@ -303,6 +317,42 @@ export default function OtpSettingsPage() {
                 onCheckedChange={setAllowPhoneSkip} 
                 className="data-[state=checked]:bg-brand"
               />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t mt-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">{locale === 'ar' ? 'الحد الأقصى في الدقيقة' : 'Max requests per minute'}</label>
+                <input
+                  type="number"
+                  dir="ltr"
+                  placeholder="3"
+                  value={rateLimitMinute}
+                  onChange={(e) => setRateLimitMinute(e.target.value)}
+                  className="w-full bg-surface border border-border/80 rounded-xl px-4 py-2"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">{locale === 'ar' ? 'الحد الأقصى للرقم يومياً' : 'Max per number daily'}</label>
+                <input
+                  type="number"
+                  dir="ltr"
+                  placeholder="5"
+                  value={rateLimitPhoneDaily}
+                  onChange={(e) => setRateLimitPhoneDaily(e.target.value)}
+                  className="w-full bg-surface border border-border/80 rounded-xl px-4 py-2"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">{locale === 'ar' ? 'الحد الأقصى للجهاز يومياً' : 'Max per IP daily'}</label>
+                <input
+                  type="number"
+                  dir="ltr"
+                  placeholder="20"
+                  value={rateLimitIpDaily}
+                  onChange={(e) => setRateLimitIpDaily(e.target.value)}
+                  className="w-full bg-surface border border-border/80 rounded-xl px-4 py-2"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>

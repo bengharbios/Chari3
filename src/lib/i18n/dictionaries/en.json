@@ -251,8 +251,16 @@
       "category": "Category",
       "limit": "Product Limit",
       "right": "Right",
-      "center": "Center",
       "left": "Left"
     }
+  },
+  "auth": {
+    "ERROR_INVALID_OTP": "Invalid verification code.",
+    "ERROR_OTP_EXPIRED": "Code has expired. Please request a new one.",
+    "ERROR_TOO_MANY_ATTEMPTS": "Too many failed attempts. Please try again later.",
+    "ERROR_RATE_LIMIT_IP_DAILY": "You have exceeded the daily request limit from this IP.",
+    "ERROR_RATE_LIMIT_PHONE_DAILY": "You have exceeded the daily request limit for this number.",
+    "ERROR_RATE_LIMIT_MINUTE": "Please wait a moment before requesting a new code.",
+    "defaultError": "An unexpected error occurred. Please try again."
   }
 }

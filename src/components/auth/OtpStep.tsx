@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { useAuthFlowStore } from '@/lib/store/auth-flow';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import type { Locale } from '@/types';
 
 // ============================================
@@ -37,6 +38,7 @@ const COUNTDOWN_SECONDS = 60;
 // ============================================
 
 export default function OtpStep() {
+  const { t: translateApi } = useTranslation();
   const locale = useAppStore((s) => s.locale);
   const {
     method,
@@ -311,7 +313,7 @@ export default function OtpStep() {
       {/* Error state */}
       {error && (
         <p className="text-sm text-[var(--destructive)] text-center animate-fade-in">
-          {error}
+          {error.startsWith('ERROR_') ? translateApi(`auth.${error}`) : error}
         </p>
       )}
 

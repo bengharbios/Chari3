@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAuthFlowStore } from '@/lib/store/auth-flow';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import type { Locale } from '@/types';
 
 // ============================================
@@ -33,6 +34,7 @@ const COUNTRY_CODES = [
 ];
 
 export default function PhoneStep() {
+  const { t: translateApi } = useTranslation();
   const locale = useAppStore((s) => s.locale);
   const {
     method,
@@ -164,7 +166,9 @@ export default function PhoneStep() {
 
         {/* Error */}
         {error && (
-          <p className="text-sm text-[var(--destructive)] text-center animate-fade-in">{error}</p>
+          <p className="text-sm text-[var(--destructive)] text-center animate-fade-in">
+            {error.startsWith('ERROR_') ? translateApi(`auth.${error}`) : error}
+          </p>
         )}
 
         {/* Send Options */}

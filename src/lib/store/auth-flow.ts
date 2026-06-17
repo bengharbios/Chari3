@@ -187,7 +187,7 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
       } else {
         set({
           isLoading: false,
-          error: data.message || 'An error occurred',
+          error: data.code || data.message || 'An error occurred',
         });
         return false;
       }
@@ -275,7 +275,7 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
           return { verified: true, isNewUser: true };
         }
       } else {
-        const errorMsg = data.message || 'Incorrect verification code';
+        const errorMsg = data.code || data.message || 'Incorrect verification code';
         set({ error: errorMsg });
         return { verified: false, isNewUser: false };
       }

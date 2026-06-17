@@ -56,7 +56,8 @@ export async function POST(request: Request) {
         key: { in: [
           'auth_captcha_enabled', 'auth_captcha_secret_key', 
           'otp_custom_gateway_enabled', 'otp_custom_gateway_url', 'otp_custom_gateway_token', 'otp_sms_template',
-          'otp_whatsapp_enabled', 'otp_whatsapp_url', 'otp_whatsapp_token', 'otp_whatsapp_template'
+          'otp_whatsapp_enabled', 'otp_whatsapp_url', 'otp_whatsapp_token', 'otp_whatsapp_template',
+          'otp_rate_limit_minute', 'otp_rate_limit_phone_daily', 'otp_rate_limit_ip_daily'
         ] }
       }
     });
@@ -83,15 +84,42 @@ export async function POST(request: Request) {
       }
     }
 
-    // ── Rate limit: max 3 requests per minute per identifier ──
-    const rateLimitKey = `otp-send:${method}:${value}`;
-    const rateCheck = checkRateLimit(rateLimitKey, 3, 60_000);
+    // ── Rate limits ──
+    const limitMinute = parseInt(sMap.otp_rate_limit_minute) || 3;
+    const limitPhoneDaily = parseInt(sMap.otp_rate_limit_phone_daily) || 5;
+    const limitIpDaily = parseInt(sMap.otp_rate_limit_ip_daily) || 20;
 
+    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+
+    // 1. IP Daily Limit
+    const ipDailyLimitKey = `otp-send-ip-daily:${ip}`;
+    const ipDailyCheck = checkRateLimit(ipDailyLimitKey, limitIpDaily, 24 * 60 * 60 * 1000);
+    if (!ipDailyCheck.allowed) {
+      return NextResponse.json(
+        { success: false, code: 'ERROR_RATE_LIMIT_IP_DAILY', message: `Too many requests from this IP today.`, retryAfterMs: ipDailyCheck.retryAfterMs },
+        { status: 429 }
+      );
+    }
+
+    // 2. Phone/Email Daily Limit
+    const phoneDailyLimitKey = `otp-send-daily:${value}`;
+    const phoneDailyCheck = checkRateLimit(phoneDailyLimitKey, limitPhoneDaily, 24 * 60 * 60 * 1000);
+    if (!phoneDailyCheck.allowed) {
+      return NextResponse.json(
+        { success: false, code: 'ERROR_RATE_LIMIT_PHONE_DAILY', message: `Too many requests for this identifier today.`, retryAfterMs: phoneDailyCheck.retryAfterMs },
+        { status: 429 }
+      );
+    }
+
+    // 3. Per Minute Limit
+    const rateLimitKey = `otp-send-minute:${method}:${value}`;
+    const rateCheck = checkRateLimit(rateLimitKey, limitMinute, 60_000);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         {
           success: false,
-          message: `Too many requests. Please try again in ${Math.ceil(rateCheck.retryAfterMs / 1000)} seconds.`,
+          code: 'ERROR_RATE_LIMIT_MINUTE',
+          message: `Too many requests. Please try again later.`,
           retryAfterMs: rateCheck.retryAfterMs,
         },
         { status: 429 }

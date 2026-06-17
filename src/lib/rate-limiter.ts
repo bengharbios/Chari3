@@ -5,6 +5,7 @@
 
 interface RateLimitEntry {
   timestamps: number[];
+  windowMs: number;
 }
 
 const store = new Map<string, RateLimitEntry>();
@@ -19,8 +20,8 @@ function startCleanup() {
   cleanupTimer = setInterval(() => {
     const now = Date.now();
     for (const [key, entry] of store.entries()) {
-      // Remove timestamps older than 5 minutes (safety margin beyond any window)
-      entry.timestamps = entry.timestamps.filter((ts) => now - ts < 300_000);
+      // Remove timestamps older than the entry's windowMs
+      entry.timestamps = entry.timestamps.filter((ts) => now - ts <= entry.windowMs);
       if (entry.timestamps.length === 0) {
         store.delete(key);
       }
@@ -57,8 +58,11 @@ export function checkRateLimit(
   let entry = store.get(key);
 
   if (!entry) {
-    entry = { timestamps: [] };
+    entry = { timestamps: [], windowMs };
     store.set(key, entry);
+  } else {
+    // Update windowMs if it has increased (e.g., key used in multiple checks, though usually unique)
+    entry.windowMs = Math.max(entry.windowMs, windowMs);
   }
 
   // Prune timestamps outside the current window

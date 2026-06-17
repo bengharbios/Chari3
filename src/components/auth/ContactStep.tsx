@@ -9,6 +9,7 @@ import { useAuthFlowStore } from '@/lib/store/auth-flow';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import Turnstile from 'react-turnstile';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import type { Locale } from '@/types';
 
 // ============================================
@@ -42,6 +43,7 @@ const COUNTRY_CODES = [
 // ============================================
 
 export default function ContactStep() {
+  const { t: translateApi } = useTranslation();
   const locale = useAppStore((s) => s.locale);
   const {
     email,
@@ -118,7 +120,9 @@ export default function ContactStep() {
 
       {/* Error */}
       {error && (
-        <p className="text-sm text-[var(--destructive)] text-center animate-fade-in">{error}</p>
+        <p className="text-sm text-[var(--destructive)] text-center animate-fade-in">
+          {error.startsWith('ERROR_') ? translateApi(`auth.${error}`) : error}
+        </p>
       )}
 
       {/* Captcha */}

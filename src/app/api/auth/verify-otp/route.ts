@@ -65,7 +65,7 @@ export async function POST(request: Request) {
 
     const rateCheck = checkRateLimit(`otp-verify:${method}:${value}`, 10, 60_000);
     if (!rateCheck.allowed) {
-      return NextResponse.json({ success: false, message: 'Too many attempts' }, { status: 429 });
+      return NextResponse.json({ success: false, code: 'ERROR_TOO_MANY_ATTEMPTS', message: 'Too many attempts' }, { status: 429 });
     }
 
     await ensureDbConnection();
@@ -82,14 +82,14 @@ export async function POST(request: Request) {
 
     if (!tokenRecord) {
       return NextResponse.json(
-        { success: false, verified: false, message: `Invalid OTP.` },
+        { success: false, verified: false, code: 'ERROR_INVALID_OTP', message: `Invalid OTP.` },
         { status: 400 }
       );
     }
 
     if (tokenRecord.expires < new Date()) {
       return NextResponse.json(
-        { success: false, verified: false, message: `OTP has expired.` },
+        { success: false, verified: false, code: 'ERROR_OTP_EXPIRED', message: `OTP has expired.` },
         { status: 400 }
       );
     }
