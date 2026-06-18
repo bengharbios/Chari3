@@ -218,7 +218,8 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
     const { method, phone, email, otpCode } = get();
     set({ isLoading: true, error: null });
 
-    const value = method === 'phone' ? phone : email;
+    const isPhoneMethod = ['phone', 'whatsapp', 'telegram'].includes(method);
+    const value = isPhoneMethod ? phone : email;
 
     if (!otpCode || otpCode.length !== 6) {
       const locale = useAppStore.getState().locale;
@@ -257,8 +258,9 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
           const returnedUser = data.user as Record<string, unknown>;
           const userPhone = returnedUser.phone as string | null;
           const userEmail = returnedUser.email as string | null;
+          const isPhoneMethod = ['phone', 'whatsapp', 'telegram'].includes(method);
           const isMatch =
-            (method === 'phone' && userPhone === value) ||
+            (isPhoneMethod && userPhone === value) ||
             (method === 'email' && userEmail === value);
 
           if (!isMatch) {
@@ -382,8 +384,9 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
         const returnedUser = data.user as Record<string, unknown>;
         const userPhone = returnedUser.phone as string | null;
         const userEmail = returnedUser.email as string | null;
+        const isPhoneMethod = ['phone', 'whatsapp', 'telegram'].includes(method);
         const isMatch =
-          (method === 'phone' && userPhone === value) ||
+          (isPhoneMethod && userPhone === value) ||
           (method === 'email' && userEmail === value);
 
         if (!isMatch) {

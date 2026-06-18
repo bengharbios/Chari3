@@ -65,7 +65,7 @@ export default function OtpStep() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const displayContact = method === 'phone'
+  const displayContact = ['phone', 'whatsapp', 'telegram'].includes(method)
     ? `${countryCode}${maskPhone(phone)}`
     : maskEmail(email);
 
@@ -341,7 +341,7 @@ export default function OtpStep() {
           ? <ArrowRight className="size-3.5" />
           : <ArrowLeft className="size-3.5" />
         }
-        {method === 'phone'
+        {['phone', 'whatsapp', 'telegram'].includes(method)
           ? t(locale, 'تغيير الرقم', 'Change number')
           : t(locale, 'تغيير البريد', 'Change email')}
       </button>
