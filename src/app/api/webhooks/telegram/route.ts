@@ -10,13 +10,28 @@ export async function POST(request: Request) {
     if (update.message) {
       const chatId = update.message.chat.id;
 
+      const settings = await db.systemSetting.findMany({
+        where: { key: { in: [
+          'otp_telegram_msg_start', 
+          'otp_telegram_msg_success', 
+          'otp_telegram_msg_no_otp', 
+          'otp_telegram_msg_wrong_contact'
+        ]}}
+      });
+      const sMap = settings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
+
+      const msgStart = sMap.otp_telegram_msg_start || 'مرحباً بك في ChariDay! 🚀\n\nلحماية حسابك والتحقق من هويتك، يرجى الضغط على زر "📱 مشاركة رقم الهاتف" بالأسفل 👇';
+      const msgSuccess = sMap.otp_telegram_msg_success || 'تم التحقق بنجاح! ✅\n\nرمز الدخول الخاص بك هو:\n*{otp}*\n\nالرمز صالح لمدة 5 دقائق.';
+      const msgNoOtp = sMap.otp_telegram_msg_no_otp || 'عذراً، لم أجد أي طلب تسجيل دخول نشط لهذا الرقم.\nيرجى طلب رمز جديد من الموقع ثم المحاولة.';
+      const msgWrongContact = sMap.otp_telegram_msg_wrong_contact || 'عذراً، يجب مشاركة رقم هاتفك الخاص بك عبر الزر المخصص أسفل الشاشة.';
+
       // 1. If user shared their contact
       if (update.message.contact) {
         const contact = update.message.contact;
         
         // Security check: ensure the contact belongs to the sender
         if (contact.user_id !== update.message.from.id) {
-          await sendTelegramMessage(chatId, 'عذراً، يجب مشاركة رقم هاتفك الخاص بك عبر الزر المخصص أسفل الشاشة.');
+          await sendTelegramMessage(chatId, msgWrongContact);
           return NextResponse.json({ success: true });
         }
 
@@ -35,17 +50,18 @@ export async function POST(request: Request) {
 
         if (tokenEntry) {
           // Success! Send the code
-          await sendTelegramMessage(chatId, `تم التحقق بنجاح! ✅\n\nرمز الدخول الخاص بك هو:\n*${tokenEntry.token}*\n\nالرمز صالح لمدة 5 دقائق.`, true); 
+          const successText = msgSuccess.replace('{otp}', tokenEntry.token);
+          await sendTelegramMessage(chatId, successText, true); 
         } else {
           // No active OTP
-          await sendTelegramMessage(chatId, `عذراً، لم أجد أي طلب تسجيل دخول نشط للرقم ${phone}.\nيرجى طلب رمز جديد من الموقع ثم المحاولة.`);
+          await sendTelegramMessage(chatId, msgNoOtp.replace('{phone}', phone));
         }
         return NextResponse.json({ success: true });
       }
 
       // 2. If user sent a text message (like /start)
       if (update.message.text) {
-        await sendContactRequest(chatId, 'مرحباً بك في ChariDay! 🚀\n\nلحماية حسابك والتحقق من هويتك، يرجى الضغط على زر **"📱 مشاركة رقم الهاتف"** بالأسفل 👇');
+        await sendContactRequest(chatId, msgStart);
         return NextResponse.json({ success: true });
       }
     }

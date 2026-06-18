@@ -27,6 +27,10 @@ export default function OtpSettingsPage() {
   const [telegramEnabled, setTelegramEnabled] = useState(false);
   const [botToken, setBotToken] = useState('');
   const [botUsername, setBotUsername] = useState('');
+  const [telegramMsgStart, setTelegramMsgStart] = useState('');
+  const [telegramMsgSuccess, setTelegramMsgSuccess] = useState('');
+  const [telegramMsgNoOtp, setTelegramMsgNoOtp] = useState('');
+  const [telegramMsgWrongContact, setTelegramMsgWrongContact] = useState('');
 
   const [customGatewayEnabled, setCustomGatewayEnabled] = useState(false);
   const [customGatewayUrl, setCustomGatewayUrl] = useState('');
@@ -71,6 +75,10 @@ export default function OtpSettingsPage() {
           setTelegramEnabled(s.otp_telegram_enabled === 'true');
           setBotToken(s.otp_telegram_bot_token || '');
           setBotUsername(s.otp_telegram_bot_username || '');
+          setTelegramMsgStart(s.otp_telegram_msg_start || '');
+          setTelegramMsgSuccess(s.otp_telegram_msg_success || '');
+          setTelegramMsgNoOtp(s.otp_telegram_msg_no_otp || '');
+          setTelegramMsgWrongContact(s.otp_telegram_msg_wrong_contact || '');
 
           setCustomGatewayEnabled(s.otp_custom_gateway_enabled === 'true');
           setCustomGatewayUrl(s.otp_custom_gateway_url || '');
@@ -120,6 +128,10 @@ export default function OtpSettingsPage() {
             otp_telegram_enabled: telegramEnabled.toString(),
             otp_telegram_bot_token: botToken,
             otp_telegram_bot_username: botUsername,
+            otp_telegram_msg_start: telegramMsgStart,
+            otp_telegram_msg_success: telegramMsgSuccess,
+            otp_telegram_msg_no_otp: telegramMsgNoOtp,
+            otp_telegram_msg_wrong_contact: telegramMsgWrongContact,
             otp_custom_gateway_enabled: customGatewayEnabled.toString(),
             otp_custom_gateway_url: customGatewayUrl,
             otp_custom_gateway_token: customGatewayToken,
@@ -526,6 +538,53 @@ export default function OtpSettingsPage() {
                 <p className="text-xs text-muted-foreground mt-1">
                   بدون الـ @، يستخدم لبناء رابط t.me الخاص بالبوت
                 </p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 border-t pt-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">{locale === 'ar' ? 'رسالة الترحيب وطلب الرقم (Start Msg)' : 'Start Message'}</label>
+                <textarea
+                  value={telegramMsgStart}
+                  onChange={(e) => setTelegramMsgStart(e.target.value)}
+                  placeholder='مرحباً بك في ChariDay! 🚀\n\nلحماية حسابك والتحقق من هويتك، يرجى الضغط على زر "📱 مشاركة رقم الهاتف" بالأسفل 👇'
+                  className="w-full bg-surface border border-border/80 rounded-xl px-4 py-2 h-24 text-sm"
+                  dir={dir}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">{locale === 'ar' ? 'رسالة النجاح والرمز (Success Msg)' : 'Success Message'}</label>
+                <textarea
+                  value={telegramMsgSuccess}
+                  onChange={(e) => setTelegramMsgSuccess(e.target.value)}
+                  placeholder='تم التحقق بنجاح! ✅\n\nرمز الدخول الخاص بك هو:\n*{otp}*\n\nالرمز صالح لمدة 5 دقائق.'
+                  className="w-full bg-surface border border-border/80 rounded-xl px-4 py-2 h-24 text-sm"
+                  dir={dir}
+                />
+                <p className="text-xs text-muted-foreground mt-1">استخدم <code className="bg-muted px-1 rounded">{"{otp}"}</code> مكان الرمز.</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">{locale === 'ar' ? 'رسالة الرفض (لا يوجد طلب نشط)' : 'No OTP Message'}</label>
+                <textarea
+                  value={telegramMsgNoOtp}
+                  onChange={(e) => setTelegramMsgNoOtp(e.target.value)}
+                  placeholder='عذراً، لم أجد أي طلب تسجيل دخول نشط لهذا الرقم.\nيرجى طلب رمز جديد من الموقع ثم المحاولة.'
+                  className="w-full bg-surface border border-border/80 rounded-xl px-4 py-2 h-24 text-sm"
+                  dir={dir}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold">{locale === 'ar' ? 'رسالة خطأ (مشاركة رقم غير مطابق)' : 'Wrong Contact Message'}</label>
+                <textarea
+                  value={telegramMsgWrongContact}
+                  onChange={(e) => setTelegramMsgWrongContact(e.target.value)}
+                  placeholder='عذراً، يجب مشاركة رقم هاتفك الخاص بك عبر الزر المخصص أسفل الشاشة.'
+                  className="w-full bg-surface border border-border/80 rounded-xl px-4 py-2 h-24 text-sm"
+                  dir={dir}
+                />
               </div>
             </div>
             {telegramEnabled && (
