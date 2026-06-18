@@ -40,13 +40,18 @@ export async function POST(request: Request) {
         if (!phone.startsWith('+')) phone = '+' + phone;
 
         // Check if there is an active OTP for this phone in the DB
-        const tokenEntry = await db.verificationToken.findFirst({
-          where: {
-            identifier: phone,
-            expires: { gt: new Date() }
-          },
+        // Since the website might save the identifier without the country code (e.g. 549955314)
+        // and Telegram sends it with the country code (e.g. +971549955314), we match by suffix.
+        const activeTokens = await db.verificationToken.findMany({
+          where: { expires: { gt: new Date() } },
           orderBy: { expires: 'desc' }
         });
+
+        const tokenEntry = activeTokens.find(t => 
+          phone === t.identifier || 
+          phone.endsWith(t.identifier) || 
+          t.identifier.endsWith(phone.replace('+', ''))
+        );
 
         if (tokenEntry) {
           // Success! Send the code
