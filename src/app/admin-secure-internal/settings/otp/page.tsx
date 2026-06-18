@@ -214,11 +214,11 @@ export default function OtpSettingsPage() {
 
   const handleTestTelegram = async () => {
     if (!telegramToken) {
-      toast.error(locale === 'ar' ? 'الرجاء إدخال Bot Token أولاً' : 'Please enter Bot Token first', { id: toastId });
+      toast.error(locale === 'ar' ? 'الرجاء إدخال Bot Token أولاً' : 'Please enter Bot Token first');
       return;
     }
 
-    toast.loading(locale === 'ar' ? 'جاري الاتصال بـ Telegram...' : 'Connecting to Telegram...', { id: toastId });
+    const toastId = toast.loading(locale === 'ar' ? 'جاري الاتصال بـ Telegram...' : 'Connecting to Telegram...');
 
     try {
       const res = await fetch('/api/admin/settings/test-telegram', {
