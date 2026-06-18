@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { validatePhone, validateEmail } from '@/lib/validators';
 import { checkRateLimit } from '@/lib/rate-limiter';
 import { db } from '@/lib/db';
+
 import * as nodemailer from 'nodemailer';
 
 export const dynamic = 'force-dynamic';
@@ -91,6 +92,65 @@ export async function POST(request: Request) {
     const limitIpDaily = parseInt(sMap.otp_rate_limit_ip_daily) || 20;
 
     const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    const detectedCountry = request.headers.get('cf-ipcountry') || 'Unknown';
+    const userAgent = request.headers.get('user-agent') || 'Unknown';
+    // Simple hash function for device fingerprint
+    let hash = 0;
+    for (let i = 0; i < userAgent.length; i++) {
+      hash = ((hash << 5) - hash) + userAgent.charCodeAt(i);
+      hash |= 0;
+    }
+    const deviceFingerprint = Math.abs(hash).toString(16);
+    
+    // ── Security Check: Banned Entities ──
+    const activeBans = await db.bannedEntity.findMany({
+      where: {
+        isActive: true,
+        OR: [
+          { expiresAt: null },
+          { expiresAt: { gt: new Date() } }
+        ]
+      }
+    });
+
+    let isBanned = false;
+    let banReason = null;
+
+    for (const ban of activeBans) {
+      if (
+        (ban.type === 'ip' && ban.value === ip) ||
+        (ban.type === 'phone' && ban.value === value && (method === 'phone' || method === 'whatsapp' || method === 'telegram')) ||
+        (ban.type === 'email' && ban.value === value && method === 'email') ||
+        (ban.type === 'device' && ban.value === deviceFingerprint) ||
+        (ban.type === 'country' && ban.value === detectedCountry)
+      ) {
+        isBanned = true;
+        banReason = ban.reason || 'Security Policy';
+        break;
+      }
+    }
+
+    if (isBanned) {
+      // Log the banned attempt
+      await db.authLog.create({
+        data: {
+          identifier: value,
+          method,
+          ipAddress: ip,
+          userAgent,
+          countryCode,
+          deviceFingerprint,
+          status: 'banned',
+          isBanned: true,
+          banReason
+        }
+      });
+      return NextResponse.json(
+        { success: false, message: 'عذراً، لا يمكنك الوصول إلى هذه الخدمة.' },
+        { status: 403 }
+      );
+    }
+
 
     // 1. IP Daily Limit
     const ipDailyLimitKey = `otp-send-ip-daily:${ip}`;
@@ -149,6 +209,20 @@ export async function POST(request: Request) {
     const otpCode = generateRandomOTP();
 
     // ── Save OTP to Database ──
+
+    // Log the attempt
+    await db.authLog.create({
+      data: {
+        identifier: value,
+        method,
+        ipAddress: ip,
+        userAgent,
+        countryCode: detectedCountry,
+        deviceFingerprint,
+        status: 'pending',
+      }
+    });
+
     await db.verificationToken.upsert({
       where: {
         identifier_token: {

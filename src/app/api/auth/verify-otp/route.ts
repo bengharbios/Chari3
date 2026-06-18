@@ -94,6 +94,19 @@ export async function POST(request: Request) {
       );
     }
 
+
+    // Update the most recent pending AuthLog
+    const latestLog = await db.authLog.findFirst({
+      where: { identifier: value, status: 'pending' },
+      orderBy: { createdAt: 'desc' }
+    });
+    if (latestLog) {
+      await db.authLog.update({
+        where: { id: latestLog.id },
+        data: { status: 'verified' }
+      });
+    }
+
     // OTP is valid. Delete it to prevent reuse.
     await db.verificationToken.delete({
       where: {

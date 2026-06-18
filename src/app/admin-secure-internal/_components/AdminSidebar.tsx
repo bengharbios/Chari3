@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAdminAuthStore } from '@/lib/store/admin-auth';
+import {
+  ShieldAlert, useAdminAuthStore } from '@/lib/store/admin-auth';
 import { useAppStore } from '@/lib/store';
 import { 
   LayoutDashboard, Settings, Sliders, ToggleRight, ChevronRight, ChevronLeft,

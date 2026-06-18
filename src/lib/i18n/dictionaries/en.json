@@ -262,5 +262,34 @@
     "ERROR_RATE_LIMIT_PHONE_DAILY": "You have exceeded the daily request limit for this number.",
     "ERROR_RATE_LIMIT_MINUTE": "Please wait a moment before requesting a new code.",
     "defaultError": "An unexpected error occurred. Please try again."
+  },
+  "security": {
+    "section_title": "Security & Access",
+    "auth_logs": "Auth Logs",
+    "ban_list": "Ban List",
+    "ban_types": {
+      "ip": "IP Address",
+      "phone": "Phone Number",
+      "email": "Email Address",
+      "device": "Device",
+      "country": "Country"
+    },
+    "ban_duration": {
+      "1h": "1 Hour",
+      "24h": "24 Hours",
+      "1w": "1 Week",
+      "1m": "1 Month",
+      "custom": "Custom Date",
+      "permanent": "Permanent"
+    },
+    "statuses": {
+      "active": "Active",
+      "expired": "Expired",
+      "pending": "Pending",
+      "verified": "Verified",
+      "registered": "Registered",
+      "failed": "Failed",
+      "banned": "Banned"
+    }
   }
 }

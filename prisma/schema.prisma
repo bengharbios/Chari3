@@ -1147,4 +1147,34 @@ model VerificationToken {
   expires    DateTime
   @@unique([identifier, token])
 }
+// ============================================
+// SECURITY & AUTH LOGGING
+// ============================================
 
+model AuthLog {
+  id                String   @id @default(cuid())
+  identifier        String   // phone or email
+  method            String   // sms, email, whatsapp, telegram
+  ipAddress         String?
+  userAgent         String?  @db.LongText
+  countryCode       String?  // AE, SA, etc.
+  deviceType        String?  // mobile, desktop, etc.
+  deviceFingerprint String?  // hash of device info
+  status            String   // pending, verified, registered, failed, banned
+  isBanned          Boolean  @default(false)
+  banReason         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model BannedEntity {
+  id          String    @id @default(cuid())
+  type        String    // ip, phone, email, device, country
+  value       String    // the actual value blocked
+  reason      String?   @db.LongText
+  bannedBy    String?   // Admin ID
+  expiresAt   DateTime? // null means permanent
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
