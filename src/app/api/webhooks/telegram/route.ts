@@ -7,68 +7,101 @@ export async function POST(request: Request) {
   try {
     const update = await request.json();
 
-    // Log for debugging
-    console.log('[Telegram Webhook] Received update:', JSON.stringify(update, null, 2));
-
-    // Ensure it's a message
-    if (update.message && update.message.text) {
-      const text = update.message.text.trim();
+    if (update.message) {
       const chatId = update.message.chat.id;
 
-      // Handle the /start command which contains the OTP payload
-      if (text.startsWith('/start ')) {
-        const payload = text.split(' ')[1];
-
-        // Ensure the payload is a valid 6-digit code
-        if (/^\d{6}$/.test(payload)) {
-          // Send the OTP back to the user
-          await sendTelegramMessage(chatId, `مرحباً بك في ChariDay! 🚀\n\nرمز الدخول الخاص بك هو:\n*${payload}*\n\nالرمز صالح لمدة 5 دقائق.`);
+      // 1. If user shared their contact
+      if (update.message.contact) {
+        const contact = update.message.contact;
+        
+        // Security check: ensure the contact belongs to the sender
+        if (contact.user_id !== update.message.from.id) {
+          await sendTelegramMessage(chatId, 'عذراً، يجب مشاركة رقم هاتفك الخاص بك عبر الزر المخصص أسفل الشاشة.');
           return NextResponse.json({ success: true });
         }
+
+        // Normalize the phone number (add + if missing)
+        let phone = contact.phone_number;
+        if (!phone.startsWith('+')) phone = '+' + phone;
+
+        // Check if there is an active OTP for this phone in the DB
+        const tokenEntry = await db.verificationToken.findFirst({
+          where: {
+            identifier: phone,
+            expires: { gt: new Date() }
+          },
+          orderBy: { expires: 'desc' }
+        });
+
+        if (tokenEntry) {
+          // Success! Send the code
+          await sendTelegramMessage(chatId, `تم التحقق بنجاح! ✅\n\nرمز الدخول الخاص بك هو:\n*${tokenEntry.token}*\n\nالرمز صالح لمدة 5 دقائق.`, true); 
+        } else {
+          // No active OTP
+          await sendTelegramMessage(chatId, `عذراً، لم أجد أي طلب تسجيل دخول نشط للرقم ${phone}.\nيرجى طلب رمز جديد من الموقع ثم المحاولة.`);
+        }
+        return NextResponse.json({ success: true });
       }
 
-      // Default response for any other message
-      await sendTelegramMessage(chatId, `مرحباً بك في ChariDay! 👋\nعذراً، هذا البوت مخصص فقط لإرسال رموز التحقق (OTP) الخاصة بالمنصة.`);
+      // 2. If user sent a text message (like /start)
+      if (update.message.text) {
+        await sendContactRequest(chatId, 'مرحباً بك في ChariDay! 🚀\n\nلحماية حسابك والتحقق من هويتك، يرجى الضغط على زر **"📱 مشاركة رقم الهاتف"** بالأسفل 👇');
+        return NextResponse.json({ success: true });
+      }
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('[Telegram Webhook] Error:', error);
-    // Always return 200 to Telegram so they don't retry endlessly
     return NextResponse.json({ success: true });
   }
 }
 
-// Helper function to send messages
-async function sendTelegramMessage(chatId: string | number, text: string) {
+async function sendTelegramMessage(chatId: string | number, text: string, removeKeyboard = false) {
   try {
-    // Get the bot token from the database
-    const setting = await db.systemSetting.findUnique({
-      where: { key: 'otp_telegram_bot_token' }
-    });
+    const setting = await db.systemSetting.findUnique({ where: { key: 'otp_telegram_bot_token' } });
+    if (!setting || !setting.value) return;
 
-    if (!setting || !setting.value) {
-      console.error('[Telegram Webhook] Bot token not found in settings');
-      return;
+    const body: any = {
+      chat_id: chatId,
+      text: text,
+      parse_mode: 'Markdown',
+    };
+
+    if (removeKeyboard) {
+      body.reply_markup = { remove_keyboard: true };
     }
 
-    const token = setting.value;
-    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+    await fetch(`https://api.telegram.org/bot${setting.value}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch (error) {
+    console.error('[Telegram Webhook] Error sending message:', error);
+  }
+}
 
-    const res = await fetch(url, {
+async function sendContactRequest(chatId: string | number, text: string) {
+  try {
+    const setting = await db.systemSetting.findUnique({ where: { key: 'otp_telegram_bot_token' } });
+    if (!setting || !setting.value) return;
+
+    await fetch(`https://api.telegram.org/bot${setting.value}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: chatId,
         text: text,
         parse_mode: 'Markdown',
+        reply_markup: {
+          keyboard: [[{ text: '📱 مشاركة رقم الهاتف', request_contact: true }]],
+          resize_keyboard: true,
+          one_time_keyboard: true
+        }
       }),
     });
-
-    if (!res.ok) {
-      console.error('[Telegram Webhook] Failed to send message:', await res.text());
-    }
   } catch (error) {
-    console.error('[Telegram Webhook] Error sending message:', error);
+    console.error('[Telegram Webhook] Error sending contact request:', error);
   }
 }

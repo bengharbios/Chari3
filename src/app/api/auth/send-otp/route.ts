@@ -304,7 +304,7 @@ export async function POST(request: Request) {
       message: 'OTP sent successfully',
       expiresIn: 300,
       _devCode: otpCode, // Keep for dev testing
-      _telegramLink: method === 'telegram' ? `https://t.me/${sMap.otp_telegram_bot_username || 'ChariDayBot'}?start=${otpCode}` : undefined
+      _telegramLink: method === 'telegram' ? `https://t.me/${sMap.otp_telegram_bot_username || 'ChariDayBot'}` : undefined
     });
   } catch (error) {
     console.error('[send-otp] Error:', error);
