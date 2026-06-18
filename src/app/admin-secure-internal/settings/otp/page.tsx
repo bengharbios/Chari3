@@ -213,7 +213,7 @@ export default function OtpSettingsPage() {
   };
 
   const handleTestTelegram = async () => {
-    if (!telegramToken) {
+    if (!botToken) {
       toast.error(locale === 'ar' ? 'الرجاء إدخال Bot Token أولاً' : 'Please enter Bot Token first');
       return;
     }
@@ -224,7 +224,7 @@ export default function OtpSettingsPage() {
       const res = await fetch('/api/admin/settings/test-telegram', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: telegramToken }),
+        body: JSON.stringify({ token: botToken }),
       });
       const data = await res.json();
       if (data.success) {
