@@ -59,19 +59,28 @@ const LOGISTICS_BOTTOM_NAV: BottomNavItem[] = [
   { id: 'logistics', labelAr: 'الرئيسية', labelEn: 'Dashboard', icon: UserCircle },
 ];
 
+const GUEST_BOTTOM_NAV: BottomNavItem[] = [
+  { id: 'home', labelAr: 'الرئيسية', labelEn: 'Home', icon: Home },
+  { id: 'search', labelAr: 'بحث', labelEn: 'Search', icon: Search },
+  { id: 'cart', labelAr: 'السلة', labelEn: 'Cart', icon: ShoppingCart, showBadge: true },
+  { id: 'login', labelAr: 'دخول', labelEn: 'Login', icon: UserCircle },
+];
+
 export default function BottomNav() {
   const { locale, currentPage, setCurrentPage } = useAppStore();
   const { isAuthenticated, user } = useAuthStore();
-  const { itemCount } = useCartStore();
-
-  if (!isAuthenticated || !user) return null;
+  const { itemCount, setCartOpen } = useCartStore();
 
   // Determine items based on user role
-  let navItems = BUYER_BOTTOM_NAV;
-  if (user.role === 'store_manager') navItems = STORE_BOTTOM_NAV;
-  else if (user.role === 'seller') navItems = SELLER_BOTTOM_NAV;
-  else if (user.role === 'supplier') navItems = SUPPLIER_BOTTOM_NAV;
-  else if (user.role === 'logistics') navItems = LOGISTICS_BOTTOM_NAV;
+  let navItems = GUEST_BOTTOM_NAV;
+  
+  if (isAuthenticated && user) {
+    if (user.role === 'store_manager') navItems = STORE_BOTTOM_NAV;
+    else if (user.role === 'seller') navItems = SELLER_BOTTOM_NAV;
+    else if (user.role === 'supplier') navItems = SUPPLIER_BOTTOM_NAV;
+    else if (user.role === 'logistics') navItems = LOGISTICS_BOTTOM_NAV;
+    else navItems = BUYER_BOTTOM_NAV;
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-[var(--z-sticky)] md:hidden bg-background/95 backdrop-blur-md border-t border-border/80 safe-bottom shadow-[0_-4px_12px_rgba(0,0,0,0.06)]" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
@@ -83,7 +92,13 @@ export default function BottomNav() {
           return (
             <button
               key={item.id + item.labelAr}
-              onClick={() => setCurrentPage(item.id)}
+              onClick={() => {
+                if (item.id === 'cart') {
+                  setCartOpen(true);
+                } else {
+                  setCurrentPage(item.id);
+                }
+              }}
               className={cn(
                 'flex flex-col items-center justify-center gap-0.5 flex-1 py-1 relative transition-all duration-200 hover:text-amber-500 active:scale-95',
                 isActive ? 'text-amber-500' : 'text-muted-foreground'

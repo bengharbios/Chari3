@@ -553,7 +553,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-[var(--header-height)] gap-4">
           {/* Logo */}
           <div className="flex items-center gap-3 shrink-0">
-            {isAuthenticated && (
+            {isAuthenticated && currentPage !== 'home' && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -774,11 +774,11 @@ export default function Header() {
               <Button
                 variant="default"
                 size="sm"
-                className="gradient-brand text-navy font-bold ms-2"
+                className="gradient-brand text-navy font-bold ms-1 sm:ms-2 px-2 sm:px-3"
                 onClick={() => useAppStore.getState().setCurrentPage('login')}
               >
-                <User className="h-4 w-4 me-1.5" />
-                {t('تسجيل الدخول', 'Sign In')}
+                <User className="h-4 w-4 sm:me-1.5" />
+                <span className="hidden sm:inline">{t('تسجيل الدخول', 'Sign In')}</span>
               </Button>
             )}
           </div>
