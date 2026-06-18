@@ -7,7 +7,7 @@ import {
   Home, ShoppingBag, Heart, Wallet, UserCircle,
   Users, ShieldCheck, Settings, Boxes, Package,
   TrendingUp, Layers, Navigation, MapPin, Tag,
-  ShoppingCart
+  ShoppingCart, Search
 } from 'lucide-react';
 import type { PageType } from '@/types';
 
