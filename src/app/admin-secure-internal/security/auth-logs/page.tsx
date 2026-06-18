@@ -90,7 +90,7 @@ export default function AuthLogsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">{t('security.auth_logs', 'Auth Logs')}</h1>
-          <p className="text-muted-foreground">Monitor all OTP and registration attempts</p>
+          <p className="text-muted-foreground">{t('security.auth_logs_desc', 'Monitor all OTP and registration attempts')}</p>
         </div>
       </div>
 
@@ -100,7 +100,7 @@ export default function AuthLogsPage() {
             <div className="relative flex-1 w-full">
               <Search className="absolute right-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by IP or Identifier..."
+                placeholder={t('security.search_ip_identifier', 'Search by IP or Identifier...')}
                 className="pr-9"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -109,10 +109,10 @@ export default function AuthLogsPage() {
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-full md:w-[150px]">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder={t('security.col_status', 'Status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="all">{t('security.status_all', 'All Statuses')}</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
                 <SelectItem value="verified">Verified</SelectItem>
                 <SelectItem value="registered">Registered</SelectItem>
@@ -121,10 +121,10 @@ export default function AuthLogsPage() {
             </Select>
             <Select value={methodFilter} onValueChange={setMethodFilter}>
               <SelectTrigger className="w-full md:w-[150px]">
-                <SelectValue placeholder="Method" />
+                <SelectValue placeholder={t('security.col_method', 'Method')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Methods</SelectItem>
+                <SelectItem value="all">{t('security.method_all', 'All Methods')}</SelectItem>
                 <SelectItem value="phone">SMS</SelectItem>
                 <SelectItem value="email">Email</SelectItem>
                 <SelectItem value="whatsapp">WhatsApp</SelectItem>
@@ -138,14 +138,14 @@ export default function AuthLogsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Identifier</TableHead>
-                  <TableHead>Method</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>IP</TableHead>
-                  <TableHead>Device</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>{t('security.col_date', 'Date')}</TableHead>
+                  <TableHead>{t('security.col_identifier', 'Identifier')}</TableHead>
+                  <TableHead>{t('security.col_method', 'Method')}</TableHead>
+                  <TableHead>{t('security.col_location', 'Location')}</TableHead>
+                  <TableHead>{t('security.col_ip', 'IP')}</TableHead>
+                  <TableHead>{t('security.col_device', 'Device')}</TableHead>
+                  <TableHead>{t('security.col_status', 'Status')}</TableHead>
+                  <TableHead>{t('security.col_actions', 'Actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -158,7 +158,7 @@ export default function AuthLogsPage() {
                 ) : logs.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                      No logs found
+                      {t('security.no_logs', 'No logs found')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -202,11 +202,11 @@ export default function AuthLogsPage() {
           </div>
           <div className="flex justify-between items-center mt-4">
             <Button disabled={page === 1} onClick={() => setPage(p => p - 1)} variant="outline">
-              Previous
+              {t('common.previous', 'Previous')}
             </Button>
-            <span>Page {page}</span>
+            <span>{t('common.page', 'Page')} {page}</span>
             <Button disabled={logs.length < 20} onClick={() => setPage(p => p + 1)} variant="outline">
-              Next
+              {t('common.next', 'Next')}
             </Button>
           </div>
         </CardContent>
