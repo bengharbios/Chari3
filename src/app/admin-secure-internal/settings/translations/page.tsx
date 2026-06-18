@@ -147,6 +147,7 @@ const TABS = [
   { id: 'header_footer', labelAr: '🖥️ الهيدر والفوتر', labelEn: '🖥️ Header & Footer' },
   { id: 'homepage', labelAr: '🏠 الصفحة الرئيسية', labelEn: '🏠 Homepage' },
   { id: 'notifications', labelAr: '🔔 الإشعارات والرسائل', labelEn: '🔔 Notifications' },
+  { id: 'security', labelAr: '🛡️ الأمان والدخول', labelEn: '🛡️ Security & Access' },
 ];
 
 function getTabForKey(key: string): string {
@@ -157,6 +158,7 @@ function getTabForKey(key: string): string {
   if (prefix === 'header' || prefix === 'footer') return 'header_footer';
   if (prefix === 'homepage') return 'homepage';
   if (prefix === 'notifications') return 'notifications';
+  if (prefix === 'security') return 'security';
   return 'common';
 }
 
