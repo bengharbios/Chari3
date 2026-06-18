@@ -182,7 +182,11 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
           return true;
         }
 
-        // Move to OTP step (verify-email if method is email, verify-phone if method is phone)
+        if (data._telegramLink && typeof window !== 'undefined') {
+          window.open(data._telegramLink, '_blank');
+        }
+
+        // Move to OTP step (verify-email if method is email, verify-phone if method is phone or whatsapp or telegram)
         set({
           step: method === 'email' ? 'verify-email' : 'verify-phone',
           isLoading: false,

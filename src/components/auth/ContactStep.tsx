@@ -275,13 +275,28 @@ export default function ContactStep() {
               </Button>
             )}
 
+            {configLoaded && availableMethods.telegram && (
+              <Button
+                onClick={() => handleSend('telegram')}
+                disabled={isLoading || !isPhoneValid || !canSend}
+                className="w-full h-11 bg-[#0088cc] hover:bg-[#0077b5] text-white font-bold rounded-lg transition-colors disabled:opacity-50"
+              >
+                {isLoading && method === 'telegram' ? (
+                  <Loader2 className="size-4 animate-spin mr-2" />
+                ) : (
+                  <MessageSquare className="size-4 mr-2" />
+                )}
+                {t(locale, 'المتابعة عبر تليجرام', 'Continue with Telegram')}
+              </Button>
+            )}
+
             <Button
-              variant={configLoaded && availableMethods.whatsapp ? "outline" : "default"}
+              variant={configLoaded && (availableMethods.whatsapp || availableMethods.telegram) ? "outline" : "default"}
               onClick={() => handleSend('phone')}
               disabled={isLoading || !isPhoneValid || !canSend}
               className={cn(
                 "w-full h-11 font-semibold rounded-lg disabled:opacity-50",
-                (!configLoaded || !availableMethods.whatsapp) && "gradient-navy text-[var(--navy-foreground)] hover:opacity-90"
+                (!configLoaded || (!availableMethods.whatsapp && !availableMethods.telegram)) && "gradient-navy text-[var(--navy-foreground)] hover:opacity-90"
               )}
             >
               {isLoading && method === 'phone' ? (

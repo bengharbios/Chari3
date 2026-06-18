@@ -8,7 +8,7 @@ export async function GET() {
     // Only fetch public-facing settings
     const settings = await db.systemSetting.findMany({
       where: {
-        key: { in: ['auth_captcha_enabled', 'auth_captcha_site_key', 'auth_allow_phone_skip'] }
+        key: { in: ['auth_captcha_enabled', 'auth_captcha_site_key', 'auth_allow_phone_skip', 'otp_telegram_enabled'] }
       }
     });
 
@@ -20,12 +20,13 @@ export async function GET() {
         captchaEnabled: settingsMap.auth_captcha_enabled === 'true',
         captchaSiteKey: settingsMap.auth_captcha_site_key || '',
         allowPhoneSkip: settingsMap.auth_allow_phone_skip !== 'false',
+        telegramEnabled: settingsMap.otp_telegram_enabled === 'true',
       }
     });
   } catch (error) {
     console.error('[auth-config] Error:', error);
     return NextResponse.json(
-      { success: false, config: { captchaEnabled: false, captchaSiteKey: '', allowPhoneSkip: true } },
+      { success: false, config: { captchaEnabled: false, captchaSiteKey: '', allowPhoneSkip: true, telegramEnabled: false } },
       { status: 500 }
     );
   }
