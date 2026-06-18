@@ -342,6 +342,12 @@
     "cancel": "إلغاء",
     "save": "حفظ الحظر",
     "success_added": "تمت إضافة الحظر بنجاح",
-    "success_removed": "تم فك الحظر بنجاح"
+    "success_removed": "تم فك الحظر بنجاح",
+    "methods": {
+      "sms": "رسالة نصية (SMS)",
+      "email": "بريد إلكتروني",
+      "whatsapp": "واتساب",
+      "telegram": "تلغرام"
+    }
   }
 }

@@ -114,10 +114,10 @@ export default function AuthLogsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('security.status_all', 'All Statuses')}</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="verified">Verified</SelectItem>
-                <SelectItem value="registered">Registered</SelectItem>
-                <SelectItem value="banned">Banned</SelectItem>
+                <SelectItem value="pending">{t('security.statuses.pending', 'Pending')}</SelectItem>
+                <SelectItem value="verified">{t('security.statuses.verified', 'Verified')}</SelectItem>
+                <SelectItem value="registered">{t('security.statuses.registered', 'Registered')}</SelectItem>
+                <SelectItem value="banned">{t('security.statuses.banned', 'Banned')}</SelectItem>
               </SelectContent>
             </Select>
             <Select value={methodFilter} onValueChange={setMethodFilter}>
@@ -126,10 +126,10 @@ export default function AuthLogsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t('security.method_all', 'All Methods')}</SelectItem>
-                <SelectItem value="phone">SMS</SelectItem>
-                <SelectItem value="email">Email</SelectItem>
-                <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                <SelectItem value="telegram">Telegram</SelectItem>
+                <SelectItem value="phone">{t('security.methods.sms', 'SMS')}</SelectItem>
+                <SelectItem value="email">{t('security.methods.email', 'Email')}</SelectItem>
+                <SelectItem value="whatsapp">{t('security.methods.whatsapp', 'WhatsApp')}</SelectItem>
+                <SelectItem value="telegram">{t('security.methods.telegram', 'Telegram')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

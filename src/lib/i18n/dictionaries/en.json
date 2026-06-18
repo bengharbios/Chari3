@@ -342,6 +342,12 @@
     "cancel": "Cancel",
     "save": "Submit Ban",
     "success_added": "Ban added successfully",
-    "success_removed": "Ban removed successfully"
+    "success_removed": "Ban removed successfully",
+    "methods": {
+      "sms": "SMS",
+      "email": "Email",
+      "whatsapp": "WhatsApp",
+      "telegram": "Telegram"
+    }
   }
 }
