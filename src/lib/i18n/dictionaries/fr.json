@@ -16,7 +16,13 @@
     "fullScreen": "Plein écran",
     "lock": "Verrouiller",
     "themeLight": "Mode clair",
-    "themeDark": "Mode sombre"
+    "themeDark": "Mode sombre",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "page": "Page",
+    "active": "Actif",
+    "expired": "Expiré",
+    "rows_per_page": "Lignes par page:"
   },
   "sidebar": {
     "sectionStore": "Boutique",
@@ -304,6 +310,10 @@
     "cancel": "Annuler",
     "save": "Enregistrer le bannissement",
     "success_added": "Bannissement ajouté avec succès",
-    "success_removed": "Bannissement supprimé avec succès"
+    "success_removed": "Bannissement supprimé avec succès",
+    "method_all": "Toutes les méthodes",
+    "col_method": "Méthode",
+    "col_location": "Emplacement",
+    "col_ip": "IP"
   }
 }

@@ -16,7 +16,13 @@
     "fullScreen": "ملء الشاشة",
     "lock": "قفل الشاشة",
     "themeLight": "الوضع النهاري",
-    "themeDark": "الوضع الليلي"
+    "themeDark": "الوضع الليلي",
+    "previous": "السابق",
+    "next": "التالي",
+    "page": "صفحة",
+    "active": "نشط",
+    "expired": "منتهي",
+    "rows_per_page": "الصفوف لكل صفحة:"
   },
   "sidebar": {
     "sectionStore": "المتجر",

@@ -22,6 +22,8 @@ import { format } from 'date-fns';
 export default function BansPage() {
   const { t, locale } = useTranslation();
   const [bans, setBans] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [loading, setLoading] = useState(true);
 
   // Modal states for new ban
@@ -195,7 +197,7 @@ export default function BansPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  bans.map((ban) => {
+                  bans.slice((page - 1) * limit, page * limit).map((ban) => {
                     const expired = isExpired(ban.expiresAt);
                     return (
                       <TableRow key={ban.id} className={expired ? 'opacity-50 bg-gray-50/50' : ''}>
@@ -225,6 +227,31 @@ export default function BansPage() {
                 )}
               </TableBody>
             </Table>
+          </div>
+          <div className="flex justify-between items-center mt-4 flex-wrap gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{t('common.rows_per_page', 'Rows per page:')}</span>
+              <Select value={limit.toString()} onValueChange={(v) => { setLimit(Number(v)); setPage(1); }}>
+                <SelectTrigger className="w-[80px]">
+                  <SelectValue placeholder="20" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button disabled={page === 1} onClick={() => setPage(p => p - 1)} variant="outline">
+                {t('common.previous', 'Previous')}
+              </Button>
+              <span className="text-sm font-medium">{t('common.page', 'Page')} {page}</span>
+              <Button disabled={page * limit >= bans.length} onClick={() => setPage(p => p + 1)} variant="outline">
+                {t('common.next', 'Next')}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>

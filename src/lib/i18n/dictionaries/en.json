@@ -16,7 +16,13 @@
     "fullScreen": "Full Screen",
     "lock": "Lock Screen",
     "themeLight": "Light Mode",
-    "themeDark": "Dark Mode"
+    "themeDark": "Dark Mode",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page",
+    "active": "Active",
+    "expired": "Expired",
+    "rows_per_page": "Rows per page:"
   },
   "sidebar": {
     "sectionStore": "Store",
