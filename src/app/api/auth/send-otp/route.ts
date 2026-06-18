@@ -57,13 +57,14 @@ export async function POST(request: Request) {
           'auth_captcha_enabled', 'auth_captcha_secret_key', 
           'otp_custom_gateway_enabled', 'otp_custom_gateway_url', 'otp_custom_gateway_token', 'otp_sms_template',
           'otp_whatsapp_enabled', 'otp_whatsapp_url', 'otp_whatsapp_token', 'otp_whatsapp_template',
-          'otp_rate_limit_minute', 'otp_rate_limit_phone_daily', 'otp_rate_limit_ip_daily'
+          'otp_rate_limit_minute', 'otp_rate_limit_phone_daily', 'otp_rate_limit_ip_daily',
+          'otp_telegram_bot_username'
         ] }
       }
     });
     const sMap = authSettings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
 
-    if (false && sMap.auth_captcha_enabled !== 'false' && sMap.auth_captcha_secret_key) { // FORCE DISABLED
+    if (sMap.auth_captcha_enabled !== 'false' && sMap.auth_captcha_secret_key) {
       if (!captchaToken) {
         return NextResponse.json({ success: false, message: 'Captcha token is required' }, { status: 400 });
       }
@@ -303,7 +304,7 @@ export async function POST(request: Request) {
       message: 'OTP sent successfully',
       expiresIn: 300,
       _devCode: otpCode, // Keep for dev testing
-      _telegramLink: method === 'telegram' ? `https://t.me/your_bot?start=${otpCode}` : undefined
+      _telegramLink: method === 'telegram' ? `https://t.me/${sMap.otp_telegram_bot_username || 'ChariDayBot'}?start=${otpCode}` : undefined
     });
   } catch (error) {
     console.error('[send-otp] Error:', error);
