@@ -270,7 +270,7 @@
     "defaultError": "An unexpected error occurred. Please try again."
   },
   "security": {
-    "section_title": "🛡️ Security & Access",
+    "section_title": "Security & Access",
     "auth_logs": "Auth Logs",
     "ban_list": "Ban List",
     "ban_types": {
