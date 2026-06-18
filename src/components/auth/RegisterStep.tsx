@@ -111,23 +111,30 @@ export default function RegisterStep() {
   const locale = useAppStore((s) => s.locale);
   const {
     method,
-    phone,
     email,
+    phone,
     fullName,
     storeName,
     selectedRole,
+    verifiedContact,
     isLoading,
     error,
-    verifiedContact,
+    intent,
     setFullName,
     setStoreName,
-    setEmail,
     setSelectedRole,
     setPasswordSetup,
-    setError,
     register,
     setStep,
+    setError,
   } = useAuthFlowStore();
+
+  React.useEffect(() => {
+    // If intent is checkout, force the role to 'buyer'
+    if (intent === 'checkout') {
+      setSelectedRole('buyer');
+    }
+  }, [intent, setSelectedRole]);
 
   const [errors, setErrors] = useState<{ name?: string; store?: string; role?: string; password?: string }>({});
 
@@ -205,66 +212,68 @@ export default function RegisterStep() {
         )}
       </div>
 
-      {/* Role Selection */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-[var(--foreground)]">
-          {t(locale, 'نوع الحساب', 'Account Type')} <span className="text-[var(--destructive)]">*</span>
-        </label>
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-          {ROLES.map((role) => {
-            const Icon = role.icon;
-            const isSelected = selectedRole === role.id;
-            return (
-              <button
-                key={role.id}
-                type="button"
-                onClick={() => {
-                  setSelectedRole(isSelected ? null : role.id);
-                  setErrors((p) => ({ ...p, role: undefined }));
-                  setError(null);
-                }}
-                className={cn(
-                  'relative flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-all duration-200 text-center',
-                  'hover:shadow-md hover:-translate-y-0.5',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2',
-                  isSelected
-                    ? 'border-[var(--brand)] bg-[var(--brand)]/5 shadow-[var(--shadow-brand)]'
-                    : 'border-[var(--border)] bg-[var(--card)]',
-                )}
-              >
-                {/* Icon */}
-                <div className={cn(
-                  'w-9 h-9 rounded-lg flex items-center justify-center text-white transition-transform',
-                  role.bgClass,
-                  isSelected && 'scale-110',
-                )}>
-                  <Icon className="size-4.5" />
-                </div>
-
-                {/* Label */}
-                <span className="text-xs font-semibold leading-tight">
-                  {locale === 'ar' ? role.labelAr : role.labelEn}
-                </span>
-
-                {/* Description */}
-                <span className="text-[10px] text-[var(--muted-foreground)] leading-tight">
-                  {locale === 'ar' ? role.descAr : role.descEn}
-                </span>
-
-                {/* Checkmark */}
-                {isSelected && (
-                  <div className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full gradient-brand flex items-center justify-center shadow-sm animate-scale-in">
-                    <Check className="size-3 text-[var(--navy)]" />
+      {/* Role Selection (hidden if checkout intent) */}
+      {intent !== 'checkout' && (
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-[var(--foreground)]">
+            {t(locale, 'نوع الحساب', 'Account Type')} <span className="text-[var(--destructive)]">*</span>
+          </label>
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+            {ROLES.map((role) => {
+              const Icon = role.icon;
+              const isSelected = selectedRole === role.id;
+              return (
+                <button
+                  key={role.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedRole(isSelected ? null : role.id);
+                    setErrors((p) => ({ ...p, role: undefined }));
+                    setError(null);
+                  }}
+                  className={cn(
+                    'relative flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-all duration-200 text-center',
+                    'hover:shadow-md hover:-translate-y-0.5',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2',
+                    isSelected
+                      ? 'border-[var(--brand)] bg-[var(--brand)]/5 shadow-[var(--shadow-brand)]'
+                      : 'border-[var(--border)] bg-[var(--card)]',
+                  )}
+                >
+                  {/* Icon */}
+                  <div className={cn(
+                    'w-9 h-9 rounded-lg flex items-center justify-center text-white transition-transform',
+                    role.bgClass,
+                    isSelected && 'scale-110',
+                  )}>
+                    <Icon className="size-4.5" />
                   </div>
-                )}
-              </button>
-            );
-          })}
+
+                  {/* Label */}
+                  <span className="text-xs font-semibold leading-tight">
+                    {locale === 'ar' ? role.labelAr : role.labelEn}
+                  </span>
+
+                  {/* Description */}
+                  <span className="text-[10px] text-[var(--muted-foreground)] leading-tight">
+                    {locale === 'ar' ? role.descAr : role.descEn}
+                  </span>
+
+                  {/* Checkmark */}
+                  {isSelected && (
+                    <div className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full gradient-brand flex items-center justify-center shadow-sm animate-scale-in">
+                      <Check className="size-3 text-[var(--navy)]" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {errors.role && (
+            <p className="text-xs text-[var(--destructive)]">{errors.role}</p>
+          )}
         </div>
-        {errors.role && (
-          <p className="text-xs text-[var(--destructive)]">{errors.role}</p>
-        )}
-      </div>
+      )}
 
       {/* Store Name (conditional) */}
       {showStoreField && (

@@ -176,6 +176,7 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
                 className="w-full text-xs font-bold text-[var(--navy)] hover:bg-[var(--navy)]/5"
                 onClick={() => {
                   onClose();
+                  import('@/lib/store/auth-flow').then(m => m.useAuthFlowStore.getState().setIntent('checkout'));
                   useAppStore.getState().setCurrentPage('login');
                 }}
               >
@@ -187,6 +188,7 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
                 className="w-full text-xs font-bold text-brand hover:bg-brand/10"
                 onClick={() => {
                   onClose();
+                  import('@/lib/store/auth-flow').then(m => m.useAuthFlowStore.getState().setIntent('checkout'));
                   useAppStore.getState().setCurrentPage('login');
                 }}
               >

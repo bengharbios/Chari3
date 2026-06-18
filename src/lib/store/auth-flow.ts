@@ -50,6 +50,10 @@ interface AuthFlowState {
   skipPhone: boolean;
   setSkipPhone: (skip: boolean) => void;
 
+  // Intent (to force roles based on context)
+  intent: 'checkout' | 'seller' | 'default';
+  setIntent: (intent: 'checkout' | 'seller' | 'default') => void;
+
   // Navigation setters
   setStep: (step: AuthStep) => void;
   setMethod: (method: ContactMethod) => void;
@@ -93,6 +97,7 @@ const INITIAL_STATE = {
   verifiedContact: null as VerifiedContact | null,
   captchaToken: null as string | null,
   skipPhone: false,
+  intent: 'default' as 'checkout' | 'seller' | 'default',
 };
 
 // ============================================
@@ -115,6 +120,7 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
   setPasswordSetup: (passwordSetup) => set({ passwordSetup }),
   setCaptchaToken: (captchaToken) => set({ captchaToken }),
   setSkipPhone: (skipPhone) => set({ skipPhone }),
+  setIntent: (intent) => set({ intent }),
   setError: (error) => set({ error }),
   setLoading: (isLoading) => set({ isLoading }),
   reset: () => set({ ...INITIAL_STATE }),
