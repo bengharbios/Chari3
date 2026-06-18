@@ -90,6 +90,15 @@ export default function AdminSidebar({ className }: { className?: string }) {
       ]
     },
     {
+      id: 'security',
+      title: t('security.section_title', 'Security & Access'),
+      icon: ShieldAlert,
+      items: [
+        { label: t('security.auth_logs', 'Auth Logs'), path: 'security/auth-logs' },
+        { label: t('security.ban_list', 'Ban List'), path: 'security/bans' },
+      ]
+    },
+    {
       id: 'platform',
       title: t('admin.platformSettings'),
       icon: Settings,
