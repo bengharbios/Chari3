@@ -213,7 +213,33 @@ export default function OtpSettingsPage() {
   };
 
   const handleTestTelegram = async () => {
-    toast.info('سيتم إرسال رسالة تجريبية لتليجرام قريباً (قيد التطوير)');
+    if (!telegramToken) {
+      toast.error(locale === 'ar' ? 'الرجاء إدخال Bot Token أولاً' : 'Please enter Bot Token first', { id: toastId });
+      return;
+    }
+
+    toast.loading(locale === 'ar' ? 'جاري الاتصال بـ Telegram...' : 'Connecting to Telegram...', { id: toastId });
+
+    try {
+      const res = await fetch('/api/admin/settings/test-telegram', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: telegramToken }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(
+          locale === 'ar'
+            ? `تم الاتصال بنجاح! اسم البوت: ${data.botName} (@${data.botUsername})`
+            : `Success! Bot Name: ${data.botName} (@${data.botUsername})`,
+          { id: toastId }
+        );
+      } else {
+        toast.error(data.message || (locale === 'ar' ? 'فشل الاتصال' : 'Connection failed'), { id: toastId });
+      }
+    } catch (error: any) {
+      toast.error('Network Error: ' + error.message, { id: toastId });
+    }
   };
 
   if (isLoading) {
