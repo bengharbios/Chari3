@@ -25,11 +25,28 @@ export async function POST(request: Request) {
     const data = await response.json();
 
     if (data.ok && data.result) {
+      // Automatically register the webhook if not on localhost
+      const host = request.headers.get('host') || '';
+      const protocol = host.includes('localhost') ? 'http' : 'https';
+      
+      let webhookStatus = 'Not registered (localhost)';
+      if (!host.includes('localhost')) {
+        const webhookUrl = `${protocol}://${host}/api/webhooks/telegram`;
+        const setWebhookRes = await fetch(`https://api.telegram.org/bot${token}/setWebhook?url=${webhookUrl}`);
+        const webhookData = await setWebhookRes.json();
+        if (webhookData.ok) {
+          webhookStatus = 'Registered automatically';
+        } else {
+          webhookStatus = `Failed to register: ${webhookData.description}`;
+        }
+      }
+
       return NextResponse.json({
         success: true,
         message: 'Bot connected successfully!',
         botName: data.result.first_name,
         botUsername: data.result.username,
+        webhookStatus
       });
     } else {
       return NextResponse.json(
