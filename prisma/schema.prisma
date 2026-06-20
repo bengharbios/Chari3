@@ -625,14 +625,19 @@ model ShipmentStatusHistory {
 }
 
 // ============================================
-// MARKETPLACE PAYMENT ENGINE MODELS
+// GLOBAL PLUGIN ARCHITECTURE
 // ============================================
 
-model PaymentProvider {
-  id           String   @id
-  name         String   // e.g., "chargily", "stripe"
+model PlatformPlugin {
+  id           String   @id // e.g. "chargily", "fedex", "twilio"
+  type         String   // e.g. "PAYMENT", "SHIPPING", "SMS", "MARKETING"
+  name         String
+  description  String?
+  author       String?
+  version      String   @default("1.0.0")
   isActive     Boolean  @default(true)
   configSchema String   @db.LongText // JSON definition of required config keys
+  globalConfig String?  @db.LongText // Encrypted global API keys for the platform
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

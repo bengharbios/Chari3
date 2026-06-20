@@ -6,7 +6,7 @@ import { useAppStore } from '@/lib/store';
 import { 
   ShieldAlert, LayoutDashboard, Settings, Sliders, ToggleRight, ChevronRight, ChevronLeft,
   FolderTree, Tag, TrendingUp, ShoppingCart, Users, Store, Wallet,
-  Boxes, Banknote, Palette, ChevronDown, Monitor, KeyRound, LogOut, Globe
+  Boxes, Banknote, Palette, ChevronDown, Monitor, KeyRound, LogOut, Globe, Plug
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -87,6 +87,14 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { label: t('admin.payoutRequests'), path: 'billing/withdrawals' },
         { label: t('admin.reviewReceipts'), path: 'billing/receipts' },
         { label: t('admin.revenueReports'), path: 'billing/revenue' },
+      ]
+    },
+    {
+      id: 'extensions',
+      title: locale === 'ar' ? 'الإضافات والتطبيقات' : 'Plugins & Extensions',
+      icon: Plug,
+      items: [
+        { label: locale === 'ar' ? 'متجر الإضافات (App Store)' : 'Plugin Manager', path: 'plugins' },
       ]
     },
     {
