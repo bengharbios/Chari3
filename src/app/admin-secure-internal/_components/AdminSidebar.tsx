@@ -72,6 +72,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { label: t('admin.userAccounts'), path: '?tab=users' },
         { label: t('admin.storesSellers'), path: '?tab=stores-sellers' },
         { label: locale === 'ar' ? 'توثيق المتاجر (KYC/KYB)' : 'KYC/KYB Verification', path: 'verifications' },
+        { label: locale === 'ar' ? 'مختبر سحب البيانات (OCR)' : 'OCR Sandbox', path: 'ocr-sandbox' },
       ]
     },
     {
