@@ -207,33 +207,31 @@ export default function AdminPaymentMethods() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">نوع الدفع (Type)</label>
-                <Select value={formData.type} onValueChange={(val) => setFormData({...formData, type: val})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cod">دفع عند الاستلام (COD)</SelectItem>
-                    <SelectItem value="credit_card">بطاقة ائتمانية (Card)</SelectItem>
-                    <SelectItem value="chargily_pay">البطاقة الذهبية / CIB (Chargily)</SelectItem>
-                    <SelectItem value="installments">تقسيط (Tabby/Tamara/etc)</SelectItem>
-                    <SelectItem value="wallet">محفظة إلكترونية</SelectItem>
-                    <SelectItem value="bank_transfer">تحويل بنكي</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select 
+                  value={formData.type} 
+                  onChange={(e) => setFormData({...formData, type: e.target.value})}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="cod">دفع عند الاستلام (COD)</option>
+                  <option value="credit_card">بطاقة ائتمانية (Card)</option>
+                  <option value="chargily_pay">البطاقة الذهبية / CIB (Chargily)</option>
+                  <option value="installments">تقسيط (Tabby/Tamara/etc)</option>
+                  <option value="wallet">محفظة إلكترونية</option>
+                  <option value="bank_transfer">تحويل بنكي</option>
+                </select>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">الأيقونة (Icon)</label>
-                <Select value={formData.icon} onValueChange={(val) => setFormData({...formData, icon: val})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="CreditCard">بطاقة بنكية</SelectItem>
-                    <SelectItem value="Banknote">أوراق نقدية (كاش)</SelectItem>
-                    <SelectItem value="Landmark">مبنى بنك</SelectItem>
-                    <SelectItem value="Smartphone">هاتف (أبل باي / الخ)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select 
+                  value={formData.icon} 
+                  onChange={(e) => setFormData({...formData, icon: e.target.value})}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  <option value="CreditCard">بطاقة بنكية</option>
+                  <option value="Banknote">أوراق نقدية (كاش)</option>
+                  <option value="Landmark">مبنى بنك</option>
+                  <option value="Smartphone">هاتف (أبل باي / الخ)</option>
+                </select>
               </div>
             </div>
 
