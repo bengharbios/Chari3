@@ -79,6 +79,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
       icon: Wallet,
       items: [
         { label: t('admin.paymentMethods', 'طرق الدفع'), path: 'payment-methods' },
+        { label: locale === 'ar' ? 'محرك بوابات الدفع' : 'Payment Engine', path: 'billing/payment-engine' },
         { label: t('admin.commissionSettings'), path: 'billing/settings' },
         { label: t('admin.subscriptionPackages'), path: 'billing/packages' },
         { label: t('admin.merchantsSubscriptions'), path: 'billing/merchants' },
