@@ -111,7 +111,7 @@ export default function Header() {
   useEffect(() => {
     setMounted(true);
   }, []);
-  const { locale, setLocale, toggleMobileMenu, setSidebarOpen, isSidebarOpen, allowGuestCheckout, setAllowGuestCheckout } = useAppStore();
+  const { locale, setLocale, toggleMobileMenu, setSidebarOpen, isSidebarOpen, allowGuestCheckout, setAllowGuestCheckout, currentPage } = useAppStore();
   const [enableDeliverTo, setEnableDeliverTo] = useState(true);
   const { user, isAuthenticated, logout, isBuyerMode } = useAuthStore();
   const {
