@@ -268,13 +268,20 @@ export default function SellerDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [verificationData, setVerificationData] = useState<any>(null);
 
   const refreshData = () => {
     if (!user?.id) return;
     setIsLoading(true);
-    fetch(`/api/seller/dashboard?userId=${user.id}`)
-      .then((r) => r.json())
-      .then((d) => { if (d.success) setData(d); })
+    
+    Promise.all([
+      fetch(`/api/seller/dashboard?userId=${user.id}`).then(r => r.json()),
+      fetch(`/api/seller/verification`).then(r => r.json())
+    ])
+      .then(([dashboardRes, verificationRes]) => {
+        if (dashboardRes.success) setData(dashboardRes);
+        if (verificationRes.success) setVerificationData(verificationRes.verification);
+      })
       .catch(() => {})
       .finally(() => setIsLoading(false));
   };
@@ -377,6 +384,41 @@ export default function SellerDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Verification Banner */}
+      {verificationData && verificationData.status !== 'APPROVED' && (
+        <div className={`p-4 rounded-xl border flex items-start gap-4 ${
+          verificationData.status === 'NOT_SUBMITTED' ? 'bg-blue-50 border-blue-200' :
+          verificationData.status === 'PENDING_REVIEW' ? 'bg-yellow-50 border-yellow-200' :
+          verificationData.status === 'REJECTED' ? 'bg-red-50 border-red-200' :
+          'bg-orange-50 border-orange-200'
+        }`}>
+          <ShieldCheck className={`h-6 w-6 mt-0.5 ${
+            verificationData.status === 'NOT_SUBMITTED' ? 'text-blue-600' :
+            verificationData.status === 'PENDING_REVIEW' ? 'text-yellow-600' :
+            verificationData.status === 'REJECTED' ? 'text-red-600' :
+            'text-orange-600'
+          }`} />
+          <div className="flex-1">
+            <h3 className="font-bold text-sm">
+              {verificationData.status === 'NOT_SUBMITTED' ? t('أكمل توثيق متجرك', 'Complete your store verification') :
+               verificationData.status === 'PENDING_REVIEW' ? t('وثائقك قيد المراجعة', 'Your documents are under review') :
+               verificationData.status === 'REJECTED' ? t('تم رفض التوثيق', 'Verification Rejected') :
+               t('مطلوب إعادة رفع بعض الوثائق', 'Requires resubmitting some documents')}
+            </h3>
+            <p className="text-xs mt-1 opacity-80">
+              {verificationData.status === 'NOT_SUBMITTED' ? t('يرجى رفع الوثائق المطلوبة (الهوية، السجل التجاري) لتفعيل كافة المزايا.', 'Please upload the required documents (ID, Commercial Register) to unlock all features.') :
+               verificationData.status === 'PENDING_REVIEW' ? t('سنقوم بمراجعة طلبك والرد في أقرب وقت.', 'We will review your application and respond shortly.') :
+               t('يرجى مراجعة الأسباب المذكورة وإعادة تقديم الطلب.', 'Please review the reasons mentioned and resubmit.')}
+            </p>
+            {verificationData.status !== 'PENDING_REVIEW' && (
+              <Button size="sm" className="mt-3" onClick={() => useAppStore.getState().setCurrentPage('verification' as any)}>
+                {t('الذهاب لصفحة التوثيق', 'Go to Verification Page')}
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards - Tremor */}
       <TremorGrid numItems={1} numItemsSm={2} numItemsLg={4} className="gap-6">

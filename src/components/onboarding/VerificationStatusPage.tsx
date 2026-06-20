@@ -1,10 +1,7 @@
 'use client';
-import React from 'react';
-
-import { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Clock, CheckCircle, XCircle, AlertTriangle, ShieldCheck, Lock, FileText, Phone, Mail, ArrowLeft, ArrowRight, Edit2, ExternalLink, Building2, UserCircle } from 'lucide-react';
-import { useAppStore } from '@/lib/store';
-import { useAuthStore } from '@/lib/store';
+import { useAppStore, useAuthStore } from '@/lib/store';
 import { useOnboardingStore, getVerificationItemsForRole, restoreDraftFields, calcResumeStep } from '@/lib/store/onboarding';
 import type { VerificationStatus } from '@/lib/store/onboarding';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { KycVerificationSection } from './KycVerificationSection';
 
 function t(isAr: boolean, ar: string, en: string) {
   return isAr ? ar : en;
@@ -475,6 +473,8 @@ export default function VerificationStatusPage() {
           </CardContent>
         </Card>
       )}
+      {/* KYC/KYB Module inspired by Ballerine */}
+      <KycVerificationSection isAr={isAr} />
     </div>
   );
 }
