@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { unlink } from 'fs/promises';
 import path from 'path';
+import { SecurityService } from '@/lib/payment-engine/services/SecurityService';
 
 export const dynamic = 'force-dynamic';
 
@@ -137,6 +138,48 @@ export async function POST(req: NextRequest) {
 
     const shippingRatesStr = settings.shippingRates ? JSON.stringify(settings.shippingRates) : null;
     const shippingIntegrationsStr = settings.shippingIntegrations ? JSON.stringify(settings.shippingIntegrations) : null;
+    
+    // Handle SellerPaymentConfig for Chargily
+    if (settings.paymentDetails && settings.paymentDetails.chargilySecretKey && settings.paymentDetails.chargilySecretKey !== '********') {
+      try {
+        const encryptedKeys = SecurityService.encryptConfig({
+          publicKey: settings.paymentDetails.chargilyPublicKey,
+          secretKey: settings.paymentDetails.chargilySecretKey
+        });
+        
+        // Find sellerId based on type
+        let sellerIdToUse: string | null = null;
+        if (type === 'store') {
+          const st = await db.store.findFirst({ where: { managerId: userId } });
+          sellerIdToUse = st?.sellerId || null;
+        } else {
+          const sp = await db.sellerProfile.findUnique({ where: { userId } });
+          sellerIdToUse = sp?.id || null;
+        }
+
+        if (sellerIdToUse) {
+          await db.sellerPaymentConfig.upsert({
+            where: { sellerId: sellerIdToUse },
+            update: {
+              gatewayId: 'chargily',
+              encryptedKeys,
+            },
+            create: {
+              sellerId: sellerIdToUse,
+              gatewayId: 'chargily',
+              mode: 'split', // default
+              encryptedKeys,
+            }
+          });
+        }
+        
+        // Hide secret key before saving in plain JSON
+        settings.paymentDetails.chargilySecretKey = '********';
+      } catch (err) {
+        console.error('Failed to encrypt payment keys:', err);
+      }
+    }
+
     const paymentDetailsStr = settings.paymentDetails ? JSON.stringify(settings.paymentDetails) : null;
     
     // Merge storeConfig into themeSettings since storeConfig doesn't have its own column

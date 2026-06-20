@@ -234,6 +234,9 @@ export default function StoreSettingsPage() {
     satimApiUsername: '',
     satimApiPassword: '',
     satimSandbox: true,
+    chargilyEnabled: false,
+    chargilyPublicKey: '',
+    chargilySecretKey: '',
   });
 
   const [themeSettings, setThemeSettings] = useState<any>({
@@ -1459,6 +1462,62 @@ export default function StoreSettingsPage() {
                         )}
                       </AnimatePresence>
                     </div>
+
+                    {/* Chargily Gateway Toggle */}
+                    <div className="p-4 bg-background/40 rounded-2xl border border-white/5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <CreditCard className="size-4 text-primary" />
+                            <p className="font-bold text-sm">{t('بوابة الدفع Chargily Pay', 'Chargily Pay Gateway')}</p>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{t('قبول المدفوعات عبر البطاقة الذهبية و CIB بكل سهولة', 'Accept online payments via Edahabia & CIB easily')}</p>
+                        </div>
+                        <Switch 
+                          checked={paymentDetails.chargilyEnabled}
+                          onCheckedChange={(checked) => setPaymentDetails({ ...paymentDetails, chargilyEnabled: checked })}
+                        />
+                      </div>
+
+                      <AnimatePresence>
+                        {paymentDetails.chargilyEnabled && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="space-y-4 pt-2 border-t border-white/5"
+                          >
+                            <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 text-primary text-xs">
+                              💡 {t('الرجاء إدخال مفاتيح API الخاصة بك من لوحة تحكم Chargily Pay V2.', 'Please enter your API keys from your Chargily Pay V2 dashboard.')}
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>{t('المفتاح العام (Public Key)', 'Public Key')}</Label>
+                                <Input 
+                                  value={paymentDetails.chargilyPublicKey || ''}
+                                  onChange={(e) => setPaymentDetails({ ...paymentDetails, chargilyPublicKey: e.target.value })}
+                                  placeholder="pk_test_... أو pk_live_..."
+                                  className="bg-muted/30 border-white/10 rounded-xl font-mono text-start"
+                                  dir="ltr"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>{t('المفتاح السري (Secret Key)', 'Secret Key')}</Label>
+                                <Input 
+                                  type="password"
+                                  value={paymentDetails.chargilySecretKey || ''}
+                                  onChange={(e) => setPaymentDetails({ ...paymentDetails, chargilySecretKey: e.target.value })}
+                                  placeholder="sk_test_... أو sk_live_..."
+                                  className="bg-muted/30 border-white/10 rounded-xl font-mono text-start"
+                                  dir="ltr"
+                                />
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
                   </CardContent>
                 </Card>
               </div>
