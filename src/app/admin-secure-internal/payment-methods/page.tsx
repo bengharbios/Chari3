@@ -36,6 +36,7 @@ export default function AdminPaymentMethods() {
     icon: 'CreditCard',
     fee: '0',
     isActive: true,
+    configSchema: '',
   });
 
   const fetchMethods = async () => {
@@ -66,6 +67,7 @@ export default function AdminPaymentMethods() {
         icon: method.icon,
         fee: String(method.fee),
         isActive: method.isActive,
+        configSchema: method.configSchema || '',
       });
     } else {
       setEditingMethod(null);
@@ -76,6 +78,7 @@ export default function AdminPaymentMethods() {
         icon: 'CreditCard',
         fee: '0',
         isActive: true,
+        configSchema: '',
       });
     }
     setIsModalOpen(true);
@@ -211,6 +214,7 @@ export default function AdminPaymentMethods() {
                   <SelectContent>
                     <SelectItem value="cod">دفع عند الاستلام (COD)</SelectItem>
                     <SelectItem value="credit_card">بطاقة ائتمانية (Card)</SelectItem>
+                    <SelectItem value="chargily_pay">البطاقة الذهبية / CIB (Chargily)</SelectItem>
                     <SelectItem value="installments">تقسيط (Tabby/Tamara/etc)</SelectItem>
                     <SelectItem value="wallet">محفظة إلكترونية</SelectItem>
                     <SelectItem value="bank_transfer">تحويل بنكي</SelectItem>
@@ -237,6 +241,23 @@ export default function AdminPaymentMethods() {
               <label className="text-sm font-medium">رسوم إضافية للمشتري (اختياري)</label>
               <Input type="number" step="0.01" value={formData.fee} onChange={e => setFormData({...formData, fee: e.target.value})} placeholder="0.00" />
             </div>
+
+            {formData.type === 'chargily_pay' && (
+              <div className="space-y-2 border p-3 rounded-lg bg-muted/20">
+                <label className="text-sm font-medium">إعدادات Chargily Pay (JSON)</label>
+                <textarea 
+                  className="w-full text-sm border p-2 rounded-md font-mono bg-background text-foreground"
+                  rows={4}
+                  value={formData.configSchema}
+                  onChange={e => setFormData({...formData, configSchema: e.target.value})}
+                  placeholder='{"secretKey": "test_sk_...", "publicKey": "test_pk_..."}'
+                  dir="ltr"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  أدخل إعدادات الربط بصيغة JSON. ستحتاج إلى Secret Key لإجراء الدفع.
+                </p>
+              </div>
+            )}
 
             <div className="flex items-center justify-between border p-3 rounded-lg mt-4">
               <span className="font-medium text-sm">تفعيل الطريقة</span>

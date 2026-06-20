@@ -41,7 +41,22 @@ export default function SinglePageCheckout() {
   const t = (ar: string, en: string) => (isRTL ? ar : en);
 
   const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => { setIsMounted(true); }, []);
+  useEffect(() => { 
+    setIsMounted(true); 
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const successParam = params.get('success');
+      const orderNumParam = params.get('orderNumber');
+      const errorParam = params.get('error');
+
+      if (successParam === 'true' && orderNumParam) {
+        setCheckoutSuccess(orderNumParam);
+        setTimeout(() => toast.success(t('🎉 تم تسجيل طلبك والدفع بنجاح!', '🎉 Order placed and paid successfully!')), 500);
+      } else if (errorParam === 'payment_failed') {
+        setTimeout(() => toast.error(t('حدث خطأ أثناء عملية الدفع، أو قمت بإلغاء العملية.', 'Payment failed or was cancelled.')), 500);
+      }
+    }
+  }, []);
 
   // States list & dynamic payment methods
   const [dynamicWilayas, setDynamicWilayas] = useState<any[]>([]);
@@ -325,6 +340,25 @@ export default function SinglePageCheckout() {
 
       if (!res.ok) throw new Error();
       const data = await res.json();
+
+      if (pm?.type === 'chargily_pay') {
+        const chargilyRes = await fetch('/api/checkout/chargily/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: data.id })
+        });
+        const chargilyData = await chargilyRes.json();
+        
+        if (chargilyData.success && chargilyData.checkout_url) {
+          clearCart();
+          window.location.href = chargilyData.checkout_url;
+          return;
+        } else {
+          toast.error(t('فشل توليد رابط الدفع، سيتم تسجيل الطلب كغير مدفوع', 'Failed to generate payment link'));
+          // Continue to normal success screen
+        }
+      }
+
       setCheckoutSuccess(data.orderNumber);
       clearCart();
       toast.success(t('🎉 تم تسجيل طلبك بنجاح!', '🎉 Order placed successfully!'));
