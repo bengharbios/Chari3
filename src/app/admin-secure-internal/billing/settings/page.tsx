@@ -100,8 +100,6 @@ export default function BillingSettingsPage() {
   const [withdrawalMethodBank, setWithdrawalMethodBank] = useState(true);
   const [withdrawalMethodCash, setWithdrawalMethodCash] = useState(false);
 
-  // Platform Payment Model
-  const [platformPaymentModel, setPlatformPaymentModel] = useState<'centralized' | 'decentralized' | 'mixed'>('mixed');
 
   // Addons States
   const [addons, setAddons] = useState<any[]>([]);
@@ -170,11 +168,7 @@ export default function BillingSettingsPage() {
             setWithdrawalMethodCash(methods.includes('cash'));
           } catch (e) {}
         }
-        
-        // Platform Payment Model
-        if (s.platform_payment_model) {
-          setPlatformPaymentModel(s.platform_payment_model as 'centralized' | 'decentralized' | 'mixed');
-        }
+
       }
 
       const addonsData = await addonsRes.json();
@@ -226,7 +220,6 @@ export default function BillingSettingsPage() {
             billing_trial_on_registration: trialOnRegistration,
             billing_expiry_action: expiryAction,
             withdrawal_min_amount: withdrawalMinAmount,
-            platform_payment_model: platformPaymentModel,
             withdrawal_methods: JSON.stringify([
               ...(withdrawalMethodCcp ? ['ccp'] : []),
               ...(withdrawalMethodCib ? ['cib'] : []),
@@ -374,48 +367,7 @@ export default function BillingSettingsPage() {
           <div className="lg:col-span-2 space-y-6">
             <form onSubmit={handleSaveSettings} className="space-y-6">
               
-              {/* Section 0: Platform Payment Model */}
-              <Card className="border-border bg-card shadow-sm hover:shadow transition-shadow border-blue-500/20">
-                <CardHeader className="bg-blue-500/5 border-b border-blue-500/10">
-                  <CardTitle className="text-base font-bold flex items-center gap-2">
-                    <Settings className="h-5 w-5 text-blue-500" />
-                    {t(locale, 'النموذج المالي العام للمنصة', 'Global Platform Payment Model')}
-                  </CardTitle>
-                  <CardDescription>
-                    {t(locale, 'تحديد كيفية عمل المنصة مالياً. هل تدفع الأموال للمنصة أم مباشرة للتاجر؟', 'Configure how money flows through the platform globally.')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-4">
-                  <div className="space-y-3">
-                    <Label className="text-xs font-semibold block">{t(locale, 'اختر نموذج الدفع الافتراضي:', 'Select Default Payment Model:')}</Label>
-                    <Select value={platformPaymentModel} onValueChange={(val: any) => setPlatformPaymentModel(val)}>
-                      <SelectTrigger className="w-full h-12 bg-background border-border rounded-xl shadow-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="centralized">
-                          <div className="flex flex-col text-start">
-                            <span className="font-bold text-sm">الدفع للمنصة (Centralized)</span>
-                            <span className="text-[10px] text-muted-foreground">المنصة تستلم الأموال وتعطي التاجر رصيداً قابلاً للسحب.</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="decentralized">
-                          <div className="flex flex-col text-start">
-                            <span className="font-bold text-sm">الدفع المباشر للتاجر (Decentralized)</span>
-                            <span className="text-[10px] text-muted-foreground">التاجر يقبض أمواله كاش وتحتسب المنصة عمولتها كمديونية على التاجر.</span>
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="mixed">
-                          <div className="flex flex-col text-start">
-                            <span className="font-bold text-sm">النظام المدمج (Mixed)</span>
-                            <span className="text-[10px] text-muted-foreground">دعم النظامين معاً (رصيد موجب أو مديونية) بناءً على طريقة الدفع.</span>
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </CardContent>
-              </Card>
+
 
               {/* Section A: Global Settings */}
               <Card className="border-border bg-card shadow-sm hover:shadow transition-shadow">
