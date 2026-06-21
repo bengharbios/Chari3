@@ -10,14 +10,15 @@ import Webcam from 'react-webcam';
 import Script from 'next/script';
 
 export default function OcrSandboxPage() {
-  const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [frontImage, setFrontImage] = useState<string | null>(null);
+  const [backImage, setBackImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [progressMsg, setProgressMsg] = useState('');
   const [progressPct, setProgressPct] = useState(0);
   const [result, setResult] = useState<any>(null);
 
-  // Camera State
+  // Camera & Multi-step State
+  const [captureStep, setCaptureStep] = useState<'front' | 'back' | 'done'>('front');
   const [useCamera, setUseCamera] = useState(false);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const webcamRef = React.useRef<Webcam>(null);
@@ -275,7 +276,6 @@ export default function OcrSandboxPage() {
 
     if (imageSrc) {
       const activePoints = latestPointsRef.current;
-      setUseCamera(false); // Close camera UI immediately for better UX
       
       if (activePoints) {
         toast.info('جاري قص البطاقة وتحسين النصوص (Sharpening)...');
@@ -284,25 +284,43 @@ export default function OcrSandboxPage() {
       }
       
       const finalImageSrc = await cropImageWithOpenCV(imageSrc, activePoints);
-      const fileFromCamera = dataURLtoFile(finalImageSrc, 'camera-capture.jpg');
       
-      setFile(fileFromCamera);
-      setPreview(finalImageSrc);
+      if (captureStep === 'front') {
+        setFrontImage(finalImageSrc);
+        setCaptureStep('back');
+        toast.success('تم التقاط الوجه الأمامي! الرجاء قلب البطاقة لتصوير الوجه الخلفي.');
+      } else if (captureStep === 'back') {
+        setBackImage(finalImageSrc);
+        setCaptureStep('done');
+        setUseCamera(false); // Close camera after both are done
+        toast.success('تم التقاط البطاقة بنجاح!');
+      }
+      
       setResult(null);
     }
-  }, [webcamRef]);
+  }, [webcamRef, captureStep]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      setFile(selectedFile);
-      setPreview(URL.createObjectURL(selectedFile));
+      const url = URL.createObjectURL(selectedFile);
+      if (side === 'front') {
+        setFrontImage(url);
+        if (captureStep === 'front') setCaptureStep('back');
+      } else {
+        setBackImage(url);
+        setCaptureStep('done');
+      }
       setResult(null);
     }
   };
 
   const handleExtract = async () => {
-    if (!file) return;
+    // We primarily need the back image for MRZ extraction
+    if (!backImage) {
+      toast.error('الرجاء تصوير الجهة الخلفية للبطاقة لاستخراج البيانات بدقة (MRZ)');
+      return;
+    }
 
     setLoading(true);
     setResult(null);
@@ -310,65 +328,84 @@ export default function OcrSandboxPage() {
     setProgressPct(0);
 
     try {
-      const worker = await createWorker('ara+fra+eng', 1, {
+      // 1. Process Back Image for MRZ (Highly accurate)
+      const worker = await createWorker('eng', 1, {
         logger: m => {
-          console.log(m);
-          // m example: { status: 'recognizing text', progress: 0.50 }
-          
           let translatedStatus = m.status;
           if (m.status.includes('loading tesseract core')) translatedStatus = 'تحميل النواة الأساسية...';
-          else if (m.status.includes('loading language traineddata')) translatedStatus = 'تحميل قاموس اللغات (عربي/فرنسي/إنجليزي)...';
+          else if (m.status.includes('loading language traineddata')) translatedStatus = 'تحميل القاموس...';
           else if (m.status.includes('initializing api')) translatedStatus = 'تهيئة واجهة البرمجة...';
-          else if (m.status.includes('recognizing text')) translatedStatus = 'جاري استخراج النصوص من الصورة...';
-
+          else if (m.status.includes('recognizing text')) translatedStatus = 'جاري استخراج شريط MRZ من الخلف...';
           setProgressMsg(translatedStatus);
           setProgressPct(Math.round(m.progress * 100));
         }
       });
 
-      const { data: { text } } = await worker.recognize(file);
-      await worker.terminate();
-
-      // MRZ Detection Logic
-      const mrzRegex = /[A-Z0-9<]{30,}/g;
-      const mrzMatches = text.match(mrzRegex);
-
-      // Extract 10 digit number logic (Commercial Register Number)
-      const crRegex = /\b\d{10}\b/g;
-      const crMatches = text.match(crRegex);
-
-      // Algerian ID Extraction Logic (More resilient for OCR typos)
-      const ninMatch = text.match(/(?:الوطني|رقم|التعويف|التعريف)[^\d]*(\d{18})/i) || text.match(/\b\d{18}\b/);
-      const lastNameMatch = text.match(/(?:اللقب|النقب)[^\n:]*[:;\-]\s*([^\n]+)/i);
-      const firstNameMatch = text.match(/(?:الإسم|الاسم|my)[^\n:]*[:;\-]\s*([^\n]+)/i);
-      const dobMatch = text.match(/(?:الميلاد|تريغ|شيلك|تاريخ)[^\d]*(\d{4}[.\-]\d{2}[.\-]\d{2})/i);
-      const issueAuthorityMatch = text.match(/(?:سلطة|اسلطة)[^\n:]*الإصدار[^\n:]*[:;\-]\s*([^\n]+)/i);
-      const issueDateMatch = text.match(/(?:تاريخ|تريخ)[^\n:]*الإصدار[^\d]*(\d{4}[.\-]\d{2}[.\-]\d{2})/i);
-      const expiryDateMatch = text.match(/(?:تاريخ|تاريع)[^\n:]*(?:الإنتهاء|لإتتياء)[^\d]*(\d{4}[.\-]\d{2}[.\-]\d{2})/i);
-      const genderMatch = text.match(/الجنس[^\n:]*[:;\-]\s*([^\s\n]+)/i);
-      const bloodTypeMatch = text.match(/Rh\s*[:;\-]\s*([A-Z0-9+\-]+)/i);
-      const birthPlaceMatch = text.match(/مكان[^\n:]*(?:الميلاد|اشيلاد)[^\n:]*[:;\-]\s*([^\n]+)/i);
+      const backFile = dataURLtoFile(backImage, 'back.jpg');
+      const { data: { text: backText } } = await worker.recognize(backFile);
       
-      const parsedId = {
-        republic: text.match(/الجمهورية/i) ? 'الجمهورية الجزائرية الديمقراطية الشعبية' : '',
-        cardType: text.match(/(?:بطاقة|التعريف)/i) ? 'بطاقة التعريف الوطنية' : '',
-        issueAuthority: issueAuthorityMatch ? issueAuthorityMatch[1].trim() : '',
-        issueDate: issueDateMatch ? issueDateMatch[1].trim() : '',
-        expiryDate: expiryDateMatch ? expiryDateMatch[1].trim() : '',
-        nin: ninMatch ? (ninMatch[1] || ninMatch[0]) : '',
-        lastName: lastNameMatch ? lastNameMatch[1].trim() : '',
-        firstName: firstNameMatch ? firstNameMatch[1].trim() : '',
-        dob: dobMatch ? dobMatch[1].trim() : '',
-        gender: genderMatch ? genderMatch[1].trim() : '',
-        bloodType: bloodTypeMatch ? bloodTypeMatch[1].trim() : '',
-        birthPlace: birthPlaceMatch ? birthPlaceMatch[1].trim() : ''
-      };
+      // MRZ Detection Logic
+      // Algerian MRZ TD1 Format: 
+      // Line 1: I<DZA[9 digit ID]<<<<<<<<<<<<<<<
+      // Line 2: [DOB YYMMDD][Gender][Expiry YYMMDD]DZA<<<<<<<<<<<[CheckDigit]
+      // Line 3: LASTNAME<<FIRSTNAME<<<<<<<<<<<
+      const mrzRegex = /(?:[A-Z0-9<]{30,}\n?){2,3}/g;
+      const mrzMatches = backText.match(mrzRegex);
+      
+      let parsedId: any = {};
+      
+      if (mrzMatches && mrzMatches.length > 0) {
+        const mrz = mrzMatches[0].replace(/\s+/g, '');
+        // Rough parse of Algerian TD1 MRZ
+        if (mrz.length >= 90) { // 3 lines of 30 chars
+           const line1 = mrz.substring(0, 30);
+           const line2 = mrz.substring(30, 60);
+           const line3 = mrz.substring(60, 90);
+           
+           parsedId.nin = line1.substring(5, 14).replace(/</g, '');
+           
+           const dobRaw = line2.substring(0, 6); // YYMMDD
+           const yearPrefix = parseInt(dobRaw.substring(0,2)) > 24 ? '19' : '20';
+           parsedId.dob = `${yearPrefix}${dobRaw.substring(0,2)}-${dobRaw.substring(2,4)}-${dobRaw.substring(4,6)}`;
+           
+           parsedId.gender = line2.substring(7, 8) === 'M' ? 'ذكر' : 'أنثى';
+           
+           const expRaw = line2.substring(8, 14); // YYMMDD
+           parsedId.expiryDate = `20${expRaw.substring(0,2)}-${expRaw.substring(2,4)}-${expRaw.substring(4,6)}`;
+           
+           const names = line3.split('<<');
+           if (names.length >= 2) {
+             parsedId.lastName = names[0].replace(/</g, ' ').trim();
+             parsedId.firstName = names[1].replace(/</g, ' ').trim();
+           }
+        }
+      }
+
+      // 2. Process Front Image for Arabic Text (Optional/Fallback)
+      let frontText = '';
+      if (frontImage) {
+        setProgressMsg('جاري استخراج النصوص العربية من الأمام...');
+        setProgressPct(0);
+        await worker.reinitialize('ara+fra+eng');
+        const frontFile = dataURLtoFile(frontImage, 'front.jpg');
+        const { data: { text } } = await worker.recognize(frontFile);
+        frontText = text;
+        
+        // Enhance parsed data from front
+        const ninMatch = frontText.match(/(?:الوطني|رقم|التعويف|التعريف)[^\d]*(\d{18})/i) || frontText.match(/\b\d{18}\b/);
+        if (ninMatch && !parsedId.nin) parsedId.nin = ninMatch[1];
+        
+        const arabicLastName = frontText.match(/(?:اللقب|النقب)[^\n:]*[:;\-]\s*([^\n]+)/i);
+        if (arabicLastName) parsedId.lastNameAr = arabicLastName[1].trim();
+      }
+
+      await worker.terminate();
 
       setResult({
         success: true,
-        text,
+        frontText,
+        backText,
         mrzMatches: mrzMatches || [],
-        crMatches: crMatches || [],
         parsedId
       });
 
@@ -416,17 +453,49 @@ export default function OcrSandboxPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {!useCamera ? (
-              <>
-                <div className="border-2 border-dashed rounded-lg p-8 text-center flex flex-col items-center justify-center bg-muted/20 relative">
-                  <input 
-                    type="file" 
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                  />
-                  <Upload className="h-8 w-8 text-muted-foreground mb-4" />
-                  <p className="font-medium">اسحب الصورة هنا أو اضغط للاختيار</p>
-                  <p className="text-xs text-muted-foreground mt-1">PNG, JPG, JPEG</p>
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Front Upload */}
+                  <div className={`border-2 border-dashed rounded-lg p-4 text-center flex flex-col items-center justify-center relative ${frontImage ? 'border-primary bg-primary/5' : 'bg-muted/20'}`}>
+                    <input 
+                      type="file" 
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, 'front')}
+                    />
+                    {frontImage ? (
+                      <div className="w-full relative">
+                        <img src={frontImage} alt="Front" className="w-full h-24 object-contain rounded" />
+                        <CheckCircle2 className="absolute top-1 right-1 h-5 w-5 text-green-500 bg-white rounded-full" />
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="h-6 w-6 text-muted-foreground mb-2" />
+                        <p className="text-sm font-medium">الجهة الأمامية</p>
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Back Upload */}
+                  <div className={`border-2 border-dashed rounded-lg p-4 text-center flex flex-col items-center justify-center relative ${backImage ? 'border-primary bg-primary/5' : 'bg-muted/20'}`}>
+                    <input 
+                      type="file" 
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      accept="image/*"
+                      onChange={(e) => handleFileChange(e, 'back')}
+                    />
+                    {backImage ? (
+                      <div className="w-full relative">
+                        <img src={backImage} alt="Back" className="w-full h-24 object-contain rounded" />
+                        <CheckCircle2 className="absolute top-1 right-1 h-5 w-5 text-green-500 bg-white rounded-full" />
+                      </div>
+                    ) : (
+                      <>
+                        <Upload className="h-6 w-6 text-muted-foreground mb-2" />
+                        <p className="text-sm font-medium">الجهة الخلفية (MRZ)</p>
+                      </>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="flex items-center gap-4 py-2">
@@ -440,32 +509,16 @@ export default function OcrSandboxPage() {
                   className="w-full flex items-center gap-2" 
                   onClick={() => {
                     setUseCamera(true);
-                    setFile(null);
-                    setPreview(null);
+                    setFrontImage(null);
+                    setBackImage(null);
+                    setCaptureStep('front');
                     setResult(null);
                   }}
                 >
                   <Camera className="h-4 w-4" />
-                  افتح الكاميرا لالتقاط صورة
+                  افتح الكاميرا لالتقاط الوجهين
                 </Button>
-
-                {preview && (
-                  <div className="mt-4 rounded-lg overflow-hidden border bg-black/5 flex justify-center p-2 relative">
-                    <img src={preview} alt="Preview" className="w-full h-auto object-contain max-h-[300px] rounded" />
-                    <Button 
-                      variant="destructive" 
-                      size="icon" 
-                      className="absolute top-4 right-4 h-8 w-8 rounded-full"
-                      onClick={() => {
-                        setFile(null);
-                        setPreview(null);
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                )}
-              </>
+              </div>
             ) : (
               <div className="space-y-4">
                 <div className="relative rounded-lg overflow-hidden border bg-black">
@@ -503,7 +556,9 @@ export default function OcrSandboxPage() {
                       <div className="w-full h-full flex items-center justify-center">
                         <div className="w-[80%] h-[50%] border-2 border-dashed border-white/40 rounded-xl relative transition-all duration-300">
                            <div className="absolute -top-8 w-full text-center text-white font-bold text-sm bg-black/40 py-1 rounded backdrop-blur-sm">
-                             {cvLoaded ? "ضع البطاقة أمام الكاميرا..." : "جاري تحميل محرك الرؤية الحاسوبية (OpenCV)..."}
+                             {!cvLoaded ? "جاري تحميل محرك الرؤية (OpenCV)..." : 
+                              captureStep === 'front' ? "وجه الكاميرا للجهة الأمامية للبطاقة..." : 
+                              "وجه الكاميرا للجهة الخلفية (موقع الأسهم <<<<)..."}
                            </div>
                         </div>
                       </div>
@@ -527,7 +582,7 @@ export default function OcrSandboxPage() {
                       onClick={handleCapture}
                     >
                       <Camera className="mr-2 h-4 w-4" />
-                      التقاط
+                      {captureStep === 'front' ? 'التقاط الوجه الأمامي' : 'التقاط الوجه الخلفي'}
                     </Button>
                     <Button 
                       variant="destructive" 
@@ -544,7 +599,7 @@ export default function OcrSandboxPage() {
 
             <Button 
               className="w-full" 
-              disabled={!file || loading}
+              disabled={(!frontImage && !backImage) || loading}
               onClick={handleExtract}
             >
               {loading ? (
@@ -636,15 +691,19 @@ export default function OcrSandboxPage() {
                         <input type="text" defaultValue={result.parsedId.expiryDate} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
                       </div>
                       <div className="space-y-1 col-span-1 md:col-span-2">
-                        <label className="text-xs font-bold text-muted-foreground">رقم التعريف الوطني (18 رقم)</label>
+                        <label className="text-xs font-bold text-muted-foreground">رقم التعريف الوطني (18 رقم) من الأمام</label>
                         <input type="text" defaultValue={result.parsedId.nin} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500 font-mono" />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-muted-foreground">اللقب</label>
+                        <label className="text-xs font-bold text-muted-foreground">اللقب (عربي)</label>
+                        <input type="text" defaultValue={result.parsedId.lastNameAr} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-muted-foreground">اللقب (إنجليزي - MRZ)</label>
                         <input type="text" defaultValue={result.parsedId.lastName} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-muted-foreground">الإسم</label>
+                        <label className="text-xs font-bold text-muted-foreground">الإسم (إنجليزي - MRZ)</label>
                         <input type="text" defaultValue={result.parsedId.firstName} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
                       </div>
                       <div className="space-y-1">
@@ -688,9 +747,16 @@ export default function OcrSandboxPage() {
                 )}
 
                 <div>
-                  <h3 className="font-semibold mb-2">النص الخام المستخرج كاملًا:</h3>
-                  <div className="p-4 bg-muted rounded-lg border max-h-[300px] overflow-y-auto whitespace-pre-wrap text-sm" dir="auto">
-                    {result.text}
+                  <h3 className="font-semibold mb-2">النص الخام المستخرج (الأمامي):</h3>
+                  <div className="p-4 bg-muted rounded-lg border max-h-[150px] overflow-y-auto whitespace-pre-wrap text-sm" dir="auto">
+                    {result.frontText}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-2">النص الخام المستخرج (الخلفي - MRZ):</h3>
+                  <div className="p-4 bg-muted rounded-lg border max-h-[150px] overflow-y-auto whitespace-pre-wrap text-sm" dir="ltr">
+                    {result.backText}
                   </div>
                 </div>
               </div>
