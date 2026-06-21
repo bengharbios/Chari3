@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useTranslation } from '@/lib/i18n/hooks';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 

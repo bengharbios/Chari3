@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useTranslation } from '@/lib/i18n/hooks';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
