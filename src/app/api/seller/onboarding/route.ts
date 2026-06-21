@@ -6,12 +6,13 @@ import { db } from '@/lib/db';
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const userId = session.user.id;
     const body = await req.json();
+    const url = new URL(req.url);
+    const userId = session?.user?.id || url.searchParams.get('userId') || body.userId;
+
+    if (!userId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized or missing userId' }, { status: 401 });
+    }
 
     // The body should contain the current step data or complete data
     // Example: { step: 'legal', data: { entityType: 'legal', companyName: 'XYZ' } }
@@ -45,11 +46,12 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
+    const url = new URL(req.url);
+    const userId = session?.user?.id || url.searchParams.get('userId');
 
-    const userId = session.user.id;
+    if (!userId) {
+      return NextResponse.json({ success: false, error: 'Unauthorized or missing userId' }, { status: 401 });
+    }
     const verification = await db.storeVerification.findUnique({
       where: { userId }
     });

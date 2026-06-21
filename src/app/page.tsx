@@ -15,7 +15,7 @@ import BottomNav from '@/components/layout/BottomNav';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useGentelellaTheme } from '@/components/layout/gentelella/theme';
 import AuthPage from '@/components/auth/AuthPage';
-import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
+import OnboardingWizard from '@/components/seller/onboarding/OnboardingWizard';
 import VerificationStatusPage from '@/components/onboarding/VerificationStatusPage';
 import { StickyStatusBanner } from '@/components/onboarding/VerificationWidget';
 import AdminReviewQueue from '@/components/onboarding/AdminReviewQueue';
@@ -239,7 +239,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
     if (!user || user.role === 'admin' || user.role === 'buyer') return;
 
     try {
-      const res = await fetch(`/api/seller/onboarding`);
+      const res = await fetch(`/api/seller/onboarding?userId=`);
       if (!res.ok) return;
       const data = await res.json();
       if (!data.success) return;
@@ -352,7 +352,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
 
     const restoreDraft = async () => {
       try {
-        const res = await fetch(`/api/seller/onboarding`);
+        const res = await fetch(`/api/seller/onboarding?userId=`);
         if (!res.ok) return;
         const data = await res.json();
         if (!data.success || !data.verificationData) return;

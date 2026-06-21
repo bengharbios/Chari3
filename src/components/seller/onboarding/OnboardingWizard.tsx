@@ -12,10 +12,12 @@ import IdentityStep from './IdentityStep';
 import TermsStep from './TermsStep';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/store';
 
 export default function OnboardingWizard() {
   const { t, locale } = useTranslation();
   const router = useRouter();
+  const { user } = useAuthStore();
   
   const [activeTab, setActiveTab] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,8 +25,9 @@ export default function OnboardingWizard() {
   
   useEffect(() => {
     const fetchData = async () => {
+      if (!user?.id) return;
       try {
-        const res = await fetch('/api/seller/onboarding');
+        const res = await fetch(`/api/seller/onboarding?userId=${user.id}`);
         const data = await res.json();
         if (data.success && data.data) {
           setFormData(data.data);
@@ -43,10 +46,10 @@ export default function OnboardingWizard() {
   const handleSave = async (showToast = true) => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/seller/onboarding', {
+      const res = await fetch(`/api/seller/onboarding?userId=${user?.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: formData })
+        body: JSON.stringify({ userId: user?.id, data: formData })
       });
       if (res.ok && showToast) {
         toast.success('تم حفظ التغييرات بنجاح');
@@ -61,10 +64,10 @@ export default function OnboardingWizard() {
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/seller/onboarding', {
+      const res = await fetch(`/api/seller/onboarding?userId=${user?.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ data: { ...formData, verificationStatus: 'pending', submittedAt: new Date() } })
+        body: JSON.stringify({ userId: user?.id, data: { ...formData, verificationStatus: 'pending', submittedAt: new Date() } })
       });
       if (res.ok) {
         toast.success('تم إرسال الطلب للمراجعة بنجاح!');
