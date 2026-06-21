@@ -64,7 +64,7 @@ const statusConfig: Record<
 
 function StickyStatusBanner() {
   const { locale, setCurrentPage } = useAppStore();
-  const { accountStatus, isBannerDismissed, dismissBanner, rejectionReason, isDraftSaved, clearDraftFlag } = useOnboardingStore();
+  const { accountStatus, isBannerDismissed, dismissBanner, rejectionReason, isDraftSaved, clearDraftFlag, setWizardOpen } = useOnboardingStore();
   const isAr = locale === 'ar';
 
   // Banner shows for: incomplete (with draft), pending, rejected
@@ -90,8 +90,8 @@ function StickyStatusBanner() {
       icon: AlertTriangle,
       bg: 'bg-orange-50 dark:bg-orange-900/20',
       border: 'border-orange-200 dark:border-orange-800/30',
-      text: isAr ? 'لديك مسودة توثيق غير مكتملة' : 'You have an incomplete verification draft',
-      subtext: isAr ? 'اكمل عملية التوثيق لتفعيل حسابك والبدء في البيع' : 'Complete verification to activate your account and start selling',
+      text: isAr ? 'يجب إكمال التوثيق' : 'Verification Required',
+      subtext: isAr ? 'لن يظهر متجرك للعملاء حتى تقوم بإكمال متطلبات التوثيق' : 'Your store will not be visible to customers until verification is complete',
       iconColor: 'text-orange-600',
       pulse: false,
       actionLabelAr: 'استكمال التوثيق',
@@ -135,6 +135,7 @@ function StickyStatusBanner() {
     if (accountStatus === 'incomplete') {
       // Reopen the wizard by clearing draft flag
       clearDraftFlag();
+      setWizardOpen(true);
     } else {
       // Navigate to verification status page
       setCurrentPage('verification');
@@ -341,6 +342,7 @@ export default function VerificationWidget() {
     rejectedItems,
     updateVerificationItem,
     setAccountStatus,
+    setWizardOpen,
   } = useOnboardingStore();
   const isAr = locale === 'ar';
 
@@ -364,12 +366,12 @@ export default function VerificationWidget() {
       updateVerificationItem(id, 'required');
     });
     setAccountStatus('pending');
+    setWizardOpen(true);
   };
 
   // Handle "Complete Now" for required items
   const handleCompleteItem = (itemId: string) => {
-    // Simulate completing an item (in real app, would navigate to onboarding wizard step)
-    updateVerificationItem(itemId, 'verified');
+    setWizardOpen(true);
   };
 
   if (!user) return null;

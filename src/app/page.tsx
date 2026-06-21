@@ -425,11 +425,10 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   }, [isAuthenticated, user?.id, fetchAndSyncStatus]);
 
   // Determine what to show
-  const needsOnboarding = isAuthenticated && user && user.role !== 'buyer' && user.role !== 'admin' && !isCompleted && !isSubmitted && !isDraftSaved && accountStatus === 'incomplete';
+  const needsOnboarding = isAuthenticated && user && user.role !== 'buyer' && user.role !== 'admin' && !isCompleted && !isSubmitted && accountStatus === 'incomplete';
   const needsAdminReview = isAuthenticated && user?.role === 'admin' && currentPage === 'admin';
-  const needsBanner = isAuthenticated && user && user.role !== 'admin' && user.role !== 'buyer' && !needsOnboarding && (
-    accountStatus === 'pending' || accountStatus === 'rejected' ||
-    (accountStatus === 'incomplete' && isDraftSaved)
+  const needsBanner = isAuthenticated && user && user.role !== 'admin' && user.role !== 'buyer' && (
+    accountStatus === 'pending' || accountStatus === 'rejected' || accountStatus === 'incomplete'
   );
   const isStorefrontPage = ['home', 'product-detail', 'seller-profile', 'login', 'verification'].includes(currentPage);
 
@@ -524,7 +523,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
           {needsAdminReview && <AdminReviewQueue />}
 
           {/* Main Dashboard Content */}
-          {!needsOnboarding && <DashboardComponent />}
+          <DashboardComponent />
         </DashboardLayout>
       ) : (
         <DashboardLayout>

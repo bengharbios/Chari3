@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { CheckCircle2, Save, ArrowRight, ArrowLeft, Store, FileText, Landmark, UserCheck, ShieldCheck } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Store, FileText, Landmark, UserCheck, ShieldCheck, ArrowRight, ArrowLeft, Save } from 'lucide-react';
 import LegalStep from './LegalStep';
 import TaxStep from './TaxStep';
 import BankStep from './BankStep';
@@ -13,22 +13,20 @@ import TermsStep from './TermsStep';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
+import { useOnboardingStore } from '@/lib/store/onboarding';
+import { Progress } from '@/components/ui/progress';
 
 export default function OnboardingWizard() {
   const { t, locale } = useTranslation();
   const router = useRouter();
   const { user } = useAuthStore();
+  const { isWizardOpen, setWizardOpen, setAccountStatus } = useOnboardingStore();
   
-  const [activeTab, setActiveTab] = useState<number | null>(null);
+  const [activeStep, setActiveStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<any>({});
   
   useEffect(() => {
-    toast.info(
-      locale === 'ar' ? 'يرجى استكمال جميع الأقسام أدناه لتفعيل حسابك' : 'Please complete all sections below to activate your account',
-      { duration: 5000 }
-    );
-    
     const fetchData = async () => {
       if (!user?.id) return;
       try {
@@ -41,14 +39,16 @@ export default function OnboardingWizard() {
         console.error("Failed to fetch onboarding data", e);
       }
     };
-    fetchData();
-  }, []);
+    if (isWizardOpen) {
+      fetchData();
+    }
+  }, [user?.id, isWizardOpen]);
 
   const handleUpdateData = (stepData: any) => {
     setFormData((prev: any) => ({ ...prev, ...stepData }));
   };
 
-  const handleSave = async (showToast = true) => {
+  const handleSaveDraft = async (showToast = true) => {
     setIsLoading(true);
     try {
       const res = await fetch(`/api/seller/onboarding?userId=${user?.id}`, {
@@ -57,10 +57,10 @@ export default function OnboardingWizard() {
         body: JSON.stringify({ userId: user?.id, data: formData })
       });
       if (res.ok && showToast) {
-        toast.success('تم حفظ التغييرات بنجاح');
+        toast.success(locale === 'ar' ? 'تم حفظ المسودة بنجاح' : 'Draft saved successfully');
       }
     } catch (e) {
-      toast.error('حدث خطأ أثناء الحفظ');
+      if (showToast) toast.error(locale === 'ar' ? 'حدث خطأ أثناء الحفظ' : 'Error saving draft');
     } finally {
       setIsLoading(false);
     }
@@ -75,11 +75,14 @@ export default function OnboardingWizard() {
         body: JSON.stringify({ userId: user?.id, data: { ...formData, verificationStatus: 'pending', submittedAt: new Date() } })
       });
       if (res.ok) {
-        toast.success('تم إرسال الطلب للمراجعة بنجاح!');
-        router.push('/seller?submitted=true');
+        toast.success(locale === 'ar' ? 'تم إرسال الطلب للمراجعة بنجاح!' : 'Application submitted successfully!');
+        setAccountStatus('pending');
+        setWizardOpen(false);
+      } else {
+        toast.error(locale === 'ar' ? 'حدث خطأ أثناء الإرسال' : 'Error submitting');
       }
     } catch (e) {
-      toast.error('حدث خطأ أثناء التقديم');
+      toast.error(locale === 'ar' ? 'حدث خطأ غير متوقع' : 'Unexpected error');
     } finally {
       setIsLoading(false);
     }
@@ -95,110 +98,116 @@ export default function OnboardingWizard() {
   const hasTerms = !!formData.agreedToTerms;
 
   const stepsList = [
-    { id: 1, title: 'السجل التجاري (تسجيل الأعمال)', icon: <Store className="w-5 h-5" />, done: hasLegal, component: <LegalStep data={formData} updateData={handleUpdateData} /> },
-    { id: 2, title: 'التفاصيل الضريبية', icon: <FileText className="w-5 h-5" />, done: hasTax, component: <TaxStep data={formData} updateData={handleUpdateData} /> },
-    { id: 3, title: 'طريقة الدفع', icon: <Landmark className="w-5 h-5" />, done: hasBank, component: <BankStep data={formData} updateData={handleUpdateData} /> },
-    { id: 4, title: 'المفوض بالتوقيع', icon: <UserCheck className="w-5 h-5" />, done: hasIdentity, component: <IdentityStep data={formData} updateData={handleUpdateData} /> },
-    { id: 5, title: 'الشروط والأحكام', icon: <ShieldCheck className="w-5 h-5" />, done: hasTerms, component: <TermsStep data={formData} updateData={handleUpdateData} /> },
+    { id: 0, title: 'السجل التجاري', icon: <Store className="w-5 h-5" />, done: hasLegal, component: <LegalStep data={formData} updateData={handleUpdateData} /> },
+    { id: 1, title: 'الضريبة', icon: <FileText className="w-5 h-5" />, done: hasTax, component: <TaxStep data={formData} updateData={handleUpdateData} /> },
+    { id: 2, title: 'البنك', icon: <Landmark className="w-5 h-5" />, done: hasBank, component: <BankStep data={formData} updateData={handleUpdateData} /> },
+    { id: 3, title: 'الهوية', icon: <UserCheck className="w-5 h-5" />, done: hasIdentity, component: <IdentityStep data={formData} updateData={handleUpdateData} /> },
+    { id: 4, title: 'الشروط', icon: <ShieldCheck className="w-5 h-5" />, done: hasTerms, component: <TermsStep data={formData} updateData={handleUpdateData} /> },
   ];
 
-  if (activeTab !== null) {
-    const step = stepsList.find(s => s.id === activeTab);
-    return (
-      <div className={`max-w-4xl mx-auto p-4 md:p-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-        <div className="mb-6 flex items-center justify-between">
-          <Button 
-            variant="ghost" 
-            onClick={() => {
-              handleSave(false);
-              setActiveTab(null);
-            }} 
-            className="gap-2 text-gray-600 hover:text-black"
-          >
-            {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-            الرجوع للقائمة
-          </Button>
-          <Button onClick={() => handleSave(true)} disabled={isLoading} className="bg-black hover:bg-gray-800 text-white">
-            حفظ التغييرات
-          </Button>
-        </div>
+  const totalSteps = stepsList.length;
+  const step = stepsList[activeStep];
+  const progress = Math.round(((activeStep + 1) / totalSteps) * 100);
 
-        <Card className="shadow-sm border-gray-200">
-          <CardHeader className="bg-gray-50/50 border-b pb-4">
-            <CardTitle className="text-xl flex items-center gap-2">
-              {step?.icon}
-              {step?.title}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            {step?.component}
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const canProceed = () => {
+    return step.done;
+  };
 
-  const isAllDone = hasLegal && hasTax && hasBank && hasIdentity && hasTerms;
+  const handleNext = () => {
+    if (!canProceed()) {
+      toast.error(locale === 'ar' ? 'يرجى إكمال الحقول المطلوبة للانتقال' : 'Please complete required fields to proceed');
+      return;
+    }
+    handleSaveDraft(false); // Silent save
+    if (activeStep < totalSteps - 1) {
+      setActiveStep(prev => prev + 1);
+    } else {
+      handleSubmit();
+    }
+  };
 
   return (
-    <div className={`max-w-4xl mx-auto p-4 md:p-8 ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">معلومات المتجر وتوثيق الأعمال</h1>
-        <p className="text-gray-500">أكمل جميع الأقسام أدناه لتفعيل حسابك على المنصة والبدء بالبيع.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <Dialog open={isWizardOpen} onOpenChange={setWizardOpen}>
+      <DialogContent className="max-w-4xl p-0 h-[95vh] md:h-auto md:max-h-[90vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border-0" aria-describedby={undefined}>
+        <DialogTitle className="sr-only">Store Verification Wizard</DialogTitle>
+        <DialogDescription className="sr-only">Complete your store verification steps.</DialogDescription>
         
-        {/* Navigation / Hub Links */}
-        <div className="md:col-span-1 space-y-1">
-          {stepsList.map(step => (
-            <button
-              key={step.id}
-              onClick={() => setActiveTab(step.id)}
-              className="w-full flex items-center justify-between p-3 rounded-lg text-start transition-colors hover:bg-gray-100"
-            >
-              <div className="flex items-center gap-3">
-                <span className={`${step.done ? 'text-green-600' : 'text-gray-400'}`}>
-                  {step.icon}
-                </span>
-                <span className={`font-semibold ${step.done ? 'text-gray-900' : 'text-gray-600'}`}>
-                  {step.title}
-                </span>
+        {/* Header section */}
+        <div className="bg-gray-50 border-b px-6 py-4 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900">
+              <Store className="text-brand" />
+              {locale === 'ar' ? 'توثيق بيانات المتجر' : 'Store Verification'}
+            </h2>
+            <Button variant="outline" size="sm" onClick={() => { handleSaveDraft(true); setWizardOpen(false); }} className="gap-2 text-gray-700 bg-white">
+              <Save className="w-4 h-4" />
+              <span className="hidden sm:inline">{locale === 'ar' ? 'حفظ مسودة' : 'Save Draft'}</span>
+            </Button>
+          </div>
+          
+          {/* Progress */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs text-gray-500 font-medium">
+              <span>{locale === 'ar' ? 'التقدم' : 'Progress'}</span>
+              <span>{activeStep + 1} / {totalSteps}</span>
+            </div>
+            <Progress value={progress} className="h-2 bg-gray-200" />
+          </div>
+
+          {/* Steps Indicator */}
+          <div className="hidden md:flex items-center justify-between pt-2">
+            {stepsList.map((s, i) => (
+              <div key={s.id} className={`flex items-center gap-2 text-sm ${i === activeStep ? 'text-black font-bold' : s.done ? 'text-green-600' : 'text-gray-400'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${i === activeStep ? 'bg-black text-white shadow-md' : s.done ? 'bg-green-100 text-green-600' : 'bg-gray-100'}`}>
+                  {s.icon}
+                </div>
+                <span className="hidden lg:inline">{s.title}</span>
               </div>
-              {step.done && <CheckCircle2 className="w-4 h-4 text-green-500" />}
-            </button>
-          ))}
+            ))}
+          </div>
         </div>
 
-        {/* Status Panel */}
-        <div className="md:col-span-3">
-          <Card className="bg-gray-50 border-dashed border-2">
-            <CardContent className="p-8 text-center flex flex-col items-center justify-center space-y-4 min-h-[300px]">
-              <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-sm">
-                <Store className="w-10 h-10 text-brand" />
-              </div>
-              <h2 className="text-2xl font-bold">مرحباً بك في شاري داي</h2>
-              <p className="text-gray-500 max-w-md">
-                قم بتعبئة الأقسام الجانبية وتوثيق هويتك وسجلك التجاري. بمجرد الانتهاء من جميع المتطلبات، سيظهر زر تقديم الطلب هنا.
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-white" dir={isRTL ? 'rtl' : 'ltr'}>
+          <div className="mb-8 flex items-center gap-3 border-b pb-4">
+            <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center text-gray-700 border">
+              {step.icon}
+            </div>
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">{step.title}</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                {locale === 'ar' ? 'الرجاء إدخال البيانات والتأكد من صحتها' : 'Please provide accurate details below'}
               </p>
-              
-              <Button 
-                size="lg"
-                onClick={handleSubmit} 
-                disabled={isLoading || !isAllDone}
-                className={`mt-4 ${isAllDone ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-300 text-gray-500'} text-white font-bold w-full max-w-xs`}
-              >
-                {isLoading ? 'جاري الإرسال...' : 'تقديم للموافقة'}
-              </Button>
-              
-              {!isAllDone && (
-                <p className="text-xs text-red-500 mt-2">يجب استكمال جميع الأقسام الخمسة (✓) لتتمكن من رفع الطلب.</p>
-              )}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
+          
+          <div className="max-w-3xl mx-auto">
+            {step.component}
+          </div>
         </div>
 
-      </div>
-    </div>
+        {/* Footer Actions */}
+        <div className="border-t bg-white p-4 md:px-8 flex items-center justify-between shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]" dir={isRTL ? 'rtl' : 'ltr'}>
+          <Button 
+            variant="outline" 
+            onClick={() => setActiveStep(prev => prev - 1)} 
+            disabled={activeStep === 0}
+            className="gap-2 bg-gray-50 hover:bg-gray-100 text-gray-700"
+          >
+            {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
+            <span className="hidden sm:inline">{locale === 'ar' ? 'السابق' : 'Previous'}</span>
+          </Button>
+
+          <Button 
+            onClick={handleNext} 
+            disabled={isLoading}
+            className={`gap-2 text-white px-8 font-bold transition-all hover:scale-105 ${activeStep === totalSteps - 1 ? 'bg-brand hover:bg-brand/90' : 'bg-black hover:bg-gray-800'}`}
+          >
+            {isLoading ? '...' : activeStep === totalSteps - 1 ? (locale === 'ar' ? 'تقديم للموافقة' : 'Submit for Review') : (locale === 'ar' ? 'التالي' : 'Next')}
+            {activeStep !== totalSteps - 1 && (isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />)}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

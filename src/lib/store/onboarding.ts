@@ -44,6 +44,8 @@ export interface OnboardingState {
   currentStep: number;
   isCompleted: boolean;
   isSubmitted: boolean;
+  isWizardOpen: boolean;
+  setWizardOpen: (open: boolean) => void;
   isDraftSaved: boolean;
 
   // Store Manager
@@ -233,6 +235,8 @@ export const useOnboardingStore = create<OnboardingState>()(
       currentStep: 0,
       isCompleted: false,
       isSubmitted: false,
+  isWizardOpen: false,
+  setWizardOpen: (open) => set({ isWizardOpen: open }),
       isDraftSaved: false,
 
       commercialRegisterNumber: '',
