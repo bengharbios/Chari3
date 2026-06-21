@@ -158,7 +158,11 @@ export default function OcrSandboxPage() {
         canvas.width = img.width;
         canvas.height = img.height;
         const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0);
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0);
+        }
 
         try {
           let src = cv.imread(canvas);
@@ -215,6 +219,7 @@ export default function OcrSandboxPage() {
           // Cleanup
           srcTri.delete(); dstTri.delete(); M.delete(); warped.delete(); src.delete();
 
+          // Enhance quality output
           resolve(canvas.toDataURL('image/jpeg', 1.0)); // 100% quality output
         } catch (e) {
           console.error("OpenCV Crop Error", e);
@@ -423,7 +428,7 @@ export default function OcrSandboxPage() {
             ) : (
               <div className="space-y-4">
                 <div className="relative rounded-lg overflow-hidden border bg-black">
-                    <Webcam
+                  <Webcam
                     audio={false}
                     ref={webcamRef}
                     screenshotFormat="image/jpeg"
@@ -433,7 +438,7 @@ export default function OcrSandboxPage() {
                       height: { ideal: 2160 },
                       facingMode: facingMode
                     }}
-                    className="w-full h-[350px] object-cover"
+                    className="w-full h-auto max-h-[60vh] object-contain rounded-t-lg bg-black"
                   />
                   
                   {/* Dynamic OpenCV Focus Frame Overlay */}
