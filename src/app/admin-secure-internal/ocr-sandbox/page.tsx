@@ -20,6 +20,7 @@ export default function OcrSandboxPage() {
   // Camera & Multi-step State
   const [captureStep, setCaptureStep] = useState<'front' | 'back' | 'done'>('front');
   const [useCamera, setUseCamera] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false); // Prevents double clicking capture
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const webcamRef = React.useRef<Webcam>(null);
 
@@ -255,50 +256,57 @@ export default function OcrSandboxPage() {
   };
 
   const handleCapture = React.useCallback(async () => {
-    let imageSrc = webcamRef.current?.getScreenshot();
-    
-    // Attempt ultra high-res capture via native hardware if supported (Android Chrome)
-    try {
-      const track = (webcamRef.current?.video as any)?.srcObject?.getVideoTracks()[0];
-      if (track && 'ImageCapture' in window) {
-        const imageCapture = new (window as any).ImageCapture(track);
-        const photoBlob = await imageCapture.takePhoto();
-        // Convert native high-res Blob to base64 Data URL
-        imageSrc = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(photoBlob);
-        });
-      }
-    } catch (e) {
-      console.log("ImageCapture not supported or failed, falling back to video screenshot");
-    }
+    if (isCapturing) return; // Prevent double clicks
+    setIsCapturing(true);
 
-    if (imageSrc) {
-      const activePoints = latestPointsRef.current;
+    try {
+      let imageSrc = webcamRef.current?.getScreenshot();
       
-      if (activePoints) {
-        toast.info('جاري قص البطاقة وتحسين النصوص (Sharpening)...');
-      } else {
-        toast.info('لم يتم التعرف على الحواف، تم التقاط الصورة بالكامل.');
+      // Attempt ultra high-res capture via native hardware if supported (Android Chrome)
+      try {
+        const track = (webcamRef.current?.video as any)?.srcObject?.getVideoTracks()[0];
+        if (track && 'ImageCapture' in window) {
+          const imageCapture = new (window as any).ImageCapture(track);
+          const photoBlob = await imageCapture.takePhoto();
+          // Convert native high-res Blob to base64 Data URL
+          imageSrc = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(photoBlob);
+          });
+        }
+      } catch (e) {
+        console.log("ImageCapture not supported or failed, falling back to video screenshot");
       }
-      
-      const finalImageSrc = await cropImageWithOpenCV(imageSrc, activePoints);
-      
-      if (captureStep === 'front') {
-        setFrontImage(finalImageSrc);
-        setCaptureStep('back');
-        toast.success('تم التقاط الوجه الأمامي! الرجاء قلب البطاقة لتصوير الوجه الخلفي.');
-      } else if (captureStep === 'back') {
-        setBackImage(finalImageSrc);
-        setCaptureStep('done');
-        setUseCamera(false); // Close camera after both are done
-        toast.success('تم التقاط البطاقة بنجاح!');
+
+      if (imageSrc) {
+        const activePoints = latestPointsRef.current;
+        
+        if (activePoints) {
+          toast.info('جاري معالجة البطاقة، يرجى الانتظار للحظات...');
+        } else {
+          toast.info('تم التقاط الصورة بالكامل (لم يتم رصد حواف البطاقة).');
+        }
+        
+        const finalImageSrc = await cropImageWithOpenCV(imageSrc, activePoints);
+        
+        if (captureStep === 'front') {
+          setFrontImage(finalImageSrc);
+          setCaptureStep('back');
+          toast.success('نجاح! الآن قم بقلب البطاقة لتصوير الجهة الخلفية.');
+        } else if (captureStep === 'back') {
+          setBackImage(finalImageSrc);
+          setCaptureStep('done');
+          setUseCamera(false); // Close camera after both are done
+          toast.success('اكتمل التقاط الوجهين بنجاح!');
+        }
+        
+        setResult(null);
       }
-      
-      setResult(null);
+    } finally {
+      setIsCapturing(false);
     }
-  }, [webcamRef, captureStep]);
+  }, [webcamRef, captureStep, isCapturing]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
     const selectedFile = e.target.files?.[0];
@@ -335,7 +343,7 @@ export default function OcrSandboxPage() {
           if (m.status.includes('loading tesseract core')) translatedStatus = 'تحميل النواة الأساسية...';
           else if (m.status.includes('loading language traineddata')) translatedStatus = 'تحميل القاموس...';
           else if (m.status.includes('initializing api')) translatedStatus = 'تهيئة واجهة البرمجة...';
-          else if (m.status.includes('recognizing text')) translatedStatus = 'جاري استخراج شريط MRZ من الخلف...';
+          else if (m.status.includes('recognizing text')) translatedStatus = 'جاري استخراج وقراءة البيانات الخلفية...';
           setProgressMsg(translatedStatus);
           setProgressPct(Math.round(m.progress * 100));
         }
@@ -578,11 +586,16 @@ export default function OcrSandboxPage() {
                       <SwitchCamera className="h-5 w-5" />
                     </Button>
                     <Button 
-                      className="rounded-full px-8 bg-brand hover:bg-brand-dark text-white font-bold shadow-lg"
+                      className="rounded-full px-8 bg-brand hover:bg-brand-dark text-white font-bold shadow-lg disabled:opacity-50"
                       onClick={handleCapture}
+                      disabled={isCapturing}
                     >
-                      <Camera className="mr-2 h-4 w-4" />
-                      {captureStep === 'front' ? 'التقاط الوجه الأمامي' : 'التقاط الوجه الخلفي'}
+                      {isCapturing ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      ) : (
+                        <Camera className="mr-2 h-4 w-4" />
+                      )}
+                      {isCapturing ? 'جاري المعالجة...' : captureStep === 'front' ? 'التقاط الوجه الأمامي' : 'التقاط الوجه الخلفي'}
                     </Button>
                     <Button 
                       variant="destructive" 
