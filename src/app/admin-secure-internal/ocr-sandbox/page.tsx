@@ -193,11 +193,11 @@ export default function OcrSandboxPage() {
           const tl = pts[0];
           const br = pts[3];
           
-          // TR has smallest x-y, BL has largest x-y
+          // TR has largest x-y, BL has smallest x-y
           const remain = [pts[1], pts[2]];
           remain.sort((a, b) => (a.x - a.y) - (b.x - b.y));
-          const tr = remain[0];
-          const bl = remain[1];
+          const bl = remain[0]; // smallest x-y
+          const tr = remain[1]; // largest x-y
 
           // Calculate actual physical width/height of the card
           const widthA = Math.hypot(br.x - bl.x, br.y - bl.y);
