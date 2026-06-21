@@ -451,15 +451,17 @@ export default function OcrSandboxPage() {
                   {/* Dynamic OpenCV Focus Frame Overlay */}
                   <div className="absolute inset-0 pointer-events-none">
                     {polygonPoints ? (
-                      <svg className="w-full h-full transition-all duration-75">
+                      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full transition-all duration-75">
                         <polygon 
-                          points={polygonPoints.map(p => `${p.x}%,${p.y}%`).join(' ')} 
+                          points={polygonPoints.map(p => `${p.x},${p.y}`).join(' ')} 
                           fill="rgba(26, 187, 156, 0.2)" 
                           stroke="#1ABB9C" 
-                          strokeWidth="3" 
+                          strokeWidth="0.5" 
+                          strokeLinejoin="round"
                         />
+                        {/* Optionally keep small dots on corners for aesthetics */}
                         {polygonPoints.map((p, i) => (
-                          <circle key={i} cx={`${p.x}%`} cy={`${p.y}%`} r="6" fill="#1ABB9C" />
+                          <circle key={i} cx={p.x} cy={p.y} r="1" fill="#1ABB9C" />
                         ))}
                       </svg>
                     ) : (
