@@ -198,6 +198,7 @@ export default function VerificationStatusPage() {
       logistics: 'logistics',
     };
     useAppStore.getState().setCurrentPage((rolePage[user.role] || 'login') as any);
+    useOnboardingStore.getState().setWizardOpen(true);
   };
 
   const handleRetry = () => {

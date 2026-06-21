@@ -9,7 +9,7 @@ import { useOnboardingStore, getVerificationItemsForRole } from '@/lib/store/onb
 
 async function fetchRejectionDetails(userId: string) {
   try {
-    const res = await fetch(`/api/seller/onboarding?userId=?userId=${userId}`);
+    const res = await fetch(`/api/seller/onboarding?userId=${userId}`);
     if (!res.ok) return;
     const data = await res.json();
     if (!data.success) return;
@@ -49,7 +49,7 @@ async function fetchRejectionDetails(userId: string) {
 
 async function fetchDraftAndRestore(userId: string) {
   try {
-    const res = await fetch(`/api/seller/onboarding?userId=`);
+    const res = await fetch(`/api/seller/onboarding?userId=${userId}`);
     if (!res.ok) return;
     const { success, data } = await res.json();
     if (!success || !data) return;
