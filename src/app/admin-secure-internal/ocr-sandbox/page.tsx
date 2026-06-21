@@ -228,10 +228,19 @@ export default function OcrSandboxPage() {
           // Use INTER_CUBIC for higher quality interpolation
           cv.warpPerspective(src, warped, M, new cv.Size(maxWidth, maxHeight), cv.INTER_CUBIC);
 
-          cv.imshow(canvas, warped);
+          // Apply Sharpening Filter to enhance text readability for OCR
+          let sharpened = new cv.Mat();
+          let sharpenKernel = cv.matFromArray(3, 3, cv.CV_32F, [
+             0, -1,  0,
+            -1,  5, -1,
+             0, -1,  0
+          ]);
+          cv.filter2D(warped, sharpened, cv.CV_8U, sharpenKernel);
+
+          cv.imshow(canvas, sharpened);
           
           // Cleanup
-          srcTri.delete(); dstTri.delete(); M.delete(); warped.delete(); src.delete();
+          srcTri.delete(); dstTri.delete(); M.delete(); warped.delete(); sharpened.delete(); sharpenKernel.delete(); src.delete();
 
           // Enhance quality output
           resolve(canvas.toDataURL('image/jpeg', 1.0)); // 100% quality output
@@ -245,13 +254,31 @@ export default function OcrSandboxPage() {
   };
 
   const handleCapture = React.useCallback(async () => {
-    const imageSrc = webcamRef.current?.getScreenshot();
+    let imageSrc = webcamRef.current?.getScreenshot();
+    
+    // Attempt ultra high-res capture via native hardware if supported (Android Chrome)
+    try {
+      const track = (webcamRef.current?.video as any)?.srcObject?.getVideoTracks()[0];
+      if (track && 'ImageCapture' in window) {
+        const imageCapture = new (window as any).ImageCapture(track);
+        const photoBlob = await imageCapture.takePhoto();
+        // Convert native high-res Blob to base64 Data URL
+        imageSrc = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(photoBlob);
+        });
+      }
+    } catch (e) {
+      console.log("ImageCapture not supported or failed, falling back to video screenshot");
+    }
+
     if (imageSrc) {
       const activePoints = latestPointsRef.current;
       setUseCamera(false); // Close camera UI immediately for better UX
       
       if (activePoints) {
-        toast.info('جاري قص البطاقة آلياً وتحسين جودتها...');
+        toast.info('جاري قص البطاقة وتحسين النصوص (Sharpening)...');
       } else {
         toast.info('لم يتم التعرف على الحواف، تم التقاط الصورة بالكامل.');
       }
@@ -442,7 +469,7 @@ export default function OcrSandboxPage() {
             ) : (
               <div className="space-y-4">
                 <div className="relative rounded-lg overflow-hidden border bg-black">
-                  <Webcam
+                    <Webcam
                     audio={false}
                     ref={webcamRef}
                     screenshotFormat="image/jpeg"
@@ -450,7 +477,8 @@ export default function OcrSandboxPage() {
                     videoConstraints={{
                       width: { ideal: 4096 }, // Force highest possible resolution
                       height: { ideal: 2160 },
-                      facingMode: facingMode
+                      facingMode: facingMode,
+                      advanced: [{ focusMode: "continuous" }] as any // Force continuous autofocus
                     }}
                     className="w-full h-auto max-h-[60vh] object-contain rounded-t-lg bg-black"
                   />
