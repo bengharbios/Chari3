@@ -9,7 +9,7 @@ import { useOnboardingStore, getVerificationItemsForRole } from '@/lib/store/onb
 
 async function fetchRejectionDetails(userId: string) {
   try {
-    const res = await fetch(`/api/onboarding/status?userId=${userId}`);
+    const res = await fetch(`/api/seller/onboarding`);
     if (!res.ok) return;
     const data = await res.json();
     if (!data.success) return;
@@ -49,10 +49,10 @@ async function fetchRejectionDetails(userId: string) {
 
 async function fetchDraftAndRestore(userId: string) {
   try {
-    const res = await fetch(`/api/onboarding/draft?userId=${userId}`);
+    const res = await fetch(`/api/seller/onboarding`);
     if (!res.ok) return;
-    const data = await res.json();
-    if (!data.success || !data.hasDraft) return;
+    const { success, data } = await res.json();
+    if (!success || !data) return;
 
     const store = useOnboardingStore.getState();
     const setField = store.setField;

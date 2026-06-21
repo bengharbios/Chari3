@@ -62,7 +62,8 @@
     "payment": "الدفع",
     "history": "سجل الفواتير",
     "upgrade": "ترقية",
-    "buyer-group": "المشتري"
+    "buyer-group": "المشتري",
+    "settings": "الإعدادات"
   },
   "admin": {
     "title": "الإدارة العامة",

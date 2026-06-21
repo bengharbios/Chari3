@@ -39,7 +39,7 @@ export default function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <RadixDirectionProvider>
               {children}
-              <Toaster position="top-center" richColors />
+              <Toaster position="top-center" richColors visibleToasts={1} duration={3000} />
             </RadixDirectionProvider>
           </ThemeProvider>
         </NextAuthProvider>

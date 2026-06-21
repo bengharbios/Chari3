@@ -239,7 +239,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
     if (!user || user.role === 'admin' || user.role === 'buyer') return;
 
     try {
-      const res = await fetch(`/api/onboarding/status?userId=${user.id}`);
+      const res = await fetch(`/api/seller/onboarding`);
       if (!res.ok) return;
       const data = await res.json();
       if (!data.success) return;
@@ -352,7 +352,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
 
     const restoreDraft = async () => {
       try {
-        const res = await fetch(`/api/onboarding?userId=${user.id}`);
+        const res = await fetch(`/api/seller/onboarding`);
         if (!res.ok) return;
         const data = await res.json();
         if (!data.success || !data.verificationData) return;

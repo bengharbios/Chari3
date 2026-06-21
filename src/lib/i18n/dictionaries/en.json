@@ -62,7 +62,8 @@
     "payment": "Payment",
     "history": "History",
     "upgrade": "Upgrade",
-    "buyer-group": "Buyer"
+    "buyer-group": "Buyer",
+    "settings": "Settings"
   },
   "admin": {
     "title": "Admin Panel",
