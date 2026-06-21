@@ -142,14 +142,134 @@ export default function OcrSandboxPage() {
     return new File([u8arr], filename, {type:mime});
   };
 
-  const handleCapture = React.useCallback(() => {
+  const cropImageWithOpenCV = async (imageSrc: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const cv = (window as any).cv;
+        if (!cv) {
+          resolve(imageSrc); // Fallback if OpenCV not loaded
+          return;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0);
+
+        try {
+          let src = cv.imread(canvas);
+          let gray = new cv.Mat();
+          let blur = new cv.Mat();
+          let edges = new cv.Mat();
+
+          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+          cv.GaussianBlur(gray, blur, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
+          cv.Canny(blur, edges, 75, 200, 3, false);
+
+          let contours = new cv.MatVector();
+          let hierarchy = new cv.Mat();
+          cv.findContours(edges, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+
+          let largestArea = 0;
+          let bestPoly = new cv.Mat();
+
+          for (let i = 0; i < contours.size(); ++i) {
+            let cnt = contours.get(i);
+            let area = cv.contourArea(cnt);
+            // Minimum area threshold (5% of full image size to avoid cropping tiny noise)
+            if (area > (img.width * img.height * 0.05)) { 
+              let peri = cv.arcLength(cnt, true);
+              let approx = new cv.Mat();
+              cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
+              
+              if (approx.rows === 4 && area > largestArea) {
+                largestArea = area;
+                approx.copyTo(bestPoly);
+              }
+              approx.delete();
+            }
+            cnt.delete();
+          }
+
+          if (largestArea > 0) {
+            // Sort points to identify Top-Left, Top-Right, Bottom-Right, Bottom-Left
+            let pts = [];
+            for (let i = 0; i < 4; i++) {
+              pts.push({ x: bestPoly.data32S[i * 2], y: bestPoly.data32S[i * 2 + 1] });
+            }
+            
+            // TL has smallest x+y, BR has largest x+y
+            pts.sort((a, b) => (a.x + a.y) - (b.x + b.y));
+            const tl = pts[0];
+            const br = pts[3];
+            
+            // TR has smallest x-y, BL has largest x-y
+            const remain = [pts[1], pts[2]];
+            remain.sort((a, b) => (a.x - a.y) - (b.x - b.y));
+            const tr = remain[0];
+            const bl = remain[1];
+
+            // Calculate actual physical width/height of the card
+            const widthA = Math.hypot(br.x - bl.x, br.y - bl.y);
+            const widthB = Math.hypot(tr.x - tl.x, tr.y - tl.y);
+            const maxWidth = Math.max(widthA, widthB);
+
+            const heightA = Math.hypot(tr.x - br.x, tr.y - br.y);
+            const heightB = Math.hypot(tl.x - bl.x, tl.y - bl.y);
+            const maxHeight = Math.max(heightA, heightB);
+
+            // Warp perspective
+            let srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+              tl.x, tl.y,
+              tr.x, tr.y,
+              br.x, br.y,
+              bl.x, bl.y
+            ]);
+            let dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+              0, 0,
+              maxWidth, 0,
+              maxWidth, maxHeight,
+              0, maxHeight
+            ]);
+
+            let M = cv.getPerspectiveTransform(srcTri, dstTri);
+            let warped = new cv.Mat();
+            cv.warpPerspective(src, warped, M, new cv.Size(maxWidth, maxHeight));
+
+            cv.imshow(canvas, warped);
+            
+            // Cleanup warped
+            srcTri.delete(); dstTri.delete(); M.delete(); warped.delete();
+          }
+
+          // Cleanup general
+          src.delete(); gray.delete(); blur.delete(); edges.delete();
+          contours.delete(); hierarchy.delete(); bestPoly.delete();
+
+          resolve(canvas.toDataURL('image/jpeg', 0.9));
+        } catch (e) {
+          console.error("OpenCV Crop Error", e);
+          resolve(imageSrc);
+        }
+      };
+      img.src = imageSrc;
+    });
+  };
+
+  const handleCapture = React.useCallback(async () => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
-      const fileFromCamera = dataURLtoFile(imageSrc, 'camera-capture.jpg');
+      setUseCamera(false); // Close camera UI immediately for better UX
+      toast.info('جاري قص البطاقة آلياً وتحسين جودتها...');
+      
+      const croppedImageSrc = await cropImageWithOpenCV(imageSrc);
+      const fileFromCamera = dataURLtoFile(croppedImageSrc, 'camera-capture.jpg');
+      
       setFile(fileFromCamera);
-      setPreview(imageSrc);
+      setPreview(croppedImageSrc);
       setResult(null);
-      setUseCamera(false); // Close camera after capture
     }
   }, [webcamRef]);
 
