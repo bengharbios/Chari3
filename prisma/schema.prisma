@@ -835,19 +835,51 @@ model StoreVerification {
   id                          String    @id @default(cuid())
   userId                      String    @unique
   user                        User      @relation(fields: [userId], references: [id])
+  
+  // Step 1: Legal / Business Registration
+  entityType                  String    @default("natural") // natural, legal
+  companyName                 String?
+  countryOfRegistration       String?   @default("DZ")
+  issueAuthority              String?
   commercialRegisterNumber    String?
+  issueDate                   DateTime?
+  expiryDate                  DateTime?
   commercialRegisterFile      String?   @db.LongText
+
+  // Step 2: Tax Details
+  hasVat                      Boolean   @default(false)
+  vatNumber                   String?
+  vatCertificateFile          String?   @db.LongText
+
+  // Step 3: Payment / Bank
+  bankName                    String?
   iban                        String?
+  swiftCode                   String?
   beneficiaryName             String?
+  isBeneficiaryMatching       Boolean   @default(true)
   bankLetterFile              String?   @db.LongText
+
+  // Step 4: Signatory & Identity
+  signatoryName               String?
+  signatoryEmail              String?
+  isLegalOwner                Boolean   @default(true)
+  powerOfAttorneyFile         String?   @db.LongText
   managerIdFront              String?   @db.LongText
   managerIdBack               String?   @db.LongText
-  verificationStatus          String    @default("pending") // pending, approved, rejected
+  extractedIdData             String?   @db.LongText // JSON of OCR extracted data (MRZ, NIN, etc.)
+
+  // Step 5: T&C
+  agreedToTerms               Boolean   @default(false)
+  agreedAt                    DateTime?
+
+  // Status and Admin
+  verificationStatus          String    @default("pending") // incomplete, pending, approved, rejected
   rejectionReasons            String?   // JSON array of reasons
   adminNotes                  String?
   reviewedBy                  String?
   reviewedAt                  DateTime?
-  submittedAt                 DateTime  @default(now())
+  submittedAt                 DateTime?
+  
   createdAt                   DateTime  @default(now())
   updatedAt                   DateTime  @updatedAt
 }

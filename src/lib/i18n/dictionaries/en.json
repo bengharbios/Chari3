@@ -349,5 +349,59 @@
       "whatsapp": "WhatsApp",
       "telegram": "Telegram"
     }
+  },
+  "onboarding": {
+    "title": "Business Registration",
+    "steps": {
+      "legal": "Legal Docs",
+      "tax": "Tax Details",
+      "bank": "Financials",
+      "identity": "Identity",
+      "terms": "T&C"
+    },
+    "legal": {
+      "entityType": "Entity Type",
+      "natural": "Natural Person",
+      "legal": "Legal Entity",
+      "crNumber": "CR Number (10 digits)",
+      "companyName": "Company Name",
+      "country": "Registration Country",
+      "issueAuthority": "Issuing Authority",
+      "issueDate": "Issue Date",
+      "expiryDate": "Expiry Date",
+      "uploadDoc": "Upload your business registration document."
+    },
+    "tax": {
+      "hasVat": "Are you VAT registered?",
+      "yesVat": "Yes",
+      "noVat": "No",
+      "trn": "Tax Registration Number (TRN)",
+      "uploadDoc": "Upload VAT registration document."
+    },
+    "bank": {
+      "method": "Payment Method",
+      "bankAccount": "Bank Account",
+      "beneficiaryName": "Beneficiary Name",
+      "sameAsCompany": "Same as company name",
+      "diffFromCompany": "Different from company name",
+      "bankName": "Bank Name",
+      "iban": "IBAN / RIB",
+      "swift": "SWIFT Code",
+      "uploadDoc": "Upload bank proof (voided check/certificate)"
+    },
+    "identity": {
+      "signatoryName": "Full Name",
+      "signatoryEmail": "Email",
+      "isOwner": "Are you the legal owner?",
+      "yes": "Yes",
+      "no": "No",
+      "poa": "Power of Attorney Document",
+      "uploadId": "Identity Verification",
+      "idDesc": "Upload a government issued ID or use camera."
+    },
+    "submit": "Submit for Approval",
+    "next": "Next",
+    "prev": "Previous",
+    "saveDraft": "Save Draft & Exit"
   }
 }
