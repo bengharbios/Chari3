@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, FileText, ScanLine, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Upload, FileText, ScanLine, AlertCircle, CheckCircle2, Camera, SwitchCamera, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { createWorker } from 'tesseract.js';
+import Webcam from 'react-webcam';
 
 export default function OcrSandboxPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -14,6 +15,36 @@ export default function OcrSandboxPage() {
   const [progressMsg, setProgressMsg] = useState('');
   const [progressPct, setProgressPct] = useState(0);
   const [result, setResult] = useState<any>(null);
+
+  // Camera State
+  const [useCamera, setUseCamera] = useState(false);
+  const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
+  const webcamRef = React.useRef<Webcam>(null);
+
+  // Helper: Convert DataURI to File
+  const dataURLtoFile = (dataurl: string, filename: string) => {
+    let arr = dataurl.split(','),
+        mimeMatch = arr[0].match(/:(.*?);/),
+        mime = mimeMatch ? mimeMatch[1] : 'image/jpeg',
+        bstr = atob(arr[1]), 
+        n = bstr.length, 
+        u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, {type:mime});
+  };
+
+  const handleCapture = React.useCallback(() => {
+    const imageSrc = webcamRef.current?.getScreenshot();
+    if (imageSrc) {
+      const fileFromCamera = dataURLtoFile(imageSrc, 'camera-capture.jpg');
+      setFile(fileFromCamera);
+      setPreview(imageSrc);
+      setResult(null);
+      setUseCamera(false); // Close camera after capture
+    }
+  }, [webcamRef]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -122,21 +153,107 @@ export default function OcrSandboxPage() {
             <CardTitle>1. رفع الصورة</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="border-2 border-dashed rounded-lg p-8 text-center flex flex-col items-center justify-center bg-muted/20 relative">
-              <input 
-                type="file" 
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                accept="image/*"
-                onChange={handleFileChange}
-              />
-              <Upload className="h-8 w-8 text-muted-foreground mb-4" />
-              <p className="font-medium">اسحب الصورة هنا أو اضغط للاختيار</p>
-              <p className="text-xs text-muted-foreground mt-1">PNG, JPG, JPEG</p>
-            </div>
+            {!useCamera ? (
+              <>
+                <div className="border-2 border-dashed rounded-lg p-8 text-center flex flex-col items-center justify-center bg-muted/20 relative">
+                  <input 
+                    type="file" 
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  <Upload className="h-8 w-8 text-muted-foreground mb-4" />
+                  <p className="font-medium">اسحب الصورة هنا أو اضغط للاختيار</p>
+                  <p className="text-xs text-muted-foreground mt-1">PNG, JPG, JPEG</p>
+                </div>
+                
+                <div className="flex items-center gap-4 py-2">
+                  <div className="flex-1 border-t"></div>
+                  <span className="text-xs text-muted-foreground uppercase font-bold tracking-widest">أو</span>
+                  <div className="flex-1 border-t"></div>
+                </div>
 
-            {preview && (
-              <div className="mt-4 rounded-lg overflow-hidden border bg-black/5 flex justify-center p-2">
-                <img src={preview} alt="Preview" className="w-full h-auto object-contain max-h-[300px] rounded" />
+                <Button 
+                  variant="outline" 
+                  className="w-full flex items-center gap-2" 
+                  onClick={() => {
+                    setUseCamera(true);
+                    setFile(null);
+                    setPreview(null);
+                    setResult(null);
+                  }}
+                >
+                  <Camera className="h-4 w-4" />
+                  افتح الكاميرا لالتقاط صورة
+                </Button>
+
+                {preview && (
+                  <div className="mt-4 rounded-lg overflow-hidden border bg-black/5 flex justify-center p-2 relative">
+                    <img src={preview} alt="Preview" className="w-full h-auto object-contain max-h-[300px] rounded" />
+                    <Button 
+                      variant="destructive" 
+                      size="icon" 
+                      className="absolute top-4 right-4 h-8 w-8 rounded-full"
+                      onClick={() => {
+                        setFile(null);
+                        setPreview(null);
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="space-y-4">
+                <div className="relative rounded-lg overflow-hidden border bg-black">
+                  <Webcam
+                    audio={false}
+                    ref={webcamRef}
+                    screenshotFormat="image/jpeg"
+                    videoConstraints={{
+                      width: 1920,
+                      height: 1080,
+                      facingMode: facingMode
+                    }}
+                    className="w-full h-[350px] object-cover"
+                  />
+                  
+                  {/* Focus Frame Overlay (Styling for ID Card) */}
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                    <div className="w-[80%] h-[50%] border-4 border-dashed border-brand/70 rounded-xl relative">
+                       <div className="absolute -top-6 w-full text-center text-white font-bold drop-shadow-md text-sm">
+                         ضع البطاقة داخل الإطار
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 px-4">
+                    <Button 
+                      variant="secondary" 
+                      size="icon"
+                      className="rounded-full h-10 w-10 bg-white/20 hover:bg-white/40 text-white backdrop-blur-md"
+                      onClick={() => setFacingMode(prev => prev === 'environment' ? 'user' : 'environment')}
+                    >
+                      <SwitchCamera className="h-5 w-5" />
+                    </Button>
+                    <Button 
+                      className="rounded-full px-8 bg-brand hover:bg-brand-dark text-white font-bold shadow-lg"
+                      onClick={handleCapture}
+                    >
+                      <Camera className="mr-2 h-4 w-4" />
+                      التقاط
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      size="icon"
+                      className="rounded-full h-10 w-10 opacity-80"
+                      onClick={() => setUseCamera(false)}
+                    >
+                      <X className="h-5 w-5" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
 
