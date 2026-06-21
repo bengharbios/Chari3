@@ -171,6 +171,15 @@ export default function AdminLayoutWrapper({
     return <div className="min-h-screen bg-background flex items-center justify-center">جاري التحويل للوحة الدخول...</div>;
   }
 
+  // If authenticated but somehow still on the login page, hide the sidebar and let the login page's useEffect redirect them.
+  if (isLoginPage) {
+    return (
+      <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-background">
+        {children}
+      </div>
+    );
+  }
+
   const themeMode = globalTheme === 'dark' ? 'dark' : 'light';
   const themeStyles = {
     '--theme-bg-sidebar': theme.colors.sidebarBackground[themeMode],
