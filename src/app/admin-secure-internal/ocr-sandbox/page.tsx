@@ -337,7 +337,21 @@ export default function OcrSandboxPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <Script src="https://docs.opencv.org/4.8.0/opencv.js" strategy="lazyOnload" onLoad={() => setCvLoaded(true)} />
+      <Script 
+        src="https://docs.opencv.org/4.8.0/opencv.js" 
+        strategy="afterInteractive" 
+        onReady={() => {
+          // OpenCV might take a bit to initialize its WebAssembly module
+          const checkCv = setInterval(() => {
+            if ((window as any).cv && (window as any).cv.Mat) {
+              clearInterval(checkCv);
+              setCvLoaded(true);
+            }
+          }, 200);
+          // Timeout after 15 seconds to avoid infinite loop just in case
+          setTimeout(() => clearInterval(checkCv), 15000);
+        }} 
+      />
       
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
