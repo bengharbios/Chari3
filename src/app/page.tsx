@@ -239,7 +239,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
     if (!user || user.role === 'admin' || user.role === 'buyer') return;
 
     try {
-      const res = await fetch(`/api/seller/onboarding?userId=`);
+      const res = await fetch(`/api/seller/onboarding?userId=${user.id}`);
       if (!res.ok) return;
       const data = await res.json();
       if (!data.success) return;
@@ -352,7 +352,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
 
     const restoreDraft = async () => {
       try {
-        const res = await fetch(`/api/seller/onboarding?userId=`);
+        const res = await fetch(`/api/seller/onboarding?userId=${user.id}`);
         if (!res.ok) return;
         const data = await res.json();
         if (!data.success || !data.verificationData) return;
@@ -516,8 +516,8 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
           {/* Sticky status banner at the top */}
           {needsBanner && <StickyStatusBanner />}
 
-          {/* Onboarding Wizard Overlay (blocks dashboard until complete) */}
-          {needsOnboarding && <OnboardingWizard />}
+          {/* Onboarding Wizard Overlay (handles its own Dialog state) */}
+          <OnboardingWizard />
 
           {/* Admin Review Queue */}
           {needsAdminReview && <AdminReviewQueue />}
