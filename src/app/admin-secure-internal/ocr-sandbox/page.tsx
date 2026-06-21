@@ -25,6 +25,7 @@ export default function OcrSandboxPage() {
   // OpenCV State
   const [cvLoaded, setCvLoaded] = useState(false);
   const [polygonPoints, setPolygonPoints] = useState<{x: number, y: number}[] | null>(null);
+  const latestPointsRef = React.useRef<{x: number, y: number}[] | null>(null);
   const hiddenCanvasRef = React.useRef<HTMLCanvasElement>(null);
   const requestRef = React.useRef<number>();
 
@@ -93,7 +94,6 @@ export default function OcrSandboxPage() {
         }
 
         if (largestContourIndex !== -1) {
-          // Convert the 4 points to percentages (0-100%) so we can map them to the responsive UI SVG
           const points = [];
           for (let i = 0; i < 4; i++) {
             points.push({
@@ -102,8 +102,10 @@ export default function OcrSandboxPage() {
             });
           }
           setPolygonPoints(points);
+          latestPointsRef.current = points;
         } else {
           setPolygonPoints(null); // No ID card found in frame
+          latestPointsRef.current = null;
         }
 
         src.delete();
@@ -142,13 +144,13 @@ export default function OcrSandboxPage() {
     return new File([u8arr], filename, {type:mime});
   };
 
-  const cropImageWithOpenCV = async (imageSrc: string): Promise<string> => {
+  const cropImageWithOpenCV = async (imageSrc: string, polyPoints: {x: number, y: number}[] | null): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
         const cv = (window as any).cv;
-        if (!cv) {
-          resolve(imageSrc); // Fallback if OpenCV not loaded
+        if (!cv || !polyPoints || polyPoints.length !== 4) {
+          resolve(imageSrc); // Fallback to original image if no crop box found
           return;
         }
 
@@ -160,95 +162,60 @@ export default function OcrSandboxPage() {
 
         try {
           let src = cv.imread(canvas);
-          let gray = new cv.Mat();
-          let blur = new cv.Mat();
-          let edges = new cv.Mat();
 
-          cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
-          cv.GaussianBlur(gray, blur, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
-          cv.Canny(blur, edges, 75, 200, 3, false);
+          // Map percentages back to the high-res image pixels
+          const pts = polyPoints.map(p => ({
+            x: (p.x / 100) * img.width,
+            y: (p.y / 100) * img.height
+          }));
 
-          let contours = new cv.MatVector();
-          let hierarchy = new cv.Mat();
-          cv.findContours(edges, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+          // Sort points to identify Top-Left, Top-Right, Bottom-Right, Bottom-Left
+          // TL has smallest x+y, BR has largest x+y
+          pts.sort((a, b) => (a.x + a.y) - (b.x + b.y));
+          const tl = pts[0];
+          const br = pts[3];
+          
+          // TR has smallest x-y, BL has largest x-y
+          const remain = [pts[1], pts[2]];
+          remain.sort((a, b) => (a.x - a.y) - (b.x - b.y));
+          const tr = remain[0];
+          const bl = remain[1];
 
-          let largestArea = 0;
-          let bestPoly = new cv.Mat();
+          // Calculate actual physical width/height of the card
+          const widthA = Math.hypot(br.x - bl.x, br.y - bl.y);
+          const widthB = Math.hypot(tr.x - tl.x, tr.y - tl.y);
+          const maxWidth = Math.max(widthA, widthB);
 
-          for (let i = 0; i < contours.size(); ++i) {
-            let cnt = contours.get(i);
-            let area = cv.contourArea(cnt);
-            // Minimum area threshold (5% of full image size to avoid cropping tiny noise)
-            if (area > (img.width * img.height * 0.05)) { 
-              let peri = cv.arcLength(cnt, true);
-              let approx = new cv.Mat();
-              cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
-              
-              if (approx.rows === 4 && area > largestArea) {
-                largestArea = area;
-                approx.copyTo(bestPoly);
-              }
-              approx.delete();
-            }
-            cnt.delete();
-          }
+          const heightA = Math.hypot(tr.x - br.x, tr.y - br.y);
+          const heightB = Math.hypot(tl.x - bl.x, tl.y - bl.y);
+          const maxHeight = Math.max(heightA, heightB);
 
-          if (largestArea > 0) {
-            // Sort points to identify Top-Left, Top-Right, Bottom-Right, Bottom-Left
-            let pts = [];
-            for (let i = 0; i < 4; i++) {
-              pts.push({ x: bestPoly.data32S[i * 2], y: bestPoly.data32S[i * 2 + 1] });
-            }
-            
-            // TL has smallest x+y, BR has largest x+y
-            pts.sort((a, b) => (a.x + a.y) - (b.x + b.y));
-            const tl = pts[0];
-            const br = pts[3];
-            
-            // TR has smallest x-y, BL has largest x-y
-            const remain = [pts[1], pts[2]];
-            remain.sort((a, b) => (a.x - a.y) - (b.x - b.y));
-            const tr = remain[0];
-            const bl = remain[1];
+          // Warp perspective
+          let srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+            tl.x, tl.y,
+            tr.x, tr.y,
+            br.x, br.y,
+            bl.x, bl.y
+          ]);
+          let dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+            0, 0,
+            maxWidth, 0,
+            maxWidth, maxHeight,
+            0, maxHeight
+          ]);
 
-            // Calculate actual physical width/height of the card
-            const widthA = Math.hypot(br.x - bl.x, br.y - bl.y);
-            const widthB = Math.hypot(tr.x - tl.x, tr.y - tl.y);
-            const maxWidth = Math.max(widthA, widthB);
+          let M = cv.getPerspectiveTransform(srcTri, dstTri);
+          let warped = new cv.Mat();
+          
+          // Use INTER_CUBIC for higher quality interpolation
+          cv.warpPerspective(src, warped, M, new cv.Size(maxWidth, maxHeight), cv.INTER_CUBIC);
 
-            const heightA = Math.hypot(tr.x - br.x, tr.y - br.y);
-            const heightB = Math.hypot(tl.x - bl.x, tl.y - bl.y);
-            const maxHeight = Math.max(heightA, heightB);
+          cv.imshow(canvas, warped);
+          
+          // Cleanup
+          srcTri.delete(); dstTri.delete(); M.delete(); warped.delete(); src.delete();
 
-            // Warp perspective
-            let srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-              tl.x, tl.y,
-              tr.x, tr.y,
-              br.x, br.y,
-              bl.x, bl.y
-            ]);
-            let dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
-              0, 0,
-              maxWidth, 0,
-              maxWidth, maxHeight,
-              0, maxHeight
-            ]);
-
-            let M = cv.getPerspectiveTransform(srcTri, dstTri);
-            let warped = new cv.Mat();
-            cv.warpPerspective(src, warped, M, new cv.Size(maxWidth, maxHeight));
-
-            cv.imshow(canvas, warped);
-            
-            // Cleanup warped
-            srcTri.delete(); dstTri.delete(); M.delete(); warped.delete();
-          }
-
-          // Cleanup general
-          src.delete(); gray.delete(); blur.delete(); edges.delete();
-          contours.delete(); hierarchy.delete(); bestPoly.delete();
-
-          resolve(canvas.toDataURL('image/jpeg', 0.9));
+          resolve(canvas.toDataURL('image/jpeg', 1.0)); // 100% quality output
         } catch (e) {
           console.error("OpenCV Crop Error", e);
           resolve(imageSrc);
@@ -261,14 +228,20 @@ export default function OcrSandboxPage() {
   const handleCapture = React.useCallback(async () => {
     const imageSrc = webcamRef.current?.getScreenshot();
     if (imageSrc) {
+      const activePoints = latestPointsRef.current;
       setUseCamera(false); // Close camera UI immediately for better UX
-      toast.info('جاري قص البطاقة آلياً وتحسين جودتها...');
       
-      const croppedImageSrc = await cropImageWithOpenCV(imageSrc);
-      const fileFromCamera = dataURLtoFile(croppedImageSrc, 'camera-capture.jpg');
+      if (activePoints) {
+        toast.info('جاري قص البطاقة آلياً وتحسين جودتها...');
+      } else {
+        toast.info('لم يتم التعرف على الحواف، تم التقاط الصورة بالكامل.');
+      }
+      
+      const finalImageSrc = await cropImageWithOpenCV(imageSrc, activePoints);
+      const fileFromCamera = dataURLtoFile(finalImageSrc, 'camera-capture.jpg');
       
       setFile(fileFromCamera);
-      setPreview(croppedImageSrc);
+      setPreview(finalImageSrc);
       setResult(null);
     }
   }, [webcamRef]);
@@ -436,13 +409,14 @@ export default function OcrSandboxPage() {
             ) : (
               <div className="space-y-4">
                 <div className="relative rounded-lg overflow-hidden border bg-black">
-                  <Webcam
+                    <Webcam
                     audio={false}
                     ref={webcamRef}
                     screenshotFormat="image/jpeg"
+                    screenshotQuality={1}
                     videoConstraints={{
-                      width: 1920,
-                      height: 1080,
+                      width: { ideal: 4096 }, // Force highest possible resolution
+                      height: { ideal: 2160 },
                       facingMode: facingMode
                     }}
                     className="w-full h-[350px] object-cover"
