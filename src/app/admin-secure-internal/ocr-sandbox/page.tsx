@@ -60,11 +60,25 @@ export default function OcrSandboxPage() {
       const crRegex = /\b\d{10}\b/g;
       const crMatches = text.match(crRegex);
 
+      // Algerian ID Extraction Logic
+      const ninMatch = text.match(/(?:الوطني|رقم)[^\d]*(\d{18})/i) || text.match(/\b\d{18}\b/);
+      const lastNameMatch = text.match(/اللقب\s*[:;\-]\s*([^\n]+)/i);
+      const firstNameMatch = text.match(/الإسم\s*[:;\-]\s*([^\n]+)/i);
+      const dobMatch = text.match(/(?:الميلاد|تريغ)[^\d]*(\d{4}[.\-]\d{2}[.\-]\d{2})/i);
+      
+      const parsedId = {
+        nin: ninMatch ? (ninMatch[1] || ninMatch[0]) : '',
+        lastName: lastNameMatch ? lastNameMatch[1].trim() : '',
+        firstName: firstNameMatch ? firstNameMatch[1].trim() : '',
+        dob: dobMatch ? dobMatch[1].trim() : ''
+      };
+
       setResult({
         success: true,
         text,
         mrzMatches: mrzMatches || [],
-        crMatches: crMatches || []
+        crMatches: crMatches || [],
+        parsedId
       });
 
       toast.success('تم الاستخراج بنجاح!');
@@ -174,6 +188,37 @@ export default function OcrSandboxPage() {
                         </code>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* ID Card Extracted Fields */}
+                {result.parsedId && (result.parsedId.nin || result.parsedId.lastName || result.parsedId.firstName) && (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 rounded-lg space-y-4">
+                    <h3 className="font-semibold text-blue-800 dark:text-blue-300 flex items-center gap-2">
+                      <ScanLine className="h-4 w-4" />
+                      البيانات الأساسية المستخرجة (قابلة للتعديل)
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-muted-foreground">رقم التعريف الوطني (18 رقم)</label>
+                        <input type="text" defaultValue={result.parsedId.nin} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-muted-foreground">اللقب</label>
+                        <input type="text" defaultValue={result.parsedId.lastName} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-muted-foreground">الإسم</label>
+                        <input type="text" defaultValue={result.parsedId.firstName} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-muted-foreground">تاريخ الميلاد</label>
+                        <input type="text" defaultValue={result.parsedId.dob} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">
+                      * قمنا باستخراج هذه البيانات عبر البحث عن الكلمات المفتاحية الثابتة (اللقب، الإسم، إلخ). يمكنك تعديل أي خطأ ناتج عن جودة الصورة.
+                    </p>
                   </div>
                 )}
 
