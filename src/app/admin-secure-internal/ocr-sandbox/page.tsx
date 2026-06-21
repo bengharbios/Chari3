@@ -7,6 +7,7 @@ import { Upload, FileText, ScanLine, AlertCircle, CheckCircle2, Camera, SwitchCa
 import { toast } from 'sonner';
 import { createWorker } from 'tesseract.js';
 import Webcam from 'react-webcam';
+import Script from 'next/script';
 
 export default function OcrSandboxPage() {
   const [file, setFile] = useState<File | null>(null);
@@ -20,6 +21,112 @@ export default function OcrSandboxPage() {
   const [useCamera, setUseCamera] = useState(false);
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment');
   const webcamRef = React.useRef<Webcam>(null);
+
+  // OpenCV State
+  const [cvLoaded, setCvLoaded] = useState(false);
+  const [polygonPoints, setPolygonPoints] = useState<{x: number, y: number}[] | null>(null);
+  const hiddenCanvasRef = React.useRef<HTMLCanvasElement>(null);
+  const requestRef = React.useRef<number>();
+
+  // OpenCV Real-time Edge Detection Loop
+  React.useEffect(() => {
+    if (!useCamera || !cvLoaded || !webcamRef.current?.video || !hiddenCanvasRef.current) return;
+
+    const video = webcamRef.current.video;
+    const canvas = hiddenCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const cv = (window as any).cv;
+
+    const processFrame = () => {
+      if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+        requestRef.current = requestAnimationFrame(processFrame);
+        return;
+      }
+
+      // Process at lower resolution for high FPS tracking
+      const width = 400;
+      const height = 300;
+      canvas.width = width;
+      canvas.height = height;
+
+      ctx?.drawImage(video, 0, 0, width, height);
+
+      try {
+        let src = cv.imread(canvas);
+        let gray = new cv.Mat();
+        let blur = new cv.Mat();
+        let edges = new cv.Mat();
+
+        // 1. Convert to grayscale
+        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+        // 2. Blur to remove noise
+        cv.GaussianBlur(gray, blur, new cv.Size(5, 5), 0, 0, cv.BORDER_DEFAULT);
+        // 3. Canny edge detection
+        cv.Canny(blur, edges, 75, 200, 3, false);
+
+        // 4. Find contours
+        let contours = new cv.MatVector();
+        let hierarchy = new cv.Mat();
+        cv.findContours(edges, contours, hierarchy, cv.RETR_LIST, cv.CHAIN_APPROX_SIMPLE);
+
+        let largestArea = 0;
+        let largestContourIndex = -1;
+        let bestPoly = new cv.Mat();
+
+        for (let i = 0; i < contours.size(); ++i) {
+          let cnt = contours.get(i);
+          let area = cv.contourArea(cnt);
+          if (area > 4000) { // Minimum area to be considered an ID card
+            let peri = cv.arcLength(cnt, true);
+            let approx = new cv.Mat();
+            cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
+            
+            // If it's a quad (4 points) and largest so far
+            if (approx.rows === 4 && area > largestArea) {
+              largestArea = area;
+              largestContourIndex = i;
+              approx.copyTo(bestPoly);
+            }
+            approx.delete();
+          }
+          cnt.delete();
+        }
+
+        if (largestContourIndex !== -1) {
+          // Convert the 4 points to percentages (0-100%) so we can map them to the responsive UI SVG
+          const points = [];
+          for (let i = 0; i < 4; i++) {
+            points.push({
+              x: (bestPoly.data32S[i * 2] / width) * 100,
+              y: (bestPoly.data32S[i * 2 + 1] / height) * 100
+            });
+          }
+          setPolygonPoints(points);
+        } else {
+          setPolygonPoints(null); // No ID card found in frame
+        }
+
+        src.delete();
+        gray.delete();
+        blur.delete();
+        edges.delete();
+        contours.delete();
+        hierarchy.delete();
+        bestPoly.delete();
+      } catch (e) {
+        // Silently ignore frame processing errors to prevent crash loop
+      }
+
+      requestRef.current = requestAnimationFrame(processFrame);
+    };
+
+    // Start loop
+    requestRef.current = requestAnimationFrame(processFrame);
+
+    return () => {
+      if (requestRef.current) cancelAnimationFrame(requestRef.current);
+    };
+  }, [useCamera, cvLoaded]);
 
   // Helper: Convert DataURI to File
   const dataURLtoFile = (dataurl: string, filename: string) => {
@@ -137,6 +244,8 @@ export default function OcrSandboxPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
+      <Script src="https://docs.opencv.org/4.8.0/opencv.js" strategy="lazyOnload" onLoad={() => setCvLoaded(true)} />
+      
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <ScanLine className="h-6 w-6 text-primary" />
@@ -219,14 +328,33 @@ export default function OcrSandboxPage() {
                     className="w-full h-[350px] object-cover"
                   />
                   
-                  {/* Focus Frame Overlay (Styling for ID Card) */}
-                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    <div className="w-[80%] h-[50%] border-4 border-dashed border-brand/70 rounded-xl relative">
-                       <div className="absolute -top-6 w-full text-center text-white font-bold drop-shadow-md text-sm">
-                         ضع البطاقة داخل الإطار
-                       </div>
-                    </div>
+                  {/* Dynamic OpenCV Focus Frame Overlay */}
+                  <div className="absolute inset-0 pointer-events-none">
+                    {polygonPoints ? (
+                      <svg className="w-full h-full transition-all duration-75">
+                        <polygon 
+                          points={polygonPoints.map(p => `${p.x}%,${p.y}%`).join(' ')} 
+                          fill="rgba(26, 187, 156, 0.2)" 
+                          stroke="#1ABB9C" 
+                          strokeWidth="3" 
+                        />
+                        {polygonPoints.map((p, i) => (
+                          <circle key={i} cx={`${p.x}%`} cy={`${p.y}%`} r="6" fill="#1ABB9C" />
+                        ))}
+                      </svg>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="w-[80%] h-[50%] border-2 border-dashed border-white/40 rounded-xl relative transition-all duration-300">
+                           <div className="absolute -top-8 w-full text-center text-white font-bold text-sm bg-black/40 py-1 rounded backdrop-blur-sm">
+                             {cvLoaded ? "ضع البطاقة أمام الكاميرا..." : "جاري تحميل محرك الرؤية الحاسوبية (OpenCV)..."}
+                           </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                  
+                  {/* Hidden Canvas for OpenCV Processing */}
+                  <canvas ref={hiddenCanvasRef} className="hidden" />
 
                   <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 px-4">
                     <Button 
