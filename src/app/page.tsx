@@ -524,7 +524,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
           {needsAdminReview && <AdminReviewQueue />}
 
           {/* Main Dashboard Content */}
-          <DashboardComponent />
+          {!needsOnboarding && <DashboardComponent />}
         </DashboardLayout>
       ) : (
         <DashboardLayout>

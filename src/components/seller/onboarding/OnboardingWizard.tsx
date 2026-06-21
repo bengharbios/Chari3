@@ -24,6 +24,11 @@ export default function OnboardingWizard() {
   const [formData, setFormData] = useState<any>({});
   
   useEffect(() => {
+    toast.info(
+      locale === 'ar' ? 'يرجى استكمال جميع الأقسام أدناه لتفعيل حسابك' : 'Please complete all sections below to activate your account',
+      { duration: 5000 }
+    );
+    
     const fetchData = async () => {
       if (!user?.id) return;
       try {
