@@ -60,17 +60,31 @@ export default function OcrSandboxPage() {
       const crRegex = /\b\d{10}\b/g;
       const crMatches = text.match(crRegex);
 
-      // Algerian ID Extraction Logic
-      const ninMatch = text.match(/(?:الوطني|رقم)[^\d]*(\d{18})/i) || text.match(/\b\d{18}\b/);
-      const lastNameMatch = text.match(/اللقب\s*[:;\-]\s*([^\n]+)/i);
-      const firstNameMatch = text.match(/الإسم\s*[:;\-]\s*([^\n]+)/i);
-      const dobMatch = text.match(/(?:الميلاد|تريغ)[^\d]*(\d{4}[.\-]\d{2}[.\-]\d{2})/i);
+      // Algerian ID Extraction Logic (More resilient for OCR typos)
+      const ninMatch = text.match(/(?:الوطني|رقم|التعويف|التعريف)[^\d]*(\d{18})/i) || text.match(/\b\d{18}\b/);
+      const lastNameMatch = text.match(/(?:اللقب|النقب)[^\n:]*[:;\-]\s*([^\n]+)/i);
+      const firstNameMatch = text.match(/(?:الإسم|الاسم|my)[^\n:]*[:;\-]\s*([^\n]+)/i);
+      const dobMatch = text.match(/(?:الميلاد|تريغ|شيلك|تاريخ)[^\d]*(\d{4}[.\-]\d{2}[.\-]\d{2})/i);
+      const issueAuthorityMatch = text.match(/(?:سلطة|اسلطة)[^\n:]*الإصدار[^\n:]*[:;\-]\s*([^\n]+)/i);
+      const issueDateMatch = text.match(/(?:تاريخ|تريخ)[^\n:]*الإصدار[^\d]*(\d{4}[.\-]\d{2}[.\-]\d{2})/i);
+      const expiryDateMatch = text.match(/(?:تاريخ|تاريع)[^\n:]*(?:الإنتهاء|لإتتياء)[^\d]*(\d{4}[.\-]\d{2}[.\-]\d{2})/i);
+      const genderMatch = text.match(/الجنس[^\n:]*[:;\-]\s*([^\s\n]+)/i);
+      const bloodTypeMatch = text.match(/Rh\s*[:;\-]\s*([A-Z0-9+\-]+)/i);
+      const birthPlaceMatch = text.match(/مكان[^\n:]*(?:الميلاد|اشيلاد)[^\n:]*[:;\-]\s*([^\n]+)/i);
       
       const parsedId = {
+        republic: text.match(/الجمهورية/i) ? 'الجمهورية الجزائرية الديمقراطية الشعبية' : '',
+        cardType: text.match(/(?:بطاقة|التعريف)/i) ? 'بطاقة التعريف الوطنية' : '',
+        issueAuthority: issueAuthorityMatch ? issueAuthorityMatch[1].trim() : '',
+        issueDate: issueDateMatch ? issueDateMatch[1].trim() : '',
+        expiryDate: expiryDateMatch ? expiryDateMatch[1].trim() : '',
         nin: ninMatch ? (ninMatch[1] || ninMatch[0]) : '',
         lastName: lastNameMatch ? lastNameMatch[1].trim() : '',
         firstName: firstNameMatch ? firstNameMatch[1].trim() : '',
-        dob: dobMatch ? dobMatch[1].trim() : ''
+        dob: dobMatch ? dobMatch[1].trim() : '',
+        gender: genderMatch ? genderMatch[1].trim() : '',
+        bloodType: bloodTypeMatch ? bloodTypeMatch[1].trim() : '',
+        birthPlace: birthPlaceMatch ? birthPlaceMatch[1].trim() : ''
       };
 
       setResult({
@@ -191,17 +205,37 @@ export default function OcrSandboxPage() {
                   </div>
                 )}
 
-                {/* ID Card Extracted Fields */}
-                {result.parsedId && (result.parsedId.nin || result.parsedId.lastName || result.parsedId.firstName) && (
+                {/* ID Card Extracted Fields Form */}
+                {result.parsedId && (
                   <div className="p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 rounded-lg space-y-4">
                     <h3 className="font-semibold text-blue-800 dark:text-blue-300 flex items-center gap-2">
                       <ScanLine className="h-4 w-4" />
-                      البيانات الأساسية المستخرجة (قابلة للتعديل)
+                      استمارة بيانات الهوية (قابلة للتعديل)
                     </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1 col-span-1 md:col-span-2">
+                        <label className="text-xs font-bold text-muted-foreground">الجمهورية</label>
+                        <input type="text" defaultValue={result.parsedId.republic} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div className="space-y-1 col-span-1 md:col-span-2">
+                        <label className="text-xs font-bold text-muted-foreground">نوع البطاقة</label>
+                        <input type="text" defaultValue={result.parsedId.cardType} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div className="space-y-1 col-span-1 md:col-span-2">
+                        <label className="text-xs font-bold text-muted-foreground">سلطة الإصدار</label>
+                        <input type="text" defaultValue={result.parsedId.issueAuthority} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                      </div>
                       <div className="space-y-1">
+                        <label className="text-xs font-bold text-muted-foreground">تاريخ الإصدار</label>
+                        <input type="text" defaultValue={result.parsedId.issueDate} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-muted-foreground">تاريخ الإنتهاء</label>
+                        <input type="text" defaultValue={result.parsedId.expiryDate} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div className="space-y-1 col-span-1 md:col-span-2">
                         <label className="text-xs font-bold text-muted-foreground">رقم التعريف الوطني (18 رقم)</label>
-                        <input type="text" defaultValue={result.parsedId.nin} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                        <input type="text" defaultValue={result.parsedId.nin} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500 font-mono" />
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs font-bold text-muted-foreground">اللقب</label>
@@ -215,9 +249,21 @@ export default function OcrSandboxPage() {
                         <label className="text-xs font-bold text-muted-foreground">تاريخ الميلاد</label>
                         <input type="text" defaultValue={result.parsedId.dob} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
                       </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-muted-foreground">مكان الميلاد</label>
+                        <input type="text" defaultValue={result.parsedId.birthPlace} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-muted-foreground">الجنس</label>
+                        <input type="text" defaultValue={result.parsedId.gender} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-muted-foreground">فصيلة الدم (Rh)</label>
+                        <input type="text" defaultValue={result.parsedId.bloodType} className="w-full p-2 text-sm border border-blue-200 dark:border-blue-800 rounded bg-background focus:ring-2 focus:ring-blue-500" />
+                      </div>
                     </div>
                     <p className="text-xs text-blue-600 dark:text-blue-400">
-                      * قمنا باستخراج هذه البيانات عبر البحث عن الكلمات المفتاحية الثابتة (اللقب، الإسم، إلخ). يمكنك تعديل أي خطأ ناتج عن جودة الصورة.
+                      * قمنا بمحاولة جلب كافة تفاصيل الهوية. أي حقل فارغ أو به خطأ إملائي بسبب جودة الصورة يمكنك تعديله يدوياً الآن.
                     </p>
                   </div>
                 )}
