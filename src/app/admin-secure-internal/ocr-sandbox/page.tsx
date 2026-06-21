@@ -44,9 +44,23 @@ export default function OcrSandboxPage() {
         return;
       }
 
-      // Process at lower resolution for high FPS tracking
-      const width = 400;
-      const height = 300;
+      // Maintain aspect ratio while scaling down for performance
+      const maxDim = 400;
+      let width = video.videoWidth;
+      let height = video.videoHeight;
+      if (width > height) {
+         height = Math.round((height / width) * maxDim);
+         width = maxDim;
+      } else {
+         width = Math.round((width / height) * maxDim);
+         height = maxDim;
+      }
+
+      if (width === 0 || height === 0) {
+         requestRef.current = requestAnimationFrame(processFrame);
+         return;
+      }
+
       canvas.width = width;
       canvas.height = height;
 
