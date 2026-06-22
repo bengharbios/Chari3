@@ -4,6 +4,8 @@ import { db } from "./db";
 import { twoFactor } from "better-auth/plugins";
 
 export const auth = betterAuth({
+  secret: process.env.BETTER_AUTH_SECRET || "fallback_secret_please_change_in_production_12345",
+  baseURL: process.env.NEXT_PUBLIC_APP_URL || "https://chariday.com",
   database: prismaAdapter(db, {
     provider: "mysql", // ChariDay uses MySQL in the schema
   }),
