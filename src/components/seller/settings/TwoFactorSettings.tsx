@@ -9,12 +9,12 @@ import QRCode from 'react-qr-code';
 import { toast } from 'sonner';
 import { useSession } from '@/lib/auth-client';
 import { twoFactorClient } from "better-auth/client/plugins";
-import { useTranslations } from '@/lib/i18n/hooks';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAppStore } from '@/lib/store';
 
 export default function TwoFactorSettings() {
   const { data: session } = useSession();
-  const { t } = useTranslations();
+  const { t } = useTranslation();
   const { locale } = useAppStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
 

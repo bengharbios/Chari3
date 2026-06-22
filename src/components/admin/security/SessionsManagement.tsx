@@ -5,13 +5,13 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, Monitor, Smartphone, Globe, ShieldOff, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTranslations } from '@/lib/i18n/hooks';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useAppStore } from '@/lib/store';
 
 export default function SessionsManagement() {
   const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const { t } = useTranslations();
+  const { t } = useTranslation();
   const { locale } = useAppStore();
 
   const fetchSessions = async () => {
