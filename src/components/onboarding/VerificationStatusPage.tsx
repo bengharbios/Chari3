@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { KycVerificationSection } from './KycVerificationSection';
+import OnboardingWizard from '@/components/seller/onboarding/OnboardingWizard';
 
 function t(isAr: boolean, ar: string, en: string) {
   return isAr ? ar : en;
@@ -30,7 +31,7 @@ const statusConfig: Record<
 export default function VerificationStatusPage() {
   const { locale } = useAppStore();
   const { user, updateProfile } = useAuthStore();
-  const { accountStatus, verificationItems, rejectionReason, rejectedItems, setAccountStatus } = useOnboardingStore();
+  const { accountStatus, verificationItems, rejectionReason, rejectedItems, setAccountStatus, isWizardOpen } = useOnboardingStore();
   const isAr = locale === 'ar';
 
   // State for email editing
@@ -206,9 +207,16 @@ export default function VerificationStatusPage() {
       const store = useOnboardingStore.getState();
       store.updateVerificationItem(id, 'required');
     });
-    setAccountStatus('incomplete');
     handleGoComplete();
   };
+
+  if (isWizardOpen) {
+    return (
+      <div className="animate-fade-in w-full">
+        <OnboardingWizard />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto animate-fade-in pb-12">

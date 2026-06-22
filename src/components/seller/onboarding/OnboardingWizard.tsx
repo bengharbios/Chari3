@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Store, FileText, Landmark, UserCheck, ShieldCheck, ArrowRight, ArrowLeft, Save } from 'lucide-react';
 import LegalStep from './LegalStep';
 import TaxStep from './TaxStep';
@@ -127,10 +127,9 @@ export default function OnboardingWizard() {
   };
 
   return (
-    <Dialog open={isWizardOpen} onOpenChange={setWizardOpen}>
-      <DialogContent className="max-w-4xl p-0 h-[95vh] md:h-auto md:max-h-[90vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border-0" aria-describedby={undefined}>
-        <DialogTitle className="sr-only">Store Verification Wizard</DialogTitle>
-        <DialogDescription className="sr-only">Complete your store verification steps.</DialogDescription>
+    <div className="max-w-4xl w-full mx-auto p-0 flex flex-col bg-white shadow-lg rounded-2xl border overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <h2 className="sr-only">Store Verification Wizard</h2>
+        <p className="sr-only">Complete your store verification steps.</p>
         
         {/* Header section */}
         <div className="bg-gray-50 border-b px-6 py-4 flex flex-col gap-4">
@@ -207,7 +206,7 @@ export default function OnboardingWizard() {
             {activeStep !== totalSteps - 1 && (isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />)}
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   );
 }

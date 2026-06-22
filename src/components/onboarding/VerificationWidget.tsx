@@ -67,11 +67,9 @@ function StickyStatusBanner() {
   const { accountStatus, isBannerDismissed, dismissBanner, rejectionReason, isDraftSaved, clearDraftFlag, setWizardOpen } = useOnboardingStore();
   const isAr = locale === 'ar';
 
-  // Banner shows for: incomplete (with draft), pending, rejected
+  // Banner shows for: incomplete, pending, rejected
   if (isBannerDismissed) return null;
   if (!accountStatus || accountStatus === 'active' || accountStatus === 'suspended') return null;
-  // Don't show incomplete banner if no draft saved (wizard will show instead)
-  if (accountStatus === 'incomplete' && !isDraftSaved) return null;
 
   // Config per status
   const bannerConfig: Record<string, {
