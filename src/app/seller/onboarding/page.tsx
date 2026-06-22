@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import OnboardingWizard from '@/components/seller/onboarding/OnboardingWizard';
 import { useAuthStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
@@ -9,11 +9,18 @@ export default function SellerOnboardingPage() {
   const { isAuthenticated, user } = useAuthStore();
   const router = useRouter();
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
-    if (!isAuthenticated || !user) {
+    const t = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && (!isAuthenticated || !user)) {
       router.push('/?login=true');
     }
-  }, [isAuthenticated, user, router]);
+  }, [mounted, isAuthenticated, user, router]);
 
   if (!isAuthenticated || !user) return null;
 

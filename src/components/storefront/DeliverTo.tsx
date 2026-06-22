@@ -34,7 +34,7 @@ export default function DeliverTo() {
   const [flags, setFlags] = useState<any>({});
   const [settings, setSettings] = useState<any>({});
 
-  const { user, isAuthenticated } = useAuthStore();
+  const { user, isAuthenticated, isBuyerMode } = useAuthStore();
   const [userAddress, setUserAddress] = useState<any>(null);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function DeliverTo() {
       if (settingsData.success) setSettings(settingsData.settings);
     }).catch(console.error);
 
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && (user.role === 'buyer' || isBuyerMode)) {
       fetch('/api/buyer/addresses').then(res => res.json()).then(data => {
         if (data.success && data.addresses?.length > 0) {
           const defaultAddr = data.addresses.find((a: any) => a.isDefault) || data.addresses[0];
@@ -63,7 +63,7 @@ export default function DeliverTo() {
     } else if (!isAutoDetected) {
       autoDetectLocation();
     }
-  }, [isAuthenticated, user, city, setLocation, isAutoDetected]);
+  }, [isAuthenticated, user, isBuyerMode, city, setLocation, isAutoDetected]);
 
   const autoDetectLocation = () => {
     fetch('https://ipapi.co/json/')
