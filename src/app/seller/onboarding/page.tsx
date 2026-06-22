@@ -8,7 +8,7 @@ export default async function SellerOnboardingPage() {
   const session = await getServerSession(authOptions);
   
   if (!session || !session.user) {
-    redirect('/auth/login?callbackUrl=/seller/onboarding');
+    redirect('/?login=true');
   }
 
   return (

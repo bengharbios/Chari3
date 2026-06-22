@@ -48,8 +48,18 @@ export default function VerificationStatusPage() {
     fetch(`/api/onboarding/status?userId=${user.id}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data.success && data.details) {
-          setDetails(data.details);
+        if (data.success) {
+          if (data.details) setDetails(data.details);
+          if (data.items && data.items.length > 0) {
+            useOnboardingStore.getState().setVerificationItems(data.items.map((i: any) => ({
+              id: i.key,
+              labelAr: i.labelAr,
+              labelEn: i.labelEn,
+              status: i.status,
+              rejectionReason: i.rejectionReason,
+              uploaded: i.uploaded
+            })));
+          }
         }
       })
       .catch(() => {});
@@ -94,12 +104,12 @@ export default function VerificationStatusPage() {
       status: 'verified' | 'pending' | 'rejected' | 'required';
     }[] = [];
 
-    if (user?.phone) {
+    if (user?.phone !== undefined) {
       contactItems.push({
         id: 'phone',
-        labelAr: `رقم الهاتف (${user.phone})`,
-        labelEn: `Phone (${user.phone})`,
-        status: 'verified',
+        labelAr: user.phone ? `رقم الهاتف (${user.phone})` : 'رقم الهاتف (غير متوفر)',
+        labelEn: user.phone ? `Phone (${user.phone})` : 'Phone (Not provided)',
+        status: user.phone ? 'verified' : 'required',
       });
     }
 
@@ -314,6 +324,19 @@ export default function VerificationStatusPage() {
                 const isContact = item.id === 'phone' || item.id === 'email';
                 const isEmail = item.id === 'email';
                 const itemRejectionReason = 'rejectionReason' in item ? (item as { rejectionReason?: string }).rejectionReason : undefined;
+                const isUploaded = 'uploaded' in item ? (item as { uploaded?: boolean }).uploaded : false;
+
+                const getFileUrl = () => {
+                  if (!details) return '#';
+                  if (item.id === 'commercial_register') return details.commercialRegisterFile;
+                  if (item.id === 'bank_account') return details.bankLetterFile || details.bankDocument;
+                  if (item.id === 'manager_id') return details.managerIdFront;
+                  if (item.id === 'national_id') return details.idFrontFile || details.nationalIdFront;
+                  if (item.id === 'selfie') return details.livenessSelfie || details.selfieUrl;
+                  if (item.id === 'freelance_document') return details.freelanceDocumentFile || details.freelanceDocument;
+                  return '#';
+                };
+                const fileUrl = getFileUrl();
 
                 return (
                   <div key={item.id} className="py-4 first:pt-0 last:pb-0">
@@ -357,9 +380,9 @@ export default function VerificationStatusPage() {
                         )}
 
                         {/* Document Preview Link */}
-                        {!isContact && item.status !== 'required' && details && (
+                        {!isContact && isUploaded && fileUrl && fileUrl !== '#' && (
                           <Button size="sm" variant="ghost" className="text-xs h-7 px-2.5 text-primary gap-1" asChild>
-                            <a href={(details.commercialRegisterFile || details.bankLetterFile || details.freelanceDocFile || '#') as string} target="_blank" rel="noreferrer">
+                            <a href={fileUrl as string} target="_blank" rel="noreferrer">
                               <ExternalLink className="size-3" />
                               {t(isAr, 'معاينة', 'Preview')}
                             </a>

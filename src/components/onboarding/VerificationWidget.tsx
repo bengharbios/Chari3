@@ -131,12 +131,10 @@ function StickyStatusBanner() {
 
   const handleAction = () => {
     if (accountStatus === 'incomplete') {
-      // Reopen the wizard by clearing draft flag
       clearDraftFlag();
-      setWizardOpen(true);
+      window.location.href = '/seller/onboarding';
     } else {
-      // Navigate to verification status page
-      setCurrentPage('verification');
+      window.location.href = '/seller/onboarding';
     }
   };
 
