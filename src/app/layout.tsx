@@ -15,7 +15,6 @@ const inter = Inter({
   display: 'swap',
 });
 
-import NextAuthProvider from '@/providers/NextAuthProvider';
 import RadixDirectionProvider from '@/providers/RadixDirectionProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
@@ -35,14 +34,12 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className={`${cairo.variable} ${inter.variable} antialiased`}>
         <LocaleProvider />
-        <NextAuthProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <RadixDirectionProvider>
               {children}
               <Toaster position="top-center" richColors visibleToasts={1} duration={3000} />
             </RadixDirectionProvider>
           </ThemeProvider>
-        </NextAuthProvider>
       </body>
     </html>
   );
