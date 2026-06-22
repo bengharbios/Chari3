@@ -67,6 +67,26 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    const superAdmins = await prisma.user.findMany({
+      where: { role: 'super_admin' },
+      select: { id: true }
+    });
+    
+    const adminNotifications = superAdmins.map(admin => ({
+      userId: admin.id,
+      type: 'NEW_VERIFICATION_SUBMISSION',
+      title: 'طلب توثيق جديد (KYC/KYB)',
+      titleEn: 'New Verification Request (KYC/KYB)',
+      body: `تم تقديم طلب توثيق قانوني جديد بواسطة ${session.user.name}. يرجى مراجعته.`,
+      bodyEn: `A new legal verification request has been submitted by ${session.user.name}. Please review it.`,
+    }));
+
+    if (adminNotifications.length > 0) {
+      await prisma.notification.createMany({
+        data: adminNotifications
+      });
+    }
+
     return NextResponse.json({ success: true, verification });
   } catch (error) {
     console.error('Error submitting seller verification:', error);

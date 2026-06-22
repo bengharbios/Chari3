@@ -278,6 +278,18 @@ async function approveUser(
     },
   });
 
+  // Create Notification
+  await db.notification.create({
+    data: {
+      userId: user.id,
+      type: 'VERIFICATION_APPROVED',
+      title: 'تم قبول طلب التوثيق',
+      titleEn: 'Verification Approved',
+      body: 'تم قبول طلب التوثيق الخاص بك، حسابك الآن مفعل ويمكنك استخدام كافة الصلاحيات.',
+      bodyEn: 'Your verification request has been approved. Your account is now active.',
+    }
+  });
+
   return NextResponse.json({ success: true, newStatus: 'active' });
 }
 
@@ -379,6 +391,18 @@ async function rejectUser(
         role,
       }),
     },
+  });
+
+  // Create Notification
+  await db.notification.create({
+    data: {
+      userId: user.id,
+      type: 'VERIFICATION_REJECTED',
+      title: 'تم رفض طلب التوثيق',
+      titleEn: 'Verification Rejected',
+      body: `تم رفض طلب التوثيق الخاص بك. السبب: ${reason || 'تم رفض الطلب'}`,
+      bodyEn: `Your verification request has been rejected. Reason: ${reason || 'Request rejected'}`,
+    }
   });
 
   return NextResponse.json({ success: true, newStatus: 'rejected' });
@@ -486,6 +510,18 @@ async function requestEditUser(
       action: 'request_edit',
       details: JSON.stringify(detailsPayload),
     },
+  });
+
+  // Create Notification
+  await db.notification.create({
+    data: {
+      userId: user.id,
+      type: 'VERIFICATION_EDIT_REQUIRED',
+      title: 'مطلوب تعديل على طلب التوثيق',
+      titleEn: 'Verification Edit Required',
+      body: `يرجى تعديل بعض بيانات طلب التوثيق الخاص بك. ملاحظة: ${reason || 'تعديل مطلوب'}`,
+      bodyEn: `Please edit some details in your verification request. Note: ${reason || 'Edit required'}`,
+    }
   });
 
   return NextResponse.json({

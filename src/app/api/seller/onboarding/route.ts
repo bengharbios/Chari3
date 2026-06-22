@@ -36,6 +36,28 @@ export async function POST(req: Request) {
       }
     });
 
+    if (dataToSave.submittedAt || dataToSave.verificationStatus === 'pending') {
+      const superAdmins = await db.user.findMany({
+        where: { role: 'super_admin' },
+        select: { id: true }
+      });
+      
+      const adminNotifications = superAdmins.map(admin => ({
+        userId: admin.id,
+        type: 'NEW_VERIFICATION_SUBMISSION',
+        title: 'طلب توثيق جديد',
+        titleEn: 'New Verification Request',
+        body: `تم تقديم طلب توثيق جديد بواسطة ${session?.user?.name || userId}. يرجى مراجعته.`,
+        bodyEn: `A new verification request has been submitted by ${session?.user?.name || userId}. Please review it.`,
+      }));
+
+      if (adminNotifications.length > 0) {
+        await db.notification.createMany({
+          data: adminNotifications
+        });
+      }
+    }
+
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {
     console.error('Onboarding POST error:', error);

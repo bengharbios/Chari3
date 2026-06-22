@@ -12,7 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { KycVerificationSection } from './KycVerificationSection';
-import OnboardingWizard from '@/components/seller/onboarding/OnboardingWizard';
+
 
 function t(isAr: boolean, ar: string, en: string) {
   return isAr ? ar : en;
@@ -131,6 +131,9 @@ export default function VerificationStatusPage() {
       }));
     }
 
+    // Filter out email and phone from roleItems to prevent duplicates, since we added them manually above
+    roleItems = roleItems.filter(item => item.id !== 'email' && item.id !== 'phone');
+
     return [...contactItems, ...roleItems];
   }, [verificationItems, user]);
 
@@ -192,14 +195,7 @@ export default function VerificationStatusPage() {
       }
     } catch {}
 
-    const rolePage: Record<string, string> = {
-      store_manager: 'store',
-      seller: 'seller',
-      supplier: 'supplier',
-      logistics: 'logistics',
-    };
-    useAppStore.getState().setCurrentPage((rolePage[user.role] || 'login') as any);
-    useOnboardingStore.getState().setWizardOpen(true);
+    window.location.href = '/seller/onboarding';
   };
 
   const handleRetry = () => {
@@ -210,13 +206,7 @@ export default function VerificationStatusPage() {
     handleGoComplete();
   };
 
-  if (isWizardOpen) {
-    return (
-      <div className="animate-fade-in w-full">
-        <OnboardingWizard />
-      </div>
-    );
-  }
+  // The wizard is now rendered on a separate page (/seller/onboarding)
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto animate-fade-in pb-12">

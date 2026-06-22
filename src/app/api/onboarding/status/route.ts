@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
               : v?.commercialRegisterNumber && v?.commercialRegisterFile
                 ? isRejected && rejectionFields.includes('commercial_register')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('commercial_register'))
               ? (adminNotes || ITEM_KEY_LABELS['commercial_register'])
@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
               : v?.iban && v?.beneficiaryName && v?.bankLetterFile
                 ? isRejected && rejectionFields.includes('bank_account')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('bank_account'))
               ? (adminNotes || ITEM_KEY_LABELS['bank_account'])
@@ -183,7 +183,7 @@ export async function GET(request: NextRequest) {
               : v?.managerIdFront && v?.managerIdBack
                 ? isRejected && rejectionFields.includes('manager_id')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('manager_id'))
               ? (adminNotes || ITEM_KEY_LABELS['manager_id'])
@@ -233,7 +233,7 @@ export async function GET(request: NextRequest) {
               : v?.nationalIdFront && v?.nationalIdBack
                 ? isRejected && rejectionFields.includes('national_id')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('national_id'))
               ? (adminNotes || ITEM_KEY_LABELS['national_id'])
@@ -249,7 +249,7 @@ export async function GET(request: NextRequest) {
               : v?.freelanceDocFile
                 ? isRejected && rejectionFields.includes('freelance_document')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('freelance_document'))
               ? (adminNotes || ITEM_KEY_LABELS['freelance_document'])
@@ -265,7 +265,7 @@ export async function GET(request: NextRequest) {
               : v?.iban
                 ? isRejected && rejectionFields.includes('bank_account')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('bank_account'))
               ? (adminNotes || ITEM_KEY_LABELS['bank_account'])
@@ -281,7 +281,7 @@ export async function GET(request: NextRequest) {
               : (v?.livenessScore ?? 0) > 0
                 ? isRejected && rejectionFields.includes('liveness')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('liveness'))
               ? (adminNotes || ITEM_KEY_LABELS['liveness'])
@@ -331,7 +331,7 @@ export async function GET(request: NextRequest) {
               : v?.transportLicenseFile
                 ? isRejected && rejectionFields.includes('transport_license')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('transport_license'))
               ? (adminNotes || ITEM_KEY_LABELS['transport_license'])
@@ -347,7 +347,7 @@ export async function GET(request: NextRequest) {
               : v?.insuranceCertificateFile
                 ? isRejected && rejectionFields.includes('insurance')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('insurance'))
               ? (adminNotes || ITEM_KEY_LABELS['insurance'])
@@ -363,7 +363,7 @@ export async function GET(request: NextRequest) {
               : v?.numberOfVehicles && v?.numberOfDrivers
                 ? isRejected && rejectionFields.includes('fleet_info')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('fleet_info'))
               ? (adminNotes || ITEM_KEY_LABELS['fleet_info'])
@@ -379,7 +379,7 @@ export async function GET(request: NextRequest) {
               : v?.iban
                 ? isRejected && rejectionFields.includes('bank_account')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('bank_account'))
               ? (adminNotes || ITEM_KEY_LABELS['bank_account'])
@@ -429,7 +429,7 @@ export async function GET(request: NextRequest) {
               : v?.commercialLicense
                 ? isRejected && rejectionFields.includes('commercial_license')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('commercial_license'))
               ? (adminNotes || ITEM_KEY_LABELS['commercial_license'])
@@ -445,7 +445,7 @@ export async function GET(request: NextRequest) {
               : v?.importLicense
                 ? isRejected && rejectionFields.includes('import_license')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('import_license'))
               ? (adminNotes || ITEM_KEY_LABELS['import_license'])
@@ -461,7 +461,7 @@ export async function GET(request: NextRequest) {
               : v?.iban
                 ? isRejected && rejectionFields.includes('bank_account')
                   ? 'rejected'
-                  : 'pending'
+                  : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('bank_account'))
               ? (adminNotes || ITEM_KEY_LABELS['bank_account'])

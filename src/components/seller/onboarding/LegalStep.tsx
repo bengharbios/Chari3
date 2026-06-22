@@ -5,6 +5,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function LegalStep({ data, updateData }: { data: any; updateData: (d: any) => void }) {
   const { t } = useTranslation();
@@ -30,14 +31,40 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
   };
 
   const [crParts, setCrParts] = useState(parseCR(data.commercialRegisterNumber || ''));
+  const [countries, setCountries] = useState<any[]>([]);
+  const [states, setStates] = useState<any[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState(data.country || 'DZ');
 
   useEffect(() => {
-    const formattedCR = `${crParts.wilaya}/${crParts.branch}-${crParts.year}${crParts.type}${crParts.sn}`;
-    // Only update if it actually changed and SN is filled
-    if (formattedCR !== data.commercialRegisterNumber) {
-      updateData({ commercialRegisterNumber: formattedCR });
+    fetch('/api/regions/countries')
+      .then(res => res.json())
+      .then(d => {
+        if (d.success) setCountries(d.countries);
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCountry) {
+      setStates([]);
+      return;
     }
-  }, [crParts]);
+    fetch(`/api/regions/states?countryCode=${selectedCountry}`)
+      .then(res => res.json())
+      .then(d => {
+        if (d.success) setStates(d.states);
+      })
+      .catch(() => {});
+  }, [selectedCountry]);
+
+  useEffect(() => {
+    if (selectedCountry === 'DZ') {
+      const formattedCR = `${crParts.wilaya}/${crParts.branch}-${crParts.year}${crParts.type}${crParts.sn}`;
+      if (formattedCR !== data.commercialRegisterNumber && crParts.sn) {
+        updateData({ commercialRegisterNumber: formattedCR });
+      }
+    }
+  }, [crParts, selectedCountry]);
 
   const handleCrChange = (field: keyof typeof crParts, value: string) => {
     setCrParts(prev => ({ ...prev, [field]: value }));
@@ -77,11 +104,43 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
         <div className="space-y-2">
           <Label>بلد تسجيل الأعمال *</Label>
-          <Input 
-            value="الجزائر (Algeria)" 
-            disabled 
-            className="bg-gray-50 text-gray-500" 
-          />
+          <Select 
+            value={selectedCountry} 
+            onValueChange={(val) => {
+              setSelectedCountry(val);
+              updateData({ country: val, state: '' });
+              if (val !== 'DZ') {
+                updateData({ commercialRegisterNumber: '' }); // Reset CR if not Algeria
+              }
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="اختر الدولة" />
+            </SelectTrigger>
+            <SelectContent>
+              {countries.map(c => (
+                <SelectItem key={c.code} value={c.code}>{c.nameAr} ({c.nameEn})</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label>الولاية / المقاطعة *</Label>
+          <Select 
+            value={data.state || ''} 
+            onValueChange={(val) => updateData({ state: val })} 
+            disabled={!selectedCountry || states.length === 0}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="اختر الولاية" />
+            </SelectTrigger>
+            <SelectContent>
+              {states.map((s, idx) => (
+                <SelectItem key={s.id || idx} value={s.nameAr || s.name || s.id}>{s.nameAr || s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         
         <div className="space-y-2">
@@ -93,53 +152,66 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
           />
         </div>
 
-        <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 rounded-lg border">
-          <Label className="text-base font-bold mb-2 block">رقم السجل التجاري *</Label>
-          <p className="text-xs text-gray-500 mb-4">مثال: 16/00-21A1234567</p>
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap" dir="ltr">
-            {/* SN */}
-            <Input 
-              className="text-center font-mono" 
-              placeholder="1234567" 
-              value={crParts.sn} 
-              onChange={(e) => handleCrChange('sn', e.target.value.replace(/\D/g, ''))} 
-            />
-            <span className="font-bold text-gray-400"> </span>
-            {/* Type */}
-            <div className="px-4 py-2 border rounded bg-white font-mono font-bold text-center w-16 shrink-0">
-              {crParts.type}
+        {selectedCountry === 'DZ' ? (
+          <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 rounded-lg border">
+            <Label className="text-base font-bold mb-2 block">رقم السجل التجاري *</Label>
+            <p className="text-xs text-gray-500 mb-4">مثال: 16/00-21A1234567</p>
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap" dir="ltr">
+              {/* SN */}
+              <Input 
+                className="text-center font-mono" 
+                placeholder="1234567" 
+                value={crParts.sn} 
+                onChange={(e) => handleCrChange('sn', e.target.value.replace(/\D/g, ''))} 
+              />
+              <span className="font-bold text-gray-400"> </span>
+              {/* Type */}
+              <div className="px-4 py-2 border rounded bg-white font-mono font-bold text-center w-16 shrink-0">
+                {crParts.type}
+              </div>
+              {/* Year */}
+              <Input 
+                className="text-center font-mono w-16 shrink-0" 
+                placeholder="21" 
+                maxLength={2}
+                value={crParts.year} 
+                onChange={(e) => handleCrChange('year', e.target.value.replace(/\D/g, ''))} 
+              />
+              <span className="font-bold text-gray-400">-</span>
+              {/* Branch */}
+              <Input 
+                className="text-center font-mono w-16 shrink-0" 
+                placeholder="00" 
+                maxLength={2}
+                value={crParts.branch} 
+                onChange={(e) => handleCrChange('branch', e.target.value.replace(/\D/g, ''))} 
+              />
+              <span className="font-bold text-gray-400">/</span>
+              {/* Wilaya */}
+              <Input 
+                className="text-center font-mono w-16 shrink-0" 
+                placeholder="16" 
+                maxLength={2}
+                value={crParts.wilaya} 
+                onChange={(e) => handleCrChange('wilaya', e.target.value.replace(/\D/g, ''))} 
+              />
             </div>
-            {/* Year */}
+            <div className="mt-3 text-sm text-blue-600 bg-blue-50 p-2 rounded" dir="rtl">
+              <strong>الرقم المجمع:</strong> <span dir="ltr" className="inline-block">{crParts.wilaya}/{crParts.branch}-{crParts.year}{crParts.type}{crParts.sn}</span>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 rounded-lg border">
+            <Label className="text-base font-bold mb-2 block">رقم السجل التجاري *</Label>
             <Input 
-              className="text-center font-mono w-16 shrink-0" 
-              placeholder="21" 
-              maxLength={2}
-              value={crParts.year} 
-              onChange={(e) => handleCrChange('year', e.target.value.replace(/\D/g, ''))} 
-            />
-            <span className="font-bold text-gray-400">-</span>
-            {/* Branch */}
-            <Input 
-              className="text-center font-mono w-16 shrink-0" 
-              placeholder="00" 
-              maxLength={2}
-              value={crParts.branch} 
-              onChange={(e) => handleCrChange('branch', e.target.value.replace(/\D/g, ''))} 
-            />
-            <span className="font-bold text-gray-400">/</span>
-            {/* Wilaya */}
-            <Input 
-              className="text-center font-mono w-16 shrink-0" 
-              placeholder="16" 
-              maxLength={2}
-              value={crParts.wilaya} 
-              onChange={(e) => handleCrChange('wilaya', e.target.value.replace(/\D/g, ''))} 
+              placeholder="أدخل رقم السجل التجاري الخاص بدولتك" 
+              value={data.commercialRegisterNumber || ''} 
+              onChange={(e) => updateData({ commercialRegisterNumber: e.target.value })} 
+              dir="ltr"
+              className="text-left"
             />
           </div>
-          <div className="mt-3 text-sm text-blue-600 bg-blue-50 p-2 rounded" dir="rtl">
-            <strong>الرقم المجمع:</strong> <span dir="ltr" className="inline-block">{crParts.wilaya}/{crParts.branch}-{crParts.year}{crParts.type}{crParts.sn}</span>
-          </div>
-        </div>
+        )}
 
         <div className="space-y-2">
           <Label>{t('onboarding.legal.issueAuthority')} *</Label>
@@ -170,9 +242,24 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
           <Label>{t('onboarding.legal.expiryDate')}</Label>
           <Input 
             type="date" 
+            min={new Date().toISOString().split('T')[0]} // Prevents selecting a past date
             value={data.expiryDate ? data.expiryDate.split('T')[0] : ''} 
-            onChange={(e) => updateData({ expiryDate: e.target.value ? new Date(e.target.value).toISOString() : null })} 
+            onChange={(e) => {
+              const selectedDate = new Date(e.target.value);
+              const today = new Date();
+              today.setHours(0,0,0,0);
+              if (selectedDate < today) {
+                // If somehow a past date is selected (e.g. typing it in manually), reset or alert
+                alert(t('common.expiredDateError') || 'تاريخ الرخصة منتهي الصلاحية، يرجى إدخال رخصة صالحة.');
+                updateData({ expiryDate: null });
+                return;
+              }
+              updateData({ expiryDate: e.target.value ? selectedDate.toISOString() : null });
+            }} 
           />
+          {data.expiryDate && new Date(data.expiryDate) < new Date(new Date().setHours(0,0,0,0)) && (
+            <p className="text-xs text-red-500 mt-1">الرخصة منتهية الصلاحية.</p>
+          )}
         </div>
       </div>
 

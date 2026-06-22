@@ -114,6 +114,12 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
     labelKey: 'sidebar.admin',
     trees: [
       {
+        id: 'verification-tree',
+        labelKey: 'header.verificationStatus',
+        icon: ShieldCheck,
+        directPageId: 'verification'
+      },
+      {
         id: 'settings-tree',
         labelKey: 'common.settings',
         icon: Settings,
@@ -190,6 +196,12 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
     id: 'admin',
     labelKey: 'sidebar.admin',
     trees: [
+      {
+        id: 'verification-tree',
+        labelKey: 'header.verificationStatus',
+        icon: ShieldCheck,
+        directPageId: 'verification'
+      },
       {
         id: 'settings-tree',
         labelKey: 'common.settings',
