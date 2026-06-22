@@ -5,132 +5,6 @@ import { type ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import Sidebar from './Sidebar';
-import GentelellaSidebar from './gentelella/GentelellaSidebar';
-import GentelellaHeader from './gentelella/GentelellaHeader';
-import { useGentelellaTheme } from './gentelella/theme';
-import Footer from './Footer';
-import { ThemeSettings, defaultSellerTheme, defaultPlatformTheme } from '@/lib/theme-defaults';
-import { useTheme } from 'next-themes';
-
-interface DashboardLayoutProps {
-  children: ReactNode;
-}
-
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { isSidebarOpen } = useAppStore();
-  const { user, isBuyerMode } = useAuthStore();
-  const [dashboardTemplate, setDashboardTemplate] = useState<string>('default');
-  
-  // Use correct default theme based on role
-  const getInitialTheme = () => {
-    if (!user) return defaultSellerTheme;
-    if (user.role === 'admin' || user.role === 'buyer' || isBuyerMode) return defaultPlatformTheme;
-    return defaultSellerTheme;
-  };
-  
-  const [theme, setTheme] = useState<ThemeSettings>(defaultSellerTheme);
-  const [isThemeLoaded, setIsThemeLoaded] = useState(false);
-  const { isDark } = useGentelellaTheme();
-
-  // Load from localStorage immediately for instant display
-  useEffect(() => {
-    try {
-      const cachedTheme = localStorage.getItem('chari_dashboard_theme');
-      if (cachedTheme) {
-        setTheme(JSON.parse(cachedTheme));
-      } else {
-        setTheme(getInitialTheme());
-      }
-      const cachedTemplate = localStorage.getItem('chari_dashboard_template');
-      if (cachedTemplate) {
-        setDashboardTemplate(cachedTemplate);
-      }
-    } catch (e) {
-      setTheme(getInitialTheme());
-    }
-  }, [user, isBuyerMode]);
-
-  useEffect(() => {
-    fetch('/api/settings/public')
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success || !data.settings) {
-          setIsThemeLoaded(true);
-          return;
-        }
-        
-        let themeKey = 'theme_seller_dashboard';
-        let defaultTh = defaultSellerTheme;
-        if (isBuyerMode || user?.role === 'buyer') {
-          themeKey = 'theme_buyer_dashboard';
-          defaultTh = defaultPlatformTheme;
-        } else if (user?.role === 'admin') {
-          themeKey = 'theme_admin_dashboard';
-          defaultTh = defaultPlatformTheme;
-        }
-
-        const isDashboardRole = user?.role && !['admin', 'buyer'].includes(user.role) && !isBuyerMode;
-        if (isDashboardRole) {
-          if (data.settings.seller_dashboard_template) {
-            setDashboardTemplate(data.settings.seller_dashboard_template);
-            localStorage.setItem('chari_dashboard_template', data.settings.seller_dashboard_template);
-          } else {
-            setDashboardTemplate('default');
-            localStorage.removeItem('chari_dashboard_template');
-          }
-        } else {
-          setDashboardTemplate('default');
-          localStorage.removeItem('chari_dashboard_template');
-        }
-
-        if (data.settings[themeKey]) {
-          try {
-            const newTheme = JSON.parse(data.settings[themeKey]);
-            setTheme(newTheme);
-            localStorage.setItem('chari_dashboard_theme', data.settings[themeKey]);
-          } catch (e) {
-            console.error('Failed to parse theme JSON', e);
-            setTheme(defaultTh);
-          }
-        } else {
-          setTheme(defaultTh);
-        }
-      })
-      .catch(() => setDashboardTemplate('default'))
-      .finally(() => setIsThemeLoaded(true));
-  }, [user, isBuyerMode]);
-
-  if (!user) return null;
-  
-  // Prevent flash by waiting for theme load or at least showing cached theme
-  if (!isThemeLoaded && !theme.colors) {
-     return <div className="min-h-screen bg-background flex items-center justify-center">...</div>;
-  }
-
-  const { isDark: gentelellaDark } = useGentelellaTheme();
-  const { theme: globalTheme } = useTheme();
-
-  const isGentelella = dashboardTemplate === 'gentelella';
-
-  const themeMode = globalTheme === 'dark' || (isGentelella && gentelellaDark) ? 'dark' : 'light';
-  
-  const themeStyles = {
-    '--theme-bg-sidebar': theme.colors.sidebarBackground[themeMode],
-    '--theme-text-sidebar': theme.colors.sidebarText[themeMode],
-    '--theme-bg-header': theme.colors.headerBackground[themeMode],
-    '--theme-text-header': theme.colors.headerText[themeMode],
-    '--theme-bg-main': theme.colors.mainBackground[themeMode],
-    '--theme-text-main': theme.colors.mainText[themeMode],
-    '--theme-primary': theme.colors.primaryColor[themeMode],
-    '--theme-bg-footer': theme.colors.footerBackground[themeMode],
-    '--theme-text-footer': theme.colors.footerText[themeMode],
-    'fontFamily': theme.typography.fontFamily,
-    // Override Shadcn UI CSS variables so Tailwind utilities like bg-sidebar and text-sidebar-foreground pick up the custom theme colors
-
-import { type ReactNode } from 'react';
-import { useEffect, useState } from 'react';
-import { useAppStore, useAuthStore } from '@/lib/store';
-import Sidebar from './Sidebar';
 import Header from './Header';
 import GentelellaSidebar from './gentelella/GentelellaSidebar';
 import GentelellaHeader from './gentelella/GentelellaHeader';
@@ -161,7 +35,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     if (user?.role === 'admin') return 'theme_admin_dashboard';
     return 'theme_seller_dashboard';
   };
-
+  
   const [theme, setTheme] = useState<ThemeSettings>(defaultSellerTheme);
   const [isThemeLoaded, setIsThemeLoaded] = useState(false);
   const { isDark } = useGentelellaTheme();
@@ -193,7 +67,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           setIsThemeLoaded(true);
           return;
         }
-        
         const themeKey = getThemeKey();
         let defaultTh = defaultSellerTheme;
         if (themeKey === 'theme_buyer_dashboard' || themeKey === 'theme_admin_dashboard') {
