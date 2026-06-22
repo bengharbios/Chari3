@@ -207,6 +207,5 @@ export default function OnboardingWizard() {
           </Button>
         </div>
       </div>
-    </div>
   );
 }
