@@ -46,7 +46,7 @@ export default function LoginPage() {
 
     // If it's the admin role (bengharbios@gmail.com), use NextAuth
     if (role === 'admin' && email === 'bengharbios@gmail.com') {
-      const { signIn } = await import('next-auth/react');
+      const { signIn } = await import('@/lib/auth-client');
       const res = await signIn('credentials', {
         email: 'bengharbios@gmail.com',
         password: 'admin1234',

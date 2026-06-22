@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { signIn, useSession } from 'next-auth/react';
+import { signIn, useSession } from '@/lib/auth-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -9,9 +9,9 @@ import { Label } from '@/components/ui/label';
 import { ShieldCheck, Lock, Mail, Key, Loader2, ArrowRight } from 'lucide-react';
 
 export default function AdminLoginPage() {
-  const { data: session, status } = useSession();
-  const isAdminAuthenticated = status === 'authenticated' && ((session?.user as any)?.role === 'admin' || (session?.user as any)?.role === 'SUPER_ADMIN');
-  const isLoading = status === 'loading';
+  const { data: session, isPending } = useSession();
+  const isAdminAuthenticated = !isPending && !!session && ((session.user as any)?.role === 'admin' || (session.user as any)?.role === 'SUPER_ADMIN');
+  const isLoading = isPending;
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -42,8 +42,7 @@ export default function AdminLoginPage() {
     setError(null);
     
     try {
-      const res = await signIn('credentials', {
-        redirect: false,
+      const res = await signIn.email({
         email,
         password,
       });

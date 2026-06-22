@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession, signOut } from '@/lib/auth-client';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import AdminSidebar from './AdminSidebar';
 import { Button } from '@/components/ui/button';
@@ -89,9 +89,9 @@ export default function AdminLayoutWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: session, status } = useSession();
+  const { data: session, isPending } = useSession();
   const { adminLocale, setAdminLocale } = useAdminAuthStore();
-  const isAdminAuthenticated = status === 'authenticated' && (session?.user as any)?.role === 'admin' || (session?.user as any)?.role === 'SUPER_ADMIN';
+  const isAdminAuthenticated = !isPending && !!session && ((session.user as any)?.role === 'admin' || (session.user as any)?.role === 'SUPER_ADMIN');
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   const { theme: globalTheme, setTheme: setGlobalTheme } = useTheme();
@@ -152,7 +152,7 @@ export default function AdminLayoutWrapper({
     return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
   };
 
-  if (status === 'loading') {
+  if (isPending) {
     return <div className="min-h-screen bg-background flex items-center justify-center">جاري التحميل...</div>;
   }
 
