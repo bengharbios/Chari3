@@ -104,6 +104,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       .finally(() => setIsThemeLoaded(true));
   }, [user, isBuyerMode]);
 
+  useEffect(() => {
+    if (dashboardTemplate === 'gentelella') {
+      document.documentElement.setAttribute('data-template', 'gentelella');
+    } else {
+      document.documentElement.removeAttribute('data-template');
+    }
+  }, [dashboardTemplate]);
+
+
   if (!user) return null;
   
   // Prevent flash by waiting for theme load or at least showing cached theme

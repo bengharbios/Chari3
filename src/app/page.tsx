@@ -161,13 +161,6 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
       });
   }, [user, isBuyerMode]);
 
-  useEffect(() => {
-    if (dashboardTemplate === 'gentelella') {
-      document.documentElement.setAttribute('data-template', 'gentelella');
-    } else {
-      document.documentElement.removeAttribute('data-template');
-    }
-  }, [dashboardTemplate]);
 
   // Synchronize browser URL bar with Zustand currentPage
   useEffect(() => {
