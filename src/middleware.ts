@@ -1,37 +1,41 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { betterFetch } from "@better-fetch/fetch";
+import type { auth } from "@/lib/better-auth";
+import { NextResponse, type NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  // The secret URL slug from environment variables (defaults to 'super-admin' if not set)
-  const adminSlug = process.env.ADMIN_PORTAL_SLUG || 'super-admin';
+const protectedRoutes = ["/admin-secure-internal", "/seller", "/checkout", "/buyer", "/logistics", "/supplier"];
+
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Block direct access to the internal routing folder
-  // We check the original browser requested URL to avoid blocking Next.js rewrites
-  const originalUrl = new URL(request.url);
-  if (originalUrl.pathname.startsWith('/admin-secure-internal')) {
-    return new Response('Not Found', { status: 404 });
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+
+  if (isProtectedRoute) {
+    const { data: session } = await betterFetch<typeof auth.$Infer.Session>(
+      "/api/auth/get-session",
+      {
+        baseURL: request.nextUrl.origin,
+        headers: {
+          cookie: request.headers.get("cookie") || "",
+        },
+      }
+    );
+
+    if (!session) {
+      // NOTE: Redirect is temporarily disabled to prevent breaking Zustand Demo Logins.
+      // Once you migrate all login forms to use `better-auth`, uncomment this line:
+      // return NextResponse.redirect(new URL("/?login=true", request.url));
+      console.log("[Middleware] Unauthenticated access to", pathname);
+    }
   }
 
-  // 2. Rewrite the secret slug to our internal admin folder
-  if (pathname === `/${adminSlug}` || pathname.startsWith(`/${adminSlug}/`)) {
-    const internalPath = pathname.replace(`/${adminSlug}`, '/admin-secure-internal');
-    return NextResponse.rewrite(new URL(internalPath, request.url));
-  }
-
-  // Continue normally for all other routes
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
   ],
 };

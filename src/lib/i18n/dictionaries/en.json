@@ -349,6 +349,28 @@
       "email": "Email",
       "whatsapp": "WhatsApp",
       "telegram": "Telegram"
+    },
+    "sessions": {
+      "title": "Sessions & Devices Management",
+      "desc": "Monitor active user sessions and connected devices, with the ability to revoke them remotely.",
+      "revokeAll": "Revoke All Sessions",
+      "currentSessions": "Active Sessions",
+      "noSessions": "No active sessions currently.",
+      "user": "User",
+      "role": "Role",
+      "ip": "IP Address",
+      "userAgent": "User Agent",
+      "time": "Login Time",
+      "actions": "Actions",
+      "revoke": "Revoke",
+      "confirmRevoke": "Are you sure you want to revoke this session? The user will be logged out immediately.",
+      "confirmRevokeAll": "WARNING: This will log out everyone from the system! Are you sure?",
+      "revokeSuccess": "Session revoked successfully",
+      "revokeFailed": "Failed to revoke session",
+      "revokeAllSuccess": "All sessions revoked",
+      "revokeAllFailed": "Failed to revoke all sessions",
+      "unknown": "Unknown",
+      "notAvailable": "N/A"
     }
   },
   "onboarding": {

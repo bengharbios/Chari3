@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { Toaster } from 'sonner';
 import FloatingCart from './FloatingCart';
+import AuthSync from '@/components/auth/AuthSync';
 
 interface AppShellProps {
   children: ReactNode;
@@ -26,6 +27,7 @@ export default function AppShell({ children }: AppShellProps) {
       }`}
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
     >
+      <AuthSync />
       {children}
       <FloatingCart />
     </div>

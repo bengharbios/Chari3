@@ -1,0 +1,34 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useSession } from '@/lib/auth-client';
+import { useAuthStore } from '@/lib/store';
+
+export default function AuthSync() {
+  const { data, isPending } = useSession();
+  const { isAuthenticated, loginWithUser, logout } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || isPending) return;
+
+    if (data?.user && !isAuthenticated) {
+      // User is authenticated on the server but not in Zustand
+      loginWithUser(data.user as any); // Cast to any to map BetterAuth User to Zustand User
+    } else if (!data?.user && isAuthenticated) {
+      // User is logged out on the server but still authenticated in Zustand
+      const currentUser = useAuthStore.getState().user;
+      // Preserve demo users (whose IDs typically contain '-001')
+      if (currentUser?.id?.includes('-001')) {
+        return;
+      }
+      logout();
+    }
+  }, [mounted, isPending, data, isAuthenticated, loginWithUser, logout]);
+
+  return null;
+}

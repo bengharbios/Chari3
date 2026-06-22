@@ -50,6 +50,11 @@ model User {
   debtReceipts       DebtPaymentReceipt[]
   subscriptions      Subscription[]
   invoices           Invoice[]
+
+  // Better Auth Relations
+  sessions           Session[]
+  accounts           Account[]
+  twoFactors         TwoFactor[]
 }
 
 model Store {
@@ -1337,4 +1342,54 @@ model VerificationReviewLog {
   notes           String?                  @db.Text
   
   createdAt       DateTime                 @default(now())
+}
+
+// ============================================
+// BETTER AUTH MODELS
+// ============================================
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+}
+
+model Verification {
+  id         String    @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+}
+
+model TwoFactor {
+  id          String   @id
+  secret      String
+  backupCodes String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

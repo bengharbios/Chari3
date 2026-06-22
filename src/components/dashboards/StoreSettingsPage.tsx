@@ -13,11 +13,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import {
   Settings, Store, Image as ImageIcon, MapPin, Truck, CreditCard, Bell, Save, Globe, Loader2, Play, CheckCircle, Trash2,
-  ShoppingCart, FileText, Share2, Search, Mail, Phone, Clock, DollarSign
+  ShoppingCart, FileText, Share2, Search, Mail, Phone, Clock, DollarSign, Shield
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import TwoFactorSettings from '@/components/seller/settings/TwoFactorSettings';
 
 const STAGGER_CONTAINER = {
   hidden: { opacity: 0 },
@@ -576,6 +577,9 @@ export default function StoreSettingsPage() {
               </TabsTrigger>
               <TabsTrigger value="social" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
                 <Share2 className="h-4 w-4" /> {t('التواصل الاجتماعي', 'Social & Contact')}
+              </TabsTrigger>
+              <TabsTrigger value="security" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
+                <Shield className="h-4 w-4" /> {t('الأمان والمصادقة', 'Security')}
               </TabsTrigger>
               <TabsTrigger value="seo" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
                 <Search className="h-4 w-4" /> {t('SEO', 'SEO')}
@@ -2065,7 +2069,14 @@ export default function StoreSettingsPage() {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
+            </TabsContent>
+
+            {/* Security Tab */}
+            <TabsContent value="security" className="mt-0 outline-none">
+              <div className="max-w-4xl mx-auto">
+                <TwoFactorSettings />
+              </div>
+            </TabsContent>
 
         </Tabs>
       </motion.div>

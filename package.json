@@ -15,6 +15,7 @@
     "db:reset": "prisma migrate reset"
   },
   "dependencies": {
+    "@better-fetch/fetch": "^1.3.1",
     "@chargily/chargily-pay": "^2.1.0",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
@@ -58,6 +59,7 @@
     "@tremor/react": "^3.18.7",
     "@types/leaflet": "^1.9.21",
     "bcryptjs": "^3.0.3",
+    "better-auth": "^1.6.20",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -81,6 +83,7 @@
     "react-hook-form": "^7.60.0",
     "react-leaflet": "^5.0.0",
     "react-markdown": "^10.1.0",
+    "react-qr-code": "^2.2.0",
     "react-resizable-panels": "^3.0.3",
     "react-syntax-highlighter": "^15.6.1",
     "react-turnstile": "^1.1.5",
