@@ -35,22 +35,18 @@ export default function StorePublicPage() {
       .finally(() => setIsResolving(false));
   }, [slug, setSelectedSellerId, setCurrentPage, router]);
 
-  if (isResolving) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <AppShell>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <Header />
-        <main className="pb-16 md:pb-0">
-          <SellerProfilePage />
+        <main className="flex-1 pb-16 md:pb-0">
+          {isResolving ? (
+            <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+              <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+            </div>
+          ) : (
+            <SellerProfilePage />
+          )}
         </main>
         <Footer />
         <BottomNav />

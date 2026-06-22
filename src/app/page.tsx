@@ -138,7 +138,6 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
 
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
-  const [dashboardTemplate, setDashboardTemplate] = useState<string>('default');
   const { isDark } = useGentelellaTheme();
 
   useEffect(() => {
@@ -160,22 +159,6 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
       .finally(() => {
         setIsLoadingConfig(false);
       });
-
-    const isDashboardRole = user?.role && !['admin', 'buyer'].includes(user.role) && !isBuyerMode;
-    if (isDashboardRole) {
-      fetch('/api/settings/public')
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.settings?.seller_dashboard_template) {
-            setDashboardTemplate(data.settings.seller_dashboard_template);
-          } else {
-            setDashboardTemplate('default');
-          }
-        })
-        .catch(() => setDashboardTemplate('default'));
-    } else {
-      setDashboardTemplate('default');
-    }
   }, [user, isBuyerMode]);
 
   useEffect(() => {
@@ -498,8 +481,8 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
           </span>
         </div>
       )}
-      {(!isStorefrontPage && dashboardTemplate === 'gentelella') ? null : (
-        dashboardTemplate === 'gentelella' ? <GentelellaHeader /> : <Header />
+      {isStorefrontPage && (
+        <Header />
       )}
 
       {isStorefrontPage ? (
