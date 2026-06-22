@@ -15,7 +15,8 @@ export function KycVerificationSection({ isAr }: { isAr: boolean }) {
   }, []);
 
   const fetchData = async () => {
-    const res = await fetch('/api/seller/verification');
+    if (!user?.id) return;
+    const res = await fetch(`/api/seller/verification?userId=${user.id}`);
     const json = await res.json();
     if (json.success) setData(json.verification);
   };
@@ -28,6 +29,8 @@ export function KycVerificationSection({ isAr }: { isAr: boolean }) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
+
+    formData.append('userId', user?.id || '');
 
     try {
       const res = await fetch('/api/seller/verification/upload', {
@@ -50,7 +53,12 @@ export function KycVerificationSection({ isAr }: { isAr: boolean }) {
   };
 
   const handleSubmitReview = async () => {
-    const res = await fetch('/api/seller/verification', { method: 'POST' });
+    if (!user?.id) return;
+    const res = await fetch('/api/seller/verification', { 
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id })
+    });
     const json = await res.json();
     if (json.success) {
       toast.success(isAr ? 'تم الإرسال للمراجعة' : 'Submitted for review');

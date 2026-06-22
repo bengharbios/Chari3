@@ -6,12 +6,26 @@ import { authOptions } from '@/lib/auth';
 export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || !['seller', 'store_manager'].includes(session.user.role)) {
+    const userIdParam = req.nextUrl.searchParams.get('userId');
+    
+    let userId = session?.user?.id;
+    let role = session?.user?.role;
+
+    if (!userId && userIdParam) {
+      // Fallback for OTP users who don't have NextAuth cookie
+      const dbUser = await prisma.user.findUnique({ where: { id: userIdParam } });
+      if (dbUser) {
+        userId = dbUser.id;
+        role = dbUser.role;
+      }
+    }
+
+    if (!userId || !['seller', 'store_manager'].includes(role || '')) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const sellerProfile = await prisma.sellerProfile.findUnique({
-      where: { userId: session.user.id },
+      where: { userId },
       include: {
         verification: {
           include: { documents: true, reviewLogs: true }
@@ -41,12 +55,25 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || !['seller', 'store_manager'].includes(session.user.role)) {
+    const body = await req.json().catch(() => ({})); // Parse body safely
+    
+    let userId = session?.user?.id;
+    let role = session?.user?.role;
+
+    if (!userId && body.userId) {
+      const dbUser = await prisma.user.findUnique({ where: { id: body.userId } });
+      if (dbUser) {
+        userId = dbUser.id;
+        role = dbUser.role;
+      }
+    }
+
+    if (!userId || !['seller', 'store_manager'].includes(role || '')) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const sellerProfile = await prisma.sellerProfile.findUnique({
-      where: { userId: session.user.id }
+      where: { userId }
     });
 
     if (!sellerProfile) {

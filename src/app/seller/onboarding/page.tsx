@@ -1,15 +1,21 @@
-import React from 'react';
-import OnboardingWizard from '@/components/seller/onboarding/OnboardingWizard';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
-import { redirect } from 'next/navigation';
+'use client';
 
-export default async function SellerOnboardingPage() {
-  const session = await getServerSession(authOptions);
-  
-  if (!session || !session.user) {
-    redirect('/?login=true');
-  }
+import React, { useEffect } from 'react';
+import OnboardingWizard from '@/components/seller/onboarding/OnboardingWizard';
+import { useAuthStore } from '@/lib/store';
+import { useRouter } from 'next/navigation';
+
+export default function SellerOnboardingPage() {
+  const { isAuthenticated, user } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthenticated || !user) {
+      router.push('/?login=true');
+    }
+  }, [isAuthenticated, user, router]);
+
+  if (!isAuthenticated || !user) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 py-6" dir="rtl">
