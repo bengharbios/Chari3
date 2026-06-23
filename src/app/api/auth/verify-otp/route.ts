@@ -165,9 +165,12 @@ export async function POST(request: Request) {
         
         await db.session.create({
           data: {
+            id: token, // Use token as ID or generate a new one
             userId: existingUser.id as string,
             token: token,
             expiresAt: expiresAt,
+            createdAt: new Date(),
+            updatedAt: new Date(),
             ipAddress: request.headers.get('x-forwarded-for') || null,
             userAgent: request.headers.get('user-agent') || null,
           }
