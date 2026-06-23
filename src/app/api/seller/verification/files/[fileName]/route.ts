@@ -1,8 +1,8 @@
+import { auth } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import { readFile } from 'fs/promises';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
 function getKycUploadDir(): string {
   return path.join(process.cwd(), '..', 'ChariDay_uploads', 'kyc_vault');
@@ -13,7 +13,7 @@ export async function GET(
   { params }: { params: Promise<{ fileName: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({ headers: await headers() });
     // Only sellers, store managers, and admins can view KYC files
     if (!session || !session.user || !['seller', 'store_manager', 'admin'].includes(session.user.role)) {
       return new NextResponse('Unauthorized', { status: 401 });

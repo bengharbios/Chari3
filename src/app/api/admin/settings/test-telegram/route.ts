@@ -1,12 +1,12 @@
+import { auth } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({ headers: await headers() });
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }

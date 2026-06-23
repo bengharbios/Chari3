@@ -1,11 +1,11 @@
+import { auth } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { db as prisma } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({ headers: await headers() });
     const userIdParam = req.nextUrl.searchParams.get('userId');
     
     let userId = session?.user?.id;
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({ headers: await headers() });
     const body = await req.json().catch(() => ({})); // Parse body safely
     
     let userId = session?.user?.id;

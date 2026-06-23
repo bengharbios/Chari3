@@ -1,7 +1,7 @@
+import { auth } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,7 +10,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({ headers: await headers() });
     if (!session || session.user.role !== 'admin' && session.user.role !== 'SUPER_ADMIN') {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }
@@ -31,7 +31,7 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({ headers: await headers() });
     if (!session || session.user.role !== 'admin' && session.user.role !== 'SUPER_ADMIN') {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 403 });
     }

@@ -1,7 +1,7 @@
+import { auth } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { authOptions } from '@/lib/auth';
-import { getServerSession } from 'next-auth';
 
 // GET all payment methods
 export async function GET(request: Request) {
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 // POST a new payment method
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({ headers: await headers() });
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 // PUT to update a payment method
 export async function PUT(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({ headers: await headers() });
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
@@ -73,7 +73,7 @@ export async function PUT(request: Request) {
 // DELETE a payment method
 export async function DELETE(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({ headers: await headers() });
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }

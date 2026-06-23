@@ -1,11 +1,11 @@
+import { auth } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({ headers: await headers() });
     const body = await req.json();
     const url = new URL(req.url);
     const userId = session?.user?.id || url.searchParams.get('userId') || body.userId;
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({ headers: await headers() });
     const url = new URL(req.url);
     const userId = session?.user?.id || url.searchParams.get('userId');
 

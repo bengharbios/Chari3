@@ -156,6 +156,34 @@ export async function POST(request: Request) {
           isNewUser: true,
         });
       }
+
+      // ── Create BetterAuth Session manually ──
+      try {
+        const crypto = require('crypto');
+        const token = crypto.randomUUID();
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        
+        await db.session.create({
+          data: {
+            userId: existingUser.id as string,
+            token: token,
+            expiresAt: expiresAt,
+            ipAddress: request.headers.get('x-forwarded-for') || null,
+            userAgent: request.headers.get('user-agent') || null,
+          }
+        });
+        
+        const { cookies } = require('next/headers');
+        cookies().set('better-auth.session_token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          expires: expiresAt,
+        });
+      } catch (sessionErr) {
+        console.error('[verify-otp] Failed to create manual session:', sessionErr);
+      }
     }
 
     return NextResponse.json({

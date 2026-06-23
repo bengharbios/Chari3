@@ -1,10 +1,10 @@
+import { auth } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
 import { db as prisma } from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 
 const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB for KYC docs
@@ -15,7 +15,7 @@ function getKycUploadDir(): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth.api.getSession({ headers: await headers() });
     const formData = await request.formData();
     const userIdParam = formData.get('userId') as string | null;
 

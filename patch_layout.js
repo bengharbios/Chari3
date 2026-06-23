@@ -1,0 +1,11 @@
+const fs = require('fs');
+const path = 'src/app/layout.tsx';
+let c = fs.readFileSync(path, 'utf8');
+c = c.replace("import NextAuthProvider from '@/providers/NextAuthProvider';\r\n", "");
+c = c.replace("import NextAuthProvider from '@/providers/NextAuthProvider';\n", "");
+c = c.replace("        <NextAuthProvider>\r\n", "");
+c = c.replace("        <NextAuthProvider>\n", "");
+c = c.replace("        </NextAuthProvider>\r\n", "");
+c = c.replace("        </NextAuthProvider>\n", "");
+fs.writeFileSync(path, c);
+console.log("Done");
