@@ -50,6 +50,12 @@ export async function POST(request: Request) {
       }
     }
 
+    // Convert NextRequest headers to a plain object to avoid Undici symbol errors
+    const plainHeaders: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      plainHeaders[key] = value;
+    });
+
     // Call better-auth's signInEmail directly with the user's email
     // This allows phone number logins to work seamlessly with Better Auth's email/password provider
     const signInResponse = await auth.api.signInEmail({
@@ -57,7 +63,7 @@ export async function POST(request: Request) {
         email: user.email,
         password: password,
       },
-      headers: request.headers,
+      headers: plainHeaders,
       asResponse: true
     });
 
