@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function LegalStep({ data, updateData }: { data: any; updateData: (d: any) => void }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   
   // Parsing existing CR number if any: e.g. "16/00-21A1234567"
   const parseCR = (cr: string) => {
