@@ -11,6 +11,16 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+    password: {
+      hash: async (password: string) => {
+        const bcrypt = require("bcryptjs");
+        return await bcrypt.hash(password, 10);
+      },
+      verify: async ({ hash, password }: { hash: string; password: string }) => {
+        const bcrypt = require("bcryptjs");
+        return await bcrypt.compare(password, hash);
+      }
+    }
   },
   plugins: [
     twoFactor({
