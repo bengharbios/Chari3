@@ -1,5 +1,4 @@
 "use client"
-import React from 'react';
 
 import * as React from "react"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
@@ -11,6 +10,14 @@ function Progress({
   value,
   ...props
 }: React.ComponentProps<typeof ProgressPrimitive.Root>) {
+  const [isRTL, setIsRTL] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof document !== 'undefined') {
+      setIsRTL(document.documentElement.dir === 'rtl');
+    }
+  }, []);
+
   return (
     <ProgressPrimitive.Root
       data-slot="progress"
@@ -23,7 +30,7 @@ function Progress({
       <ProgressPrimitive.Indicator
         data-slot="progress-indicator"
         className="bg-primary h-full w-full flex-1 transition-all"
-        style={{ transform: `translateX(-${100 - (value || 0)}%)` }}
+        style={{ transform: `translateX(${isRTL ? '' : '-'}${100 - (value || 0)}%)` }}
       />
     </ProgressPrimitive.Root>
   )

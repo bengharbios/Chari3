@@ -101,7 +101,7 @@ export default function OnboardingWizard() {
     { id: 0, title: 'السجل التجاري', icon: <Store className="w-5 h-5" />, done: hasLegal, component: <LegalStep data={formData} updateData={handleUpdateData} /> },
     { id: 1, title: 'الضريبة', icon: <FileText className="w-5 h-5" />, done: hasTax, component: <TaxStep data={formData} updateData={handleUpdateData} /> },
     { id: 2, title: 'البنك', icon: <Landmark className="w-5 h-5" />, done: hasBank, component: <BankStep data={formData} updateData={handleUpdateData} /> },
-    { id: 3, title: 'الهوية', icon: <UserCheck className="w-5 h-5" />, done: hasIdentity, component: <IdentityStep data={formData} updateData={handleUpdateData} /> },
+    { id: 3, title: locale === 'ar' ? 'هوية المدير أو المالك أو الممثل القانوني للشركة' : 'Identity (Manager/Owner/Representative)', icon: <UserCheck className="w-5 h-5" />, done: hasIdentity, component: <IdentityStep data={formData} updateData={handleUpdateData} /> },
     { id: 4, title: 'الشروط', icon: <ShieldCheck className="w-5 h-5" />, done: hasTerms, component: <TermsStep data={formData} updateData={handleUpdateData} /> },
   ];
 
@@ -127,7 +127,7 @@ export default function OnboardingWizard() {
   };
 
   return (
-    <div className="max-w-4xl w-full mx-auto p-0 flex flex-col bg-white shadow-lg rounded-2xl border overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="max-w-4xl w-full mx-auto p-0 flex flex-col bg-white shadow-lg rounded-2xl border overflow-hidden animate-in fade-in zoom-in-95 duration-200" dir={isRTL ? 'rtl' : 'ltr'}>
         <h2 className="sr-only">Store Verification Wizard</h2>
         <p className="sr-only">Complete your store verification steps.</p>
         

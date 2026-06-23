@@ -379,7 +379,7 @@
       "legal": "Legal Docs",
       "tax": "Tax Details",
       "bank": "Financials",
-      "identity": "Identity",
+      "identity": "Identity (Manager/Owner/Representative)",
       "terms": "T&C"
     },
     "legal": {
@@ -419,7 +419,7 @@
       "yes": "Yes",
       "no": "No",
       "poa": "Power of Attorney Document",
-      "uploadId": "Identity Verification",
+      "uploadId": "Manager/Owner/Representative Identity",
       "idDesc": "Upload a government issued ID or use camera."
     },
     "submit": "Submit for Approval",

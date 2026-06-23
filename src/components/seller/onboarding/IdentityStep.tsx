@@ -321,30 +321,84 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
         {!useCamera ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className={`border-2 border-dashed rounded-lg p-4 text-center ${data.managerIdFront ? 'border-primary bg-primary/5' : 'bg-muted/20'}`}>
+              <div className={`border-2 border-dashed rounded-lg p-4 text-center relative flex flex-col justify-center items-center min-h-[140px] ${data.managerIdFront ? 'border-primary bg-primary/5' : 'bg-muted/20'}`}>
                 {data.managerIdFront ? (
-                  <div className="relative">
+                  <div className="relative w-full h-full flex flex-col items-center justify-center">
                     <img src={data.managerIdFront} alt="Front" className="w-full h-24 object-contain rounded" />
-                    <CheckCircle2 className="absolute top-1 right-1 h-5 w-5 text-green-500 bg-white rounded-full" />
+                    <button
+                      type="button"
+                      onClick={() => updateData({ managerIdFront: null })}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md transition-colors"
+                      title="حذف الصورة"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                    <p className="text-xs text-green-600 mt-2 font-medium">الوجه الأمامي مرفوع</p>
                   </div>
                 ) : (
-                  <>
+                  <label className="cursor-pointer block w-full h-full">
                     <Upload className="h-6 w-6 text-muted-foreground mb-2 mx-auto" />
-                    <p className="text-sm font-medium">الأمامي</p>
-                  </>
+                    <p className="text-sm font-medium">{t('onboarding.identity.front') || 'الأمامي (اضغط للرفع)'}</p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG</p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            updateData({ managerIdFront: reader.result as string });
+                            if (data.managerIdBack) {
+                              handleExtract(reader.result as string, data.managerIdBack);
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
                 )}
               </div>
-              <div className={`border-2 border-dashed rounded-lg p-4 text-center ${data.managerIdBack ? 'border-primary bg-primary/5' : 'bg-muted/20'}`}>
+              <div className={`border-2 border-dashed rounded-lg p-4 text-center relative flex flex-col justify-center items-center min-h-[140px] ${data.managerIdBack ? 'border-primary bg-primary/5' : 'bg-muted/20'}`}>
                 {data.managerIdBack ? (
-                  <div className="relative">
+                  <div className="relative w-full h-full flex flex-col items-center justify-center">
                     <img src={data.managerIdBack} alt="Back" className="w-full h-24 object-contain rounded" />
-                    <CheckCircle2 className="absolute top-1 right-1 h-5 w-5 text-green-500 bg-white rounded-full" />
+                    <button
+                      type="button"
+                      onClick={() => updateData({ managerIdBack: null })}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md transition-colors"
+                      title="حذف الصورة"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                    <p className="text-xs text-green-600 mt-2 font-medium">الوجه الخلفي مرفوع</p>
                   </div>
                 ) : (
-                  <>
+                  <label className="cursor-pointer block w-full h-full">
                     <Upload className="h-6 w-6 text-muted-foreground mb-2 mx-auto" />
-                    <p className="text-sm font-medium">الخلفي</p>
-                  </>
+                    <p className="text-sm font-medium">{t('onboarding.identity.back') || 'الخلفي (اضغط للرفع)'}</p>
+                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG</p>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            updateData({ managerIdBack: reader.result as string });
+                            if (data.managerIdFront) {
+                              handleExtract(data.managerIdFront, reader.result as string);
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
                 )}
               </div>
             </div>

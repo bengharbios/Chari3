@@ -76,3 +76,12 @@ export const auth = betterAuth({
     }
   }
 });
+
+export async function getSession(headersList: any) {
+  const safeHeaders = new Headers();
+  headersList.forEach((value: string, key: string) => {
+    safeHeaders.append(key, value);
+  });
+  return await auth.api.getSession({ headers: safeHeaders });
+}
+
