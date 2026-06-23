@@ -420,6 +420,8 @@
       "no": "No",
       "poa": "Power of Attorney Document",
       "uploadId": "Manager/Owner/Representative Identity",
+      "front": "Front Side (Click to upload)",
+      "back": "Back Side (Click to upload)",
       "idDesc": "Upload a government issued ID or use camera."
     },
     "submit": "Submit for Approval",

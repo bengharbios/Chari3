@@ -3,6 +3,41 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+const ALLOWED_FIELDS = [
+  'entityType',
+  'companyName',
+  'countryOfRegistration',
+  'issueAuthority',
+  'commercialRegisterNumber',
+  'issueDate',
+  'expiryDate',
+  'commercialRegisterFile',
+  'hasVat',
+  'vatNumber',
+  'vatCertificateFile',
+  'bankName',
+  'iban',
+  'swiftCode',
+  'beneficiaryName',
+  'isBeneficiaryMatching',
+  'bankLetterFile',
+  'signatoryName',
+  'signatoryEmail',
+  'isLegalOwner',
+  'powerOfAttorneyFile',
+  'managerIdFront',
+  'managerIdBack',
+  'extractedIdData',
+  'agreedToTerms',
+  'agreedAt',
+  'verificationStatus',
+  'rejectionReasons',
+  'adminNotes',
+  'reviewedBy',
+  'reviewedAt',
+  'submittedAt'
+];
+
 export async function POST(req: Request) {
   try {
     const session = await getSession(await headers());
@@ -14,15 +49,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Unauthorized or missing userId' }, { status: 401 });
     }
 
-    // The body should contain the current step data or complete data
-    // Example: { step: 'legal', data: { entityType: 'legal', companyName: 'XYZ' } }
+    // Sanitize data to only include valid StoreVerification schema fields
+    const rawData = body.data || {};
+    const dataToSave: Record<string, any> = {};
     
-    // We will do an upsert on StoreVerification
-    const existing = await db.storeVerification.findUnique({
-      where: { userId }
-    });
-
-    const dataToSave = body.data || {};
+    for (const key of ALLOWED_FIELDS) {
+      if (rawData[key] !== undefined) {
+        // Convert date strings to Date objects for database compatibility
+        if (['issueDate', 'expiryDate', 'agreedAt', 'reviewedAt', 'submittedAt'].includes(key) && rawData[key]) {
+          dataToSave[key] = new Date(rawData[key]);
+        } else {
+          dataToSave[key] = rawData[key];
+        }
+      }
+    }
 
     const updated = await db.storeVerification.upsert({
       where: { userId },
