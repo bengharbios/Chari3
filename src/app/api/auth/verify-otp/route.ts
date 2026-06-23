@@ -177,7 +177,8 @@ export async function POST(request: Request) {
         });
         
         const { cookies } = require('next/headers');
-        cookies().set('better-auth.session_token', token, {
+        const cookieStore = await cookies();
+        cookieStore.set('better-auth.session_token', token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
