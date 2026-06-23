@@ -124,6 +124,7 @@ export default function RegisterStep() {
     setStoreName,
     setSelectedRole,
     setPasswordSetup,
+    setEmail,
     register,
     setStep,
     setError,
