@@ -57,7 +57,7 @@ export async function POST(request: Request) {
         email: user.email,
         password: password,
       },
-      headers: headers(),
+      headers: request.headers,
       asResponse: true
     });
 
