@@ -302,7 +302,7 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
       {!data.isLegalOwner && (
         <div className="pt-4 space-y-4">
           <Label className="text-base font-bold text-red-600">{t('onboarding.identity.poa')}</Label>
-          <p className="text-sm text-gray-500">الرجاء إرفاق التفويض القانوني أو الوكالة</p>
+          <p className="text-sm text-gray-500">{t('onboarding.identity.poaDesc')}</p>
           <Input 
             type="file" 
             accept=".pdf,.jpg,.png" 
@@ -329,16 +329,16 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
                       type="button"
                       onClick={() => updateData({ managerIdFront: null })}
                       className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md transition-colors"
-                      title="حذف الصورة"
+                      title={t('onboarding.identity.deleteImage')}
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
-                    <p className="text-xs text-green-600 mt-2 font-medium">الوجه الأمامي مرفوع</p>
+                    <p className="text-xs text-green-600 mt-2 font-medium">{t('onboarding.identity.frontUploaded')}</p>
                   </div>
                 ) : (
                   <label className="cursor-pointer block w-full h-full">
                     <Upload className="h-6 w-6 text-muted-foreground mb-2 mx-auto" />
-                    <p className="text-sm font-medium">{t('onboarding.identity.front') || 'الأمامي (اضغط للرفع)'}</p>
+                    <p className="text-sm font-medium">{t('onboarding.identity.frontUpload')}</p>
                     <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG</p>
                     <input
                       type="file"
@@ -369,16 +369,16 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
                       type="button"
                       onClick={() => updateData({ managerIdBack: null })}
                       className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md transition-colors"
-                      title="حذف الصورة"
+                      title={t('onboarding.identity.deleteImage')}
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
-                    <p className="text-xs text-green-600 mt-2 font-medium">الوجه الخلفي مرفوع</p>
+                    <p className="text-xs text-green-600 mt-2 font-medium">{t('onboarding.identity.backUploaded')}</p>
                   </div>
                 ) : (
                   <label className="cursor-pointer block w-full h-full">
                     <Upload className="h-6 w-6 text-muted-foreground mb-2 mx-auto" />
-                    <p className="text-sm font-medium">{t('onboarding.identity.back') || 'الخلفي (اضغط للرفع)'}</p>
+                    <p className="text-sm font-medium">{t('onboarding.identity.backUpload')}</p>
                     <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG</p>
                     <input
                       type="file"
@@ -412,7 +412,7 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
               }}
             >
               <ScanLine className="h-4 w-4" />
-              تشغيل الماسح الذكي للهوية (OCR)
+              {t('onboarding.identity.ocrScanner')}
             </Button>
           </div>
         ) : (
@@ -434,7 +434,7 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
                 <div className="w-full h-full flex items-center justify-center">
                   <div className="w-[80%] h-[50%] border-2 border-dashed border-white/40 rounded-xl relative">
                     <div className="absolute -top-8 w-full text-center text-white font-bold text-sm bg-black/40 py-1 rounded">
-                      {!cvLoaded ? "تحميل OpenCV..." : captureStep === 'front' ? "وجه الأمامية..." : "وجه الخلفية (شريط MRZ)..."}
+                      {!cvLoaded ? t('onboarding.identity.loadingOpenCV') : captureStep === 'front' ? t('onboarding.identity.frameFront') : t('onboarding.identity.frameBack')}
                     </div>
                   </div>
                 </div>
@@ -448,7 +448,7 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
               </Button>
               <Button className="rounded-full px-8 bg-brand text-white disabled:opacity-50" onClick={handleCapture} disabled={isCapturing}>
                 {isCapturing ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> : <Camera className="mr-2 h-4 w-4" />}
-                {isCapturing ? 'جاري...' : captureStep === 'front' ? 'التقاط الوجه الأمامي' : 'التقاط الوجه الخلفي'}
+                {isCapturing ? t('onboarding.identity.capturing') : captureStep === 'front' ? t('onboarding.identity.captureFront') : t('onboarding.identity.captureBack')}
               </Button>
               <Button variant="destructive" size="icon" className="rounded-full opacity-80" onClick={() => setUseCamera(false)}>
                 <X className="h-5 w-5" />

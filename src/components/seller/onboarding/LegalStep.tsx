@@ -73,7 +73,7 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
   return (
     <div className="space-y-6">
       <div>
-        <Label className="text-base font-bold mb-4 block">طبيعة النشاط / نوع التاجر *</Label>
+        <Label className="text-base font-bold mb-4 block">{t('onboarding.legal.activityType')}</Label>
         <RadioGroup 
           value={crParts.type} 
           onValueChange={(val) => {
@@ -88,22 +88,22 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
         >
           <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
             <RadioGroupItem value="A" id="type-a" />
-            <Label htmlFor="type-a" className="cursor-pointer">شخص طبيعي (A)</Label>
+            <Label htmlFor="type-a" className="cursor-pointer">{t('onboarding.legal.typeNatural')}</Label>
           </div>
           <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
             <RadioGroupItem value="B" id="type-b" />
-            <Label htmlFor="type-b" className="cursor-pointer">شخص معنوي - شركة (B)</Label>
+            <Label htmlFor="type-b" className="cursor-pointer">{t('onboarding.legal.typeLegal')}</Label>
           </div>
           <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
             <RadioGroupItem value="D" id="type-d" />
-            <Label htmlFor="type-d" className="cursor-pointer">نشاط غير قار / متنقل (D)</Label>
+            <Label htmlFor="type-d" className="cursor-pointer">{t('onboarding.legal.typeMobile')}</Label>
           </div>
         </RadioGroup>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
         <div className="space-y-2">
-          <Label>بلد تسجيل الأعمال *</Label>
+          <Label>{t('onboarding.legal.countryOfRegistration')}</Label>
           <Select 
             value={selectedCountry} 
             onValueChange={(val) => {
@@ -115,38 +115,38 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
             }}
           >
             <SelectTrigger>
-              <SelectValue placeholder="اختر الدولة" />
+              <SelectValue placeholder={t('onboarding.legal.selectCountry')} />
             </SelectTrigger>
             <SelectContent>
               {countries.map(c => (
-                <SelectItem key={c.code} value={c.code}>{c.nameAr} ({c.nameEn})</SelectItem>
+                <SelectItem key={c.code} value={c.code}>{locale === 'ar' ? c.nameAr : c.nameEn} ({c.code})</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         
         <div className="space-y-2">
-          <Label>الولاية / المقاطعة *</Label>
+          <Label>{t('onboarding.legal.state')}</Label>
           <Select 
             value={data.state || ''} 
             onValueChange={(val) => updateData({ state: val })} 
             disabled={!selectedCountry || states.length === 0}
           >
             <SelectTrigger>
-              <SelectValue placeholder="اختر الولاية" />
+              <SelectValue placeholder={t('onboarding.legal.selectState')} />
             </SelectTrigger>
             <SelectContent>
               {states.map((s, idx) => (
-                <SelectItem key={s.id || idx} value={s.nameAr || s.name || s.id}>{s.nameAr || s.name}</SelectItem>
+                <SelectItem key={s.id || idx} value={s.nameAr || s.name || s.id}>{locale === 'ar' ? (s.nameAr || s.name) : (s.name || s.nameAr)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         
         <div className="space-y-2">
-          <Label>اسم الشركة / المتجر المذكور في السجل *</Label>
+          <Label>{t('onboarding.legal.companyNameLabel')}</Label>
           <Input 
-            placeholder="يرجى إدخال الاسم الدقيق" 
+            placeholder={t('onboarding.legal.companyNamePlaceholder')} 
             value={data.companyName || ''} 
             onChange={(e) => updateData({ companyName: e.target.value })} 
           />
@@ -154,8 +154,8 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
 
         {selectedCountry === 'DZ' ? (
           <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 rounded-lg border">
-            <Label className="text-base font-bold mb-2 block">رقم السجل التجاري *</Label>
-            <p className="text-xs text-gray-500 mb-4">مثال: 16/00-21A1234567</p>
+            <Label className="text-base font-bold mb-2 block">{t('onboarding.legal.crNumberLabel')}</Label>
+            <p className="text-xs text-gray-500 mb-4">{t('onboarding.legal.crExample')}</p>
             <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap" dir="ltr">
               {/* SN */}
               <Input 
@@ -196,15 +196,15 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
                 onChange={(e) => handleCrChange('wilaya', e.target.value.replace(/\D/g, ''))} 
               />
             </div>
-            <div className="mt-3 text-sm text-blue-600 bg-blue-50 p-2 rounded" dir="rtl">
-              <strong>الرقم المجمع:</strong> <span dir="ltr" className="inline-block">{crParts.wilaya}/{crParts.branch}-{crParts.year}{crParts.type}{crParts.sn}</span>
+            <div className="mt-3 text-sm text-blue-600 bg-blue-50 p-2 rounded" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+              <strong>{t('onboarding.legal.crCombined')}</strong> <span dir="ltr" className="inline-block">{crParts.wilaya}/{crParts.branch}-{crParts.year}{crParts.type}{crParts.sn}</span>
             </div>
           </div>
         ) : (
           <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 rounded-lg border">
-            <Label className="text-base font-bold mb-2 block">رقم السجل التجاري *</Label>
+            <Label className="text-base font-bold mb-2 block">{t('onboarding.legal.crNumberLabel')}</Label>
             <Input 
-              placeholder="أدخل رقم السجل التجاري الخاص بدولتك" 
+              placeholder={t('onboarding.legal.crOtherPlaceholder')} 
               value={data.commercialRegisterNumber || ''} 
               onChange={(e) => updateData({ commercialRegisterNumber: e.target.value })} 
               dir="ltr"
@@ -216,15 +216,15 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
         <div className="space-y-2">
           <Label>{t('onboarding.legal.issueAuthority')} *</Label>
           <Input 
-            placeholder="المركز الوطني للسجل التجاري - فرع..." 
+            placeholder={t('onboarding.legal.issueAuthorityPlaceholder')} 
             value={data.issueAuthority || ''} 
             onChange={(e) => updateData({ issueAuthority: e.target.value })} 
           />
         </div>
         <div className="space-y-2">
-          <Label>عنوان الشركة / المقر *</Label>
+          <Label>{t('onboarding.legal.companyAddress')}</Label>
           <Input 
-            placeholder="العنوان كاملاً" 
+            placeholder={t('onboarding.legal.companyAddressPlaceholder')} 
             value={data.companyAddress || ''} 
             onChange={(e) => updateData({ companyAddress: e.target.value })} 
           />
@@ -264,8 +264,8 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
       </div>
 
       <div className="mt-8 border-t pt-6 space-y-4">
-        <Label className="text-base font-bold">وثيقة تسجيل الأعمال (مستخرج السجل التجاري) *</Label>
-        <p className="text-sm text-gray-500">قم بتحميل نسخة واضحة (PDF, JPG, PNG - Max 10MB)</p>
+        <Label className="text-base font-bold">{t('onboarding.legal.crFile')}</Label>
+        <p className="text-sm text-gray-500">{t('onboarding.legal.crFileDesc')}</p>
         <Input 
           type="file" 
           accept=".pdf,.jpg,.jpeg,.png" 
@@ -274,7 +274,7 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
             if (file) updateData({ commercialRegisterFile: 'https://fake-s3.com/upload.pdf' });
           }} 
         />
-        {data.commercialRegisterFile && <p className="text-sm text-green-600">تم رفع الملف بنجاح</p>}
+        {data.commercialRegisterFile && <p className="text-sm text-green-600">{t('onboarding.common.uploadSuccess')}</p>}
       </div>
     </div>
   );

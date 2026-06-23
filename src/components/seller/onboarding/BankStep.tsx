@@ -13,7 +13,7 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
   return (
     <div className="space-y-6">
       <div className="mb-6">
-        <Label className="text-base font-bold mb-4 block">طريقة الدفع *</Label>
+        <Label className="text-base font-bold mb-4 block">{t('onboarding.bank.paymentMethod')}</Label>
         <RadioGroup 
           value={paymentType} 
           onValueChange={(val: 'bank' | 'ccp') => {
@@ -28,11 +28,11 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
         >
           <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50">
             <RadioGroupItem value="bank" id="type-bank" />
-            <Label htmlFor="type-bank" className="cursor-pointer">حساب بنكي (Bank Account)</Label>
+            <Label htmlFor="type-bank" className="cursor-pointer">{t('onboarding.bank.typeBank')}</Label>
           </div>
           <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50">
             <RadioGroupItem value="ccp" id="type-ccp" />
-            <Label htmlFor="type-ccp" className="cursor-pointer">حساب بريدي جاري (CCP / RIP)</Label>
+            <Label htmlFor="type-ccp" className="cursor-pointer">{t('onboarding.bank.typeCcp')}</Label>
           </div>
         </RadioGroup>
       </div>
@@ -52,7 +52,7 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
             <div className="space-y-2">
               <Label>{t('onboarding.bank.bankName')} *</Label>
               <Input 
-                placeholder="مثال: BDL, CPA, BADR..." 
+                placeholder={t('onboarding.bank.bankNamePlaceholder')} 
                 value={data.bankName || ''} 
                 onChange={(e) => updateData({ bankName: e.target.value })} 
               />
@@ -60,7 +60,7 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
             <div className="space-y-2">
               <Label>{t('onboarding.bank.swift')} *</Label>
               <Input 
-                placeholder="SWIFT / BIC" 
+                placeholder={t('onboarding.bank.swiftPlaceholder')} 
                 value={data.swiftCode || ''} 
                 onChange={(e) => updateData({ swiftCode: e.target.value })} 
               />
@@ -68,7 +68,7 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
             <div className="space-y-2 col-span-1 md:col-span-2">
               <Label>{t('onboarding.bank.iban')} *</Label>
               <Input 
-                placeholder="RIB / IBAN (20 أرقام على الأقل)" 
+                placeholder={t('onboarding.bank.ibanPlaceholder')} 
                 value={data.iban || ''} 
                 onChange={(e) => updateData({ iban: e.target.value })} 
                 dir="ltr"
@@ -78,18 +78,18 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
         ) : (
           <>
             <div className="space-y-2">
-              <Label>رقم الحساب البريدي (N° CCP) *</Label>
+              <Label>{t('onboarding.bank.ccpNumber')}</Label>
               <Input 
-                placeholder="مثال: 1234567" 
+                placeholder={t('onboarding.bank.ccpNumberPlaceholder')} 
                 value={data.ccpNumber || ''} 
                 onChange={(e) => updateData({ ccpNumber: e.target.value })} 
                 dir="ltr"
               />
             </div>
             <div className="space-y-2">
-              <Label>المفتاح (Clé) *</Label>
+              <Label>{t('onboarding.bank.ccpCle')}</Label>
               <Input 
-                placeholder="مثال: 45" 
+                placeholder={t('onboarding.bank.ccpClePlaceholder')} 
                 value={data.ccpCle || ''} 
                 onChange={(e) => updateData({ ccpCle: e.target.value })} 
                 maxLength={2}
@@ -97,9 +97,9 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
               />
             </div>
             <div className="space-y-2 col-span-1 md:col-span-2">
-              <Label>الرقم التعريفي البريدي (RIP) المكون من 20 رقم *</Label>
+              <Label>{t('onboarding.bank.rip')}</Label>
               <Input 
-                placeholder="مثال: 00799999001234567845" 
+                placeholder={t('onboarding.bank.ripPlaceholder')} 
                 value={data.iban || ''} 
                 onChange={(e) => updateData({ iban: e.target.value })} 
                 maxLength={20}
@@ -111,7 +111,7 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
       </div>
 
       <div className="pt-4 border-t">
-        <Label className="text-base font-bold mb-4 block">تطابق اسم المستفيد</Label>
+        <Label className="text-base font-bold mb-4 block">{t('onboarding.bank.beneficiaryMatch')}</Label>
         <RadioGroup 
           value={data.isBeneficiaryMatching ? 'yes' : 'no'} 
           onValueChange={(val) => updateData({ isBeneficiaryMatching: val === 'yes' })}
@@ -129,8 +129,8 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
       </div>
 
       <div className="pt-4 border-t space-y-4">
-        <Label className="text-base font-bold">إثبات وسيلة الدفع *</Label>
-        <p className="text-sm text-gray-500">قم بتحميل المستند المناسب لنوع الإثبات المختار (شيك ملغى أو شهادة بنكية/بريدية - Max 5MB)</p>
+        <Label className="text-base font-bold mb-4 block">{t('onboarding.bank.bankProof')}</Label>
+        <p className="text-sm text-gray-500">{t('onboarding.bank.bankProofDesc')}</p>
         <Input 
           type="file" 
           accept=".pdf,.jpg,.png,.jpeg" 
@@ -139,7 +139,7 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
             if (file) updateData({ bankLetterFile: 'https://fake-s3.com/bank.pdf' });
           }} 
         />
-        {data.bankLetterFile && <p className="text-sm text-green-600">تم رفع الملف بنجاح</p>}
+        {data.bankLetterFile && <p className="text-sm text-green-600">{t('onboarding.common.uploadSuccess')}</p>}
       </div>
     </div>
   );

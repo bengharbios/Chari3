@@ -42,7 +42,7 @@ export default function TaxStep({ data, updateData }: { data: any; updateData: (
 
           <div className="space-y-4">
             <Label className="text-base font-bold">{t('onboarding.tax.uploadDoc')}</Label>
-            <p className="text-sm text-gray-500">PDF, JPG, PNG (Max 5MB)</p>
+            <p className="text-sm text-gray-500">{t('onboarding.tax.fileDesc')}</p>
             <Input 
               type="file" 
               accept=".pdf,.jpg,.png" 
@@ -51,7 +51,7 @@ export default function TaxStep({ data, updateData }: { data: any; updateData: (
                 if (file) updateData({ vatCertificateFile: 'https://fake-s3.com/vat.pdf' });
               }} 
             />
-            {data.vatCertificateFile && <p className="text-sm text-green-600">تم رفع الملف بنجاح</p>}
+            {data.vatCertificateFile && <p className="text-sm text-green-600">{t('onboarding.common.uploadSuccess')}</p>}
           </div>
         </div>
       )}
