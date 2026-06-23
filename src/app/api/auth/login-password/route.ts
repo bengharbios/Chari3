@@ -25,6 +25,31 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
+    // Temporary fix: If the user has a password in the User table but no Account record (e.g. from seed),
+    // we create the Account record for better-auth to use.
+    if (user.password) {
+      // We must dynamically import bcrypt so it doesn't break edge, but this is a node API route so it's fine
+      const bcrypt = require('bcryptjs');
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (isPasswordValid) {
+        const account = await db.account.findFirst({ where: { userId: user.id, providerId: 'credential' } });
+        if (!account) {
+          const { randomUUID } = require('crypto');
+          await db.account.create({
+            data: { 
+              id: randomUUID(), 
+              accountId: user.email, 
+              providerId: 'credential', 
+              userId: user.id, 
+              password: user.password, 
+              createdAt: new Date(), 
+              updatedAt: new Date() 
+            }
+          });
+        }
+      }
+    }
+
     // Call better-auth's signInEmail directly with the user's email
     // This allows phone number logins to work seamlessly with Better Auth's email/password provider
     const signInResponse = await auth.api.signInEmail({

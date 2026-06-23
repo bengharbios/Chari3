@@ -42,16 +42,29 @@ export default function AdminLoginPage() {
     setError(null);
     
     try {
-      const res = await signIn.email({
-        email,
-        password,
+      const res = await fetch('/api/auth/login-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identifier: email,
+          password: password,
+        }),
       });
 
-      if (res?.error) {
-        setError('بيانات الدخول غير صحيحة');
+      const data = await res.json();
+
+      if (!data.success) {
+        setError(data.message || 'بيانات الدخول غير صحيحة');
         setIsSubmitting(false);
       } else {
         // Redirection will be handled by the useEffect above
+        // Force a re-fetch of the session by reloading the page if needed,
+        // but useEffect should catch it since useSession polls or we can just redirect manually
+        if (typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          const targetPath = currentPath.replace(/\/login\/?$/, '');
+          window.location.href = targetPath || '/';
+        }
       }
     } catch (err) {
       setError('حدث خطأ أثناء الاتصال بالخادم');
