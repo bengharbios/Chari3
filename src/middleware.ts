@@ -1,4 +1,3 @@
-import { betterFetch } from "@better-fetch/fetch";
 import type { auth } from "@/lib/better-auth";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -10,17 +9,10 @@ export async function middleware(request: NextRequest) {
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
 
   if (isProtectedRoute) {
-    const { data: session } = await betterFetch<typeof auth.$Infer.Session>(
-      "/api/auth/get-session",
-      {
-        baseURL: request.nextUrl.origin,
-        headers: {
-          cookie: request.headers.get("cookie") || "",
-        },
-      }
-    );
+    // Check for session cookie instead of doing an internal fetch which fails on Hostinger loopback
+    const sessionToken = request.cookies.get("better-auth.session_token")?.value;
 
-    if (!session) {
+    if (!sessionToken) {
       // NOTE: Redirect is temporarily disabled to prevent breaking Zustand Demo Logins.
       // Once you migrate all login forms to use `better-auth`, uncomment this line:
       // return NextResponse.redirect(new URL("/?login=true", request.url));
