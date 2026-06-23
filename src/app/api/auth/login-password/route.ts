@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       const bcrypt = require('bcryptjs');
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (isPasswordValid) {
-        const { randomUUID, randomBytes } = require('crypto');
+        const { randomUUID } = require('crypto');
         
         // Ensure Account exists
         const account = await db.account.findFirst({ where: { userId: user.id, providerId: 'credential' } });
@@ -49,41 +49,14 @@ export async function POST(request: Request) {
             }
           });
         }
-
-        // Manually create a session to bypass any better-auth internal signInEmail issues
-        const sessionToken = randomBytes(32).toString('hex');
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
-
-        await db.session.create({
-          data: {
-            id: randomUUID(),
-            userId: user.id,
-            token: sessionToken,
-            expiresAt,
-            ipAddress: request.headers.get("x-forwarded-for") || "127.0.0.1",
-            userAgent: request.headers.get("user-agent") || "",
-            createdAt: new Date(),
-            updatedAt: new Date()
-          }
-        });
-
-        const response = NextResponse.json({ success: true, user });
-        // Set the better-auth cookie
-        // Note: better-auth uses "better-auth.session_token" by default
-        const isProd = process.env.NODE_ENV === 'production';
-        response.headers.set(
-          'Set-Cookie', 
-          `better-auth.session_token=${sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=604800${isProd ? '; Secure' : ''}`
-        );
-        return response;
       }
     }
 
-    // Fallback to better-auth if manual check didn't apply
-    const plainHeaders: Record<string, string> = {};
+    // Convert NextRequest headers to a native Headers object to avoid Undici symbol errors 
+    // but still provide the .get() method that better-auth expects!
+    const safeHeaders = new Headers();
     request.headers.forEach((value, key) => {
-      plainHeaders[key] = value;
+      safeHeaders.append(key, value);
     });
 
     const signInResponse = await auth.api.signInEmail({
@@ -91,7 +64,7 @@ export async function POST(request: Request) {
         email: user.email,
         password: password,
       },
-      headers: plainHeaders,
+      headers: safeHeaders,
       asResponse: true
     });
 
