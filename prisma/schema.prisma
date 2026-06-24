@@ -845,11 +845,18 @@ model StoreVerification {
   entityType                  String    @default("natural") // natural, legal
   companyName                 String?
   countryOfRegistration       String?   @default("DZ")
+  country                     String?   @default("DZ")
+  state                       String?
+  companyAddress              String?
   issueAuthority              String?
   commercialRegisterNumber    String?
   issueDate                   DateTime?
   expiryDate                  DateTime?
   commercialRegisterFile      String?   @db.LongText
+
+  // Step 3: Payment / Bank extra fields
+  ccpNumber                   String?
+  ccpCle                      String?
 
   // Step 2: Tax Details
   hasVat                      Boolean   @default(false)

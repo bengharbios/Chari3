@@ -7,6 +7,9 @@ const ALLOWED_FIELDS = [
   'entityType',
   'companyName',
   'countryOfRegistration',
+  'country',
+  'state',
+  'companyAddress',
   'issueAuthority',
   'commercialRegisterNumber',
   'issueDate',
@@ -18,6 +21,8 @@ const ALLOWED_FIELDS = [
   'bankName',
   'iban',
   'swiftCode',
+  'ccpNumber',
+  'ccpCle',
   'beneficiaryName',
   'isBeneficiaryMatching',
   'bankLetterFile',
@@ -77,6 +82,12 @@ export async function POST(req: Request) {
     });
 
     if (dataToSave.submittedAt || dataToSave.verificationStatus === 'pending') {
+      // Update the user's account status in the database to pending
+      await db.user.update({
+        where: { id: userId },
+        data: { accountStatus: 'pending' }
+      });
+
       const superAdmins = await db.user.findMany({
         where: { role: 'super_admin' },
         select: { id: true }
