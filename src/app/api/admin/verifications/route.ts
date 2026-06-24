@@ -6,7 +6,7 @@ import { db as prisma } from '@/lib/db';
 export async function GET(req: NextRequest) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
-    if (!session || !session.user || session.user.role !== 'admin') {
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin' && session.user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 

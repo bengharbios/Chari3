@@ -9,7 +9,7 @@ export async function PATCH(
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
-    if (!session || !session.user || session.user.role !== 'admin') {
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin' && session.user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -95,7 +95,7 @@ export async function GET(
 ) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
-    if (!session || !session.user || session.user.role !== 'admin') {
+    if (!session || !session.user || (session.user.role !== 'admin' && session.user.role !== 'super_admin' && session.user.role !== 'SUPER_ADMIN')) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 

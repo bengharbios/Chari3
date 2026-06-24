@@ -78,6 +78,7 @@ export default function OnboardingWizard() {
         toast.success(locale === 'ar' ? 'تم إرسال الطلب للمراجعة بنجاح!' : 'Application submitted successfully!');
         setAccountStatus('pending');
         setWizardOpen(false);
+        router.push('/verification');
       } else {
         toast.error(locale === 'ar' ? 'حدث خطأ أثناء الإرسال' : 'Error submitting');
       }
