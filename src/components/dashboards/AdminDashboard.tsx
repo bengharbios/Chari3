@@ -1025,7 +1025,7 @@ export default function AdminDashboard() {
                             </div>
                             <div className="flex items-center gap-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-1.5 py-0.5 rounded text-xs font-bold">
                               <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
-                              {store.rating.toFixed(1)}
+                              {(store.rating ?? 0).toFixed(1)}
                             </div>
                           </div>
                           
@@ -1101,7 +1101,7 @@ export default function AdminDashboard() {
                             </div>
                             <div className="flex items-center gap-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 px-1.5 py-0.5 rounded text-xs font-bold">
                               <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
-                              {seller.rating.toFixed(1)}
+                              {(seller.rating ?? 0).toFixed(1)}
                             </div>
                           </div>
                           
