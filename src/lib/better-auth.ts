@@ -26,6 +26,11 @@ export const auth = betterAuth({
       }
     }
   },
+  advanced: {
+    cookie: {
+      domain: process.env.NODE_ENV === "production" ? ".chariday.com" : undefined,
+    },
+  },
   plugins: [
     twoFactor({
       otpOptions: {

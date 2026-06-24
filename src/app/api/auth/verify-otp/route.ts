@@ -184,6 +184,7 @@ export async function POST(request: Request) {
           sameSite: 'lax',
           path: '/',
           expires: expiresAt,
+          domain: process.env.NODE_ENV === 'production' ? '.chariday.com' : undefined,
         });
       } catch (sessionErr) {
         console.error('[verify-otp] Failed to create manual session:', sessionErr);

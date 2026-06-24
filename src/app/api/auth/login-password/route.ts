@@ -73,9 +73,23 @@ export async function POST(request: Request) {
     }
 
     const response = NextResponse.json({ success: true, user });
+    
+    // Copy all headers except set-cookie first
     signInResponse.headers.forEach((value, key) => {
-      response.headers.append(key, value);
+      if (key.toLowerCase() !== 'set-cookie') {
+        response.headers.set(key, value);
+      }
     });
+
+    // Copy set-cookie headers properly to avoid comma-joining
+    const setCookies = signInResponse.headers.getSetCookie 
+      ? signInResponse.headers.getSetCookie() 
+      : signInResponse.headers.get('set-cookie')?.split(', ') || [];
+
+    setCookies.forEach((cookieVal) => {
+      response.headers.append('set-cookie', cookieVal);
+    });
+
     return response;
 
   } catch (error) {
