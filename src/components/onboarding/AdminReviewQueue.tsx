@@ -232,10 +232,17 @@ function RequestCard({ merchant, isAr, onViewDetails }: RequestCardProps) {
               {getRelativeTime(merchant.registeredAt, isAr)}
             </p>
             <div className="flex items-center gap-3 mt-2">
-              <span className="text-xs text-green-600 flex items-center gap-1">
-                <CheckCircle className="size-3" />
-                {isAr ? 'هاتف' : 'Phone'}
-              </span>
+              {merchant.phoneVerified ? (
+                <span className="text-xs text-green-600 flex items-center gap-1">
+                  <CheckCircle className="size-3" />
+                  {isAr ? 'هاتف' : 'Phone'}
+                </span>
+              ) : (
+                <span className="text-xs text-yellow-600 flex items-center gap-1">
+                  <Clock className="size-3" />
+                  {isAr ? 'هاتف' : 'Phone'}
+                </span>
+              )}
               {merchant.emailVerified ? (
                 <span className="text-xs text-green-600 flex items-center gap-1">
                   <CheckCircle className="size-3" />
@@ -339,6 +346,117 @@ function DetailModal({
                 </Badge>
               </div>
             </div>
+
+            {merchant.details && (
+              <>
+                <Separator />
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold">
+                    {isAr ? '📝 البيانات المدخلة للتحقق' : '📝 Application Details'}
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs p-4 rounded-xl border bg-muted/20">
+                    {merchant.details.companyName && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'اسم الشركة' : 'Company Name'}</span>
+                        <p className="font-semibold text-sm text-foreground">{merchant.details.companyName}</p>
+                      </div>
+                    )}
+                    {merchant.details.entityType && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'نوع الكيان' : 'Entity Type'}</span>
+                        <p className="font-semibold text-sm text-foreground">
+                          {merchant.details.entityType === 'legal' ? (isAr ? 'شركة / شخص معنوي' : 'Legal Entity') : (isAr ? 'شخص طبيعي' : 'Natural Person')}
+                        </p>
+                      </div>
+                    )}
+                    {merchant.details.commercialRegisterNumber && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'رقم السجل التجاري' : 'Commercial Register Number'}</span>
+                        <p className="font-semibold text-sm text-foreground font-mono">{merchant.details.commercialRegisterNumber}</p>
+                      </div>
+                    )}
+                    {merchant.details.issueAuthority && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'جهة الإصدار' : 'Issue Authority'}</span>
+                        <p className="font-semibold text-sm text-foreground">{merchant.details.issueAuthority}</p>
+                      </div>
+                    )}
+                    {merchant.details.issueDate && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'تاريخ الإصدار' : 'Issue Date'}</span>
+                        <p className="font-semibold text-sm text-foreground">{new Date(merchant.details.issueDate).toLocaleDateString(isAr ? 'ar-SA' : 'en-US')}</p>
+                      </div>
+                    )}
+                    {merchant.details.expiryDate && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'تاريخ الانتهاء' : 'Expiry Date'}</span>
+                        <p className="font-semibold text-sm text-foreground">{new Date(merchant.details.expiryDate).toLocaleDateString(isAr ? 'ar-SA' : 'en-US')}</p>
+                      </div>
+                    )}
+                    {merchant.details.state && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'الولاية / المقاطعة' : 'State / Region'}</span>
+                        <p className="font-semibold text-sm text-foreground">{merchant.details.state}</p>
+                      </div>
+                    )}
+                    {merchant.details.companyAddress && (
+                      <div className="col-span-1 sm:col-span-2">
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'العنوان الكامل' : 'Full Address'}</span>
+                        <p className="font-semibold text-sm text-foreground">{merchant.details.companyAddress}</p>
+                      </div>
+                    )}
+
+                    <div className="col-span-1 sm:col-span-2 my-1 border-t border-dashed" />
+
+                    {merchant.details.beneficiaryName && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'صاحب الحساب (المستفيد)' : 'Beneficiary Name'}</span>
+                        <p className="font-semibold text-sm text-foreground">{merchant.details.beneficiaryName}</p>
+                      </div>
+                    )}
+                    {merchant.details.bankName && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'اسم البنك / البريد' : 'Bank Name'}</span>
+                        <p className="font-semibold text-sm text-foreground">{merchant.details.bankName}</p>
+                      </div>
+                    )}
+                    {merchant.details.iban && (
+                      <div className="col-span-1 sm:col-span-2">
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'رقم الآيبان (IBAN / RIP)' : 'IBAN / RIP'}</span>
+                        <p className="font-semibold text-sm text-foreground font-mono">{merchant.details.iban}</p>
+                      </div>
+                    )}
+                    {merchant.details.ccpNumber && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'رقم الحساب الجاري (CCP)' : 'CCP Number'}</span>
+                        <p className="font-semibold text-sm text-foreground font-mono">{merchant.details.ccpNumber}</p>
+                      </div>
+                    )}
+                    {merchant.details.ccpCle && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'مفتاح الحساب الجاري (Key)' : 'CCP Key'}</span>
+                        <p className="font-semibold text-sm text-foreground font-mono">{merchant.details.ccpCle}</p>
+                      </div>
+                    )}
+
+                    <div className="col-span-1 sm:col-span-2 my-1 border-t border-dashed" />
+
+                    {merchant.details.signatoryName && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'اسم المفوض بالتوقيع' : 'Authorized Signatory Name'}</span>
+                        <p className="font-semibold text-sm text-foreground">{merchant.details.signatoryName}</p>
+                      </div>
+                    )}
+                    {merchant.details.signatoryEmail && (
+                      <div>
+                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'بريد المفوض بالتوقيع' : 'Authorized Signatory Email'}</span>
+                        <p className="font-semibold text-sm text-foreground">{merchant.details.signatoryEmail}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
 
             <Separator />
 

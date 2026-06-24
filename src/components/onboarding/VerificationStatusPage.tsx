@@ -11,7 +11,6 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { KycVerificationSection } from './KycVerificationSection';
 
 
 function t(isAr: boolean, ar: string, en: string) {
@@ -495,8 +494,6 @@ export default function VerificationStatusPage() {
           </CardContent>
         </Card>
       )}
-      {/* KYC/KYB Module inspired by Ballerine */}
-      <KycVerificationSection isAr={isAr} />
     </div>
   );
 }
