@@ -138,20 +138,13 @@ const OTP_STEP_ORDER: OtpLoginStep[] = ['phone', 'otp', 'role', 'basic-info'];
 export const getVerificationItemsForRole = (role: UserRole): VerificationItem[] => {
   switch (role) {
     case 'store_manager':
+    case 'seller':
       return [
         { id: 'phone', labelAr: 'رقم الهاتف', labelEn: 'Phone Number', status: 'verified' },
         { id: 'email', labelAr: 'البريد الإلكتروني', labelEn: 'Email Address', status: 'required' },
         { id: 'commercial_register', labelAr: 'السجل التجاري', labelEn: 'Commercial Register', status: 'pending' },
         { id: 'bank_account', labelAr: 'الحساب البنكي', labelEn: 'Bank Account', status: 'pending' },
         { id: 'manager_id', labelAr: 'هوية المدير', labelEn: 'Manager ID', status: 'pending' },
-      ];
-    case 'seller':
-      return [
-        { id: 'phone', labelAr: 'رقم الهاتف', labelEn: 'Phone Number', status: 'verified' },
-        { id: 'email', labelAr: 'البريد الإلكتروني', labelEn: 'Email Address', status: 'required' },
-        { id: 'national_id', labelAr: 'الهوية الوطنية', labelEn: 'National ID', status: 'pending' },
-        { id: 'selfie', labelAr: 'السيلفي الحي', labelEn: 'Live Selfie', status: 'pending' },
-        { id: 'bank_account', labelAr: 'الحساب البنكي', labelEn: 'Bank Account', status: 'pending' },
       ];
     case 'supplier':
       return [
@@ -496,6 +489,7 @@ export function restoreDraftFields(role: string, data: Record<string, unknown>) 
 
   switch (role) {
     case 'store_manager':
+    case 'seller':
       if (data.commercialRegisterNumber) store.setField('commercialRegisterNumber', data.commercialRegisterNumber);
       if (data.commercialRegisterFile) store.setField('commercialRegisterFile', data.commercialRegisterFile);
       if (data.iban) store.setField('iban', data.iban);
@@ -503,25 +497,6 @@ export function restoreDraftFields(role: string, data: Record<string, unknown>) 
       if (data.bankLetterFile) store.setField('bankLetterFile', data.bankLetterFile);
       if (data.managerIdFront) store.setField('idFrontFile', data.managerIdFront);
       if (data.managerIdBack) store.setField('idBackFile', data.managerIdBack);
-      break;
-    case 'seller':
-      if (data.freelanceDocFile) store.setField('freelanceDocumentFile', data.freelanceDocFile);
-      if (data.nationalIdFront) store.setField('freelancerIdFrontFile', data.nationalIdFront);
-      if (data.nationalIdBack) store.setField('freelancerIdBackFile', data.nationalIdBack);
-      if (data.iban) store.setField('freelancerIban', data.iban);
-      // Always mark liveness as completed when restoring data —
-      // the user already went through this step before,
-      // and liveness is optional (skip button exists, API doesn't require it)
-      store.setField('livenessCompleted', true);
-      // Try to restore selfie URL
-      if (data.selfieUrls) {
-        try {
-          const urls = JSON.parse(data.selfieUrls as string);
-          if (Array.isArray(urls) && urls.length > 0) {
-            store.setField('livenessSelfie', urls[0]);
-          }
-        } catch { /* ignore */ }
-      }
       break;
     case 'supplier':
       if (data.commercialLicense) store.setField('commercialLicenseFile', data.commercialLicense);
@@ -543,16 +518,11 @@ export function restoreDraftFields(role: string, data: Record<string, unknown>) 
  */
 export function calcResumeStep(role: string, data: Record<string, unknown>): number {
   switch (role) {
-    case 'store_manager': {
+    case 'store_manager':
+    case 'seller': {
       if (!data.commercialRegisterNumber && !data.commercialRegisterFile) return 0;
       if (!data.iban || !data.beneficiaryName || !data.bankLetterFile) return 1;
       if (!data.managerIdFront || !data.managerIdBack) return 2;
-      return 2;
-    }
-    case 'seller': {
-      if (!data.nationalIdFront || !data.nationalIdBack) return 1;
-      if (!(data.livenessScore && typeof data.livenessScore === 'number' && data.livenessScore > 0)) return 1;
-      if (!data.iban) return 2;
       return 2;
     }
     case 'supplier': {

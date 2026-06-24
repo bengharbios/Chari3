@@ -210,7 +210,7 @@ export async function GET(request: NextRequest) {
       }
 
       case 'seller': {
-        const v = user.freelancerVerification;
+        const v = user.storeVerification;
         const hasVerification = !!v;
         const rejectionFields = parseRejectionReasons(v?.rejectionReasons ?? null);
         rejectionReasons = rejectionFields;
@@ -225,36 +225,20 @@ export async function GET(request: NextRequest) {
 
         items = [
           {
-            key: 'national_id',
-            labelAr: 'الهوية الوطنية',
-            labelEn: 'National ID',
+            key: 'commercial_register',
+            labelAr: 'السجل التجاري',
+            labelEn: 'Commercial Register',
             status: isApproved
               ? 'verified'
-              : v?.nationalIdFront && v?.nationalIdBack
-                ? isRejected && rejectionFields.includes('national_id')
+              : v?.commercialRegisterNumber && v?.commercialRegisterFile
+                ? isRejected && rejectionFields.includes('commercial_register')
                   ? 'rejected'
                   : v.submittedAt ? 'pending' : 'required'
                 : 'required',
-            rejectionReason: (isRejected && rejectionFields.includes('national_id'))
-              ? (adminNotes || ITEM_KEY_LABELS['national_id'])
+            rejectionReason: (isRejected && rejectionFields.includes('commercial_register'))
+              ? (adminNotes || ITEM_KEY_LABELS['commercial_register'])
               : undefined,
-            uploaded: !!(v?.nationalIdFront && v?.nationalIdBack),
-          },
-          {
-            key: 'freelance_document',
-            labelAr: 'وثيقة العمل الحر',
-            labelEn: 'Freelance Document',
-            status: isApproved
-              ? 'verified'
-              : v?.freelanceDocFile
-                ? isRejected && rejectionFields.includes('freelance_document')
-                  ? 'rejected'
-                  : v.submittedAt ? 'pending' : 'required'
-                : 'required',
-            rejectionReason: (isRejected && rejectionFields.includes('freelance_document'))
-              ? (adminNotes || ITEM_KEY_LABELS['freelance_document'])
-              : undefined,
-            uploaded: !!v?.freelanceDocFile,
+            uploaded: !!v?.commercialRegisterFile,
           },
           {
             key: 'bank_account',
@@ -262,7 +246,7 @@ export async function GET(request: NextRequest) {
             labelEn: 'Bank Account (IBAN)',
             status: isApproved
               ? 'verified'
-              : v?.iban
+              : v?.iban && v?.beneficiaryName && v?.bankLetterFile
                 ? isRejected && rejectionFields.includes('bank_account')
                   ? 'rejected'
                   : v.submittedAt ? 'pending' : 'required'
@@ -270,23 +254,23 @@ export async function GET(request: NextRequest) {
             rejectionReason: (isRejected && rejectionFields.includes('bank_account'))
               ? (adminNotes || ITEM_KEY_LABELS['bank_account'])
               : undefined,
-            uploaded: false,
+            uploaded: !!v?.bankLetterFile,
           },
           {
-            key: 'liveness',
-            labelAr: 'التحقق الحي',
-            labelEn: 'Liveness Check',
+            key: 'manager_id',
+            labelAr: 'هوية المدير',
+            labelEn: 'Manager ID',
             status: isApproved
               ? 'verified'
-              : (v?.livenessScore ?? 0) > 0
-                ? isRejected && rejectionFields.includes('liveness')
+              : v?.managerIdFront && v?.managerIdBack
+                ? isRejected && rejectionFields.includes('manager_id')
                   ? 'rejected'
                   : v.submittedAt ? 'pending' : 'required'
                 : 'required',
-            rejectionReason: (isRejected && rejectionFields.includes('liveness'))
-              ? (adminNotes || ITEM_KEY_LABELS['liveness'])
+            rejectionReason: (isRejected && rejectionFields.includes('manager_id'))
+              ? (adminNotes || ITEM_KEY_LABELS['manager_id'])
               : undefined,
-            uploaded: false,
+            uploaded: !!(v?.managerIdFront && v?.managerIdBack),
           },
         ];
 

@@ -300,15 +300,18 @@ export async function GET(request: NextRequest) {
         break;
 
       case 'seller':
-        if (user.freelancerVerification) {
-          verificationData = user.freelancerVerification as unknown as Record<string, unknown>;
-          verificationItems = buildFreelancerItems({
-            freelanceDocFile: user.freelancerVerification.freelanceDocFile,
-            nationalIdFront: user.freelancerVerification.nationalIdFront,
-            nationalIdBack: user.freelancerVerification.nationalIdBack,
-            iban: user.freelancerVerification.iban,
-            verificationStatus: user.freelancerVerification.verificationStatus,
-            rejectionReasons: user.freelancerVerification.rejectionReasons,
+        if (user.storeVerification) {
+          verificationData = user.storeVerification as unknown as Record<string, unknown>;
+          verificationItems = buildStoreItems({
+            commercialRegisterNumber: user.storeVerification.commercialRegisterNumber,
+            commercialRegisterFile: user.storeVerification.commercialRegisterFile,
+            iban: user.storeVerification.iban,
+            beneficiaryName: user.storeVerification.beneficiaryName,
+            bankLetterFile: user.storeVerification.bankLetterFile,
+            managerIdFront: user.storeVerification.managerIdFront,
+            managerIdBack: user.storeVerification.managerIdBack,
+            verificationStatus: user.storeVerification.verificationStatus,
+            rejectionReasons: user.storeVerification.rejectionReasons,
           });
         }
         break;
@@ -447,7 +450,7 @@ async function handleSubmit(body: Record<string, unknown>) {
       missingFields = validateStoreFields(body);
       break;
     case 'seller':
-      missingFields = validateFreelancerFields(body);
+      missingFields = validateStoreFields(body);
       break;
     case 'supplier':
       missingFields = validateSupplierFields(body);
@@ -511,21 +514,17 @@ async function handleSubmit(body: Record<string, unknown>) {
       }
 
       case 'seller': {
-        // Save liveness selfie if provided
-        const livenessSelfie = body.livenessSelfie as string | undefined;
-        const selfieJson = livenessSelfie ? JSON.stringify([livenessSelfie]) : undefined;
-        const livenessScore = livenessSelfie ? 0.85 : null;
-
-        const record = await db.freelancerVerification.upsert({
+        const record = await db.storeVerification.upsert({
           where: { userId: userId as string },
           create: {
             userId: userId as string,
-            freelanceDocFile: (body.freelanceDocumentFile as string) || null,
-            nationalIdFront: body.freelancerIdFrontFile as string,
-            nationalIdBack: body.freelancerIdBackFile as string,
-            iban: body.freelancerIban as string,
-            selfieUrls: selfieJson,
-            livenessScore: livenessScore,
+            commercialRegisterNumber: body.commercialRegisterNumber as string,
+            commercialRegisterFile: body.commercialRegisterFile as string,
+            iban: body.iban as string,
+            beneficiaryName: body.beneficiaryName as string,
+            bankLetterFile: body.bankLetterFile as string,
+            managerIdFront: body.idFrontFile as string,
+            managerIdBack: body.idBackFile as string,
             verificationStatus: 'pending',
             rejectionReasons: null,
             adminNotes: null,
@@ -534,12 +533,13 @@ async function handleSubmit(body: Record<string, unknown>) {
             submittedAt: new Date(),
           },
           update: {
-            freelanceDocFile: (body.freelanceDocumentFile as string) || null,
-            nationalIdFront: body.freelancerIdFrontFile as string,
-            nationalIdBack: body.freelancerIdBackFile as string,
-            iban: body.freelancerIban as string,
-            selfieUrls: selfieJson,
-            livenessScore: livenessScore,
+            commercialRegisterNumber: body.commercialRegisterNumber as string,
+            commercialRegisterFile: body.commercialRegisterFile as string,
+            iban: body.iban as string,
+            beneficiaryName: body.beneficiaryName as string,
+            bankLetterFile: body.bankLetterFile as string,
+            managerIdFront: body.idFrontFile as string,
+            managerIdBack: body.idBackFile as string,
             verificationStatus: 'pending',
             rejectionReasons: null,
             adminNotes: null,

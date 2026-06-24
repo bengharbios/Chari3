@@ -214,7 +214,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
     if (!user || user.role === 'admin' || user.role === 'buyer') return;
 
     try {
-      const res = await fetch(`/api/seller/onboarding?userId=${user.id}`);
+      const res = await fetch(`/api/onboarding/status?userId=${user.id}`);
       if (!res.ok) return;
       const data = await res.json();
       if (!data.success) return;
