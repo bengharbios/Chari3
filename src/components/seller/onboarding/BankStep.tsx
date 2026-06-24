@@ -5,6 +5,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { toast } from 'sonner';
 
 export default function BankStep({ data, updateData }: { data: any; updateData: (d: any) => void }) {
   const { t } = useTranslation();
@@ -134,12 +135,32 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
         <Input 
           type="file" 
           accept=".pdf,.jpg,.png,.jpeg" 
-          onChange={(e) => {
+          onChange={async (e) => {
             const file = e.target.files?.[0];
-            if (file) updateData({ bankLetterFile: 'https://fake-s3.com/bank.pdf' });
+            if (!file) return;
+
+            const uploadToast = toast.loading(t('onboarding.bank.uploading') || 'جاري رفع إثبات الحساب...');
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+              const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+              });
+              const json = await res.json();
+              if (json.success) {
+                updateData({ bankLetterFile: json.url });
+                toast.success(t('onboarding.bank.uploadSuccess') || 'تم رفع إثبات الحساب بنجاح!', { id: uploadToast });
+              } else {
+                toast.error(json.error || 'فشل رفع الملف', { id: uploadToast });
+              }
+            } catch (err) {
+              toast.error('حدث خطأ أثناء رفع الملف', { id: uploadToast });
+            }
           }} 
         />
-        {data.bankLetterFile && <p className="text-sm text-green-600">{t('onboarding.common.uploadSuccess')}</p>}
+        {data.bankLetterFile && <p className="text-sm text-green-600 font-medium">{t('onboarding.common.uploadSuccess')}</p>}
       </div>
     </div>
   );

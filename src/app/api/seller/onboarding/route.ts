@@ -2,6 +2,22 @@ import { auth, getSession } from '@/lib/better-auth';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { unlink } from 'fs/promises';
+import path from 'path';
+
+async function deleteOldFile(oldUrl: string | null | undefined, newUrl: string | null | undefined) {
+  if (!oldUrl || !newUrl || oldUrl === newUrl) return;
+  if (!oldUrl.startsWith('/api/files/')) return;
+  try {
+    const fileName = oldUrl.replace('/api/files/', '');
+    const uploadDir = process.env.UPLOAD_DIR || path.join(process.cwd(), '..', 'ChariDay_uploads');
+    const filePath = path.join(uploadDir, fileName);
+    await unlink(filePath);
+    console.log('[cleanup] Deleted old document:', filePath);
+  } catch (err) {
+    console.warn('[cleanup] Failed to delete old file:', oldUrl, err);
+  }
+}
 
 const ALLOWED_FIELDS = [
   'entityType',
@@ -66,6 +82,26 @@ export async function POST(req: Request) {
         } else {
           dataToSave[key] = rawData[key];
         }
+      }
+    }
+
+    // Fetch existing record to check for old files to delete
+    const existing = await db.storeVerification.findUnique({
+      where: { userId }
+    });
+
+    if (existing) {
+      if (dataToSave.commercialRegisterFile && existing.commercialRegisterFile) {
+        await deleteOldFile(existing.commercialRegisterFile, dataToSave.commercialRegisterFile);
+      }
+      if (dataToSave.bankLetterFile && existing.bankLetterFile) {
+        await deleteOldFile(existing.bankLetterFile, dataToSave.bankLetterFile);
+      }
+      if (dataToSave.powerOfAttorneyFile && existing.powerOfAttorneyFile) {
+        await deleteOldFile(existing.powerOfAttorneyFile, dataToSave.powerOfAttorneyFile);
+      }
+      if (dataToSave.vatCertificateFile && existing.vatCertificateFile) {
+        await deleteOldFile(existing.vatCertificateFile, dataToSave.vatCertificateFile);
       }
     }
 

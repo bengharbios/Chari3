@@ -39,10 +39,8 @@ export default function OnboardingWizard() {
         console.error("Failed to fetch onboarding data", e);
       }
     };
-    if (isWizardOpen) {
-      fetchData();
-    }
-  }, [user?.id, isWizardOpen]);
+    fetchData();
+  }, [user?.id]);
 
   const handleUpdateData = (stepData: any) => {
     setFormData((prev: any) => ({ ...prev, ...stepData }));

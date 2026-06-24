@@ -49,8 +49,17 @@ export default function VerificationStatusPage() {
       .then((data) => {
         if (data.success) {
           if (data.details) setDetails(data.details);
+          
+          // Synchronize Zustand store status with actual database status
+          const store = useOnboardingStore.getState();
+          if (data.accountStatus) {
+            store.setAccountStatus(data.accountStatus as any);
+          }
+          store.setRejectionReason(data.adminNotes || null);
+          store.setRejectedItems(data.rejectionReasons || []);
+
           if (data.items && data.items.length > 0) {
-            useOnboardingStore.getState().setVerificationItems(data.items.map((i: any) => ({
+            store.setVerificationItems(data.items.map((i: any) => ({
               id: i.key,
               labelAr: i.labelAr,
               labelEn: i.labelEn,

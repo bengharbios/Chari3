@@ -5,9 +5,10 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { toast } from 'sonner';
 
 export default function TaxStep({ data, updateData }: { data: any; updateData: (d: any) => void }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   return (
     <div className="space-y-6">
@@ -46,15 +47,36 @@ export default function TaxStep({ data, updateData }: { data: any; updateData: (
             <Input 
               type="file" 
               accept=".pdf,.jpg,.png" 
-              onChange={(e) => {
+              onChange={async (e) => {
                 const file = e.target.files?.[0];
-                if (file) updateData({ vatCertificateFile: 'https://fake-s3.com/vat.pdf' });
+                if (!file) return;
+
+                const uploadToast = toast.loading(locale === 'ar' ? 'جاري رفع شهادة الضريبة...' : 'Uploading VAT certificate...');
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                  const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                  });
+                  const json = await res.json();
+                  if (json.success) {
+                    updateData({ vatCertificateFile: json.url });
+                    toast.success(locale === 'ar' ? 'تم رفع شهادة الضريبة بنجاح!' : 'VAT certificate uploaded successfully!', { id: uploadToast });
+                  } else {
+                    toast.error(json.error || (locale === 'ar' ? 'فشل رفع الملف' : 'Upload failed'), { id: uploadToast });
+                  }
+                } catch (err) {
+                  toast.error(locale === 'ar' ? 'حدث خطأ أثناء رفع الملف' : 'Error uploading file', { id: uploadToast });
+                }
               }} 
             />
-            {data.vatCertificateFile && <p className="text-sm text-green-600">{t('onboarding.common.uploadSuccess')}</p>}
+            {data.vatCertificateFile && <p className="text-sm text-green-600 font-medium">{t('onboarding.common.uploadSuccess')}</p>}
           </div>
         </div>
       )}
     </div>
   );
 }
+

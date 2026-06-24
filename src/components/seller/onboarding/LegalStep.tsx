@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
 
 export default function LegalStep({ data, updateData }: { data: any; updateData: (d: any) => void }) {
   const { t, locale } = useTranslation();
@@ -269,12 +270,32 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
         <Input 
           type="file" 
           accept=".pdf,.jpg,.jpeg,.png" 
-          onChange={(e) => {
+          onChange={async (e) => {
             const file = e.target.files?.[0];
-            if (file) updateData({ commercialRegisterFile: 'https://fake-s3.com/upload.pdf' });
+            if (!file) return;
+
+            const uploadToast = toast.loading(locale === 'ar' ? 'جاري رفع السجل التجاري...' : 'Uploading Commercial Register...');
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+              const res = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+              });
+              const json = await res.json();
+              if (json.success) {
+                updateData({ commercialRegisterFile: json.url });
+                toast.success(locale === 'ar' ? 'تم رفع السجل التجاري بنجاح!' : 'Commercial Register uploaded successfully!', { id: uploadToast });
+              } else {
+                toast.error(json.error || (locale === 'ar' ? 'فشل رفع الملف' : 'Upload failed'), { id: uploadToast });
+              }
+            } catch (err) {
+              toast.error(locale === 'ar' ? 'حدث خطأ أثناء رفع الملف' : 'Error uploading file', { id: uploadToast });
+            }
           }} 
         />
-        {data.commercialRegisterFile && <p className="text-sm text-green-600">{t('onboarding.common.uploadSuccess')}</p>}
+        {data.commercialRegisterFile && <p className="text-sm text-green-600 font-medium">{t('onboarding.common.uploadSuccess')}</p>}
       </div>
     </div>
   );

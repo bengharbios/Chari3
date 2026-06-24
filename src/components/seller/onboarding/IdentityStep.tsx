@@ -306,9 +306,29 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
           <Input 
             type="file" 
             accept=".pdf,.jpg,.png" 
-            onChange={(e) => {
+            onChange={async (e) => {
               const file = e.target.files?.[0];
-              if (file) updateData({ powerOfAttorneyFile: 'https://fake-s3.com/poa.pdf' });
+              if (!file) return;
+
+              const uploadToast = toast.loading('جاري رفع مستند التفويض...');
+              const formData = new FormData();
+              formData.append('file', file);
+
+              try {
+                const res = await fetch('/api/upload', {
+                  method: 'POST',
+                  body: formData,
+                });
+                const json = await res.json();
+                if (json.success) {
+                  updateData({ powerOfAttorneyFile: json.url });
+                  toast.success('تم رفع تفويض التوقيع بنجاح!', { id: uploadToast });
+                } else {
+                  toast.error(json.error || 'فشل رفع الملف', { id: uploadToast });
+                }
+              } catch (err) {
+                toast.error('حدث خطأ أثناء رفع الملف', { id: uploadToast });
+              }
             }} 
           />
         </div>

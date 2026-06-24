@@ -607,6 +607,9 @@ function RejectionDialog({
             <XCircle className="size-5" />
             {isAr ? 'رفض طلب التفعيل' : 'Reject Activation Request'}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {isAr ? 'نموذج لتوضيح سبب رفض طلب التفعيل للتاجر' : 'Form to specify the rejection reason for this activation request'}
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
@@ -713,6 +716,9 @@ function RequestEditDialog({
             <Edit className="size-5" />
             {isAr ? 'طلب تعديل المستندات' : 'Request Document Edit'}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {isAr ? 'نموذج لاختيار الحقول التي تحتاج لتعديل من قبل التاجر' : 'Form to select the fields that need correction by the merchant'}
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">

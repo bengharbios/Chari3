@@ -64,8 +64,25 @@ const statusConfig: Record<
 
 function StickyStatusBanner() {
   const { locale, setCurrentPage } = useAppStore();
+  const { user } = useAuthStore();
   const { accountStatus, isBannerDismissed, dismissBanner, rejectionReason, isDraftSaved, clearDraftFlag, setWizardOpen } = useOnboardingStore();
   const isAr = locale === 'ar';
+
+  // Synchronize status on mount/session load
+  React.useEffect(() => {
+    if (!user?.id) return;
+    fetch(`/api/onboarding/status?userId=${user.id}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.accountStatus) {
+          const store = useOnboardingStore.getState();
+          store.setAccountStatus(data.accountStatus as any);
+          store.setRejectionReason(data.adminNotes || null);
+          store.setRejectedItems(data.rejectionReasons || []);
+        }
+      })
+      .catch(() => {});
+  }, [user?.id]);
 
   // Banner shows for: incomplete, pending, rejected
   if (isBannerDismissed) return null;
