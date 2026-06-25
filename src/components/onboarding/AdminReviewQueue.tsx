@@ -19,6 +19,7 @@ import {
   TrendingDown,
   Timer,
   Loader2,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppStore } from '@/lib/store';
@@ -296,6 +297,14 @@ function DetailModal({
   isAr,
   loading,
 }: DetailModalProps) {
+  const [activePreviewDoc, setActivePreviewDoc] = useState<any>(null);
+
+  React.useEffect(() => {
+    if (!open) {
+      setActivePreviewDoc(null);
+    }
+  }, [open]);
+
   if (!merchant) return null;
   const roleCfg = ROLE_CONFIG[merchant.role];
 
@@ -470,7 +479,7 @@ function DetailModal({
                 {merchant.documents.map((doc) => (
                   <div
                     key={doc.id}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${activePreviewDoc?.id === doc.id ? 'border-indigo-500 bg-indigo-50/10' : 'bg-muted/30 border-border'}`}
                   >
                     <div className="flex items-center gap-2">
                       <FileText className="size-4 text-muted-foreground" />
@@ -482,23 +491,70 @@ function DetailModal({
                       )}
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="icon" className="size-8">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="size-8"
+                        onClick={() => setActivePreviewDoc(doc)}
+                        title={isAr ? 'معاينة المستند' : 'Preview'}
+                      >
                         <Eye className="size-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="size-8">
-                        <Download className="size-4" />
+                      <Button variant="ghost" size="icon" className="size-8" asChild title={isAr ? 'تحميل' : 'Download'}>
+                        <a href={doc.url} download>
+                          <Download className="size-4" />
+                        </a>
                       </Button>
                     </div>
                   </div>
                 ))}
               </div>
-              {/* Document preview placeholder */}
-              <div className="mt-3 p-8 rounded-lg border-2 border-dashed bg-muted/20 text-center">
-                <FileText className="size-8 mx-auto text-muted-foreground/50" />
-                <p className="text-xs text-muted-foreground mt-2">
-                  {isAr ? 'معاينة المستند ستظهر هنا' : 'Document preview will appear here'}
-                </p>
-              </div>
+              {/* Document preview panel */}
+              {activePreviewDoc ? (
+                <div className="mt-4 p-4 rounded-xl border border-indigo-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 space-y-3">
+                  <div className="flex justify-between items-center pb-2 border-b dark:border-slate-800">
+                    <span className="text-xs font-bold text-gray-900 dark:text-slate-100 flex items-center gap-1">
+                      <FileText className="size-3.5 text-indigo-500" />
+                      {isAr ? activePreviewDoc.name : activePreviewDoc.nameEn}
+                    </span>
+                    <Button variant="ghost" size="icon" className="size-6 text-muted-foreground hover:bg-muted" onClick={() => setActivePreviewDoc(null)}>
+                      <X className="size-3.5" />
+                    </Button>
+                  </div>
+                  <div className="rounded-lg overflow-hidden border bg-white dark:bg-slate-900 aspect-video flex flex-col items-center justify-center relative min-h-[280px]">
+                    {activePreviewDoc.url.toLowerCase().endsWith('.pdf') || activePreviewDoc.url.includes('.pdf?') ? (
+                      <div className="w-full h-full flex flex-col">
+                        <p className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 p-1.5 rounded text-center font-medium border-b border-amber-100 dark:border-amber-900/10">
+                          {isAr 
+                            ? 'تلميح أمان: إذا لم تظهر المعاينة أدناه تلقائياً، فهذا بسبب قيود الأمان (X-Frame-Options) المفروضة من خادم الاستضافة.' 
+                            : 'Security Tip: If the preview does not load below, it is due to security restrictions (X-Frame-Options) enforced by your hosting provider.'}
+                          <a href={activePreviewDoc.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline mx-1 font-bold inline-block">
+                            {isAr ? 'اضغط هنا لفتح الملف بأمان في نافذة مستقلة ↗' : 'Click here to open the file securely in a new window ↗'}
+                          </a>
+                        </p>
+                        <iframe
+                          src={activePreviewDoc.url}
+                          className="w-full flex-1 border-0 bg-white"
+                          title="Admin Document Preview"
+                        />
+                      </div>
+                    ) : (
+                      <img
+                        src={activePreviewDoc.url}
+                        alt="Document Preview"
+                        className="max-h-[350px] max-w-full object-contain p-2"
+                      />
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-3 p-8 rounded-lg border-2 border-dashed bg-muted/20 text-center">
+                  <FileText className="size-8 mx-auto text-muted-foreground/50" />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {isAr ? 'معاينة المستند ستظهر هنا (اضغط على أيقونة العين 👁️ لمشاهدة المرفق)' : 'Document preview will appear here (Click the Eye icon 👁️ to view attachment)'}
+                  </p>
+                </div>
+              )}
             </div>
 
             <Separator />
