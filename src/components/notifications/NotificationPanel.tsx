@@ -270,7 +270,10 @@ export default function NotificationPanel() {
     clearAll,
     refreshForUser,
     addNotification,
+    setNotifications,
   } = useNotificationStore();
+
+  const [mounted, setMounted] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
 
@@ -284,9 +287,17 @@ export default function NotificationPanel() {
     );
   }, [isAuthenticated, user?.id, user?.accountStatus, user?.isVerified, refreshForUser]);
 
-  // Poll DB notifications every 30 seconds and merge with local
+  // Sync mounted state
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Fetch notifications from DB on mount and when panel is opened (eliminates heavy background polling)
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
+
+    // Prevent fetching if the panel is closed and we already loaded initial notifications
+    if (mounted && !isOpen && notifications.length > 0) return;
 
     const fetchDbNotifications = async () => {
       try {
@@ -295,7 +306,7 @@ export default function NotificationPanel() {
         const data = await res.json();
         if (!data.success || !data.notifications) return;
 
-        data.notifications.forEach((dbNotif: {
+        const dbNotifications = data.notifications.map((dbNotif: {
           id: string; title: string; titleEn?: string;
           body: string; bodyEn?: string; type: string;
           isRead: boolean; createdAt: string; data?: string;
@@ -316,7 +327,7 @@ export default function NotificationPanel() {
             alert: 'bg-red-100 dark:bg-red-900/30',
           };
 
-          addNotification({
+          return {
             id: `db-${dbNotif.id}`,
             category: cat as any,
             titleAr: dbNotif.title,
@@ -332,17 +343,17 @@ export default function NotificationPanel() {
             iconBg: iconBgMap[cat] || iconBgMap.system,
             urgency: dbNotif.type === 'new_order' ? 'high' : 'normal',
             data: dbNotif.data,
-          });
+          };
         });
+
+        // Completely replace notifications in store to sync deletions and read state
+        setNotifications(dbNotifications);
       } catch {
         // Silent fail — notifications are not critical
       }
     };
-
-    fetchDbNotifications(); // fetch immediately
-    const interval = setInterval(fetchDbNotifications, 30000); // every 30s
-    return () => clearInterval(interval);
-  }, [isAuthenticated, user?.id, addNotification]);
+    fetchDbNotifications();
+  }, [isAuthenticated, user?.id, isOpen, mounted, setNotifications, user.role]);
 
   // Filter and Sort: filter by active tab, then sort: unread first → by urgency → newest first
   const filteredAndSortedNotifications = useMemo(() => {
