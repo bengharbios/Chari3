@@ -136,11 +136,12 @@ export default function StoreDashboard() {
     );
   }
 
-  const { kpis, products, recentOrders } = dashboardData;
+  const { kpis = {}, products = [], recentOrders = [] } = dashboardData || {};
 
   const storeCurrency = dashboardData?.currency || 'DZD';
   const formatStoreCurrency = (amount: number) => {
-    const formattedAmount = amount.toLocaleString(locale === 'ar' ? 'ar-DZ' : 'en-US');
+    const safeAmount = amount ?? 0;
+    const formattedAmount = safeAmount.toLocaleString(locale === 'ar' ? 'ar-DZ' : 'en-US');
     if (locale === 'ar') {
       return storeCurrency === 'DZD' ? `${formattedAmount} د.ج` : `${formattedAmount} ${storeCurrency}`;
     }
@@ -274,7 +275,7 @@ export default function StoreDashboard() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'الإيرادات', 'REVENUE')}</p>
                   <div className="flex items-baseline gap-2">
-                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">{formatStoreCurrency(kpis.monthRevenue ?? 0)}</h3>
+                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">{formatStoreCurrency(kpis?.monthRevenue ?? 0)}</h3>
                     <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 18%</span>
                   </div>
                   <p className="text-[10px] text-muted-foreground truncate mt-1">{formatStoreCurrency(3218)} {t(locale, 'اليوم', 'today')}</p>
@@ -442,13 +443,14 @@ export default function StoreDashboard() {
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-border">
-                     {recentOrders.slice(0, 5).map((item: any, idx: number) => {
+                     {(recentOrders || []).slice(0, 5).map((item: any, idx: number) => {
+                        if (!item || !item.order) return null;
                         const st = STATUS_CONFIG[item.order.status] ?? STATUS_CONFIG.pending;
                         return (
                           <tr key={idx} className="hover:bg-muted/30 transition-colors">
-                            <td className="px-5 py-3 font-mono text-xs">#{item.order.orderNumber}</td>
-                            <td className="px-5 py-3 font-medium text-[13px]">{item.order.user?.name || 'Guest'}</td>
-                            <td className="px-5 py-3 text-[13px] max-w-[150px] truncate">{item.product.name}</td>
+                            <td className="px-5 py-3 font-mono text-xs">#{item.order.orderNumber || ''}</td>
+                            <td className="px-5 py-3 font-medium text-[13px]">{item.order.buyer?.name || item.order.user?.name || 'Guest'}</td>
+                            <td className="px-5 py-3 text-[13px] max-w-[150px] truncate">{item.product?.name || item.productName || ''}</td>
                             <td className="px-5 py-3 font-bold text-[13px]">{formatStoreCurrency(item.total)}</td>
                             <td className="px-5 py-3">
                               <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${st.color}`}>
@@ -456,7 +458,7 @@ export default function StoreDashboard() {
                               </span>
                             </td>
                             <td className="px-5 py-3 text-[11px] text-muted-foreground">
-                              {new Date(item.order.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US')}
+                              {item.order.createdAt ? new Date(item.order.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US') : ''}
                             </td>
                           </tr>
                         );
