@@ -61,7 +61,7 @@ export async function GET(
         'Content-Disposition': `inline; filename="${basename}"`,
         'Cache-Control': 'private, max-age=86400',
         'X-Content-Type-Options': 'nosniff',
-        'X-Frame-Options': 'DENY',
+        'X-Frame-Options': 'SAMEORIGIN',
         'Referrer-Policy': 'no-referrer',
       },
     });

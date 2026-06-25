@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { localeDirections } from '@/lib/i18n/config';
+import NotificationPanel from '@/components/notifications/NotificationPanel';
 
 function AdminBreadcrumb() {
   const pathname = usePathname();
@@ -304,6 +305,11 @@ export default function AdminLayoutWrapper({
                 </svg>
               )}
             </button>
+
+            {/* Notifications */}
+            <div className={cn(themeMode === 'dark' ? '[&_button]:text-[#8899aa] [&_button:hover]:text-white' : '')}>
+              <NotificationPanel />
+            </div>
 
             {/* Messages */}
             <button
