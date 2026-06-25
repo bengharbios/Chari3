@@ -345,6 +345,7 @@ export const useAuthStore = create<AuthState>()(
         const state = { user, isAuthenticated: true };
         if (typeof window !== 'undefined') {
           try { localStorage.setItem('platform-auth-store', JSON.stringify({ state, version: 0 })); } catch {}
+          try { sessionStorage.setItem('just_logged_in', Date.now().toString()); } catch {}
         }
 
         set({

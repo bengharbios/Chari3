@@ -21,6 +21,22 @@ export default function AuthSync() {
       loginWithUser(data.user as any); // Cast to any to map BetterAuth User to Zustand User
     } else if (!data?.user && isAuthenticated) {
       // User is logged out on the server but still authenticated in Zustand
+      
+      // Check if they just logged in within the last 10 seconds to prevent race conditions with cached useSession()
+      if (typeof window !== 'undefined') {
+        try {
+          const justLoggedInStr = sessionStorage.getItem('just_logged_in');
+          if (justLoggedInStr) {
+            const diff = Date.now() - parseInt(justLoggedInStr, 10);
+            if (diff < 10000) { // 10 seconds guard
+              return;
+            }
+          }
+        } catch (e) {
+          console.error('[AuthSync] failed to read sessionStorage:', e);
+        }
+      }
+
       const currentUser = useAuthStore.getState().user;
       // Preserve demo users (whose IDs typically contain '-001')
       if (currentUser?.id?.includes('-001')) {
