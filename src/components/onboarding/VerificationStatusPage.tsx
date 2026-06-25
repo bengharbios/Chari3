@@ -44,7 +44,9 @@ export default function VerificationStatusPage() {
   // Fetch full verification details
   useEffect(() => {
     if (!user?.id) return;
-    fetch(`/api/onboarding/status?userId=${user.id}`)
+    fetch(`/api/onboarding/status?userId=${user.id}&t=${Date.now()}`, {
+      cache: 'no-store'
+    })
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {

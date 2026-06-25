@@ -30,7 +30,9 @@ export default function OnboardingWizard() {
     const fetchData = async () => {
       if (!user?.id) return;
       try {
-        const res = await fetch(`/api/seller/onboarding?userId=${user.id}`);
+        const res = await fetch(`/api/seller/onboarding?userId=${user.id}&t=${Date.now()}`, {
+          cache: 'no-store'
+        });
         const data = await res.json();
         if (data.success && data.data) {
           setFormData(data.data);
