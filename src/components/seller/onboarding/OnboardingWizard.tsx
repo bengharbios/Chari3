@@ -226,11 +226,21 @@ export default function OnboardingWizard() {
               </div>
               <div className="p-4 bg-gray-100 dark:bg-slate-950 flex justify-center items-center h-[65vh] overflow-y-auto">
                 {previewFileUrl.toLowerCase().endsWith('.pdf') || previewFileUrl.includes('.pdf?') ? (
-                  <iframe
-                    src={previewFileUrl}
-                    className="w-full h-full rounded-lg border-0 bg-white shadow-inner"
-                    title="Document PDF Preview"
-                  />
+                  <div className="w-full h-full flex flex-col gap-2">
+                    <p className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 p-2 rounded border border-amber-100 dark:border-amber-900/30 text-center font-medium">
+                      {locale === 'ar' 
+                        ? 'تلميح أمان: إذا لم تظهر المعاينة أدناه تلقائياً، فهذا بسبب قيود الأمان (X-Frame-Options) المفروضة من خادم الاستضافة الخاص بك.' 
+                        : 'Security Tip: If the preview does not load below, it is due to security restrictions (X-Frame-Options) enforced by your hosting provider.'}
+                      <a href={previewFileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline mx-1 font-bold inline-block">
+                        {locale === 'ar' ? 'اضغط هنا لفتح الملف بأمان في نافذة مستقلة ↗' : 'Click here to open the file securely in a new window ↗'}
+                      </a>
+                    </p>
+                    <iframe
+                      src={previewFileUrl}
+                      className="w-full flex-1 rounded-lg border-0 bg-white shadow-inner"
+                      title="Document PDF Preview"
+                    />
+                  </div>
                 ) : (
                   <img
                     src={previewFileUrl}
