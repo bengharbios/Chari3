@@ -16,8 +16,8 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
     const defaultCr = { wilaya: '16', branch: '00', year: '21', type: 'A', sn: '' };
     if (!cr) return defaultCr;
     
-    // Rough regex to match the pattern: (\d{2})/(\d{2})-(\d{2})([ABDabd])(\d+)
-    const match = cr.match(/^(\d{2})\/(\d{2})-(\d{2})([A-Za-z])(\d+)$/);
+    // Rough regex to match the pattern: (\d{2})/(\d{2})-(\d{2})([ABDabd])(\d*)
+    const match = cr.match(/^(\d{2})\/(\d{2})-(\d{2})([A-Za-z])(\d*)$/);
     if (match) {
       return {
         wilaya: match[1],
@@ -37,7 +37,7 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
   const [selectedCountry, setSelectedCountry] = useState(data.country || 'DZ');
   const [crFormat, setCrFormat] = useState(() => {
     if (!data.commercialRegisterNumber) return 'structured';
-    const isStructured = /^(\d{2})\/(\d{2})-(\d{2})([A-Za-z])(\d+)$/.test(data.commercialRegisterNumber);
+    const isStructured = /^(\d{2})\/(\d{2})-(\d{2})([A-Za-z])(\d*)$/.test(data.commercialRegisterNumber);
     return isStructured ? 'structured' : 'freeform';
   });
 
@@ -66,7 +66,7 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
   useEffect(() => {
     if (selectedCountry === 'DZ' && crFormat === 'structured') {
       const formattedCR = `${crParts.wilaya}/${crParts.branch}-${crParts.year}${crParts.type}${crParts.sn}`;
-      if (formattedCR !== data.commercialRegisterNumber && crParts.sn) {
+      if (formattedCR !== data.commercialRegisterNumber) {
         updateData({ commercialRegisterNumber: formattedCR });
       }
     }
@@ -191,27 +191,15 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
             <Label className="text-base font-bold mb-2 block">{t('onboarding.legal.crNumberLabel')}</Label>
             <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">{t('onboarding.legal.crExample')}</p>
             <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap" dir="ltr">
-              {/* SN */}
-              <Input 
-                className="text-center font-mono dark:bg-slate-900 dark:border-slate-800" 
-                placeholder="1234567" 
-                value={crParts.sn} 
-                onChange={(e) => handleCrChange('sn', e.target.value.replace(/\D/g, ''))} 
-              />
-              <span className="font-bold text-gray-400"> </span>
-              {/* Type */}
-              <div className="px-4 py-2 border rounded bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 font-mono font-bold text-center w-16 shrink-0">
-                {crParts.type}
-              </div>
-              {/* Year */}
+              {/* Wilaya */}
               <Input 
                 className="text-center font-mono w-16 shrink-0 dark:bg-slate-900 dark:border-slate-800" 
-                placeholder="21" 
+                placeholder="16" 
                 maxLength={2}
-                value={crParts.year} 
-                onChange={(e) => handleCrChange('year', e.target.value.replace(/\D/g, ''))} 
+                value={crParts.wilaya} 
+                onChange={(e) => handleCrChange('wilaya', e.target.value.replace(/\D/g, ''))} 
               />
-              <span className="font-bold text-gray-400">-</span>
+              <span className="font-bold text-gray-400">/</span>
               {/* Branch */}
               <Input 
                 className="text-center font-mono w-16 shrink-0 dark:bg-slate-900 dark:border-slate-800" 
@@ -220,14 +208,26 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
                 value={crParts.branch} 
                 onChange={(e) => handleCrChange('branch', e.target.value.replace(/\D/g, ''))} 
               />
-              <span className="font-bold text-gray-400">/</span>
-              {/* Wilaya */}
+              <span className="font-bold text-gray-400">-</span>
+              {/* Year */}
               <Input 
                 className="text-center font-mono w-16 shrink-0 dark:bg-slate-900 dark:border-slate-800" 
-                placeholder="16" 
+                placeholder="21" 
                 maxLength={2}
-                value={crParts.wilaya} 
-                onChange={(e) => handleCrChange('wilaya', e.target.value.replace(/\D/g, ''))} 
+                value={crParts.year} 
+                onChange={(e) => handleCrChange('year', e.target.value.replace(/\D/g, ''))} 
+              />
+              {/* Type */}
+              <div className="px-4 py-2 border rounded bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 font-mono font-bold text-center w-16 shrink-0">
+                {crParts.type}
+              </div>
+              <span className="font-bold text-gray-400"> </span>
+              {/* SN */}
+              <Input 
+                className="text-center font-mono dark:bg-slate-900 dark:border-slate-800" 
+                placeholder="" 
+                value={crParts.sn} 
+                onChange={(e) => handleCrChange('sn', e.target.value.replace(/\D/g, ''))} 
               />
             </div>
             <div className="mt-3 text-sm text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/30 p-2 rounded" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
