@@ -22,7 +22,8 @@
     "page": "Page",
     "active": "Active",
     "expired": "Expired",
-    "rows_per_page": "Rows per page:"
+    "rows_per_page": "Rows per page:",
+    "progress": "Progress"
   },
   "sidebar": {
     "sectionStore": "Store",

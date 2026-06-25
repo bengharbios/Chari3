@@ -22,7 +22,8 @@
     "page": "صفحة",
     "active": "نشط",
     "expired": "منتهي",
-    "rows_per_page": "الصفوف لكل صفحة:"
+    "rows_per_page": "الصفوف لكل صفحة:",
+    "progress": "التقدم"
   },
   "sidebar": {
     "sectionStore": "المتجر",

@@ -41,6 +41,41 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
     return isStructured ? 'structured' : 'freeform';
   });
 
+  // Sync state with async loaded data prop
+  useEffect(() => {
+    if (data.country && data.country !== selectedCountry) {
+      setSelectedCountry(data.country);
+    }
+  }, [data.country]);
+
+  useEffect(() => {
+    if (data.commercialRegisterNumber) {
+      const isStructured = /^(\d{2})\/(\d{2})-(\d{2})([A-Za-z])(\d*)$/.test(data.commercialRegisterNumber);
+      const targetFormat = isStructured ? 'structured' : 'freeform';
+      if (targetFormat !== crFormat) {
+        setCrFormat(targetFormat);
+      }
+    }
+  }, [data.commercialRegisterNumber]);
+
+  useEffect(() => {
+    if (data.commercialRegisterNumber) {
+      const parsed = parseCR(data.commercialRegisterNumber);
+      setCrParts(prev => {
+        if (
+          prev.wilaya === parsed.wilaya &&
+          prev.branch === parsed.branch &&
+          prev.year === parsed.year &&
+          prev.type === parsed.type &&
+          prev.sn === parsed.sn
+        ) {
+          return prev;
+        }
+        return parsed;
+      });
+    }
+  }, [data.commercialRegisterNumber]);
+
   useEffect(() => {
     fetch('/api/regions/countries')
       .then(res => res.json())

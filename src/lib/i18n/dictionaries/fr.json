@@ -22,7 +22,8 @@
     "page": "Page",
     "active": "Actif",
     "expired": "Expiré",
-    "rows_per_page": "Lignes par page:"
+    "rows_per_page": "Lignes par page:",
+    "progress": "Progression"
   },
   "sidebar": {
     "sectionStore": "Boutique",
