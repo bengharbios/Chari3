@@ -87,22 +87,22 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
           }}
           className="grid grid-cols-1 md:grid-cols-3 gap-4"
         >
-          <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
+          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 text-sm">
             <RadioGroupItem value="A" id="type-a" />
             <Label htmlFor="type-a" className="cursor-pointer">{t('onboarding.legal.typeNatural')}</Label>
           </div>
-          <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
+          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 text-sm">
             <RadioGroupItem value="B" id="type-b" />
             <Label htmlFor="type-b" className="cursor-pointer">{t('onboarding.legal.typeLegal')}</Label>
           </div>
-          <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50 text-sm">
+          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 text-sm">
             <RadioGroupItem value="D" id="type-d" />
             <Label htmlFor="type-d" className="cursor-pointer">{t('onboarding.legal.typeMobile')}</Label>
           </div>
         </RadioGroup>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t dark:border-slate-800">
         <div className="space-y-2">
           <Label>{t('onboarding.legal.countryOfRegistration')}</Label>
           <Select 
@@ -115,10 +115,10 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
               }
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger className="dark:bg-slate-900 dark:border-slate-800">
               <SelectValue placeholder={t('onboarding.legal.selectCountry')} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="dark:bg-slate-900 dark:border-slate-800">
               {countries.map(c => (
                 <SelectItem key={c.code} value={c.code}>{locale === 'ar' ? c.nameAr : c.nameEn} ({c.code})</SelectItem>
               ))}
@@ -133,10 +133,10 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
             onValueChange={(val) => updateData({ state: val })} 
             disabled={!selectedCountry || states.length === 0}
           >
-            <SelectTrigger>
+            <SelectTrigger className="dark:bg-slate-900 dark:border-slate-800">
               <SelectValue placeholder={t('onboarding.legal.selectState')} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="dark:bg-slate-900 dark:border-slate-800">
               {states.map((s, idx) => (
                 <SelectItem key={s.id || idx} value={s.nameAr || s.name || s.id}>{locale === 'ar' ? (s.nameAr || s.name) : (s.name || s.nameAr)}</SelectItem>
               ))}
@@ -150,29 +150,30 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
             placeholder={t('onboarding.legal.companyNamePlaceholder')} 
             value={data.companyName || ''} 
             onChange={(e) => updateData({ companyName: e.target.value })} 
+            className="dark:bg-slate-900 dark:border-slate-800"
           />
         </div>
 
         {selectedCountry === 'DZ' ? (
-          <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 rounded-lg border">
+          <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-800">
             <Label className="text-base font-bold mb-2 block">{t('onboarding.legal.crNumberLabel')}</Label>
-            <p className="text-xs text-gray-500 mb-4">{t('onboarding.legal.crExample')}</p>
+            <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">{t('onboarding.legal.crExample')}</p>
             <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap" dir="ltr">
               {/* SN */}
               <Input 
-                className="text-center font-mono" 
+                className="text-center font-mono dark:bg-slate-900 dark:border-slate-800" 
                 placeholder="1234567" 
                 value={crParts.sn} 
                 onChange={(e) => handleCrChange('sn', e.target.value.replace(/\D/g, ''))} 
               />
               <span className="font-bold text-gray-400"> </span>
               {/* Type */}
-              <div className="px-4 py-2 border rounded bg-white font-mono font-bold text-center w-16 shrink-0">
+              <div className="px-4 py-2 border rounded bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 font-mono font-bold text-center w-16 shrink-0">
                 {crParts.type}
               </div>
               {/* Year */}
               <Input 
-                className="text-center font-mono w-16 shrink-0" 
+                className="text-center font-mono w-16 shrink-0 dark:bg-slate-900 dark:border-slate-800" 
                 placeholder="21" 
                 maxLength={2}
                 value={crParts.year} 
@@ -181,7 +182,7 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
               <span className="font-bold text-gray-400">-</span>
               {/* Branch */}
               <Input 
-                className="text-center font-mono w-16 shrink-0" 
+                className="text-center font-mono w-16 shrink-0 dark:bg-slate-900 dark:border-slate-800" 
                 placeholder="00" 
                 maxLength={2}
                 value={crParts.branch} 
@@ -190,26 +191,26 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
               <span className="font-bold text-gray-400">/</span>
               {/* Wilaya */}
               <Input 
-                className="text-center font-mono w-16 shrink-0" 
+                className="text-center font-mono w-16 shrink-0 dark:bg-slate-900 dark:border-slate-800" 
                 placeholder="16" 
                 maxLength={2}
                 value={crParts.wilaya} 
                 onChange={(e) => handleCrChange('wilaya', e.target.value.replace(/\D/g, ''))} 
               />
             </div>
-            <div className="mt-3 text-sm text-blue-600 bg-blue-50 p-2 rounded" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="mt-3 text-sm text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/30 p-2 rounded" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
               <strong>{t('onboarding.legal.crCombined')}</strong> <span dir="ltr" className="inline-block">{crParts.wilaya}/{crParts.branch}-{crParts.year}{crParts.type}{crParts.sn}</span>
             </div>
           </div>
         ) : (
-          <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 rounded-lg border">
+          <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-800">
             <Label className="text-base font-bold mb-2 block">{t('onboarding.legal.crNumberLabel')}</Label>
             <Input 
               placeholder={t('onboarding.legal.crOtherPlaceholder')} 
               value={data.commercialRegisterNumber || ''} 
               onChange={(e) => updateData({ commercialRegisterNumber: e.target.value })} 
               dir="ltr"
-              className="text-left"
+              className="text-left dark:bg-slate-900 dark:border-slate-800"
             />
           </div>
         )}
@@ -220,6 +221,7 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
             placeholder={t('onboarding.legal.issueAuthorityPlaceholder')} 
             value={data.issueAuthority || ''} 
             onChange={(e) => updateData({ issueAuthority: e.target.value })} 
+            className="dark:bg-slate-900 dark:border-slate-800"
           />
         </div>
         <div className="space-y-2">
@@ -228,6 +230,7 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
             placeholder={t('onboarding.legal.companyAddressPlaceholder')} 
             value={data.companyAddress || ''} 
             onChange={(e) => updateData({ companyAddress: e.target.value })} 
+            className="dark:bg-slate-900 dark:border-slate-800"
           />
         </div>
         
@@ -237,6 +240,7 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
             type="date" 
             value={data.issueDate ? data.issueDate.split('T')[0] : ''} 
             onChange={(e) => updateData({ issueDate: e.target.value ? new Date(e.target.value).toISOString() : null })} 
+            className="dark:bg-slate-900 dark:border-slate-800"
           />
         </div>
         <div className="space-y-2">
@@ -257,6 +261,7 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
               }
               updateData({ expiryDate: e.target.value ? selectedDate.toISOString() : null });
             }} 
+            className="dark:bg-slate-900 dark:border-slate-800"
           />
           {data.expiryDate && new Date(data.expiryDate) < new Date(new Date().setHours(0,0,0,0)) && (
             <p className="text-xs text-red-500 mt-1">الرخصة منتهية الصلاحية.</p>
@@ -264,12 +269,13 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
         </div>
       </div>
 
-      <div className="mt-8 border-t pt-6 space-y-4">
+      <div className="mt-8 border-t dark:border-slate-800 pt-6 space-y-4">
         <Label className="text-base font-bold">{t('onboarding.legal.crFile')}</Label>
-        <p className="text-sm text-gray-500">{t('onboarding.legal.crFileDesc')}</p>
+        <p className="text-sm text-gray-500 dark:text-slate-400">{t('onboarding.legal.crFileDesc')}</p>
         <Input 
           type="file" 
           accept=".pdf,.jpg,.jpeg,.png" 
+          className="dark:bg-slate-900 dark:border-slate-800"
           onChange={async (e) => {
             const file = e.target.files?.[0];
             if (!file) return;

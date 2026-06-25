@@ -19,11 +19,11 @@ export default function TaxStep({ data, updateData }: { data: any; updateData: (
           onValueChange={(val) => updateData({ hasVat: val === 'yes' })}
           className="flex flex-col gap-3"
         >
-          <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50">
+          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
             <RadioGroupItem value="yes" id="vat-yes" />
             <Label htmlFor="vat-yes" className="cursor-pointer">{t('onboarding.tax.yesVat')}</Label>
           </div>
-          <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50">
+          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
             <RadioGroupItem value="no" id="vat-no" />
             <Label htmlFor="vat-no" className="cursor-pointer">{t('onboarding.tax.noVat')}</Label>
           </div>
@@ -31,22 +31,24 @@ export default function TaxStep({ data, updateData }: { data: any; updateData: (
       </div>
 
       {data.hasVat && (
-        <div className="space-y-6 pt-4 border-t">
+        <div className="space-y-6 pt-4 border-t dark:border-slate-800">
           <div className="space-y-2">
             <Label>{t('onboarding.tax.trn')}</Label>
             <Input 
               placeholder="e.g. 10023000..." 
               value={data.vatNumber || ''} 
               onChange={(e) => updateData({ vatNumber: e.target.value })} 
+              className="dark:bg-slate-900 dark:border-slate-800"
             />
           </div>
 
           <div className="space-y-4">
             <Label className="text-base font-bold">{t('onboarding.tax.uploadDoc')}</Label>
-            <p className="text-sm text-gray-500">{t('onboarding.tax.fileDesc')}</p>
+            <p className="text-sm text-gray-500 dark:text-slate-400">{t('onboarding.tax.fileDesc')}</p>
             <Input 
               type="file" 
               accept=".pdf,.jpg,.png" 
+              className="dark:bg-slate-900 dark:border-slate-800"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;

@@ -10,7 +10,7 @@ export default function TermsStep({ data, updateData }: { data: any; updateData:
 
   return (
     <div className="space-y-6">
-      <div className="bg-gray-50 p-6 rounded-lg border h-64 overflow-y-auto text-sm text-gray-700 leading-relaxed">
+      <div className="bg-gray-50 dark:bg-slate-800/50 p-6 rounded-lg border dark:border-slate-800 h-64 overflow-y-auto text-sm text-gray-700 dark:text-slate-300 leading-relaxed">
         <h3 className="font-bold text-lg mb-4">{t('onboarding.terms.termsTitle')}</h3>
         <p className="mb-4">
           {t('onboarding.terms.intro')}
@@ -32,7 +32,7 @@ export default function TermsStep({ data, updateData }: { data: any; updateData:
         </p>
       </div>
 
-      <div className="flex items-start space-x-3 space-x-reverse bg-blue-50 p-4 rounded-lg border border-blue-100">
+      <div className="flex items-start space-x-3 space-x-reverse bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-100 dark:border-slate-800">
         <Checkbox 
           id="terms" 
           checked={data.agreedToTerms || false}
@@ -45,7 +45,7 @@ export default function TermsStep({ data, updateData }: { data: any; updateData:
           >
             {t('onboarding.terms.agreeCheckbox')}
           </Label>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-slate-400">
             {t('onboarding.terms.agreeCheckboxDesc')}
           </p>
         </div>

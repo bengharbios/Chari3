@@ -127,22 +127,25 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const themeMode = globalTheme === 'dark' || (isGentelella && gentelellaDark) ? 'dark' : 'light';
   
+  const colors = theme?.colors || getInitialTheme().colors;
+  const typography = theme?.typography || getInitialTheme().typography;
+
   const themeStyles = {
-    '--theme-bg-sidebar': theme.colors.sidebarBackground[themeMode],
-    '--theme-text-sidebar': theme.colors.sidebarText[themeMode],
-    '--theme-bg-header': theme.colors.headerBackground[themeMode],
-    '--theme-text-header': theme.colors.headerText[themeMode],
-    '--theme-bg-main': theme.colors.mainBackground[themeMode],
-    '--theme-text-main': theme.colors.mainText[themeMode],
-    '--theme-primary': theme.colors.primaryColor[themeMode],
-    '--theme-bg-footer': theme.colors.footerBackground[themeMode],
-    '--theme-text-footer': theme.colors.footerText[themeMode],
-    'fontFamily': theme.typography.fontFamily,
+    '--theme-bg-sidebar': colors?.sidebarBackground?.[themeMode] || '#2A3F54',
+    '--theme-text-sidebar': colors?.sidebarText?.[themeMode] || '#E7E7E7',
+    '--theme-bg-header': colors?.headerBackground?.[themeMode] || '#ffffff',
+    '--theme-text-header': colors?.headerText?.[themeMode] || '#555555',
+    '--theme-bg-main': colors?.mainBackground?.[themeMode] || '#F7F7F7',
+    '--theme-text-main': colors?.mainText?.[themeMode] || '#73879C',
+    '--theme-primary': colors?.primaryColor?.[themeMode] || '#1ABB9C',
+    '--theme-bg-footer': colors?.footerBackground?.[themeMode] || '#ffffff',
+    '--theme-text-footer': colors?.footerText?.[themeMode] || '#555555',
+    'fontFamily': typography?.fontFamily || 'Cairo, sans-serif',
     // Override Shadcn UI CSS variables so Tailwind utilities like bg-sidebar and text-sidebar-foreground pick up the custom theme colors
-    '--sidebar': theme.colors.sidebarBackground[themeMode],
-    '--sidebar-foreground': theme.colors.sidebarText[themeMode],
-    '--background': theme.colors.mainBackground[themeMode],
-    '--foreground': theme.colors.mainText[themeMode],
+    '--sidebar': colors?.sidebarBackground?.[themeMode] || '#2A3F54',
+    '--sidebar-foreground': colors?.sidebarText?.[themeMode] || '#E7E7E7',
+    '--background': colors?.mainBackground?.[themeMode] || '#F7F7F7',
+    '--foreground': colors?.mainText?.[themeMode] || '#73879C',
   } as React.CSSProperties;
 
   return (

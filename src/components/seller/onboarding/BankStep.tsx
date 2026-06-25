@@ -27,11 +27,11 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
           }}
           className="flex flex-col gap-3"
         >
-          <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50">
+          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
             <RadioGroupItem value="bank" id="type-bank" />
             <Label htmlFor="type-bank" className="cursor-pointer">{t('onboarding.bank.typeBank')}</Label>
           </div>
-          <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50">
+          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
             <RadioGroupItem value="ccp" id="type-ccp" />
             <Label htmlFor="type-ccp" className="cursor-pointer">{t('onboarding.bank.typeCcp')}</Label>
           </div>
@@ -45,6 +45,7 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
             placeholder={t('onboarding.bank.beneficiaryName')} 
             value={data.beneficiaryName || ''} 
             onChange={(e) => updateData({ beneficiaryName: e.target.value })} 
+            className="dark:bg-slate-900 dark:border-slate-800"
           />
         </div>
 
@@ -56,6 +57,7 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
                 placeholder={t('onboarding.bank.bankNamePlaceholder')} 
                 value={data.bankName || ''} 
                 onChange={(e) => updateData({ bankName: e.target.value })} 
+                className="dark:bg-slate-900 dark:border-slate-800"
               />
             </div>
             <div className="space-y-2">
@@ -64,6 +66,7 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
                 placeholder={t('onboarding.bank.swiftPlaceholder')} 
                 value={data.swiftCode || ''} 
                 onChange={(e) => updateData({ swiftCode: e.target.value })} 
+                className="dark:bg-slate-900 dark:border-slate-800"
               />
             </div>
             <div className="space-y-2 col-span-1 md:col-span-2">
@@ -73,6 +76,7 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
                 value={data.iban || ''} 
                 onChange={(e) => updateData({ iban: e.target.value })} 
                 dir="ltr"
+                className="dark:bg-slate-900 dark:border-slate-800"
               />
             </div>
           </>
@@ -85,6 +89,7 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
                 value={data.ccpNumber || ''} 
                 onChange={(e) => updateData({ ccpNumber: e.target.value })} 
                 dir="ltr"
+                className="dark:bg-slate-900 dark:border-slate-800"
               />
             </div>
             <div className="space-y-2">
@@ -95,6 +100,7 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
                 onChange={(e) => updateData({ ccpCle: e.target.value })} 
                 maxLength={2}
                 dir="ltr"
+                className="dark:bg-slate-900 dark:border-slate-800"
               />
             </div>
             <div className="space-y-2 col-span-1 md:col-span-2">
@@ -105,36 +111,38 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
                 onChange={(e) => updateData({ iban: e.target.value })} 
                 maxLength={20}
                 dir="ltr"
+                className="dark:bg-slate-900 dark:border-slate-800"
               />
             </div>
           </>
         )}
       </div>
 
-      <div className="pt-4 border-t">
+      <div className="pt-4 border-t dark:border-slate-800">
         <Label className="text-base font-bold mb-4 block">{t('onboarding.bank.beneficiaryMatch')}</Label>
         <RadioGroup 
           value={data.isBeneficiaryMatching ? 'yes' : 'no'} 
           onValueChange={(val) => updateData({ isBeneficiaryMatching: val === 'yes' })}
           className="flex flex-col gap-3"
         >
-          <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50">
+          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
             <RadioGroupItem value="yes" id="match-yes" />
             <Label htmlFor="match-yes" className="cursor-pointer">{t('onboarding.bank.sameAsCompany')}</Label>
           </div>
-          <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg cursor-pointer hover:bg-gray-50">
+          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
             <RadioGroupItem value="no" id="match-no" />
             <Label htmlFor="match-no" className="cursor-pointer">{t('onboarding.bank.diffFromCompany')}</Label>
           </div>
         </RadioGroup>
       </div>
 
-      <div className="pt-4 border-t space-y-4">
+      <div className="pt-4 border-t dark:border-slate-800 space-y-4">
         <Label className="text-base font-bold mb-4 block">{t('onboarding.bank.bankProof')}</Label>
-        <p className="text-sm text-gray-500">{t('onboarding.bank.bankProofDesc')}</p>
+        <p className="text-sm text-gray-500 dark:text-slate-400">{t('onboarding.bank.bankProofDesc')}</p>
         <Input 
           type="file" 
           accept=".pdf,.jpg,.png,.jpeg" 
+          className="dark:bg-slate-900 dark:border-slate-800"
           onChange={async (e) => {
             const file = e.target.files?.[0];
             if (!file) return;

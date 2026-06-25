@@ -268,6 +268,7 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
             placeholder={t('onboarding.identity.signatoryName')} 
             value={data.signatoryName || ''} 
             onChange={(e) => updateData({ signatoryName: e.target.value })} 
+            className="dark:bg-slate-900 dark:border-slate-800"
           />
         </div>
         <div className="space-y-2">
@@ -277,22 +278,23 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
             placeholder={t('onboarding.identity.signatoryEmail')} 
             value={data.signatoryEmail || ''} 
             onChange={(e) => updateData({ signatoryEmail: e.target.value })} 
+            className="dark:bg-slate-900 dark:border-slate-800"
           />
         </div>
       </div>
 
-      <div className="pt-4 border-t">
+      <div className="pt-4 border-t dark:border-slate-800">
         <Label className="text-base font-bold mb-4 block">{t('onboarding.identity.isOwner')}</Label>
         <RadioGroup 
           value={data.isLegalOwner ? 'yes' : 'no'} 
           onValueChange={(val) => updateData({ isLegalOwner: val === 'yes' })}
           className="flex flex-col sm:flex-row gap-4"
         >
-          <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg flex-1 cursor-pointer hover:bg-gray-50">
+          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg flex-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
             <RadioGroupItem value="yes" id="owner-yes" />
             <Label htmlFor="owner-yes" className="cursor-pointer">{t('onboarding.identity.yes')}</Label>
           </div>
-          <div className="flex items-center space-x-2 space-x-reverse border p-4 rounded-lg flex-1 cursor-pointer hover:bg-gray-50">
+          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg flex-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
             <RadioGroupItem value="no" id="owner-no" />
             <Label htmlFor="owner-no" className="cursor-pointer">{t('onboarding.identity.no')}</Label>
           </div>
@@ -302,10 +304,11 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
       {!data.isLegalOwner && (
         <div className="pt-4 space-y-4">
           <Label className="text-base font-bold text-red-600">{t('onboarding.identity.poa')}</Label>
-          <p className="text-sm text-gray-500">{t('onboarding.identity.poaDesc')}</p>
+          <p className="text-sm text-gray-500 dark:text-slate-400">{t('onboarding.identity.poaDesc')}</p>
           <Input 
             type="file" 
             accept=".pdf,.jpg,.png" 
+            className="dark:bg-slate-900 dark:border-slate-800"
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
@@ -334,14 +337,14 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
         </div>
       )}
 
-      <div className="pt-6 border-t space-y-4">
+      <div className="pt-6 border-t dark:border-slate-800 space-y-4">
         <Label className="text-base font-bold">{t('onboarding.identity.uploadId')}</Label>
-        <p className="text-sm text-gray-500">{t('onboarding.identity.idDesc')}</p>
+        <p className="text-sm text-gray-500 dark:text-slate-400">{t('onboarding.identity.idDesc')}</p>
         
         {!useCamera ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className={`border-2 border-dashed rounded-lg p-4 text-center relative flex flex-col justify-center items-center min-h-[140px] ${data.managerIdFront ? 'border-primary bg-primary/5' : 'bg-muted/20'}`}>
+              <div className={`border-2 border-dashed rounded-lg p-4 text-center relative flex flex-col justify-center items-center min-h-[140px] ${data.managerIdFront ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'bg-muted/20 dark:bg-slate-800/30 dark:border-slate-800'}`}>
                 {data.managerIdFront ? (
                   <div className="relative w-full h-full flex flex-col items-center justify-center">
                     <img src={data.managerIdFront} alt="Front" className="w-full h-24 object-contain rounded" />
@@ -353,13 +356,13 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
-                    <p className="text-xs text-green-600 mt-2 font-medium">{t('onboarding.identity.frontUploaded')}</p>
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">{t('onboarding.identity.frontUploaded')}</p>
                   </div>
                 ) : (
                   <label className="cursor-pointer block w-full h-full">
                     <Upload className="h-6 w-6 text-muted-foreground mb-2 mx-auto" />
                     <p className="text-sm font-medium">{t('onboarding.identity.frontUpload')}</p>
-                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG</p>
+                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">PNG, JPG, JPEG</p>
                     <input
                       type="file"
                       accept="image/*"
@@ -381,7 +384,7 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
                   </label>
                 )}
               </div>
-              <div className={`border-2 border-dashed rounded-lg p-4 text-center relative flex flex-col justify-center items-center min-h-[140px] ${data.managerIdBack ? 'border-primary bg-primary/5' : 'bg-muted/20'}`}>
+              <div className={`border-2 border-dashed rounded-lg p-4 text-center relative flex flex-col justify-center items-center min-h-[140px] ${data.managerIdBack ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'bg-muted/20 dark:bg-slate-800/30 dark:border-slate-800'}`}>
                 {data.managerIdBack ? (
                   <div className="relative w-full h-full flex flex-col items-center justify-center">
                     <img src={data.managerIdBack} alt="Back" className="w-full h-24 object-contain rounded" />
@@ -393,13 +396,13 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
-                    <p className="text-xs text-green-600 mt-2 font-medium">{t('onboarding.identity.backUploaded')}</p>
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">{t('onboarding.identity.backUploaded')}</p>
                   </div>
                 ) : (
                   <label className="cursor-pointer block w-full h-full">
                     <Upload className="h-6 w-6 text-muted-foreground mb-2 mx-auto" />
                     <p className="text-sm font-medium">{t('onboarding.identity.backUpload')}</p>
-                    <p className="text-xs text-gray-400 mt-1">PNG, JPG, JPEG</p>
+                    <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">PNG, JPG, JPEG</p>
                     <input
                       type="file"
                       accept="image/*"
@@ -425,7 +428,7 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
 
             <Button 
               variant="outline" 
-              className="w-full flex items-center gap-2 border-brand text-brand hover:bg-brand hover:text-white" 
+              className="w-full flex items-center gap-2 border-brand text-brand hover:bg-brand hover:text-white dark:border-brand dark:text-brand dark:hover:bg-brand dark:hover:text-slate-900" 
               onClick={() => {
                 setUseCamera(true);
                 setCaptureStep('front');
@@ -436,7 +439,7 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
             </Button>
           </div>
         ) : (
-          <div className="relative rounded-lg overflow-hidden border bg-black">
+          <div className="relative rounded-lg overflow-hidden border dark:border-slate-800 bg-black">
             <Webcam
               audio={false}
               ref={webcamRef}
@@ -478,8 +481,8 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
         )}
 
         {loading && (
-          <div className="p-4 bg-blue-50 text-blue-800 rounded-lg flex items-center gap-3">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-800"></div>
+          <div className="p-4 bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-400 rounded-lg flex items-center gap-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-800 dark:border-blue-400"></div>
             <span>{progressMsg}</span>
           </div>
         )}
