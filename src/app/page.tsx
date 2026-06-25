@@ -97,6 +97,20 @@ const ALLOWED_EXTRA_PAGES: PageType[] = [
   'verification', 'search',
 ];
 
+const ITEM_LABELS: Record<string, { ar: string; en: string }> = {
+  commercial_register: { ar: 'السجل التجاري', en: 'Commercial Register' },
+  bank_account: { ar: 'الحساب البنكي', en: 'Bank Account' },
+  manager_id: { ar: 'هوية المدير', en: 'Manager ID' },
+  national_id: { ar: 'الهوية الوطنية', en: 'National ID' },
+  freelance_document: { ar: 'وثيقة العمل الحر', en: 'Freelance Document' },
+  liveness: { ar: 'التحقق الحي', en: 'Liveness Check' },
+  commercial_license: { ar: 'رخصة تجارية', en: 'Commercial License' },
+  import_license: { ar: 'رخصة الاستيراد', en: 'Import License' },
+  transport_license: { ar: 'رخصة النقل', en: 'Transport License' },
+  insurance: { ar: 'شهادة التأمين', en: 'Insurance Certificate' },
+  fleet_info: { ar: 'معلومات الأسطول', en: 'Fleet Information' },
+};
+
 function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   const { currentPage, setCurrentPage, locale } = useAppStore();
   const { isAuthenticated, user, isBuyerMode } = useAuthStore();
@@ -241,19 +255,6 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
         store.setRejectionReason(data.adminNotes);
       } else if (data.rejectionReasons && data.rejectionReasons.length > 0) {
         // Fallback: build reason from item keys if no admin notes
-        const ITEM_LABELS: Record<string, { ar: string; en: string }> = {
-          commercial_register: { ar: 'السجل التجاري', en: 'Commercial Register' },
-          bank_account: { ar: 'الحساب البنكي', en: 'Bank Account' },
-          manager_id: { ar: 'هوية المدير', en: 'Manager ID' },
-          national_id: { ar: 'الهوية الوطنية', en: 'National ID' },
-          freelance_document: { ar: 'وثيقة العمل الحر', en: 'Freelance Document' },
-          liveness: { ar: 'التحقق الحي', en: 'Liveness Check' },
-          commercial_license: { ar: 'رخصة تجارية', en: 'Commercial License' },
-          import_license: { ar: 'رخصة الاستيراد', en: 'Import License' },
-          transport_license: { ar: 'رخصة النقل', en: 'Transport License' },
-          insurance: { ar: 'شهادة التأمين', en: 'Insurance Certificate' },
-          fleet_info: { ar: 'معلومات الأسطول', en: 'Fleet Information' },
-        };
         const labels = data.rejectionReasons.map((key: string) => {
           const label = ITEM_LABELS[key];
           return label ? (locale === 'ar' ? label.ar : label.en) : key;
@@ -296,9 +297,11 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
               : '🎉 Your account has been activated! All features are now available'
           );
         } else if (showToastOnChange && dbStatus === 'rejected') {
-          const reason = data.rejectionReasons?.length
-            ? data.rejectionReasons.join(', ')
-            : '';
+          const labels = (data.rejectionReasons || []).map((key: string) => {
+            const label = ITEM_LABELS[key];
+            return label ? (locale === 'ar' ? label.ar : label.en) : key;
+          });
+          const reason = labels.length ? labels.join(locale === 'ar' ? '، ' : ', ') : '';
           toast.error(
             locale === 'ar'
               ? `تم رفض طلب التوثيق${reason ? `: ${reason}` : ''}. يرجى مراجعة حالة التوثيق لإعادة التقديم.`
