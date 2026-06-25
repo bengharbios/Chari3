@@ -4,6 +4,7 @@ import React from 'react';
 import { useEffect, useMemo } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { useNotificationStore, type AppNotification } from '@/lib/store/notifications';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import {
   Bell, Package, Truck, ShieldCheck, Info, Tag, Wallet, AlertTriangle,
   CheckCheck, Trash2, Clock
@@ -44,32 +45,27 @@ const categoryIconColors: Record<string, string> = {
 // ============================================
 
 const urgencyConfig: Record<string, {
-  labelAr: string;
-  labelEn: string;
+  translationKey: string;
   badgeClass: string;
   actionVariant: QuickActionVariant;
 }> = {
   urgent: {
-    labelAr: 'عاجل',
-    labelEn: 'Urgent',
+    translationKey: 'notifications.urgency.urgent',
     badgeClass: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
     actionVariant: 'danger',
   },
   high: {
-    labelAr: 'مهم',
-    labelEn: 'Important',
+    translationKey: 'notifications.urgency.high',
     badgeClass: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
     actionVariant: 'primary',
   },
   normal: {
-    labelAr: 'عادي',
-    labelEn: 'Normal',
+    translationKey: 'notifications.urgency.normal',
     badgeClass: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
     actionVariant: 'subtle',
   },
   low: {
-    labelAr: 'معلومات',
-    labelEn: 'Info',
+    translationKey: 'notifications.urgency.low',
     badgeClass: 'bg-gray-50 text-gray-500 dark:bg-gray-800/50 dark:text-gray-500',
     actionVariant: 'subtle',
   },
@@ -80,11 +76,11 @@ const urgencyConfig: Record<string, {
 // ============================================
 
 function UrgencyBadge({ urgency }: { urgency: string }) {
-  const isAr = useAppStore((s) => s.locale === 'ar');
+  const { t } = useTranslation();
   const c = urgencyConfig[urgency] || urgencyConfig.normal;
   return (
     <Badge variant="secondary" className={cn('text-[10px] px-1.5 py-0 border-0', c.badgeClass)}>
-      {isAr ? c.labelAr : c.labelEn}
+      {t(c.translationKey)}
     </Badge>
   );
 }
@@ -94,7 +90,7 @@ function UrgencyBadge({ urgency }: { urgency: string }) {
 // ============================================
 
 function TimeAgo({ dateStr }: { dateStr: string }) {
-  const isAr = useAppStore((s) => s.locale === 'ar');
+  const { t } = useTranslation();
   const now = Date.now();
   const then = new Date(dateStr).getTime();
   const diffMs = now - then;
@@ -103,10 +99,10 @@ function TimeAgo({ dateStr }: { dateStr: string }) {
   const diffDay = Math.floor(diffMs / 86400000);
 
   let text: string;
-  if (diffMin < 1) text = isAr ? 'الآن' : 'Now';
-  else if (diffMin < 60) text = isAr ? `منذ ${diffMin} دقيقة` : `${diffMin}m ago`;
-  else if (diffHr < 24) text = isAr ? `منذ ${diffHr} ساعة` : `${diffHr}h ago`;
-  else text = isAr ? `منذ ${diffDay} يوم` : `${diffDay}d ago`;
+  if (diffMin < 1) text = t('notifications.timeAgo.now');
+  else if (diffMin < 60) text = t('notifications.timeAgo.minutes', { minutes: diffMin });
+  else if (diffHr < 24) text = t('notifications.timeAgo.hours', { hours: diffHr });
+  else text = t('notifications.timeAgo.days', { days: diffDay });
 
   return (
     <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
@@ -123,7 +119,8 @@ function TimeAgo({ dateStr }: { dateStr: string }) {
 import { useRouter, usePathname } from 'next/navigation';
 
 function NotificationItem({ notification }: { notification: AppNotification }) {
-  const isAr = useAppStore((s) => s.locale === 'ar');
+  const { t, locale } = useTranslation();
+  const isAr = locale === 'ar';
   const { markAsRead, clearNotification, setOpen } = useNotificationStore();
   const { setCurrentPage } = useAppStore();
   const { user } = useAuthStore();
@@ -218,7 +215,7 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
               clearNotification(notification.id);
             }}
             className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted transition-all shrink-0"
-            aria-label={isAr ? 'حذف' : 'Delete'}
+            aria-label={t('notifications.delete')}
           >
             <Trash2 className="size-3 text-muted-foreground hover:text-destructive" />
           </button>
@@ -261,7 +258,8 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
 // ============================================
 
 export default function NotificationPanel() {
-  const isAr = useAppStore((s) => s.locale === 'ar');
+  const { t, locale } = useTranslation();
+  const isAr = locale === 'ar';
   const { user, isAuthenticated } = useAuthStore();
   const {
     notifications,
@@ -395,11 +393,11 @@ export default function NotificationPanel() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold">
-                  {isAr ? 'الإشعارات' : 'Notifications'}
+                  {t('notifications.title')}
                 </h3>
                 {unreadCount > 0 && (
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-0">
-                    {unreadCount} {isAr ? 'جديد' : 'new'}
+                    {unreadCount} {t('notifications.new')}
                   </Badge>
                 )}
               </div>
@@ -421,7 +419,7 @@ export default function NotificationPanel() {
                     }}
                   >
                     <CheckCheck className="size-3.5" />
-                    <span>{isAr ? 'قراءة الكل' : 'Read all'}</span>
+                    <span>{t('notifications.readAll')}</span>
                   </Button>
                 )}
                 {notifications.length > 0 && (
@@ -432,7 +430,7 @@ export default function NotificationPanel() {
                     onClick={clearAll}
                   >
                     <Trash2 className="size-3.5" />
-                    <span>{isAr ? 'مسح الكل' : 'Clear all'}</span>
+                    <span>{t('notifications.clearAll')}</span>
                   </Button>
                 )}
               </div>
@@ -453,10 +451,10 @@ export default function NotificationPanel() {
                   <Bell className="size-6 text-muted-foreground" />
                 </div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  {isAr ? 'لا توجد إشعارات' : 'No notifications'}
+                  {t('notifications.noNotifications')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {isAr ? 'ستظهر الإشعارات الجديدة هنا' : 'New notifications will appear here'}
+                  {t('notifications.newNotificationsWillAppear')}
                 </p>
               </div>
             )}
@@ -467,9 +465,7 @@ export default function NotificationPanel() {
                 <Separator />
                 <div className="px-4 py-2">
                   <p className="text-[11px] text-muted-foreground text-center">
-                    {isAr
-                      ? `${notifications.length} إشعار • ${unreadCount} غير مقروء`
-                      : `${notifications.length} notifications • ${unreadCount} unread`}
+                    {t('notifications.countTemplate', { count: notifications.length, unread: unreadCount })}
                   </p>
                 </div>
               </>

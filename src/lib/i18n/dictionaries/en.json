@@ -228,7 +228,27 @@
     "orderConfirmedTitle": "Your order has been confirmed 📦",
     "orderShippedTitle": "Your order has been shipped 📦",
     "orderDeliveredTitle": "Your order has been delivered 📦",
-    "orderCancelledTitle": "Your order has been cancelled 📦"
+    "orderCancelledTitle": "Your order has been cancelled 📦",
+    "title": "Notifications",
+    "readAll": "Read all",
+    "clearAll": "Clear all",
+    "noNotifications": "No notifications",
+    "newNotificationsWillAppear": "New notifications will appear here",
+    "new": "new",
+    "delete": "Delete",
+    "countTemplate": "%count% notifications • %unread% unread",
+    "timeAgo": {
+      "now": "Now",
+      "minutes": "%minutes%m ago",
+      "hours": "%hours%h ago",
+      "days": "%days%d ago"
+    },
+    "urgency": {
+      "urgent": "Urgent",
+      "high": "Important",
+      "normal": "Normal",
+      "low": "Info"
+    }
   },
   "saada": {
     "editorTitle": "SAADA Builder",
@@ -375,6 +395,7 @@
   },
   "onboarding": {
     "title": "Business Registration",
+    "subtitle": "Please provide accurate details below",
     "steps": {
       "legal": "Legal Docs",
       "tax": "Tax Details",
@@ -412,7 +433,10 @@
       "companyAddressPlaceholder": "Full Address",
       "issueAuthorityPlaceholder": "National Center for Commercial Registry - Branch...",
       "crFile": "Business Registration Document (Commercial Register) *",
-      "crFileDesc": "Upload a clear copy (PDF, JPG, PNG - Max 10MB)"
+      "crFileDesc": "Upload a clear copy (PDF, JPG, PNG - Max 10MB)",
+      "crFormatLabel": "CR Number Entry Method",
+      "crFormatStructured": "Structured Algerian Format",
+      "crFormatFreeform": "Freeform / Manual Format"
     },
     "tax": {
       "hasVat": "Are you VAT registered?",
@@ -485,7 +509,10 @@
       "agreeCheckboxDesc": "By agreeing, this document is considered a binding contract to start operating on ChariDay platform."
     },
     "common": {
-      "uploadSuccess": "File uploaded successfully"
+      "uploadSuccess": "File uploaded successfully",
+      "previewFile": "Preview Document",
+      "downloadFile": "Download",
+      "or": "or"
     },
     "submit": "Submit for Approval",
     "next": "Next",

@@ -223,7 +223,27 @@
     "orderConfirmedTitle": "Votre commande a été confirmée 📦",
     "orderShippedTitle": "Votre commande a été expédiée 📦",
     "orderDeliveredTitle": "Votre commande a été livrée 📦",
-    "orderCancelledTitle": "Votre commande a été annulée 📦"
+    "orderCancelledTitle": "Votre commande a été annulée 📦",
+    "title": "Notifications",
+    "readAll": "Tout marquer comme lu",
+    "clearAll": "Tout effacer",
+    "noNotifications": "Aucune notification",
+    "newNotificationsWillAppear": "Les nouvelles notifications apparaîtront ici",
+    "new": "nouvelle(s)",
+    "delete": "Supprimer",
+    "countTemplate": "%count% notifications • %unread% non lues",
+    "timeAgo": {
+      "now": "À l'instant",
+      "minutes": "Il y a %minutes% min",
+      "hours": "Il y a %hours% h",
+      "days": "Il y a %days% j"
+    },
+    "urgency": {
+      "urgent": "Urgent",
+      "high": "Important",
+      "normal": "Normal",
+      "low": "Info"
+    }
   },
   "saada": {
     "editorTitle": "SAADA Builder",
@@ -324,6 +344,7 @@
   },
   "onboarding": {
     "title": "Enregistrement de l'entreprise",
+    "subtitle": "Veuillez fournir des détails précis ci-dessous",
     "steps": {
       "legal": "Documents légaux",
       "tax": "Détails fiscaux",
@@ -361,7 +382,10 @@
       "companyAddressPlaceholder": "Adresse complète",
       "issueAuthorityPlaceholder": "Centre National du Registre du Commerce - Succursale de...",
       "crFile": "Document d'enregistrement d'entreprise (Registre du commerce) *",
-      "crFileDesc": "Télécharger une copie claire (PDF, JPG, PNG - Max 10Mo)"
+      "crFileDesc": "Télécharger une copie claire (PDF, JPG, PNG - Max 10Mo)",
+      "crFormatLabel": "Méthode de saisie du numéro de RC",
+      "crFormatStructured": "Format algérien structuré",
+      "crFormatFreeform": "Format libre / Saisie manuelle"
     },
     "tax": {
       "hasVat": "Êtes-vous assujetti à la TVA ?",
@@ -434,7 +458,10 @@
       "agreeCheckboxDesc": "En acceptant, ce document est considéré comme un contrat contraignant pour commencer à opérer sur la plateforme ChariDay."
     },
     "common": {
-      "uploadSuccess": "Fichier téléchargé avec succès"
+      "uploadSuccess": "Fichier téléchargé avec succès",
+      "previewFile": "Aperçu du document",
+      "downloadFile": "Télécharger",
+      "or": "ou"
     },
     "submit": "Soumettre pour approbation",
     "next": "Suivant",

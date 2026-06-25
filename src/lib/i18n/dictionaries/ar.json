@@ -228,7 +228,27 @@
     "orderConfirmedTitle": "تم تأكيد طلبك 📦",
     "orderShippedTitle": "تم شحن طلبك 📦",
     "orderDeliveredTitle": "تم تسليم طلبك 📦",
-    "orderCancelledTitle": "تم إلغاء طلبك 📦"
+    "orderCancelledTitle": "تم إلغاء طلبك 📦",
+    "title": "الإشعارات",
+    "readAll": "قراءة الكل",
+    "clearAll": "مسح الكل",
+    "noNotifications": "لا توجد إشعارات",
+    "newNotificationsWillAppear": "ستظهر الإشعارات الجديدة هنا",
+    "new": "جديد",
+    "delete": "حذف",
+    "countTemplate": "%count% إشعار • %unread% غير مقروء",
+    "timeAgo": {
+      "now": "الآن",
+      "minutes": "منذ %minutes% دقيقة",
+      "hours": "منذ %hours% ساعة",
+      "days": "منذ %days% يوم"
+    },
+    "urgency": {
+      "urgent": "عاجل",
+      "high": "مهم",
+      "normal": "عادي",
+      "low": "معلومات"
+    }
   },
   "saada": {
     "editorTitle": "منشئ صفحات SAADA",
@@ -375,6 +395,7 @@
   },
   "onboarding": {
     "title": "تسجيل الأعمال",
+    "subtitle": "الرجاء إدخال البيانات والتأكد من صحتها",
     "steps": {
       "legal": "التوثيق القانوني",
       "tax": "التفاصيل الضريبية",
@@ -412,7 +433,10 @@
       "companyAddressPlaceholder": "العنوان كاملاً",
       "issueAuthorityPlaceholder": "المركز الوطني للسجل التجاري - فرع...",
       "crFile": "وثيقة تسجيل الأعمال (مستخرج السجل التجاري) *",
-      "crFileDesc": "قم بتحميل نسخة واضحة (PDF, JPG, PNG - Max 10MB)"
+      "crFileDesc": "قم بتحميل نسخة واضحة (PDF, JPG, PNG - Max 10MB)",
+      "crFormatLabel": "طريقة إدخال رقم السجل",
+      "crFormatStructured": "التنسيق الجزائري المنظم",
+      "crFormatFreeform": "تنسيق حر (إدخال يدوي)"
     },
     "tax": {
       "hasVat": "هل شركتك مسجلة لضريبة القيمة المضافة؟",
@@ -485,7 +509,10 @@
       "agreeCheckboxDesc": "بموافقتك، تعتبر هذه الوثيقة عقداً ملزماً لبدء العمل على منصة شاري داي."
     },
     "common": {
-      "uploadSuccess": "تم رفع الملف بنجاح"
+      "uploadSuccess": "تم رفع الملف بنجاح",
+      "previewFile": "معاينة المستند",
+      "downloadFile": "تحميل",
+      "or": "أو"
     },
     "submit": "تقديم للموافقة",
     "next": "التالي",

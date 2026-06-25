@@ -35,6 +35,11 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
   const [countries, setCountries] = useState<any[]>([]);
   const [states, setStates] = useState<any[]>([]);
   const [selectedCountry, setSelectedCountry] = useState(data.country || 'DZ');
+  const [crFormat, setCrFormat] = useState(() => {
+    if (!data.commercialRegisterNumber) return 'structured';
+    const isStructured = /^(\d{2})\/(\d{2})-(\d{2})([A-Za-z])(\d+)$/.test(data.commercialRegisterNumber);
+    return isStructured ? 'structured' : 'freeform';
+  });
 
   useEffect(() => {
     fetch('/api/regions/countries')
@@ -59,13 +64,13 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
   }, [selectedCountry]);
 
   useEffect(() => {
-    if (selectedCountry === 'DZ') {
+    if (selectedCountry === 'DZ' && crFormat === 'structured') {
       const formattedCR = `${crParts.wilaya}/${crParts.branch}-${crParts.year}${crParts.type}${crParts.sn}`;
       if (formattedCR !== data.commercialRegisterNumber && crParts.sn) {
         updateData({ commercialRegisterNumber: formattedCR });
       }
     }
-  }, [crParts, selectedCountry]);
+  }, [crParts, selectedCountry, crFormat]);
 
   const handleCrChange = (field: keyof typeof crParts, value: string) => {
     setCrParts(prev => ({ ...prev, [field]: value }));
@@ -150,11 +155,38 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
             placeholder={t('onboarding.legal.companyNamePlaceholder')} 
             value={data.companyName || ''} 
             onChange={(e) => updateData({ companyName: e.target.value })} 
+            dir="auto"
             className="dark:bg-slate-900 dark:border-slate-800"
           />
         </div>
 
-        {selectedCountry === 'DZ' ? (
+        {selectedCountry === 'DZ' && (
+          <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-100 dark:bg-slate-800/30 rounded-lg border dark:border-slate-800">
+            <Label className="font-bold block mb-2">{t('onboarding.legal.crFormatLabel')}</Label>
+            <RadioGroup
+              value={crFormat}
+              onValueChange={(val) => {
+                setCrFormat(val);
+                if (val === 'structured') {
+                  const formattedCR = `${crParts.wilaya}/${crParts.branch}-${crParts.year}${crParts.type}${crParts.sn}`;
+                  updateData({ commercialRegisterNumber: formattedCR });
+                }
+              }}
+              className="flex gap-4 mb-2"
+            >
+              <div className="flex items-center space-x-2 space-x-reverse">
+                <RadioGroupItem value="structured" id="fmt-structured" />
+                <Label htmlFor="fmt-structured" className="cursor-pointer text-xs">{t('onboarding.legal.crFormatStructured')}</Label>
+              </div>
+              <div className="flex items-center space-x-2 space-x-reverse">
+                <RadioGroupItem value="freeform" id="fmt-freeform" />
+                <Label htmlFor="fmt-freeform" className="cursor-pointer text-xs">{t('onboarding.legal.crFormatFreeform')}</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        )}
+
+        {selectedCountry === 'DZ' && crFormat === 'structured' ? (
           <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-800">
             <Label className="text-base font-bold mb-2 block">{t('onboarding.legal.crNumberLabel')}</Label>
             <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">{t('onboarding.legal.crExample')}</p>
@@ -209,8 +241,8 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
               placeholder={t('onboarding.legal.crOtherPlaceholder')} 
               value={data.commercialRegisterNumber || ''} 
               onChange={(e) => updateData({ commercialRegisterNumber: e.target.value })} 
-              dir="ltr"
-              className="text-left dark:bg-slate-900 dark:border-slate-800"
+              dir="auto"
+              className="dark:bg-slate-900 dark:border-slate-800"
             />
           </div>
         )}
@@ -221,6 +253,7 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
             placeholder={t('onboarding.legal.issueAuthorityPlaceholder')} 
             value={data.issueAuthority || ''} 
             onChange={(e) => updateData({ issueAuthority: e.target.value })} 
+            dir="auto"
             className="dark:bg-slate-900 dark:border-slate-800"
           />
         </div>
@@ -230,6 +263,7 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
             placeholder={t('onboarding.legal.companyAddressPlaceholder')} 
             value={data.companyAddress || ''} 
             onChange={(e) => updateData({ companyAddress: e.target.value })} 
+            dir="auto"
             className="dark:bg-slate-900 dark:border-slate-800"
           />
         </div>
@@ -301,7 +335,29 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
             }
           }} 
         />
-        {data.commercialRegisterFile && <p className="text-sm text-green-600 font-medium">{t('onboarding.common.uploadSuccess')}</p>}
+        {data.commercialRegisterFile && (
+          <div className="mt-2 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-100 dark:border-green-900/30 flex items-center justify-between">
+            <p className="text-sm text-green-600 dark:text-green-400 font-medium">{t('onboarding.common.uploadSuccess')}</p>
+            <div className="flex items-center gap-2">
+              <a 
+                href={data.commercialRegisterFile} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              >
+                {t('onboarding.common.previewFile')}
+              </a>
+              <span className="text-gray-300 dark:text-slate-700">|</span>
+              <a 
+                href={data.commercialRegisterFile} 
+                download
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              >
+                {t('onboarding.common.downloadFile')}
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

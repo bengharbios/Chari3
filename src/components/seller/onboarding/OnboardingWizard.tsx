@@ -135,18 +135,18 @@ export default function OnboardingWizard() {
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900 dark:text-slate-100">
               <Store className="text-brand" />
-              {locale === 'ar' ? 'توثيق بيانات المتجر' : 'Store Verification'}
+              {t('onboarding.title', { defaultValue: 'Store Verification' })}
             </h2>
             <Button variant="outline" size="sm" onClick={() => { handleSaveDraft(true); setWizardOpen(false); }} className="gap-2 text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700">
               <Save className="w-4 h-4" />
-              <span className="hidden sm:inline">{locale === 'ar' ? 'حفظ مسودة' : 'Save Draft'}</span>
+              <span className="hidden sm:inline">{t('onboarding.saveDraft')}</span>
             </Button>
           </div>
           
           {/* Progress */}
           <div className="space-y-2">
             <div className="flex justify-between text-xs text-gray-500 dark:text-slate-400 font-medium">
-              <span>{locale === 'ar' ? 'التقدم' : 'Progress'}</span>
+              <span>{t('common.progress', { defaultValue: 'Progress' })}</span>
               <span>{activeStep + 1} / {totalSteps}</span>
             </div>
             <Progress value={progress} className="h-2 bg-gray-200 dark:bg-slate-800" />
@@ -174,7 +174,7 @@ export default function OnboardingWizard() {
             <div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">{step.title}</h3>
               <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-                {locale === 'ar' ? 'الرجاء إدخال البيانات والتأكد من صحتها' : 'Please provide accurate details below'}
+                {t('onboarding.subtitle')}
               </p>
             </div>
           </div>
@@ -193,7 +193,7 @@ export default function OnboardingWizard() {
             className="gap-2 bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-slate-300 border-gray-200 dark:border-slate-700"
           >
             {isRTL ? <ArrowRight className="w-4 h-4" /> : <ArrowLeft className="w-4 h-4" />}
-            <span className="hidden sm:inline">{locale === 'ar' ? 'السابق' : 'Previous'}</span>
+            <span className="hidden sm:inline">{t('onboarding.prev')}</span>
           </Button>
 
           <Button 
@@ -201,7 +201,7 @@ export default function OnboardingWizard() {
             disabled={isLoading}
             className={`gap-2 px-8 font-bold transition-all hover:scale-105 ${activeStep === totalSteps - 1 ? 'bg-brand hover:bg-brand/90 text-white' : 'bg-black dark:bg-slate-100 hover:bg-gray-800 dark:hover:bg-slate-200 text-white dark:text-slate-900'}`}
           >
-            {isLoading ? '...' : activeStep === totalSteps - 1 ? (locale === 'ar' ? 'تقديم للموافقة' : 'Submit for Review') : (locale === 'ar' ? 'التالي' : 'Next')}
+            {isLoading ? '...' : activeStep === totalSteps - 1 ? t('onboarding.submit') : t('onboarding.next')}
             {activeStep !== totalSteps - 1 && (isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />)}
           </Button>
         </div>
