@@ -12,7 +12,7 @@ import Script from 'next/script';
 import { createWorker } from 'tesseract.js';
 import { toast } from 'sonner';
 
-export default function IdentityStep({ data, updateData }: { data: any; updateData: (d: any) => void }) {
+export default function IdentityStep({ data, updateData, onPreviewFile }: { data: any; updateData: (d: any) => void; onPreviewFile: (url: string) => void }) {
   const { t } = useTranslation();
 
   // Camera & Multi-step State
@@ -334,6 +334,28 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
               }
             }} 
           />
+          {data.powerOfAttorneyFile && (
+            <div className="mt-2 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-100 dark:border-green-900/30 flex items-center justify-between">
+              <p className="text-sm text-green-600 dark:text-green-400 font-medium">{t('onboarding.common.uploadSuccess')}</p>
+              <div className="flex items-center gap-2">
+                <button 
+                  type="button"
+                  onClick={() => onPreviewFile(data.powerOfAttorneyFile)}
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                >
+                  {t('onboarding.common.previewFile')}
+                </button>
+                <span className="text-gray-300 dark:text-slate-700">|</span>
+                <a 
+                  href={data.powerOfAttorneyFile} 
+                  download
+                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                >
+                  {t('onboarding.common.downloadFile')}
+                </a>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -347,7 +369,14 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
               <div className={`border-2 border-dashed rounded-lg p-4 text-center relative flex flex-col justify-center items-center min-h-[140px] ${data.managerIdFront ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'bg-muted/20 dark:bg-slate-800/30 dark:border-slate-800'}`}>
                 {data.managerIdFront ? (
                   <div className="relative w-full h-full flex flex-col items-center justify-center">
-                    <img src={data.managerIdFront} alt="Front" className="w-full h-24 object-contain rounded" />
+                    <button
+                      type="button"
+                      onClick={() => onPreviewFile(data.managerIdFront)}
+                      className="cursor-zoom-in hover:opacity-80 transition-opacity"
+                      title={t('onboarding.common.previewFile')}
+                    >
+                      <img src={data.managerIdFront} alt="Front" className="w-full h-24 object-contain rounded" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => updateData({ managerIdFront: null })}
@@ -387,7 +416,14 @@ export default function IdentityStep({ data, updateData }: { data: any; updateDa
               <div className={`border-2 border-dashed rounded-lg p-4 text-center relative flex flex-col justify-center items-center min-h-[140px] ${data.managerIdBack ? 'border-primary bg-primary/5 dark:bg-primary/10' : 'bg-muted/20 dark:bg-slate-800/30 dark:border-slate-800'}`}>
                 {data.managerIdBack ? (
                   <div className="relative w-full h-full flex flex-col items-center justify-center">
-                    <img src={data.managerIdBack} alt="Back" className="w-full h-24 object-contain rounded" />
+                    <button
+                      type="button"
+                      onClick={() => onPreviewFile(data.managerIdBack)}
+                      className="cursor-zoom-in hover:opacity-80 transition-opacity"
+                      title={t('onboarding.common.previewFile')}
+                    >
+                      <img src={data.managerIdBack} alt="Back" className="w-full h-24 object-contain rounded" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => updateData({ managerIdBack: null })}

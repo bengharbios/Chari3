@@ -471,7 +471,9 @@
       "ripPlaceholder": "e.g. 00799999001234567845",
       "beneficiaryMatch": "Beneficiary Name Match",
       "bankProof": "Proof of Payment Method *",
-      "bankProofDesc": "Upload the appropriate document for the selected proof type (voided check or bank/postal certificate - Max 5MB)"
+      "bankProofDesc": "Upload the appropriate document for the selected proof type (voided check or bank/postal certificate - Max 5MB)",
+      "uploading": "Uploading account proof...",
+      "uploadSuccess": "Account proof uploaded successfully!"
     },
     "identity": {
       "signatoryName": "Full Name",

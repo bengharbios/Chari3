@@ -420,7 +420,9 @@
       "ripPlaceholder": "ex: 00799999001234567845",
       "beneficiaryMatch": "Correspondance du nom du bénéficiaire",
       "bankProof": "Preuve du mode de paiement *",
-      "bankProofDesc": "Télécharger le document approprié pour le type de preuve sélectionné (chèque annulé ou attestation bancaire/postale - Max 5Mo)"
+      "bankProofDesc": "Télécharger le document approprié pour le type de preuve sélectionné (chèque annulé ou attestation bancaire/postale - Max 5Mo)",
+      "uploading": "Téléchargement de la preuve de compte...",
+      "uploadSuccess": "Preuve de compte téléchargée avec succès!"
     },
     "identity": {
       "signatoryName": "Nom complet",

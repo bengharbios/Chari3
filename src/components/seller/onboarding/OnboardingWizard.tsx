@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Button } from '@/components/ui/button';
 import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Store, FileText, Landmark, UserCheck, ShieldCheck, ArrowRight, ArrowLeft, Save } from 'lucide-react';
+import { Store, FileText, Landmark, UserCheck, ShieldCheck, ArrowRight, ArrowLeft, Save, X } from 'lucide-react';
 import LegalStep from './LegalStep';
 import TaxStep from './TaxStep';
 import BankStep from './BankStep';
@@ -25,6 +25,7 @@ export default function OnboardingWizard() {
   const [activeStep, setActiveStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<any>({});
+  const [previewFileUrl, setPreviewFileUrl] = useState<string | null>(null);
   
   useEffect(() => {
     const fetchData = async () => {
@@ -99,10 +100,10 @@ export default function OnboardingWizard() {
   const hasTerms = !!formData.agreedToTerms;
 
   const stepsList = [
-    { id: 0, title: locale === 'ar' ? 'السجل التجاري' : 'Commercial Register', tabTitle: locale === 'ar' ? 'السجل التجاري' : 'Register', icon: <Store className="w-5 h-5" />, done: hasLegal, component: <LegalStep data={formData} updateData={handleUpdateData} /> },
-    { id: 1, title: locale === 'ar' ? 'الضريبة' : 'Tax Details', tabTitle: locale === 'ar' ? 'الضريبة' : 'Tax', icon: <FileText className="w-5 h-5" />, done: hasTax, component: <TaxStep data={formData} updateData={handleUpdateData} /> },
-    { id: 2, title: locale === 'ar' ? 'البنك' : 'Financials', tabTitle: locale === 'ar' ? 'البنك' : 'Bank', icon: <Landmark className="w-5 h-5" />, done: hasBank, component: <BankStep data={formData} updateData={handleUpdateData} /> },
-    { id: 3, title: locale === 'ar' ? 'هوية المدير أو المالك أو الممثل القانوني للشركة' : 'Identity (Manager/Owner/Representative)', tabTitle: locale === 'ar' ? 'الهوية' : 'Identity', icon: <UserCheck className="w-5 h-5" />, done: hasIdentity, component: <IdentityStep data={formData} updateData={handleUpdateData} /> },
+    { id: 0, title: locale === 'ar' ? 'السجل التجاري' : 'Commercial Register', tabTitle: locale === 'ar' ? 'السجل التجاري' : 'Register', icon: <Store className="w-5 h-5" />, done: hasLegal, component: <LegalStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} /> },
+    { id: 1, title: locale === 'ar' ? 'الضريبة' : 'Tax Details', tabTitle: locale === 'ar' ? 'الضريبة' : 'Tax', icon: <FileText className="w-5 h-5" />, done: hasTax, component: <TaxStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} /> },
+    { id: 2, title: locale === 'ar' ? 'البنك' : 'Financials', tabTitle: locale === 'ar' ? 'البنك' : 'Bank', icon: <Landmark className="w-5 h-5" />, done: hasBank, component: <BankStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} /> },
+    { id: 3, title: locale === 'ar' ? 'هوية المدير أو المالك أو الممثل القانوني للشركة' : 'Identity (Manager/Owner/Representative)', tabTitle: locale === 'ar' ? 'الهوية' : 'Identity', icon: <UserCheck className="w-5 h-5" />, done: hasIdentity, component: <IdentityStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} /> },
     { id: 4, title: locale === 'ar' ? 'الشروط' : 'Terms', tabTitle: locale === 'ar' ? 'الشروط' : 'Terms', icon: <ShieldCheck className="w-5 h-5" />, done: hasTerms, component: <TermsStep data={formData} updateData={handleUpdateData} /> },
   ];
 
@@ -148,7 +149,7 @@ export default function OnboardingWizard() {
           {/* Progress */}
           <div className="space-y-2">
             <div className="flex justify-between text-xs text-gray-500 dark:text-slate-400 font-medium">
-              <span>{t('common.progress', { defaultValue: 'Progress' })}</span>
+              <span>{t('common.progress')}</span>
               <span>{activeStep + 1} / {totalSteps}</span>
             </div>
             <Progress value={progress} className="h-2 bg-gray-200 dark:bg-slate-800" />
@@ -207,6 +208,50 @@ export default function OnboardingWizard() {
             {activeStep !== totalSteps - 1 && (isRTL ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />)}
           </Button>
         </div>
+
+        {/* High-res Document Preview Modal Overlay */}
+        {previewFileUrl && (
+          <div
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+            onClick={() => setPreviewFileUrl(null)}
+          >
+            <div className="max-w-4xl w-full rounded-2xl overflow-hidden bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 shadow-2xl animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
+              <div className="p-4 border-b dark:border-slate-800 flex justify-between items-center bg-gray-50 dark:bg-slate-900/50">
+                <span className="font-bold text-base text-gray-900 dark:text-slate-100">
+                  {locale === 'ar' ? 'معاينة المستند' : 'Document Preview'}
+                </span>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-gray-500 hover:bg-gray-250 dark:hover:bg-slate-800" onClick={() => setPreviewFileUrl(null)}>
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+              <div className="p-4 bg-gray-100 dark:bg-slate-950 flex justify-center items-center h-[65vh] overflow-y-auto">
+                {previewFileUrl.toLowerCase().endsWith('.pdf') || previewFileUrl.includes('.pdf?') ? (
+                  <iframe
+                    src={previewFileUrl}
+                    className="w-full h-full rounded-lg border-0 bg-white shadow-inner"
+                    title="Document PDF Preview"
+                  />
+                ) : (
+                  <img
+                    src={previewFileUrl}
+                    alt="Document Preview"
+                    className="max-h-full max-w-full object-contain rounded-lg shadow-md border dark:border-slate-800"
+                  />
+                )}
+              </div>
+              <div className="bg-gray-50 dark:bg-slate-900/50 border-t dark:border-slate-800 p-4 flex justify-end gap-3">
+                <Button variant="outline" size="sm" className="rounded-xl px-4 py-2 font-semibold text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700" asChild>
+                  <a href={previewFileUrl} download>
+                    {locale === 'ar' ? 'تحميل الملف' : 'Download File'}
+                  </a>
+                </Button>
+                <Button variant="default" size="sm" className="rounded-xl px-5 py-2 font-bold bg-black dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-gray-800 dark:hover:bg-slate-250" onClick={() => setPreviewFileUrl(null)}>
+                  {locale === 'ar' ? 'إغلاق المعاينة' : 'Close'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
   );
 }

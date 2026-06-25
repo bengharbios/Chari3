@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 
-export default function BankStep({ data, updateData }: { data: any; updateData: (d: any) => void }) {
+export default function BankStep({ data, updateData, onPreviewFile }: { data: any; updateData: (d: any) => void; onPreviewFile: (url: string) => void }) {
   const { t } = useTranslation();
   const [paymentType, setPaymentType] = useState<'bank' | 'ccp'>(data.swiftCode ? 'bank' : 'ccp');
 
@@ -168,7 +168,28 @@ export default function BankStep({ data, updateData }: { data: any; updateData: 
             }
           }} 
         />
-        {data.bankLetterFile && <p className="text-sm text-green-600 font-medium">{t('onboarding.common.uploadSuccess')}</p>}
+        {data.bankLetterFile && (
+          <div className="mt-2 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-100 dark:border-green-900/30 flex items-center justify-between">
+            <p className="text-sm text-green-600 dark:text-green-400 font-medium">{t('onboarding.common.uploadSuccess')}</p>
+            <div className="flex items-center gap-2">
+              <button 
+                type="button"
+                onClick={() => onPreviewFile(data.bankLetterFile)}
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              >
+                {t('onboarding.common.previewFile')}
+              </button>
+              <span className="text-gray-300 dark:text-slate-700">|</span>
+              <a 
+                href={data.bankLetterFile} 
+                download
+                className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              >
+                {t('onboarding.common.downloadFile')}
+              </a>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

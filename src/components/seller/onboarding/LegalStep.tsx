@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
-export default function LegalStep({ data, updateData }: { data: any; updateData: (d: any) => void }) {
+export default function LegalStep({ data, updateData, onPreviewFile }: { data: any; updateData: (d: any) => void; onPreviewFile: (url: string) => void }) {
   const { t, locale } = useTranslation();
   
   // Parsing existing CR number if any: e.g. "16/00-21A1234567"
@@ -374,14 +374,13 @@ export default function LegalStep({ data, updateData }: { data: any; updateData:
           <div className="mt-2 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-100 dark:border-green-900/30 flex items-center justify-between">
             <p className="text-sm text-green-600 dark:text-green-400 font-medium">{t('onboarding.common.uploadSuccess')}</p>
             <div className="flex items-center gap-2">
-              <a 
-                href={data.commercialRegisterFile} 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <button 
+                type="button"
+                onClick={() => onPreviewFile(data.commercialRegisterFile)}
                 className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
               >
                 {t('onboarding.common.previewFile')}
-              </a>
+              </button>
               <span className="text-gray-300 dark:text-slate-700">|</span>
               <a 
                 href={data.commercialRegisterFile} 
