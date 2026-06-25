@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { useNotificationStore, type AppNotification } from '@/lib/store/notifications';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -272,6 +272,8 @@ export default function NotificationPanel() {
     addNotification,
   } = useNotificationStore();
 
+  const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
+
   // Refresh role-based notifications when user changes
   useEffect(() => {
     if (!isAuthenticated || !user) return;
@@ -342,9 +344,13 @@ export default function NotificationPanel() {
     return () => clearInterval(interval);
   }, [isAuthenticated, user?.id, addNotification]);
 
-  // Sort: unread first → by urgency → newest first
-  const sortedNotifications = useMemo(() => {
-    return [...notifications].sort((a, b) => {
+  // Filter and Sort: filter by active tab, then sort: unread first → by urgency → newest first
+  const filteredAndSortedNotifications = useMemo(() => {
+    const filtered = activeTab === 'unread' 
+      ? notifications.filter(n => !n.isRead) 
+      : notifications;
+
+    return [...filtered].sort((a, b) => {
       if (a.isRead !== b.isRead) return a.isRead ? 1 : -1;
       const urgencyOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
       const uA = urgencyOrder[a.urgency] ?? 2;
@@ -352,7 +358,7 @@ export default function NotificationPanel() {
       if (uA !== uB) return uA - uB;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-  }, [notifications]);
+  }, [notifications, activeTab]);
 
   if (!isAuthenticated) return null;
 
@@ -436,11 +442,54 @@ export default function NotificationPanel() {
               </div>
             </div>
 
+            {/* Tabs Segment Control */}
+            <div className="px-4 py-2 border-b border-border bg-muted/10">
+              <div className="flex p-0.5 bg-muted/50 rounded-lg gap-0.5">
+                <button
+                  onClick={() => setActiveTab('all')}
+                  className={cn(
+                    "flex-1 py-1.5 text-xs font-medium rounded-md transition-all text-center flex items-center justify-center gap-1.5",
+                    activeTab === 'all'
+                      ? "bg-background text-foreground shadow-sm font-bold"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <span>{t('notifications.all')}</span>
+                  <Badge variant="secondary" className={cn(
+                    "text-[10px] px-1.5 py-0 border-0 pointer-events-none h-4 min-w-4 flex items-center justify-center p-0",
+                    activeTab === 'all' ? "bg-muted text-foreground" : "bg-muted/50 text-muted-foreground"
+                  )}>
+                    {notifications.length}
+                  </Badge>
+                </button>
+                <button
+                  onClick={() => setActiveTab('unread')}
+                  className={cn(
+                    "flex-1 py-1.5 text-xs font-medium rounded-md transition-all text-center flex items-center justify-center gap-1.5",
+                    activeTab === 'unread'
+                      ? "bg-background text-foreground shadow-sm font-bold"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <span>{t('notifications.unread')}</span>
+                  {unreadCount > 0 ? (
+                    <Badge className="text-[10px] px-1.5 py-0 border-0 bg-primary text-primary-foreground font-bold animate-pulse h-4 min-w-4 flex items-center justify-center p-0">
+                      {unreadCount}
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 border-0 bg-muted/50 text-muted-foreground pointer-events-none h-4 min-w-4 flex items-center justify-center p-0">
+                      0
+                    </Badge>
+                  )}
+                </button>
+              </div>
+            </div>
+
             {/* Notifications List */}
-            {sortedNotifications.length > 0 ? (
+            {filteredAndSortedNotifications.length > 0 ? (
               <div className="max-h-[400px] overflow-y-auto overflow-x-hidden" dir={isAr ? 'rtl' : 'ltr'}>
                 <div className="divide-y divide-border/50 p-2">
-                  {sortedNotifications.map((notification) => (
+                  {filteredAndSortedNotifications.map((notification) => (
                     <NotificationItem key={notification.id} notification={notification} />
                   ))}
                 </div>
@@ -451,10 +500,12 @@ export default function NotificationPanel() {
                   <Bell className="size-6 text-muted-foreground" />
                 </div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  {t('notifications.noNotifications')}
+                  {activeTab === 'unread' ? t('notifications.noUnread') : t('notifications.noNotifications')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  {t('notifications.newNotificationsWillAppear')}
+                  {activeTab === 'unread' 
+                    ? t('notifications.allCaughtUp') 
+                    : t('notifications.newNotificationsWillAppear')}
                 </p>
               </div>
             )}
