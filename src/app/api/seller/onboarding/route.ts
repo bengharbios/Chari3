@@ -117,7 +117,7 @@ export async function POST(req: Request) {
       }
     });
 
-    if (dataToSave.submittedAt || dataToSave.verificationStatus === 'pending') {
+    if (dataToSave.verificationStatus === 'pending') {
       // Update the user's account status in the database to pending
       await db.user.update({
         where: { id: userId },
