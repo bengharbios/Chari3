@@ -126,6 +126,50 @@ export default function Header() {
     setCartOpen
   } = useCartStore();
 
+  // Super Admin Banners & Announcements State
+  const [dbAnnouncements, setDbAnnouncements] = useState<any[]>([]);
+  const [dismissedBanners, setDismissedBanners] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('dismissed_announcements');
+        if (saved) {
+          setDismissedBanners(JSON.parse(saved));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const fetchAnnouncements = async () => {
+      try {
+        const res = await fetch('/api/admin/announcements');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setDbAnnouncements(data.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch announcements:', err);
+      }
+    };
+    fetchAnnouncements();
+  }, [user]);
+
+  const dismissAnnouncement = (id: string) => {
+    const updated = [...dismissedBanners, id];
+    setDismissedBanners(updated);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('dismissed_announcements', JSON.stringify(updated));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
   const [scrolled, setScrolled] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -512,6 +556,38 @@ export default function Header() {
           : 'bg-background border-b border-transparent'
       }`}
     >
+      {/* Super Admin Announcement Banners */}
+      {dbAnnouncements
+        .filter((ann) => !dismissedBanners.includes(ann.id))
+        .map((ann) => (
+          <div
+            key={ann.id}
+            className={cn(
+              "py-2 px-8 text-center text-xs font-bold w-full relative flex items-center justify-center gap-2 border-b border-black/5 transition-all duration-300",
+              ann.bgColor || 'bg-primary',
+              ann.textColor || 'text-white'
+            )}
+          >
+            <div className="container-platform flex items-center justify-center gap-2 pr-4 pl-4">
+              {ann.linkUrl ? (
+                <a href={ann.linkUrl} className="hover:underline flex items-center gap-1">
+                  <span>{isRTL ? ann.contentAr : (ann.contentEn || ann.contentAr)}</span>
+                  <ArrowLeft className={`h-3 w-3 ${isRTL ? '' : 'rotate-180'}`} />
+                </a>
+              ) : (
+                <span>{isRTL ? ann.contentAr : (ann.contentEn || ann.contentAr)}</span>
+              )}
+            </div>
+            <button
+              onClick={() => dismissAnnouncement(ann.id)}
+              className="absolute end-3 top-1/2 -translate-y-1/2 p-1 hover:bg-black/10 hover:text-white rounded-full transition-colors"
+              aria-label="Dismiss"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ))}
+
       {/* Dynamic Header Blocks (Announcement bars) */}
       {headerBlocks.map((block, idx) => {
         if (!block.isActive) return null;

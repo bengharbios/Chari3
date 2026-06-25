@@ -52,6 +52,7 @@ export type PageType =
   | 'store-analytics'
   | 'seller-products'
   | 'seller-orders'
+  | 'seller-messages'
   | 'seller-upgrade'
   | 'seller-settings'
   | 'supplier'

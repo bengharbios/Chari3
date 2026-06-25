@@ -36,6 +36,7 @@ import WalletPage from '@/components/seller/WalletPage';
 import DebtsPage from '@/components/seller/DebtsPage';
 import { toast } from 'sonner';
 import type { PageType, UserRole } from '@/types';
+import ChatWidget from '@/components/chat/ChatWidget';
 
 const DASHBOARD_MAP: Record<string, React.ComponentType> = {
   'store-billing': BillingPage,
@@ -59,6 +60,7 @@ const DASHBOARD_MAP: Record<string, React.ComponentType> = {
   store: StoreDashboard,
   'seller-products': SellerDashboard,
   'seller-orders': SellerDashboard,
+  'seller-messages': SellerDashboard,
   'seller-upgrade': SellerDashboard,
   'seller-settings': StoreSettingsPage,
   seller: SellerDashboard,
@@ -112,7 +114,7 @@ const ITEM_LABELS: Record<string, { ar: string; en: string }> = {
 };
 
 function HomePageInner({ initialPage }: { initialPage?: PageType }) {
-  const { currentPage, setCurrentPage, locale } = useAppStore();
+  const { currentPage, setCurrentPage, locale, selectedSellerId } = useAppStore();
   const { isAuthenticated, user, isBuyerMode } = useAuthStore();
   const { isAdminAuthenticated } = useAdminAuthStore();
   const searchParams = useSearchParams();
@@ -512,6 +514,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
         <>
           <Footer />
           <BottomNav />
+          <ChatWidget storeSellerId={selectedSellerId || undefined} />
         </>
       )}
     </AppShell>

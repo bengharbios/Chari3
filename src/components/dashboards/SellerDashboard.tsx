@@ -19,6 +19,7 @@ import { Separator } from '@/components/ui/separator';
 import { useOnboardingStore } from '@/lib/store/onboarding';
 import { useAppStore as appStore } from '@/lib/store';
 import { toast } from 'sonner';
+import SellerChatTab from '@/components/seller/chat/SellerChatTab';
 import {
   Card as TremorCard,
   Metric,
@@ -349,6 +350,15 @@ export default function SellerDashboard() {
         <SuspensionBanner storeStatus={data.storeStatus} t={t} isAr={isAr} />
       )}
       <SellerOrdersTab data={data} isLoading={isLoading} t={t} isAr={isAr} onRefresh={refreshData} />
+    </div>
+  );
+
+  if (currentPage === 'seller-messages') return (
+    <div className="space-y-4">
+      {isSuspended && data?.storeStatus && (
+        <SuspensionBanner storeStatus={data.storeStatus} t={t} isAr={isAr} />
+      )}
+      <SellerChatTab />
     </div>
   );
 

@@ -50,6 +50,9 @@ model User {
   debtReceipts       DebtPaymentReceipt[]
   subscriptions      Subscription[]
   invoices           Invoice[]
+  chatRoomsAsBuyer   ChatRoom[]       @relation("ChatRoomBuyer")
+  chatRoomsAsSeller  ChatRoom[]       @relation("ChatRoomSeller")
+  sentMessages       ChatMessage[]    @relation("MessageSender")
 
   // Better Auth Relations
   sessions           Session[]
@@ -1399,4 +1402,68 @@ model TwoFactor {
   backupCodes String
   userId      String
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================================
+// ANNOUNCEMENT MODEL (Top Banners)
+// ============================================
+
+model Announcement {
+  id          String    @id @default(cuid())
+  contentAr   String    @db.Text
+  contentEn   String?   @db.Text
+  targetRole  String    @default("all") // all, seller, store_manager, buyer
+  isActive    Boolean   @default(true)
+  bgColor     String    @default("bg-primary") // bg-primary, bg-warning, bg-destructive, etc.
+  textColor   String    @default("text-white")
+  linkUrl     String?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// ============================================
+// CHAT / MESSAGING MODELS
+// ============================================
+
+model ChatRoom {
+  id            String        @id @default(cuid())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  buyerId       String
+  buyer         User          @relation("ChatRoomBuyer", fields: [buyerId], references: [id])
+  
+  sellerId      String
+  seller        User          @relation("ChatRoomSeller", fields: [sellerId], references: [id])
+
+  isActive      Boolean       @default(true)
+  lastMessage   String?       @db.Text
+  lastMessageAt DateTime?
+
+  messages      ChatMessage[]
+
+  @@unique([buyerId, sellerId])
+  @@index([buyerId])
+  @@index([sellerId])
+}
+
+model ChatMessage {
+  id            String    @id @default(cuid())
+  roomId        String
+  room          ChatRoom  @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  senderId      String
+  sender        User      @relation("MessageSender", fields: [senderId], references: [id])
+  
+  content       String    @db.Text
+  isRead        Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  isFlagged     Boolean   @default(false)
+  flaggedReason String?
+
+  @@index([roomId])
+  @@index([senderId])
 }

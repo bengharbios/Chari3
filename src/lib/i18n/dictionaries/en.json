@@ -26,6 +26,7 @@
     "progress": "Progress"
   },
   "sidebar": {
+    "messages": "Messages",
     "sectionStore": "Store",
     "sectionSeller": "Seller",
     "sectionBilling": "Billing & Subscriptions",

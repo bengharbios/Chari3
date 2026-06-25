@@ -327,6 +327,24 @@ export default function NotificationPanel() {
             alert: 'bg-red-100 dark:bg-red-900/30',
           };
 
+          // Dynamic action overrides from JSON data column
+          let actionPage: string | null = user.role === 'store_manager' ? 'store-orders' : 'seller-orders';
+          let actionUrl = null;
+          let actionLabelAr = 'عرض الطلبات';
+          let actionLabelEn = 'View Orders';
+          let urgency = dbNotif.type === 'new_order' ? 'high' : 'normal';
+
+          if (dbNotif.data) {
+            try {
+              const parsed = JSON.parse(dbNotif.data);
+              if ('actionPage' in parsed) actionPage = parsed.actionPage;
+              if ('actionUrl' in parsed) actionUrl = parsed.actionUrl;
+              if ('actionLabelAr' in parsed) actionLabelAr = parsed.actionLabelAr;
+              if ('actionLabelEn' in parsed) actionLabelEn = parsed.actionLabelEn;
+              if ('urgency' in parsed) urgency = parsed.urgency;
+            } catch (e) {}
+          }
+
           return {
             id: `db-${dbNotif.id}`,
             category: cat as any,
@@ -336,12 +354,12 @@ export default function NotificationPanel() {
             bodyEn: dbNotif.bodyEn || dbNotif.body,
             isRead: dbNotif.isRead,
             createdAt: dbNotif.createdAt,
-            actionLabelAr: 'عرض الطلبات',
-            actionLabelEn: 'View Orders',
-            actionPage: user.role === 'store_manager' ? 'store-orders' : 'seller-orders',
-            actionUrl: null,
+            actionLabelAr,
+            actionLabelEn,
+            actionPage: actionPage as any,
+            actionUrl,
             iconBg: iconBgMap[cat] || iconBgMap.system,
-            urgency: dbNotif.type === 'new_order' ? 'high' : 'normal',
+            urgency: urgency as any,
             data: dbNotif.data,
           };
         });

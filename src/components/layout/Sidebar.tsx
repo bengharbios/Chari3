@@ -11,7 +11,7 @@ import {
   Store, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
   Wallet, Heart, Star, Bell, ChevronLeft, ChevronRight, LogOut,
   TrendingUp, CreditCard, Boxes, ChevronUp, ChevronDown, ArrowLeftRight, Layers,
-  Receipt, Sparkles
+  Receipt, Sparkles, MessageSquare
 } from 'lucide-react';
 
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -20,7 +20,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, Users, Package, ShoppingCart, BarChart3, Settings,
   Store, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
   Wallet, Heart, Star, Bell, LogOut, TrendingUp, CreditCard, Boxes,
-  ChevronUp, ArrowLeftRight, Layers, Receipt, Sparkles,
+  ChevronUp, ArrowLeftRight, Layers, Receipt, Sparkles, MessageSquare,
 };
 
 
@@ -81,6 +81,7 @@ const SELLER_NAV_GROUPS: NavGroup[] = [
       { id: 'seller', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
       { id: 'seller-products', labelAr: 'منتجاتي', labelEn: 'My Products', icon: 'Boxes' },
       { id: 'seller-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 4 },
+      { id: 'seller-messages', labelAr: 'الرسائل والمحادثات', labelEn: 'Messages', icon: 'MessageSquare' },
     ]
   },
   {
@@ -209,6 +210,7 @@ interface SidebarProps {
         'seller': 'sidebar.overview',
         'seller-products': 'sidebar.myProducts',
         'seller-orders': 'sidebar.orders',
+        'seller-messages': 'sidebar.messages',
         'seller-wallet': 'sidebar.wallet',
         'seller-debts': 'sidebar.debts',
         'seller-billing': 'sidebar.currentInvoice',
