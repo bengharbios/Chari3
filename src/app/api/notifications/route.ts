@@ -49,3 +49,26 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }
 }
+
+// DELETE /api/notifications — delete single notification or clear all
+export async function DELETE(req: NextRequest) {
+  try {
+    const { userId, notificationId, clearAll } = await req.json();
+    if (!userId) return NextResponse.json({ success: false, error: 'userId required' }, { status: 400 });
+
+    if (clearAll) {
+      await db.notification.deleteMany({
+        where: { userId },
+      });
+    } else if (notificationId) {
+      await db.notification.delete({
+        where: { id: notificationId },
+      });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
+  }
+}
+

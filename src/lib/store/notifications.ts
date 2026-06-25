@@ -37,8 +37,8 @@ interface NotificationState {
   setNotifications: (notifications: AppNotification[]) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
-  clearNotification: (id: string) => void;
-  clearAll: () => void;
+  clearNotification: (id: string, userId?: string) => void;
+  clearAll: (userId?: string) => void;
   setOpen: (open: boolean) => void;
   toggleOpen: () => void;
   addNotification: (notification: AppNotification) => void;
@@ -104,13 +104,31 @@ export const useNotificationStore = create<NotificationState>()(
           unreadCount: 0,
         })),
 
-      clearNotification: (id) =>
+      clearNotification: (id, userId) => {
         set((state) => {
           const notifications = state.notifications.filter((n) => n.id !== id);
           return { notifications, unreadCount: notifications.filter((n) => !n.isRead).length };
-        }),
+        });
+        if (userId && id.startsWith('db-')) {
+          const dbId = id.replace('db-', '');
+          fetch('/api/notifications', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, notificationId: dbId })
+          }).catch(console.error);
+        }
+      },
 
-      clearAll: () => set({ notifications: [], unreadCount: 0 }),
+      clearAll: (userId) => {
+        set({ notifications: [], unreadCount: 0 });
+        if (userId) {
+          fetch('/api/notifications', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, clearAll: true })
+          }).catch(console.error);
+        }
+      },
 
       setOpen: (open) => set({ isOpen: open }),
       toggleOpen: () => set((state) => ({ isOpen: !state.isOpen })),

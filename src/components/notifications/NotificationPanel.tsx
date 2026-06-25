@@ -175,7 +175,7 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
   };
 
   const handleClick = () => {
-    handleMarkAsRead();
+    handleAction();
   };
 
   return (
@@ -212,9 +212,9 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              clearNotification(notification.id);
+              clearNotification(notification.id, user?.id);
             }}
-            className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted transition-all shrink-0"
+            className="opacity-60 md:opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted transition-all shrink-0"
             aria-label={t('notifications.delete')}
           >
             <Trash2 className="size-3 text-muted-foreground hover:text-destructive" />
@@ -427,7 +427,7 @@ export default function NotificationPanel() {
                     variant="ghost"
                     size="sm"
                     className="h-7 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1"
-                    onClick={clearAll}
+                    onClick={() => clearAll(user?.id)}
                   >
                     <Trash2 className="size-3.5" />
                     <span>{t('notifications.clearAll')}</span>
