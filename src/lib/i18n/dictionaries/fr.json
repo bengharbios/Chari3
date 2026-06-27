@@ -422,7 +422,7 @@
       "crFile": "Document d'enregistrement d'entreprise (Registre du commerce) *",
       "crFileDesc": "Télécharger une copie claire (PDF, JPG, PNG - Max 10Mo)",
       "crFormatLabel": "Méthode de saisie du numéro de RC",
-      "crFormatStructured": "Format algérien structuré",
+      "crFormatStructured": "Format structuré",
       "crFormatFreeform": "Format libre / Saisie manuelle"
     },
     "tax": {

@@ -27,8 +27,8 @@ export default function LegalStep({ data, updateData, onPreviewFile }: { data: a
         sn: match[5]
       };
     }
-    // If it doesn't match, just put the whole thing in SN and default the rest
-    return { ...defaultCr, sn: cr };
+    // If it doesn't match, extract only digits for SN to avoid infinite appending
+    return { ...defaultCr, sn: cr.replace(/\D/g, '') };
   };
 
   const [crParts, setCrParts] = useState(parseCR(data.commercialRegisterNumber || ''));
@@ -154,6 +154,7 @@ export default function LegalStep({ data, updateData, onPreviewFile }: { data: a
                 updateData({ commercialRegisterNumber: '' }); // Reset CR if not Algeria
               }
             }}
+            dir={locale === 'ar' ? 'rtl' : 'ltr'}
           >
             <SelectTrigger className="dark:bg-slate-900 dark:border-slate-800">
               <SelectValue placeholder={t('onboarding.legal.selectCountry')} />
@@ -172,6 +173,7 @@ export default function LegalStep({ data, updateData, onPreviewFile }: { data: a
             value={data.state || ''} 
             onValueChange={(val) => updateData({ state: val })} 
             disabled={!selectedCountry || states.length === 0}
+            dir={locale === 'ar' ? 'rtl' : 'ltr'}
           >
             <SelectTrigger className="dark:bg-slate-900 dark:border-slate-800">
               <SelectValue placeholder={t('onboarding.legal.selectState')} />
@@ -319,7 +321,11 @@ export default function LegalStep({ data, updateData, onPreviewFile }: { data: a
             min={new Date().toISOString().split('T')[0]} // Prevents selecting a past date
             value={data.expiryDate ? data.expiryDate.split('T')[0] : ''} 
             onChange={(e) => {
-              const selectedDate = new Date(e.target.value);
+              if (!e.target.value) {
+                updateData({ expiryDate: null });
+                return;
+              }
+              const selectedDate = new Date(e.target.value + 'T00:00:00');
               const today = new Date();
               today.setHours(0,0,0,0);
               if (selectedDate < today) {
@@ -328,7 +334,7 @@ export default function LegalStep({ data, updateData, onPreviewFile }: { data: a
                 updateData({ expiryDate: null });
                 return;
               }
-              updateData({ expiryDate: e.target.value ? selectedDate.toISOString() : null });
+              updateData({ expiryDate: selectedDate.toISOString() });
             }} 
             className="dark:bg-slate-900 dark:border-slate-800"
           />

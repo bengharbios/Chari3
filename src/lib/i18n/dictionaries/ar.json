@@ -441,7 +441,7 @@
       "crFile": "وثيقة تسجيل الأعمال (مستخرج السجل التجاري) *",
       "crFileDesc": "قم بتحميل نسخة واضحة (PDF, JPG, PNG - Max 10MB)",
       "crFormatLabel": "طريقة إدخال رقم السجل",
-      "crFormatStructured": "التنسيق الجزائري المنظم",
+      "crFormatStructured": "التنسيق المنظم",
       "crFormatFreeform": "تنسيق حر (إدخال يدوي)"
     },
     "tax": {

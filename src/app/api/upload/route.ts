@@ -5,6 +5,8 @@ import crypto from 'crypto';
 
 import { db } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 const DEFAULT_MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
 

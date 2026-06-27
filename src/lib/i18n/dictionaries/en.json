@@ -441,7 +441,7 @@
       "crFile": "Business Registration Document (Commercial Register) *",
       "crFileDesc": "Upload a clear copy (PDF, JPG, PNG - Max 10MB)",
       "crFormatLabel": "CR Number Entry Method",
-      "crFormatStructured": "Structured Algerian Format",
+      "crFormatStructured": "Structured Format",
       "crFormatFreeform": "Freeform / Manual Format"
     },
     "tax": {
