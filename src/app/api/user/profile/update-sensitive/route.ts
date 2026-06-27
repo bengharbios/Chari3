@@ -132,12 +132,105 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
+    const oldValue = method === 'email' ? user.email : user.phone;
+
     // ============================================
-    // ACTION: REQUEST CHANGE (Generate & Send OTPs)
+    // ACTION: REQUEST OLD VERIFY (Send OTP to current email/phone)
     // ============================================
-    if (action === 'request_change') {
+    if (action === 'request_old_verify') {
+      if (!oldValue || oldValue.includes('@charyday.local')) {
+        return NextResponse.json({
+          success: true,
+          requiresOldVerify: false,
+          message: 'لا توجد قيمة قديمة للتحقق منها، يمكنك التخطي مباشرة.'
+        });
+      }
+
+      const oldOtpCode = generateRandomOTP();
+      const expiry = new Date(Date.now() + 5 * 60 * 1000);
+
+      await db.verificationToken.upsert({
+        where: { identifier_token: { identifier: `${oldValue}_profile_update_old`, token: oldOtpCode } },
+        update: { expires: expiry },
+        create: { identifier: `${oldValue}_profile_update_old`, token: oldOtpCode, expires: expiry }
+      });
+
+      let sent = false;
+      if (method === 'email') {
+        sent = await sendEmailOTP(oldValue, oldOtpCode, false);
+      } else {
+        sent = await sendSmsOTP(oldValue, oldOtpCode, false);
+      }
+
+      console.log(`[DEV ONLY] Profile change OLD OTP: Code = ${oldOtpCode} sent to ${oldValue}`);
+
+      return NextResponse.json({
+        success: true,
+        requiresOldVerify: true,
+        message: method === 'email'
+          ? 'تم إرسال رمز الأمان إلى بريدك الإلكتروني الحالي.'
+          : 'تم إرسال رمز الأمان إلى رقم هاتفك الحالي.',
+        _devCodeOld: oldOtpCode
+      });
+    }
+
+    // ============================================
+    // ACTION: CONFIRM OLD VERIFY (Verify OTP of current email/phone)
+    // ============================================
+    if (action === 'confirm_old_verify') {
+      if (!oldValue || oldValue.includes('@charyday.local')) {
+        return NextResponse.json({ success: true, message: 'Verified (no old value)' });
+      }
+
+      if (!oldOtp) {
+        return NextResponse.json({ success: false, error: 'رمز تأكيد العنوان الحالي مطلوب' }, { status: 400 });
+      }
+
+      const tokenRecord = await db.verificationToken.findUnique({
+        where: { identifier_token: { identifier: `${oldValue}_profile_update_old`, token: oldOtp.trim() } }
+      });
+
+      if (!tokenRecord || tokenRecord.expires < new Date()) {
+        return NextResponse.json({ success: false, error: 'رمز تأكيد البريد/الهاتف الحالي غير صالح أو منتهي الصلاحية.' }, { status: 400 });
+      }
+
+      // Cleanup token
+      await db.verificationToken.delete({
+        where: { identifier_token: { identifier: `${oldValue}_profile_update_old`, token: oldOtp.trim() } }
+      }).catch(() => {});
+
+      // Create a temporary proof that old verification was passed
+      const passExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      const passToken = generateRandomOTP(); // simple random code as proof token
+      await db.verificationToken.upsert({
+        where: { identifier_token: { identifier: `${user.id}_old_verify_passed`, token: passToken } },
+        update: { expires: passExpiry },
+        create: { identifier: `${user.id}_old_verify_passed`, token: passToken, expires: passExpiry }
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: 'تم التحقق من هويتك بنجاح. يرجى إدخال البريد/الهاتف الجديد.',
+        passToken
+      });
+    }
+
+    // ============================================
+    // ACTION: REQUEST NEW VERIFY (Send OTP to new email/phone)
+    // ============================================
+    if (action === 'request_new_verify') {
       if (!newValue) {
         return NextResponse.json({ success: false, error: 'New value is required' }, { status: 400 });
+      }
+
+      // Verify that old verification passed if required
+      if (oldValue && !oldValue.includes('@charyday.local')) {
+        const passRecord = await db.verificationToken.findFirst({
+          where: { identifier: `${user.id}_old_verify_passed`, expires: { gte: new Date() } }
+        });
+        if (!passRecord) {
+          return NextResponse.json({ success: false, error: 'يرجى تأكيد هويتك عبر بريدك/هاتفك الحالي أولاً.' }, { status: 401 });
+        }
       }
 
       // Check if new value is already taken
@@ -151,101 +244,68 @@ export async function POST(req: NextRequest) {
         }, { status: 400 });
       }
 
-      const oldValue = method === 'email' ? user.email : user.phone;
-
-      // 1. Generate OTPs
-      const oldOtpCode = generateRandomOTP();
       const newOtpCode = generateRandomOTP();
-
-      // 2. Save OTPs to DB (expires in 5 minutes)
       const expiry = new Date(Date.now() + 5 * 60 * 1000);
 
-      // Save token for old email/phone verification
-      if (oldValue) {
-        await db.verificationToken.upsert({
-          where: { identifier_token: { identifier: `${oldValue}_profile_update`, token: oldOtpCode } },
-          update: { expires: expiry },
-          create: { identifier: `${oldValue}_profile_update`, token: oldOtpCode, expires: expiry }
-        });
-      }
-
-      // Save token for new email/phone verification
       await db.verificationToken.upsert({
-        where: { identifier_token: { identifier: `${newValue}_profile_update`, token: newOtpCode } },
+        where: { identifier_token: { identifier: `${newValue}_profile_update_new`, token: newOtpCode } },
         update: { expires: expiry },
-        create: { identifier: `${newValue}_profile_update`, token: newOtpCode, expires: expiry }
+        create: { identifier: `${newValue}_profile_update_new`, token: newOtpCode, expires: expiry }
       });
 
-      // 3. Send OTPs
-      let oldSent = false;
-      let newSent = false;
-
+      let sent = false;
       if (method === 'email') {
-        if (oldValue) oldSent = await sendEmailOTP(oldValue, oldOtpCode, false);
-        else oldSent = true; // No old email (e.g. phone-only registration), skip old verify
-        newSent = await sendEmailOTP(newValue, newOtpCode, true);
+        sent = await sendEmailOTP(newValue, newOtpCode, true);
       } else {
-        if (oldValue) oldSent = await sendSmsOTP(oldValue, oldOtpCode, false);
-        else oldSent = true; // No old phone, skip old verify
-        newSent = await sendSmsOTP(newValue, newOtpCode, true);
+        sent = await sendSmsOTP(newValue, newOtpCode, true);
       }
 
-      // Log codes in dev environment for easy testing
-      console.log(`[DEV ONLY] Profile change OTPs: Old Code = ${oldOtpCode}, New Code = ${newOtpCode}`);
+      console.log(`[DEV ONLY] Profile change NEW OTP: Code = ${newOtpCode} sent to ${newValue}`);
 
       return NextResponse.json({
         success: true,
-        message: 'تم إرسال رموز الأمان للبريد/الهاتف القديم والجديد بنجاح. يرجى تأكيدها لإتمام التغيير.',
-        requiresOldVerify: !!oldValue,
-        _devCodeOld: oldOtpCode,
-        _devCodeNew: newOtpCode,
+        message: 'تم إرسال رمز التحقق إلى العنوان الجديد بنجاح.',
+        _devCodeNew: newOtpCode
       });
     }
 
     // ============================================
-    // ACTION: CONFIRM CHANGE (Verify & Update)
+    // ACTION: CONFIRM NEW CHANGE (Verify & Update User)
     // ============================================
-    if (action === 'confirm_change') {
+    if (action === 'confirm_new_change') {
       if (!newValue || !newOtp) {
         return NextResponse.json({ success: false, error: 'Missing newValue or newOtp' }, { status: 400 });
       }
 
-      const oldValue = method === 'email' ? user.email : user.phone;
-
-      // 1. Verify old value OTP (if oldValue exists)
-      if (oldValue) {
-        if (!oldOtp) {
-          return NextResponse.json({ success: false, error: 'رمز تأكيد العنوان الحالي مطلوب' }, { status: 400 });
-        }
-        const oldTokenRecord = await db.verificationToken.findUnique({
-          where: { identifier_token: { identifier: `${oldValue}_profile_update`, token: oldOtp.trim() } }
+      // Verify that old verification passed if required
+      if (oldValue && !oldValue.includes('@charyday.local')) {
+        const passRecord = await db.verificationToken.findFirst({
+          where: { identifier: `${user.id}_old_verify_passed`, expires: { gte: new Date() } }
         });
-
-        if (!oldTokenRecord || oldTokenRecord.expires < new Date()) {
-          return NextResponse.json({ success: false, error: 'رمز تأكيد البريد/الهاتف الحالي غير صالح أو منتهي الصلاحية.' }, { status: 400 });
+        if (!passRecord) {
+          return NextResponse.json({ success: false, error: 'يرجى تأكيد هويتك عبر بريدك/هاتفك الحالي أولاً.' }, { status: 401 });
         }
       }
 
-      // 2. Verify new value OTP
+      // Verify new value OTP
       const newTokenRecord = await db.verificationToken.findUnique({
-        where: { identifier_token: { identifier: `${newValue}_profile_update`, token: newOtp.trim() } }
+        where: { identifier_token: { identifier: `${newValue}_profile_update_new`, token: newOtp.trim() } }
       });
 
       if (!newTokenRecord || newTokenRecord.expires < new Date()) {
         return NextResponse.json({ success: false, error: 'رمز تأكيد البريد/الهاتف الجديد غير صالح أو منتهي الصلاحية.' }, { status: 400 });
       }
 
-      // 3. Cleanup used tokens
-      if (oldValue) {
-        await db.verificationToken.delete({
-          where: { identifier_token: { identifier: `${oldValue}_profile_update`, token: oldOtp.trim() } }
-        }).catch(() => {});
-      }
+      // Cleanup tokens
       await db.verificationToken.delete({
-        where: { identifier_token: { identifier: `${newValue}_profile_update`, token: newOtp.trim() } }
+        where: { identifier_token: { identifier: `${newValue}_profile_update_new`, token: newOtp.trim() } }
       }).catch(() => {});
 
-      // 4. Perform User profile update in Transaction
+      await db.verificationToken.deleteMany({
+        where: { identifier: `${user.id}_old_verify_passed` }
+      }).catch(() => {});
+
+      // Perform User profile update in Transaction
       await db.$transaction(async (tx) => {
         if (method === 'email') {
           await tx.user.update({

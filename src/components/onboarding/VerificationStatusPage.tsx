@@ -57,65 +57,118 @@ export default function VerificationStatusPage() {
   // State for fetched document details from API
   const [details, setDetails] = useState<Record<string, unknown> | null>(null);
 
-  // States for sensitive profile update (double OTP modal)
+  // States for sensitive profile update (sequential flow)
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [updateMethod, setUpdateMethod] = useState<'email' | 'phone'>('email');
   const [newValueInput, setNewValueInput] = useState('');
   const [oldOtpInput, setOldOtpInput] = useState('');
   const [newOtpInput, setNewOtpInput] = useState('');
-  const [updateStep, setUpdateStep] = useState<1 | 2>(1); // 1 = Input value, 2 = Verify OTPs
-  const [verificationStage, setVerificationStage] = useState<'new' | 'old'>('new');
-  const [requiresOldOtp, setRequiresOldOtp] = useState(false);
-  const [isSendingUpdateOtp, setIsSendingUpdateOtp] = useState(false);
-  const [isConfirmingUpdate, setIsConfirmingUpdate] = useState(false);
+  const [updateStep, setUpdateStep] = useState<1 | 2 | 3 | 4>(1); // 1 = request old, 2 = verify old, 3 = input new, 4 = verify new
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
   const openUpdateModal = (method: 'email' | 'phone') => {
     setUpdateMethod(method);
-    setNewValueInput(''); // Keep it empty so the user enters the new value
+    setNewValueInput('');
     setOldOtpInput('');
     setNewOtpInput('');
-    setUpdateStep(1);
-    setVerificationStage('new');
-    setRequiresOldOtp(false);
+    
+    const hasOld = method === 'email'
+      ? (user.email && !user.email.includes('@charyday.local'))
+      : !!user.phone;
+
+    if (hasOld) {
+      setUpdateStep(1);
+    } else {
+      setUpdateStep(3); // Start directly by entering the new value
+    }
     setIsUpdateModalOpen(true);
   };
 
-  const handleRequestChange = async () => {
-    if (!newValueInput) {
-      toast.error(t(isAr, 'يرجى إدخال القيمة الجديدة', 'Please enter new value'));
-      return;
-    }
-    
-    if (updateMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newValueInput)) {
-      toast.error(t(isAr, 'صيغة البريد الإلكتروني غير صحيحة', 'Invalid email format'));
-      return;
-    }
-
-    setIsSendingUpdateOtp(true);
+  const handleSendOldOtp = async () => {
+    setIsSendingOtp(true);
     try {
       const res = await fetch('/api/user/profile/update-sensitive', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'request_change',
+          action: 'request_old_verify',
+          method: updateMethod,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(t(isAr, 'تم إرسال رمز الأمان للعنوان الحالي.', 'Security code sent to current address.'));
+        setUpdateStep(2);
+        if (data._devCodeOld) {
+          toast.info(t(isAr, `[تجريبي] رمز التحقق الحالي: ${data._devCodeOld}`, `[Dev] Current OTP: ${data._devCodeOld}`), { duration: 15000 });
+        }
+      } else {
+        toast.error(data.error || t(isAr, 'فشل إرسال الرمز', 'Failed to send code'));
+      }
+    } catch {
+      toast.error(t(isAr, 'خطأ في الاتصال بالخادم', 'Connection error'));
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOldOtp = async () => {
+    if (!oldOtpInput || oldOtpInput.length < 6) {
+      toast.error(t(isAr, 'يرجى إدخال الرمز كاملاً', 'Please enter full code'));
+      return;
+    }
+    setIsVerifyingOtp(true);
+    try {
+      const res = await fetch('/api/user/profile/update-sensitive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'confirm_old_verify',
+          method: updateMethod,
+          oldOtp: oldOtpInput,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(t(isAr, 'تم التحقق من هويتك بنجاح.', 'Identity verified successfully.'));
+        setUpdateStep(3);
+      } else {
+        toast.error(data.error || t(isAr, 'الرمز غير صحيح أو منتهي الصلاحية', 'Incorrect or expired code'));
+      }
+    } catch {
+      toast.error(t(isAr, 'خطأ في الاتصال بالخادم', 'Connection error'));
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const handleSendNewOtp = async () => {
+    if (!newValueInput) {
+      toast.error(t(isAr, 'يرجى إدخال القيمة الجديدة', 'Please enter new value'));
+      return;
+    }
+    if (updateMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newValueInput)) {
+      toast.error(t(isAr, 'صيغة البريد الإلكتروني غير صحيحة', 'Invalid email format'));
+      return;
+    }
+    setIsSendingOtp(true);
+    try {
+      const res = await fetch('/api/user/profile/update-sensitive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'request_new_verify',
           method: updateMethod,
           newValue: newValueInput,
         }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(t(isAr, 'تم إرسال رموز الأمان بنجاح.', 'Security codes sent successfully.'));
-        setRequiresOldOtp(data.requiresOldVerify);
-        setUpdateStep(2);
-
-        if (data._devCodeOld || data._devCodeNew) {
-          toast.info(
-            t(isAr, 
-              `[تجريبي] الرمز القديم: ${data._devCodeOld || 'لا يوجد'}، الرمز الجديد: ${data._devCodeNew}`, 
-              `[Dev] Old OTP: ${data._devCodeOld || 'None'}, New OTP: ${data._devCodeNew}`
-            ),
-            { duration: 15000 }
-          );
+        toast.success(t(isAr, 'تم إرسال رمز الأمان للعنوان الجديد بنجاح.', 'Security code sent to the new address.'));
+        setUpdateStep(4);
+        if (data._devCodeNew) {
+          toast.info(t(isAr, `[تجريبي] الرمز الجديد: ${data._devCodeNew}`, `[Dev] New OTP: ${data._devCodeNew}`), { duration: 15000 });
         }
       } else {
         toast.error(data.error || t(isAr, 'فشل طلب التعديل', 'Failed to request change'));
@@ -123,26 +176,24 @@ export default function VerificationStatusPage() {
     } catch {
       toast.error(t(isAr, 'خطأ في الاتصال بالخادم', 'Connection error'));
     } finally {
-      setIsSendingUpdateOtp(false);
+      setIsSendingOtp(false);
     }
   };
 
-  const handleConfirmChange = async () => {
-    if (!newOtpInput || (requiresOldOtp && !oldOtpInput)) {
-      toast.error(t(isAr, 'يرجى إدخال رموز التحقق المطلوبة', 'Please enter required verification codes'));
+  const handleConfirmNewChange = async () => {
+    if (!newOtpInput || newOtpInput.length < 6) {
+      toast.error(t(isAr, 'يرجى إدخال رمز التحقق الجديد كاملاً', 'Please enter new OTP code'));
       return;
     }
-
-    setIsConfirmingUpdate(true);
+    setIsVerifyingOtp(true);
     try {
       const res = await fetch('/api/user/profile/update-sensitive', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          action: 'confirm_change',
+          action: 'confirm_new_change',
           method: updateMethod,
           newValue: newValueInput,
-          oldOtp: oldOtpInput,
           newOtp: newOtpInput,
         }),
       });
@@ -161,9 +212,10 @@ export default function VerificationStatusPage() {
     } catch {
       toast.error(t(isAr, 'خطأ في الاتصال بالخادم', 'Connection error'));
     } finally {
-      setIsConfirmingUpdate(false);
+      setIsVerifyingOtp(false);
     }
   };
+
 
 
   // Fetch full verification details
@@ -662,33 +714,93 @@ export default function VerificationStatusPage() {
           </CardContent>
         </Card>
       )}
-      {/* Sensitive Profile Update Dialog (Double OTP) */}
+      {/* Sensitive Profile Update Dialog (Sequential step-by-step flow) */}
       <Dialog open={isUpdateModalOpen} onOpenChange={setIsUpdateModalOpen}>
         <DialogContent dir={isAr ? 'rtl' : 'ltr'} className="max-w-md">
           <DialogHeader className="text-start rtl:text-right ltr:text-left">
             <DialogTitle>
               {updateMethod === 'email' 
-                ? (user.email && !user.email.includes('@charyday.local')
-                    ? t(isAr, 'تعديل البريد الإلكتروني للحساب', 'Edit Account Email')
-                    : t(isAr, 'إدخال البريد الإلكتروني للحساب', 'Enter Account Email')
-                  )
-                : (user.phone
-                    ? t(isAr, 'تعديل رقم هاتف الحساب', 'Edit Account Phone Number')
-                    : t(isAr, 'إدخال رقم هاتف الحساب', 'Enter Account Phone Number')
-                  )
+                ? t(isAr, 'تعديل البريد الإلكتروني للحساب', 'Edit Account Email')
+                : t(isAr, 'تعديل رقم هاتف الحساب', 'Edit Account Phone Number')
               }
             </DialogTitle>
             <DialogDescription>
               {t(isAr, 
-                'لدواعي الأمان ولحماية حسابك، تتطلب هذه العملية التحقق من الهوية عبر إرسال رموز تحقق مستقلة.',
-                'For security and account protection, this operation requires identity verification via security codes.'
+                'لدواعي الأمان ولحماية حسابك، تتطلب هذه العملية التحقق من الهوية خطوة بخطوة عبر رموز أمان مستقلة.',
+                'For security and account protection, this operation requires step-by-step identity verification via separate security codes.'
               )}
             </DialogDescription>
           </DialogHeader>
 
-          {updateStep === 1 ? (
+          {/* STEP 1: Request OTP for current old email/phone */}
+          {updateStep === 1 && (
             <div className="space-y-4 py-2 text-start rtl:text-right ltr:text-left">
-              {/* Show current email or phone if verified and exists */}
+              <p className="text-xs text-muted-foreground">
+                {updateMethod === 'email'
+                  ? t(isAr, `الخطوة 1: يرجى تأكيد هويتك أولاً عبر إرسال رمز التحقق لبريدك الإلكتروني الحالي: ${user.email}`, `Step 1: Please verify your identity first by sending a code to your current email: ${user.email}`)
+                  : t(isAr, `الخطوة 1: يرجى تأكيد هويتك أولاً عبر إرسال رمز التحقق لهاتفك الحالي: ${user.phone}`, `Step 1: Please verify your identity first by sending a code to your current phone: ${user.phone}`)
+                }
+              </p>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl" onClick={() => setIsUpdateModalOpen(false)}>
+                  {t(isAr, 'إلغاء', 'Cancel')}
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="text-xs font-bold rounded-xl bg-primary text-white" 
+                  disabled={isSendingOtp}
+                  onClick={handleSendOldOtp}
+                >
+                  {isSendingOtp ? '...' : t(isAr, 'إرسال رمز التحقق الحالي', 'Send Current Verification Code')}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Verify current old OTP */}
+          {updateStep === 2 && (
+            <div className="space-y-4 py-2 text-start rtl:text-right ltr:text-left">
+              <div className="space-y-2">
+                <span className="text-sm font-semibold">
+                  {updateMethod === 'email'
+                    ? t(isAr, 'أدخل الرمز المرسل لبريدك الإلكتروني الحالي', 'Enter code sent to current email')
+                    : t(isAr, 'أدخل الرمز المرسل لهاتفك الحالي', 'Enter code sent to current phone')
+                  }
+                </span>
+                <Input
+                  dir="ltr"
+                  maxLength={6}
+                  placeholder="123456"
+                  value={oldOtpInput}
+                  onChange={(e) => setOldOtpInput(e.target.value.replace(/\D/g, ''))}
+                  className="bg-muted/30 border-white/10 rounded-xl text-xs text-center font-mono tracking-widest"
+                />
+              </div>
+              <div className="flex justify-between items-center pt-2">
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setUpdateStep(1)}>
+                  {t(isAr, '← رجوع', '← Back')}
+                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl" onClick={() => setIsUpdateModalOpen(false)}>
+                    {t(isAr, 'إلغاء', 'Cancel')}
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="text-xs font-bold rounded-xl bg-primary text-white" 
+                    disabled={isVerifyingOtp}
+                    onClick={handleVerifyOldOtp}
+                  >
+                    {isVerifyingOtp ? '...' : t(isAr, 'تأكيد الهوية', 'Verify Identity')}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: Input new value */}
+          {updateStep === 3 && (
+            <div className="space-y-4 py-2 text-start rtl:text-right ltr:text-left">
+              {/* Show current value if it exists */}
               {updateMethod === 'email' && user.email && !user.email.includes('@charyday.local') && (
                 <div className="text-xs bg-muted/50 p-3 rounded-lg border border-dashed">
                   <span className="text-muted-foreground block mb-1">{t(isAr, 'البريد الإلكتروني الحالي:', 'Current Email:')}</span>
@@ -705,14 +817,8 @@ export default function VerificationStatusPage() {
               <div className="space-y-2">
                 <span className="text-sm font-semibold">
                   {updateMethod === 'email'
-                    ? (user.email && !user.email.includes('@charyday.local')
-                        ? t(isAr, 'البريد الإلكتروني الجديد', 'New Email Address')
-                        : t(isAr, 'البريد الإلكتروني', 'Email Address')
-                      )
-                    : (user.phone
-                        ? t(isAr, 'رقم الهاتف الجديد', 'New Phone Number')
-                        : t(isAr, 'رقم الهاتف', 'Phone Number')
-                      )
+                    ? t(isAr, 'أدخل البريد الإلكتروني الجديد', 'Enter New Email Address')
+                    : t(isAr, 'أدخل رقم الهاتف الجديد', 'Enter New Phone Number')
                   }
                 </span>
                 <Input
@@ -724,116 +830,72 @@ export default function VerificationStatusPage() {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl" onClick={() => setIsUpdateModalOpen(false)}>
-                  {t(isAr, 'إلغاء', 'Cancel')}
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="text-xs font-bold rounded-xl bg-primary text-white" 
-                  disabled={isSendingUpdateOtp}
-                  onClick={handleRequestChange}
-                >
-                  {isSendingUpdateOtp ? '...' : t(isAr, 'إرسال رموز الأمان', 'Send Security Codes')}
-                </Button>
+              <div className="flex justify-between items-center pt-2">
+                {/* Only allow back to verify old if they had one */}
+                {(updateMethod === 'email' ? (user.email && !user.email.includes('@charyday.local')) : !!user.phone) ? (
+                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setUpdateStep(2)}>
+                    {t(isAr, '← رجوع', '← Back')}
+                  </Button>
+                ) : <div />}
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl" onClick={() => setIsUpdateModalOpen(false)}>
+                    {t(isAr, 'إلغاء', 'Cancel')}
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="text-xs font-bold rounded-xl bg-primary text-white" 
+                    disabled={isSendingOtp}
+                    onClick={handleSendNewOtp}
+                  >
+                    {isSendingOtp ? '...' : t(isAr, 'إرسال الرمز للعنوان الجديد', 'Send Verification Code')}
+                  </Button>
+                </div>
               </div>
             </div>
-          ) : (
+          )}
+
+          {/* STEP 4: Verify new OTP and save */}
+          {updateStep === 4 && (
             <div className="space-y-4 py-2 text-start rtl:text-right ltr:text-left">
-              {verificationStage === 'new' ? (
-                <>
-                  <p className="text-xs text-muted-foreground">
-                    {updateMethod === 'email'
-                      ? t(isAr, `يرجى إدخال رمز التحقق المكون من 6 أرقام المرسل إلى بريدك الجديد: ${newValueInput}`, `Please enter the 6-digit verification code sent to your new email: ${newValueInput}`)
-                      : t(isAr, `يرجى إدخال رمز التحقق المكون من 6 أرقام المرسل إلى هاتفك الجديد: ${newValueInput}`, `Please enter the 6-digit verification code sent to your new phone: ${newValueInput}`)
-                    }
-                  </p>
+              <p className="text-xs text-muted-foreground">
+                {updateMethod === 'email'
+                  ? t(isAr, `يرجى إدخال رمز التحقق المكون من 6 أرقام المرسل إلى بريدك الجديد: ${newValueInput}`, `Please enter the 6-digit verification code sent to your new email: ${newValueInput}`)
+                  : t(isAr, `يرجى إدخال رمز التحقق المكون من 6 أرقام المرسل إلى هاتفك الجديد: ${newValueInput}`, `Please enter the 6-digit verification code sent to your new phone: ${newValueInput}`)
+                }
+              </p>
 
-                  <div className="space-y-2">
-                    <span className="text-sm font-semibold">
-                      {t(isAr, 'رمز التحقق الجديد', 'New Verification Code')}
-                    </span>
-                    <Input
-                      dir="ltr"
-                      maxLength={6}
-                      placeholder="123456"
-                      value={newOtpInput}
-                      onChange={(e) => setNewOtpInput(e.target.value.replace(/\D/g, ''))}
-                      className="bg-muted/30 border-white/10 rounded-xl text-xs text-center font-mono tracking-widest"
-                    />
-                  </div>
+              <div className="space-y-2">
+                <span className="text-sm font-semibold">
+                  {t(isAr, 'رمز التحقق الجديد', 'New Verification Code')}
+                </span>
+                <Input
+                  dir="ltr"
+                  maxLength={6}
+                  placeholder="123456"
+                  value={newOtpInput}
+                  onChange={(e) => setNewOtpInput(e.target.value.replace(/\D/g, ''))}
+                  className="bg-muted/30 border-white/10 rounded-xl text-xs text-center font-mono tracking-widest"
+                />
+              </div>
 
-                  <div className="flex justify-between items-center pt-2">
-                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setUpdateStep(1)}>
-                      {t(isAr, '← رجوع', '← Back')}
-                    </Button>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl" onClick={() => setIsUpdateModalOpen(false)}>
-                        {t(isAr, 'إلغاء', 'Cancel')}
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="text-xs font-bold rounded-xl bg-primary text-white" 
-                        onClick={() => {
-                          if (!newOtpInput || newOtpInput.length < 6) {
-                            toast.error(t(isAr, 'يرجى إدخال رمز التحقق الجديد كاملاً', 'Please enter full new verification code'));
-                            return;
-                          }
-                          if (requiresOldOtp) {
-                            setVerificationStage('old');
-                          } else {
-                            handleConfirmChange();
-                          }
-                        }}
-                      >
-                        {requiresOldOtp ? t(isAr, 'التالي ←', 'Next →') : t(isAr, 'تأكيد وحفظ', 'Confirm & Save')}
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p className="text-xs text-muted-foreground">
-                    {updateMethod === 'email'
-                      ? t(isAr, `لتأكيد التعديل، يرجى إدخال رمز الأمان المرسل إلى بريدك الإلكتروني الحالي: ${user.email}`, `To confirm the update, please enter the security code sent to your current email: ${user.email}`)
-                      : t(isAr, `لتأكيد التعديل، يرجى إدخال رمز الأمان المرسل إلى هاتفك الحالي: ${user.phone}`, `To confirm the update, please enter the security code sent to your current phone: ${user.phone}`)
-                    }
-                  </p>
-
-                  <div className="space-y-2">
-                    <span className="text-sm font-semibold">
-                      {t(isAr, 'رمز التحقق للمصادقة الحالية', 'Current Authentication Code')}
-                    </span>
-                    <Input
-                      dir="ltr"
-                      maxLength={6}
-                      placeholder="123456"
-                      value={oldOtpInput}
-                      onChange={(e) => setOldOtpInput(e.target.value.replace(/\D/g, ''))}
-                      className="bg-muted/30 border-white/10 rounded-xl text-xs text-center font-mono tracking-widest"
-                    />
-                  </div>
-
-                  <div className="flex justify-between items-center pt-2">
-                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setVerificationStage('new')}>
-                      {t(isAr, '← رجوع', '← Back')}
-                    </Button>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl" onClick={() => setIsUpdateModalOpen(false)}>
-                        {t(isAr, 'إلغاء', 'Cancel')}
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="text-xs font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white" 
-                        disabled={isConfirmingUpdate}
-                        onClick={handleConfirmChange}
-                      >
-                        {isConfirmingUpdate ? '...' : t(isAr, 'تأكيد وحفظ', 'Confirm & Save')}
-                      </Button>
-                    </div>
-                  </div>
-                </>
-              )}
+              <div className="flex justify-between items-center pt-2">
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setUpdateStep(3)}>
+                  {t(isAr, '← رجوع', '← Back')}
+                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl" onClick={() => setIsUpdateModalOpen(false)}>
+                    {t(isAr, 'إلغاء', 'Cancel')}
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="text-xs font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white" 
+                    disabled={isVerifyingOtp}
+                    onClick={handleConfirmNewChange}
+                  >
+                    {isVerifyingOtp ? '...' : t(isAr, 'تأكيد وحفظ', 'Confirm & Save')}
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>
