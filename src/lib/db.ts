@@ -30,9 +30,7 @@ function createPrisma() {
 
 export const db = globalForPrisma.prisma ?? createPrisma();
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = db;
-}
+globalForPrisma.prisma = db;
 
 // ============================================
 // DB UTILS
