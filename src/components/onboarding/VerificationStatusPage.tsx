@@ -70,7 +70,8 @@ export default function VerificationStatusPage() {
 
   const openUpdateModal = (method: 'email' | 'phone') => {
     setUpdateMethod(method);
-    setNewValueInput(method === 'email' ? (user.email?.includes('@charyday.local') ? '' : user.email || '') : (user.phone || ''));
+    setNewValueInput(''); // Keep it empty so the user enters the new value
+
     setOldOtpInput('');
     setNewOtpInput('');
     setUpdateStep(1);
@@ -539,15 +540,29 @@ export default function VerificationStatusPage() {
       {/* Active Account Notice */}
       {accountStatus === 'active' && (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/30">
+          <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg border ${
+            requiredCount > 0
+              ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/30'
+              : 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800/30'
+          }`}>
             <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
+              {requiredCount > 0 ? (
+                <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 animate-pulse" />
+              ) : (
+                <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
+              )}
               <div>
-                <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                  {t(isAr, '🎉 حسابك مفعّل بالكامل كمقر متجر رسمي', 'Your account is fully activated as Verified Store')}
+                <p className={`text-sm font-medium ${requiredCount > 0 ? 'text-amber-800 dark:text-amber-200' : 'text-green-800 dark:text-green-200'}`}>
+                  {requiredCount > 0 
+                    ? t(isAr, '🎉 حسابك نشط، ولكن يرجى إكمال البيانات المطلوبة', '🎉 Account active, but please complete required info')
+                    : t(isAr, '🎉 حسابك مفعّل بالكامل كمقر متجر رسمي', 'Your account is fully activated as Verified Store')
+                  }
                 </p>
-                <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
-                  {t(isAr, 'يمكنك الآن إدارة منتجاتك، طلباتك، وموظفيك بحرية مطلقة', 'You now have full access to manage your products, orders, and staff')}
+                <p className={`text-xs mt-0.5 ${requiredCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-green-600 dark:text-green-400'}`}>
+                  {requiredCount > 0
+                    ? t(isAr, 'حسابك مفعّل، ولكن يرجى استكمال بيانات الهاتف/البريد لتفادي أي قيود على سحب الأرباح.', 'Your account is active, but please complete phone/email to avoid payout holds.')
+                    : t(isAr, 'يمكنك الآن إدارة منتجاتك، طلباتك، وموظفيك بحرية مطلقة', 'You now have full access to manage your products, orders, and staff')
+                  }
                 </p>
               </div>
             </div>
@@ -672,6 +687,20 @@ export default function VerificationStatusPage() {
 
           {updateStep === 1 ? (
             <div className="space-y-4 py-2 text-start rtl:text-right ltr:text-left">
+              {/* Show current email or phone if verified and exists */}
+              {updateMethod === 'email' && user.email && !user.email.includes('@charyday.local') && (
+                <div className="text-xs bg-muted/50 p-3 rounded-lg border border-dashed">
+                  <span className="text-muted-foreground block mb-1">{t(isAr, 'البريد الإلكتروني الحالي:', 'Current Email:')}</span>
+                  <span className="font-semibold font-mono text-sm">{user.email}</span>
+                </div>
+              )}
+              {updateMethod === 'phone' && user.phone && (
+                <div className="text-xs bg-muted/50 p-3 rounded-lg border border-dashed">
+                  <span className="text-muted-foreground block mb-1">{t(isAr, 'رقم الهاتف الحالي:', 'Current Phone:')}</span>
+                  <span className="font-semibold font-mono text-sm">{user.phone}</span>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <span className="text-sm font-semibold">
                   {updateMethod === 'email'
