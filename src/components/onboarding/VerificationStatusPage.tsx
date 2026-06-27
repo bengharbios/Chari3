@@ -64,6 +64,7 @@ export default function VerificationStatusPage() {
   const [oldOtpInput, setOldOtpInput] = useState('');
   const [newOtpInput, setNewOtpInput] = useState('');
   const [updateStep, setUpdateStep] = useState<1 | 2>(1); // 1 = Input value, 2 = Verify OTPs
+  const [verificationStage, setVerificationStage] = useState<'new' | 'old'>('new');
   const [requiresOldOtp, setRequiresOldOtp] = useState(false);
   const [isSendingUpdateOtp, setIsSendingUpdateOtp] = useState(false);
   const [isConfirmingUpdate, setIsConfirmingUpdate] = useState(false);
@@ -71,10 +72,10 @@ export default function VerificationStatusPage() {
   const openUpdateModal = (method: 'email' | 'phone') => {
     setUpdateMethod(method);
     setNewValueInput(''); // Keep it empty so the user enters the new value
-
     setOldOtpInput('');
     setNewOtpInput('');
     setUpdateStep(1);
+    setVerificationStage('new');
     setRequiresOldOtp(false);
     setIsUpdateModalOpen(true);
   };
@@ -739,73 +740,100 @@ export default function VerificationStatusPage() {
             </div>
           ) : (
             <div className="space-y-4 py-2 text-start rtl:text-right ltr:text-left">
-              <p className="text-xs text-muted-foreground">
-                {t(isAr, 
-                  'يرجى إدخال رموز التحقق المرسلة إليك لتأكيد التغيير.',
-                  'Please enter the verification codes sent to confirm the change.'
-                )}
-              </p>
-
-              {requiresOldOtp && (
-                <div className="space-y-2">
-                  <span className="text-sm font-semibold">
+              {verificationStage === 'new' ? (
+                <>
+                  <p className="text-xs text-muted-foreground">
                     {updateMethod === 'email'
-                      ? t(isAr, 'رمز التحقق المرسل لبريدك الحالي', 'OTP sent to current email')
-                      : t(isAr, 'رمز التحقق المرسل لهاتفك الحالي', 'OTP sent to current phone')
+                      ? t(isAr, `يرجى إدخال رمز التحقق المكون من 6 أرقام المرسل إلى بريدك الجديد: ${newValueInput}`, `Please enter the 6-digit verification code sent to your new email: ${newValueInput}`)
+                      : t(isAr, `يرجى إدخال رمز التحقق المكون من 6 أرقام المرسل إلى هاتفك الجديد: ${newValueInput}`, `Please enter the 6-digit verification code sent to your new phone: ${newValueInput}`)
                     }
-                  </span>
-                  <Input
-                    dir="ltr"
-                    maxLength={6}
-                    placeholder="123456"
-                    value={oldOtpInput}
-                    onChange={(e) => setOldOtpInput(e.target.value.replace(/\D/g, ''))}
-                    className="bg-muted/30 border-white/10 rounded-xl text-xs text-center font-mono tracking-widest"
-                  />
-                </div>
+                  </p>
+
+                  <div className="space-y-2">
+                    <span className="text-sm font-semibold">
+                      {t(isAr, 'رمز التحقق الجديد', 'New Verification Code')}
+                    </span>
+                    <Input
+                      dir="ltr"
+                      maxLength={6}
+                      placeholder="123456"
+                      value={newOtpInput}
+                      onChange={(e) => setNewOtpInput(e.target.value.replace(/\D/g, ''))}
+                      className="bg-muted/30 border-white/10 rounded-xl text-xs text-center font-mono tracking-widest"
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2">
+                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setUpdateStep(1)}>
+                      {t(isAr, '← رجوع', '← Back')}
+                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl" onClick={() => setIsUpdateModalOpen(false)}>
+                        {t(isAr, 'إلغاء', 'Cancel')}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="text-xs font-bold rounded-xl bg-primary text-white" 
+                        onClick={() => {
+                          if (!newOtpInput || newOtpInput.length < 6) {
+                            toast.error(t(isAr, 'يرجى إدخال رمز التحقق الجديد كاملاً', 'Please enter full new verification code'));
+                            return;
+                          }
+                          if (requiresOldOtp) {
+                            setVerificationStage('old');
+                          } else {
+                            handleConfirmChange();
+                          }
+                        }}
+                      >
+                        {requiresOldOtp ? t(isAr, 'التالي ←', 'Next →') : t(isAr, 'تأكيد وحفظ', 'Confirm & Save')}
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-muted-foreground">
+                    {updateMethod === 'email'
+                      ? t(isAr, `لتأكيد التعديل، يرجى إدخال رمز الأمان المرسل إلى بريدك الإلكتروني الحالي: ${user.email}`, `To confirm the update, please enter the security code sent to your current email: ${user.email}`)
+                      : t(isAr, `لتأكيد التعديل، يرجى إدخال رمز الأمان المرسل إلى هاتفك الحالي: ${user.phone}`, `To confirm the update, please enter the security code sent to your current phone: ${user.phone}`)
+                    }
+                  </p>
+
+                  <div className="space-y-2">
+                    <span className="text-sm font-semibold">
+                      {t(isAr, 'رمز التحقق للمصادقة الحالية', 'Current Authentication Code')}
+                    </span>
+                    <Input
+                      dir="ltr"
+                      maxLength={6}
+                      placeholder="123456"
+                      value={oldOtpInput}
+                      onChange={(e) => setOldOtpInput(e.target.value.replace(/\D/g, ''))}
+                      className="bg-muted/30 border-white/10 rounded-xl text-xs text-center font-mono tracking-widest"
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center pt-2">
+                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setVerificationStage('new')}>
+                      {t(isAr, '← رجوع', '← Back')}
+                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl" onClick={() => setIsUpdateModalOpen(false)}>
+                        {t(isAr, 'إلغاء', 'Cancel')}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="text-xs font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white" 
+                        disabled={isConfirmingUpdate}
+                        onClick={handleConfirmChange}
+                      >
+                        {isConfirmingUpdate ? '...' : t(isAr, 'تأكيد وحفظ', 'Confirm & Save')}
+                      </Button>
+                    </div>
+                  </div>
+                </>
               )}
-
-              <div className="space-y-2">
-                <span className="text-sm font-semibold">
-                  {updateMethod === 'email'
-                    ? (requiresOldOtp 
-                        ? t(isAr, 'رمز التحقق المرسل للبريد الجديد', 'OTP sent to new email')
-                        : t(isAr, 'رمز التحقق المرسل لبريدك الإلكتروني', 'OTP sent to your email')
-                      )
-                    : (requiresOldOtp
-                        ? t(isAr, 'رمز التحقق المرسل للهاتف الجديد', 'OTP sent to new phone')
-                        : t(isAr, 'رمز التحقق المرسل لهاتفك', 'OTP sent to your phone')
-                      )
-                  }
-                </span>
-                <Input
-                  dir="ltr"
-                  maxLength={6}
-                  placeholder="123456"
-                  value={newOtpInput}
-                  onChange={(e) => setNewOtpInput(e.target.value.replace(/\D/g, ''))}
-                  className="bg-muted/30 border-white/10 rounded-xl text-xs text-center font-mono tracking-widest"
-                />
-              </div>
-
-              <div className="flex justify-between items-center pt-2">
-                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setUpdateStep(1)}>
-                  {t(isAr, '← رجوع', '← Back')}
-                </Button>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl" onClick={() => setIsUpdateModalOpen(false)}>
-                    {t(isAr, 'إلغاء', 'Cancel')}
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    className="text-xs font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white" 
-                    disabled={isConfirmingUpdate}
-                    onClick={handleConfirmChange}
-                  >
-                    {isConfirmingUpdate ? '...' : t(isAr, 'تأكيد وحفظ', 'Confirm & Save')}
-                  </Button>
-                </div>
-              </div>
             </div>
           )}
         </DialogContent>
