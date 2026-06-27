@@ -430,7 +430,7 @@ async function handleSubmit(body: Record<string, unknown>) {
   // Check user exists
   const user = await db.user.findUnique({
     where: { id: userId as string },
-    select: { id: true, role: true, accountStatus: true },
+    select: { id: true, name: true, role: true, accountStatus: true },
   });
 
   if (!user) {
@@ -633,6 +633,33 @@ async function handleSubmit(body: Record<string, unknown>) {
         details: JSON.stringify({ role, verificationId }),
       },
     });
+
+    // Create notifications for Admins
+    try {
+      const admins = await db.user.findMany({
+        where: {
+          role: { in: ['admin', 'SUPER_ADMIN', 'super_admin'] }
+        },
+        select: { id: true }
+      });
+
+      const adminNotifications = admins.map(admin => ({
+        userId: admin.id,
+        type: 'NEW_VERIFICATION_SUBMISSION',
+        title: 'طلب توثيق جديد',
+        titleEn: 'New Verification Request',
+        body: `تم تقديم طلب توثيق جديد بواسطة ${user?.name || userId}. يرجى مراجعته.`,
+        bodyEn: `A new verification request has been submitted by ${user?.name || userId}. Please review it.`,
+      }));
+
+      if (adminNotifications.length > 0) {
+        await db.notification.createMany({
+          data: adminNotifications
+        });
+      }
+    } catch (notifErr) {
+      console.error('Failed to create admin notification for onboarding submission:', notifErr);
+    }
 
     return {
       success: true,

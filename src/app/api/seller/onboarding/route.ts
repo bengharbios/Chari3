@@ -125,7 +125,7 @@ export async function POST(req: Request) {
       });
 
       const superAdmins = await db.user.findMany({
-        where: { role: 'super_admin' },
+        where: { role: { in: ['admin', 'SUPER_ADMIN', 'super_admin'] } },
         select: { id: true }
       });
       
