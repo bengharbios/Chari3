@@ -64,6 +64,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Seller not found' }, { status: 404 });
     }
 
+    // Security check: Check for sensitive changes (email or phone updates) in the past 48 hours
+    const recentSensitiveChange = await db.auditLog.findFirst({
+      where: {
+        userId: seller.userId,
+        action: { in: ['email_changed', 'phone_changed'] },
+        createdAt: { gte: new Date(Date.now() - 48 * 60 * 60 * 1000) }
+      }
+    });
+
+    if (recentSensitiveChange) {
+      return NextResponse.json({
+        success: false,
+        error: 'تم قفل عمليات سحب الأموال مؤقتاً لمدة 48 ساعة لدواعي أمنية بسبب تعديل البريد الإلكتروني أو رقم الهاتف للحساب مؤخراً.'
+      }, { status: 400 });
+    }
+
     const wallet = await db.wallet.findUnique({ where: { userId: seller.userId } });
     if (!wallet) {
       return NextResponse.json({ success: false, error: 'Wallet not found' }, { status: 404 });
