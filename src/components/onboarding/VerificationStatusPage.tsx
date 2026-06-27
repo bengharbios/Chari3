@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Clock, CheckCircle, XCircle, AlertTriangle, ShieldCheck, Lock, FileText, Phone, Mail, ArrowLeft, ArrowRight, Edit2, ExternalLink, Building2, UserCircle } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { useOnboardingStore, getVerificationItemsForRole, restoreDraftFields, calcResumeStep } from '@/lib/store/onboarding';
@@ -67,6 +67,33 @@ export default function VerificationStatusPage() {
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
 
+  const [countdown, setCountdown] = useState(0);
+  const [canResend, setCanResend] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const startTimer = () => {
+    setCountdown(60);
+    setCanResend(false);
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          setCanResend(true);
+          if (timerRef.current) clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
+
+
   const openUpdateModal = (method: 'email' | 'phone') => {
     setUpdateMethod(method);
     setNewValueInput('');
@@ -100,6 +127,7 @@ export default function VerificationStatusPage() {
       if (res.ok && data.success) {
         toast.success(t(isAr, 'تم إرسال رمز الأمان للعنوان الحالي.', 'Security code sent to current address.'));
         setUpdateStep(2);
+        startTimer();
         if (process.env.NODE_ENV === 'development' && data._devCodeOld) {
           toast.info(t(isAr, `[تجريبي] رمز التحقق الحالي: ${data._devCodeOld}`, `[Dev] Current OTP: ${data._devCodeOld}`), { duration: 15000 });
         }
@@ -148,6 +176,17 @@ export default function VerificationStatusPage() {
       toast.error(t(isAr, 'يرجى إدخال القيمة الجديدة', 'Please enter new value'));
       return;
     }
+
+    const currentValue = updateMethod === 'email' ? user.email : user.phone;
+    if (newValueInput.trim().toLowerCase() === currentValue?.trim().toLowerCase()) {
+      toast.error(
+        updateMethod === 'email'
+          ? t(isAr, 'يرجى إدخال بريد إلكتروني مختلف عن البريد الحالي', 'Please enter a different email address from the current one')
+          : t(isAr, 'يرجى إدخال رقم هاتف مختلف عن الرقم الحالي', 'Please enter a different phone number from the current one')
+      );
+      return;
+    }
+
     if (updateMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newValueInput)) {
       toast.error(t(isAr, 'صيغة البريد الإلكتروني غير صحيحة', 'Invalid email format'));
       return;
@@ -167,6 +206,7 @@ export default function VerificationStatusPage() {
       if (res.ok && data.success) {
         toast.success(t(isAr, 'تم إرسال رمز الأمان للعنوان الجديد بنجاح.', 'Security code sent to the new address.'));
         setUpdateStep(4);
+        startTimer();
         if (process.env.NODE_ENV === 'development' && data._devCodeNew) {
           toast.info(t(isAr, `[تجريبي] الرمز الجديد: ${data._devCodeNew}`, `[Dev] New OTP: ${data._devCodeNew}`), { duration: 15000 });
         }
@@ -775,6 +815,25 @@ export default function VerificationStatusPage() {
                   onChange={(e) => setOldOtpInput(e.target.value.replace(/\D/g, ''))}
                   className="bg-muted/30 border-white/10 rounded-xl text-xs text-center font-mono tracking-widest"
                 />
+                
+                {/* Resend Code OTP old */}
+                <div className="flex justify-start pt-1">
+                  <button
+                    type="button"
+                    disabled={!canResend || isSendingOtp}
+                    onClick={handleSendOldOtp}
+                    className={`text-[11px] font-semibold transition-all ${
+                      canResend && !isSendingOtp
+                        ? 'text-primary hover:underline'
+                        : 'text-muted-foreground cursor-not-allowed'
+                    }`}
+                  >
+                    {t(isAr, 'إعادة إرسال رمز التحقق الحالي', 'Resend Current Code')}
+                    {!canResend && countdown > 0 && (
+                      <span className="ms-1 font-mono text-[10px]">({countdown}ث)</span>
+                    )}
+                  </button>
+                </div>
               </div>
               <div className="flex justify-between items-center pt-2">
                 <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setUpdateStep(1)}>
@@ -876,6 +935,25 @@ export default function VerificationStatusPage() {
                   onChange={(e) => setNewOtpInput(e.target.value.replace(/\D/g, ''))}
                   className="bg-muted/30 border-white/10 rounded-xl text-xs text-center font-mono tracking-widest"
                 />
+
+                {/* Resend Code OTP new */}
+                <div className="flex justify-start pt-1">
+                  <button
+                    type="button"
+                    disabled={!canResend || isSendingOtp}
+                    onClick={handleSendNewOtp}
+                    className={`text-[11px] font-semibold transition-all ${
+                      canResend && !isSendingOtp
+                        ? 'text-primary hover:underline'
+                        : 'text-muted-foreground cursor-not-allowed'
+                    }`}
+                  >
+                    {t(isAr, 'إعادة إرسال رمز التحقق الجديد', 'Resend New Code')}
+                    {!canResend && countdown > 0 && (
+                      <span className="ms-1 font-mono text-[10px]">({countdown}ث)</span>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <div className="flex justify-between items-center pt-2">

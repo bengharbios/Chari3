@@ -223,6 +223,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, error: 'New value is required' }, { status: 400 });
       }
 
+      if (newValue.trim().toLowerCase() === oldValue?.trim().toLowerCase()) {
+        return NextResponse.json({
+          success: false,
+          error: method === 'email'
+            ? 'يرجى إدخال بريد إلكتروني مختلف عن البريد الحالي.'
+            : 'يرجى إدخال رقم هاتف مختلف عن الرقم الحالي.'
+        }, { status: 400 });
+      }
+
       // Verify that old verification passed if required
       if (oldValue && !oldValue.includes('@charyday.local')) {
         const passRecord = await db.verificationToken.findFirst({
@@ -275,6 +284,15 @@ export async function POST(req: NextRequest) {
     if (action === 'confirm_new_change') {
       if (!newValue || !newOtp) {
         return NextResponse.json({ success: false, error: 'Missing newValue or newOtp' }, { status: 400 });
+      }
+
+      if (newValue.trim().toLowerCase() === oldValue?.trim().toLowerCase()) {
+        return NextResponse.json({
+          success: false,
+          error: method === 'email'
+            ? 'يرجى إدخال بريد إلكتروني مختلف عن البريد الحالي.'
+            : 'يرجى إدخال رقم هاتف مختلف عن الرقم الحالي.'
+        }, { status: 400 });
       }
 
       // Verify that old verification passed if required
@@ -345,8 +363,7 @@ export async function POST(req: NextRequest) {
             title: 'تنبيه أمني: تغيير البيانات الحساسة للحساب',
             titleEn: 'Security Alert: Sensitive account details updated',
             body: `تم تغيير ${method === 'email' ? 'البريد الإلكتروني' : 'رقم الهاتف'} لحسابك بنجاح. لدواعي الأمان، تم إيقاف طلبات سحب الأموال مؤقتاً لمدة 48 ساعة.`,
-            bodyEn: `Your account\'s ${method === 'email' ? 'email' : 'phone number'} has been successfully updated. Payout requests are temporarily blocked for 48 hours for security reasons.`,
-            urgency: 'high'
+            bodyEn: `Your account\'s ${method === 'email' ? 'email' : 'phone number'} has been successfully updated. Payout requests are temporarily blocked for 48 hours for security reasons.`
           }
         });
 
@@ -362,8 +379,7 @@ export async function POST(req: NextRequest) {
           title: 'تغيير بيانات حساب تاجر',
           titleEn: 'Merchant Account Details Changed',
           body: `قام التاجر ${user.name || user.id} بتغيير ${method === 'email' ? 'بريده الإلكتروني' : 'رقم هاتفه'}. تم تطبيق قفل السحب الاحترازي لمدة 48 ساعة.`,
-          bodyEn: `Merchant ${user.name || user.id} has changed their login ${method === 'email' ? 'email' : 'phone'}. 48-hour withdrawal lock applied.`,
-          urgency: 'high'
+          bodyEn: `Merchant ${user.name || user.id} has changed their login ${method === 'email' ? 'email' : 'phone'}. 48-hour withdrawal lock applied.`
         }));
 
         if (adminNotifications.length > 0) {
