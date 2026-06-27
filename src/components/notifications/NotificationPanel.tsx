@@ -170,7 +170,11 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
         setCurrentPage(notification.actionPage);
       }
     } else if (notification.actionUrl) {
-      window.open(notification.actionUrl, '_blank');
+      if (notification.actionUrl.startsWith('/')) {
+        router.push(notification.actionUrl);
+      } else {
+        window.open(notification.actionUrl, '_blank');
+      }
     }
   };
 
@@ -311,12 +315,18 @@ export default function NotificationPanel() {
           body: string; bodyEn?: string; type: string;
           isRead: boolean; createdAt: string; data?: string;
         }) => {
-          const typeToCategory: Record<string, string> = {
-            new_order: 'order', shipment: 'shipment',
-            verification: 'verification', wallet: 'wallet',
-            promotion: 'promotion', alert: 'alert',
+          const getCategory = (type: string) => {
+            const lowerType = type.toLowerCase();
+            if (lowerType.includes('order')) return 'order';
+            if (lowerType.includes('shipment')) return 'shipment';
+            if (lowerType.includes('verification')) return 'verification';
+            if (lowerType.includes('wallet')) return 'wallet';
+            if (lowerType.includes('promotion')) return 'promotion';
+            if (lowerType.includes('alert')) return 'alert';
+            return 'system';
           };
-          const cat = typeToCategory[dbNotif.type] || 'system';
+
+          const cat = getCategory(dbNotif.type);
           const iconBgMap: Record<string, string> = {
             order: 'bg-blue-100 dark:bg-blue-900/30',
             shipment: 'bg-emerald-100 dark:bg-emerald-900/30',
@@ -327,12 +337,38 @@ export default function NotificationPanel() {
             alert: 'bg-red-100 dark:bg-red-900/30',
           };
 
-          // Dynamic action overrides from JSON data column
-          let actionPage: string | null = user.role === 'store_manager' ? 'store-orders' : 'seller-orders';
-          let actionUrl = null;
-          let actionLabelAr = 'عرض الطلبات';
-          let actionLabelEn = 'View Orders';
+          // Determine action label & target dynamically based on role and notification type
+          let actionLabelAr = 'عرض التفاصيل';
+          let actionLabelEn = 'View Details';
+          let actionPage: string | null = null;
+          let actionUrl: string | null = null;
           let urgency = dbNotif.type === 'new_order' ? 'high' : 'normal';
+
+          const isAdmin = user.role === 'admin' || user.role === 'SUPER_ADMIN';
+
+          if (cat === 'verification') {
+            if (isAdmin) {
+              actionLabelAr = 'عرض طلبات التوثيق';
+              actionLabelEn = 'View Verification Requests';
+              actionUrl = '/admin-secure-internal/verifications';
+            } else {
+              actionLabelAr = dbNotif.type === 'VERIFICATION_EDIT_REQUIRED' ? 'تعديل طلب التوثيق' : 'عرض حالة التوثيق';
+              actionLabelEn = dbNotif.type === 'VERIFICATION_EDIT_REQUIRED' ? 'Edit Verification' : 'View Verification Status';
+              actionPage = 'verification';
+            }
+          } else if (cat === 'order') {
+            actionLabelAr = 'عرض الطلبات';
+            actionLabelEn = 'View Orders';
+            actionPage = user.role === 'store_manager' ? 'store-orders' : 'seller-orders';
+          } else if (cat === 'wallet') {
+            actionLabelAr = 'عرض المحفظة';
+            actionLabelEn = 'View Wallet';
+            actionPage = 'seller-wallet';
+          } else {
+            actionLabelAr = 'عرض التفاصيل';
+            actionLabelEn = 'View Details';
+            actionPage = user.role === 'store_manager' ? 'store-orders' : 'seller-orders';
+          }
 
           if (dbNotif.data) {
             try {
