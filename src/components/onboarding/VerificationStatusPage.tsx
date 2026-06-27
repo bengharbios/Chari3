@@ -11,6 +11,18 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+
 
 
 function t(isAr: boolean, ar: string, en: string) {
@@ -464,35 +476,56 @@ export default function VerificationStatusPage() {
                 </p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs font-bold border-green-300 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-800 dark:text-green-200"
-              onClick={async () => {
-                const confirmMsg = t(isAr, 'هل تريد تعديل أو تحديث وثائق التوثيق الخاصة بك؟ سيتم إعادة حالة التوثيق إلى غير مكتملة لتتمكن من رفع وتعديل المستندات.', 'Do you want to edit or update your verification documents? This will reset the verification status so you can re-upload your files.');
-                if (window.confirm(confirmMsg)) {
-                  try {
-                    const res = await fetch('/api/onboarding', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ _action: 'request_update', userId: user.id })
-                    });
-                    if (res.ok) {
-                      toast.success(t(isAr, 'تم إعادة تعيين حالة التوثيق بنجاح. يمكنك التعديل الآن.', 'Verification status reset. You can now edit.'));
-                      setAccountStatus('incomplete');
-                      window.location.href = '/seller/onboarding';
-                    } else {
-                      toast.error(t(isAr, 'حدث خطأ أثناء طلب التعديل', 'Failed to request edit'));
-                    }
-                  } catch {
-                    toast.error(t(isAr, 'خطأ في الاتصال بالخادم', 'Connection error'));
-                  }
-                }
-              }}
-            >
-              <Edit2 className="size-3 me-1.5" />
-              {t(isAr, 'تحديث أو تعديل المستندات المرفوعة', 'Update or Edit Documents')}
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs font-bold border-green-300 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-800 dark:text-green-200"
+                >
+                  <Edit2 className="size-3 me-1.5" />
+                  {t(isAr, 'تحديث أو تعديل المستندات المرفوعة', 'Update or Edit Documents')}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader className="text-start">
+                  <AlertDialogTitle>
+                    {t(isAr, 'تحديث وثائق التوثيق', 'Update Verification Documents')}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t(isAr, 'هل تريد تعديل أو تحديث وثائق التوثيق الخاصة بك؟ سيتم إعادة حالة التوثيق إلى غير مكتملة لتتمكن من رفع وتعديل المستندات وإرسالها للمراجعة مرة أخرى.', 'Do you want to edit or update your verification documents? This will reset the status to incomplete so you can upload and edit files to submit again.')}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="flex-row justify-end gap-2 pt-2">
+                  <AlertDialogCancel className="text-xs font-bold rounded-xl">
+                    {t(isAr, 'إلغاء', 'Cancel')}
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    className="text-xs font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white"
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/onboarding', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ _action: 'request_update', userId: user.id })
+                        });
+                        if (res.ok) {
+                          toast.success(t(isAr, 'تم إعادة تعيين حالة التوثيق بنجاح. يمكنك التعديل الآن.', 'Verification status reset. You can now edit.'));
+                          setAccountStatus('incomplete');
+                          window.location.href = '/seller/onboarding';
+                        } else {
+                          toast.error(t(isAr, 'حدث خطأ أثناء طلب التعديل', 'Failed to request edit'));
+                        }
+                      } catch {
+                        toast.error(t(isAr, 'خطأ في الاتصال بالخادم', 'Connection error'));
+                      }
+                    }}
+                  >
+                    {t(isAr, 'تعديل', 'Edit')}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       )}
