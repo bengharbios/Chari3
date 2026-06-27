@@ -34,6 +34,7 @@ import SearchPage from '@/components/storefront/SearchPage';
 import BillingPage from '@/components/seller/BillingPage';
 import WalletPage from '@/components/seller/WalletPage';
 import DebtsPage from '@/components/seller/DebtsPage';
+import SecurityCenterPage from '@/components/security/SecurityCenterPage';
 import { toast } from 'sonner';
 import type { PageType, UserRole } from '@/types';
 import ChatWidget from '@/components/chat/ChatWidget';
@@ -80,6 +81,7 @@ const DASHBOARD_MAP: Record<string, React.ComponentType> = {
   'buyer-reviews': BuyerDashboard,
   buyer: BuyerDashboard,
   verification: VerificationStatusPage,
+  security: SecurityCenterPage,
   home: HomepagePage,
   search: SearchPage,
   login: AuthPage,
@@ -96,7 +98,7 @@ const ROLE_TO_PAGE: Record<UserRole, PageType> = {
 
 // Pages that should NOT be auto-redirected to role dashboard
 const ALLOWED_EXTRA_PAGES: PageType[] = [
-  'verification', 'search',
+  'verification', 'search', 'security',
 ];
 
 const ITEM_LABELS: Record<string, { ar: string; en: string }> = {

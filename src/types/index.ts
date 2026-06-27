@@ -87,7 +87,8 @@ export type PageType =
   | 'seller-billing-plans'
   | 'seller-billing-addons'
   | 'seller-billing-pay'
-  | 'seller-billing-history';
+  | 'seller-billing-history'
+  | 'security';
 
 export interface NavItem {
   id: PageType | string;

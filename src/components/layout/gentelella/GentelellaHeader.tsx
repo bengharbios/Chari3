@@ -8,7 +8,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { User, Settings, LogOut, Globe } from 'lucide-react';
+import { User, Settings, LogOut, Globe, ShieldCheck } from 'lucide-react';
 import { useGentelellaTheme } from './theme';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
@@ -289,6 +289,17 @@ export default function GentelellaHeader() {
               <DropdownMenuItem onClick={() => navigateToDashboard('verification')} className={cn('py-2.5 px-3 cursor-pointer gap-2', isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50')}>
                 <svg className="h-4 w-4 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 14l2 2 4-4"/></svg>
                 {t(locale, 'حالة التوثيق', 'Verification Status')}
+              </DropdownMenuItem>
+            )}
+
+            {user.role !== 'admin' && user.role !== 'buyer' && (
+              <DropdownMenuItem
+                id="gentelella-security-menu-item"
+                onClick={() => navigateToDashboard('security')}
+                className={cn('py-2.5 px-3 cursor-pointer gap-2', isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50')}
+              >
+                <ShieldCheck className="h-4 w-4 text-[#1ABB9C]" />
+                {t(locale, 'الأمان والخصوصية', 'Security & Privacy')}
               </DropdownMenuItem>
             )}
 

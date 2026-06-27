@@ -8,7 +8,7 @@ import {
   Search, ShoppingCart, Moon, Sun,
   Menu, X, ChevronDown, User, LogOut, Settings,
   ClipboardCheck, Trash2, Plus, Minus, Loader2, CheckSquare,
-  ArrowLeft, ArrowRight, ShoppingBag, Truck, Tag, AlertCircle
+  ArrowLeft, ArrowRight, ShoppingBag, Truck, Tag, AlertCircle, ShieldCheck
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
@@ -833,6 +833,15 @@ export default function Header() {
                     <DropdownMenuItem onClick={() => navigateToDashboard('verification')}>
                       <ClipboardCheck className="h-4 w-4" />
                       {t('حالة التوثيق', 'Verification Status')}
+                    </DropdownMenuItem>
+                  )}
+                  {user.role !== 'admin' && user.role !== 'buyer' && (
+                    <DropdownMenuItem
+                      id="profile-security-menu-item"
+                      onClick={() => navigateToDashboard('security')}
+                    >
+                      <ShieldCheck className="h-4 w-4 text-green-500" />
+                      {t('الأمان والخصوصية', 'Security & Privacy')}
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuItem>

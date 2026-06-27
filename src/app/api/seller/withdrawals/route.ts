@@ -64,19 +64,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Seller not found' }, { status: 404 });
     }
 
-    // Security check: Check for sensitive changes (email or phone updates) in the past 48 hours
+    // Security check: Check for sensitive changes dynamically using admin-configured hold hours
+    const holdSetting = await db.systemSetting.findUnique({ where: { key: 'security_withdrawal_hold_hours' } });
+    const holdHours = holdSetting ? Number(holdSetting.value) : 48;
+
     const recentSensitiveChange = await db.auditLog.findFirst({
       where: {
         userId: seller.userId,
         action: { in: ['email_changed', 'phone_changed'] },
-        createdAt: { gte: new Date(Date.now() - 48 * 60 * 60 * 1000) }
+        createdAt: { gte: new Date(Date.now() - holdHours * 60 * 60 * 1000) }
       }
     });
 
     if (recentSensitiveChange) {
       return NextResponse.json({
         success: false,
-        error: 'تم قفل عمليات سحب الأموال مؤقتاً لمدة 48 ساعة لدواعي أمنية بسبب تعديل البريد الإلكتروني أو رقم الهاتف للحساب مؤخراً.'
+        error: `تم قفل عمليات سحب الأموال مؤقتاً لمدة ${holdHours} ساعة لدواعي أمنية بسبب تعديل البريد الإلكتروني أو رقم الهاتف للحساب مؤخراً.`,
+        holdHours
       }, { status: 400 });
     }
 

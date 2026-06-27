@@ -27,6 +27,7 @@ model User {
   isVerified      Boolean   @default(false)
   phoneVerified   Boolean   @default(false)
   emailVerified   Boolean   @default(false)
+  twoFactorEnabled Boolean   @default(false)
   locale          String    @default("ar")
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -1364,9 +1365,14 @@ model Session {
   token     String   @unique
   createdAt DateTime
   updatedAt DateTime
-  ipAddress String?
-  userAgent String?
-  userId    String
+  ipAddress   String?
+  userAgent   String?
+  deviceType  String?
+  os          String?
+  browser     String?
+  countryCode String?
+  city        String?
+  userId      String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
