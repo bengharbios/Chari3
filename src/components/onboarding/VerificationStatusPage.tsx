@@ -100,7 +100,7 @@ export default function VerificationStatusPage() {
       if (res.ok && data.success) {
         toast.success(t(isAr, 'تم إرسال رمز الأمان للعنوان الحالي.', 'Security code sent to current address.'));
         setUpdateStep(2);
-        if (data._devCodeOld) {
+        if (process.env.NODE_ENV === 'development' && data._devCodeOld) {
           toast.info(t(isAr, `[تجريبي] رمز التحقق الحالي: ${data._devCodeOld}`, `[Dev] Current OTP: ${data._devCodeOld}`), { duration: 15000 });
         }
       } else {
@@ -167,7 +167,7 @@ export default function VerificationStatusPage() {
       if (res.ok && data.success) {
         toast.success(t(isAr, 'تم إرسال رمز الأمان للعنوان الجديد بنجاح.', 'Security code sent to the new address.'));
         setUpdateStep(4);
-        if (data._devCodeNew) {
+        if (process.env.NODE_ENV === 'development' && data._devCodeNew) {
           toast.info(t(isAr, `[تجريبي] الرمز الجديد: ${data._devCodeNew}`, `[Dev] New OTP: ${data._devCodeNew}`), { duration: 15000 });
         }
       } else {
@@ -716,7 +716,7 @@ export default function VerificationStatusPage() {
       )}
       {/* Sensitive Profile Update Dialog (Sequential step-by-step flow) */}
       <Dialog open={isUpdateModalOpen} onOpenChange={setIsUpdateModalOpen}>
-        <DialogContent dir={isAr ? 'rtl' : 'ltr'} className="max-w-md">
+        <DialogContent dir={isAr ? 'rtl' : 'ltr'} className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
           <DialogHeader className="text-start rtl:text-right ltr:text-left">
             <DialogTitle>
               {updateMethod === 'email' 
