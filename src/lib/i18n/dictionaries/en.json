@@ -525,6 +525,11 @@
     "submit": "Submit for Approval",
     "next": "Next",
     "prev": "Previous",
-    "saveDraft": "Save Draft & Exit"
+    "saveDraft": "Save Draft & Exit",
+    "updateVerificationTitle": "Update Verification Documents",
+    "updateVerificationDesc": "Do you want to edit or update your verification documents? This will reset the status to incomplete so you can upload and edit files to submit again.",
+    "updateVerificationBtn": "Update or Edit Documents",
+    "updateVerificationResetSuccess": "Verification status reset. You can now edit.",
+    "updateVerificationResetError": "Failed to request edit"
   }
 }

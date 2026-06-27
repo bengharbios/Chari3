@@ -22,6 +22,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+
 
 
 
@@ -45,13 +54,115 @@ export default function VerificationStatusPage() {
   const { accountStatus, verificationItems, rejectionReason, rejectedItems, setAccountStatus, isWizardOpen } = useOnboardingStore();
   const isAr = locale === 'ar';
 
-  // State for email editing
-  const [isEditingEmail, setIsEditingEmail] = useState(false);
-  const [emailInput, setEmailInput] = useState('');
-  const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
-
   // State for fetched document details from API
   const [details, setDetails] = useState<Record<string, unknown> | null>(null);
+
+  // States for sensitive profile update (double OTP modal)
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [updateMethod, setUpdateMethod] = useState<'email' | 'phone'>('email');
+  const [newValueInput, setNewValueInput] = useState('');
+  const [oldOtpInput, setOldOtpInput] = useState('');
+  const [newOtpInput, setNewOtpInput] = useState('');
+  const [updateStep, setUpdateStep] = useState<1 | 2>(1); // 1 = Input value, 2 = Verify OTPs
+  const [requiresOldOtp, setRequiresOldOtp] = useState(false);
+  const [isSendingUpdateOtp, setIsSendingUpdateOtp] = useState(false);
+  const [isConfirmingUpdate, setIsConfirmingUpdate] = useState(false);
+
+  const openUpdateModal = (method: 'email' | 'phone') => {
+    setUpdateMethod(method);
+    setNewValueInput(method === 'email' ? (user.email?.includes('@charyday.local') ? '' : user.email || '') : (user.phone || ''));
+    setOldOtpInput('');
+    setNewOtpInput('');
+    setUpdateStep(1);
+    setRequiresOldOtp(false);
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleRequestChange = async () => {
+    if (!newValueInput) {
+      toast.error(t(isAr, 'يرجى إدخال القيمة الجديدة', 'Please enter new value'));
+      return;
+    }
+    
+    if (updateMethod === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newValueInput)) {
+      toast.error(t(isAr, 'صيغة البريد الإلكتروني غير صحيحة', 'Invalid email format'));
+      return;
+    }
+
+    setIsSendingUpdateOtp(true);
+    try {
+      const res = await fetch('/api/user/profile/update-sensitive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'request_change',
+          method: updateMethod,
+          newValue: newValueInput,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(t(isAr, 'تم إرسال رموز الأمان بنجاح.', 'Security codes sent successfully.'));
+        setRequiresOldOtp(data.requiresOldVerify);
+        setUpdateStep(2);
+
+        if (data._devCodeOld || data._devCodeNew) {
+          toast.info(
+            t(isAr, 
+              `[تجريبي] الرمز القديم: ${data._devCodeOld || 'لا يوجد'}، الرمز الجديد: ${data._devCodeNew}`, 
+              `[Dev] Old OTP: ${data._devCodeOld || 'None'}, New OTP: ${data._devCodeNew}`
+            ),
+            { duration: 15000 }
+          );
+        }
+      } else {
+        toast.error(data.error || t(isAr, 'فشل طلب التعديل', 'Failed to request change'));
+      }
+    } catch {
+      toast.error(t(isAr, 'خطأ في الاتصال بالخادم', 'Connection error'));
+    } finally {
+      setIsSendingUpdateOtp(false);
+    }
+  };
+
+  const handleConfirmChange = async () => {
+    if (!newOtpInput || (requiresOldOtp && !oldOtpInput)) {
+      toast.error(t(isAr, 'يرجى إدخال رموز التحقق المطلوبة', 'Please enter required verification codes'));
+      return;
+    }
+
+    setIsConfirmingUpdate(true);
+    try {
+      const res = await fetch('/api/user/profile/update-sensitive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'confirm_change',
+          method: updateMethod,
+          newValue: newValueInput,
+          oldOtp: oldOtpInput,
+          newOtp: newOtpInput,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(data.message || t(isAr, 'تم تحديث البيانات بنجاح وتفعيل قفل الأمان.', 'Updated successfully and safety lock activated.'));
+        if (updateMethod === 'email') {
+          updateProfile({ email: newValueInput });
+        } else {
+          updateProfile({ phone: newValueInput });
+        }
+        setIsUpdateModalOpen(false);
+      } else {
+        toast.error(data.error || t(isAr, 'رمز التحقق غير صحيح', 'Incorrect verification code'));
+      }
+    } catch {
+      toast.error(t(isAr, 'خطأ في الاتصال بالخادم', 'Connection error'));
+    } finally {
+      setIsConfirmingUpdate(false);
+    }
+  };
+
 
   // Fetch full verification details
   useEffect(() => {
@@ -87,35 +198,7 @@ export default function VerificationStatusPage() {
       .catch(() => {});
   }, [user?.id]);
 
-  // Handle email update
-  const handleUpdateEmail = async () => {
-    if (!emailInput || !user?.id) return;
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput)) {
-      toast.error(t(isAr, 'صيغة البريد الإلكتروني غير صحيحة', 'Invalid email format'));
-      return;
-    }
 
-    setIsSubmittingEmail(true);
-    try {
-      const res = await fetch('/api/users', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: user.id, email: emailInput }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        updateProfile({ email: emailInput });
-        setIsEditingEmail(false);
-        toast.success(t(isAr, 'تم تحديث البريد الإلكتروني بنجاح', 'Email updated successfully'));
-      } else {
-        toast.error(data.error || t(isAr, 'فشل تحديث البريد', 'Failed to update email'));
-      }
-    } catch {
-      toast.error(t(isAr, 'حدث خطأ في الاتصال', 'Connection error occurred'));
-    } finally {
-      setIsSubmittingEmail(false);
-    }
-  };
 
   // Build items
   const items = useMemo(() => {
@@ -393,9 +476,14 @@ export default function VerificationStatusPage() {
                           {isAr ? config.labelAr : config.labelEn}
                         </Badge>
 
-                        {/* Edit Email Button */}
-                        {isEmail && !isEditingEmail && (
-                          <Button size="sm" variant="outline" className="text-xs h-7 px-2.5 gap-1.5" onClick={() => { setEmailInput(user.email.includes('@charyday.local') ? '' : user.email); setIsEditingEmail(true); }}>
+                        {/* Edit Email/Phone Button */}
+                        {isContact && (
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="text-xs h-7 px-2.5 gap-1.5" 
+                            onClick={() => openUpdateModal(item.id as 'email' | 'phone')}
+                          >
                             <Edit2 className="size-3" />
                             {t(isAr, 'تعديل', 'Edit')}
                           </Button>
@@ -412,19 +500,6 @@ export default function VerificationStatusPage() {
                         )}
                       </div>
                     </div>
-
-                    {/* Inline Email Edit Form */}
-                    {isEmail && isEditingEmail && (
-                      <div className="mt-3 p-3 rounded-lg bg-muted/50 border flex items-center gap-2">
-                        <Input size={1} className="text-xs h-8 bg-background" placeholder={t(isAr, 'أدخل بريدك الإلكتروني الحقيقي...', 'Enter real email address...')} value={emailInput} onChange={(e) => setEmailInput(e.target.value)} />
-                        <Button size="sm" className="h-8 text-xs shrink-0" disabled={isSubmittingEmail} onClick={handleUpdateEmail}>
-                          {t(isAr, 'حفظ', 'Save')}
-                        </Button>
-                        <Button size="sm" variant="ghost" className="h-8 text-xs shrink-0" onClick={() => setIsEditingEmail(false)}>
-                          {t(isAr, 'إلغاء', 'Cancel')}
-                        </Button>
-                      </div>
-                    )}
 
                     {item.status === 'rejected' && itemRejectionReason && (
                       <p className="text-xs text-red-500 mt-1.5 sm:ps-11">{itemRejectionReason}</p>
@@ -571,6 +646,123 @@ export default function VerificationStatusPage() {
           </CardContent>
         </Card>
       )}
+      {/* Sensitive Profile Update Dialog (Double OTP) */}
+      <Dialog open={isUpdateModalOpen} onOpenChange={setIsUpdateModalOpen}>
+        <DialogContent dir={isAr ? 'rtl' : 'ltr'} className="max-w-md">
+          <DialogHeader className="text-start rtl:text-right ltr:text-left">
+            <DialogTitle>
+              {updateMethod === 'email' 
+                ? t(isAr, 'تعديل البريد الإلكتروني للحساب', 'Edit Account Email')
+                : t(isAr, 'تعديل رقم هاتف الحساب', 'Edit Account Phone Number')
+              }
+            </DialogTitle>
+            <DialogDescription>
+              {t(isAr, 
+                'لحماية حسابك من الاختراقات، تتطلب هذه العملية التحقق الثنائي من الهوية عبر إرسال رموز تحقق مستقلة.',
+                'To secure your account, this operation requires double-verification via separate security codes.'
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          {updateStep === 1 ? (
+            <div className="space-y-4 py-2 text-start rtl:text-right ltr:text-left">
+              <div className="space-y-2">
+                <span className="text-sm font-semibold">
+                  {updateMethod === 'email'
+                    ? t(isAr, 'البريد الإلكتروني الجديد', 'New Email Address')
+                    : t(isAr, 'رقم الهاتف الجديد', 'New Phone Number')
+                  }
+                </span>
+                <Input
+                  dir="ltr"
+                  placeholder={updateMethod === 'email' ? 'email@example.com' : '+213XXXXXXXXX'}
+                  value={newValueInput}
+                  onChange={(e) => setNewValueInput(e.target.value)}
+                  className="bg-muted/30 border-white/10 rounded-xl text-xs"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl" onClick={() => setIsUpdateModalOpen(false)}>
+                  {t(isAr, 'إلغاء', 'Cancel')}
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="text-xs font-bold rounded-xl bg-primary text-white" 
+                  disabled={isSendingUpdateOtp}
+                  onClick={handleRequestChange}
+                >
+                  {isSendingUpdateOtp ? '...' : t(isAr, 'إرسال رموز الأمان', 'Send Security Codes')}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 py-2 text-start rtl:text-right ltr:text-left">
+              <p className="text-xs text-muted-foreground">
+                {t(isAr, 
+                  'يرجى إدخال رموز التحقق المرسلة إليك لتأكيد التغيير.',
+                  'Please enter the verification codes sent to confirm the change.'
+                )}
+              </p>
+
+              {requiresOldOtp && (
+                <div className="space-y-2">
+                  <span className="text-sm font-semibold">
+                    {updateMethod === 'email'
+                      ? t(isAr, 'رمز التحقق المرسل لبريدك الحالي', 'OTP sent to current email')
+                      : t(isAr, 'رمز التحقق المرسل لهاتفك الحالي', 'OTP sent to current phone')
+                    }
+                  </span>
+                  <Input
+                    dir="ltr"
+                    maxLength={6}
+                    placeholder="123456"
+                    value={oldOtpInput}
+                    onChange={(e) => setOldOtpInput(e.target.value.replace(/\D/g, ''))}
+                    className="bg-muted/30 border-white/10 rounded-xl text-xs text-center font-mono tracking-widest"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <span className="text-sm font-semibold">
+                  {updateMethod === 'email'
+                    ? t(isAr, 'رمز التحقق المرسل للبريد الجديد', 'OTP sent to new email')
+                    : t(isAr, 'رمز التحقق المرسل للهاتف الجديد', 'OTP sent to new phone')
+                  }
+                </span>
+                <Input
+                  dir="ltr"
+                  maxLength={6}
+                  placeholder="123456"
+                  value={newOtpInput}
+                  onChange={(e) => setNewOtpInput(e.target.value.replace(/\D/g, ''))}
+                  className="bg-muted/30 border-white/10 rounded-xl text-xs text-center font-mono tracking-widest"
+                />
+              </div>
+
+              <div className="flex justify-between items-center pt-2">
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setUpdateStep(1)}>
+                  {t(isAr, '← رجوع', '← Back')}
+                </Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="text-xs font-bold rounded-xl" onClick={() => setIsUpdateModalOpen(false)}>
+                    {t(isAr, 'إلغاء', 'Cancel')}
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    className="text-xs font-bold rounded-xl bg-green-600 hover:bg-green-700 text-white" 
+                    disabled={isConfirmingUpdate}
+                    onClick={handleConfirmChange}
+                  >
+                    {isConfirmingUpdate ? '...' : t(isAr, 'تأكيد وحفظ', 'Confirm & Save')}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
