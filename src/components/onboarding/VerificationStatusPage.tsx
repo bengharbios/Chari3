@@ -562,8 +562,8 @@ export default function VerificationStatusPage() {
                   {t(isAr, 'تحديث أو تعديل المستندات المرفوعة', 'Update or Edit Documents')}
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader className="text-start">
+              <AlertDialogContent dir={isAr ? 'rtl' : 'ltr'}>
+                <AlertDialogHeader className="text-start rtl:text-right ltr:text-left">
                   <AlertDialogTitle>
                     {t(isAr, 'تحديث وثائق التوثيق', 'Update Verification Documents')}
                   </AlertDialogTitle>
@@ -652,14 +652,20 @@ export default function VerificationStatusPage() {
           <DialogHeader className="text-start rtl:text-right ltr:text-left">
             <DialogTitle>
               {updateMethod === 'email' 
-                ? t(isAr, 'تعديل البريد الإلكتروني للحساب', 'Edit Account Email')
-                : t(isAr, 'تعديل رقم هاتف الحساب', 'Edit Account Phone Number')
+                ? (user.email && !user.email.includes('@charyday.local')
+                    ? t(isAr, 'تعديل البريد الإلكتروني للحساب', 'Edit Account Email')
+                    : t(isAr, 'إدخال البريد الإلكتروني للحساب', 'Enter Account Email')
+                  )
+                : (user.phone
+                    ? t(isAr, 'تعديل رقم هاتف الحساب', 'Edit Account Phone Number')
+                    : t(isAr, 'إدخال رقم هاتف الحساب', 'Enter Account Phone Number')
+                  )
               }
             </DialogTitle>
             <DialogDescription>
               {t(isAr, 
-                'لحماية حسابك من الاختراقات، تتطلب هذه العملية التحقق الثنائي من الهوية عبر إرسال رموز تحقق مستقلة.',
-                'To secure your account, this operation requires double-verification via separate security codes.'
+                'لدواعي الأمان ولحماية حسابك، تتطلب هذه العملية التحقق من الهوية عبر إرسال رموز تحقق مستقلة.',
+                'For security and account protection, this operation requires identity verification via security codes.'
               )}
             </DialogDescription>
           </DialogHeader>
@@ -669,8 +675,14 @@ export default function VerificationStatusPage() {
               <div className="space-y-2">
                 <span className="text-sm font-semibold">
                   {updateMethod === 'email'
-                    ? t(isAr, 'البريد الإلكتروني الجديد', 'New Email Address')
-                    : t(isAr, 'رقم الهاتف الجديد', 'New Phone Number')
+                    ? (user.email && !user.email.includes('@charyday.local')
+                        ? t(isAr, 'البريد الإلكتروني الجديد', 'New Email Address')
+                        : t(isAr, 'البريد الإلكتروني', 'Email Address')
+                      )
+                    : (user.phone
+                        ? t(isAr, 'رقم الهاتف الجديد', 'New Phone Number')
+                        : t(isAr, 'رقم الهاتف', 'Phone Number')
+                      )
                   }
                 </span>
                 <Input
@@ -727,8 +739,14 @@ export default function VerificationStatusPage() {
               <div className="space-y-2">
                 <span className="text-sm font-semibold">
                   {updateMethod === 'email'
-                    ? t(isAr, 'رمز التحقق المرسل للبريد الجديد', 'OTP sent to new email')
-                    : t(isAr, 'رمز التحقق المرسل للهاتف الجديد', 'OTP sent to new phone')
+                    ? (requiresOldOtp 
+                        ? t(isAr, 'رمز التحقق المرسل للبريد الجديد', 'OTP sent to new email')
+                        : t(isAr, 'رمز التحقق المرسل لبريدك الإلكتروني', 'OTP sent to your email')
+                      )
+                    : (requiresOldOtp
+                        ? t(isAr, 'رمز التحقق المرسل للهاتف الجديد', 'OTP sent to new phone')
+                        : t(isAr, 'رمز التحقق المرسل لهاتفك', 'OTP sent to your phone')
+                      )
                   }
                 </span>
                 <Input
