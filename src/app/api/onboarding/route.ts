@@ -745,6 +745,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(result, result.status ? { status: result.status as 400 | 404 | 500 } : undefined);
     }
 
+    if (action === 'request_update') {
+      const { userId } = body;
+      if (!userId) {
+        return NextResponse.json({ success: false, error: 'userId is required' }, { status: 400 });
+      }
+      await db.user.update({
+        where: { id: userId },
+        data: { accountStatus: 'incomplete' },
+      });
+      return NextResponse.json({ success: true, accountStatus: 'incomplete' });
+    }
+
     // Default: submit
     const result = await handleSubmit(body);
     return NextResponse.json(result, result.status ? { status: result.status as 400 | 404 | 500 } : undefined);

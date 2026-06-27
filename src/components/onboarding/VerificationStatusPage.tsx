@@ -451,15 +451,48 @@ export default function VerificationStatusPage() {
 
       {/* Active Account Notice */}
       {accountStatus === 'active' && (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/30">
-          <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
-          <div>
-            <p className="text-sm font-medium text-green-800 dark:text-green-200">
-              {t(isAr, '🎉 حسابك مفعّل بالكامل كمقر متجر رسمي', 'Your account is fully activated as Verified Store')}
-            </p>
-            <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
-              {t(isAr, 'يمكنك الآن إدارة منتجاتك، طلباتك، وموظفيك بحرية مطلقة', 'You now have full access to manage your products, orders, and staff')}
-            </p>
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800/30">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-5 w-5 text-green-600 shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-green-800 dark:text-green-200">
+                  {t(isAr, '🎉 حسابك مفعّل بالكامل كمقر متجر رسمي', 'Your account is fully activated as Verified Store')}
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400 mt-0.5">
+                  {t(isAr, 'يمكنك الآن إدارة منتجاتك، طلباتك، وموظفيك بحرية مطلقة', 'You now have full access to manage your products, orders, and staff')}
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs font-bold border-green-300 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/30 text-green-800 dark:text-green-200"
+              onClick={async () => {
+                const confirmMsg = t(isAr, 'هل تريد تعديل أو تحديث وثائق التوثيق الخاصة بك؟ سيتم إعادة حالة التوثيق إلى غير مكتملة لتتمكن من رفع وتعديل المستندات.', 'Do you want to edit or update your verification documents? This will reset the verification status so you can re-upload your files.');
+                if (window.confirm(confirmMsg)) {
+                  try {
+                    const res = await fetch('/api/onboarding', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ _action: 'request_update', userId: user.id })
+                    });
+                    if (res.ok) {
+                      toast.success(t(isAr, 'تم إعادة تعيين حالة التوثيق بنجاح. يمكنك التعديل الآن.', 'Verification status reset. You can now edit.'));
+                      setAccountStatus('incomplete');
+                      window.location.href = '/seller/onboarding';
+                    } else {
+                      toast.error(t(isAr, 'حدث خطأ أثناء طلب التعديل', 'Failed to request edit'));
+                    }
+                  } catch {
+                    toast.error(t(isAr, 'خطأ في الاتصال بالخادم', 'Connection error'));
+                  }
+                }
+              }}
+            >
+              <Edit2 className="size-3 me-1.5" />
+              {t(isAr, 'تحديث أو تعديل المستندات المرفوعة', 'Update or Edit Documents')}
+            </Button>
           </div>
         </div>
       )}
