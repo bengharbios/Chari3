@@ -1255,6 +1255,7 @@ model AuthLog {
   ipAddress         String?
   userAgent         String?  @db.LongText
   countryCode       String?  // AE, SA, etc.
+  city              String?  // Dubai, Riyadh, etc.
   deviceType        String?  // mobile, desktop, etc.
   deviceFingerprint String?  // hash of device info
   status            String   // pending, verified, registered, failed, banned

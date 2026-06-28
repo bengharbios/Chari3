@@ -175,7 +175,7 @@ export default function AuthLogsPage() {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Globe className="h-3 w-3" />
-                          <span>{log.countryCode || 'N/A'}</span>
+                          <span>{log.city ? `${log.city}, ` : ''}{log.countryCode || 'N/A'}</span>
                         </div>
                       </TableCell>
                       <TableCell className="font-mono text-sm">{log.ipAddress}</TableCell>

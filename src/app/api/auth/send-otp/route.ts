@@ -93,6 +93,14 @@ export async function POST(request: Request) {
 
     const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
     const detectedCountry = request.headers.get('cf-ipcountry') || 'Unknown';
+    let detectedCity = request.headers.get('cf-ipcity') || '';
+    if (detectedCity) {
+      try {
+        detectedCity = decodeURIComponent(detectedCity);
+      } catch (e) {
+        // ignore
+      }
+    }
     const userAgent = request.headers.get('user-agent') || 'Unknown';
     // Simple hash function for device fingerprint
     let hash = 0;
@@ -139,6 +147,7 @@ export async function POST(request: Request) {
           ipAddress: ip,
           userAgent,
           countryCode,
+          city: detectedCity,
           deviceFingerprint,
           status: 'banned',
           isBanned: true,
@@ -218,6 +227,7 @@ export async function POST(request: Request) {
         ipAddress: ip,
         userAgent,
         countryCode: detectedCountry,
+        city: detectedCity,
         deviceFingerprint,
         status: 'pending',
       }
