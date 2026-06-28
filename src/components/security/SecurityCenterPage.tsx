@@ -44,11 +44,11 @@ function getStrengthScore(password: string): number {
 }
 
 function getStrengthLabel(score: number, isAr: boolean): { text: string; color: string } {
-  if (score <= 1) return { text: tStr('ضعيفة جداً', 'Very Weak'), color: 'bg-red-500' };
-  if (score === 2) return { text: tStr('ضعيفة', 'Weak'), color: 'bg-orange-400' };
-  if (score === 3) return { text: tStr('متوسطة', 'Fair'), color: 'bg-yellow-400' };
-  if (score === 4) return { text: tStr('جيدة', 'Good'), color: 'bg-blue-500' };
-  return { text: tStr('قوية جداً ✓', 'Very Strong ✓'), color: 'bg-green-500' };
+  if (score <= 1) return { text: isAr ? 'ضعيفة جداً' : 'Very Weak', color: 'bg-red-500' };
+  if (score === 2) return { text: isAr ? 'ضعيفة' : 'Weak', color: 'bg-orange-400' };
+  if (score === 3) return { text: isAr ? 'متوسطة' : 'Fair', color: 'bg-yellow-400' };
+  if (score === 4) return { text: isAr ? 'جيدة' : 'Good', color: 'bg-blue-500' };
+  return { text: isAr ? 'قوية جداً ✓' : 'Very Strong ✓', color: 'bg-green-500' };
 }
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
