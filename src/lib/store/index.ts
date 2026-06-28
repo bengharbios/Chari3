@@ -414,7 +414,8 @@ export const useAuthStore = create<AuthState>()(
         onboardingState.resetOtpFlow();
 
         if (typeof window !== 'undefined') {
-          window.location.reload();
+          // Clear any protected view from the URL and redirect to login
+          window.location.href = '/?view=login';
         }
       },
 

@@ -212,8 +212,9 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
     const isGlobalAllowed = ['home', 'search', 'product-detail', 'seller-profile', 'login'].includes(currentPage);
     
     if (!isAuthenticated || !user) {
-      if (!isGlobalAllowed && currentPage !== 'home') {
-        setCurrentPage('home');
+      if (!isGlobalAllowed && currentPage !== 'home' && currentPage !== 'login') {
+        setCurrentPage('login');
+        toast.error(locale === 'ar' ? 'يرجى تسجيل الدخول أولاً' : 'Please log in first');
       }
       return;
     }
