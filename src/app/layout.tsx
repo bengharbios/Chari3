@@ -25,6 +25,8 @@ export const metadata: Metadata = {
   description: 'منصة تجارة إلكترونية شاملة متعددة البائعين مع لوحات تحكم متكاملة',
 };
 
+import DebugState from './debug-state';
+
 export default function RootLayout({
   children,
 }: {
@@ -36,6 +38,7 @@ export default function RootLayout({
         <LocaleProvider />
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <RadixDirectionProvider>
+              <DebugState />
               {children}
               <Toaster position="top-center" richColors visibleToasts={1} duration={3000} />
             </RadixDirectionProvider>
