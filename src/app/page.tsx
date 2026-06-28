@@ -195,7 +195,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
 
       const isBaseRoute = ['store', 'seller', 'supplier', 'logistics', 'buyer', 'verification', 'home', 'login'].includes(currentPage);
       if (!isBaseRoute) {
-        targetPath += (targetPath === '/' ? '?' : '&') + `view=${currentPage}`;
+        targetPath += (targetPath.includes('?') ? '&' : '?') + `view=${currentPage}`;
       }
 
       const currentUrl = window.location.pathname + window.location.search;
