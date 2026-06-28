@@ -229,6 +229,15 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
     const isRoleAllowed = currentPage === rolePrefix || currentPage.startsWith(`${rolePrefix}-`);
     const isAdminAllowed = ALLOWED_EXTRA_PAGES.includes(currentPage);
 
+    // If they are on the login page but are authenticated, redirect them to their dashboard
+    if (currentPage === 'login') {
+      const targetPage = ROLE_TO_PAGE[user.role as UserRole];
+      if (targetPage) {
+        setCurrentPage(targetPage);
+        return;
+      }
+    }
+
     if (isRoleAllowed || isGlobalAllowed || isAdminAllowed) return;
     const targetPage = ROLE_TO_PAGE[user.role as UserRole];
     if (targetPage && currentPage !== targetPage) {

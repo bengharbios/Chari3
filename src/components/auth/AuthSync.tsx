@@ -37,6 +37,15 @@ export default function AuthSync() {
               return;
             }
           }
+          
+          const justLoggedOutStr = sessionStorage.getItem('just_logged_out');
+          if (justLoggedOutStr) {
+            const diff = Date.now() - parseInt(justLoggedOutStr, 10);
+            if (diff < 5000) { // 5 seconds guard
+              console.log('[AuthSync] Ignoring session because user just logged out');
+              return;
+            }
+          }
         } catch (e) {
           console.error('[AuthSync] failed to read sessionStorage:', e);
         }

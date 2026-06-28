@@ -401,6 +401,23 @@ export const useAuthStore = create<AuthState>()(
           console.error('[logout] better-auth signOut failed:', e);
         }
 
+        // Force delete cookies on client side as fallback
+        if (typeof document !== 'undefined') {
+          const domains = [window.location.hostname, `.${window.location.hostname.replace('www.', '')}`];
+          const cookieNames = ['better-auth.session_token', '__Secure-better-auth.session_token'];
+          
+          cookieNames.forEach(name => {
+            domains.forEach(domain => {
+              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${domain};`;
+              document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+            });
+          });
+        }
+        
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('just_logged_out', Date.now().toString());
+        }
+
         set({
           user: null,
           isAuthenticated: false,
