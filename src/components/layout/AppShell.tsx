@@ -5,6 +5,7 @@ import { useAppStore, useAuthStore } from '@/lib/store';
 import { Toaster } from 'sonner';
 import FloatingCart from './FloatingCart';
 import AuthSync from '@/components/auth/AuthSync';
+import ResizeObserverPatcher from '@/components/layout/ResizeObserverPatcher';
 
 interface AppShellProps {
   children: ReactNode;
@@ -27,6 +28,7 @@ export default function AppShell({ children }: AppShellProps) {
       }`}
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
     >
+      <ResizeObserverPatcher />
       <AuthSync />
       {children}
       <FloatingCart />
