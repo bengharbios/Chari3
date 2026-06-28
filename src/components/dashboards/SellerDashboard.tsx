@@ -33,7 +33,7 @@ import {
   ProgressBar
 } from '@tremor/react';
 
-const DZD = (n: number) => `${n.toLocaleString('ar-DZ')} د.ج`;
+const DZD = (n: number) => `${Number(n || 0).toLocaleString('ar-DZ')} د.ج`;
 
 const LEVEL_INFO: Record<number, { name: string; badge: string; color: string }> = {
   1: { name: 'صاعد', badge: '🌱', color: 'from-gray-500 to-gray-600' },
@@ -259,7 +259,7 @@ export default function SellerDashboard() {
   
   const walletCurrency = data?.kpis?.walletCurrency || 'DZD';
   const DZD = (n: number) => {
-    const formattedAmount = n.toLocaleString(isAr ? 'ar-DZ' : 'en-US');
+    const formattedAmount = Number(n || 0).toLocaleString(isAr ? 'ar-DZ' : 'en-US');
     if (isAr) {
       return walletCurrency === 'DZD' ? `${formattedAmount} د.ج` : `${formattedAmount} ${walletCurrency}`;
     }
@@ -451,7 +451,7 @@ export default function SellerDashboard() {
         <TremorCard decoration="top" decorationColor="amber" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
           <Text>{t('التقييم العام', 'Overall Rating')}</Text>
           <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
-            <Metric className="font-black text-foreground">{(kpis?.rating ?? 0).toFixed(1)} ⭐</Metric>
+            <Metric className="font-black text-foreground">{Number(kpis?.rating ?? 0).toFixed(1)} ⭐</Metric>
             <BadgeDelta deltaType="unchanged">0%</BadgeDelta>
           </Flex>
         </TremorCard>
@@ -486,7 +486,7 @@ export default function SellerDashboard() {
                 <div key={m.label}>
                   <Flex className="mb-2">
                     <Text>{m.label}</Text>
-                    <Text className="font-bold">{m.current.toFixed(m.unit === '%' ? 0 : 1)}{m.unit} / {m.target}{m.unit}</Text>
+                    <Text className="font-bold">{Number(m.current).toFixed(m.unit === '%' ? 0 : 1)}{m.unit} / {m.target}{m.unit}</Text>
                   </Flex>
                   <ProgressBar value={progress} color={m.color as any} className="mt-2" />
                 </div>
@@ -511,7 +511,7 @@ export default function SellerDashboard() {
           {(() => {
             const totalViews = data.products.reduce((sum, p: any) => sum + (p.viewCount || 0), 0);
             const totalSold = data.products.reduce((sum, p: any) => sum + (p.soldCount || 0), 0);
-            const conversionRate = totalViews > 0 ? ((totalSold / totalViews) * 100).toFixed(1) : '0';
+            const conversionRate = totalViews > 0 ? (Number(totalSold) / Number(totalViews) * 100).toFixed(1) : '0';
             const progress = Math.min(100, (parseFloat(conversionRate) / 3.5) * 100);
             return (
               <div className="space-y-6">
@@ -596,7 +596,7 @@ export default function SellerDashboard() {
               <Flex className="mb-2">
                 <Text>{m.label}</Text>
                 <Text className={`font-bold ${m.value >= m.good ? 'text-green-600' : 'text-orange-500'}`}>
-                  {m.value.toFixed(0)}{m.suffix}
+                  {Number(m.value).toFixed(0)}{m.suffix}
                 </Text>
               </Flex>
               <ProgressBar value={m.value} color={m.value >= m.good ? m.color as any : 'orange'} className="mt-2" />
@@ -681,7 +681,7 @@ function SellerProductsTab({
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const walletCurrency = data?.kpis?.walletCurrency || 'DZD';
   const fmtProd = (n: number) => {
-    const formattedAmount = n.toLocaleString(isAr ? 'ar-DZ' : 'en-US');
+    const formattedAmount = Number(n || 0).toLocaleString(isAr ? 'ar-DZ' : 'en-US');
     if (isAr) {
       return walletCurrency === 'DZD' ? `${formattedAmount} د.ج` : `${formattedAmount} ${walletCurrency}`;
     }
@@ -1300,7 +1300,7 @@ function ProductVariantsPreview({ variants, isAr, t }: { variants: any; isAr: bo
                 <td className="p-2 font-bold text-foreground">{v.name}</td>
                 <td className="p-2 text-foreground">{v.value}</td>
                 <td className="p-2 text-amber-600 font-bold">
-                  {v.price ? `${v.price.toLocaleString('ar-DZ')} د.ج` : t('افتراضي', 'Default')}
+                  {v.price ? `${Number(v.price).toLocaleString('ar-DZ')} د.ج` : t('افتراضي', 'Default')}
                 </td>
                 <td className="p-2 font-semibold">
                   {v.stock > 0 ? (
@@ -1504,8 +1504,8 @@ function SellerOrdersTab({ data, isLoading, t, isAr, onRefresh }: { data: Dashbo
   }, [isLoading, data]);
 
   const walletCurrency = data?.kpis?.walletCurrency || 'DZD';
-  const DZD2 = (n: number) => {
-    const formattedAmount = n.toLocaleString(isAr ? 'ar-DZ' : 'en-US');
+  const fmtOrd = (n: number) => {
+    const formattedAmount = Number(n || 0).toLocaleString(isAr ? 'ar-DZ' : 'en-US');
     if (isAr) {
       return walletCurrency === 'DZD' ? `${formattedAmount} د.ج` : `${formattedAmount} ${walletCurrency}`;
     }
@@ -1610,12 +1610,12 @@ function SellerOrdersTab({ data, isLoading, t, isAr, onRefresh }: { data: Dashbo
                         <h4 className="font-black text-sm text-foreground truncate">{item.product.name}</h4>
                         <p className="text-xs text-muted-foreground mt-1">
                           {t('الكمية: ', 'Qty: ')}<span className="font-bold text-foreground">{item.quantity}</span>
-                          {' • '}{t('سعر الوحدة: ', 'Unit Price: ')}<span className="font-bold text-foreground">{DZD2(item.product.price)}</span>
+                          {' • '}{t('سعر الوحدة: ', 'Unit Price: ')}<span className="font-bold text-foreground">{fmtOrd(item.product.price)}</span>
                         </p>
                       </div>
                       <div className="text-end">
                         <span className="text-xs text-muted-foreground block">{t('إجمالي العنصر', 'Item Total')}</span>
-                        <span className="font-black text-base text-primary block mt-0.5">{DZD2(item.total)}</span>
+                        <span className="font-black text-base text-primary block mt-0.5">{fmtOrd(item.total)}</span>
                       </div>
                     </div>
 
