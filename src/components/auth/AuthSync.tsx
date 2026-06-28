@@ -5,7 +5,7 @@ import { useSession } from '@/lib/auth-client';
 import { useAuthStore } from '@/lib/store';
 
 export default function AuthSync() {
-  const { data, isPending } = useSession();
+  const { data, isPending, error } = useSession();
   const { isAuthenticated, loginWithUser, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
 
@@ -22,6 +22,11 @@ export default function AuthSync() {
     } else if (!data?.user && isAuthenticated) {
       // User is logged out on the server but still authenticated in Zustand
       
+      // If there's a network or server error (like a DB connection panic), don't falsely log out the user
+      if (error) {
+        console.warn('[AuthSync] Session fetch failed with error, preserving local session state.', error);
+        return;
+      }
       // Check if they just logged in within the last 10 seconds to prevent race conditions with cached useSession()
       if (typeof window !== 'undefined') {
         try {
@@ -44,7 +49,7 @@ export default function AuthSync() {
       }
       logout();
     }
-  }, [mounted, isPending, data, isAuthenticated, loginWithUser, logout]);
+  }, [mounted, isPending, data, error, isAuthenticated, loginWithUser, logout]);
 
   return null;
 }
