@@ -75,15 +75,13 @@ export const auth = betterAuth({
     }
   },
   advanced: {
-    cookie: {
+    defaultCookieAttributes: {
       domain: process.env.NODE_ENV === "production" ? ".chariday.com" : undefined,
     },
   },
   plugins: [
     twoFactor({
-      otpOptions: {
-        issuer: "ChariDay",
-      },
+      issuer: "ChariDay",
     }),
   ],
   user: {
@@ -133,6 +131,10 @@ export const auth = betterAuth({
     }
   }
 });
+
+// We must manually add the hooks to the session model using database hooks
+// because better-auth doesn't natively expose session.additionalFields yet in this version,
+// but the schema has them. Actually wait, let's try adding session: { ... } inside the config
 
 export async function getSession(headersList: any) {
   const safeHeaders = new Headers();

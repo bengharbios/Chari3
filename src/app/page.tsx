@@ -211,6 +211,8 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
   useEffect(() => {
     const isGlobalAllowed = ['home', 'search', 'product-detail', 'seller-profile', 'login'].includes(currentPage);
     
+    if (isLoadingConfig) return; // Wait for initial config/hydration before redirecting
+
     if (!isAuthenticated || !user) {
       if (!isGlobalAllowed && currentPage !== 'home' && currentPage !== 'login') {
         setCurrentPage('login');
