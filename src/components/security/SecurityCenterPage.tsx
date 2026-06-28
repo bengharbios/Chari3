@@ -136,17 +136,6 @@ export default function SecurityCenterPage() {
     }
   }, [user]);
 
-  // Load sessions when tab opens
-  useEffect(() => {
-    if (activeTab === 'sessions') {
-      if (user?.id?.includes('-001')) {
-        setSessions([]);
-        return;
-      }
-      fetchSessions();
-    }
-  }, [activeTab, user?.id, fetchSessions]);
-
   // ── API helpers ───────────────────────────────────────────────────────────
   const fetchSessions = useCallback(async () => {
     setSessionsLoading(true);
@@ -160,6 +149,17 @@ export default function SecurityCenterPage() {
       setSessionsLoading(false);
     }
   }, [isAr]);
+
+  // Load sessions when tab opens
+  useEffect(() => {
+    if (activeTab === 'sessions') {
+      if (user?.id?.includes('-001')) {
+        setSessions([]);
+        return;
+      }
+      fetchSessions();
+    }
+  }, [activeTab, user?.id, fetchSessions]);
 
   const handleProfileSave = async () => {
     if (!profileName.trim() || profileName.trim().length < 2) {
