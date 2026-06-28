@@ -73,13 +73,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
-    // Get the stored password from better-auth Account table
     const account = await prisma.account.findFirst({
       where: {
         userId: session.user.id,
         providerId: 'credential',
       },
-      select: { password: true },
+      select: { id: true, password: true },
     });
 
     if (!account?.password) {
@@ -111,12 +110,7 @@ export async function POST(req: NextRequest) {
     const hashedNewPassword = await bcrypt.hash(newPassword, 12); // cost factor 12
 
     await prisma.account.update({
-      where: {
-        providerId_accountId: {
-          providerId: 'credential',
-          accountId: user.email,
-        },
-      },
+      where: { id: account.id },
       data: { password: hashedNewPassword },
     });
 

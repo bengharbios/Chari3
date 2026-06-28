@@ -182,7 +182,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
 
   // Synchronize browser URL bar with Zustand currentPage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && mounted) {
       let targetPath = '/';
       if (currentPage.startsWith('store')) targetPath = '/store';
       else if (currentPage.startsWith('seller')) targetPath = '/seller';
@@ -192,8 +192,8 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
       else if (currentPage === 'verification') targetPath = '/verification';
 
       const isBaseRoute = ['store', 'seller', 'supplier', 'logistics', 'buyer', 'verification', 'home', 'login'].includes(currentPage);
-      if (!isBaseRoute && targetPath !== '/') {
-        targetPath += `?view=${currentPage}`;
+      if (!isBaseRoute) {
+        targetPath += (targetPath === '/' ? '?' : '&') + `view=${currentPage}`;
       }
 
       const currentUrl = window.location.pathname + window.location.search;

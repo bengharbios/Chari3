@@ -42,6 +42,7 @@ const DEFAULTS: SecuritySettings = {
 export default function AdminSecuritySettingsPage() {
   const { t, locale } = useTranslation();
   const isRTL = locale === 'ar';
+  const tStr = (ar, en) => locale === 'ar' ? ar : en;
 
   const [settings, setSettings] = useState<SecuritySettings>(DEFAULTS);
   const [loading, setLoading] = useState(true);
@@ -60,7 +61,7 @@ export default function AdminSecuritySettingsPage() {
         setSettings({ ...DEFAULTS, ...data.settings });
       }
     } catch {
-      toast.error(t(locale, 'خطأ في تحميل الإعدادات', 'Error loading settings'));
+      toast.error(tStr('خطأ في تحميل الإعدادات', 'Error loading settings'));
     } finally {
       setLoading(false);
     }
@@ -76,12 +77,12 @@ export default function AdminSecuritySettingsPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(t(locale, 'تم حفظ إعدادات الأمان بنجاح ✓', 'Security settings saved successfully ✓'));
+        toast.success(tStr('تم حفظ إعدادات الأمان بنجاح ✓', 'Security settings saved successfully ✓'));
       } else {
-        toast.error(data.error || t(locale, 'حدث خطأ', 'An error occurred'));
+        toast.error(data.error || tStr('حدث خطأ', 'An error occurred'));
       }
     } catch {
-      toast.error(t(locale, 'خطأ في الاتصال بالخادم', 'Server connection error'));
+      toast.error(tStr('خطأ في الاتصال بالخادم', 'Server connection error'));
     } finally {
       setSaving(false);
     }
@@ -116,10 +117,10 @@ export default function AdminSecuritySettingsPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">
-              {t(locale, 'إعدادات الأمان المتقدمة', 'Advanced Security Settings')}
+              {tStr('إعدادات الأمان المتقدمة', 'Advanced Security Settings')}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {t(locale, 'تحكم في سياسات الأمان وحماية الحسابات على مستوى المنصة', 'Control security policies and account protection platform-wide')}
+              {tStr('تحكم في سياسات الأمان وحماية الحسابات على مستوى المنصة', 'Control security policies and account protection platform-wide')}
             </p>
           </div>
         </div>
@@ -130,7 +131,7 @@ export default function AdminSecuritySettingsPage() {
           id="save-security-settings-btn"
         >
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {t(locale, 'حفظ الإعدادات', 'Save Settings')}
+          {tStr('حفظ الإعدادات', 'Save Settings')}
         </Button>
       </div>
 
@@ -142,12 +143,11 @@ export default function AdminSecuritySettingsPage() {
             <div className="flex items-center gap-2">
               <Lock className="h-5 w-5 text-orange-500" />
               <CardTitle className="text-base">
-                {t(locale, 'قفل السحب الأمني', 'Withdrawal Security Lock')}
+                {tStr('قفل السحب الأمني', 'Withdrawal Security Lock')}
               </CardTitle>
             </div>
             <CardDescription>
-              {t(locale,
-                'مدة تجميد عمليات السحب بعد تغيير البيانات الحساسة (البريد أو الهاتف)',
+              {tStr('مدة تجميد عمليات السحب بعد تغيير البيانات الحساسة (البريد أو الهاتف)',
                 'Duration to freeze withdrawals after sensitive data changes (email or phone)'
               )}
             </CardDescription>
@@ -155,7 +155,7 @@ export default function AdminSecuritySettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="withdrawal-hold-hours">
-                {t(locale, 'مدة الحظر (بالساعات)', 'Hold Duration (hours)')}
+                {tStr('مدة الحظر (بالساعات)', 'Hold Duration (hours)')}
               </Label>
               <div className="flex items-center gap-3">
                 <Input
@@ -169,14 +169,14 @@ export default function AdminSecuritySettingsPage() {
                 />
                 <span className="text-sm text-muted-foreground">
                   {settings.withdrawal_hold_hours === 0
-                    ? t(locale, 'معطّل', 'Disabled')
+                    ? tStr('معطّل', 'Disabled')
                     : settings.withdrawal_hold_hours === 24
-                      ? t(locale, '24 ساعة (يوم)', '24 hours (1 day)')
+                      ? tStr('24 ساعة (يوم)', '24 hours (1 day)')
                       : settings.withdrawal_hold_hours === 48
-                        ? t(locale, '48 ساعة (يومان) ← الافتراضي', '48 hours (2 days) ← Default')
+                        ? tStr('48 ساعة (يومان) ← الافتراضي', '48 hours (2 days) ← Default')
                         : settings.withdrawal_hold_hours === 72
-                          ? t(locale, '72 ساعة (3 أيام)', '72 hours (3 days)')
-                          : `${settings.withdrawal_hold_hours} ${t(locale, 'ساعة', 'hours')}`
+                          ? tStr('72 ساعة (3 أيام)', '72 hours (3 days)')
+                          : `${settings.withdrawal_hold_hours} ${tStr('ساعة', 'hours')}`
                   }
                 </span>
               </div>
@@ -189,7 +189,7 @@ export default function AdminSecuritySettingsPage() {
                     onClick={() => setSettings(p => ({ ...p, withdrawal_hold_hours: h }))}
                     id={`hold-hours-${h}-btn`}
                   >
-                    {h === 0 ? t(locale, 'معطّل', 'Off') : `${h}h`}
+                    {h === 0 ? tStr('معطّل', 'Off') : `${h}h`}
                   </Button>
                 ))}
               </div>
@@ -200,10 +200,10 @@ export default function AdminSecuritySettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-sm">
-                  {t(locale, 'اشتراط 2FA لعمليات السحب', 'Require 2FA for Withdrawals')}
+                  {tStr('اشتراط 2FA لعمليات السحب', 'Require 2FA for Withdrawals')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {t(locale, 'يجبر التاجر على تفعيل المصادقة الثنائية قبل السحب', 'Forces merchants to enable 2FA before withdrawing')}
+                  {tStr('يجبر التاجر على تفعيل المصادقة الثنائية قبل السحب', 'Forces merchants to enable 2FA before withdrawing')}
                 </p>
               </div>
               <Switch
@@ -221,18 +221,18 @@ export default function AdminSecuritySettingsPage() {
             <div className="flex items-center gap-2">
               <Smartphone className="h-5 w-5 text-blue-500" />
               <CardTitle className="text-base">
-                {t(locale, 'إدارة الجلسات', 'Session Management')}
+                {tStr('إدارة الجلسات', 'Session Management')}
               </CardTitle>
             </div>
             <CardDescription>
-              {t(locale, 'التحكم في عدد الجلسات المسموحة وعمرها', 'Control allowed session count and lifetime')}
+              {tStr('التحكم في عدد الجلسات المسموحة وعمرها', 'Control allowed session count and lifetime')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="max-sessions">
-                  {t(locale, 'أقصى عدد جلسات', 'Max Sessions per User')}
+                  {tStr('أقصى عدد جلسات', 'Max Sessions per User')}
                 </Label>
                 <Input
                   id="max-sessions"
@@ -245,7 +245,7 @@ export default function AdminSecuritySettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="session-lifetime">
-                  {t(locale, 'عمر الجلسة (يوماً)', 'Session Lifetime (days)')}
+                  {tStr('عمر الجلسة (يوماً)', 'Session Lifetime (days)')}
                 </Label>
                 <Input
                   id="session-lifetime"
@@ -258,8 +258,7 @@ export default function AdminSecuritySettingsPage() {
               </div>
             </div>
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-xs text-blue-700 dark:text-blue-300">
-              {t(locale,
-                '💡 إذا تجاوز المستخدم الحد الأقصى، سيتم إنهاء أقدم الجلسات تلقائياً.',
+              {tStr('💡 إذا تجاوز المستخدم الحد الأقصى، سيتم إنهاء أقدم الجلسات تلقائياً.',
                 '💡 If a user exceeds the limit, the oldest sessions will be automatically terminated.'
               )}
             </div>
@@ -272,18 +271,18 @@ export default function AdminSecuritySettingsPage() {
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-500" />
               <CardTitle className="text-base">
-                {t(locale, 'حماية تسجيل الدخول', 'Login Protection')}
+                {tStr('حماية تسجيل الدخول', 'Login Protection')}
               </CardTitle>
             </div>
             <CardDescription>
-              {t(locale, 'سياسة القفل التلقائي عند محاولات الدخول الفاشلة', 'Auto-lockout policy for failed login attempts')}
+              {tStr('سياسة القفل التلقائي عند محاولات الدخول الفاشلة', 'Auto-lockout policy for failed login attempts')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="login-attempts">
-                  {t(locale, 'عدد المحاولات المسموحة', 'Allowed Attempts')}
+                  {tStr('عدد المحاولات المسموحة', 'Allowed Attempts')}
                 </Label>
                 <Input
                   id="login-attempts"
@@ -296,7 +295,7 @@ export default function AdminSecuritySettingsPage() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lockout-minutes">
-                  {t(locale, 'مدة القفل (دقائق)', 'Lockout Duration (min)')}
+                  {tStr('مدة القفل (دقائق)', 'Lockout Duration (min)')}
                 </Label>
                 <Input
                   id="lockout-minutes"
@@ -317,21 +316,21 @@ export default function AdminSecuritySettingsPage() {
             <div className="flex items-center gap-2">
               <Eye className="h-5 w-5 text-green-500" />
               <CardTitle className="text-base">
-                {t(locale, 'التنبيهات والإشعارات', 'Alerts & Notifications')}
+                {tStr('التنبيهات والإشعارات', 'Alerts & Notifications')}
               </CardTitle>
             </div>
             <CardDescription>
-              {t(locale, 'إشعارات الأمان التلقائية عند النشاطات الحساسة', 'Automatic security alerts for sensitive activities')}
+              {tStr('إشعارات الأمان التلقائية عند النشاطات الحساسة', 'Automatic security alerts for sensitive activities')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-sm">
-                  {t(locale, 'تنبيه عند تسجيل الدخول من جهاز جديد', 'Alert on New Device Login')}
+                  {tStr('تنبيه عند تسجيل الدخول من جهاز جديد', 'Alert on New Device Login')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {t(locale, 'إرسال إشعار للتاجر عند الدخول من جهاز غير معروف', 'Notify merchant when logging in from unknown device')}
+                  {tStr('إرسال إشعار للتاجر عند الدخول من جهاز غير معروف', 'Notify merchant when logging in from unknown device')}
                 </p>
               </div>
               <Switch
@@ -346,10 +345,10 @@ export default function AdminSecuritySettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-medium text-sm">
-                  {t(locale, 'تنبيه عند تعديل البيانات الحساسة', 'Alert on Sensitive Change')}
+                  {tStr('تنبيه عند تعديل البيانات الحساسة', 'Alert on Sensitive Change')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {t(locale, 'إشعار عند تغيير البريد أو الهاتف أو كلمة المرور', 'Notify on email, phone or password change')}
+                  {tStr('إشعار عند تغيير البريد أو الهاتف أو كلمة المرور', 'Notify on email, phone or password change')}
                 </p>
               </div>
               <Switch
@@ -363,7 +362,7 @@ export default function AdminSecuritySettingsPage() {
 
             <div className="space-y-2">
               <Label htmlFor="mfa-grace-period">
-                {t(locale, 'مهلة المصادقة الثنائية (ساعات)', '2FA Grace Period (hours)')}
+                {tStr('مهلة المصادقة الثنائية (ساعات)', '2FA Grace Period (hours)')}
               </Label>
               <Input
                 id="mfa-grace-period"
@@ -374,8 +373,7 @@ export default function AdminSecuritySettingsPage() {
                 onChange={e => setNum('mfa_grace_period_hours', e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                {t(locale,
-                  'المدة المسموحة للتاجر لإكمال إعداد 2FA بعد طلب الإدارة (0 = فوري)',
+                {tStr('المدة المسموحة للتاجر لإكمال إعداد 2FA بعد طلب الإدارة (0 = فوري)',
                   'Grace period for merchant to complete 2FA setup after admin request (0 = immediate)'
                 )}
               </p>
@@ -390,26 +388,26 @@ export default function AdminSecuritySettingsPage() {
         <CardHeader>
           <CardTitle className="text-sm text-slate-300 flex items-center gap-2">
             <Settings2 className="h-4 w-4" />
-            {t(locale, 'ملخص السياسة الأمنية الحالية', 'Current Security Policy Summary')}
+            {tStr('ملخص السياسة الأمنية الحالية', 'Current Security Policy Summary')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
               <p className="text-2xl font-bold text-orange-400">{settings.withdrawal_hold_hours}h</p>
-              <p className="text-xs text-slate-400">{t(locale, 'قفل السحب', 'Withdrawal Lock')}</p>
+              <p className="text-xs text-slate-400">{tStr('قفل السحب', 'Withdrawal Lock')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-blue-400">{settings.max_sessions_per_user}</p>
-              <p className="text-xs text-slate-400">{t(locale, 'أقصى جلسات', 'Max Sessions')}</p>
+              <p className="text-xs text-slate-400">{tStr('أقصى جلسات', 'Max Sessions')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-red-400">{settings.login_attempt_limit}</p>
-              <p className="text-xs text-slate-400">{t(locale, 'محاولات الدخول', 'Login Attempts')}</p>
+              <p className="text-xs text-slate-400">{tStr('محاولات الدخول', 'Login Attempts')}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-green-400">{settings.session_lifetime_days}d</p>
-              <p className="text-xs text-slate-400">{t(locale, 'عمر الجلسة', 'Session Lifetime')}</p>
+              <p className="text-xs text-slate-400">{tStr('عمر الجلسة', 'Session Lifetime')}</p>
             </div>
           </div>
         </CardContent>

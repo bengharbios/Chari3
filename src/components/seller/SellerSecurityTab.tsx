@@ -50,6 +50,7 @@ function DeviceIcon({ type }: { type: string }) {
 
 export default function SellerSecurityTab() {
   const { t, locale } = useTranslation();
+  const tStr = (ar, en) => locale === 'ar' ? ar : en;
   const { user } = useAuthStore();
   const isAr = locale === 'ar';
   const dateFnsLocale = isAr ? ar : enUS;
@@ -91,7 +92,7 @@ export default function SellerSecurityTab() {
         setSessions(data.sessions);
       }
     } catch {
-      toast.error(t(locale, 'خطأ في تحميل الجلسات', 'Error loading sessions'));
+      toast.error(tStr('خطأ في تحميل الجلسات', 'Error loading sessions'));
     } finally {
       setSessionsLoading(false);
     }
@@ -111,10 +112,10 @@ export default function SellerSecurityTab() {
         setSetupData(data);
         setSetupStep('qr');
       } else {
-        toast.error(data.error || t(locale, 'حدث خطأ', 'An error occurred'));
+        toast.error(data.error || tStr('حدث خطأ', 'An error occurred'));
       }
     } catch {
-      toast.error(t(locale, 'خطأ في الاتصال', 'Connection error'));
+      toast.error(tStr('خطأ في الاتصال', 'Connection error'));
     } finally {
       setSetup2FALoading(false);
     }
@@ -122,7 +123,7 @@ export default function SellerSecurityTab() {
 
   const handle2FAEnable = async () => {
     if (!otpInput || otpInput.length !== 6) {
-      toast.error(t(locale, 'يرجى إدخال رمز التحقق المكون من 6 أرقام', 'Please enter the 6-digit verification code'));
+      toast.error(tStr('يرجى إدخال رمز التحقق المكون من 6 أرقام', 'Please enter the 6-digit verification code'));
       return;
     }
     setOtpLoading(true);
@@ -136,12 +137,12 @@ export default function SellerSecurityTab() {
       if (data.success) {
         setSetupStep('codes');
         setIs2FAEnabled(true);
-        toast.success(t(locale, '✅ تم تفعيل المصادقة الثنائية بنجاح!', '✅ Two-Factor Authentication enabled!'));
+        toast.success(tStr('✅ تم تفعيل المصادقة الثنائية بنجاح!', '✅ Two-Factor Authentication enabled!'));
       } else {
-        toast.error(data.error || t(locale, 'رمز التحقق غير صحيح', 'Invalid verification code'));
+        toast.error(data.error || tStr('رمز التحقق غير صحيح', 'Invalid verification code'));
       }
     } catch {
-      toast.error(t(locale, 'خطأ في الاتصال', 'Connection error'));
+      toast.error(tStr('خطأ في الاتصال', 'Connection error'));
     } finally {
       setOtpLoading(false);
       setOtpInput('');
@@ -150,7 +151,7 @@ export default function SellerSecurityTab() {
 
   const handle2FADisable = async () => {
     if (!disableOtp) {
-      toast.error(t(locale, 'يرجى إدخال رمز التحقق', 'Please enter verification code'));
+      toast.error(tStr('يرجى إدخال رمز التحقق', 'Please enter verification code'));
       return;
     }
     setDisableLoading(true);
@@ -166,12 +167,12 @@ export default function SellerSecurityTab() {
         setShowDisable2FA(false);
         setSetupStep('idle');
         setSetupData(null);
-        toast.success(t(locale, 'تم إيقاف المصادقة الثنائية', '2FA has been disabled'));
+        toast.success(tStr('تم إيقاف المصادقة الثنائية', '2FA has been disabled'));
       } else {
-        toast.error(data.error || t(locale, 'رمز التحقق غير صحيح', 'Invalid code'));
+        toast.error(data.error || tStr('رمز التحقق غير صحيح', 'Invalid code'));
       }
     } catch {
-      toast.error(t(locale, 'خطأ في الاتصال', 'Connection error'));
+      toast.error(tStr('خطأ في الاتصال', 'Connection error'));
     } finally {
       setDisableLoading(false);
       setDisableOtp('');
@@ -182,7 +183,7 @@ export default function SellerSecurityTab() {
     if (!setupData) return;
     navigator.clipboard.writeText(setupData.recoveryCodes.join('\n'));
     setRecoveryCodesCopied(true);
-    toast.success(t(locale, 'تم نسخ رموز الاستعادة ✓', 'Recovery codes copied ✓'));
+    toast.success(tStr('تم نسخ رموز الاستعادة ✓', 'Recovery codes copied ✓'));
     setTimeout(() => setRecoveryCodesCopied(false), 3000);
   };
 
@@ -194,12 +195,12 @@ export default function SellerSecurityTab() {
       const data = await res.json();
       if (data.success) {
         setSessions(prev => prev.filter(s => s.id !== sessionId));
-        toast.success(t(locale, 'تم إنهاء الجلسة بنجاح', 'Session terminated successfully'));
+        toast.success(tStr('تم إنهاء الجلسة بنجاح', 'Session terminated successfully'));
       } else {
         toast.error(data.error);
       }
     } catch {
-      toast.error(t(locale, 'خطأ في الاتصال', 'Connection error'));
+      toast.error(tStr('خطأ في الاتصال', 'Connection error'));
     } finally {
       setRevokingId(null);
     }
@@ -210,7 +211,7 @@ export default function SellerSecurityTab() {
     for (const s of otherSessions) {
       await handleRevokeSession(s.id);
     }
-    toast.success(t(locale, 'تم إنهاء جميع الجلسات الأخرى', 'All other sessions terminated'));
+    toast.success(tStr('تم إنهاء جميع الجلسات الأخرى', 'All other sessions terminated'));
   };
 
   return (
@@ -228,11 +229,10 @@ export default function SellerSecurityTab() {
             </div>
             <div>
               <CardTitle className="text-base">
-                {t(locale, 'المصادقة الثنائية (2FA)', 'Two-Factor Authentication (2FA)')}
+                {tStr('المصادقة الثنائية (2FA)', 'Two-Factor Authentication (2FA)')}
               </CardTitle>
               <CardDescription>
-                {t(locale,
-                  'حماية إضافية لحسابك باستخدام تطبيقات Google Authenticator أو Authy',
+                {tStr('حماية إضافية لحسابك باستخدام تطبيقات Google Authenticator أو Authy',
                   'Extra protection using Google Authenticator or Authy apps'
                 )}
               </CardDescription>
@@ -240,8 +240,8 @@ export default function SellerSecurityTab() {
             <div className="ms-auto">
               <Badge variant={is2FAEnabled ? 'default' : 'secondary'} className={is2FAEnabled ? 'bg-green-500 text-white' : ''}>
                 {is2FAEnabled
-                  ? t(locale, '✓ مفعّل', '✓ Enabled')
-                  : t(locale, 'غير مفعّل', 'Disabled')
+                  ? tStr('✓ مفعّل', '✓ Enabled')
+                  : tStr('غير مفعّل', 'Disabled')
                 }
               </Badge>
             </div>
@@ -255,11 +255,10 @@ export default function SellerSecurityTab() {
               <AlertTriangle className="h-5 w-5 text-orange-500 shrink-0" />
               <div className="flex-1">
                 <p className="font-medium text-sm">
-                  {t(locale, 'حسابك غير محمي بالمصادقة الثنائية', 'Your account is not protected with 2FA')}
+                  {tStr('حسابك غير محمي بالمصادقة الثنائية', 'Your account is not protected with 2FA')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {t(locale,
-                    'يُنصح بشدة بتفعيل 2FA لحماية حسابك ومحفظتك من الاختراق',
+                  {tStr('يُنصح بشدة بتفعيل 2FA لحماية حسابك ومحفظتك من الاختراق',
                     'We strongly recommend enabling 2FA to protect your account and wallet'
                   )}
                 </p>
@@ -271,7 +270,7 @@ export default function SellerSecurityTab() {
                 className="gap-2 shrink-0"
               >
                 {setup2FALoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
-                {t(locale, 'تفعيل 2FA', 'Enable 2FA')}
+                {tStr('تفعيل 2FA', 'Enable 2FA')}
               </Button>
             </div>
           )}
@@ -281,11 +280,10 @@ export default function SellerSecurityTab() {
             <div className="space-y-4">
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 text-sm">
                 <p className="font-bold mb-1">
-                  {t(locale, '📱 الخطوة 1: امسح رمز QR', '📱 Step 1: Scan the QR Code')}
+                  {tStr('📱 الخطوة 1: امسح رمز QR', '📱 Step 1: Scan the QR Code')}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  {t(locale,
-                    'افتح تطبيق Google Authenticator أو Authy واضغط على إضافة حساب، ثم امسح الرمز أدناه',
+                  {tStr('افتح تطبيق Google Authenticator أو Authy واضغط على إضافة حساب، ثم امسح الرمز أدناه',
                     'Open Google Authenticator or Authy, tap Add Account, then scan the code below'
                   )}
                 </p>
@@ -298,7 +296,7 @@ export default function SellerSecurityTab() {
 
                 <div className="w-full space-y-2">
                   <Label className="text-xs text-muted-foreground">
-                    {t(locale, 'أو أدخل الكود يدوياً:', 'Or enter the key manually:')}
+                    {tStr('أو أدخل الكود يدوياً:', 'Or enter the key manually:')}
                   </Label>
                   <div className="flex items-center gap-2">
                     <code className={`flex-1 p-2 rounded-lg bg-muted font-mono text-sm ${showSecret ? '' : 'blur-sm select-none'}`}>
@@ -309,7 +307,7 @@ export default function SellerSecurityTab() {
                     </Button>
                     <Button variant="ghost" size="icon" onClick={() => {
                       navigator.clipboard.writeText(setupData.secret);
-                      toast.success(t(locale, 'تم النسخ', 'Copied'));
+                      toast.success(tStr('تم النسخ', 'Copied'));
                     }}>
                       <Copy className="h-4 w-4" />
                     </Button>
@@ -321,7 +319,7 @@ export default function SellerSecurityTab() {
 
               <div className="space-y-2">
                 <Label>
-                  {t(locale, '🔐 الخطوة 2: أدخل الرمز من التطبيق للتأكيد', '🔐 Step 2: Enter the code from your app to confirm')}
+                  {tStr('🔐 الخطوة 2: أدخل الرمز من التطبيق للتأكيد', '🔐 Step 2: Enter the code from your app to confirm')}
                 </Label>
                 <div className="flex gap-2">
                   <Input
@@ -341,7 +339,7 @@ export default function SellerSecurityTab() {
                     className="gap-2"
                   >
                     {otpLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-                    {t(locale, 'تأكيد وتفعيل', 'Confirm & Enable')}
+                    {tStr('تأكيد وتفعيل', 'Confirm & Enable')}
                   </Button>
                 </div>
               </div>
@@ -353,11 +351,10 @@ export default function SellerSecurityTab() {
             <div className="space-y-4">
               <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-300 dark:border-yellow-700">
                 <p className="font-bold text-sm mb-1">
-                  ⚠️ {t(locale, 'احتفظ برموز الاستعادة الاحتياطية في مكان آمن', 'Keep your backup recovery codes in a safe place')}
+                  ⚠️ {tStr('احتفظ برموز الاستعادة الاحتياطية في مكان آمن', 'Keep your backup recovery codes in a safe place')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {t(locale,
-                    'هذه الرموز تستخدم مرة واحدة فقط للدخول إذا فقدت جهازك. لن تتمكن من رؤيتها مجدداً.',
+                  {tStr('هذه الرموز تستخدم مرة واحدة فقط للدخول إذا فقدت جهازك. لن تتمكن من رؤيتها مجدداً.',
                     'These codes are used once only to log in if you lose your device. You will not be able to see them again.'
                   )}
                 </p>
@@ -379,8 +376,8 @@ export default function SellerSecurityTab() {
               >
                 <Copy className="h-4 w-4" />
                 {recoveryCodesCopied
-                  ? t(locale, '✓ تم النسخ', '✓ Copied')
-                  : t(locale, 'نسخ جميع الرموز', 'Copy All Codes')
+                  ? tStr('✓ تم النسخ', '✓ Copied')
+                  : tStr('نسخ جميع الرموز', 'Copy All Codes')
                 }
               </Button>
 
@@ -389,7 +386,7 @@ export default function SellerSecurityTab() {
                 onClick={() => { setSetupStep('idle'); setSetupData(null); }}
                 className="w-full"
               >
-                {t(locale, 'تم — إغلاق', 'Done — Close')}
+                {tStr('تم — إغلاق', 'Done — Close')}
               </Button>
             </div>
           )}
@@ -400,11 +397,10 @@ export default function SellerSecurityTab() {
               <ShieldCheck className="h-5 w-5 text-green-600 shrink-0" />
               <div className="flex-1">
                 <p className="font-medium text-sm text-green-700 dark:text-green-400">
-                  {t(locale, 'حسابك محمي بالمصادقة الثنائية', 'Your account is protected with 2FA')}
+                  {tStr('حسابك محمي بالمصادقة الثنائية', 'Your account is protected with 2FA')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {t(locale,
-                    'سيُطلب منك رمز التحقق عند كل تسجيل دخول',
+                  {tStr('سيُطلب منك رمز التحقق عند كل تسجيل دخول',
                     'A verification code will be required at every login'
                   )}
                 </p>
@@ -417,7 +413,7 @@ export default function SellerSecurityTab() {
                 className="gap-2 shrink-0"
               >
                 <ShieldOff className="h-4 w-4" />
-                {t(locale, 'إيقاف 2FA', 'Disable 2FA')}
+                {tStr('إيقاف 2FA', 'Disable 2FA')}
               </Button>
             </div>
           )}
@@ -434,24 +430,23 @@ export default function SellerSecurityTab() {
               </div>
               <div>
                 <CardTitle className="text-base">
-                  {t(locale, 'الجلسات النشطة والأجهزة', 'Active Sessions & Devices')}
+                  {tStr('الجلسات النشطة والأجهزة', 'Active Sessions & Devices')}
                 </CardTitle>
                 <CardDescription>
-                  {t(locale,
-                    'جميع الأجهزة التي سجّلت الدخول بها على حسابك',
+                  {tStr('جميع الأجهزة التي سجّلت الدخول بها على حسابك',
                     'All devices currently logged into your account'
                   )}
                 </CardDescription>
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" size="icon" onClick={fetchSessions} title={t(locale, 'تحديث', 'Refresh')}>
+              <Button variant="ghost" size="icon" onClick={fetchSessions} title={tStr('تحديث', 'Refresh')}>
                 <RefreshCw className={`h-4 w-4 ${sessionsLoading ? 'animate-spin' : ''}`} />
               </Button>
               {sessions.filter(s => !s.isCurrent).length > 1 && (
                 <Button variant="destructive" size="sm" onClick={handleRevokeAllOther} className="gap-1.5 text-xs">
                   <LogOut className="h-3.5 w-3.5" />
-                  {t(locale, 'إنهاء الكل', 'Terminate All')}
+                  {tStr('إنهاء الكل', 'Terminate All')}
                 </Button>
               )}
             </div>
@@ -466,7 +461,7 @@ export default function SellerSecurityTab() {
             </div>
           ) : sessions.length === 0 ? (
             <p className="text-center text-muted-foreground text-sm py-6">
-              {t(locale, 'لا توجد جلسات نشطة', 'No active sessions found')}
+              {tStr('لا توجد جلسات نشطة', 'No active sessions found')}
             </p>
           ) : (
             <div className="space-y-3">
@@ -487,7 +482,7 @@ export default function SellerSecurityTab() {
                       </p>
                       {session.isCurrent && (
                         <Badge variant="outline" className="text-xs text-primary border-primary/30 px-1.5 py-0">
-                          {t(locale, 'الجلسة الحالية', 'Current Session')}
+                          {tStr('الجلسة الحالية', 'Current Session')}
                         </Badge>
                       )}
                     </div>
@@ -519,7 +514,7 @@ export default function SellerSecurityTab() {
                         ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         : <LogOut className="h-3.5 w-3.5" />
                       }
-                      {t(locale, 'إنهاء', 'End')}
+                      {tStr('إنهاء', 'End')}
                     </Button>
                   )}
                 </div>
@@ -535,11 +530,10 @@ export default function SellerSecurityTab() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <ShieldOff className="h-5 w-5" />
-              {t(locale, 'إيقاف المصادقة الثنائية', 'Disable Two-Factor Authentication')}
+              {tStr('إيقاف المصادقة الثنائية', 'Disable Two-Factor Authentication')}
             </DialogTitle>
             <DialogDescription>
-              {t(locale,
-                'لإيقاف 2FA، أدخل رمز التحقق من تطبيقك. تحذير: سيصبح حسابك أقل أماناً.',
+              {tStr('لإيقاف 2FA، أدخل رمز التحقق من تطبيقك. تحذير: سيصبح حسابك أقل أماناً.',
                 'To disable 2FA, enter the verification code from your app. Warning: your account will be less secure.'
               )}
             </DialogDescription>
@@ -547,7 +541,7 @@ export default function SellerSecurityTab() {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label htmlFor="disable-otp">
-                {t(locale, 'رمز التحقق (6 أرقام)', 'Verification Code (6 digits)')}
+                {tStr('رمز التحقق (6 أرقام)', 'Verification Code (6 digits)')}
               </Label>
               <Input
                 id="disable-otp"
@@ -563,7 +557,7 @@ export default function SellerSecurityTab() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => { setShowDisable2FA(false); setDisableOtp(''); }}>
-              {t(locale, 'إلغاء', 'Cancel')}
+              {tStr('إلغاء', 'Cancel')}
             </Button>
             <Button
               variant="destructive"
@@ -573,7 +567,7 @@ export default function SellerSecurityTab() {
               className="gap-2"
             >
               {disableLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldOff className="h-4 w-4" />}
-              {t(locale, 'إيقاف 2FA', 'Disable 2FA')}
+              {tStr('إيقاف 2FA', 'Disable 2FA')}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -49,16 +49,18 @@ export async function GET(req: NextRequest) {
 
     const formattedSessions = activeSessions.map(s => {
       const parsedUA = parseUserAgent(s.userAgent || '');
+      const rawIp = s.ipAddress || '127.0.0.1';
+      const cleanIp = rawIp.split(',')[0].trim();
       return {
         id: s.id,
         createdAt: s.createdAt,
         expiresAt: s.expiresAt,
-        ipAddress: s.ipAddress || '127.0.0.1',
+        ipAddress: cleanIp,
         deviceType: s.deviceType || parsedUA.deviceType,
         os: s.os || parsedUA.os,
         browser: s.browser || parsedUA.browser,
-        countryCode: s.countryCode || 'DZ',
-        city: s.city || 'Alger',
+        countryCode: s.countryCode || '',
+        city: s.city || '',
         isCurrent: s.token === currentToken
       };
     });

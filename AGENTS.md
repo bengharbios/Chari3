@@ -52,3 +52,9 @@ ChariDay is a custom-built, multi-vendor B2B/B2C marketplace platform. It allows
 ## 🚀 Execution Checklist
 - Before finalizing a task, ensure the Next.js build passes.
 - Validate that the changes do not break the Arabic UI layout (RTL support is critical).
+
+## 🔒 Security & Session Management (Recent Updates)
+- **Session Duration:** Sessions are configured via `better-auth.ts` to expire in 30 days (`expiresIn: 60 * 60 * 24 * 30`) with an `updateAge` of 1 day to prevent sudden idle logouts.
+- **Geo-Location & IPs:** The `Session` model parses `x-forwarded-for` to obtain clean IPs, falling back safely to unassigned values instead of hardcoding "Alger, DZ".
+- **Language Routing:** `currentPage` is persisted in `useAppStore`'s `partialize`. Changing the language relies on `window.location.reload()`, which retains the active dashboard without falling back to `/`.
+- **UI Localization:** When localizing long components without dedicated JSON keys, ensure that the ternary (`isAr ? ar : en`) is avoided. Use `t(ar, en, fr)` or standard dictionary keys.

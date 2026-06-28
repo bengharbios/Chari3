@@ -44,11 +44,11 @@ function getStrengthScore(password: string): number {
 }
 
 function getStrengthLabel(score: number, isAr: boolean): { text: string; color: string } {
-  if (score <= 1) return { text: isAr ? 'ضعيفة جداً' : 'Very Weak', color: 'bg-red-500' };
-  if (score === 2) return { text: isAr ? 'ضعيفة' : 'Weak', color: 'bg-orange-400' };
-  if (score === 3) return { text: isAr ? 'متوسطة' : 'Fair', color: 'bg-yellow-400' };
-  if (score === 4) return { text: isAr ? 'جيدة' : 'Good', color: 'bg-blue-500' };
-  return { text: isAr ? 'قوية جداً ✓' : 'Very Strong ✓', color: 'bg-green-500' };
+  if (score <= 1) return { text: tStr('ضعيفة جداً', 'Very Weak'), color: 'bg-red-500' };
+  if (score === 2) return { text: tStr('ضعيفة', 'Weak'), color: 'bg-orange-400' };
+  if (score === 3) return { text: tStr('متوسطة', 'Fair'), color: 'bg-yellow-400' };
+  if (score === 4) return { text: tStr('جيدة', 'Good'), color: 'bg-blue-500' };
+  return { text: tStr('قوية جداً ✓', 'Very Strong ✓'), color: 'bg-green-500' };
 }
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -85,6 +85,7 @@ export default function SecurityCenterPage() {
   const { t, locale } = useTranslation();
   const { user } = useAuthStore();
   const isAr = locale === 'ar';
+  const tStr = (ar: string, en: string, fr: string = en) => { if (locale === 'ar') return ar; if (locale === 'fr') return fr; return en; };
   const dateFnsLocale = isAr ? ar : enUS;
 
   const [activeTab, setActiveTab] = useState<TabKey>('profile');
@@ -148,7 +149,7 @@ export default function SecurityCenterPage() {
       const data = await res.json();
       if (data.success) setSessions(data.sessions);
     } catch {
-      toast.error(isAr ? 'خطأ في تحميل الجلسات' : 'Error loading sessions');
+      toast.error(tStr('خطأ في تحميل الجلسات', 'Error loading sessions'));
     } finally {
       setSessionsLoading(false);
     }
@@ -156,7 +157,7 @@ export default function SecurityCenterPage() {
 
   const handleProfileSave = async () => {
     if (!profileName.trim() || profileName.trim().length < 2) {
-      toast.error(isAr ? 'الاسم يجب أن يكون حرفين على الأقل' : 'Name must be at least 2 characters');
+      toast.error(tStr('الاسم يجب أن يكون حرفين على الأقل', 'Name must be at least 2 characters'));
       return;
     }
     setProfileLoading(true);
@@ -169,13 +170,13 @@ export default function SecurityCenterPage() {
       const data = await res.json();
       if (data.success) {
         setProfileSaved(true);
-        toast.success(isAr ? '✅ تم حفظ البيانات بنجاح' : '✅ Profile updated successfully');
+        toast.success(tStr('✅ تم حفظ البيانات بنجاح', '✅ Profile updated successfully'));
         setTimeout(() => setProfileSaved(false), 3000);
       } else {
         toast.error(data.error);
       }
     } catch {
-      toast.error(isAr ? 'خطأ في الاتصال' : 'Connection error');
+      toast.error(tStr('خطأ في الاتصال', 'Connection error'));
     } finally {
       setProfileLoading(false);
     }
@@ -183,15 +184,15 @@ export default function SecurityCenterPage() {
 
   const handleChangePassword = async () => {
     if (!currentPwd || !newPwd || !confirmPwd) {
-      toast.error(isAr ? 'يرجى ملء جميع الحقول' : 'Please fill all fields');
+      toast.error(tStr('يرجى ملء جميع الحقول', 'Please fill all fields'));
       return;
     }
     if (newPwd !== confirmPwd) {
-      toast.error(isAr ? 'كلمة المرور الجديدة لا تتطابق مع التأكيد' : 'Passwords do not match');
+      toast.error(tStr('كلمة المرور الجديدة لا تتطابق مع التأكيد', 'Passwords do not match'));
       return;
     }
     if (strengthScore < 4) {
-      toast.error(isAr ? 'كلمة المرور ضعيفة جداً، الرجاء اختيار كلمة مرور أقوى' : 'Password is too weak, please choose a stronger one');
+      toast.error(tStr('كلمة المرور ضعيفة جداً، الرجاء اختيار كلمة مرور أقوى', 'Password is too weak, please choose a stronger one'));
       return;
     }
     setPwdLoading(true);
@@ -203,13 +204,13 @@ export default function SecurityCenterPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(isAr ? '✅ تم تغيير كلمة المرور، تم إنهاء جميع الجلسات الأخرى' : '✅ Password changed! All other sessions were terminated.');
+        toast.success(tStr('✅ تم تغيير كلمة المرور، تم إنهاء جميع الجلسات الأخرى', '✅ Password changed! All other sessions were terminated.'));
         setCurrentPwd(''); setNewPwd(''); setConfirmPwd('');
       } else {
         toast.error(data.error);
       }
     } catch {
-      toast.error(isAr ? 'خطأ في الاتصال' : 'Connection error');
+      toast.error(tStr('خطأ في الاتصال', 'Connection error'));
     } finally {
       setPwdLoading(false);
     }
@@ -241,8 +242,8 @@ export default function SecurityCenterPage() {
       const data = await res.json();
       if (data.success) {
         setSetupStep('codes'); setIs2FAEnabled(true);
-        toast.success(isAr ? '✅ تم تفعيل المصادقة الثنائية!' : '✅ 2FA Enabled!');
-      } else toast.error(data.error || (isAr ? 'رمز خاطئ' : 'Invalid code'));
+        toast.success(tStr('✅ تم تفعيل المصادقة الثنائية!', '✅ 2FA Enabled!'));
+      } else toast.error(data.error || (tStr('رمز خاطئ', 'Invalid code')));
     } finally { setOtpLoading(false); setOtpInput(''); }
   };
 
@@ -258,8 +259,8 @@ export default function SecurityCenterPage() {
       const data = await res.json();
       if (data.success) {
         setIs2FAEnabled(false); setShowDisable2FA(false); setSetupStep('idle'); setSetupData(null);
-        toast.success(isAr ? 'تم إيقاف 2FA' : '2FA has been disabled');
-      } else toast.error(data.error || (isAr ? 'رمز خاطئ' : 'Invalid code'));
+        toast.success(tStr('تم إيقاف 2FA', '2FA has been disabled'));
+      } else toast.error(data.error || (tStr('رمز خاطئ', 'Invalid code')));
     } finally { setDisableLoading(false); setDisableOtp(''); }
   };
 
@@ -270,7 +271,7 @@ export default function SecurityCenterPage() {
       const data = await res.json();
       if (data.success) {
         setSessions(prev => prev.filter(s => s.id !== sessionId));
-        toast.success(isAr ? 'تم إنهاء الجلسة' : 'Session terminated');
+        toast.success(tStr('تم إنهاء الجلسة', 'Session terminated'));
       }
     } finally { setRevokingId(null); }
   };
@@ -285,7 +286,7 @@ export default function SecurityCenterPage() {
     if (!setupData) return;
     navigator.clipboard.writeText(setupData.recoveryCodes.join('\n'));
     setCodesCopied(true);
-    toast.success(isAr ? 'تم نسخ رموز الاستعادة' : 'Recovery codes copied');
+    toast.success(tStr('تم نسخ رموز الاستعادة', 'Recovery codes copied'));
     setTimeout(() => setCodesCopied(false), 3000);
   };
 
@@ -306,24 +307,24 @@ export default function SecurityCenterPage() {
   );
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4 py-4" dir={isAr ? 'rtl' : 'ltr'}>
+    <div className="max-w-2xl mx-auto space-y-4 py-4" dir={tStr('rtl', 'ltr')}>
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold flex items-center gap-2">
           <Shield className="h-5 w-5 text-primary" />
-          {isAr ? 'الأمان والخصوصية' : 'Security & Privacy'}
+          {tStr('الأمان والخصوصية', 'Security & Privacy')}
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          {isAr ? 'إدارة بيانات حسابك وأمانه' : 'Manage your account info and security settings'}
+          {tStr('إدارة بيانات حسابك وأمانه', 'Manage your account info and security settings')}
         </p>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1">
-        <TabBtn id="profile" icon={User} label={isAr ? 'البيانات الشخصية' : 'Profile'} />
-        <TabBtn id="password" icon={Lock} label={isAr ? 'كلمة المرور' : 'Password'} />
-        <TabBtn id="2fa" icon={ShieldCheck} label={isAr ? 'المصادقة الثنائية' : '2FA'} />
-        <TabBtn id="sessions" icon={Globe} label={isAr ? 'الجلسات' : 'Sessions'} />
+        <TabBtn id="profile" icon={User} label={tStr('البيانات الشخصية', 'Profile')} />
+        <TabBtn id="password" icon={Lock} label={tStr('كلمة المرور', 'Password')} />
+        <TabBtn id="2fa" icon={ShieldCheck} label={tStr('المصادقة الثنائية', '2FA')} />
+        <TabBtn id="sessions" icon={Globe} label={tStr('الجلسات', 'Sessions')} />
       </div>
 
       {/* ── TAB: Profile ───────────────────────────────────────────────────── */}
@@ -332,17 +333,17 @@ export default function SecurityCenterPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <User className="h-4 w-4" />
-              {isAr ? 'البيانات الشخصية' : 'Personal Information'}
+              {tStr('البيانات الشخصية', 'Personal Information')}
             </CardTitle>
             <CardDescription>
-              {isAr ? 'تحديث اسمك ورقم هاتفك' : 'Update your name and phone number'}
+              {tStr('تحديث اسمك ورقم هاتفك', 'Update your name and phone number')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Email (read-only) */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">
-                {isAr ? 'البريد الإلكتروني (لا يمكن تغييره)' : 'Email address (cannot be changed)'}
+                {tStr('البريد الإلكتروني (لا يمكن تغييره)', 'Email address (cannot be changed)')}
               </Label>
               <Input value={user?.email || ''} disabled className="bg-muted/50 font-mono text-sm" />
             </div>
@@ -350,30 +351,30 @@ export default function SecurityCenterPage() {
             {/* Name */}
             <div className="space-y-1.5">
               <Label htmlFor="profile-name">
-                {isAr ? 'الاسم الكامل' : 'Full Name'} <span className="text-destructive">*</span>
+                {tStr('الاسم الكامل', 'Full Name')} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="profile-name"
                 value={profileName}
                 onChange={e => setProfileName(e.target.value)}
-                placeholder={isAr ? 'أدخل اسمك' : 'Enter your name'}
+                placeholder={tStr('أدخل اسمك', 'Enter your name')}
               />
             </div>
 
             {/* Phone */}
             <div className="space-y-1.5">
               <Label htmlFor="profile-phone">
-                {isAr ? 'رقم الهاتف' : 'Phone Number'}
+                {tStr('رقم الهاتف', 'Phone Number')}
               </Label>
               <div className="relative">
-                <Phone className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground ${isAr ? 'right-3' : 'left-3'}`} />
+                <Phone className={`absolute top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground ${tStr('right-3', 'left-3')}`} />
                 <Input
                   id="profile-phone"
                   type="tel"
                   value={profilePhone}
                   onChange={e => setProfilePhone(e.target.value)}
                   placeholder="+213 5XX XXX XXX"
-                  className={isAr ? 'pr-10' : 'pl-10'}
+                  className={tStr('pr-10', 'pl-10')}
                   dir="ltr"
                 />
               </div>
@@ -392,8 +393,8 @@ export default function SecurityCenterPage() {
                 : <User className="h-4 w-4" />
               }
               {profileSaved
-                ? (isAr ? 'تم الحفظ ✓' : 'Saved ✓')
-                : (isAr ? 'حفظ البيانات' : 'Save Changes')
+                ? (tStr('تم الحفظ ✓', 'Saved ✓'))
+                : (tStr('حفظ البيانات', 'Save Changes'))
               }
             </Button>
           </CardContent>
@@ -406,12 +407,10 @@ export default function SecurityCenterPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Lock className="h-4 w-4" />
-              {isAr ? 'تغيير كلمة المرور' : 'Change Password'}
+              {tStr('تغيير كلمة المرور', 'Change Password')}
             </CardTitle>
             <CardDescription>
-              {isAr
-                ? 'يجب إدخال كلمة المرور الحالية، وستنتهي جميع الجلسات الأخرى بعد التغيير'
-                : 'You must enter your current password. All other sessions will be terminated after change.'
+              {tStr('يجب إدخال كلمة المرور الحالية، وستنتهي جميع الجلسات الأخرى بعد التغيير', 'You must enter your current password. All other sessions will be terminated after change.')
               }
             </CardDescription>
           </CardHeader>
@@ -419,7 +418,7 @@ export default function SecurityCenterPage() {
             {/* Current password */}
             <div className="space-y-1.5">
               <Label htmlFor="current-pwd">
-                {isAr ? 'كلمة المرور الحالية' : 'Current Password'} <span className="text-destructive">*</span>
+                {tStr('كلمة المرور الحالية', 'Current Password')} <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
                 <Input
@@ -428,13 +427,13 @@ export default function SecurityCenterPage() {
                   value={currentPwd}
                   onChange={e => setCurrentPwd(e.target.value)}
                   placeholder="••••••••"
-                  className={isAr ? 'pl-10' : 'pr-10'}
+                  className={tStr('pl-10', 'pr-10')}
                   dir="ltr"
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrent(v => !v)}
-                  className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground ${isAr ? 'left-3' : 'right-3'}`}
+                  className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground ${tStr('left-3', 'right-3')}`}
                 >
                   {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -446,7 +445,7 @@ export default function SecurityCenterPage() {
             {/* New password */}
             <div className="space-y-1.5">
               <Label htmlFor="new-pwd">
-                {isAr ? 'كلمة المرور الجديدة' : 'New Password'} <span className="text-destructive">*</span>
+                {tStr('كلمة المرور الجديدة', 'New Password')} <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
                 <Input
@@ -455,13 +454,13 @@ export default function SecurityCenterPage() {
                   value={newPwd}
                   onChange={e => setNewPwd(e.target.value)}
                   placeholder="••••••••"
-                  className={isAr ? 'pl-10' : 'pr-10'}
+                  className={tStr('pl-10', 'pr-10')}
                   dir="ltr"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNew(v => !v)}
-                  className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground ${isAr ? 'left-3' : 'right-3'}`}
+                  className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground ${tStr('left-3', 'right-3')}`}
                 >
                   {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -471,7 +470,7 @@ export default function SecurityCenterPage() {
               {newPwd && (
                 <div className="space-y-2 mt-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">{isAr ? 'قوة كلمة المرور:' : 'Password strength:'}</span>
+                    <span className="text-muted-foreground">{tStr('قوة كلمة المرور:', 'Password strength:')}</span>
                     <span className={`font-semibold ${
                       strengthScore <= 2 ? 'text-red-500'
                       : strengthScore === 3 ? 'text-yellow-500'
@@ -512,7 +511,7 @@ export default function SecurityCenterPage() {
             {/* Confirm password */}
             <div className="space-y-1.5">
               <Label htmlFor="confirm-pwd">
-                {isAr ? 'تأكيد كلمة المرور الجديدة' : 'Confirm New Password'} <span className="text-destructive">*</span>
+                {tStr('تأكيد كلمة المرور الجديدة', 'Confirm New Password')} <span className="text-destructive">*</span>
               </Label>
               <div className="relative">
                 <Input
@@ -521,7 +520,7 @@ export default function SecurityCenterPage() {
                   value={confirmPwd}
                   onChange={e => setConfirmPwd(e.target.value)}
                   placeholder="••••••••"
-                  className={`${isAr ? 'pl-10' : 'pr-10'} ${
+                  className={`${tStr('pl-10', 'pr-10')} ${
                     confirmPwd && (confirmPwd === newPwd ? 'border-green-500 focus-visible:ring-green-500' : 'border-red-500 focus-visible:ring-red-500')
                   }`}
                   dir="ltr"
@@ -529,7 +528,7 @@ export default function SecurityCenterPage() {
                 <button
                   type="button"
                   onClick={() => setShowConfirm(v => !v)}
-                  className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground ${isAr ? 'left-3' : 'right-3'}`}
+                  className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground ${tStr('left-3', 'right-3')}`}
                 >
                   {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -537,13 +536,13 @@ export default function SecurityCenterPage() {
               {confirmPwd && confirmPwd !== newPwd && (
                 <p className="text-xs text-destructive flex items-center gap-1">
                   <XCircle className="h-3.5 w-3.5" />
-                  {isAr ? 'كلمتا المرور غير متطابقتين' : 'Passwords do not match'}
+                  {tStr('كلمتا المرور غير متطابقتين', 'Passwords do not match')}
                 </p>
               )}
               {confirmPwd && confirmPwd === newPwd && (
                 <p className="text-xs text-green-600 flex items-center gap-1">
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  {isAr ? 'كلمتا المرور متطابقتان ✓' : 'Passwords match ✓'}
+                  {tStr('كلمتا المرور متطابقتان ✓', 'Passwords match ✓')}
                 </p>
               )}
             </div>
@@ -552,9 +551,7 @@ export default function SecurityCenterPage() {
             <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800 flex gap-2 text-xs">
               <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0 mt-0.5" />
               <p className="text-muted-foreground">
-                {isAr
-                  ? 'بعد تغيير كلمة المرور، سيتم إنهاء جميع الجلسات النشطة على الأجهزة الأخرى تلقائياً لحماية حسابك.'
-                  : 'After changing your password, all active sessions on other devices will be automatically terminated to protect your account.'
+                {tStr('بعد تغيير كلمة المرور، سيتم إنهاء جميع الجلسات النشطة على الأجهزة الأخرى تلقائياً لحماية حسابك.', 'After changing your password, all active sessions on other devices will be automatically terminated to protect your account.')
                 }
               </p>
             </div>
@@ -567,7 +564,7 @@ export default function SecurityCenterPage() {
               variant="default"
             >
               {pwdLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-              {isAr ? 'تغيير كلمة المرور' : 'Change Password'}
+              {tStr('تغيير كلمة المرور', 'Change Password')}
             </Button>
           </CardContent>
         </Card>
@@ -586,14 +583,14 @@ export default function SecurityCenterPage() {
               </div>
               <div className="flex-1">
                 <CardTitle className="text-base">
-                  {isAr ? 'المصادقة الثنائية (2FA)' : 'Two-Factor Authentication'}
+                  {tStr('المصادقة الثنائية (2FA)', 'Two-Factor Authentication')}
                 </CardTitle>
                 <CardDescription>
-                  {isAr ? 'حماية إضافية باستخدام Google Authenticator أو Authy' : 'Extra protection via Google Authenticator or Authy'}
+                  {tStr('حماية إضافية باستخدام Google Authenticator أو Authy', 'Extra protection via Google Authenticator or Authy')}
                 </CardDescription>
               </div>
               <Badge variant={is2FAEnabled ? 'default' : 'secondary'} className={is2FAEnabled ? 'bg-green-500 text-white' : ''}>
-                {is2FAEnabled ? (isAr ? '✓ مفعّل' : '✓ Enabled') : (isAr ? 'غير مفعّل' : 'Disabled')}
+                {is2FAEnabled ? (tStr('✓ مفعّل', '✓ Enabled')) : (tStr('غير مفعّل', 'Disabled'))}
               </Badge>
             </div>
           </CardHeader>
@@ -603,14 +600,14 @@ export default function SecurityCenterPage() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800">
                 <AlertTriangle className="h-5 w-5 text-orange-500 shrink-0" />
                 <div className="flex-1">
-                  <p className="font-medium text-sm">{isAr ? 'حسابك غير محمي بـ 2FA' : 'Your account is not protected with 2FA'}</p>
+                  <p className="font-medium text-sm">{tStr('حسابك غير محمي بـ 2FA', 'Your account is not protected with 2FA')}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {isAr ? 'يُنصح بتفعيله لحماية محفظتك وبياناتك' : 'Strongly recommended to protect your wallet and account'}
+                    {tStr('يُنصح بتفعيله لحماية محفظتك وبياناتك', 'Strongly recommended to protect your wallet and account')}
                   </p>
                 </div>
                 <Button id="setup-2fa-btn" onClick={handle2FASetup} disabled={setup2FALoading} className="gap-2 shrink-0">
                   {setup2FALoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
-                  {isAr ? 'تفعيل 2FA' : 'Enable 2FA'}
+                  {tStr('تفعيل 2FA', 'Enable 2FA')}
                 </Button>
               </div>
             )}
@@ -619,9 +616,9 @@ export default function SecurityCenterPage() {
             {setupStep === 'qr' && setupData && (
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 text-sm">
-                  <p className="font-bold mb-1">📱 {isAr ? 'الخطوة 1: امسح رمز QR' : 'Step 1: Scan QR Code'}</p>
+                  <p className="font-bold mb-1">📱 {tStr('الخطوة 1: امسح رمز QR', 'Step 1: Scan QR Code')}</p>
                   <p className="text-muted-foreground text-xs">
-                    {isAr ? 'افتح Google Authenticator أو Authy ثم أضف حساباً جديداً' : 'Open Google Authenticator or Authy and add a new account'}
+                    {tStr('افتح Google Authenticator أو Authy ثم أضف حساباً جديداً', 'Open Google Authenticator or Authy and add a new account')}
                   </p>
                 </div>
                 <div className="flex flex-col items-center gap-4">
@@ -629,13 +626,13 @@ export default function SecurityCenterPage() {
                     <QRCode value={setupData.qrCodeUrl} size={160} />
                   </div>
                   <div className="w-full space-y-2">
-                    <Label className="text-xs text-muted-foreground">{isAr ? 'أو أدخل الكود يدوياً:' : 'Or enter key manually:'}</Label>
+                    <Label className="text-xs text-muted-foreground">{tStr('أو أدخل الكود يدوياً:', 'Or enter key manually:')}</Label>
                     <div className="flex items-center gap-2">
                       <code className={`flex-1 p-2 rounded-lg bg-muted font-mono text-sm ${showSecret ? '' : 'blur-sm select-none'}`}>{setupData.secret}</code>
                       <Button variant="ghost" size="icon" onClick={() => setShowSecret(v => !v)}>
                         {showSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(setupData.secret); toast.success(isAr ? 'تم النسخ' : 'Copied'); }}>
+                      <Button variant="ghost" size="icon" onClick={() => { navigator.clipboard.writeText(setupData.secret); toast.success(tStr('تم النسخ', 'Copied')); }}>
                         <Copy className="h-4 w-4" />
                       </Button>
                     </div>
@@ -643,7 +640,7 @@ export default function SecurityCenterPage() {
                 </div>
                 <Separator />
                 <div className="space-y-2">
-                  <Label>🔐 {isAr ? 'الخطوة 2: أدخل الرمز للتأكيد' : 'Step 2: Enter code to confirm'}</Label>
+                  <Label>🔐 {tStr('الخطوة 2: أدخل الرمز للتأكيد', 'Step 2: Enter code to confirm')}</Label>
                   <div className="flex gap-2">
                     <Input
                       id="totp-input"
@@ -653,7 +650,7 @@ export default function SecurityCenterPage() {
                     />
                     <Button id="enable-2fa-btn" onClick={handle2FAEnable} disabled={otpLoading || otpInput.length !== 6} className="gap-2">
                       {otpLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-                      {isAr ? 'تفعيل' : 'Enable'}
+                      {tStr('تفعيل', 'Enable')}
                     </Button>
                   </div>
                 </div>
@@ -664,8 +661,8 @@ export default function SecurityCenterPage() {
             {setupStep === 'codes' && setupData && (
               <div className="space-y-4">
                 <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-xl border border-yellow-300 dark:border-yellow-700">
-                  <p className="font-bold text-sm mb-1">⚠️ {isAr ? 'احتفظ بهذه الرموز في مكان آمن' : 'Save these codes in a safe place'}</p>
-                  <p className="text-xs text-muted-foreground">{isAr ? 'تُستخدم مرة واحدة فقط عند فقدان جهازك. لن تظهر مجدداً.' : 'Used once if you lose access. Cannot be shown again.'}</p>
+                  <p className="font-bold text-sm mb-1">⚠️ {tStr('احتفظ بهذه الرموز في مكان آمن', 'Save these codes in a safe place')}</p>
+                  <p className="text-xs text-muted-foreground">{tStr('تُستخدم مرة واحدة فقط عند فقدان جهازك. لن تظهر مجدداً.', 'Used once if you lose access. Cannot be shown again.')}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   {setupData.recoveryCodes.map((code, i) => (
@@ -674,10 +671,10 @@ export default function SecurityCenterPage() {
                 </div>
                 <Button id="copy-codes-btn" onClick={copyRecoveryCodes} variant="outline" className="w-full gap-2">
                   <Copy className="h-4 w-4" />
-                  {codescopied ? (isAr ? '✓ تم النسخ' : '✓ Copied') : (isAr ? 'نسخ الرموز' : 'Copy Codes')}
+                  {codescopied ? (tStr('✓ تم النسخ', '✓ Copied')) : (tStr('نسخ الرموز', 'Copy Codes'))}
                 </Button>
                 <Button id="finish-2fa-btn" onClick={() => { setSetupStep('idle'); setSetupData(null); }} className="w-full">
-                  {isAr ? 'تم — إغلاق' : 'Done — Close'}
+                  {tStr('تم — إغلاق', 'Done — Close')}
                 </Button>
               </div>
             )}
@@ -687,12 +684,12 @@ export default function SecurityCenterPage() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
                 <ShieldCheck className="h-5 w-5 text-green-600 shrink-0" />
                 <div className="flex-1">
-                  <p className="font-medium text-sm text-green-700 dark:text-green-400">{isAr ? 'حسابك محمي بـ 2FA' : 'Your account is protected with 2FA'}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{isAr ? 'سيُطلب رمز التحقق عند كل تسجيل دخول' : 'A code will be required at every login'}</p>
+                  <p className="font-medium text-sm text-green-700 dark:text-green-400">{tStr('حسابك محمي بـ 2FA', 'Your account is protected with 2FA')}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{tStr('سيُطلب رمز التحقق عند كل تسجيل دخول', 'A code will be required at every login')}</p>
                 </div>
                 <Button id="disable-2fa-btn" variant="destructive" size="sm" onClick={() => setShowDisable2FA(true)} className="gap-2 shrink-0">
                   <ShieldOff className="h-4 w-4" />
-                  {isAr ? 'إيقاف' : 'Disable'}
+                  {tStr('إيقاف', 'Disable')}
                 </Button>
               </div>
             )}
@@ -710,8 +707,8 @@ export default function SecurityCenterPage() {
                   <Globe className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <CardTitle className="text-base">{isAr ? 'الجلسات النشطة' : 'Active Sessions'}</CardTitle>
-                  <CardDescription>{isAr ? 'جميع الأجهزة المتصلة بحسابك' : 'All devices logged into your account'}</CardDescription>
+                  <CardTitle className="text-base">{tStr('الجلسات النشطة', 'Active Sessions')}</CardTitle>
+                  <CardDescription>{tStr('جميع الأجهزة المتصلة بحسابك', 'All devices logged into your account')}</CardDescription>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -721,7 +718,7 @@ export default function SecurityCenterPage() {
                 {sessions.filter(s => !s.isCurrent).length > 0 && (
                   <Button variant="destructive" size="sm" onClick={handleRevokeAll} className="gap-1.5 text-xs">
                     <LogOut className="h-3.5 w-3.5" />
-                    {isAr ? 'إنهاء الكل' : 'End All'}
+                    {tStr('إنهاء الكل', 'End All')}
                   </Button>
                 )}
               </div>
@@ -731,7 +728,7 @@ export default function SecurityCenterPage() {
             {sessionsLoading ? (
               <div className="space-y-3">{[1, 2].map(i => <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />)}</div>
             ) : sessions.length === 0 ? (
-              <p className="text-center text-muted-foreground text-sm py-6">{isAr ? 'لا توجد جلسات نشطة' : 'No active sessions'}</p>
+              <p className="text-center text-muted-foreground text-sm py-6">{tStr('لا توجد جلسات نشطة', 'No active sessions')}</p>
             ) : (
               <div className="space-y-3">
                 {sessions.map(session => (
@@ -747,12 +744,12 @@ export default function SecurityCenterPage() {
                         <p className="font-medium text-sm">{session.browser} — {session.os}</p>
                         {session.isCurrent && (
                           <Badge variant="outline" className="text-xs text-primary border-primary/30 px-1.5 py-0">
-                            {isAr ? 'الجلسة الحالية' : 'Current'}
+                            {tStr('الجلسة الحالية', 'Current')}
                           </Badge>
                         )}
                       </div>
                       <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-                        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{session.city}, {session.countryCode}</span>
+                        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{session.city && session.countryCode ? `${session.city}, ${session.countryCode}` : tStr('غير معروف', 'Unknown')}</span>
                         <span className="flex items-center gap-1"><Globe className="h-3 w-3" />{session.ipAddress}</span>
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
@@ -769,7 +766,7 @@ export default function SecurityCenterPage() {
                         id={`revoke-${session.id}`}
                       >
                         {revokingId === session.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <LogOut className="h-3.5 w-3.5" />}
-                        {isAr ? 'إنهاء' : 'End'}
+                        {tStr('إنهاء', 'End')}
                       </Button>
                     )}
                   </div>
@@ -786,14 +783,14 @@ export default function SecurityCenterPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <ShieldOff className="h-5 w-5" />
-              {isAr ? 'إيقاف المصادقة الثنائية' : 'Disable Two-Factor Authentication'}
+              {tStr('إيقاف المصادقة الثنائية', 'Disable Two-Factor Authentication')}
             </DialogTitle>
             <DialogDescription>
-              {isAr ? 'أدخل رمز التحقق من التطبيق للتأكيد. سيصبح حسابك أقل أماناً.' : 'Enter the code from your app to confirm. Your account will be less secure.'}
+              {tStr('أدخل رمز التحقق من التطبيق للتأكيد. سيصبح حسابك أقل أماناً.', 'Enter the code from your app to confirm. Your account will be less secure.')}
             </DialogDescription>
           </DialogHeader>
           <div className="py-2 space-y-3">
-            <Label htmlFor="disable-otp">{isAr ? 'رمز التحقق (6 أرقام)' : 'Verification Code (6 digits)'}</Label>
+            <Label htmlFor="disable-otp">{tStr('رمز التحقق (6 أرقام)', 'Verification Code (6 digits)')}</Label>
             <Input
               id="disable-otp"
               type="text" inputMode="numeric" maxLength={6}
@@ -803,11 +800,11 @@ export default function SecurityCenterPage() {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => { setShowDisable2FA(false); setDisableOtp(''); }}>
-              {isAr ? 'إلغاء' : 'Cancel'}
+              {tStr('إلغاء', 'Cancel')}
             </Button>
             <Button id="confirm-disable-2fa" variant="destructive" onClick={handle2FADisable} disabled={disableLoading || disableOtp.length !== 6} className="gap-2">
               {disableLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldOff className="h-4 w-4" />}
-              {isAr ? 'إيقاف 2FA' : 'Disable 2FA'}
+              {tStr('إيقاف 2FA', 'Disable 2FA')}
             </Button>
           </DialogFooter>
         </DialogContent>

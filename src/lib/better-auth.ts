@@ -13,6 +13,10 @@ export const auth = betterAuth({
   database: prismaAdapter(db, {
     provider: "mysql", // ChariDay uses MySQL in the schema
   }),
+  session: {
+    expiresIn: 60 * 60 * 24 * 30, // 30 days
+    updateAge: 60 * 60 * 24, // 1 day
+  },
   emailAndPassword: {
     enabled: true,
     password: {
