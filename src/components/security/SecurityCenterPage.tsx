@@ -290,22 +290,6 @@ export default function SecurityCenterPage() {
     setTimeout(() => setCodesCopied(false), 3000);
   };
 
-  // ── Tab button ────────────────────────────────────────────────────────────
-  const TabBtn = ({ id, icon: Icon, label }: { id: TabKey; icon: any; label: string }) => (
-    <button
-      id={`security-tab-${id}`}
-      onClick={() => setActiveTab(id)}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
-        activeTab === id
-          ? 'bg-primary text-primary-foreground shadow-sm'
-          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-      }`}
-    >
-      <Icon className="h-4 w-4 shrink-0" />
-      <span className="hidden sm:inline">{label}</span>
-    </button>
-  );
-
   return (
     <div className="max-w-2xl mx-auto space-y-4 py-4" dir={tStr('rtl', 'ltr')}>
       {/* Header */}
@@ -321,10 +305,29 @@ export default function SecurityCenterPage() {
 
       {/* Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1">
-        <TabBtn id="profile" icon={User} label={tStr('البيانات الشخصية', 'Profile')} />
-        <TabBtn id="password" icon={Lock} label={tStr('كلمة المرور', 'Password')} />
-        <TabBtn id="2fa" icon={ShieldCheck} label={tStr('المصادقة الثنائية', '2FA')} />
-        <TabBtn id="sessions" icon={Globe} label={tStr('الجلسات', 'Sessions')} />
+        {[
+          { id: 'profile', icon: User, label: tStr('البيانات الشخصية', 'Profile') },
+          { id: 'password', icon: Lock, label: tStr('كلمة المرور', 'Password') },
+          { id: '2fa', icon: ShieldCheck, label: tStr('المصادقة الثنائية', '2FA') },
+          { id: 'sessions', icon: Globe, label: tStr('الجلسات', 'Sessions') },
+        ].map(tab => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              id={`security-tab-${tab.id}`}
+              onClick={() => setActiveTab(tab.id as TabKey)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                activeTab === tab.id
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* ── TAB: Profile ───────────────────────────────────────────────────── */}
