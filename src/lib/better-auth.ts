@@ -4,6 +4,8 @@ import { db } from "./db";
 import { twoFactor } from "better-auth/plugins";
 import { headers } from "next/headers";
 
+import { lookupIpLocation } from "./ip-lookup";
+
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || "fallback_secret_please_change_in_production_12345",
   baseURL: process.env.NEXT_PUBLIC_APP_URL || "https://chariday.com",
@@ -20,18 +22,32 @@ export const auth = betterAuth({
         before: async (session) => {
           try {
             const reqHeaders = await headers();
-            const country = reqHeaders.get("cf-ipcountry") || reqHeaders.get("x-vercel-ip-country");
-            const city = reqHeaders.get("cf-ipcity") || reqHeaders.get("x-vercel-ip-city");
+            let country = reqHeaders.get("cf-ipcountry") || reqHeaders.get("x-vercel-ip-country");
+            let city = reqHeaders.get("cf-ipcity") || reqHeaders.get("x-vercel-ip-city");
+            
+            if (city) {
+              try {
+                city = decodeURIComponent(city);
+              } catch {
+                // ignore
+              }
+            }
+
+            // If Cloudflare didn't provide location, lookup from IP
+            if (!country || !city) {
+              const ip = reqHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() || reqHeaders.get("x-real-ip");
+              if (ip) {
+                const geo = await lookupIpLocation(ip);
+                if (geo.countryCode && !country) country = geo.countryCode;
+                if (geo.city && !city) city = geo.city;
+              }
+            }
             
             if (country) {
               (session as any).countryCode = country;
             }
             if (city) {
-              try {
-                (session as any).city = decodeURIComponent(city);
-              } catch {
-                (session as any).city = city;
-              }
+              (session as any).city = city;
             }
           } catch (e) {
             // Ignore if headers() is called outside of request context

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { validatePhone, validateEmail } from '@/lib/validators';
 import { checkRateLimit } from '@/lib/rate-limiter';
 import { db } from '@/lib/db';
+import { lookupIpLocation } from '@/lib/ip-lookup';
 
 import * as nodemailer from 'nodemailer';
 
@@ -91,8 +92,8 @@ export async function POST(request: Request) {
     const limitPhoneDaily = parseInt(sMap.otp_rate_limit_phone_daily) || 5;
     const limitIpDaily = parseInt(sMap.otp_rate_limit_ip_daily) || 20;
 
-    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
-    const detectedCountry = request.headers.get('cf-ipcountry') || 'Unknown';
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
+    let detectedCountry = request.headers.get('cf-ipcountry') || '';
     let detectedCity = request.headers.get('cf-ipcity') || '';
     if (detectedCity) {
       try {
@@ -101,6 +102,17 @@ export async function POST(request: Request) {
         // ignore
       }
     }
+    
+    // Fallback to IP lookup if Cloudflare didn't provide location
+    if (!detectedCountry || !detectedCity) {
+      const geo = await lookupIpLocation(ip);
+      if (geo.countryCode && !detectedCountry) detectedCountry = geo.countryCode;
+      if (geo.city && !detectedCity) detectedCity = geo.city;
+    }
+    
+    // Ensure fallback value
+    if (!detectedCountry) detectedCountry = 'Unknown';
+    
     const userAgent = request.headers.get('user-agent') || 'Unknown';
     // Simple hash function for device fingerprint
     let hash = 0;
