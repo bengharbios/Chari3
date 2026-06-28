@@ -35,9 +35,19 @@ function parseUserAgent(ua: string) {
 // GET /api/user/sessions - Get all active sessions for current user
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
+    const sessionToken = req.cookies.get("better-auth.session_token")?.value;
+    
+    if (!sessionToken) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const session = await db.session.findUnique({
+      where: { token: sessionToken },
+      include: { user: true }
+    });
+
     if (!session || !session.user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
     }
 
     const activeSessions = await db.session.findMany({
@@ -45,7 +55,7 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' }
     });
 
-    const currentToken = session.session.token;
+    const currentToken = sessionToken;
 
     const formattedSessions = activeSessions.map(s => {
       const parsedUA = parseUserAgent(s.userAgent || '');
@@ -78,9 +88,19 @@ export async function GET(req: NextRequest) {
 // DELETE /api/user/sessions - Revoke / terminate a session
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
+    const sessionToken = req.cookies.get("better-auth.session_token")?.value;
+    
+    if (!sessionToken) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const session = await db.session.findUnique({
+      where: { token: sessionToken },
+      include: { user: true }
+    });
+
     if (!session || !session.user) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
     }
 
     const { searchParams } = new URL(req.url);

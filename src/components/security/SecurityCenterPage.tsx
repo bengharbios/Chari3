@@ -138,8 +138,14 @@ export default function SecurityCenterPage() {
 
   // Load sessions when tab opens
   useEffect(() => {
-    if (activeTab === 'sessions') fetchSessions();
-  }, [activeTab]);
+    if (activeTab === 'sessions') {
+      if (user?.id?.includes('-001')) {
+        setSessions([]);
+        return;
+      }
+      fetchSessions();
+    }
+  }, [activeTab, user?.id, fetchSessions]);
 
   // ── API helpers ───────────────────────────────────────────────────────────
   const fetchSessions = useCallback(async () => {
