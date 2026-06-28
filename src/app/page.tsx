@@ -154,6 +154,8 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
     }
   }, [initialPage, searchParams, setCurrentPage]);
 
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const [isMaintenance, setIsMaintenance] = useState(false);
   const [isLoadingConfig, setIsLoadingConfig] = useState(true);
   const { isDark } = useGentelellaTheme();
