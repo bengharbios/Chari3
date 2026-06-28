@@ -209,7 +209,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
 
   // Navigate to correct dashboard on role change (but allow verification page)
   useEffect(() => {
-    const isGlobalAllowed = ['verification', 'home', 'search', 'product-detail', 'seller-profile', 'login'].includes(currentPage);
+    const isGlobalAllowed = ['home', 'search', 'product-detail', 'seller-profile', 'login'].includes(currentPage);
     
     if (!isAuthenticated || !user) {
       if (!isGlobalAllowed && currentPage !== 'home') {

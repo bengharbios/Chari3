@@ -47,7 +47,10 @@ export default function AuthSync() {
       if (currentUser?.id?.includes('-001')) {
         return;
       }
-      logout();
+      
+      // DISABLED: Cloudflare Bot Fight Mode intercepts the background session check
+      // and returns HTML (data: null, error: null), falsely logging out legitimate users.
+      // logout();
     }
   }, [mounted, isPending, data, error, isAuthenticated, loginWithUser, logout]);
 
