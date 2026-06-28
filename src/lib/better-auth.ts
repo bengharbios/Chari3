@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { db } from "./db";
 import { twoFactor } from "better-auth/plugins";
+import { headers } from "next/headers";
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || "fallback_secret_please_change_in_production_12345",
@@ -13,6 +14,33 @@ export const auth = betterAuth({
   database: prismaAdapter(db, {
     provider: "mysql", // ChariDay uses MySQL in the schema
   }),
+  databaseHooks: {
+    session: {
+      create: {
+        before: async (session) => {
+          try {
+            const reqHeaders = await headers();
+            const country = reqHeaders.get("cf-ipcountry") || reqHeaders.get("x-vercel-ip-country");
+            const city = reqHeaders.get("cf-ipcity") || reqHeaders.get("x-vercel-ip-city");
+            
+            if (country) {
+              (session as any).countryCode = country;
+            }
+            if (city) {
+              try {
+                (session as any).city = decodeURIComponent(city);
+              } catch {
+                (session as any).city = city;
+              }
+            }
+          } catch (e) {
+            // Ignore if headers() is called outside of request context
+          }
+          return { data: session };
+        }
+      }
+    }
+  },
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 days
     updateAge: 60 * 60 * 24, // 1 day
