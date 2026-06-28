@@ -209,23 +209,29 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
 
   // Navigate to correct dashboard on role change (but allow verification page)
   useEffect(() => {
-    if (isAuthenticated && user) {
-      // If user is in Buyer Mode, they can access any buyer-centric pages implicitly (home, search, checkout)
-      if (isBuyerMode) {
-        const isBuyerAllowed = ['home', 'search', 'product-detail', 'seller-profile', 'cart', 'buyer', 'buyer-orders', 'buyer-wishlist', 'buyer-addresses', 'buyer-wallet', 'buyer-reviews'].includes(currentPage);
-        if (isBuyerAllowed) return;
+    const isGlobalAllowed = ['verification', 'home', 'search', 'product-detail', 'seller-profile', 'login'].includes(currentPage);
+    
+    if (!isAuthenticated || !user) {
+      if (!isGlobalAllowed && currentPage !== 'home') {
+        setCurrentPage('home');
       }
+      return;
+    }
 
-      const rolePrefix = user.role === 'store_manager' ? 'store' : user.role;
-      const isRoleAllowed = currentPage === rolePrefix || currentPage.startsWith(`${rolePrefix}-`);
-      const isGlobalAllowed = ['verification', 'home', 'search', 'product-detail', 'seller-profile', 'login'].includes(currentPage);
-      const isAdminAllowed = ALLOWED_EXTRA_PAGES.includes(currentPage);
+    // If user is in Buyer Mode, they can access any buyer-centric pages implicitly (home, search, checkout)
+    if (isBuyerMode) {
+      const isBuyerAllowed = ['home', 'search', 'product-detail', 'seller-profile', 'cart', 'buyer', 'buyer-orders', 'buyer-wishlist', 'buyer-addresses', 'buyer-wallet', 'buyer-reviews'].includes(currentPage);
+      if (isBuyerAllowed) return;
+    }
 
-      if (isRoleAllowed || isGlobalAllowed || isAdminAllowed) return;
-      const targetPage = ROLE_TO_PAGE[user.role as UserRole];
-      if (targetPage && currentPage !== targetPage) {
-        setCurrentPage(targetPage);
-      }
+    const rolePrefix = user.role === 'store_manager' ? 'store' : user.role;
+    const isRoleAllowed = currentPage === rolePrefix || currentPage.startsWith(`${rolePrefix}-`);
+    const isAdminAllowed = ALLOWED_EXTRA_PAGES.includes(currentPage);
+
+    if (isRoleAllowed || isGlobalAllowed || isAdminAllowed) return;
+    const targetPage = ROLE_TO_PAGE[user.role as UserRole];
+    if (targetPage && currentPage !== targetPage) {
+      setCurrentPage(targetPage);
     }
   }, [isAuthenticated, user?.role, currentPage, setCurrentPage, isBuyerMode]);
 
