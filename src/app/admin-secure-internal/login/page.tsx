@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ShieldCheck, Lock, Mail, Key, Loader2, ArrowRight } from 'lucide-react';
+import Turnstile from 'react-turnstile';
 
 export default function AdminLoginPage() {
   const { data: session, isPending } = useSession();
@@ -17,6 +18,27 @@ export default function AdminLoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+
+  const [captchaConfig, setCaptchaConfig] = useState({ enabled: false, siteKey: '' });
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [configLoaded, setConfigLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/auth/config')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setCaptchaConfig({
+            enabled: data.config.captchaEnabled,
+            siteKey: data.config.captchaSiteKey,
+          });
+        }
+        setConfigLoaded(true);
+      })
+      .catch(() => setConfigLoaded(true));
+  }, []);
+
+  const canSubmit = captchaConfig.enabled && captchaConfig.siteKey ? !!captchaToken : true;
 
   // Handle successful login redirection
   useEffect(() => {
@@ -48,6 +70,7 @@ export default function AdminLoginPage() {
         body: JSON.stringify({
           identifier: email,
           password: password,
+          captchaToken: captchaToken,
         }),
       });
 
@@ -132,7 +155,17 @@ export default function AdminLoginPage() {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full font-bold h-11 bg-brand text-navy hover:bg-brand/90" disabled={isSubmitting}>
+              {configLoaded && captchaConfig.enabled && captchaConfig.siteKey && (
+                <div className="flex justify-center my-4 animate-fade-in">
+                  <Turnstile
+                    sitekey={captchaConfig.siteKey}
+                    onVerify={(token) => setCaptchaToken(token)}
+                    theme="auto"
+                  />
+                </div>
+              )}
+
+              <Button type="submit" className="w-full font-bold h-11 bg-brand text-navy hover:bg-brand/90" disabled={isSubmitting || !canSubmit}>
                 {isSubmitting ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (

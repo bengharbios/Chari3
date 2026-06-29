@@ -23,7 +23,25 @@
     "active": "Active",
     "expired": "Expired",
     "rows_per_page": "Rows per page:",
-    "progress": "Progress"
+    "progress": "Progress",
+    "checkout": {
+      "all_data_secured": "All data is secured",
+      "free_shipping_offer": "Free shipping special offer for you",
+      "free_return": "Free Return",
+      "up_to_90_days": "Up to 90 days",
+      "sign_in_to_save": "Sign in to save your cart to your account.",
+      "email_or_phone": "Email or Phone Number",
+      "password": "Password",
+      "continue": "Continue",
+      "or_continue_with": "Or continue with",
+      "login_securely_with_otp": "Login securely with OTP",
+      "register_now": "Don't have an account? Register now",
+      "terms_agreement": "By continuing, you agree to ChariDay's Terms of Use and Privacy Policy.",
+      "logged_in": "Logged in successfully!",
+      "invalid_credentials": "Invalid credentials",
+      "server_error": "Server connection error",
+      "google_redirect": "Redirecting to Google..."
+    }
   },
   "sidebar": {
     "messages": "Messages",
@@ -296,7 +314,6 @@
     "ERROR_RATE_LIMIT_MINUTE": "Please wait a moment before requesting a new code.",
     "defaultError": "An unexpected error occurred. Please try again."
   },
-  
   "onboarding": {
     "title": "Business Registration",
     "subtitle": "Please provide accurate details below",
@@ -431,7 +448,7 @@
     "updateVerificationResetError": "Failed to request edit"
   },
   "security": {
-"title": "Security",
+    "title": "Security",
     "twoFactor": "Two-Factor Authentication (2FA)",
     "twoFactorDesc": "Extra protection using Google Authenticator or Authy apps",
     "enabled": "Enabled",
@@ -454,7 +471,28 @@
     "accountNotProtected": "Your account is not protected with 2FA",
     "2faRecommendation": "We strongly recommend enabling 2FA to protect your account and wallet",
     "2faActive": "A verification code will be required at every login",
-    "sessions": "Active Sessions & Devices",
+    "sessions": {
+      "title": "Sessions & Devices Management",
+      "desc": "Monitor active user sessions and connected devices, with the ability to revoke them remotely.",
+      "revokeAll": "Revoke All Sessions",
+      "currentSessions": "Active Sessions",
+      "noSessions": "No active sessions currently.",
+      "user": "User",
+      "role": "Role",
+      "ip": "IP Address",
+      "userAgent": "User Agent",
+      "time": "Login Time",
+      "actions": "Actions",
+      "revoke": "Revoke",
+      "confirmRevoke": "Are you sure you want to revoke this session? The user will be logged out immediately.",
+      "confirmRevokeAll": "WARNING: This will log out everyone from the system! Are you sure?",
+      "revokeSuccess": "Session revoked successfully",
+      "revokeFailed": "Failed to revoke session",
+      "revokeAllSuccess": "All sessions revoked",
+      "revokeAllFailed": "Failed to revoke all sessions",
+      "unknown": "Unknown",
+      "notAvailable": "N/A"
+    },
     "sessionsDesc": "All devices currently logged into your account",
     "currentSession": "Current Session",
     "terminateSession": "End",
@@ -489,7 +527,6 @@
     "saveSettings": "Save Settings",
     "settingsSaved": "Security settings saved successfully ✓",
     "securitySummary": "Current Security Policy Summary",
-
     "section_title": "Security & Access",
     "auth_logs": "Auth Logs",
     "ban_list": "Ban List",
@@ -568,29 +605,6 @@
       "email": "Email",
       "whatsapp": "WhatsApp",
       "telegram": "Telegram"
-    },
-    "sessions": {
-      "title": "Sessions & Devices Management",
-      "desc": "Monitor active user sessions and connected devices, with the ability to revoke them remotely.",
-      "revokeAll": "Revoke All Sessions",
-      "currentSessions": "Active Sessions",
-      "noSessions": "No active sessions currently.",
-      "user": "User",
-      "role": "Role",
-      "ip": "IP Address",
-      "userAgent": "User Agent",
-      "time": "Login Time",
-      "actions": "Actions",
-      "revoke": "Revoke",
-      "confirmRevoke": "Are you sure you want to revoke this session? The user will be logged out immediately.",
-      "confirmRevokeAll": "WARNING: This will log out everyone from the system! Are you sure?",
-      "revokeSuccess": "Session revoked successfully",
-      "revokeFailed": "Failed to revoke session",
-      "revokeAllSuccess": "All sessions revoked",
-      "revokeAllFailed": "Failed to revoke all sessions",
-      "unknown": "Unknown",
-      "notAvailable": "N/A"
     }
-  
-}
+  }
 }

@@ -23,7 +23,25 @@
     "active": "نشط",
     "expired": "منتهي",
     "rows_per_page": "الصفوف لكل صفحة:",
-    "progress": "التقدم"
+    "progress": "التقدم",
+    "checkout": {
+      "all_data_secured": "جميع البيانات مؤمنة",
+      "free_shipping_offer": "شحن مجاني عرض خاص لك",
+      "free_return": "إرجاع مجاني",
+      "up_to_90_days": "لمدة تصل إلى ٩٠ يومًا",
+      "sign_in_to_save": "سجِّل الدخول لحفظ عربة تسوقك في حسابك.",
+      "email_or_phone": "البريد الإلكتروني أو رقم الهاتف",
+      "password": "كلمة المرور",
+      "continue": "المتابعة",
+      "or_continue_with": "أو المتابعة بطرق أخرى",
+      "login_securely_with_otp": "تسجيل الدخول باستخدام رمز OTP الآمن",
+      "register_now": "ليس لديك حساب؟ أنشئ حسابك الآن",
+      "terms_agreement": "بالمتابعة، فإنك توافق على شروط الاستخدام وسياسة الخصوصية الخاصة بـ ChariDay.",
+      "logged_in": "تم تسجيل الدخول بنجاح!",
+      "invalid_credentials": "بيانات الدخول غير صحيحة",
+      "server_error": "حدث خطأ أثناء الاتصال بالخادم",
+      "google_redirect": "سيتم توجيهك إلى Google..."
+    }
   },
   "sidebar": {
     "messages": "الرسائل",
@@ -296,7 +314,6 @@
     "ERROR_RATE_LIMIT_MINUTE": "رجاءً انتظر قليلاً قبل طلب رمز جديد.",
     "defaultError": "حدث خطأ أثناء معالجة الطلب، يرجى المحاولة مرة أخرى."
   },
-  
   "onboarding": {
     "title": "تسجيل الأعمال",
     "subtitle": "الرجاء إدخال البيانات والتأكد من صحتها",
@@ -431,7 +448,7 @@
     "updateVerificationResetError": "حدث خطأ أثناء طلب التعديل"
   },
   "security": {
-"title": "الأمان",
+    "title": "الأمان",
     "twoFactor": "المصادقة الثنائية (2FA)",
     "twoFactorDesc": "حماية إضافية لحسابك باستخدام تطبيقات Google Authenticator أو Authy",
     "enabled": "مفعّل",
@@ -454,7 +471,28 @@
     "accountNotProtected": "حسابك غير محمي بالمصادقة الثنائية",
     "2faRecommendation": "يُنصح بشدة بتفعيل 2FA لحماية حسابك ومحفظتك من الاختراق",
     "2faActive": "سيُطلب منك رمز التحقق عند كل تسجيل دخول",
-    "sessions": "الجلسات النشطة والأجهزة",
+    "sessions": {
+      "title": "إدارة الجلسات والأجهزة (Sessions)",
+      "desc": "مراقبة الأجهزة المتصلة بحسابات المستخدمين وإمكانية إلغائها وطردها عن بُعد.",
+      "revokeAll": "طرد جميع المستخدمين (إنهاء كل الجلسات)",
+      "currentSessions": "الأجهزة المتصلة حالياً",
+      "noSessions": "لا توجد أجهزة متصلة حالياً.",
+      "user": "المستخدم",
+      "role": "الدور",
+      "ip": "IP Address",
+      "userAgent": "الجهاز (User Agent)",
+      "time": "وقت الدخول",
+      "actions": "إجراءات",
+      "revoke": "إنهاء",
+      "confirmRevoke": "هل أنت متأكد من إنهاء هذه الجلسة؟ سيتم تسجيل خروج المستخدم فوراً.",
+      "confirmRevokeAll": "تحذير: سيتم تسجيل خروج الجميع من النظام! هل أنت متأكد؟",
+      "revokeSuccess": "تم إنهاء الجلسة بنجاح",
+      "revokeFailed": "فشل إنهاء الجلسة",
+      "revokeAllSuccess": "تم إنهاء جميع الجلسات",
+      "revokeAllFailed": "فشل إنهاء جميع الجلسات",
+      "unknown": "مجهول",
+      "notAvailable": "غير متوفر"
+    },
     "sessionsDesc": "جميع الأجهزة التي سجّلت الدخول بها على حسابك",
     "currentSession": "الجلسة الحالية",
     "terminateSession": "إنهاء",
@@ -489,7 +527,6 @@
     "saveSettings": "حفظ الإعدادات",
     "settingsSaved": "تم حفظ إعدادات الأمان بنجاح ✓",
     "securitySummary": "ملخص السياسة الأمنية الحالية",
-
     "section_title": "الأمان والدخول",
     "auth_logs": "سجلات المصادقة",
     "ban_list": "قائمة الحظر",
@@ -568,29 +605,6 @@
       "email": "بريد إلكتروني",
       "whatsapp": "واتساب",
       "telegram": "تلغرام"
-    },
-    "sessions": {
-      "title": "إدارة الجلسات والأجهزة (Sessions)",
-      "desc": "مراقبة الأجهزة المتصلة بحسابات المستخدمين وإمكانية إلغائها وطردها عن بُعد.",
-      "revokeAll": "طرد جميع المستخدمين (إنهاء كل الجلسات)",
-      "currentSessions": "الأجهزة المتصلة حالياً",
-      "noSessions": "لا توجد أجهزة متصلة حالياً.",
-      "user": "المستخدم",
-      "role": "الدور",
-      "ip": "IP Address",
-      "userAgent": "الجهاز (User Agent)",
-      "time": "وقت الدخول",
-      "actions": "إجراءات",
-      "revoke": "إنهاء",
-      "confirmRevoke": "هل أنت متأكد من إنهاء هذه الجلسة؟ سيتم تسجيل خروج المستخدم فوراً.",
-      "confirmRevokeAll": "تحذير: سيتم تسجيل خروج الجميع من النظام! هل أنت متأكد؟",
-      "revokeSuccess": "تم إنهاء الجلسة بنجاح",
-      "revokeFailed": "فشل إنهاء الجلسة",
-      "revokeAllSuccess": "تم إنهاء جميع الجلسات",
-      "revokeAllFailed": "فشل إنهاء جميع الجلسات",
-      "unknown": "مجهول",
-      "notAvailable": "غير متوفر"
     }
-  
-}
+  }
 }

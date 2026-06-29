@@ -10,9 +10,11 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, Mail, Phone, Lock, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Loader2, Mail, Lock, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import Turnstile from 'react-turnstile';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 interface QuickLoginModalProps {
   isOpen: boolean;
@@ -29,8 +31,28 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [captchaConfig, setCaptchaConfig] = useState({ enabled: false, siteKey: '' });
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [configLoaded, setConfigLoaded] = useState(false);
 
-  const t = (ar: string, en: string) => (isRTL ? ar : en);
+  const { t } = useTranslation();
+
+  React.useEffect(() => {
+    fetch('/api/auth/config')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setCaptchaConfig({
+            enabled: data.config.captchaEnabled,
+            siteKey: data.config.captchaSiteKey,
+          });
+        }
+        setConfigLoaded(true);
+      })
+      .catch(() => setConfigLoaded(true));
+  }, []);
+
+  const canSend = captchaConfig.enabled && captchaConfig.siteKey ? !!captchaToken : true;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,20 +63,20 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
       const res = await fetch('/api/auth/login-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({ identifier, password, captchaToken }),
       });
       
       const data = await res.json();
       if (data.success) {
         login(data.user, data.token);
-        toast.success(t('تم تسجيل الدخول بنجاح!', 'Logged in successfully!'));
+        toast.success(t('checkout.logged_in', 'تم تسجيل الدخول بنجاح!'));
         onClose();
         if (onSuccess) onSuccess();
       } else {
-        toast.error(data.error || t('بيانات الدخول غير صحيحة', 'Invalid credentials'));
+        toast.error(data.error || t('checkout.invalid_credentials', 'بيانات الدخول غير صحيحة'));
       }
     } catch (error) {
-      toast.error(t('حدث خطأ أثناء الاتصال بالخادم', 'Server connection error'));
+      toast.error(t('checkout.server_error', 'حدث خطأ أثناء الاتصال بالخادم'));
     } finally {
       setIsLoading(false);
     }
@@ -62,7 +84,7 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
 
   const handleGoogleLogin = () => {
     // Redirect to actual next-auth google flow or show toast
-    toast.success(t('سيتم توجيهك إلى Google...', 'Redirecting to Google...'));
+    toast.success(t('checkout.google_redirect', 'سيتم توجيهك إلى Google...'));
     // Example: window.location.href = '/api/auth/signin/google'
   };
 
@@ -74,20 +96,20 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
           <div className="bg-brand/10 p-6 pb-8 text-center relative overflow-hidden">
             <div className="absolute top-0 inset-x-0 h-1.5 gradient-brand"></div>
             <DialogTitle className="text-xl font-black font-cairo text-foreground">
-              {t('جميع البيانات مؤمنة', 'All data is secured')}
+              {t('checkout.all_data_secured', 'جميع البيانات مؤمنة')}
             </DialogTitle>
             <p className="text-sm font-semibold text-primary mt-2 flex items-center justify-center gap-1.5">
               <Lock className="size-4" />
-              {t('شحن مجاني عرض خاص لك', 'Free shipping special offer for you')}
+              {t('checkout.free_shipping_offer', 'شحن مجاني عرض خاص لك')}
             </p>
             <div className="flex items-center justify-center gap-4 mt-4 text-xs font-bold text-muted-foreground">
               <span className="flex items-center gap-1">
                 <ChevronRight className="size-3 text-green-500" />
-                {t('إرجاع مجاني', 'Free Return')}
+                {t('checkout.free_return', 'إرجاع مجاني')}
               </span>
               <span className="flex items-center gap-1">
                 <ChevronRight className="size-3 text-green-500" />
-                {t('لمدة تصل إلى ٩٠ يومًا', 'Up to 90 days')}
+                {t('checkout.up_to_90_days', 'لمدة تصل إلى ٩٠ يومًا')}
               </span>
             </div>
           </div>
@@ -96,14 +118,14 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
           <div className="p-6 bg-surface -mt-4 rounded-t-3xl relative z-10 space-y-6">
             <div className="text-center space-y-2">
               <p className="text-sm font-bold text-foreground">
-                {t('سجِّل الدخول لحفظ عربة تسوقك في حسابك.', 'Sign in to save your cart to your account.')}
+                {t('checkout.sign_in_to_save', 'سجِّل الدخول لحفظ عربة تسوقك في حسابك.')}
               </p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted-foreground">
-                  {t('البريد الإلكتروني أو رقم الهاتف', 'Email or Phone Number')}
+                  {t('checkout.email_or_phone', 'البريد الإلكتروني أو رقم الهاتف')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-muted-foreground">
@@ -121,7 +143,7 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
 
               <div className="space-y-1">
                 <label className="text-xs font-bold text-muted-foreground">
-                  {t('كلمة المرور', 'Password')}
+                  {t('checkout.password', 'كلمة المرور')}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-muted-foreground">
@@ -138,19 +160,29 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
                 </div>
               </div>
 
+              {configLoaded && captchaConfig.enabled && captchaConfig.siteKey && (
+                <div className="flex justify-center my-4 animate-fade-in">
+                  <Turnstile
+                    sitekey={captchaConfig.siteKey}
+                    onVerify={(token) => setCaptchaToken(token)}
+                    theme="auto"
+                  />
+                </div>
+              )}
+
               <Button 
                 type="submit" 
-                disabled={isLoading}
+                disabled={isLoading || !canSend}
                 className="w-full h-12 rounded-xl font-bold gradient-brand text-navy text-base shadow-lg shadow-brand/20 hover:scale-[1.02] transition-all"
               >
-                {isLoading ? <Loader2 className="size-5 animate-spin" /> : t('المتابعة', 'Continue')}
+                {isLoading ? <Loader2 className="size-5 animate-spin" /> : t('checkout.continue', 'المتابعة')}
               </Button>
             </form>
 
             <div className="relative flex items-center justify-center text-xs">
               <div className="absolute inset-x-0 h-px bg-border/60"></div>
               <span className="relative bg-surface px-4 text-muted-foreground font-semibold">
-                {t('أو المتابعة بطرق أخرى', 'Or continue with')}
+                {t('checkout.or_continue_with', 'أو المتابعة بطرق أخرى')}
               </span>
             </div>
 
@@ -180,7 +212,7 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
                   useAppStore.getState().setCurrentPage('login');
                 }}
               >
-                {t('تسجيل الدخول باستخدام رمز OTP الآمن', 'Login securely with OTP')}
+                {t('checkout.login_securely_with_otp', 'تسجيل الدخول باستخدام رمز OTP الآمن')}
               </Button>
               <Button 
                 type="button" 
@@ -192,12 +224,12 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
                   useAppStore.getState().setCurrentPage('login');
                 }}
               >
-                {t('ليس لديك حساب؟ أنشئ حسابك الآن', 'Don\'t have an account? Register now')}
+                {t('checkout.register_now', 'ليس لديك حساب؟ أنشئ حسابك الآن')}
               </Button>
             </div>
 
             <p className="text-[10px] text-center text-muted-foreground px-4 leading-relaxed">
-              {t('بالمتابعة، فإنك توافق على شروط الاستخدام وسياسة الخصوصية الخاصة بـ ChariDay.', 'By continuing, you agree to ChariDay\'s Terms of Use and Privacy Policy.')}
+              {t('checkout.terms_agreement', 'بالمتابعة، فإنك توافق على شروط الاستخدام وسياسة الخصوصية الخاصة بـ ChariDay.')}
             </p>
           </div>
         </div>

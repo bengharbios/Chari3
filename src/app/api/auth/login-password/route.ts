@@ -5,10 +5,37 @@ import { headers } from 'next/headers';
 
 export async function POST(request: Request) {
   try {
-    const { identifier, password } = await request.json();
+    const body = await request.json();
+    const { identifier, password, captchaToken } = body;
 
     if (!identifier || !password) {
       return NextResponse.json({ success: false, message: 'Missing fields' }, { status: 400 });
+    }
+
+    // Verify Captcha if enabled
+    const authSettings = await db.systemSetting.findMany({
+      where: { key: { in: ['auth_captcha_enabled', 'auth_captcha_secret_key'] } }
+    });
+    const sMap = authSettings.reduce((acc, s) => ({ ...acc, [s.key]: s.value }), {} as Record<string, string>);
+    
+    if (sMap.auth_captcha_enabled !== 'false' && sMap.auth_captcha_secret_key) {
+      if (!captchaToken) {
+        return NextResponse.json({ success: false, message: 'Captcha token is required' }, { status: 400 });
+      }
+
+      const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          secret: sMap.auth_captcha_secret_key,
+          response: captchaToken,
+        }),
+      });
+
+      const outcome = await verifyRes.json();
+      if (!outcome.success) {
+        return NextResponse.json({ success: false, message: 'Captcha verification failed' }, { status: 400 });
+      }
     }
 
     // Lookup user by email or phone
