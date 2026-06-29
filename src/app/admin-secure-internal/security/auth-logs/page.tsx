@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { parseUserAgent } from '@/lib/ip-lookup';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -181,7 +182,10 @@ export default function AuthLogsPage() {
                       <TableCell className="font-mono text-sm">{log.ipAddress}</TableCell>
                       <TableCell>
                         <div className="max-w-[150px] truncate text-xs" title={log.userAgent}>
-                          {log.deviceType || 'Unknown'} - {log.userAgent?.substring(0, 20)}...
+                          <span className="font-semibold">{log.deviceType || 'Unknown'}</span> - {(() => {
+                            const parsed = parseUserAgent(log.userAgent);
+                            return `${parsed.browser} (${parsed.os})`;
+                          })()}
                         </div>
                       </TableCell>
                       <TableCell>{getStatusBadge(log.status)}</TableCell>
