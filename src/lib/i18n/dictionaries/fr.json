@@ -23,25 +23,7 @@
     "active": "Actif",
     "expired": "Expiré",
     "rows_per_page": "Lignes par page:",
-    "progress": "Progression",
-    "checkout": {
-      "all_data_secured": "Toutes les données sont sécurisées",
-      "free_shipping_offer": "Livraison gratuite, offre spéciale pour vous",
-      "free_return": "Retour gratuit",
-      "up_to_90_days": "Jusqu'à 90 jours",
-      "sign_in_to_save": "Connectez-vous pour enregistrer votre panier sur votre compte.",
-      "email_or_phone": "E-mail ou numéro de téléphone",
-      "password": "Mot de passe",
-      "continue": "Continuer",
-      "or_continue_with": "Ou continuer avec",
-      "login_securely_with_otp": "Connectez-vous en toute sécurité avec OTP",
-      "register_now": "Vous n'avez pas de compte ? Inscrivez-vous maintenant",
-      "terms_agreement": "En continuant, vous acceptez les conditions d'utilisation et la politique de confidentialité de ChariDay.",
-      "logged_in": "Connexion réussie !",
-      "invalid_credentials": "Identifiants invalides",
-      "server_error": "Erreur de connexion au serveur",
-      "google_redirect": "Redirection vers Google..."
-    }
+    "progress": "Progression"
   },
   "sidebar": {
     "sectionStore": "Boutique",
@@ -525,5 +507,23 @@
     "next": "Suivant",
     "prev": "Précédent",
     "saveDraft": "Enregistrer le brouillon et quitter"
+  },
+  "checkout": {
+    "all_data_secured": "Toutes les données sont sécurisées",
+    "free_shipping_offer": "Livraison gratuite, offre spéciale pour vous",
+    "free_return": "Retour gratuit",
+    "up_to_90_days": "Jusqu'à 90 jours",
+    "sign_in_to_save": "Connectez-vous pour enregistrer votre panier sur votre compte.",
+    "email_or_phone": "E-mail ou numéro de téléphone",
+    "password": "Mot de passe",
+    "continue": "Continuer",
+    "or_continue_with": "Ou continuer avec",
+    "login_securely_with_otp": "Connectez-vous en toute sécurité avec OTP",
+    "register_now": "Vous n'avez pas de compte ? Inscrivez-vous maintenant",
+    "terms_agreement": "En continuant, vous acceptez les conditions d'utilisation et la politique de confidentialité de ChariDay.",
+    "logged_in": "Connexion réussie !",
+    "invalid_credentials": "Identifiants invalides",
+    "server_error": "Erreur de connexion au serveur",
+    "google_redirect": "Redirection vers Google..."
   }
 }

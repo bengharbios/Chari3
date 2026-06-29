@@ -23,25 +23,7 @@
     "active": "نشط",
     "expired": "منتهي",
     "rows_per_page": "الصفوف لكل صفحة:",
-    "progress": "التقدم",
-    "checkout": {
-      "all_data_secured": "جميع البيانات مؤمنة",
-      "free_shipping_offer": "شحن مجاني عرض خاص لك",
-      "free_return": "إرجاع مجاني",
-      "up_to_90_days": "لمدة تصل إلى ٩٠ يومًا",
-      "sign_in_to_save": "سجِّل الدخول لحفظ عربة تسوقك في حسابك.",
-      "email_or_phone": "البريد الإلكتروني أو رقم الهاتف",
-      "password": "كلمة المرور",
-      "continue": "المتابعة",
-      "or_continue_with": "أو المتابعة بطرق أخرى",
-      "login_securely_with_otp": "تسجيل الدخول باستخدام رمز OTP الآمن",
-      "register_now": "ليس لديك حساب؟ أنشئ حسابك الآن",
-      "terms_agreement": "بالمتابعة، فإنك توافق على شروط الاستخدام وسياسة الخصوصية الخاصة بـ ChariDay.",
-      "logged_in": "تم تسجيل الدخول بنجاح!",
-      "invalid_credentials": "بيانات الدخول غير صحيحة",
-      "server_error": "حدث خطأ أثناء الاتصال بالخادم",
-      "google_redirect": "سيتم توجيهك إلى Google..."
-    }
+    "progress": "التقدم"
   },
   "sidebar": {
     "messages": "الرسائل",
@@ -606,5 +588,23 @@
       "whatsapp": "واتساب",
       "telegram": "تلغرام"
     }
+  },
+  "checkout": {
+    "all_data_secured": "جميع البيانات مؤمنة",
+    "free_shipping_offer": "شحن مجاني عرض خاص لك",
+    "free_return": "إرجاع مجاني",
+    "up_to_90_days": "لمدة تصل إلى ٩٠ يومًا",
+    "sign_in_to_save": "سجِّل الدخول لحفظ عربة تسوقك في حسابك.",
+    "email_or_phone": "البريد الإلكتروني أو رقم الهاتف",
+    "password": "كلمة المرور",
+    "continue": "المتابعة",
+    "or_continue_with": "أو المتابعة بطرق أخرى",
+    "login_securely_with_otp": "تسجيل الدخول باستخدام رمز OTP الآمن",
+    "register_now": "ليس لديك حساب؟ أنشئ حسابك الآن",
+    "terms_agreement": "بالمتابعة، فإنك توافق على شروط الاستخدام وسياسة الخصوصية الخاصة بـ ChariDay.",
+    "logged_in": "تم تسجيل الدخول بنجاح!",
+    "invalid_credentials": "بيانات الدخول غير صحيحة",
+    "server_error": "حدث خطأ أثناء الاتصال بالخادم",
+    "google_redirect": "سيتم توجيهك إلى Google..."
   }
 }

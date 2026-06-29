@@ -209,7 +209,11 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
                 onClick={() => {
                   onClose();
                   import('@/lib/store/auth-flow').then(m => m.useAuthFlowStore.getState().setIntent('checkout'));
-                  useAppStore.getState().setCurrentPage('login');
+                  if (window.location.pathname !== '/') {
+                    router.push('/?view=login');
+                  } else {
+                    useAppStore.getState().setCurrentPage('login');
+                  }
                 }}
               >
                 {t('checkout.login_securely_with_otp', 'تسجيل الدخول باستخدام رمز OTP الآمن')}
@@ -221,7 +225,11 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
                 onClick={() => {
                   onClose();
                   import('@/lib/store/auth-flow').then(m => m.useAuthFlowStore.getState().setIntent('checkout'));
-                  useAppStore.getState().setCurrentPage('login');
+                  if (window.location.pathname !== '/') {
+                    router.push('/?view=login');
+                  } else {
+                    useAppStore.getState().setCurrentPage('login');
+                  }
                 }}
               >
                 {t('checkout.register_now', 'ليس لديك حساب؟ أنشئ حسابك الآن')}
