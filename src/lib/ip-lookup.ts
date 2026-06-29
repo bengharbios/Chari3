@@ -29,3 +29,30 @@ export async function lookupIpLocation(ip: string): Promise<{ countryCode: strin
     return { countryCode: null, city: null };
   }
 }
+
+export function parseUserAgent(ua: string | null | undefined) {
+  let deviceType = 'Desktop';
+  let os = 'Unknown OS';
+  let browser = 'Unknown Browser';
+
+  if (!ua) return { deviceType, os, browser };
+  const lower = ua.toLowerCase();
+
+  if (/mobile|android|iphone|ipad|phone/i.test(lower)) {
+    deviceType = /ipad|tablet/i.test(lower) ? 'Tablet' : 'Mobile';
+  }
+
+  if (lower.includes('windows')) os = 'Windows';
+  else if (lower.includes('macintosh') || lower.includes('mac os')) os = 'macOS';
+  else if (lower.includes('iphone') || lower.includes('ipad')) os = 'iOS';
+  else if (lower.includes('android')) os = 'Android';
+  else if (lower.includes('linux')) os = 'Linux';
+
+  if (lower.includes('firefox')) browser = 'Firefox';
+  else if (lower.includes('opr/') || lower.includes('opera')) browser = 'Opera';
+  else if (lower.includes('edg/')) browser = 'Edge';
+  else if (lower.includes('chrome') && !lower.includes('chromium')) browser = 'Chrome';
+  else if (lower.includes('safari') && !lower.includes('chrome')) browser = 'Safari';
+
+  return { deviceType, os, browser };
+}

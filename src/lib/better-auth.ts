@@ -4,7 +4,7 @@ import { db } from "./db";
 import { twoFactor } from "better-auth/plugins";
 import { headers } from "next/headers";
 
-import { lookupIpLocation } from "./ip-lookup";
+import { lookupIpLocation, parseUserAgent } from "./ip-lookup";
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || "fallback_secret_please_change_in_production_12345",
@@ -49,6 +49,15 @@ export const auth = betterAuth({
             if (city) {
               (session as any).city = city;
             }
+            
+            // Parse User Agent to populate OS and Browser for AuthLog & Session
+            const userAgent = reqHeaders.get("user-agent");
+            if (userAgent) {
+              const parsed = parseUserAgent(userAgent);
+              (session as any).deviceType = parsed.deviceType;
+              (session as any).os = parsed.os;
+              (session as any).browser = parsed.browser;
+            }
           } catch (e) {
             // Ignore if headers() is called outside of request context
           }
@@ -60,6 +69,13 @@ export const auth = betterAuth({
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 days
     updateAge: 60 * 60 * 24, // 1 day
+    additionalFields: {
+      countryCode: { type: "string", required: false },
+      city: { type: "string", required: false },
+      browser: { type: "string", required: false },
+      os: { type: "string", required: false },
+      deviceType: { type: "string", required: false }
+    }
   },
   emailAndPassword: {
     enabled: true,
