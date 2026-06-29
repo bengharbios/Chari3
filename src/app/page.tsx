@@ -245,7 +245,7 @@ function HomePageInner({ initialPage }: { initialPage?: PageType }) {
     if (targetPage && currentPage !== targetPage) {
       setCurrentPage(targetPage);
     }
-  }, [isAuthenticated, user?.role, currentPage, setCurrentPage, isBuyerMode]);
+  }, [isAuthenticated, user?.role, currentPage, setCurrentPage, isBuyerMode, isLoadingConfig]);
 
   // Fetch real verification status from the database and sync store
   const fetchAndSyncStatus = useCallback(async (showToastOnChange: boolean = false) => {
