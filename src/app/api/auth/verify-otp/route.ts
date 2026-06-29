@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db, ensureDbConnection } from '@/lib/db';
 import { checkRateLimit } from '@/lib/rate-limiter';
+import { lookupIpLocation, parseUserAgent } from '@/lib/ip-lookup';
 
 export const dynamic = 'force-dynamic';
 
@@ -162,6 +163,25 @@ export async function POST(request: Request) {
         const crypto = require('crypto');
         const token = crypto.randomUUID();
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+          
+        const reqIp = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || '127.0.0.1';
+        const reqUserAgent = request.headers.get('user-agent') || '';
+        
+        // Try headers first for location
+        let country = request.headers.get('cf-ipcountry') || request.headers.get('x-vercel-ip-country') || '';
+        let city = request.headers.get('cf-ipcity') || request.headers.get('x-vercel-ip-city') || '';
+        
+        if (city) {
+          try { city = decodeURIComponent(city); } catch (e) {}
+        }
+        
+        if (!country || !city) {
+          const geo = await lookupIpLocation(reqIp);
+          if (geo.countryCode && !country) country = geo.countryCode;
+          if (geo.city && !city) city = geo.city;
+        }
+        
+        const parsedUa = parseUserAgent(reqUserAgent);
         
         await db.session.create({
           data: {
@@ -171,8 +191,13 @@ export async function POST(request: Request) {
             expiresAt: expiresAt,
             createdAt: new Date(),
             updatedAt: new Date(),
-            ipAddress: request.headers.get('x-forwarded-for') || null,
-            userAgent: request.headers.get('user-agent') || null,
+            ipAddress: reqIp || null,
+            userAgent: reqUserAgent || null,
+            countryCode: country || null,
+            city: city || null,
+            deviceType: parsedUa.deviceType || null,
+            os: parsedUa.os || null,
+            browser: parsedUa.browser || null,
           }
         });
         

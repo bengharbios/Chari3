@@ -114,6 +114,10 @@ export async function POST(request: Request) {
     if (!detectedCountry) detectedCountry = 'Unknown';
     
     const userAgent = request.headers.get('user-agent') || 'Unknown';
+    const { parseUserAgent } = require('@/lib/ip-lookup');
+    const parsedUa = parseUserAgent(userAgent);
+    const deviceType = parsedUa.deviceType || 'Unknown';
+
     // Simple hash function for device fingerprint
     let hash = 0;
     for (let i = 0; i < userAgent.length; i++) {
@@ -160,6 +164,7 @@ export async function POST(request: Request) {
           userAgent,
           countryCode,
           city: detectedCity,
+          deviceType: deviceType,
           deviceFingerprint,
           status: 'banned',
           isBanned: true,
@@ -240,6 +245,7 @@ export async function POST(request: Request) {
         userAgent,
         countryCode: detectedCountry,
         city: detectedCity,
+        deviceType: deviceType,
         deviceFingerprint,
         status: 'pending',
       }
