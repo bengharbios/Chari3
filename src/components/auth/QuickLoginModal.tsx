@@ -38,7 +38,7 @@ export default function QuickLoginModal({ isOpen, onClose, onSuccess }: QuickLog
     
     setIsLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/login-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier, password }),

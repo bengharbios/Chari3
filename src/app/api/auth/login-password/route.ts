@@ -68,9 +68,48 @@ export async function POST(request: Request) {
       asResponse: true
     });
 
+    // Extract device/IP info
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
+    let detectedCountry = request.headers.get('cf-ipcountry') || 'Unknown';
+    let detectedCity = request.headers.get('cf-ipcity') || 'Unknown';
+    if (detectedCity !== 'Unknown') {
+      try { detectedCity = decodeURIComponent(detectedCity); } catch (e) {}
+    }
+    const userAgent = request.headers.get('user-agent') || 'Unknown';
+    const { parseUserAgent } = require('@/lib/ip-lookup');
+    const parsedUa = parseUserAgent(userAgent);
+    const deviceType = parsedUa.deviceType || 'Unknown';
+
     if (!signInResponse.ok) {
+      await db.authLog.create({
+        data: {
+          identifier: user.email,
+          method: 'password',
+          ipAddress: ip,
+          userAgent,
+          countryCode: detectedCountry,
+          city: detectedCity,
+          deviceType,
+          status: 'pending',
+          isBanned: false,
+        }
+      });
       return NextResponse.json({ success: false, message: 'Invalid password' }, { status: 401 });
     }
+
+    await db.authLog.create({
+      data: {
+        identifier: user.email,
+        method: 'password',
+        ipAddress: ip,
+        userAgent,
+        countryCode: detectedCountry,
+        city: detectedCity,
+        deviceType,
+        status: 'verified',
+        isBanned: false,
+      }
+    });
 
     const response = NextResponse.json({ success: true, user });
     
