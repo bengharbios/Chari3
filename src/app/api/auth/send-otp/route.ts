@@ -15,7 +15,7 @@ function generateRandomOTP() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { method, value, countryCode, captchaToken } = body;
+    const { method, value, countryCode, captchaToken, forceOtp } = body;
 
     // ── Validate required fields ──
     if (!method || !value) {
@@ -223,7 +223,7 @@ export async function POST(request: Request) {
       }
     });
 
-    if (existingUser && existingUser.password) {
+    if (!forceOtp && existingUser && existingUser.password) {
       return NextResponse.json({
         success: true,
         userExistsWithPassword: true,

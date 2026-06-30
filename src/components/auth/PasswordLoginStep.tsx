@@ -67,6 +67,13 @@ export default function PasswordLoginStep() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    const success = await useAuthFlowStore.getState().sendOtp(true);
+    if (success) {
+      toast.success(t(locale, 'OU. OO1O3OU, O1U.O O U,OO-U,U,', 'Verification code sent'));
+    }
+  };
+
   const handleBack = () => {
     setStep('contact');
   };

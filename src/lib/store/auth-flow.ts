@@ -70,7 +70,7 @@ interface AuthFlowState {
   reset: () => void;
 
   // Actions
-  sendOtp: () => Promise<boolean>;
+  sendOtp: (forceOtp?: boolean) => Promise<boolean>;
   verifyOtp: () => Promise<{ verified: boolean; isNewUser: boolean; user?: User }>;
   register: () => Promise<boolean>;
 }
@@ -126,7 +126,7 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
   reset: () => set({ ...INITIAL_STATE }),
 
   // ── Action: Send OTP ──
-  sendOtp: async () => {
+  sendOtp: async (forceOtp?: boolean) => {
     const { method, phone, email, countryCode } = get();
     set({ isLoading: true, error: null });
 
@@ -166,7 +166,7 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
       const res = await fetch('/api/auth/send-otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ method, value, countryCode, captchaToken }),
+        body: JSON.stringify({ method, value, countryCode, captchaToken, forceOtp }),
       });
 
       const data = await res.json();
