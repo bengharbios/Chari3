@@ -11,7 +11,9 @@ export async function middleware(request: NextRequest) {
 
   if (isProtectedRoute && !isLoginPage) {
     // Check for session cookie instead of doing an internal fetch which fails on Hostinger loopback
-    const sessionToken = request.cookies.get("better-auth.session_token")?.value;
+    // In production (HTTPS), better-auth uses the __Secure- prefix
+    const sessionToken = request.cookies.get("better-auth.session_token")?.value || 
+                         request.cookies.get("__Secure-better-auth.session_token")?.value;
 
     if (!sessionToken) {
       // All login forms are now using better-auth, so we can enforce the redirect.
