@@ -54,6 +54,7 @@ export default function ContactStep() {
   const [showCountryPicker, setShowCountryPicker] = useState(false);
   const [captchaConfig, setCaptchaConfig] = useState({ enabled: false, siteKey: '' });
   const [configLoaded, setConfigLoaded] = useState(false);
+  const handleCaptchaSuccess = React.useCallback((token: string) => setCaptchaToken(token), []);
   const [availableMethods, setAvailableMethods] = useState({
     sms: true,
     whatsapp: false,
@@ -235,7 +236,7 @@ export default function ContactStep() {
         <div className="flex justify-center my-4 animate-fade-in">
           <Turnstile
             siteKey={captchaConfig.siteKey}
-            onSuccess={React.useCallback((token: string) => setCaptchaToken(token), [])}
+            onSuccess={handleCaptchaSuccess}
           />
         </div>
       )}

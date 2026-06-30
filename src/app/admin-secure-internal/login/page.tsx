@@ -22,6 +22,7 @@ export default function AdminLoginPage() {
   const [captchaConfig, setCaptchaConfig] = useState({ enabled: false, siteKey: '' });
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [configLoaded, setConfigLoaded] = useState(false);
+  const handleCaptchaSuccess = React.useCallback((token: string) => setCaptchaToken(token), []);
 
   useEffect(() => {
     fetch('/api/auth/config')
@@ -159,7 +160,7 @@ export default function AdminLoginPage() {
                 <div className="flex justify-center my-4 animate-fade-in">
                   <Turnstile
                     siteKey={captchaConfig.siteKey}
-                    onSuccess={React.useCallback((token: string) => setCaptchaToken(token), [])}
+                    onSuccess={handleCaptchaSuccess}
                   />
                 </div>
               )}
