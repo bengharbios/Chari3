@@ -748,7 +748,7 @@ export default function Header() {
               className="relative"
               onClick={() => {
                 const auth = useAuthStore.getState();
-                if (auth.isAuthenticated && auth.user && auth.user.role !== 'admin' && auth.user.role !== 'buyer' && !auth.isBuyerMode) {
+                if (auth.isAuthenticated && auth.user && auth.user?.role !== 'admin' && auth.user?.role !== 'buyer' && !auth.isBuyerMode) {
                   toast(t('تنبيه', 'Notice'), {
                     description: t('الرجاء التبديل إلى وضع المشتري لعرض سلة التسوق وإتمام الطلب', 'Please switch to buyer mode to view the cart and checkout'),
                     action: {
@@ -796,18 +796,18 @@ export default function Header() {
                       <p className="text-xs text-muted-foreground">{user.email}</p>
                       <Badge variant="secondary" className="w-fit text-xs mt-1">
                         {t(
-                          ({ admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', logistics: 'مندوب شحن', buyer: 'مشتري' } as Record<string, string>)[user.role] || user.role,
-                          ({ admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', logistics: 'Courier', buyer: 'Buyer' } as Record<string, string>)[user.role] || user.role
+                          ({ admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', logistics: 'مندوب شحن', buyer: 'مشتري' } as Record<string, string>)[user?.role || ''] || user?.role,
+                          ({ admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', logistics: 'Courier', buyer: 'Buyer' } as Record<string, string>)[user?.role || ''] || user?.role
                         )}
                       </Badge>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigateToDashboard(isBuyerMode ? 'buyer' : (rolePages[user.role] || 'buyer'))}>
+                  <DropdownMenuItem onClick={() => navigateToDashboard(isBuyerMode ? 'buyer' : (rolePages[user?.role || ''] || 'buyer'))}>
                     <User className="h-4 w-4" />
                     {t('لوحة التحكم', 'Dashboard')}
                   </DropdownMenuItem>
-                  {user.role !== 'admin' && user.role !== 'buyer' && (
+                  {user?.role !== 'admin' && user?.role !== 'buyer' && (
                     <DropdownMenuItem 
                       onClick={() => {
                         const { setBuyerMode, isBuyerMode } = useAuthStore.getState();
@@ -818,7 +818,7 @@ export default function Header() {
                           navigateToDashboard('home');
                         } else {
                           // Switching back: Go to Seller Dashboard
-                          navigateToDashboard(rolePages[user.role] || 'seller');
+                          navigateToDashboard(rolePages[user?.role || ''] || 'seller');
                         }
                       }}
                       className={useAuthStore.getState().isBuyerMode ? "bg-brand/10 text-brand" : ""}
@@ -829,13 +829,13 @@ export default function Header() {
                         : t('تصفح كـ مشتري', 'Browse as Buyer')}
                     </DropdownMenuItem>
                   )}
-                  {user.role !== 'admin' && user.role !== 'buyer' && (
+                  {user?.role !== 'admin' && user?.role !== 'buyer' && (
                     <DropdownMenuItem onClick={() => navigateToDashboard('verification')}>
                       <ClipboardCheck className="h-4 w-4" />
                       {t('حالة التوثيق', 'Verification Status')}
                     </DropdownMenuItem>
                   )}
-                  {user.role !== 'admin' && user.role !== 'buyer' && (
+                  {user?.role !== 'admin' && user?.role !== 'buyer' && (
                     <DropdownMenuItem
                       id="profile-security-menu-item"
                       onClick={() => navigateToDashboard('security')}

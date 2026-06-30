@@ -336,13 +336,13 @@ interface SidebarProps {
 
   const navGroups = isBuyerMode
     ? BUYER_NAV_GROUPS
-    : user.role === 'store_manager'
+    : user?.role === 'store_manager'
     ? STORE_NAV_GROUPS
-    : user.role === 'seller'
+    : user?.role === 'seller'
     ? getSellerNavGroups(paymentModel, merchantType)
-    : user.role === 'supplier'
+    : user?.role === 'supplier'
     ? SUPPLIER_NAV_GROUPS
-    : user.role === 'logistics'
+    : user?.role === 'logistics'
     ? LOGISTICS_NAV_GROUPS
     : BUYER_NAV_GROUPS;
 
@@ -409,8 +409,8 @@ interface SidebarProps {
                 <p className="text-sm font-semibold truncate">{user.name}</p>
                 <Badge variant="secondary" className="text-[10px] mt-0.5 bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-border">
                   {t(locale,
-                    isBuyerMode ? 'مشتري' : { admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', supplier: 'مورد', logistics: 'مندوب شحن', buyer: 'مشتري' }[user.role] || 'مشتري',
-                    isBuyerMode ? 'Buyer' : { admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', supplier: 'Supplier', logistics: 'Courier', buyer: 'Buyer' }[user.role] || 'Buyer'
+                    isBuyerMode ? 'مشتري' : { admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', supplier: 'مورد', logistics: 'مندوب شحن', buyer: 'مشتري' }[user?.role || 'buyer'] || 'مشتري',
+                    isBuyerMode ? 'Buyer' : { admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', supplier: 'Supplier', logistics: 'Courier', buyer: 'Buyer' }[user?.role || 'buyer'] || 'Buyer'
                   )}
                 </Badge>
               </div>

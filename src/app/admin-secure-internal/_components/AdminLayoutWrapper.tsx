@@ -87,12 +87,15 @@ function AdminBreadcrumb() {
 
 export default function AdminLayoutWrapper({
   children,
+  initialSession
 }: {
   children: React.ReactNode;
+  initialSession?: any;
 }) {
-  const { data: session, isPending, error } = useSession();
+  const { data: clientSession, isPending, error } = useSession();
+  const session = initialSession || clientSession;
   const { adminLocale, setAdminLocale } = useAdminAuthStore();
-  const isAdminAuthenticated = !isPending && !!session && ((session.user as any)?.role === 'admin' || (session.user as any)?.role === 'SUPER_ADMIN');
+  const isAdminAuthenticated = (initialSession != null || !isPending) && !!session && ((session.user as any)?.role === 'admin' || (session.user as any)?.role === 'SUPER_ADMIN');
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   const { theme: globalTheme, setTheme: setGlobalTheme } = useTheme();
@@ -153,12 +156,12 @@ export default function AdminLayoutWrapper({
     return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
   };
 
-  if (isPending) {
+  if (isPending && !initialSession) {
     return <div className="min-h-screen bg-background flex items-center justify-center">جاري التحميل...</div>;
   }
 
   // Prevent bouncing loop if database panics/crashes
-  if (error) {
+  if (error && !initialSession) {
     return (
       <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 text-center p-4">
         <div className="p-4 bg-red-100 text-red-700 rounded-full mb-4">
