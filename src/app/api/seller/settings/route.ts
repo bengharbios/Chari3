@@ -112,6 +112,7 @@ export async function GET(req: NextRequest) {
           storeConfig: themeParsed?.storeConfig || null,
           currency,
           paymentModel: seller.paymentModel,
+          merchantType: seller.merchantType,
         }
       });
     }

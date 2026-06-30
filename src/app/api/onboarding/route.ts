@@ -437,6 +437,9 @@ async function handleSubmit(body: Record<string, unknown>) {
     return { success: false, error: 'User not found', status: 404 };
   }
 
+  // Get merchantType
+  const merchantType = (body.merchantType as string) || 'individual';
+
   // Validate role matches user
   if (user.role !== role) {
     return { success: false, error: `User role is "${user.role}" but submitted role is "${role}"`, status: 400 };
@@ -510,6 +513,12 @@ async function handleSubmit(body: Record<string, unknown>) {
           },
         });
         verificationId = record.id;
+        
+        // Update merchantType in SellerProfile
+        await db.sellerProfile.update({
+          where: { id: userId as string },
+          data: { merchantType },
+        }).catch(err => console.error("Failed to update merchantType", err));
         break;
       }
 
@@ -549,6 +558,12 @@ async function handleSubmit(body: Record<string, unknown>) {
           },
         });
         verificationId = record.id;
+        
+        // Update merchantType in SellerProfile
+        await db.sellerProfile.update({
+          where: { id: userId as string },
+          data: { merchantType },
+        }).catch(err => console.error("Failed to update merchantType", err));
         break;
       }
 

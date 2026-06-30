@@ -111,20 +111,41 @@ const SELLER_NAV_GROUPS: NavGroup[] = [
   }
 ];
 
-// Helper to filter nav items based on payment model
-const getSellerNavGroups = (paymentModel: string): NavGroup[] => {
+// Items exclusively for business accounts
+const BUSINESS_SELLER_ITEMS = [
+  { id: 'seller-staff', labelAr: 'الفريق', labelEn: 'Team', icon: 'Users' },
+  { id: 'seller-taxes', labelAr: 'التقارير الضريبية (B2B)', labelEn: 'Taxes (B2B)', icon: 'Receipt' },
+  { id: 'seller-branches', labelAr: 'إدارة الفروع', labelEn: 'Branches', icon: 'Store' },
+];
+
+// Helper to filter nav items based on payment model and merchantType
+const getSellerNavGroups = (paymentModel: string, merchantType: string): NavGroup[] => {
   return SELLER_NAV_GROUPS.map(group => {
-    if (group.id === 'billing-group') {
-      return {
-        ...group,
-        items: group.items.filter(item => {
-          if (item.id === 'seller-wallet' && paymentModel === 'decentralized') return false; // Hide wallet for decentralized
-          if (item.id === 'seller-debts' && paymentModel === 'centralized') return false; // Hide debts for centralized
-          return true;
-        })
-      };
+    let items = [...group.items];
+    
+    if (group.id === 'seller-group') {
+      // Inject business items for 'business' merchantType
+      if (merchantType === 'business') {
+        items.splice(2, 0, ...BUSINESS_SELLER_ITEMS); // Insert after products
+      }
     }
-    return group;
+    
+    if (group.id === 'settings-group') {
+      // Hide 'Upgrade to Store' if they are already 'business'
+      if (merchantType === 'business') {
+        items = items.filter(item => item.id !== 'seller-upgrade');
+      }
+    }
+
+    if (group.id === 'billing-group') {
+      items = items.filter(item => {
+        if (item.id === 'seller-wallet' && paymentModel === 'decentralized') return false; // Hide wallet for decentralized
+        if (item.id === 'seller-debts' && paymentModel === 'centralized') return false; // Hide debts for centralized
+        return true;
+      });
+    }
+
+    return { ...group, items };
   });
 };
 
@@ -272,6 +293,7 @@ interface SidebarProps {
   }, [isSidebarOpen, setSidebarOpen]);
 
   const [paymentModel, setPaymentModel] = useState<string>('mixed');
+  const [merchantType, setMerchantType] = useState<string>('individual');
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
   const toggleSection = (sectionId: string) => {
@@ -293,8 +315,15 @@ interface SidebarProps {
           fetch(`/api/seller/settings?userId=${user.id}`)
             .then(res => res.json())
             .then(data => {
-              if (data.success && data.settings?.paymentModel && data.settings.paymentModel !== 'default') {
-                setPaymentModel(data.settings.paymentModel);
+              if (data.success && data.settings) {
+                if (data.settings.paymentModel && data.settings.paymentModel !== 'default') {
+                  setPaymentModel(data.settings.paymentModel);
+                } else {
+                  setPaymentModel(model); // fallback to global
+                }
+                if (data.settings.merchantType) {
+                  setMerchantType(data.settings.merchantType);
+                }
               } else {
                 setPaymentModel(model); // fallback to global
               }
@@ -310,7 +339,7 @@ interface SidebarProps {
     : user.role === 'store_manager'
     ? STORE_NAV_GROUPS
     : user.role === 'seller'
-    ? getSellerNavGroups(paymentModel)
+    ? getSellerNavGroups(paymentModel, merchantType)
     : user.role === 'supplier'
     ? SUPPLIER_NAV_GROUPS
     : user.role === 'logistics'

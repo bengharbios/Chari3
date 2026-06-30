@@ -122,6 +122,7 @@ model StoreStaff {
 
 model SellerProfile {
   id                  String    @id @default(cuid())
+  merchantType        String    @default("individual") // individual, business
   storeName           String?
   storeNameEn         String?
   bio                 String?

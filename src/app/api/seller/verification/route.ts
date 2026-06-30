@@ -41,11 +41,12 @@ export async function GET(req: NextRequest) {
       // Return a default NOT_SUBMITTED payload
       return NextResponse.json({ 
         success: true, 
-        verification: { status: 'NOT_SUBMITTED', documents: [] } 
+        verification: { status: 'NOT_SUBMITTED', documents: [] },
+        merchantType: sellerProfile.merchantType
       });
     }
 
-    return NextResponse.json({ success: true, verification: sellerProfile.verification });
+    return NextResponse.json({ success: true, verification: sellerProfile.verification, merchantType: sellerProfile.merchantType });
   } catch (error) {
     console.error('Error fetching seller verification:', error);
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });

@@ -18,6 +18,12 @@ export async function GET() {
       'theme_storefront',
       'footer_blocks',
       'google_maps_api_key',
+      // New: Registration toggles
+      'enable_seller_registration',
+      'enable_buyer_registration',
+      'enable_supplier_registration',
+      'enable_logistics_registration',
+      'enable_store_registration'
     ];
 
     const settings = await db.systemSetting.findMany({
@@ -56,6 +62,12 @@ export async function GET() {
         map_default_lat: settingsMap.map_default_lat || '25.2048',
         map_default_lng: settingsMap.map_default_lng || '55.2708',
         map_default_zoom: settingsMap.map_default_zoom || '12',
+        // Registration toggles (default to 'true' if not set)
+        enable_seller_registration: settingsMap.enable_seller_registration !== undefined ? settingsMap.enable_seller_registration : 'true',
+        enable_buyer_registration: settingsMap.enable_buyer_registration !== undefined ? settingsMap.enable_buyer_registration : 'true',
+        enable_supplier_registration: settingsMap.enable_supplier_registration !== undefined ? settingsMap.enable_supplier_registration : 'true',
+        enable_logistics_registration: settingsMap.enable_logistics_registration !== undefined ? settingsMap.enable_logistics_registration : 'true',
+        enable_store_registration: settingsMap.enable_store_registration !== undefined ? settingsMap.enable_store_registration : 'true',
       }
     });
   } catch (error) {

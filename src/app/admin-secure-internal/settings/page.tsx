@@ -36,6 +36,12 @@ export default function AdminSettingsPage() {
     enable_product_qa: 'true',
     seller_dashboard_template: 'default',
     google_maps_api_key: '',
+    // Registration toggles
+    enable_seller_registration: 'true',
+    enable_buyer_registration: 'true',
+    enable_supplier_registration: 'true',
+    enable_logistics_registration: 'true',
+    enable_store_registration: 'true',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -79,6 +85,11 @@ export default function AdminSettingsPage() {
               : 'true',
             seller_dashboard_template: data.settings.seller_dashboard_template || 'default',
             google_maps_api_key: data.settings.google_maps_api_key || '',
+            enable_seller_registration: data.settings.enable_seller_registration !== undefined ? String(data.settings.enable_seller_registration) : 'true',
+            enable_buyer_registration: data.settings.enable_buyer_registration !== undefined ? String(data.settings.enable_buyer_registration) : 'true',
+            enable_supplier_registration: data.settings.enable_supplier_registration !== undefined ? String(data.settings.enable_supplier_registration) : 'true',
+            enable_logistics_registration: data.settings.enable_logistics_registration !== undefined ? String(data.settings.enable_logistics_registration) : 'true',
+            enable_store_registration: data.settings.enable_store_registration !== undefined ? String(data.settings.enable_store_registration) : 'true',
           }));
         }
       } catch (err) {
@@ -316,6 +327,92 @@ export default function AdminSettingsPage() {
                 <p className="text-xs text-muted-foreground mt-1">
                   {t('مطلوب لتشغيل الخرائط في المتجر وتحديد مواقع المشترين.', 'Required to enable maps and location selection for buyers.')}
                 </p>
+              </div>
+              
+              <Button 
+                onClick={handleSave} 
+                disabled={isSaving}
+                className="w-full mt-10 font-bold gap-2"
+              >
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {t('حفظ التعديلات', 'Save Changes')}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* New Card for Roles & Registration */}
+          <Card className="card-surface">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">{t('الصلاحيات وإعدادات التسجيل', 'Roles & Registration Settings')}</CardTitle>
+              <CardDescription>
+                {t('التحكم في أنواع الحسابات المسموح بتسجيلها في المنصة.', 'Control which account types are allowed to register on the platform.')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="enable_seller_registration">{t('تسجيل الباعة المستقلين (Freelancers)', 'Independent Seller Registration')}</Label>
+                <select
+                  id="enable_seller_registration"
+                  name="enable_seller_registration"
+                  value={settings.enable_seller_registration}
+                  onChange={(e) => setSettings(prev => ({ ...prev, enable_seller_registration: e.target.value }))}
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                >
+                  <option value="true">{t('مسموح', 'Allowed')}</option>
+                  <option value="false">{t('موقوف مؤقتاً', 'Suspended')}</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="enable_store_registration">{t('تسجيل المتاجر والشركات (Stores)', 'Store / Corporate Registration')}</Label>
+                <select
+                  id="enable_store_registration"
+                  name="enable_store_registration"
+                  value={settings.enable_store_registration}
+                  onChange={(e) => setSettings(prev => ({ ...prev, enable_store_registration: e.target.value }))}
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                >
+                  <option value="true">{t('مسموح', 'Allowed')}</option>
+                  <option value="false">{t('موقوف مؤقتاً', 'Suspended')}</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="enable_supplier_registration">{t('تسجيل الموردين (Suppliers)', 'Supplier Registration')}</Label>
+                <select
+                  id="enable_supplier_registration"
+                  name="enable_supplier_registration"
+                  value={settings.enable_supplier_registration}
+                  onChange={(e) => setSettings(prev => ({ ...prev, enable_supplier_registration: e.target.value }))}
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                >
+                  <option value="true">{t('مسموح', 'Allowed')}</option>
+                  <option value="false">{t('موقوف مؤقتاً', 'Suspended')}</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="enable_logistics_registration">{t('تسجيل مناديب الشحن (Logistics)', 'Logistics Registration')}</Label>
+                <select
+                  id="enable_logistics_registration"
+                  name="enable_logistics_registration"
+                  value={settings.enable_logistics_registration}
+                  onChange={(e) => setSettings(prev => ({ ...prev, enable_logistics_registration: e.target.value }))}
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                >
+                  <option value="true">{t('مسموح', 'Allowed')}</option>
+                  <option value="false">{t('موقوف مؤقتاً', 'Suspended')}</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="enable_buyer_registration">{t('تسجيل المشترين (Buyers)', 'Buyer Registration')}</Label>
+                <select
+                  id="enable_buyer_registration"
+                  name="enable_buyer_registration"
+                  value={settings.enable_buyer_registration}
+                  onChange={(e) => setSettings(prev => ({ ...prev, enable_buyer_registration: e.target.value }))}
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                >
+                  <option value="true">{t('مسموح', 'Allowed')}</option>
+                  <option value="false">{t('موقوف مؤقتاً', 'Suspended')}</option>
+                </select>
               </div>
               
               <Button 

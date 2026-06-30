@@ -42,6 +42,7 @@ export interface OnboardingState {
 
   // Wizard
   currentStep: number;
+  merchantType: 'individual' | 'business';
   isCompleted: boolean;
   isSubmitted: boolean;
   isWizardOpen: boolean;
@@ -102,6 +103,7 @@ export interface OnboardingState {
   setSelectedRole: (role: UserRole | null) => void;
   setFullName: (name: string) => void;
   setStoreName: (name: string) => void;
+  setMerchantType: (type: 'individual' | 'business') => void;
   otpNextStep: () => void;
   otpGoBack: () => void;
   resetOtpFlow: () => void;
@@ -226,10 +228,11 @@ export const useOnboardingStore = create<OnboardingState>()(
       storeName: '',
 
       currentStep: 0,
+      merchantType: 'individual',
       isCompleted: false,
       isSubmitted: false,
-  isWizardOpen: false,
-  setWizardOpen: (open) => set({ isWizardOpen: open }),
+      isWizardOpen: false,
+      setWizardOpen: (open) => set({ isWizardOpen: open }),
       isDraftSaved: false,
 
       commercialRegisterNumber: '',
@@ -329,6 +332,7 @@ export const useOnboardingStore = create<OnboardingState>()(
       setSelectedRole: (r) => set({ selectedRole: r }),
       setFullName: (n) => set({ fullName: n }),
       setStoreName: (n) => set({ storeName: n }),
+      setMerchantType: (t) => set({ merchantType: t }),
 
       otpNextStep: () => {
         const { otpStep } = get();
@@ -445,6 +449,7 @@ export const useOnboardingStore = create<OnboardingState>()(
         selectedRole: state.selectedRole,
         fullName: state.fullName,
         storeName: state.storeName,
+        merchantType: state.merchantType,
         currentStep: state.currentStep,
         isCompleted: state.isCompleted,
         isSubmitted: state.isSubmitted,

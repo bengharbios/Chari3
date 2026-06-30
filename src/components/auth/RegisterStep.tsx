@@ -138,6 +138,32 @@ export default function RegisterStep() {
   }, [intent, setSelectedRole]);
 
   const [errors, setErrors] = useState<{ name?: string; store?: string; role?: string; password?: string }>({});
+  const [allowedRoles, setAllowedRoles] = useState<UserRole[]>(['store_manager', 'seller', 'supplier', 'logistics', 'buyer']);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(true);
+
+  React.useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const res = await fetch('/api/settings/public');
+        const data = await res.json();
+        if (data.success && data.settings) {
+          const s = data.settings;
+          const newAllowed: UserRole[] = [];
+          if (String(s.enable_store_registration) !== 'false') newAllowed.push('store_manager');
+          if (String(s.enable_seller_registration) !== 'false') newAllowed.push('seller');
+          if (String(s.enable_supplier_registration) !== 'false') newAllowed.push('supplier');
+          if (String(s.enable_logistics_registration) !== 'false') newAllowed.push('logistics');
+          if (String(s.enable_buyer_registration) !== 'false') newAllowed.push('buyer');
+          setAllowedRoles(newAllowed);
+        }
+      } catch (err) {
+        console.error('Failed to load role settings', err);
+      } finally {
+        setIsLoadingRoles(false);
+      }
+    }
+    fetchSettings();
+  }, []);
 
   const showStoreField = selectedRole !== null && selectedRole !== 'buyer';
   const displayPhone = verifiedContact?.method === 'phone'
@@ -220,55 +246,61 @@ export default function RegisterStep() {
             {t(locale, 'نوع الحساب', 'Account Type')} <span className="text-[var(--destructive)]">*</span>
           </label>
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-            {ROLES.map((role) => {
-              const Icon = role.icon;
-              const isSelected = selectedRole === role.id;
-              return (
-                <button
-                  key={role.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedRole(isSelected ? null : role.id);
-                    setErrors((p) => ({ ...p, role: undefined }));
-                    setError(null);
-                  }}
-                  className={cn(
-                    'relative flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-all duration-200 text-center',
-                    'hover:shadow-md hover:-translate-y-0.5',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2',
-                    isSelected
-                      ? 'border-[var(--brand)] bg-[var(--brand)]/5 shadow-[var(--shadow-brand)]'
-                      : 'border-[var(--border)] bg-[var(--card)]',
-                  )}
-                >
-                  {/* Icon */}
-                  <div className={cn(
-                    'w-9 h-9 rounded-lg flex items-center justify-center text-white transition-transform',
-                    role.bgClass,
-                    isSelected && 'scale-110',
-                  )}>
-                    <Icon className="size-4.5" />
-                  </div>
-
-                  {/* Label */}
-                  <span className="text-xs font-semibold leading-tight">
-                    {locale === 'ar' ? role.labelAr : role.labelEn}
-                  </span>
-
-                  {/* Description */}
-                  <span className="text-[10px] text-[var(--muted-foreground)] leading-tight">
-                    {locale === 'ar' ? role.descAr : role.descEn}
-                  </span>
-
-                  {/* Checkmark */}
-                  {isSelected && (
-                    <div className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full gradient-brand flex items-center justify-center shadow-sm animate-scale-in">
-                      <Check className="size-3 text-[var(--navy)]" />
+            {isLoadingRoles ? (
+              <div className="col-span-full flex justify-center py-4">
+                <Loader2 className="size-6 text-[var(--brand)] animate-spin" />
+              </div>
+            ) : (
+              ROLES.filter(r => allowedRoles.includes(r.id)).map((role) => {
+                const Icon = role.icon;
+                const isSelected = selectedRole === role.id;
+                return (
+                  <button
+                    key={role.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedRole(isSelected ? null : role.id);
+                      setErrors((p) => ({ ...p, role: undefined }));
+                      setError(null);
+                    }}
+                    className={cn(
+                      'relative flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-all duration-200 text-center',
+                      'hover:shadow-md hover:-translate-y-0.5',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] focus-visible:ring-offset-2',
+                      isSelected
+                        ? 'border-[var(--brand)] bg-[var(--brand)]/5 shadow-[var(--shadow-brand)]'
+                        : 'border-[var(--border)] bg-[var(--card)]',
+                    )}
+                  >
+                    {/* Icon */}
+                    <div className={cn(
+                      'w-9 h-9 rounded-lg flex items-center justify-center text-white transition-transform',
+                      role.bgClass,
+                      isSelected && 'scale-110',
+                    )}>
+                      <Icon className="size-4.5" />
                     </div>
-                  )}
-                </button>
-              );
-            })}
+
+                    {/* Label */}
+                    <span className="text-xs font-semibold leading-tight">
+                      {locale === 'ar' ? role.labelAr : role.labelEn}
+                    </span>
+
+                    {/* Description */}
+                    <span className="text-[10px] text-[var(--muted-foreground)] leading-tight">
+                      {locale === 'ar' ? role.descAr : role.descEn}
+                    </span>
+
+                    {/* Checkmark */}
+                    {isSelected && (
+                      <div className="absolute -top-1.5 -end-1.5 w-5 h-5 rounded-full gradient-brand flex items-center justify-center shadow-sm animate-scale-in">
+                        <Check className="size-3 text-[var(--navy)]" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })
+            )}
           </div>
           {errors.role && (
             <p className="text-xs text-[var(--destructive)]">{errors.role}</p>

@@ -50,7 +50,7 @@ const USER_SELECT = {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { method, value, fullName, role, storeName, locale } = body;
+    const { method, value, fullName, role, storeName, locale, merchantType } = body;
 
     // ── Validate required fields ──
     if (!method || !value || !fullName || !role) {
@@ -168,13 +168,22 @@ export async function POST(request: Request) {
             ...(sanitizedStoreName && role !== 'buyer' && { nameEn: sanitizedStoreName }),
             // Role-specific profiles
             ...(role === 'seller' && {
-              sellerProfile: { create: { ...(sanitizedStoreName && { storeName: sanitizedStoreName }) } },
+              sellerProfile: { create: { 
+                ...(sanitizedStoreName && { storeName: sanitizedStoreName }),
+                merchantType: merchantType || 'individual' 
+              } },
             }),
             ...(role === 'supplier' && {
-              sellerProfile: { create: { ...(sanitizedStoreName && { storeName: sanitizedStoreName }) } },
+              sellerProfile: { create: { 
+                ...(sanitizedStoreName && { storeName: sanitizedStoreName }),
+                merchantType: merchantType || 'individual' 
+              } },
             }),
             ...(role === 'store_manager' && {
-              sellerProfile: { create: { ...(sanitizedStoreName && { storeName: sanitizedStoreName }) } },
+              sellerProfile: { create: { 
+                ...(sanitizedStoreName && { storeName: sanitizedStoreName }),
+                merchantType: merchantType || 'individual' 
+              } },
             }),
             ...(role === 'logistics' && {
               logisticsProfile: { create: {} },
@@ -222,7 +231,7 @@ export async function POST(request: Request) {
       locale: locale === 'en' ? 'en' : 'ar',
       createdAt: now,
       sellerProfile: ['seller', 'supplier', 'store_manager'].includes(role)
-        ? { id: userId, storeName: sanitizedStoreName }
+        ? { id: userId, storeName: sanitizedStoreName, merchantType: merchantType || 'individual' }
         : null,
       logisticsProfile: role === 'logistics' ? { id: userId } : null,
       buyerProfile: role === 'buyer' ? { id: userId } : null,
