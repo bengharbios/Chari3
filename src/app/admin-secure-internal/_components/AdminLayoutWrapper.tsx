@@ -6,7 +6,7 @@ import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import AdminSidebar from './AdminSidebar';
 import { Button } from '@/components/ui/button';
 import { Globe, LogOut, Menu, LayoutDashboard, Settings, Sliders, ToggleRight, TrendingUp, ShoppingCart, Users, Store, Wallet, Tag, FolderTree, Boxes, Moon, Sun } from 'lucide-react';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
@@ -98,6 +98,7 @@ export default function AdminLayoutWrapper({
   const isAdminAuthenticated = (initialSession != null || !isPending) && !!session && ((session.user as any)?.role === 'admin' || (session.user as any)?.role === 'SUPER_ADMIN');
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { theme: globalTheme, setTheme: setGlobalTheme } = useTheme();
   const { t, locale } = useTranslation();
   
@@ -180,6 +181,12 @@ export default function AdminLayoutWrapper({
     );
   }
 
+  useEffect(() => {
+    if (isMounted && !isPending && !isAdminAuthenticated && !isLoginPage) {
+      router.replace(getAdminPath('login'));
+    }
+  }, [isMounted, isPending, isAdminAuthenticated, isLoginPage, router]);
+
   if (!isAdminAuthenticated) {
     if (isLoginPage) {
       return (
@@ -187,10 +194,6 @@ export default function AdminLayoutWrapper({
           {children}
         </div>
       );
-    }
-    // Security Fix: Redirect immediately if not authenticated
-    if (typeof window !== 'undefined') {
-      window.location.href = getAdminPath('login');
     }
     return <div className="min-h-screen bg-background flex items-center justify-center">جاري التحويل للوحة الدخول...</div>;
   }
