@@ -113,6 +113,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }, [dashboardTemplate]);
 
 
+  const { isDark: gentelellaDark } = useGentelellaTheme();
+  const { theme: globalTheme } = useTheme();
+
   if (!user) return null;
   
   // Prevent flash by waiting for theme load or at least showing cached theme
@@ -120,8 +123,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
      return <div className="min-h-screen bg-background flex items-center justify-center">...</div>;
   }
 
-  const { isDark: gentelellaDark } = useGentelellaTheme();
-  const { theme: globalTheme } = useTheme();
 
   const isGentelella = dashboardTemplate === 'gentelella';
 

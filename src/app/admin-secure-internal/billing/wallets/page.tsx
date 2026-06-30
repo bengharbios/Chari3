@@ -89,12 +89,14 @@ export default function WalletsPage() {
     }
   }, [isMounted, fetchWallets]);
 
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
   if (!isMounted || !isAdminAuthenticated) return null;
 
   const merchants = adminUsers.filter(u => u.role === 'seller' || u.role === 'store_manager');
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
   const totalCount = merchants.length;
+
   const totalPages = Math.ceil(totalCount / limit) || 1;
   const paginatedMerchants = merchants.slice((page - 1) * limit, page * limit);
 
