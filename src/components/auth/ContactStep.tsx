@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useAuthFlowStore } from '@/lib/store/auth-flow';
 import { useAppStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
-import Turnstile from 'react-turnstile';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import type { Locale } from '@/types';
 
@@ -234,9 +234,8 @@ export default function ContactStep() {
       {configLoaded && captchaConfig.enabled && captchaConfig.siteKey && (
         <div className="flex justify-center my-4 animate-fade-in">
           <Turnstile
-            sitekey={captchaConfig.siteKey}
-            onVerify={(token) => setCaptchaToken(token)}
-            theme="auto"
+            siteKey={captchaConfig.siteKey}
+            onSuccess={React.useCallback((token: string) => setCaptchaToken(token), [])}
           />
         </div>
       )}

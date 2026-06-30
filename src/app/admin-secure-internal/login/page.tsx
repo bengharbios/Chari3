@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { ShieldCheck, Lock, Mail, Key, Loader2, ArrowRight } from 'lucide-react';
-import Turnstile from 'react-turnstile';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function AdminLoginPage() {
   const { data: session, isPending } = useSession();
@@ -158,9 +158,8 @@ export default function AdminLoginPage() {
               {configLoaded && captchaConfig.enabled && captchaConfig.siteKey && (
                 <div className="flex justify-center my-4 animate-fade-in">
                   <Turnstile
-                    sitekey={captchaConfig.siteKey}
-                    onVerify={React.useCallback((token: string) => setCaptchaToken(token), [])}
-                    theme="auto"
+                    siteKey={captchaConfig.siteKey}
+                    onSuccess={React.useCallback((token: string) => setCaptchaToken(token), [])}
                   />
                 </div>
               )}
