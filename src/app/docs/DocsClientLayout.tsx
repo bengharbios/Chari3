@@ -26,7 +26,8 @@ export default function DocsClientLayout({ children, allDocs }: { children: Reac
     return acc;
   }, {});
 
-  const SidebarContent = () => (
+  // Extracted logic to inline the rendering instead of defining a functional component inside a component.
+  const renderSidebarLinks = () => (
     <div className="py-6 px-6">
       {Object.keys(categories).map((catKey) => (
         groupedDocs[catKey] && groupedDocs[catKey].length > 0 ? (
@@ -88,7 +89,7 @@ export default function DocsClientLayout({ children, allDocs }: { children: Reac
         {/* Desktop Sidebar */}
         <aside className="fixed top-14 z-30 hidden h-[calc(100vh-3.5rem)] w-full shrink-0 md:sticky md:block overflow-y-auto border-border">
           <div className={isRTL ? 'border-l pl-4' : 'border-r pr-4'}>
-            <SidebarContent />
+            {renderSidebarLinks()}
           </div>
         </aside>
 
@@ -97,7 +98,7 @@ export default function DocsClientLayout({ children, allDocs }: { children: Reac
           <div className="fixed inset-0 top-14 z-50 bg-background/80 backdrop-blur-sm md:hidden">
             <div className="fixed inset-y-0 start-0 z-50 h-full w-3/4 max-w-sm border-e bg-background shadow-lg animate-in slide-in-from-start">
               <div className="h-full overflow-y-auto">
-                <SidebarContent />
+                {renderSidebarLinks()}
               </div>
             </div>
             <div className="absolute inset-0 z-40" onClick={() => setMobileMenuOpen(false)} />
