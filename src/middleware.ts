@@ -7,8 +7,9 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+  const isLoginPage = pathname.endsWith('/login') || pathname === '/login';
 
-  if (isProtectedRoute) {
+  if (isProtectedRoute && !isLoginPage) {
     // Check for session cookie instead of doing an internal fetch which fails on Hostinger loopback
     const sessionToken = request.cookies.get("better-auth.session_token")?.value;
 
