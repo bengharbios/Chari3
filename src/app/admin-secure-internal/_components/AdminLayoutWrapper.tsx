@@ -90,7 +90,7 @@ export default function AdminLayoutWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending, error } = useSession();
   const { adminLocale, setAdminLocale } = useAdminAuthStore();
   const isAdminAuthenticated = !isPending && !!session && ((session.user as any)?.role === 'admin' || (session.user as any)?.role === 'SUPER_ADMIN');
   const [isMounted, setIsMounted] = useState(false);
@@ -155,6 +155,26 @@ export default function AdminLayoutWrapper({
 
   if (isPending) {
     return <div className="min-h-screen bg-background flex items-center justify-center">جاري التحميل...</div>;
+  }
+
+  // Prevent bouncing loop if database panics/crashes
+  if (error) {
+    return (
+      <div dir={isRTL ? 'rtl' : 'ltr'} className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 text-center p-4">
+        <div className="p-4 bg-red-100 text-red-700 rounded-full mb-4">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <h1 className="text-xl font-bold text-gray-800">حدث خطأ في الاتصال بالخادم</h1>
+        <p className="text-gray-500 max-w-md">تعذر التحقق من الجلسة الخاصة بك بسبب ضغط على قاعدة البيانات أو خطأ في الشبكة. يرجى تحديث الصفحة والمحاولة مرة أخرى.</p>
+        <Button onClick={() => window.location.reload()} variant="outline" className="mt-4">
+          تحديث الصفحة
+        </Button>
+      </div>
+    );
   }
 
   if (!isAdminAuthenticated) {

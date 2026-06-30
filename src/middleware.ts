@@ -13,10 +13,9 @@ export async function middleware(request: NextRequest) {
     const sessionToken = request.cookies.get("better-auth.session_token")?.value;
 
     if (!sessionToken) {
-      // NOTE: Redirect is temporarily disabled to prevent breaking Zustand Demo Logins.
-      // Once you migrate all login forms to use `better-auth`, uncomment this line:
-      // return NextResponse.redirect(new URL("/?login=true", request.url));
-      console.log("[Middleware] Unauthenticated access to", pathname);
+      // All login forms are now using better-auth, so we can enforce the redirect.
+      const url = new URL(pathname.startsWith('/admin-secure-internal') ? '/admin-secure-internal/login' : '/?login=true', request.url);
+      return NextResponse.redirect(url);
     }
   }
 
