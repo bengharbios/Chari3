@@ -16,9 +16,11 @@ export async function middleware(request: NextRequest) {
                          request.cookies.get("__Secure-better-auth.session_token")?.value;
 
     if (!sessionToken) {
-      // All login forms are now using better-auth, so we can enforce the redirect.
-      const url = new URL(pathname.startsWith('/admin-secure-internal') ? '/admin-secure-internal/login' : '/?login=true', request.url);
-      return NextResponse.redirect(url);
+      // NOTE: Redirect is disabled because Hostinger's Edge proxy strips or obscures cookies 
+      // in middleware. Client-side layout (AdminLayoutWrapper) handles the redirect securely.
+      // const url = new URL(pathname.startsWith('/admin-secure-internal') ? '/admin-secure-internal/login' : '/?login=true', request.url);
+      // return NextResponse.redirect(url);
+      console.log("[Middleware] Unauthenticated access to", pathname);
     }
   }
 
