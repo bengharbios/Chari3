@@ -181,11 +181,16 @@ export default function AdminLayoutWrapper({
     );
   }
 
+  const redirectFired = React.useRef(false);
+
   useEffect(() => {
     if (isMounted && !isPending && !isAdminAuthenticated && !isLoginPage) {
-      router.replace(getAdminPath('login'));
+      if (!redirectFired.current) {
+        redirectFired.current = true;
+        window.location.href = getAdminPath('login');
+      }
     }
-  }, [isMounted, isPending, isAdminAuthenticated, isLoginPage, router]);
+  }, [isMounted, isPending, isAdminAuthenticated, isLoginPage]);
 
   if (!isAdminAuthenticated) {
     if (isLoginPage) {
