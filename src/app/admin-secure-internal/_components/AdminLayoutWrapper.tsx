@@ -104,6 +104,7 @@ export default function AdminLayoutWrapper({
   
   const [theme, setTheme] = useState<ThemeSettings>(defaultPlatformTheme);
   const [isThemeLoaded, setIsThemeLoaded] = useState(false);
+  const redirectFired = React.useRef(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -138,15 +139,6 @@ export default function AdminLayoutWrapper({
     setGlobalTheme(globalTheme === 'dark' ? 'light' : 'dark');
   };
 
-  const handleLogout = async () => {
-    await signOut({ redirect: false });
-    window.location.href = getAdminPath('login');
-  };
-
-  if (!isMounted) {
-    return <div className="min-h-screen bg-background" />;
-  }
-
   const isRTL = localeDirections[locale] === 'rtl';
   const isLoginPage = pathname.includes('/login');
 
@@ -156,6 +148,24 @@ export default function AdminLayoutWrapper({
     const baseSlug = segments[1] || 'super-admin';
     return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
   };
+
+  const handleLogout = async () => {
+    await signOut({ redirect: false });
+    window.location.href = getAdminPath('login');
+  };
+
+  useEffect(() => {
+    if (isMounted && !isPending && !isAdminAuthenticated && !isLoginPage) {
+      if (!redirectFired.current) {
+        redirectFired.current = true;
+        window.location.href = getAdminPath('login');
+      }
+    }
+  }, [isMounted, isPending, isAdminAuthenticated, isLoginPage]);
+
+  if (!isMounted) {
+    return <div className="min-h-screen bg-background" />;
+  }
 
   if (isPending && !initialSession) {
     return <div className="min-h-screen bg-background flex items-center justify-center">جاري التحميل...</div>;
@@ -180,17 +190,6 @@ export default function AdminLayoutWrapper({
       </div>
     );
   }
-
-  const redirectFired = React.useRef(false);
-
-  useEffect(() => {
-    if (isMounted && !isPending && !isAdminAuthenticated && !isLoginPage) {
-      if (!redirectFired.current) {
-        redirectFired.current = true;
-        window.location.href = getAdminPath('login');
-      }
-    }
-  }, [isMounted, isPending, isAdminAuthenticated, isLoginPage]);
 
   if (!isAdminAuthenticated) {
     if (isLoginPage) {
