@@ -159,7 +159,7 @@ export default function AdminLoginPage() {
                 <div className="flex justify-center my-4 animate-fade-in">
                   <Turnstile
                     sitekey={captchaConfig.siteKey}
-                    onVerify={(token) => setCaptchaToken(token)}
+                    onVerify={React.useCallback((token: string) => setCaptchaToken(token), [])}
                     theme="auto"
                   />
                 </div>
