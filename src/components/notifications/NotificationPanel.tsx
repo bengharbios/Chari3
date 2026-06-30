@@ -407,7 +407,7 @@ export default function NotificationPanel() {
       }
     };
     fetchDbNotifications();
-  }, [isAuthenticated, user?.id, isOpen, mounted, setNotifications, user.role]);
+  }, [isAuthenticated, user?.id, isOpen, mounted, setNotifications, user?.role]);
 
   // Filter and Sort: filter by active tab, then sort: unread first → by urgency → newest first
   const filteredAndSortedNotifications = useMemo(() => {
