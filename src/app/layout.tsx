@@ -27,6 +27,8 @@ export const metadata: Metadata = {
 
 import DebugState from './debug-state';
 
+import { GlobalErrorBoundary } from '@/components/GlobalErrorBoundary';
+
 export default function RootLayout({
   children,
 }: {
@@ -39,7 +41,9 @@ export default function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <RadixDirectionProvider>
               <DebugState />
-              {children}
+              <GlobalErrorBoundary>
+                {children}
+              </GlobalErrorBoundary>
               <Toaster position="top-center" richColors visibleToasts={1} duration={3000} />
             </RadixDirectionProvider>
           </ThemeProvider>
