@@ -118,6 +118,46 @@ La plateforme est équipée des derniers systèmes de protection intelligents :
 `
       }
     }
+  },
+  {
+    slug: 'otp-2fa-system',
+    category: 'security',
+    isPublished: true,
+    sortOrder: 4,
+    title: 'نظام التحقق المزدوج (OTP & 2FA)',
+    titleEn: 'OTP & Two-Factor Authentication',
+    content: `
+# نظام التحقق المزدوج و الرمز المؤقت (OTP & 2FA)
+
+لضمان أعلى درجات الأمان وحماية المستخدمين من الاختراق، قمنا بدمج نظام **التحقق عبر الرمز المؤقت (OTP)** مع نظام كلمة المرور:
+- **تسجيل الدخول الذكي:** عند محاولة الدخول ببريد أو رقم هاتف لا يحتوي على كلمة مرور (مثل الحسابات الجديدة)، يرسل النظام رمز OTP تلقائياً لتأكيد الهوية.
+- **الرمز المؤقت لمرة واحدة:** يتم إرسال رموز OTP بمدة صلاحية قصيرة لمنع استخدامها لاحقاً.
+- **دمج مع كلمات المرور:** يتم إجبار المستخدمين الجدد على تعيين كلمة مرور بعد التحقق عبر OTP، مما يعزز الأمان ويقلل تكاليف رسائل الـ SMS.
+- **استرداد الحساب:** يمكن استخدام الـ OTP كطريقة آمنة وبديلة في حال نسيان كلمة المرور الأساسية.
+`,
+    contentEn: `
+# OTP & Two-Factor Authentication
+
+To ensure maximum security and protect users from breaches, we have integrated an **OTP system** with the password system:
+- **Smart Login:** When attempting to log in with an email or phone that has no password, the system automatically sends an OTP.
+- **Time-Limited OTP:** OTP codes are sent with a short validity period.
+- **Password Integration:** New users are forced to set a password after OTP verification, enhancing security and reducing SMS costs.
+- **Account Recovery:** OTP can be used as a secure alternative in case the primary password is forgotten.
+`,
+    translations: {
+      fr: {
+        title: "Authentification à deux facteurs et OTP",
+        content: `
+# Authentification à deux facteurs et OTP
+
+Pour garantir une sécurité maximale, nous avons intégré un **système OTP** avec le système de mot de passe :
+- **Connexion Intelligente :** Un OTP est envoyé automatiquement si aucun mot de passe n'est défini.
+- **OTP à durée limitée :** Les codes OTP ont une courte durée de validité.
+- **Intégration des mots de passe :** Les nouveaux utilisateurs doivent définir un mot de passe après vérification de l'OTP.
+- **Récupération de compte :** L'OTP sert d'alternative sécurisée en cas d'oubli du mot de passe.
+`
+      }
+    }
   }
 ];
 
