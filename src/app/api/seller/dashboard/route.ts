@@ -233,6 +233,7 @@ export async function GET(req: NextRequest) {
         totalEarnings: seller.totalEarnings,
         rating: seller.rating,
         level: seller.level,
+        wantsUpgrade: seller.wantsUpgrade,
         completionRate: seller.completionRate,
         responseRate: seller.responseRate,
         walletBalance: wallet?.balance ?? 0,

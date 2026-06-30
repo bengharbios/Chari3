@@ -76,7 +76,7 @@ export async function GET(request: Request) {
           _count: { select: { orders: true } },
           wallet: { select: { balance: true, debt: true, currency: true } },
           store: { select: { id: true, name: true, isActive: true, rating: true, level: true, packageId: true, addonMobileApp: true, addonWhatsAppSupport: true, addonAdvancedCRM: true, addonEchangoPOS: true, addonExtraPOSDevices: true } },
-          sellerProfile: { select: { id: true, rating: true, level: true, packageId: true, addonMobileApp: true, addonWhatsAppSupport: true, addonAdvancedCRM: true, addonEchangoPOS: true, addonExtraPOSDevices: true } },
+          sellerProfile: { select: { id: true, rating: true, level: true, packageId: true, wantsUpgrade: true, upgradeRequestedAt: true, addonMobileApp: true, addonWhatsAppSupport: true, addonAdvancedCRM: true, addonEchangoPOS: true, addonExtraPOSDevices: true } },
           logisticsProfile: { select: { totalDeliveries: true } },
         },
       }),

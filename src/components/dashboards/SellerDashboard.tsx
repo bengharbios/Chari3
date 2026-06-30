@@ -61,6 +61,7 @@ interface DashboardData {
     storeName?: string;
     rating: number;
     level: number;
+    wantsUpgrade?: boolean;
     completionRate: number;
     responseRate: number;
     totalSales: number;
@@ -545,7 +546,7 @@ export default function SellerDashboard() {
       {/* Commission info */}
       <Card>
         <CardContent className="pt-5">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <p className="text-sm font-semibold">{t('الباقة الحالية', 'Current Package')}: <span className="text-primary">{data?.seller?.package?.name ?? t('مجاني', 'Free')}</span></p>
               <p className="text-xs text-muted-foreground mt-1">
@@ -556,7 +557,34 @@ export default function SellerDashboard() {
                 {t('عمولة هذا الشهر', 'This month commission')}: <strong>{DZD(kpis?.monthCommission ?? 0)}</strong>
               </p>
             </div>
-            <Button size="sm" variant="outline" className="shrink-0">{t('ترقية الباقة', 'Upgrade')}</Button>
+            <div className="flex items-center gap-2 shrink-0">
+              {data?.seller?.wantsUpgrade ? (
+                <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 gap-1.5 py-1.5 px-3">
+                  <Clock className="size-3.5" />
+                  {t('طلب الترقية لمتجر قيد المراجعة', 'Store Upgrade Pending')}
+                </Badge>
+              ) : (
+                <Button 
+                  size="sm" 
+                  className="gap-2 bg-gradient-to-r from-brand to-brand/80 text-navy font-bold hover:shadow-lg transition-all"
+                  onClick={async () => {
+                    if (confirm(t('هل تريد حقاً تقديم طلب للترقية إلى مدير متجر كامل؟', 'Are you sure you want to request an upgrade to a full Store Manager?'))) {
+                      const res = await fetch('/api/seller/upgrade-request', { method: 'POST' });
+                      const d = await res.json();
+                      if (d.success) {
+                        toast.success(t('تم إرسال طلب الترقية بنجاح!', 'Upgrade request sent successfully!'));
+                        refreshData();
+                      } else {
+                        toast.error(t('حدث خطأ أثناء إرسال الطلب', 'Error sending request'));
+                      }
+                    }
+                  }}
+                >
+                  <Store className="size-4" />
+                  {t('طلب الترقية لمتجر', 'Request Store Upgrade')}
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
