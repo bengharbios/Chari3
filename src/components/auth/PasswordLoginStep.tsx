@@ -9,6 +9,7 @@ import { useAuthFlowStore } from '@/lib/store/auth-flow';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import type { Locale, User } from '@/types';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 function t(locale: Locale, ar: string, en: string) {
   return locale === 'ar' ? ar : en;
@@ -29,8 +30,30 @@ export default function PasswordLoginStep() {
   } = useAuthFlowStore();
 
   const [password, setPassword] = useState('');
+  const [captchaConfig, setCaptchaConfig] = useState({ enabled: false, siteKey: '' });
+  const [configLoaded, setConfigLoaded] = useState(false);
+
+  React.useEffect(() => {
+    fetch('/api/auth/config')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setCaptchaConfig({
+            enabled: data.config.captchaEnabled,
+            siteKey: data.config.captchaSiteKey,
+          });
+        }
+        setConfigLoaded(true);
+      })
+      .catch(() => setConfigLoaded(true));
+  }, []);
 
   const displayContact = method === 'phone' ? phone : email;
+
+  // Clear token on mount so we don't reuse the spent token from ContactStep
+  React.useEffect(() => {
+    setCaptchaToken(null);
+  }, [setCaptchaToken]);
 
   const handleLogin = async () => {
     if (!password) {
@@ -117,10 +140,20 @@ export default function PasswordLoginStep() {
         <p className="text-sm text-[var(--destructive)] text-center animate-fade-in">{error}</p>
       )}
 
+      {/* Captcha */}
+      {configLoaded && captchaConfig.enabled && captchaConfig.siteKey && (
+        <div className="flex justify-center my-4 animate-fade-in">
+          <Turnstile
+            siteKey={captchaConfig.siteKey}
+            onSuccess={(token) => setCaptchaToken(token)}
+          />
+        </div>
+      )}
+
       {/* Login Button */}
       <Button
         onClick={handleLogin}
-        disabled={isLoading || !password}
+        disabled={isLoading || !password || (captchaConfig.enabled && !captchaToken)}
         className="w-full h-11 gradient-navy text-[var(--navy-foreground)] font-semibold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
       >
         {isLoading ? (
