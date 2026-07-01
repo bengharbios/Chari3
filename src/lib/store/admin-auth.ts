@@ -18,6 +18,7 @@ interface AdminAuthState {
   setError: (error: string | null) => void;
   setStep: (step: 'login' | 'otp' | 'success') => void;
   setAdminLocale: (locale: 'ar' | 'en' | 'fr') => void;
+  syncSession: (sessionUser: any) => void;
 }
 
 export const useAdminAuthStore = create<AdminAuthState>()(
@@ -90,6 +91,21 @@ export const useAdminAuthStore = create<AdminAuthState>()(
       setError: (error) => set({ error }),
       setStep: (adminStep) => set({ adminStep }),
       setAdminLocale: (adminLocale) => set({ adminLocale }),
+      syncSession: (sessionUser) => {
+        if (sessionUser) {
+          set({
+            adminUser: sessionUser,
+            isAdminAuthenticated: true,
+            adminStep: 'success',
+          });
+        } else {
+          set({
+            adminUser: null,
+            isAdminAuthenticated: false,
+            adminStep: 'login',
+          });
+        }
+      },
     }),
     {
       name: 'platform-admin-auth-store',

@@ -8,10 +8,14 @@ import { lookupIpLocation, parseUserAgent } from "./ip-lookup";
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET || "fallback_secret_please_change_in_production_12345",
-  baseURL: process.env.NEXT_PUBLIC_APP_URL || "https://chariday.com",
+  baseURL: process.env.NODE_ENV === "production" 
+    ? (process.env.NEXT_PUBLIC_APP_URL || "https://chariday.com") 
+    : (process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
   trustedOrigins: [
     "https://chariday.com",
-    "https://www.chariday.com"
+    "https://www.chariday.com",
+    "http://localhost:3000",
+    "http://0.0.0.0:3000"
   ],
   database: prismaAdapter(db, {
     provider: "mysql", // ChariDay uses MySQL in the schema
@@ -93,6 +97,8 @@ export const auth = betterAuth({
   advanced: {
     defaultCookieAttributes: {
       domain: process.env.NODE_ENV === "production" ? ".chariday.com" : undefined,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
     },
   },
   plugins: [

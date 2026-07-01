@@ -94,10 +94,20 @@ export default function AdminLayoutWrapper({
 }) {
   const { data: clientSession, isPending, error } = useSession();
   const session = initialSession || clientSession;
-  const { adminLocale, setAdminLocale } = useAdminAuthStore();
+  const { adminLocale, setAdminLocale, syncSession } = useAdminAuthStore();
   const isAdminAuthenticated = (initialSession != null || !isPending) && !!session && ((session.user as any)?.role === 'admin' || (session.user as any)?.role === 'SUPER_ADMIN');
   const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
+  
+  useEffect(() => {
+    if (!isPending) {
+      if (isAdminAuthenticated) {
+        syncSession(session?.user);
+      } else {
+        syncSession(null);
+      }
+    }
+  }, [isPending, isAdminAuthenticated, session, syncSession]);
   const router = useRouter();
   const { theme: globalTheme, setTheme: setGlobalTheme } = useTheme();
   const { t, locale } = useTranslation();
