@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Button } from '@/components/ui/button';
 import { DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Store, FileText, Landmark, UserCheck, ShieldCheck, ArrowRight, ArrowLeft, Save, X } from 'lucide-react';
+import { Store as StoreIcon, FileText, Landmark, UserCheck, ShieldCheck, ArrowRight, ArrowLeft, Save, X } from 'lucide-react';
 import LegalStep from './LegalStep';
 import TaxStep from './TaxStep';
 import BankStep from './BankStep';
@@ -100,7 +100,7 @@ export default function OnboardingWizard() {
   const hasTerms = !!formData.agreedToTerms;
 
   const stepsList = [
-    { id: 0, title: locale === 'ar' ? 'السجل التجاري' : 'Commercial Register', tabTitle: locale === 'ar' ? 'السجل التجاري' : 'Register', icon: <Store className="w-5 h-5" />, done: hasLegal, component: <LegalStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} /> },
+    { id: 0, title: locale === 'ar' ? 'السجل التجاري' : 'Commercial Register', tabTitle: locale === 'ar' ? 'السجل التجاري' : 'Register', icon: <StoreIcon className="w-5 h-5" />, done: hasLegal, component: <LegalStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} /> },
     { id: 1, title: locale === 'ar' ? 'الضريبة' : 'Tax Details', tabTitle: locale === 'ar' ? 'الضريبة' : 'Tax', icon: <FileText className="w-5 h-5" />, done: hasTax, component: <TaxStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} /> },
     { id: 2, title: locale === 'ar' ? 'البنك' : 'Financials', tabTitle: locale === 'ar' ? 'البنك' : 'Bank', icon: <Landmark className="w-5 h-5" />, done: hasBank, component: <BankStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} /> },
     { id: 3, title: locale === 'ar' ? 'هوية المدير أو المالك أو الممثل القانوني للشركة' : 'Identity (Manager/Owner/Representative)', tabTitle: locale === 'ar' ? 'الهوية' : 'Identity', icon: <UserCheck className="w-5 h-5" />, done: hasIdentity, component: <IdentityStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} /> },
@@ -137,7 +137,7 @@ export default function OnboardingWizard() {
         <div className="bg-gray-50 dark:bg-slate-900/50 border-b dark:border-slate-800 px-6 py-4 flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-bold flex items-center gap-2 text-gray-900 dark:text-slate-100">
-              <Store className="text-brand" />
+              <StoreIcon className="text-brand" />
               {t('onboarding.title', { defaultValue: 'Store Verification' })}
             </h2>
             <Button variant="outline" size="sm" onClick={() => { handleSaveDraft(true); setWizardOpen(false); }} className="gap-2 text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700">

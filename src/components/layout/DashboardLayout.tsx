@@ -13,6 +13,7 @@ import { useGentelellaTheme } from './gentelella/theme';
 import Footer from './Footer';
 import { ThemeSettings, defaultSellerTheme, defaultPlatformTheme } from '@/lib/theme-defaults';
 import { useTheme } from 'next-themes';
+import { usePathname } from 'next/navigation';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -20,19 +21,33 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isSidebarOpen } = useAppStore();
-  const { user, isBuyerMode } = useAuthStore();
+  const { user, isBuyerMode, setBuyerMode } = useAuthStore();
+  const pathname = usePathname();
   const [dashboardTemplate, setDashboardTemplate] = useState<string>('default');
   
+  const isBuyerRoute = pathname?.startsWith('/buyer') || false;
+  const isSellerRoute = pathname?.startsWith('/seller') || false;
+  const effectiveBuyerMode = isBuyerMode || isBuyerRoute;
+
+  // Sync zustand store if URL does not match state
+  useEffect(() => {
+    if (isBuyerRoute && !isBuyerMode) {
+      setBuyerMode(true);
+    } else if (isSellerRoute && isBuyerMode) {
+      setBuyerMode(false);
+    }
+  }, [pathname, isBuyerRoute, isSellerRoute, isBuyerMode, setBuyerMode]);
+
   // Use correct default theme based on role
   const getInitialTheme = () => {
     if (!user) return defaultSellerTheme;
-    if (user.role === 'admin' || user.role === 'buyer' || isBuyerMode) return defaultPlatformTheme;
+    if (user.role === 'admin' || user.role === 'buyer' || effectiveBuyerMode) return defaultPlatformTheme;
     return defaultSellerTheme;
   };
   
   const getThemeKey = () => {
     if (!user) return 'theme_seller_dashboard';
-    if (isBuyerMode || user?.role === 'buyer') return 'theme_buyer_dashboard';
+    if (effectiveBuyerMode || user?.role === 'buyer') return 'theme_buyer_dashboard';
     if (user?.role === 'admin') return 'theme_admin_dashboard';
     return 'theme_seller_dashboard';
   };
@@ -58,7 +73,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     } catch (e) {
       setTheme(getInitialTheme());
     }
-  }, [user, isBuyerMode]);
+  }, [user, effectiveBuyerMode]);
 
   useEffect(() => {
     fetch('/api/settings/public')
@@ -74,7 +89,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           defaultTh = defaultPlatformTheme;
         }
 
-        const isDashboardRole = user?.role && !['admin', 'buyer'].includes(user.role) && !isBuyerMode;
+        const isDashboardRole = user?.role && !['admin', 'buyer'].includes(user.role) && !effectiveBuyerMode;
         if (isDashboardRole) {
           if (data.settings.seller_dashboard_template) {
             setDashboardTemplate(data.settings.seller_dashboard_template);
@@ -103,7 +118,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       })
       .catch(() => setDashboardTemplate('default'))
       .finally(() => setIsThemeLoaded(true));
-  }, [user, isBuyerMode]);
+  }, [user, effectiveBuyerMode]);
 
   useEffect(() => {
     if (dashboardTemplate === 'gentelella') {

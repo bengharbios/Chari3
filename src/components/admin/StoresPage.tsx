@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { toast } from 'sonner';
 import {
-  Search, Store, Eye, Star, RefreshCw, ShoppingBag, CheckCircle2,
+  Search, Store as StoreIcon, Eye, Star, RefreshCw, ShoppingBag, CheckCircle2,
   XCircle, Clock, TrendingUp, Users, Package, AlertTriangle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -47,7 +47,7 @@ export default function StoresPage() {
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
+  const [selectedStore, setSelectedStore] = useState<StoreIcon | null>(null);
 
   const stats = useMemo(() => ({
     total: MOCK_STORES.length,
@@ -63,7 +63,7 @@ export default function StoresPage() {
   }), [search, statusFilter]);
 
   const cards = [
-    { label: t(locale, 'إجمالي المتاجر', 'Total'), value: stats.total, color: 'text-[var(--navy)]', bg: 'bg-[var(--navy)]/10', icon: Store },
+    { label: t(locale, 'إجمالي المتاجر', 'Total'), value: stats.total, color: 'text-[var(--navy)]', bg: 'bg-[var(--navy)]/10', icon: StoreIcon },
     { label: t(locale, 'نشط', 'Active'), value: stats.active, color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900/20', icon: CheckCircle2 },
     { label: t(locale, 'قيد المراجعة', 'Pending'), value: stats.pending, color: 'text-amber-600', bg: 'bg-amber-100 dark:bg-amber-900/20', icon: Clock },
     { label: t(locale, 'معلّق', 'Suspended'), value: stats.suspended, color: 'text-red-600', bg: 'bg-red-100 dark:bg-red-900/20', icon: XCircle },

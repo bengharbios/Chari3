@@ -7,7 +7,7 @@ import {
   Wallet, AlertTriangle, ChevronUp, BarChart3, Clock, CheckCircle,
   XCircle, Eye, Plus, Edit, Trash2, Trophy, Target, Zap, Wrench, Loader2, Upload, X, Layers,
   LayoutGrid, List, ClipboardCheck, Truck, CheckSquare, Check,
-  ShieldAlert, Ban, Lock, Info, Activity
+  ShieldAlert, Ban, Lock, Info, Activity, Store as StoreIcon
 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -580,7 +580,7 @@ export default function SellerDashboard() {
                     }
                   }}
                 >
-                  <Store className="size-4" />
+                  <StoreIcon className="size-4" />
                   {t('طلب الترقية لمتجر', 'Request Store Upgrade')}
                 </Button>
               )}

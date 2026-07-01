@@ -5,7 +5,7 @@ import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { useAppStore } from '@/lib/store';
 import { 
   ShieldAlert, LayoutDashboard, Settings, Sliders, ToggleRight, ChevronRight, ChevronLeft,
-  FolderTree, Tag, TrendingUp, ShoppingCart, Users, Store, Wallet,
+  FolderTree, Tag, TrendingUp, ShoppingCart, Users, Store as StoreIcon, Wallet,
   Boxes, Banknote, Palette, ChevronDown, Monitor, KeyRound, LogOut, Globe, Plug
 } from 'lucide-react';
 import Link from 'next/link';

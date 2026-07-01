@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import {
-  Settings, Store, Image as ImageIcon, MapPin, Truck, CreditCard, Bell, Save, Globe, Loader2, Play, CheckCircle, Trash2,
+  Settings, Store as StoreIcon, Image as ImageIcon, MapPin, Truck, CreditCard, Bell, Save, Globe, Loader2, Play, CheckCircle, Trash2,
   ShoppingCart, FileText, Share2, Search, Mail, Phone, Clock, DollarSign, Shield
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -558,7 +558,7 @@ export default function StoreSettingsPage() {
           <div className="overflow-x-auto hide-scrollbar mb-6">
             <TabsList className="bg-background/60 backdrop-blur-md border border-white/10 rounded-xl p-1 h-auto flex w-max min-w-full">
               <TabsTrigger value="general" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
-                <Store className="h-4 w-4" /> {t('الهوية والمعلومات', 'Profile')}
+                <StoreIcon className="h-4 w-4" /> {t('الهوية والمعلومات', 'Profile')}
               </TabsTrigger>
               <TabsTrigger value="shipping" className="rounded-lg py-2.5 px-4 font-bold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground flex gap-2">
                 <Truck className="h-4 w-4" /> {t('الشحن والتوصيل المتطور', 'Shipping & Delivery')}
@@ -1596,7 +1596,7 @@ export default function StoreSettingsPage() {
                           ) : generalSettings.logo ? (
                             <img src={generalSettings.logo} alt="Logo" className="object-cover w-full h-full" />
                           ) : (
-                            <Store className="h-8 w-8 text-muted-foreground/50" />
+                            <StoreIcon className="h-8 w-8 text-muted-foreground/50" />
                           )}
                         </div>
                         <div className="space-y-2 flex-1 min-w-[200px]">

@@ -31,7 +31,7 @@ import {
   ShoppingCart,
   Package,
   Users,
-  Store,
+  Store as StoreIcon,
   UserCog,
   Truck,
   TrendingUp,
@@ -524,7 +524,7 @@ export default function AdminDashboard() {
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3 text-start">
                     <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                      <Store className="h-5 w-5" />
+                      <StoreIcon className="h-5 w-5" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{stats.totalStores}</p>
@@ -972,7 +972,7 @@ export default function AdminDashboard() {
               <Tabs defaultValue="stores-sub" className="w-full">
                 <TabsList className="mb-4">
                   <TabsTrigger value="stores-sub" className="gap-1.5 font-bold">
-                    <Store className="h-3.5 w-3.5" />
+                    <StoreIcon className="h-3.5 w-3.5" />
                     {t(locale, 'المتاجر الرسمية', 'Official Stores')}
                     <Badge variant="secondary" className="ms-1.5 bg-brand/10 text-brand">
                       {stores.length}
@@ -996,7 +996,7 @@ export default function AdminDashboard() {
                             <img src={store.coverImage} alt="Cover" className="h-full w-full object-cover" />
                           ) : (
                             <div className="h-full w-full flex items-center justify-center text-muted-foreground bg-gradient-to-tr from-brand/5 to-brand/10">
-                              <Store className="h-8 w-8 opacity-20" />
+                              <StoreIcon className="h-8 w-8 opacity-20" />
                             </div>
                           )}
                           <div className="absolute -bottom-6 right-4 rtl:right-4 rtl:left-auto ltr:left-4 ltr:right-auto">

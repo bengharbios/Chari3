@@ -338,6 +338,12 @@ export const useAuthStore = create<AuthState>()(
         const { setCurrentPage, setLocale } = useAppStore.getState();
         setLocale(role === 'admin' && user.locale ? user.locale : 'ar');
         setCurrentPage(role === 'buyer' ? 'home' : ROLE_TO_PAGE[role]);
+        if (typeof window !== 'undefined') {
+          if (role === 'admin') window.location.href = '/admin-secure-internal';
+          else if (role === 'buyer') window.location.href = '/';
+          else if (role === 'logistics') window.location.href = '/logistics';
+          else window.location.href = '/seller/dashboard';
+        }
       },
 
       loginWithUser: (user: User) => {
@@ -360,6 +366,13 @@ export const useAuthStore = create<AuthState>()(
         const { setCurrentPage, setLocale } = useAppStore.getState();
         setLocale(user.locale || 'ar');
         setCurrentPage(user.role === 'buyer' ? 'home' : ROLE_TO_PAGE[user.role]);
+        
+        if (typeof window !== 'undefined') {
+          if (user.role === 'admin') window.location.href = '/admin-secure-internal';
+          else if (user.role === 'buyer') window.location.href = '/buyer';
+          else if (user.role === 'logistics') window.location.href = '/logistics';
+          else window.location.href = '/seller/dashboard';
+        }
 
         // Sync onboarding store with user's account status from DB
         const onboardingState = useOnboardingStore.getState();
@@ -434,8 +447,8 @@ export const useAuthStore = create<AuthState>()(
         onboardingState.resetOtpFlow();
 
         if (typeof window !== 'undefined') {
-          // Clear any protected view from the URL and redirect to login
-          window.location.href = '/?view=login';
+          // Redirect to login page
+          window.location.href = '/login';
         }
       },
 

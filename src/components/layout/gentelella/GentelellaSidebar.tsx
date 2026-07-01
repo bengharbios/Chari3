@@ -8,7 +8,7 @@ import type { PageType, UserRole } from '@/types';
 import { useGentelellaTheme } from './theme';
 import {
   LayoutDashboard, Users, Package, ShoppingCart, BarChart3, Settings,
-  Store, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
+  Store as StoreIcon, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
   Wallet, Heart, Star, Bell, ChevronLeft, ChevronRight, LogOut,
   TrendingUp, CreditCard, Boxes, ChevronUp, ChevronDown, ArrowLeftRight, Layers,
   Receipt, Sparkles, Monitor, KeyRound, MoreHorizontal

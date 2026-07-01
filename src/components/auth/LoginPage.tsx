@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import {
-  ShieldCheck, Store, UserCircle, Truck, ShoppingBag,
+  ShieldCheck, Store as StoreIcon, UserCircle, Truck, ShoppingBag,
   Moon, Sun, Zap, ChevronDown, ChevronUp
 } from 'lucide-react';
 import type { UserRole } from '@/types';
@@ -26,11 +26,11 @@ const t = (locale: string, ar: string, en: string, fr?: string) => {
 
 const DEMO_ACCOUNTS: { role: UserRole; labelAr: string; labelEn: string; email: string; icon: React.ComponentType<{ className?: string }>; color: string; status: string }[] = [
   { role: 'admin', labelAr: 'مدير النظام', labelEn: 'System Admin', email: 'bengharbios@gmail.com', icon: ShieldCheck, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', status: 'active' },
-  { role: 'store_manager', labelAr: 'مدير متجر', labelEn: 'Store Manager', email: 'store@charyday.com', icon: Store, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', status: 'active' },
+  { role: 'store_manager', labelAr: 'مدير متجر', labelEn: 'Store Manager', email: 'store@charyday.com', icon: StoreIcon, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', status: 'active' },
   { role: 'seller', labelAr: 'تاجر مستقل', labelEn: 'Individual Seller', email: 'seller@charyday.com', icon: UserCircle, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', status: 'active' },
   { role: 'logistics', labelAr: 'مندوب شحن', labelEn: 'Courier', email: 'delivery@charyday.com', icon: Truck, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400', status: 'active' },
   { role: 'buyer', labelAr: 'مشتري', labelEn: 'Buyer', email: 'buyer@charyday.com', icon: ShoppingBag, color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', status: 'active' },
-  { role: 'store_manager', labelAr: 'متجر معلق (بانتظار المراجعة)', labelEn: 'Store (Pending Review)', email: 'pending@charyday.com', icon: Store, color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', status: 'pending' },
+  { role: 'store_manager', labelAr: 'متجر معلق (بانتظار المراجعة)', labelEn: 'Store (Pending Review)', email: 'pending@charyday.com', icon: StoreIcon, color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', status: 'pending' },
   { role: 'seller', labelAr: 'تاجر (مرفوض - يعيد التقديم)', labelEn: 'Seller (Rejected - Resubmit)', email: 'rejected@charyday.com', icon: UserCircle, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', status: 'rejected' },
 ];
 

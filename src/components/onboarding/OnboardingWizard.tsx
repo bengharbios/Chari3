@@ -26,7 +26,7 @@ import {
   AlertCircle,
   Loader2,
   User,
-  Store,
+  Store as StoreIcon,
   Package,
   Truck,
   ShoppingCart,

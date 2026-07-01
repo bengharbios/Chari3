@@ -6,7 +6,7 @@ import {
   CheckCircle,
   XCircle,
   AlertTriangle,
-  Store,
+  Store as StoreIcon,
   User,
   Truck,
   Package,
@@ -80,7 +80,7 @@ const ROLE_CONFIG: Record<
   { icon: React.ElementType; labelAr: string; labelEn: string; color: string }
 > = {
   store: {
-    icon: Store,
+    icon: StoreIcon,
     labelAr: 'متجر',
     labelEn: 'Store',
     color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',

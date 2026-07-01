@@ -79,7 +79,7 @@ import {
   Star,
   ShoppingCart,
   Wallet,
-  Store,
+  Store as StoreIcon,
   ArrowLeft,
   ArrowRight,
   ChevronsLeft,
@@ -261,7 +261,7 @@ import {
   Star,
   ShoppingCart,
   Wallet,
-  Store,
+  Store as StoreIcon,
   ArrowLeft,
   ArrowRight,
   ChevronsLeft,
@@ -406,7 +406,7 @@ export default function UsersTable({ locale = 'ar' }: { locale?: Locale }) {
     {user.sellerProfile?.wantsUpgrade && (
       <>
         <DropdownMenuItem onClick={() => { setSelectedUser(user); setUpgradePackageId(''); setApproveUpgradeOpen(true); }} className="gap-2 cursor-pointer text-brand font-bold bg-brand/5">
-          <Store className="h-4 w-4" />
+          <StoreIcon className="h-4 w-4" />
           {t(locale, 'الموافقة على ترقية المتجر', 'Approve Store Upgrade')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => { setSelectedUser(user); setRejectUpgradeOpen(true); }} className="gap-2 cursor-pointer text-destructive bg-destructive/5 mb-2">
@@ -431,7 +431,7 @@ export default function UsersTable({ locale = 'ar' }: { locale?: Locale }) {
         <AlertDialogContent dir={dir}>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-brand font-bold">
-              <Store className="h-5 w-5" />
+              <StoreIcon className="h-5 w-5" />
               {t(locale, 'الموافقة على ترقية التاجر لمدير متجر', 'Approve Upgrade to Store Manager')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>

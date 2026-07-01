@@ -9,7 +9,7 @@ import type { NavItem, PageType, UserRole } from '@/types';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Users, Package, ShoppingCart, BarChart3, Settings,
-  Store, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
+  Store as StoreIcon, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
   Wallet, Heart, Star, Bell, ChevronLeft, ChevronRight, LogOut,
   TrendingUp, CreditCard, Boxes, ChevronUp, ChevronDown, ArrowLeftRight, Layers,
   Receipt, Sparkles, MessageSquare
@@ -19,7 +19,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   LayoutDashboard, Users, Package, ShoppingCart, BarChart3, Settings,
-  Store, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
+  Store: StoreIcon, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
   Wallet, Heart, Star, Bell, LogOut, TrendingUp, CreditCard, Boxes,
   ChevronUp, ArrowLeftRight, Layers, Receipt, Sparkles, MessageSquare,
 };
@@ -210,6 +210,9 @@ interface SidebarProps {
     const pathname = usePathname();
     const router = useRouter();
 
+    const isBuyerRoute = pathname?.startsWith('/buyer') || false;
+    const effectiveBuyerMode = isBuyerMode || isBuyerRoute;
+
     const getSidebarKey = (id: string, labelAr: string): string => {
       const idMap: Record<string, string> = {
         'store-group': 'sidebar.sectionStore',
@@ -337,7 +340,7 @@ interface SidebarProps {
     }
   }, [user, isBuyerMode]);
 
-  const navGroups = isBuyerMode
+  const navGroups = effectiveBuyerMode
     ? BUYER_NAV_GROUPS
     : user?.role === 'store_manager'
     ? STORE_NAV_GROUPS
@@ -412,8 +415,8 @@ interface SidebarProps {
                 <p className="text-sm font-semibold truncate">{user.name}</p>
                 <Badge variant="secondary" className="text-[10px] mt-0.5 bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-border">
                   {t(locale,
-                    isBuyerMode ? 'مشتري' : { admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', supplier: 'مورد', logistics: 'مندوب شحن', buyer: 'مشتري' }[user?.role || 'buyer'] || 'مشتري',
-                    isBuyerMode ? 'Buyer' : { admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', supplier: 'Supplier', logistics: 'Courier', buyer: 'Buyer' }[user?.role || 'buyer'] || 'Buyer'
+                    effectiveBuyerMode ? 'مشتري' : { admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', supplier: 'مورد', logistics: 'مندوب شحن', buyer: 'مشتري' }[user?.role || 'buyer'] || 'مشتري',
+                    effectiveBuyerMode ? 'Buyer' : { admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', supplier: 'Supplier', logistics: 'Courier', buyer: 'Buyer' }[user?.role || 'buyer'] || 'Buyer'
                   )}
                 </Badge>
               </div>
@@ -434,7 +437,7 @@ interface SidebarProps {
                 const isSectionCollapsed = collapsedSections[group.id] ?? true;
                 const isOpen = !isSectionCollapsed;
                 const isGroupActive = group.items.some(item => (item as any).path ? pathname === (item as any).path || pathname.startsWith((item as any).path + '/') : currentPage === item.id);
-                const GroupIcon = iconMap[group.icon] || Store;
+                const GroupIcon = iconMap[group.icon] || StoreIcon;
 
                 return (
                   <div key={group.id} className="relative group">

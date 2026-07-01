@@ -5,7 +5,7 @@ import { useSession, signOut } from '@/lib/auth-client';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import AdminSidebar from './AdminSidebar';
 import { Button } from '@/components/ui/button';
-import { Globe, LogOut, Menu, LayoutDashboard, Settings, Sliders, ToggleRight, TrendingUp, ShoppingCart, Users, Store, Wallet, Tag, FolderTree, Boxes, Moon, Sun } from 'lucide-react';
+import { Globe, LogOut, Menu, LayoutDashboard, Settings, Sliders, ToggleRight, TrendingUp, ShoppingCart, Users, Store as StoreIcon, Wallet, Tag, FolderTree, Boxes, Moon, Sun } from 'lucide-react';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import Link from 'next/link';

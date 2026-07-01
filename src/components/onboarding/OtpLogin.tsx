@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
-  Store,
+  Store as StoreIcon,
   UserCircle,
   Package,
   Truck,
@@ -68,7 +68,7 @@ const ROLES: RoleOption[] = [
     labelEn: 'Official Store',
     descAr: 'متجر كامل مع فريق عمل',
     descEn: 'Full store with team access',
-    icon: Store,
+    icon: StoreIcon,
     bgClass: 'bg-[var(--navy)]',
     emoji: '🏢',
   },
