@@ -54,15 +54,16 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
         labelKey: 'sidebar.dashboard',
         icon: LayoutDashboard,
         children: [
-          { id: 'store', labelKey: 'sidebar.operations' },
-          { id: 'store-analytics', labelKey: 'sidebar.analytics' },
+          { id: 'store', labelKey: 'sidebar.operations', path: '/seller/dashboard' },
+          { id: 'store-analytics', labelKey: 'sidebar.analytics', path: '/seller/analytics' },
         ]
       },
       {
         id: 'team',
         labelKey: 'sidebar.team',
         icon: Users,
-        directPageId: 'store-staff'
+        directPageId: 'store-staff',
+        path: '/seller/staff'
       }
     ]
   },
@@ -76,21 +77,23 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
         icon: Boxes,
         directPageId: 'store-products',
         badge: 5,
-        badgeColor: 'bg-blue-500'
+        badgeColor: 'bg-blue-500',
+        path: '/seller/products'
       },
       {
         id: 'orders-tree',
         labelKey: 'sidebar.orders',
         icon: Package,
         children: [
-          { id: 'store-orders', labelKey: 'sidebar.allOrders', badge: 12 },
+          { id: 'store-orders', labelKey: 'sidebar.allOrders', badge: 12, path: '/seller/orders' },
         ]
       },
       {
         id: 'marketing-tree',
         labelKey: 'sidebar.marketing',
         icon: CreditCard,
-        directPageId: 'store-coupons'
+        directPageId: 'store-coupons',
+        path: '/seller/coupons'
       }
     ]
   },
@@ -103,11 +106,11 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
         labelKey: 'sidebar.billing',
         icon: Receipt,
         children: [
-          { id: 'store-billing', labelKey: 'sidebar.currentInvoice' },
-          { id: 'store-billing-plans', labelKey: 'sidebar.plans' },
-          { id: 'store-billing-addons', labelKey: 'sidebar.addons' },
-          { id: 'store-billing-pay', labelKey: 'sidebar.payment' },
-          { id: 'store-billing-history', labelKey: 'sidebar.history' },
+          { id: 'store-billing', labelKey: 'sidebar.currentInvoice', path: '/seller/billing' },
+          { id: 'store-billing-plans', labelKey: 'sidebar.plans', path: '/seller/billing/plans' },
+          { id: 'store-billing-addons', labelKey: 'sidebar.addons', path: '/seller/billing/addons' },
+          { id: 'store-billing-pay', labelKey: 'sidebar.payment', path: '/seller/billing/pay' },
+          { id: 'store-billing-history', labelKey: 'sidebar.history', path: '/seller/billing/history' },
         ]
       }
     ]
@@ -120,13 +123,15 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
         id: 'verification-tree',
         labelKey: 'header.verificationStatus',
         icon: ShieldCheck,
-        directPageId: 'verification'
+        directPageId: 'verification',
+        path: '/verification'
       },
       {
         id: 'settings-tree',
         labelKey: 'common.settings',
         icon: Settings,
-        directPageId: 'store-settings'
+        directPageId: 'store-settings',
+        path: '/seller/settings'
       }
     ]
   }

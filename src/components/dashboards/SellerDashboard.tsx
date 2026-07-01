@@ -296,6 +296,11 @@ export default function SellerDashboard() {
   // Store suspension check
   const isSuspended = data?.storeStatus?.isSuspended === true;
 
+  // Bypass SellerDashboard loading state and double-fetching for store managers on the overview page
+  if (user?.role === 'store_manager' && (pathname === '/seller/dashboard' || pathname === '/seller')) {
+    return <StoreDashboard />;
+  }
+
   // Show different sub-pages
   if (pathname.includes('/products')) {
     // Block add/edit when suspended

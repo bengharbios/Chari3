@@ -51,7 +51,21 @@ export default function GentelellaHeader() {
 
   const navigateToDashboard = (view: string) => {
     setCurrentPage(view as PageType);
-    router.push(`/?view=${view}`);
+    if (view === 'home') {
+      router.push('/');
+    } else if (view === 'verification') {
+      router.push('/verification');
+    } else if (view === 'security') {
+      router.push('/security');
+    } else if (['seller', 'store', 'logistics', 'buyer', 'admin'].includes(view)) {
+      if (view === 'admin') {
+        router.push('/admin-secure-internal');
+      } else {
+        router.push(`/${view === 'store' ? 'seller' : view}`);
+      }
+    } else {
+      router.push(`/?view=${view}`);
+    }
   };
 
   const getPageTitle = (page: string) => {
