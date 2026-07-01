@@ -125,7 +125,6 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { label: t('admin.manageAdvertisements'), path: 'advertisements' },
         { label: t('admin.featureFlags'), path: 'flags' },
         { label: 'إعدادات الخرائط', path: 'settings/maps' },
-        { label: locale === 'ar' ? 'إعدادات التوثيق والدخول' : 'Auth & OTP', path: 'settings/otp' },
         { label: t('admin.manageTranslations'), path: 'settings/translations' },
         { label: t('admin.generalSettings'), path: 'settings' },
         { label: t('admin.themeDesign'), path: 'settings/theme' },
