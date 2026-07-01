@@ -25,6 +25,7 @@ export default function PasswordLoginStep() {
     setStep,
     setError,
     setLoading,
+    captchaToken,
   } = useAuthFlowStore();
 
   const [password, setPassword] = useState('');
@@ -47,6 +48,7 @@ export default function PasswordLoginStep() {
         body: JSON.stringify({
           identifier: displayContact,
           password,
+          captchaToken,
         }),
       });
 
