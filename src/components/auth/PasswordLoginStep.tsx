@@ -145,6 +145,7 @@ export default function PasswordLoginStep() {
       {configLoaded && captchaConfig.enabled && captchaConfig.siteKey && (
         <div className="flex justify-center my-4 animate-fade-in">
           <Turnstile
+            key="password-step-captcha"
             siteKey={captchaConfig.siteKey}
             onSuccess={(token) => setCaptchaToken(token)}
           />

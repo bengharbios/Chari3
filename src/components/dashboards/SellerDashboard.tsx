@@ -20,6 +20,7 @@ import { useOnboardingStore } from '@/lib/store/onboarding';
 import { useAppStore as appStore } from '@/lib/store';
 import { toast } from 'sonner';
 import SellerChatTab from '@/components/seller/chat/SellerChatTab';
+import StoreDashboard from '@/components/dashboards/StoreDashboard';
 import {
   Card as TremorCard,
   Metric,
@@ -368,6 +369,18 @@ export default function SellerDashboard() {
       {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-24 rounded-2xl bg-muted" />)}
     </div>
   );
+
+  if (pathname.includes('/analytics')) return (
+    <div className="space-y-4 text-center py-20 bg-card rounded-xl border border-border shadow-sm">
+      <h2 className="text-2xl font-bold">{t('التحليلات التفصيلية', 'Detailed Analytics')}</h2>
+      <p className="text-muted-foreground">{t('هذه الميزة قيد التطوير وستتوفر قريباً.', 'This feature is under development and will be available soon.')}</p>
+    </div>
+  );
+
+  // If user is a store_manager and we reach here (meaning they are on the overview page)
+  if (user?.role === 'store_manager') {
+    return <StoreDashboard />;
+  }
 
   const kpis = data?.kpis;
   const lvl = kpis?.level ?? 1;
