@@ -1,5 +1,5 @@
-import HomePage from '@/app/page';
+import SellerDashboard from '@/components/dashboards/SellerDashboard';
 
-export default function SupplierRoute() {
-  return <HomePage initialPage="supplier" />;
+export default function SupplierDashboardPage() {
+  return <SellerDashboard />
 }

@@ -1,5 +1,5 @@
-import HomePage from '@/app/page';
+import BuyerDashboard from '@/components/dashboards/BuyerDashboard';
 
-export default function BuyerRoute() {
-  return <HomePage initialPage="buyer" />;
+export default function BuyerDashboardPage() {
+  return <BuyerDashboard />
 }

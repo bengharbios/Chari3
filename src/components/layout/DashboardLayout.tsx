@@ -4,6 +4,7 @@ import React from 'react';
 import { type ReactNode } from 'react';
 import { useEffect, useState } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
+import { useSession } from '@/lib/auth-client';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import GentelellaSidebar from './gentelella/GentelellaSidebar';
@@ -115,9 +116,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const { isDark: gentelellaDark } = useGentelellaTheme();
   const { theme: globalTheme } = useTheme();
+  const { isPending, data } = useSession();
 
-  if (!user) return null;
-  
+  if (isPending) {
+    return <div className="min-h-screen bg-background flex items-center justify-center">...</div>;
+  }
+
+  if (!user && !data?.user) {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    return null;
+  }
+
   // Prevent flash by waiting for theme load or at least showing cached theme
   if (!isThemeLoaded && !theme.colors) {
      return <div className="min-h-screen bg-background flex items-center justify-center">...</div>;

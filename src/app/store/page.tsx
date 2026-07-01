@@ -1,5 +1,5 @@
-import HomePage from '@/app/page';
+import StoreDashboard from '@/components/dashboards/StoreDashboard';
 
-export default function StoreRoute() {
-  return <HomePage initialPage="store" />;
+export default function StoreDashboardPage() {
+  return <StoreDashboard />
 }

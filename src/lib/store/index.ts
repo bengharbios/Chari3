@@ -128,6 +128,7 @@ interface AppState {
   setSelectedProductId: (id: string | null) => void;
   setSelectedSellerId: (id: string | null) => void;
   setAllowGuestCheckout: (allow: boolean) => void;
+  setIsMaintenance: (val: boolean) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -144,6 +145,7 @@ export const useAppStore = create<AppState>()(
       selectedProductId: null,
       selectedSellerId: null,
       allowGuestCheckout: true,
+      isMaintenance: false,
 
       setLocale: (locale) => set({ locale }),
       setTheme: (theme) => set({ theme }),
@@ -159,6 +161,7 @@ export const useAppStore = create<AppState>()(
       setSelectedProductId: (selectedProductId) => set({ selectedProductId }),
       setSelectedSellerId: (selectedSellerId) => set({ selectedSellerId }),
       setAllowGuestCheckout: (allow) => set({ allowGuestCheckout: allow }),
+      setIsMaintenance: (isMaintenance) => set({ isMaintenance }),
     }),
     {
       name: 'platform-app-store',

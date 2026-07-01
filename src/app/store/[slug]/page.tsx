@@ -15,7 +15,6 @@ export default function StorePublicPage() {
   const slug = params?.slug as string;
   const router = useRouter();
   const setSelectedSellerId = useAppStore(state => state.setSelectedSellerId);
-  const setCurrentPage = useAppStore(state => state.setCurrentPage);
   const [isResolving, setIsResolving] = useState(true);
 
   useEffect(() => {
@@ -26,31 +25,23 @@ export default function StorePublicPage() {
       .then(data => {
         if (data.success && data.store) {
           setSelectedSellerId(data.store.id);
-          setCurrentPage('seller-profile');
         } else {
           router.push('/');
         }
       })
       .catch(() => router.push('/'))
       .finally(() => setIsResolving(false));
-  }, [slug, setSelectedSellerId, setCurrentPage, router]);
+  }, [slug, setSelectedSellerId, router]);
 
   return (
-    <AppShell>
-      <div className="min-h-screen bg-background flex flex-col">
-        <Header />
-        <main className="flex-1 pb-16 md:pb-0">
-          {isResolving ? (
-            <div className="flex-1 flex items-center justify-center min-h-[50vh]">
-              <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
-            </div>
-          ) : (
-            <SellerProfilePage />
-          )}
-        </main>
-        <Footer />
-        <BottomNav />
-      </div>
-    </AppShell>
+    <>
+      {isResolving ? (
+        <div className="flex-1 flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+        </div>
+      ) : (
+        <SellerProfilePage />
+      )}
+    </>
   );
 }

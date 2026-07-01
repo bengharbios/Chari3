@@ -14,6 +14,7 @@ import {
   Receipt, Sparkles, Monitor, KeyRound, MoreHorizontal
 } from 'lucide-react';
 
+import { usePathname, useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { localeDirections } from '@/lib/i18n/config';
 
@@ -22,6 +23,7 @@ type GentelellaNavSubItem = {
   id: PageType;
   labelKey: string;
   badge?: number;
+  path?: string;
 };
 
 type GentelellaNavTree = {
@@ -32,6 +34,7 @@ type GentelellaNavTree = {
   badgeColor?: string;
   children?: GentelellaNavSubItem[];
   directPageId?: PageType; // If it has no children, it links directly
+  path?: string;
 };
 
 type GentelellaNavGroup = {
@@ -140,7 +143,7 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         labelKey: 'sidebar.dashboard',
         icon: LayoutDashboard,
         children: [
-          { id: 'seller', labelKey: 'sidebar.operations' },
+          { id: 'seller', labelKey: 'sidebar.operations', path: '/seller/dashboard' },
         ]
       }
     ]
@@ -153,14 +156,15 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         id: 'products-tree',
         labelKey: 'sidebar.products',
         icon: Boxes,
-        directPageId: 'seller-products'
+        directPageId: 'seller-products',
+        path: '/seller/products'
       },
       {
         id: 'orders-tree',
         labelKey: 'sidebar.orders',
         icon: Package,
         children: [
-          { id: 'seller-orders', labelKey: 'sidebar.allOrders', badge: 4 },
+          { id: 'seller-orders', labelKey: 'sidebar.allOrders', badge: 4, path: '/seller/orders' },
         ]
       }
     ]
@@ -174,8 +178,8 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         labelKey: 'sidebar.wallet',
         icon: Wallet,
         children: [
-          { id: 'seller-wallet' as PageType, labelKey: 'sidebar.payouts' },
-          { id: 'seller-debts' as PageType, labelKey: 'sidebar.debts' },
+          { id: 'seller-wallet' as PageType, labelKey: 'sidebar.payouts', path: '/seller/wallet' },
+          { id: 'seller-debts' as PageType, labelKey: 'sidebar.debts', path: '/seller/debts' },
         ]
       },
       {
@@ -183,11 +187,11 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         labelKey: 'sidebar.billing',
         icon: Receipt,
         children: [
-          { id: 'seller-billing', labelKey: 'sidebar.currentInvoice' },
-          { id: 'seller-billing-plans', labelKey: 'sidebar.plans' },
-          { id: 'seller-billing-addons', labelKey: 'sidebar.addons' },
-          { id: 'seller-billing-pay', labelKey: 'sidebar.payment' },
-          { id: 'seller-billing-history', labelKey: 'sidebar.history' },
+          { id: 'seller-billing', labelKey: 'sidebar.currentInvoice', path: '/seller/billing' },
+          { id: 'seller-billing-plans', labelKey: 'sidebar.plans', path: '/seller/billing/plans' },
+          { id: 'seller-billing-addons', labelKey: 'sidebar.addons', path: '/seller/billing/addons' },
+          { id: 'seller-billing-pay', labelKey: 'sidebar.payment', path: '/seller/billing/pay' },
+          { id: 'seller-billing-history', labelKey: 'sidebar.history', path: '/seller/billing/history' },
         ]
       }
     ]
@@ -206,7 +210,8 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         id: 'settings-tree',
         labelKey: 'common.settings',
         icon: Settings,
-        directPageId: 'seller-settings'
+        directPageId: 'seller-settings',
+        path: '/seller/settings'
       },
       {
         id: 'upgrade-tree',
@@ -214,7 +219,8 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         icon: TrendingUp,
         directPageId: 'seller-upgrade',
         badge: 'New',
-        badgeColor: 'bg-teal-500'
+        badgeColor: 'bg-teal-500',
+        path: '/seller/upgrade'
       }
     ]
   }
@@ -226,6 +232,8 @@ export default function GentelellaSidebar({ className }: { className?: string })
   const { isDark } = useGentelellaTheme();
   const { t } = useTranslation();
   const isRTL = localeDirections[locale] === 'rtl';
+  const pathname = usePathname();
+  const router = useRouter();
   
   // Track open accordion trees
   const [openTrees, setOpenTrees] = useState<Record<string, boolean>>({});
@@ -274,7 +282,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
     
     groups.forEach(group => {
       group.trees.forEach(tree => {
-        if (tree.children?.some(child => child.id === currentPage)) {
+        if (tree.children?.some(child => child.path ? pathname === child.path || pathname.startsWith(child.path + '/') : child.id === currentPage) || (tree.path ? pathname === tree.path || pathname.startsWith(tree.path + '/') : tree.directPageId === currentPage)) {
           if (!newOpenTrees[tree.id]) {
             newOpenTrees[tree.id] = true;
             changed = true;
@@ -285,7 +293,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
     
     if (changed) setOpenTrees(newOpenTrees);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, user?.role]);
+  }, [currentPage, pathname, user?.role]);
 
   if (!user) return null;
 
@@ -408,8 +416,8 @@ export default function GentelellaSidebar({ className }: { className?: string })
                       const hasChildren = tree.children && tree.children.length > 0;
                       const isOpen = openTrees[tree.id] || false;
                       const isTreeActive = hasChildren 
-                        ? tree.children!.some(c => c.id === currentPage)
-                        : tree.directPageId === currentPage;
+                        ? tree.children!.some(c => c.path ? pathname === c.path || pathname.startsWith(c.path + '/') : c.id === currentPage)
+                        : (tree.path ? pathname === tree.path || pathname.startsWith(tree.path + '/') : tree.directPageId === currentPage);
                       
                       const Icon = tree.icon;
 
@@ -420,6 +428,9 @@ export default function GentelellaSidebar({ className }: { className?: string })
                             onClick={() => {
                               if (hasChildren) {
                                 toggleTree(tree.id);
+                              } else if (tree.path) {
+                                router.push(tree.path);
+                                if (window.innerWidth < 1024) setSidebarOpen(false);
                               } else if (tree.directPageId) {
                                 setCurrentPage(tree.directPageId);
                                 if (window.innerWidth < 1024) setSidebarOpen(false);
@@ -480,12 +491,16 @@ export default function GentelellaSidebar({ className }: { className?: string })
                                 )} />
                                 
                                 {tree.children!.map(child => {
-                                  const isChildActive = currentPage === child.id;
+                                  const isChildActive = child.path ? pathname === child.path || pathname.startsWith(child.path + '/') : currentPage === child.id;
                                   return (
                                     <li key={child.id} className="relative">
                                       <button
                                         onClick={() => {
-                                          setCurrentPage(child.id);
+                                          if (child.path) {
+                                            router.push(child.path);
+                                          } else {
+                                            setCurrentPage(child.id);
+                                          }
                                           if (window.innerWidth < 1024) setSidebarOpen(false);
                                         }}
                                         className={cn(

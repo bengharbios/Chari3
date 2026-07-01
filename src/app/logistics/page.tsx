@@ -1,5 +1,5 @@
-import HomePage from '@/app/page';
+import LogisticsDashboard from '@/components/dashboards/LogisticsDashboard';
 
-export default function LogisticsRoute() {
-  return <HomePage initialPage="logistics" />;
+export default function LogisticsDashboardPage() {
+  return <LogisticsDashboard />
 }

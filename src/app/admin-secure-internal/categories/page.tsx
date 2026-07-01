@@ -64,11 +64,6 @@ export default function AdminCategoriesPage() {
 
   useEffect(() => { setIsMounted(true); }, []);
 
-  useEffect(() => {
-    if (isMounted && !isAdminAuthenticated) {
-      window.location.href = getAdminPath('login');
-    }
-  }, [isMounted, isAdminAuthenticated]);
 
   const fetchData = async () => {
     try {

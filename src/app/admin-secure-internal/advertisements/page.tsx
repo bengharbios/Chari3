@@ -72,11 +72,6 @@ export default function AdminAdvertisementsPage() {
     setIsMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (isMounted && !isAdminAuthenticated) {
-      window.location.href = getAdminPath('login');
-    }
-  }, [isMounted, isAdminAuthenticated]);
 
   const fetchAds = async () => {
     try {

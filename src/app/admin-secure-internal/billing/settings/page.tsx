@@ -121,11 +121,6 @@ export default function BillingSettingsPage() {
     setIsMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (isMounted && !isAdminAuthenticated) {
-      window.location.href = getAdminPath('login');
-    }
-  }, [isMounted, isAdminAuthenticated]);
 
   const fetchAllData = useCallback(async () => {
     if (!isAdminAuthenticated) return;

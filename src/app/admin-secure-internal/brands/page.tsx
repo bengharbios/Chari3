@@ -46,11 +46,6 @@ export default function AdminBrandsPage() {
     setIsMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (isMounted && !isAdminAuthenticated) {
-      window.location.href = getAdminPath('login');
-    }
-  }, [isMounted, isAdminAuthenticated]);
 
   const fetchBrands = async () => {
     try {

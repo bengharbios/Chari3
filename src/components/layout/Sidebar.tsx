@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import type { NavItem, PageType, UserRole } from '@/types';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Users, Package, ShoppingCart, BarChart3, Settings,
   Store, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
@@ -78,10 +79,10 @@ const SELLER_NAV_GROUPS: NavGroup[] = [
     labelEn: 'Seller',
     icon: 'UserCircle',
     items: [
-      { id: 'seller', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
-      { id: 'seller-products', labelAr: 'منتجاتي', labelEn: 'My Products', icon: 'Boxes' },
-      { id: 'seller-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 4 },
-      { id: 'seller-messages', labelAr: 'الرسائل والمحادثات', labelEn: 'Messages', icon: 'MessageSquare' },
+      { id: 'seller', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard', path: '/seller/dashboard' },
+      { id: 'seller-products', labelAr: 'منتجاتي', labelEn: 'My Products', icon: 'Boxes', path: '/seller/products' },
+      { id: 'seller-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 4, path: '/seller/orders' },
+      { id: 'seller-messages', labelAr: 'الرسائل والمحادثات', labelEn: 'Messages', icon: 'MessageSquare', path: '/seller/messages' },
     ]
   },
   {
@@ -90,13 +91,13 @@ const SELLER_NAV_GROUPS: NavGroup[] = [
     labelEn: 'Billing & Subscriptions',
     icon: 'Wallet',
     items: [
-      { id: 'seller-wallet', labelAr: 'محفظتي والأرباح', labelEn: 'Wallet & Payouts', icon: 'Wallet' },
-      { id: 'seller-debts', labelAr: 'سداد المديونية', labelEn: 'Pay Debts', icon: 'Receipt' },
-      { id: 'seller-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice', icon: 'Receipt' },
-      { id: 'seller-billing-plans', labelAr: 'اختر باقة', labelEn: 'Choose Plan', icon: 'Package' },
-      { id: 'seller-billing-addons', labelAr: 'الميزات الإضافية', labelEn: 'Add-ons', icon: 'Sparkles' },
-      { id: 'seller-billing-pay', labelAr: 'الدفع والتسديد', labelEn: 'Payment', icon: 'CreditCard' },
-      { id: 'seller-billing-history', labelAr: 'سجل الفواتير', labelEn: 'Invoice History', icon: 'FileText' },
+      { id: 'seller-wallet', labelAr: 'محفظتي والأرباح', labelEn: 'Wallet & Payouts', icon: 'Wallet', path: '/seller/wallet' },
+      { id: 'seller-debts', labelAr: 'سداد المديونية', labelEn: 'Pay Debts', icon: 'Receipt', path: '/seller/debts' },
+      { id: 'seller-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice', icon: 'Receipt', path: '/seller/billing' },
+      { id: 'seller-billing-plans', labelAr: 'اختر باقة', labelEn: 'Choose Plan', icon: 'Package', path: '/seller/billing/plans' },
+      { id: 'seller-billing-addons', labelAr: 'الميزات الإضافية', labelEn: 'Add-ons', icon: 'Sparkles', path: '/seller/billing/addons' },
+      { id: 'seller-billing-pay', labelAr: 'الدفع والتسديد', labelEn: 'Payment', icon: 'CreditCard', path: '/seller/billing/pay' },
+      { id: 'seller-billing-history', labelAr: 'سجل الفواتير', labelEn: 'Invoice History', icon: 'FileText', path: '/seller/billing/history' },
     ]
   },
   {
@@ -105,8 +106,8 @@ const SELLER_NAV_GROUPS: NavGroup[] = [
     labelEn: 'Settings',
     icon: 'Settings',
     items: [
-      { id: 'seller-settings', labelAr: 'الإعدادات', labelEn: 'Settings', icon: 'Settings' },
-      { id: 'seller-upgrade', labelAr: 'ترقية لمتجر', labelEn: 'Upgrade to Store', icon: 'TrendingUp' },
+      { id: 'seller-settings', labelAr: 'الإعدادات', labelEn: 'Settings', icon: 'Settings', path: '/seller/settings' },
+      { id: 'seller-upgrade', labelAr: 'ترقية لمتجر', labelEn: 'Upgrade to Store', icon: 'TrendingUp', path: '/seller/upgrade' },
     ]
   }
 ];
@@ -206,6 +207,8 @@ interface SidebarProps {
     const { user, logout, isBuyerMode } = useAuthStore();
     const isRTL = locale === 'ar';
     const { t: globalT } = useTranslation();
+    const pathname = usePathname();
+    const router = useRouter();
 
     const getSidebarKey = (id: string, labelAr: string): string => {
       const idMap: Record<string, string> = {
@@ -349,12 +352,12 @@ interface SidebarProps {
   // Auto-expand active group on mount or page change
   useEffect(() => {
     const activeGroup = navGroups.find(group => 
-      group.items.some(item => item.id === currentPage)
+      group.items.some(item => (item as any).path ? pathname === (item as any).path || pathname.startsWith((item as any).path + '/') : item.id === currentPage)
     );
     if (activeGroup) {
       setCollapsedSections(prev => ({ ...prev, [activeGroup.id]: false }));
     }
-  }, [currentPage, navGroups]);
+  }, [currentPage, pathname, navGroups]);
 
   if (!user) return null;
 
@@ -430,7 +433,7 @@ interface SidebarProps {
               {navGroups.map((group) => {
                 const isSectionCollapsed = collapsedSections[group.id] ?? true;
                 const isOpen = !isSectionCollapsed;
-                const isGroupActive = group.items.some(item => currentPage === item.id);
+                const isGroupActive = group.items.some(item => (item as any).path ? pathname === (item as any).path || pathname.startsWith((item as any).path + '/') : currentPage === item.id);
                 const GroupIcon = iconMap[group.icon] || Store;
 
                 return (
@@ -491,8 +494,8 @@ interface SidebarProps {
                             isRTL ? "right-5" : "left-5"
                           )} />
 
-                          {group.items.map((item) => {
-                            const isActive = currentPage === item.id;
+                          {group.items.map((item: any) => {
+                            const isActive = item.path ? pathname === item.path || pathname.startsWith(item.path + '/') : currentPage === item.id;
                             const SubIcon = iconMap[item.icon || 'LayoutDashboard'] || LayoutDashboard;
                             
                             return (
@@ -500,7 +503,11 @@ interface SidebarProps {
                                 <button
                                   dir={isRTL ? 'rtl' : 'ltr'}
                                   onClick={() => {
-                                    setCurrentPage(item.id as PageType);
+                                    if (item.path) {
+                                      router.push(item.path);
+                                    } else {
+                                      setCurrentPage(item.id as PageType);
+                                    }
                                     if (window.innerWidth < 1024) setSidebarOpen(false);
                                   }}
                                   className={cn(

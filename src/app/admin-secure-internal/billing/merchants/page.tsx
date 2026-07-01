@@ -115,11 +115,6 @@ export default function BillingMerchantsPage() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (isMounted && !isAdminAuthenticated) {
-      window.location.href = getAdminPath('login');
-    }
-  }, [isMounted, isAdminAuthenticated]);
 
   const fetchSubscriptions = useCallback(async () => {
     if (!isAdminAuthenticated) return;

@@ -44,11 +44,6 @@ export default function PaymentEnginePage() {
     setIsMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (isMounted && !isAdminAuthenticated) {
-      window.location.href = getAdminPath('login');
-    }
-  }, [isMounted, isAdminAuthenticated]);
 
   const fetchSettings = async () => {
     if (!isAdminAuthenticated) return;

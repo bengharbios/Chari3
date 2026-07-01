@@ -108,6 +108,7 @@ function SuspensionBanner({ storeStatus, t, isAr }: {
   t: (ar: string, en: string) => string;
   isAr: boolean;
 }) {
+  const router = require('next/navigation').useRouter();
   const reasonConfig: Record<string, {
     icon: React.ElementType;
     titleAr: string;
@@ -215,7 +216,7 @@ function SuspensionBanner({ storeStatus, t, isAr }: {
               className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-md"
               onClick={() => {
                 // Navigate to subscription/upgrade page
-                useAppStore.getState().setCurrentPage('seller-upgrade' as any);
+                router.push('/seller/billing');
               }}
             >
               <Zap className="size-4" />
@@ -248,11 +249,10 @@ function SuspensionBanner({ storeStatus, t, isAr }: {
     </div>
   );
 }
-
 export default function SellerDashboard() {
   const { locale } = useAppStore();
   const { user } = useAuthStore();
-  const { currentPage } = useAppStore();
+  const pathname = require('next/navigation').usePathname();
   const isAr = locale === 'ar';
   const t = (ar: string, en: string) => isAr ? ar : en;
 
@@ -296,7 +296,7 @@ export default function SellerDashboard() {
   const isSuspended = data?.storeStatus?.isSuspended === true;
 
   // Show different sub-pages
-  if (currentPage === 'seller-products' || currentPage === 'supplier-products' || currentPage === 'store-products') {
+  if (pathname.includes('/products')) {
     // Block add/edit when suspended
     if (showAddForm && !isSuspended) {
       return (
@@ -345,7 +345,7 @@ export default function SellerDashboard() {
       </div>
     );
   }
-  if (currentPage === 'seller-orders' || currentPage === 'supplier-orders' || currentPage === 'store-orders') return (
+  if (pathname.includes('/orders')) return (
     <div className="space-y-4">
       {isSuspended && data?.storeStatus && (
         <SuspensionBanner storeStatus={data.storeStatus} t={t} isAr={isAr} />
@@ -354,7 +354,7 @@ export default function SellerDashboard() {
     </div>
   );
 
-  if (currentPage === 'seller-messages') return (
+  if (pathname.includes('/messages')) return (
     <div className="space-y-4">
       {isSuspended && data?.storeStatus && (
         <SuspensionBanner storeStatus={data.storeStatus} t={t} isAr={isAr} />
@@ -423,7 +423,7 @@ export default function SellerDashboard() {
                t('يرجى مراجعة الأسباب المذكورة وإعادة تقديم الطلب.', 'Please review the reasons mentioned and resubmit.')}
             </p>
             {verificationData.status !== 'PENDING_REVIEW' && (
-              <Button size="sm" className="mt-3" onClick={() => useAppStore.getState().setCurrentPage('verification' as any)}>
+              <Button size="sm" className="mt-3" onClick={() => router.push('/verification')}>
                 {t('الذهاب لصفحة التوثيق', 'Go to Verification Page')}
               </Button>
             )}
@@ -638,7 +638,7 @@ export default function SellerDashboard() {
         <TremorCard className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg mt-4">
           <Flex className="mb-4">
             <Title className="text-foreground">{t('آخر الطلبات', 'Recent Orders')}</Title>
-            <Button size="sm" variant="ghost" onClick={() => appStore.getState().setCurrentPage('seller-orders' as any)}>
+            <Button size="sm" variant="ghost" onClick={() => router.push('/seller/orders')}>
               {t('عرض الكل', 'View All')}
             </Button>
           </Flex>

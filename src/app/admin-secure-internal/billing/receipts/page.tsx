@@ -75,11 +75,6 @@ export default function BillingReceiptsPage() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (isMounted && !isAdminAuthenticated) {
-      window.location.href = getAdminPath('login');
-    }
-  }, [isMounted, isAdminAuthenticated]);
 
   const fetchReceipts = useCallback(async () => {
     if (!isAdminAuthenticated) return;

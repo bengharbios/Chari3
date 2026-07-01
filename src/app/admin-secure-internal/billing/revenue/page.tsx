@@ -73,11 +73,6 @@ export default function BillingRevenuePage() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (isMounted && !isAdminAuthenticated) {
-      window.location.href = getAdminPath('login');
-    }
-  }, [isMounted, isAdminAuthenticated]);
 
   const fetchRevenueData = useCallback(async () => {
     if (!isAdminAuthenticated) return;

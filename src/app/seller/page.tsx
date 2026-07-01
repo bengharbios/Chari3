@@ -1,5 +1,5 @@
-import HomePage from '@/app/page';
+import { redirect } from 'next/navigation';
 
 export default function SellerRoute() {
-  return <HomePage initialPage="seller" />;
+  redirect('/seller/dashboard');
 }

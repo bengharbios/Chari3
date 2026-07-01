@@ -48,11 +48,6 @@ export default function WalletsPage() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (isMounted && !isAdminAuthenticated) {
-      window.location.href = getAdminPath('login');
-    }
-  }, [isMounted, isAdminAuthenticated]);
 
   const fetchWallets = useCallback(async () => {
     if (!isAdminAuthenticated) return;
