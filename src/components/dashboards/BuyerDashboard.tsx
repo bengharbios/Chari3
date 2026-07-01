@@ -134,6 +134,13 @@ export default function BuyerDashboard() {
       .finally(() => setIsLoadingOrders(false));
   }, [user?.id]);
 
+  const pathname = require('next/navigation').usePathname();
+  let defaultTab = 'orders';
+  if (pathname.includes('/wishlist')) defaultTab = 'wishlist';
+  else if (pathname.includes('/wallet')) defaultTab = 'wallet';
+  else if (pathname.includes('/addresses')) defaultTab = 'addresses';
+  else if (pathname.includes('/reviews')) defaultTab = 'orders'; // fallback or you could have a reviews tab
+
   // Submit review to API
   const handleSubmitRating = async (order: Order, star: number) => {
     if (!user?.id) return;
@@ -257,7 +264,7 @@ export default function BuyerDashboard() {
       {/* ============================================ */}
       {/* MAIN TABS SECTION                            */}
       {/* ============================================ */}
-      <Tabs defaultValue="orders" className="space-y-6">
+      <Tabs defaultValue={defaultTab} className="space-y-6">
         <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="orders" className="gap-1.5">
             <Package className="h-4 w-4" />

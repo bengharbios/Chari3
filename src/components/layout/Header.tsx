@@ -473,12 +473,42 @@ export default function Header() {
   const navigateToDashboard = (view: string) => {
     setCheckoutSuccess(null);
     setCartOpen(false);
-    const isOnSubRoute = pathname !== '/';
-    if (isOnSubRoute) {
-      router.push(`/?view=${view}`);
-    } else {
-      useAppStore.getState().setCurrentPage(view as PageType);
+    
+    if (view === 'login') {
+      router.push('/login');
+      return;
     }
+    if (view === 'seller' || view === 'store') {
+      router.push('/seller/dashboard');
+      return;
+    }
+    if (view === 'logistics' || view === 'supplier') {
+      router.push(`/${view}`);
+      return;
+    }
+    if (view === 'admin') {
+      router.push('/admin-secure-internal');
+      return;
+    }
+    if (view === 'buyer') {
+      router.push('/buyer');
+      return;
+    }
+    if (view === 'security') {
+      router.push('/security');
+      return;
+    }
+    if (view === 'verification') {
+      router.push('/verification');
+      return;
+    }
+    if (view === 'home') {
+      router.push('/');
+      return;
+    }
+    
+    // fallback
+    router.push(`/${view}`);
   };
 
   useEffect(() => {
@@ -860,7 +890,7 @@ export default function Header() {
                 variant="default"
                 size="sm"
                 className="gradient-brand text-navy font-bold ms-1 sm:ms-2 px-2 sm:px-3"
-                onClick={() => useAppStore.getState().setCurrentPage('login')}
+                onClick={() => router.push('/login')}
               >
                 <User className="h-4 w-4 sm:me-1.5" />
                 <span className="hidden sm:inline">{t('تسجيل الدخول', 'Sign In')}</span>

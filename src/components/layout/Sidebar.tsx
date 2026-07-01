@@ -40,12 +40,12 @@ const STORE_NAV_GROUPS: NavGroup[] = [
     labelEn: 'Store',
     icon: 'Store',
     items: [
-      { id: 'store', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
-      { id: 'store-products', labelAr: 'المنتجات', labelEn: 'Products', icon: 'Boxes', badge: 5 },
-      { id: 'store-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 12 },
-      { id: 'store-coupons', labelAr: 'الكوبونات والخصومات', labelEn: 'Coupons', icon: 'CreditCard' },
-      { id: 'store-staff', labelAr: 'الفريق', labelEn: 'Team', icon: 'Users' },
-      { id: 'store-analytics', labelAr: 'التحليلات', labelEn: 'Analytics', icon: 'BarChart3' },
+      { id: 'store', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard', path: '/seller/dashboard' },
+      { id: 'store-products', labelAr: 'المنتجات', labelEn: 'Products', icon: 'Boxes', badge: 5, path: '/seller/products' },
+      { id: 'store-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 12, path: '/seller/orders' },
+      { id: 'store-coupons', labelAr: 'الكوبونات والخصومات', labelEn: 'Coupons', icon: 'CreditCard', path: '/seller/coupons' },
+      { id: 'store-staff', labelAr: 'الفريق', labelEn: 'Team', icon: 'Users', path: '/seller/staff' },
+      { id: 'store-analytics', labelAr: 'التحليلات', labelEn: 'Analytics', icon: 'BarChart3', path: '/seller/analytics' },
     ]
   },
   {
@@ -54,11 +54,11 @@ const STORE_NAV_GROUPS: NavGroup[] = [
     labelEn: 'Billing & Subscriptions',
     icon: 'Wallet',
     items: [
-      { id: 'store-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice', icon: 'Receipt' },
-      { id: 'store-billing-plans', labelAr: 'اختر باقة', labelEn: 'Choose Plan', icon: 'Package' },
-      { id: 'store-billing-addons', labelAr: 'الميزات الإضافية', labelEn: 'Add-ons', icon: 'Sparkles' },
-      { id: 'store-billing-pay', labelAr: 'الدفع والتسديد', labelEn: 'Payment', icon: 'CreditCard' },
-      { id: 'store-billing-history', labelAr: 'سجل الفواتير', labelEn: 'Invoice History', icon: 'FileText' },
+      { id: 'store-billing', labelAr: 'فاتورتي الحالية', labelEn: 'Current Invoice', icon: 'Receipt', path: '/seller/billing' },
+      { id: 'store-billing-plans', labelAr: 'اختر باقة', labelEn: 'Choose Plan', icon: 'Package', path: '/seller/billing/plans' },
+      { id: 'store-billing-addons', labelAr: 'الميزات الإضافية', labelEn: 'Add-ons', icon: 'Sparkles', path: '/seller/billing/addons' },
+      { id: 'store-billing-pay', labelAr: 'الدفع والتسديد', labelEn: 'Payment', icon: 'CreditCard', path: '/seller/billing/pay' },
+      { id: 'store-billing-history', labelAr: 'سجل الفواتير', labelEn: 'Invoice History', icon: 'FileText', path: '/seller/billing/history' },
     ]
   },
   {
@@ -67,7 +67,7 @@ const STORE_NAV_GROUPS: NavGroup[] = [
     labelEn: 'Settings',
     icon: 'Settings',
     items: [
-      { id: 'store-settings', labelAr: 'إعدادات المتجر', labelEn: 'Store Settings', icon: 'Settings' },
+      { id: 'store-settings', labelAr: 'إعدادات المتجر', labelEn: 'Store Settings', icon: 'Settings', path: '/seller/settings' },
     ]
   }
 ];
@@ -157,10 +157,10 @@ const SUPPLIER_NAV_GROUPS: NavGroup[] = [
     labelEn: 'Supplier',
     icon: 'Store',
     items: [
-      { id: 'supplier', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
-      { id: 'supplier-products', labelAr: 'المنتجات', labelEn: 'Products', icon: 'Boxes' },
-      { id: 'supplier-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 3 },
-      { id: 'supplier-inventory', labelAr: 'المخزون', labelEn: 'Inventory', icon: 'Layers' },
+      { id: 'supplier', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard', path: '/supplier' },
+      { id: 'supplier-products', labelAr: 'المنتجات', labelEn: 'Products', icon: 'Boxes', path: '/supplier/products' },
+      { id: 'supplier-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 3, path: '/supplier/orders' },
+      { id: 'supplier-inventory', labelAr: 'المخزون', labelEn: 'Inventory', icon: 'Layers', path: '/supplier/inventory' },
     ]
   }
 ];
@@ -172,11 +172,11 @@ const LOGISTICS_NAV_GROUPS: NavGroup[] = [
     labelEn: 'Logistics',
     icon: 'Truck',
     items: [
-      { id: 'logistics', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
-      { id: 'logistics-active', labelAr: 'الشحنات النشطة', labelEn: 'Active Shipments', icon: 'Navigation', badge: 7 },
-      { id: 'logistics-deliveries', labelAr: 'التوصيلات', labelEn: 'Deliveries', icon: 'MapPin' },
-      { id: 'logistics-history', labelAr: 'السجل', labelEn: 'History', icon: 'FileText' },
-      { id: 'logistics-earnings', labelAr: 'الأرباح', labelEn: 'Earnings', icon: 'Wallet' },
+      { id: 'logistics', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard', path: '/logistics' },
+      { id: 'logistics-active', labelAr: 'الشحنات النشطة', labelEn: 'Active Shipments', icon: 'Navigation', badge: 7, path: '/logistics/active' },
+      { id: 'logistics-deliveries', labelAr: 'التوصيلات', labelEn: 'Deliveries', icon: 'MapPin', path: '/logistics/deliveries' },
+      { id: 'logistics-history', labelAr: 'السجل', labelEn: 'History', icon: 'FileText', path: '/logistics/history' },
+      { id: 'logistics-earnings', labelAr: 'الأرباح', labelEn: 'Earnings', icon: 'Wallet', path: '/logistics/earnings' },
     ]
   }
 ];
@@ -188,12 +188,12 @@ const BUYER_NAV_GROUPS: NavGroup[] = [
     labelEn: 'Buyer',
     icon: 'UserCircle',
     items: [
-      { id: 'buyer', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard' },
-      { id: 'buyer-orders', labelAr: 'طلباتي', labelEn: 'My Orders', icon: 'Package', badge: 2 },
-      { id: 'buyer-wishlist', labelAr: 'المفضلة', labelEn: 'Wishlist', icon: 'Heart' },
-      { id: 'buyer-addresses', labelAr: 'العناوين', labelEn: 'Addresses', icon: 'MapPin' },
-      { id: 'buyer-wallet', labelAr: 'المحفظة', labelEn: 'Wallet', icon: 'Wallet' },
-      { id: 'buyer-reviews', labelAr: 'التقييمات', labelEn: 'Reviews', icon: 'Star' },
+      { id: 'buyer', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard', path: '/buyer' },
+      { id: 'buyer-orders', labelAr: 'طلباتي', labelEn: 'My Orders', icon: 'Package', badge: 2, path: '/buyer/orders' },
+      { id: 'buyer-wishlist', labelAr: 'المفضلة', labelEn: 'Wishlist', icon: 'Heart', path: '/buyer/wishlist' },
+      { id: 'buyer-addresses', labelAr: 'العناوين', labelEn: 'Addresses', icon: 'MapPin', path: '/buyer/addresses' },
+      { id: 'buyer-wallet', labelAr: 'المحفظة', labelEn: 'Wallet', icon: 'Wallet', path: '/buyer/wallet' },
+      { id: 'buyer-reviews', labelAr: 'التقييمات', labelEn: 'Reviews', icon: 'Star', path: '/buyer/reviews' },
     ]
   }
 ];
