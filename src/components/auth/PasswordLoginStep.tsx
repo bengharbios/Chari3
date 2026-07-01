@@ -27,6 +27,7 @@ export default function PasswordLoginStep() {
     setError,
     setLoading,
     captchaToken,
+    setCaptchaToken,
   } = useAuthFlowStore();
 
   const [password, setPassword] = useState('');
