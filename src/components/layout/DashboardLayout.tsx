@@ -27,7 +27,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   
   const isBuyerRoute = pathname?.startsWith('/buyer') || false;
   const isSellerRoute = pathname?.startsWith('/seller') || false;
-  const effectiveBuyerMode = isBuyerMode || isBuyerRoute;
+  // Instantly override persisted state based on current route to prevent UI flashes
+  const effectiveBuyerMode = isSellerRoute ? false : (isBuyerRoute ? true : isBuyerMode);
 
   // Sync zustand store if URL does not match state
   useEffect(() => {
