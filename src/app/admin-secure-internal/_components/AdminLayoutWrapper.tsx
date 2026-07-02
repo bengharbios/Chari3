@@ -57,6 +57,8 @@ function AdminBreadcrumb() {
       'cms': 'admin.storefrontCMS',
       'advertisements': 'admin.manageAdvertisements',
       'flags': 'admin.featureFlags',
+      'users': 'admin.userAccounts',
+      'roles': 'security.roles',
     };
 
     const translationKey = keyMap[key];

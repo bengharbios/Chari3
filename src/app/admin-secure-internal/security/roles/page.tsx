@@ -1,21 +1,21 @@
-import React from 'react';
+'use client';
+
+import React, { Suspense } from 'react';
 import RolesManagement from '@/components/admin/security/RolesManagement';
-import { Metadata } from 'next';
-import { getTranslations } from 'next-intl/server';
-import { cookies } from 'next/headers';
+import { useTranslation } from '@/lib/i18n/useTranslation';
+import { Loader2 } from 'lucide-react';
 
-export const metadata: Metadata = {
-  title: 'Roles & Permissions | ChariDay Admin',
-  description: 'Manage dynamic roles and permissions across the platform.',
-};
-
-export default async function RolesPage() {
-  const cookieStore = await cookies();
-  const locale = cookieStore.get('NEXT_LOCALE')?.value || 'ar';
+export default function RolesPage() {
+  const { locale } = useTranslation();
   
   return (
-    <div className="container mx-auto p-4 md:p-6 lg:p-8">
+    <Suspense fallback={
+      <div className="h-[60vh] w-full flex flex-col items-center justify-center gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-brand" />
+        <p className="text-sm text-muted-foreground font-bold">جاري التحميل...</p>
+      </div>
+    }>
       <RolesManagement locale={locale} />
-    </div>
+    </Suspense>
   );
 }

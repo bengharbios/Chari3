@@ -836,9 +836,17 @@ export default function AdminDashboard() {
             title={t(locale, 'إدارة حسابات المستخدمين', 'User Accounts Directory')}
             description={t(locale, 'البحث وتعديل خصائص الأعضاء، البائعين والمندوبين وحظر أو توثيق الحسابات', 'Directory of members, sellers, and couriers; verify, suspend or modify statuses instantly')}
             actions={
-              <Button variant="outline" size="sm" onClick={() => router.push(getAdminPath(''))} className="font-bold">
-                {t(locale, 'العودة للوحة التحكم', 'Back to Overview')}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Link href={getAdminPath('users')}>
+                  <Button size="sm" className="gap-2 font-bold bg-brand hover:bg-brand/90 text-brand-foreground">
+                    <Users className="h-4 w-4" />
+                    {t(locale, 'الإدارة المتقدمة للمستخدمين', 'Advanced User Management')}
+                  </Button>
+                </Link>
+                <Button variant="outline" size="sm" onClick={() => router.push(getAdminPath(''))} className="font-bold">
+                  {t(locale, 'العودة للوحة التحكم', 'Back to Overview')}
+                </Button>
+              </div>
             }
           />
           <Card className="card-surface">

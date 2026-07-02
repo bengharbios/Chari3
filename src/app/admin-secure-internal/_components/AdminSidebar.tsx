@@ -69,6 +69,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
       title: t('admin.accounts'),
       icon: Users,
       items: [
+        { label: locale === 'ar' ? 'إدارة المستخدمين (متقدم)' : 'User Management (Advanced)', path: 'users' },
         { label: t('admin.userAccounts'), path: '?tab=users' },
         { label: t('admin.storesSellers'), path: '?tab=stores-sellers' },
         { label: locale === 'ar' ? 'توثيق المتاجر (KYC/KYB)' : 'KYC/KYB Verification', path: 'verifications' },
@@ -104,6 +105,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
       title: t('security.section_title', 'Security & Access'),
       icon: ShieldAlert,
       items: [
+        { label: locale === 'ar' ? 'الأدوار والصلاحيات' : 'Roles & Permissions', path: 'security/roles' },
         { label: t('security.auth_logs', 'Auth Logs'), path: 'security/auth-logs' },
         { label: t('security.ban_list', 'Ban List'), path: 'security/bans' },
         { label: locale === 'ar' ? 'إعدادات التوثيق والدخول' : 'Auth & OTP', path: 'settings/otp' },
