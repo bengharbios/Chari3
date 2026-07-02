@@ -53,6 +53,7 @@ export async function GET(request: Request) {
         isSystem: true,
         sortOrder: true,
         isActive: true,
+        targetEntity: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -113,6 +114,7 @@ export async function POST(request: Request) {
       icon,
       permissions,
       sortOrder,
+      targetEntity,
     } = body;
 
     // ---- Validation ----
@@ -178,6 +180,7 @@ export async function POST(request: Request) {
         icon: icon || 'UserCircle',
         permissions: JSON.stringify(validatedPermissions),
         isSystem: false,
+        targetEntity: targetEntity || 'SELLER',
         sortOrder: typeof sortOrder === 'number' ? sortOrder : 100,
         isActive: true,
       },
@@ -197,6 +200,7 @@ export async function POST(request: Request) {
           nameEn,
           permissionsCount: validatedPermissions.length,
           isSystem: false,
+          targetEntity: targetEntity || 'SELLER',
         }),
       },
     });

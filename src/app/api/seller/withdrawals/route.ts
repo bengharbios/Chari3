@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     const recentSensitiveChange = await db.auditLog.findFirst({
       where: {
         userId: seller.userId,
-        action: { in: ['email_changed', 'phone_changed'] },
+        action: { in: ['email_changed', 'phone_changed', 'rib_changed'] },
         createdAt: { gte: new Date(Date.now() - holdHours * 60 * 60 * 1000) }
       }
     });
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     if (recentSensitiveChange) {
       return NextResponse.json({
         success: false,
-        error: `تم قفل عمليات سحب الأموال مؤقتاً لمدة ${holdHours} ساعة لدواعي أمنية بسبب تعديل البريد الإلكتروني أو رقم الهاتف للحساب مؤخراً.`,
+        error: `تم قفل عمليات سحب الأموال مؤقتاً لمدة ${holdHours} ساعة لدواعي أمنية بسبب تعديل البريد الإلكتروني، رقم الهاتف، أو الحساب البنكي (RIB) مؤخراً.`,
         holdHours
       }, { status: 400 });
     }

@@ -139,6 +139,8 @@ model SellerProfile {
   totalEarnings       Float     @default(0)
   commissionPaid      Float     @default(0)
   completionRate      Float     @default(100) // %
+  cancellationRate    Float     @default(0)   // % (To track COD leakage)
+  returnRate          Float     @default(0)   // % (To track COD leakage)
   responseRate        Float     @default(100) // %
   avgResponseHours    Float     @default(24)
   challengePoints     Int       @default(0)
@@ -986,6 +988,7 @@ model Role {
   icon        String   @default("UserCircle") // Lucide icon name
   permissions String   @default("[]") // JSON array of permission keys
   isSystem    Boolean  @default(false) // System roles cannot be deleted
+  targetEntity String  @default("SELLER") // SELLER, SUPPLIER, LOGISTICS, ADMIN
   sortOrder   Int      @default(0)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())

@@ -103,6 +103,36 @@ export async function POST(req: Request) {
       if (dataToSave.vatCertificateFile && existing.vatCertificateFile) {
         await deleteOldFile(existing.vatCertificateFile, dataToSave.vatCertificateFile);
       }
+      
+      // Detect RIB/Bank Details Changes
+      const ribChanged = 
+        (dataToSave.ccpNumber && dataToSave.ccpNumber !== existing.ccpNumber) ||
+        (dataToSave.ccpCle && dataToSave.ccpCle !== existing.ccpCle) ||
+        (dataToSave.iban && dataToSave.iban !== existing.iban);
+
+      if (ribChanged) {
+        // Force re-verification
+        dataToSave.verificationStatus = 'pending';
+        // Log the change to trigger 24h/48h withdrawal freeze
+        await db.auditLog.create({
+          data: {
+            userId,
+            action: 'rib_changed',
+            details: JSON.stringify({
+              old: {
+                ccpNumber: existing.ccpNumber,
+                ccpCle: existing.ccpCle,
+                iban: existing.iban
+              },
+              new: {
+                ccpNumber: dataToSave.ccpNumber,
+                ccpCle: dataToSave.ccpCle,
+                iban: dataToSave.iban
+              }
+            })
+          }
+        });
+      }
     }
 
     const updated = await db.storeVerification.upsert({
