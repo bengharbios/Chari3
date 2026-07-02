@@ -333,7 +333,7 @@ export default function AdminDashboard() {
     );
   }
 
-  const { analytics, stats, users, stores = [], sellers = [] } = dashboardData;
+  const { analytics, stats, users, stores = [], sellers = [], storeStaff = [] } = dashboardData;
   const {
     totalRevenue,
     totalOrders,
@@ -993,6 +993,13 @@ export default function AdminDashboard() {
                       {sellers.length}
                     </Badge>
                   </TabsTrigger>
+                  <TabsTrigger value="staff-sub" className="gap-1.5 font-bold">
+                    <Users className="h-3.5 w-3.5" />
+                    {t(locale, 'فريق العمل (الموظفين)', 'Store Staff (Employees)')}
+                    <Badge variant="secondary" className="ms-1.5 bg-brand/10 text-brand">
+                      {storeStaff.length}
+                    </Badge>
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="stores-sub">
@@ -1142,6 +1149,69 @@ export default function AdminDashboard() {
                     {sellers.length === 0 && (
                       <div className="col-span-full py-12 text-center text-muted-foreground font-semibold">
                         {t(locale, 'لا يوجد تجار مستقلين مسجلين.', 'No independent sellers registered.')}
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="staff-sub">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {storeStaff.map((staff: any) => (
+                      <div key={staff.id} className="flex flex-col gap-3 p-4 rounded-xl border bg-surface/50 hover:bg-surface transition-all duration-300">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-10 w-10 shrink-0 border">
+                              <AvatarFallback className="text-sm font-bold bg-surface text-brand">
+                                {staff.user?.name?.charAt(0) || '?'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-black text-foreground truncate">
+                                {locale === 'ar' ? staff.user?.name : (staff.user?.nameEn || staff.user?.name)}
+                              </span>
+                              <span className="text-[11px] text-muted-foreground font-mono">{staff.user?.email}</span>
+                            </div>
+                          </div>
+                          
+                          <Button
+                            size="icon"
+                            variant="outline"
+                            className={`h-7 w-7 rounded-lg border-2 ${
+                              staff.user?.isActive
+                                ? 'hover:bg-red-500/10 border-red-500/20'
+                                : 'hover:bg-green-500/10 border-green-500/20'
+                            }`}
+                            onClick={() => handleUserToggleActive(staff.user?.id, staff.user?.isActive)}
+                            title={staff.user?.isActive ? t(locale, 'تعليق الحساب', 'Suspend Account') : t(locale, 'تفعيل الحساب', 'Activate Account')}
+                          >
+                            {staff.user?.isActive ? (
+                              <UserX className="h-3.5 w-3.5 text-red-500" />
+                            ) : (
+                              <UserCheck className="h-3.5 w-3.5 text-green-500" />
+                            )}
+                          </Button>
+                        </div>
+                        
+                        <div className="flex flex-col gap-1.5 mt-2 p-2 bg-background rounded-lg border text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">{t(locale, 'المتجر التابع له:', 'Assigned Store:')}</span>
+                            <span className="font-bold flex items-center gap-1 text-brand">
+                              <StoreIcon className="h-3 w-3" />
+                              {locale === 'ar' ? staff.store?.name : (staff.store?.nameEn || staff.store?.name)}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-muted-foreground">{t(locale, 'الدور الوظيفي:', 'Assigned Role:')}</span>
+                            <span className="font-bold">
+                              {staff.user?.role || 'staff'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {storeStaff.length === 0 && (
+                      <div className="col-span-full py-12 text-center text-muted-foreground font-semibold">
+                        {t(locale, 'لا يوجد موظفين مسجلين ضمن المتاجر حالياً.', 'No staff members registered in stores currently.')}
                       </div>
                     )}
                   </div>

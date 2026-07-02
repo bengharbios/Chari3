@@ -1,16 +1,16 @@
 'use client';
 import React from 'react';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppStore } from '@/lib/store';
 import { PageHeader } from '@/components/shared/StatsCard';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
-  Shield, UserPlus, Users, Key, Lock, Unlock, Mail, Phone, Calendar, MoreHorizontal, Circle, Activity, AlertCircle, Trash2, CheckCircle2, X
+  Shield, UserPlus, Users, Key, Lock, Unlock, Mail, Phone, Calendar, MoreHorizontal, Circle, Activity, AlertCircle, Trash2, CheckCircle2, X, Loader2
 } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
@@ -37,24 +37,18 @@ const FADE_UP = {
 };
 
 interface StaffMember {
-  id: string;
+  id: string; // The StoreStaff.id or User.id
+  userId?: string; // We'll keep the actual User ID here for referencing
   name: string;
   email: string;
   phone: string;
-  role: 'admin' | 'editor' | 'support' | 'viewer';
+  role: string; // 'admin', 'editor', 'support', 'viewer'
   roleAr: string;
   isOnline: boolean;
   joined: string;
   avatar: string;
   isSuspended?: boolean;
 }
-
-const INITIAL_STAFF: StaffMember[] = [
-  { id: '1', name: 'محمد الصالح', email: 'mohammed@store.com', phone: '+213 555 1234', role: 'admin', roleAr: 'مدير المتجر', isOnline: true, joined: '2025-01-15', avatar: 'https://i.pravatar.cc/150?u=1', isSuspended: false },
-  { id: '2', name: 'فاطمة الزهراء', email: 'fatima@store.com', phone: '+213 666 5678', role: 'editor', roleAr: 'إدارة المحتوى', isOnline: true, joined: '2025-03-22', avatar: 'https://i.pravatar.cc/150?u=2', isSuspended: false },
-  { id: '3', name: 'ياسين بوعلام', email: 'yassine@store.com', phone: '+213 777 9012', role: 'support', roleAr: 'دعم العملاء', isOnline: false, joined: '2025-05-10', avatar: 'https://i.pravatar.cc/150?u=3', isSuspended: false },
-  { id: '4', name: 'خديجة نور', email: 'khadija@store.com', phone: '+213 555 3456', role: 'viewer', roleAr: 'متابعة أداء', isOnline: false, joined: '2026-01-05', avatar: 'https://i.pravatar.cc/150?u=4', isSuspended: false },
-];
 
 export default function StoreStaffPage() {
   const { locale } = useAppStore();
@@ -63,7 +57,10 @@ export default function StoreStaffPage() {
   const isAr = locale === 'ar';
 
   // Stateful list of staff
-  const [staffList, setStaffList] = useState<StaffMember[]>(INITIAL_STAFF);
+  const [staffList, setStaffList] = useState<StaffMember[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [maxTeamMembers, setMaxTeamMembers] = useState(1);
+  const [currentTeamSize, setCurrentTeamSize] = useState(0);
 
   // Stateful activity logs
   const [activities, setActivities] = useState([
@@ -110,6 +107,40 @@ export default function StoreStaffPage() {
     }
   };
 
+  useEffect(() => {
+    if (user?.id) fetchStaff();
+  }, [user]);
+
+  const fetchStaff = async () => {
+    try {
+      setIsLoading(true);
+      const res = await fetch(`/api/seller/staff?userId=${user?.id}`);
+      const data = await res.json();
+      if (data.success) {
+        setMaxTeamMembers(data.maxTeamMembers || 1);
+        setCurrentTeamSize(data.currentTeamSize || 0);
+        setStaffList(data.staff.map((s: any) => ({
+          id: s.id,
+          userId: s.user.id,
+          name: locale === 'ar' ? s.user.name : (s.user.nameEn || s.user.name),
+          email: s.user.email,
+          phone: s.user.phone || '-',
+          role: s.role || s.user.role,
+          roleAr: getRoleAr(s.role || s.user.role),
+          isOnline: false,
+          joined: new Date(s.joinedAt).toISOString().split('T')[0],
+          avatar: s.user.avatar || `https://i.pravatar.cc/150?u=${s.user.id}`,
+          isSuspended: s.user.isActive === false,
+        })));
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(t('حدث خطأ أثناء جلب قائمة الموظفين', 'Failed to fetch staff list'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const addActivity = (actorName: string, actionAr: string, actionEn: string, item: string) => {
     setActivities(prev => [
       {
@@ -131,37 +162,47 @@ export default function StoreStaffPage() {
     }
   };
 
-  const handleInviteSubmit = (e: React.FormEvent) => {
+  const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteName || !inviteEmail || !invitePhone) {
+    if (!inviteName || !inviteEmail) {
       toast.error(t('يرجى ملء جميع الحقول المطلوبة', 'Please fill in all required fields'));
       return;
     }
 
-    const newStaff: StaffMember = {
-      id: String(Date.now()),
-      name: inviteName,
-      email: inviteEmail,
-      phone: invitePhone,
-      role: inviteRole,
-      roleAr: getRoleAr(inviteRole),
-      isOnline: false,
-      joined: new Date().toISOString().split('T')[0],
-      avatar: `https://i.pravatar.cc/150?u=${Date.now()}`,
-      isSuspended: false,
-    };
+    try {
+      const res = await fetch('/api/seller/staff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id,
+          name: inviteName,
+          email: inviteEmail,
+          phone: invitePhone,
+          role: inviteRole,
+        }),
+      });
 
-    setStaffList(prev => [...prev, newStaff]);
-    addActivity(user?.name || t('المدير', 'Manager'), `قام بدعوة الموظف الجديد (${inviteName})`, `invited new staff member (${inviteName})`, `[${getRoleAr(inviteRole)}]`);
-    
-    toast.success(t('✉️ تم إرسال رابط دعوة الموظف الجديد وإضافته بنجاح!', '✉️ Staff invitation link sent and member added successfully!'));
-    
-    // Reset Form
-    setInviteName('');
-    setInviteEmail('');
-    setInvitePhone('');
-    setInviteRole('editor');
-    setIsInviteOpen(false);
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success(t('✉️ تم إضافة الموظف الجديد بنجاح!', '✉️ Staff member added successfully!'));
+        addActivity(user?.name || t('المدير', 'Manager'), `قام بدعوة الموظف الجديد (${inviteName})`, `invited new staff member (${inviteName})`, `[${getRoleAr(inviteRole)}]`);
+        
+        // Refresh data
+        fetchStaff();
+
+        // Reset Form
+        setInviteName('');
+        setInviteEmail('');
+        setInvitePhone('');
+        setInviteRole('editor');
+        setIsInviteOpen(false);
+      } else {
+        toast.error(data.error || t('فشل في إضافة الموظف', 'Failed to add staff'));
+      }
+    } catch (err) {
+      toast.error(t('حدث خطأ في الاتصال بالخادم', 'Server connection error'));
+    }
   };
 
   const handleOpenEditRole = (staff: StaffMember) => {
@@ -172,26 +213,45 @@ export default function StoreStaffPage() {
     }
   };
 
-  const handleEditRoleSubmit = (e: React.FormEvent) => {
+  const handleEditRoleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedStaff) return;
 
-    setStaffList(prev => prev.map(s => 
-      s.id === selectedStaff.id 
-        ? { ...s, role: selectedRole, roleAr: getRoleAr(selectedRole) } 
-        : s
-    ));
+    try {
+      const res = await fetch('/api/seller/staff', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user?.id,
+          staffUserId: selectedStaff.userId,
+          newRole: selectedRole,
+        }),
+      });
 
-    addActivity(
-      user?.name || t('المدير', 'Manager'), 
-      `قام بتغيير صلاحيات الموظف (${selectedStaff.name}) إلى`, 
-      `changed role of staff (${selectedStaff.name}) to`, 
-      getRoleAr(selectedRole)
-    );
+      const data = await res.json();
+      if (data.success) {
+        setStaffList(prev => prev.map(s => 
+          s.id === selectedStaff.id 
+            ? { ...s, role: selectedRole, roleAr: getRoleAr(selectedRole) } 
+            : s
+        ));
+        
+        addActivity(
+          user?.name || t('المدير', 'Manager'), 
+          `قام بتغيير صلاحيات الموظف (${selectedStaff.name}) إلى`, 
+          `changed role of staff (${selectedStaff.name}) to`, 
+          getRoleAr(selectedRole)
+        );
 
-    toast.success(t('✅ تم تحديث صلاحيات الموظف بنجاح!', '✅ Staff role updated successfully!'));
-    setIsEditRoleOpen(false);
-    setSelectedStaff(null);
+        toast.success(t('✅ تم تحديث صلاحيات الموظف بنجاح!', '✅ Staff role updated successfully!'));
+        setIsEditRoleOpen(false);
+        setSelectedStaff(null);
+      } else {
+        toast.error(data.error || t('فشل التحديث', 'Update failed'));
+      }
+    } catch (err) {
+      toast.error(t('خطأ في الاتصال بالخادم', 'Server error'));
+    }
   };
 
   const handleResetPassword = (staff: StaffMember) => {
@@ -211,44 +271,77 @@ export default function StoreStaffPage() {
     }
   };
 
-  const handleToggleSuspend = (staff: StaffMember) => {
+  const handleToggleSuspend = async (staff: StaffMember) => {
     const isCurrentlySuspended = staff.isSuspended;
     const actionLabel = isCurrentlySuspended ? t('تنشيط الحساب', 'Activate Account') : t('حظر الحساب', 'Suspend Account');
     
     if (checkPermission(actionLabel)) {
-      setStaffList(prev => prev.map(s => 
-        s.id === staff.id 
-          ? { ...s, isSuspended: !isCurrentlySuspended } 
-          : s
-      ));
+      try {
+        const res = await fetch('/api/seller/staff', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: user?.id,
+            staffUserId: staff.userId,
+            suspendAction: !isCurrentlySuspended, // pass true to suspend, false to activate
+          }),
+        });
 
-      addActivity(
-        user?.name || t('المدير', 'Manager'),
-        isCurrentlySuspended ? `قام بتنشيط حساب الموظف` : `قام بحظر حساب الموظف`,
-        isCurrentlySuspended ? `activated account of staff` : `suspended account of staff`,
-        staff.name
-      );
+        const data = await res.json();
+        if (data.success) {
+          setStaffList(prev => prev.map(s => 
+            s.id === staff.id 
+              ? { ...s, isSuspended: !isCurrentlySuspended } 
+              : s
+          ));
 
-      toast.success(
-        isCurrentlySuspended
-          ? t(`✅ تم تنشيط حساب الموظف (${staff.name}) بنجاح!`, `✅ Staff member (${staff.name}) account activated successfully!`)
-          : t(`🔒 تم حظر حساب الموظف (${staff.name}) بنجاح!`, `🔒 Staff member (${staff.name}) account suspended successfully!`)
-      );
+          addActivity(
+            user?.name || t('المدير', 'Manager'),
+            isCurrentlySuspended ? `قام بتنشيط حساب الموظف` : `قام بحظر حساب الموظف`,
+            isCurrentlySuspended ? `activated account of staff` : `suspended account of staff`,
+            staff.name
+          );
+
+          toast.success(
+            isCurrentlySuspended
+              ? t(`✅ تم تنشيط حساب الموظف (${staff.name}) بنجاح!`, `✅ Staff member (${staff.name}) account activated successfully!`)
+              : t(`🔒 تم حظر حساب الموظف (${staff.name}) بنجاح!`, `🔒 Staff member (${staff.name}) account suspended successfully!`)
+          );
+        } else {
+          toast.error(data.error || t('حدث خطأ', 'An error occurred'));
+        }
+      } catch (err) {
+        toast.error(t('خطأ في الخادم', 'Server error'));
+      }
     }
   };
 
-  const handleDeleteStaff = (staff: StaffMember) => {
-    if (checkPermission(t('حذف الحساب', 'Delete Account'))) {
-      setStaffList(prev => prev.filter(s => s.id !== staff.id));
-      
-      addActivity(
-        user?.name || t('المدير', 'Manager'),
-        `قام بإزالة الموظف من فريق العمل`,
-        `removed staff member`,
-        staff.name
-      );
+  const handleDeleteStaff = async (staff: StaffMember) => {
+    if (checkPermission(t('حذف الحساب', 'Delete Account')) && window.confirm(t('هل أنت متأكد من حذف هذا الموظف؟', 'Are you sure you want to delete this staff member?'))) {
+      try {
+        const res = await fetch(`/api/seller/staff?userId=${user?.id}&staffUserId=${staff.userId}`, {
+          method: 'DELETE',
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          setStaffList(prev => prev.filter(s => s.id !== staff.id));
+          setCurrentTeamSize(prev => prev - 1);
+          
+          addActivity(
+            user?.name || t('المدير', 'Manager'),
+            `قام بإزالة الموظف من فريق العمل`,
+            `removed staff member`,
+            staff.name
+          );
 
-      toast.success(t(`🗑️ تم حذف الموظف (${staff.name}) من قائمة الفريق بنجاح!`, `🗑️ Staff member (${staff.name}) removed from team successfully!`));
+          toast.success(t(`🗑️ تم حذف الموظف (${staff.name}) من قائمة الفريق بنجاح!`, `🗑️ Staff member (${staff.name}) removed from team successfully!`));
+        } else {
+          toast.error(data.error || t('فشل الحذف', 'Failed to delete'));
+        }
+      } catch (err) {
+        toast.error(t('خطأ خادم', 'Server error'));
+      }
     }
   };
 
@@ -275,13 +368,26 @@ export default function StoreStaffPage() {
           title={t('فريق العمل والصلاحيات', 'Staff & Permissions')}
           description={t('إدارة حسابات موظفي المتجر، التحكم بمستويات الوصول، وسجل النشاط.', 'Manage store staff accounts, access levels, and activity logs.')}
         />
-        <Button 
-          onClick={handleOpenInvite}
-          className="rounded-xl font-bold bg-gradient-to-r from-primary to-primary/80 shadow-lg shadow-primary/20 hover:scale-105 transition-all"
-        >
-          <UserPlus className="h-4 w-4 me-2" />
-          {t('دعوة موظف جديد', 'Invite Staff Member')}
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col text-end">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('استهلاك الباقة', 'Plan Usage')}</span>
+            <span className={`text-sm font-black ${currentTeamSize >= maxTeamMembers ? 'text-red-500' : 'text-foreground'}`}>
+              {currentTeamSize} / {maxTeamMembers} {t('موظف', 'Staff')}
+            </span>
+          </div>
+          <Button 
+            onClick={handleOpenInvite}
+            disabled={currentTeamSize >= maxTeamMembers}
+            className={`rounded-xl font-bold shadow-lg transition-all ${
+              currentTeamSize >= maxTeamMembers
+                ? 'bg-muted text-muted-foreground cursor-not-allowed shadow-none' 
+                : 'bg-gradient-to-r from-primary to-primary/80 shadow-primary/20 hover:scale-105'
+            }`}
+          >
+            <UserPlus className="h-4 w-4 me-2" />
+            {currentTeamSize >= maxTeamMembers ? t('تم تجاوز الحد', 'Limit Reached') : t('دعوة موظف جديد', 'Invite Staff Member')}
+          </Button>
+        </div>
       </motion.div>
 
       {/* Permission Warning Alert for Non-Managers */}
@@ -316,95 +422,102 @@ export default function StoreStaffPage() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y divide-border/30">
-                <AnimatePresence initial={false}>
-                  {staffList.map((staff, idx) => (
-                    <motion.div 
-                      key={staff.id} 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors ${staff.isSuspended ? 'bg-red-500/5 opacity-70' : ''}`}
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="relative">
-                          <Avatar className={`h-12 w-12 border-2 border-background shadow-sm ${staff.isSuspended ? 'grayscale' : ''}`}>
-                            <AvatarImage src={staff.avatar} />
-                            <AvatarFallback className="font-black bg-primary/10 text-primary">{staff.name[0]}</AvatarFallback>
-                          </Avatar>
-                          <span className={`absolute bottom-0 end-0 h-3 w-3 rounded-full border-2 border-background ${staff.isSuspended ? 'bg-red-500' : staff.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className={`font-bold text-sm ${staff.isSuspended ? 'line-through text-muted-foreground' : ''}`}>{staff.name}</h4>
-                            {staff.isSuspended && (
-                              <Badge className="bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] py-0 px-1.5 font-bold">
-                                {t('محظور', 'Suspended')}
-                              </Badge>
-                            )}
+                {isLoading ? (
+                  <div className="p-12 flex flex-col items-center justify-center text-muted-foreground gap-3">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="font-semibold">{t('جاري تحميل بيانات الموظفين...', 'Loading staff data...')}</span>
+                  </div>
+                ) : (
+                  <AnimatePresence initial={false}>
+                    {staffList.map((staff, idx) => (
+                      <motion.div 
+                        key={staff.id} 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/30 transition-colors ${staff.isSuspended ? 'bg-red-500/5 opacity-70' : ''}`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <Avatar className={`h-12 w-12 border-2 border-background shadow-sm ${staff.isSuspended ? 'grayscale' : ''}`}>
+                              <AvatarImage src={staff.avatar} />
+                              <AvatarFallback className="font-black bg-primary/10 text-primary">{staff.name[0]}</AvatarFallback>
+                            </Avatar>
+                            <span className={`absolute bottom-0 end-0 h-3 w-3 rounded-full border-2 border-background ${staff.isSuspended ? 'bg-red-500' : staff.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
                           </div>
-                          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
-                            <span className="flex items-center gap-1"><Mail className="h-3 w-3" /> {staff.email}</span>
-                            <span className="flex items-center gap-1"><Phone className="h-3 w-3" /> {staff.phone}</span>
-                            <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {staff.joined}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-4 sm:justify-end w-full sm:w-auto">
-                        <Badge variant="outline" className={`border font-bold ${getRoleStyle(staff.role)}`}>
-                          {isAr ? staff.roleAr : staff.role.charAt(0).toUpperCase() + staff.role.slice(1)}
-                        </Badge>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8 rounded-lg shrink-0 hover:bg-muted/80"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align={isAr ? "start" : "end"} className="w-52 rounded-xl border-white/10 bg-background/95 backdrop-blur-xl">
-                            <DropdownMenuItem 
-                              onClick={() => handleOpenEditRole(staff)}
-                              className="cursor-pointer font-semibold"
-                            >
-                              <Shield className="h-4 w-4 me-2 text-blue-500" /> {t('تعديل الصلاحيات', 'Edit Roles')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleResetPassword(staff)}
-                              className="cursor-pointer font-semibold"
-                            >
-                              <Key className="h-4 w-4 me-2 text-purple-500" /> {t('إعادة تعيين كلمة المرور', 'Reset Password')}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleToggleSuspend(staff)}
-                              className={`cursor-pointer font-semibold ${staff.isSuspended ? 'text-green-500' : 'text-amber-500'}`}
-                            >
-                              {staff.isSuspended ? (
-                                <>
-                                  <Unlock className="h-4 w-4 me-2 text-green-500" /> {t('تنشيط الحساب', 'Activate Account')}
-                                </>
-                              ) : (
-                                <>
-                                  <Lock className="h-4 w-4 me-2 text-amber-500" /> {t('حظر الحساب', 'Suspend Account')}
-                                </>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className={`font-bold text-sm ${staff.isSuspended ? 'line-through text-muted-foreground' : ''}`}>{staff.name}</h4>
+                              {staff.isSuspended && (
+                                <Badge className="bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] py-0 px-1.5 font-bold">
+                                  {t('محظور', 'Suspended')}
+                                </Badge>
                               )}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => handleDeleteStaff(staff)}
-                              className="cursor-pointer font-semibold text-red-500 focus:bg-red-500/10"
-                            >
-                              <Trash2 className="h-4 w-4 me-2" /> {t('حذف الموظف', 'Delete Staff')}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-                {staffList.length === 0 && (
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
+                              <span className="flex items-center gap-1"><Mail className="h-3 w-3" /> {staff.email}</span>
+                              <span className="flex items-center gap-1"><Phone className="h-3 w-3" /> {staff.phone}</span>
+                              <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {staff.joined}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4 sm:justify-end w-full sm:w-auto">
+                          <Badge variant="outline" className={`border font-bold ${getRoleStyle(staff.role)}`}>
+                            {isAr ? staff.roleAr : staff.role.charAt(0).toUpperCase() + staff.role.slice(1)}
+                          </Badge>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 rounded-lg shrink-0 hover:bg-muted/80"
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align={isAr ? "start" : "end"} className="w-52 rounded-xl border-white/10 bg-background/95 backdrop-blur-xl">
+                              <DropdownMenuItem 
+                                onClick={() => handleOpenEditRole(staff)}
+                                className="cursor-pointer font-semibold"
+                              >
+                                <Shield className="h-4 w-4 me-2 text-blue-500" /> {t('تعديل الصلاحيات', 'Edit Roles')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleResetPassword(staff)}
+                                className="cursor-pointer font-semibold"
+                              >
+                                <Key className="h-4 w-4 me-2 text-purple-500" /> {t('إعادة تعيين كلمة المرور', 'Reset Password')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleToggleSuspend(staff)}
+                                className={`cursor-pointer font-semibold ${staff.isSuspended ? 'text-green-500' : 'text-amber-500'}`}
+                              >
+                                {staff.isSuspended ? (
+                                  <>
+                                    <Unlock className="h-4 w-4 me-2 text-green-500" /> {t('تنشيط الحساب', 'Activate Account')}
+                                  </>
+                                ) : (
+                                  <>
+                                    <Lock className="h-4 w-4 me-2 text-amber-500" /> {t('حظر الحساب', 'Suspend Account')}
+                                  </>
+                                )}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteStaff(staff)}
+                                className="cursor-pointer font-semibold text-red-500 focus:bg-red-500/10"
+                              >
+                                <Trash2 className="h-4 w-4 me-2" /> {t('حذف الموظف', 'Delete Staff')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                )}
+                {!isLoading && staffList.length === 0 && (
                   <div className="p-8 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
                     <Users className="h-10 w-10 text-muted-foreground/40" />
                     <p className="font-semibold text-sm">{t('لا يوجد موظفين مسجلين حالياً', 'No registered staff members found')}</p>

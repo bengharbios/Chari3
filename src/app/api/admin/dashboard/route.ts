@@ -214,6 +214,15 @@ export async function GET() {
       },
     });
 
+    // 12. Fetch all store staff
+    const storeStaffList = await db.storeStaff.findMany({
+      orderBy: { joinedAt: 'desc' },
+      include: {
+        user: { select: { id: true, name: true, nameEn: true, email: true, isActive: true, role: true } },
+        store: { select: { name: true, nameEn: true } },
+      },
+    });
+
     return NextResponse.json({
       success: true,
       currency,
@@ -243,6 +252,7 @@ export async function GET() {
       users,
       stores: storesList,
       sellers: sellersList,
+      storeStaff: storeStaffList,
     });
   } catch (error: any) {
     console.error('[GET /api/admin/dashboard]', error);
