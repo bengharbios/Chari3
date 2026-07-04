@@ -111,6 +111,7 @@ model Store {
 model StoreStaff {
   id        String   @id @default(cuid())
   role      String   @default("staff")
+  status    String   @default("active") // active, pending, rejected
   joinedAt  DateTime @default(now())
 
   storeId   String

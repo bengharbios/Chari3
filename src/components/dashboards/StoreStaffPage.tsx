@@ -51,6 +51,7 @@ interface StaffMember {
   joined: string;
   avatar: string;
   isSuspended?: boolean;
+  status?: string;
 }
 
 export default function StoreStaffPage() {
@@ -168,8 +169,9 @@ export default function StoreStaffPage() {
           roleAr: getRoleAr(s.role || s.user.role),
           isOnline: false,
           joined: new Date(s.joinedAt).toISOString().split('T')[0],
-          avatar: s.user.avatar || `https://i.pravatar.cc/150?u=${s.user.id}`,
+          avatar: s.user.avatar || '',
           isSuspended: s.user.isActive === false,
+          status: s.status || 'active',
         })));
       }
     } catch (err) {
@@ -580,6 +582,11 @@ export default function StoreStaffPage() {
                               {staff.isSuspended && (
                                 <Badge className="bg-red-500/10 text-red-500 border border-red-500/20 text-[10px] py-0 px-1.5 font-bold">
                                   {t('محظور', 'Suspended')}
+                                </Badge>
+                              )}
+                              {staff.status === 'pending' && (
+                                <Badge className="bg-amber-500/10 text-amber-600 border border-amber-500/20 text-[10px] py-0 px-1.5 font-bold">
+                                  {t('دعوة معلقة', 'Pending Invitation')}
                                 </Badge>
                               )}
                             </div>
