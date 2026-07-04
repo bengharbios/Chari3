@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
+import { usePathname } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,8 +63,8 @@ export default function BillingPage() {
   const { user } = useAuthStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const isRTL = locale === 'ar';
-  const { currentPage, setCurrentPage } = useAppStore();
-  const activeTab = currentPage.includes('plans') ? 'plans' : currentPage.includes('addons') ? 'addons' : currentPage.includes('pay') ? 'pay' : currentPage.includes('history') ? 'history' : 'invoice';
+  const pathname = usePathname();
+  const activeTab = pathname.includes('/plans') ? 'plans' : pathname.includes('/addons') ? 'addons' : pathname.includes('/pay') ? 'pay' : pathname.includes('/history') ? 'history' : 'invoice';
 
   // ─── State ────────────────────────────────────────────────────────────────
   const [isLoading, setIsLoading]         = useState(true);

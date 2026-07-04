@@ -21,6 +21,8 @@ const rolePages: Record<string, PageType> = {
   admin: 'admin',
   store_manager: 'store',
   seller: 'seller',
+  store: 'seller',
+  freelancer: 'seller',
   supplier: 'seller',
   logistics: 'logistics',
   buyer: 'buyer',

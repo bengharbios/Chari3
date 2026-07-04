@@ -296,8 +296,8 @@ export default function SellerDashboard() {
   // Store suspension check
   const isSuspended = data?.storeStatus?.isSuspended === true;
 
-  // Bypass SellerDashboard loading state and double-fetching for store managers on the overview page
-  if (user?.role === 'store_manager' && (pathname === '/seller/dashboard' || pathname === '/seller')) {
+  // Bypass SellerDashboard loading state and double-fetching for store managers and sellers on the overview page
+  if ((user?.role === 'store_manager' || user?.role === 'store' || user?.role === 'freelancer' || user?.role === 'seller') && (pathname === '/seller/dashboard' || pathname === '/seller')) {
     return <StoreDashboard />;
   }
 
@@ -382,8 +382,8 @@ export default function SellerDashboard() {
     </div>
   );
 
-  // If user is a store_manager and we reach here (meaning they are on the overview page)
-  if (user?.role === 'store_manager') {
+  // If user is a store_manager or store/seller and we reach here (meaning they are on the overview page)
+  if (user?.role === 'store_manager' || user?.role === 'store' || user?.role === 'freelancer' || user?.role === 'seller') {
     return <StoreDashboard />;
   }
 
