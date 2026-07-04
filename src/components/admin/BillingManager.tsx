@@ -625,10 +625,20 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
                         : 'border-border hover:border-brand/40 hover:bg-muted/20'
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <h4 className="font-bold text-sm" style={{ color: pkg.color }}>
-                        {locale === 'ar' ? pkg.name : (pkg.nameEn || pkg.name)}
-                      </h4>
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-bold text-sm" style={{ color: pkg.color }}>
+                          {locale === 'ar' ? pkg.name : (pkg.nameEn || pkg.name)}
+                        </h4>
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 border-white/10 bg-white/5 text-muted-foreground font-bold">
+                          {pkg.targetRole === 'INDIVIDUAL' 
+                            ? t(locale, 'مستقل', 'Freelancer') 
+                            : pkg.targetRole === 'BUSINESS' 
+                            ? t(locale, 'متجر', 'Store') 
+                            : t(locale, 'الجميع', 'All')
+                          }
+                        </Badge>
+                      </div>
                       <Badge className="text-[10px] font-bold shrink-0">{fmt(pkg.price)}</Badge>
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">
@@ -671,6 +681,20 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
                           className="h-9 rounded-xl"
                         />
                       </div>
+                    </div>
+
+                    {/* Target Audience / Role */}
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold">{t(locale, 'الفئة المستهدفة للباقة', 'Target Audience / Role')}</Label>
+                      <select
+                        value={editingPackage.targetRole || 'ALL'}
+                        onChange={e => setEditingPackage({ ...editingPackage, targetRole: e.target.value })}
+                        className="flex h-9 w-full rounded-xl border border-white/10 bg-background/50 px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        <option value="ALL" className="bg-popover text-popover-foreground">{t(locale, 'الجميع (تظهر لكافة الحسابات)', 'All Roles / General')}</option>
+                        <option value="INDIVIDUAL" className="bg-popover text-popover-foreground">{t(locale, 'التجار المستقلين فقط (Freelancer)', 'Freelancers / Individuals only')}</option>
+                        <option value="BUSINESS" className="bg-popover text-popover-foreground">{t(locale, 'المتاجر والشركات فقط (Business)', 'Business / Stores only')}</option>
+                      </select>
                     </div>
 
                     {/* Pricing & Commission */}

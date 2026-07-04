@@ -55,6 +55,7 @@ model User {
   chatRoomsAsBuyer   ChatRoom[]       @relation("ChatRoomBuyer")
   chatRoomsAsSeller  ChatRoom[]       @relation("ChatRoomSeller")
   sentMessages       ChatMessage[]    @relation("MessageSender")
+  suspensionAppeals  SuspensionAppeal[]
 
   // Better Auth Relations
   sessions           Session[]
@@ -226,6 +227,7 @@ model SellerPackage {
   icon                  String   @default("Package")
   isActive              Boolean  @default(true)
   sortOrder             Int      @default(0)
+  targetRole            String   @default("ALL") // ALL, INDIVIDUAL, BUSINESS
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
@@ -1480,4 +1482,29 @@ model ChatMessage {
 
   @@index([roomId])
   @@index([senderId])
+}
+
+model SuspensionAppeal {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  reason        String   @db.Text
+  documentUrl   String?
+  status        String   @default("pending") // pending, approved, rejected
+  adminNote     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model PendingCriticalAction {
+  id            String   @id @default(cuid())
+  actionType    String   // e.g. "CHANGE_DEBT_LIMIT", "CREATE_ADMIN"
+  payload       String   @db.LongText // JSON string
+  createdBy     String
+  approvedBy    String?
+  status        String   @default("pending") // pending, approved, rejected
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }

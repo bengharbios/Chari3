@@ -25,6 +25,11 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
       include: {
         package: true,
+        user: {
+          select: {
+            sellerProfile: { select: { merchantType: true } },
+          },
+        },
       },
     });
 
@@ -67,6 +72,7 @@ export async function GET(req: NextRequest) {
       package: subscription.package,
       daysRemaining,
       invoices,
+      merchantType: subscription.user?.sellerProfile?.merchantType || 'individual',
     });
   } catch (err) {
     console.error('[billing/subscription GET]', err);

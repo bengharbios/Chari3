@@ -70,6 +70,7 @@ export default function BillingPage() {
   const [isLoading, setIsLoading]         = useState(true);
   const [subscription, setSubscription]   = useState<any>(null);
   const [packages, setPackages]           = useState<any[]>([]);
+  const [merchantType, setMerchantType]   = useState<string>('individual');
   const [invoices, setInvoices]           = useState<any[]>([]);
   const [receipts, setReceipts]           = useState<any[]>([]);
   const [settings, setSettings]           = useState<Record<string, string>>({});
@@ -101,6 +102,13 @@ export default function BillingPage() {
   const [cardAmt, setCardAmt]     = useState('');
   const [isCardPay, setIsCardPay] = useState(false);
 
+  // Suspension Appeal
+  const [showAppealForm, setShowAppealForm]   = useState(false);
+  const [appealReason, setAppealReason]       = useState('');
+  const [appealDocUrl, setAppealDocUrl]       = useState('');
+  const [isSubmittingAppeal, setIsSubmittingAppeal] = useState(false);
+  const [existingAppeal, setExistingAppeal]   = useState<any>(null);
+
   // ─── Currency ─────────────────────────────────────────────────────────────
   const currencyCode = wallet?.currency || 'DZD';
   const fmt = (n: number) => {
@@ -122,6 +130,14 @@ export default function BillingPage() {
   };
 
   const selectedPackage = packages.find(p => p.id === selectedPackageId);
+  // Filter packages by targetRole based on merchant type
+  const visiblePackages = packages.filter(p => {
+    const role = p.targetRole || 'ALL';
+    if (role === 'ALL') return true;
+    if (role === 'INDIVIDUAL') return merchantType === 'individual';
+    if (role === 'BUSINESS') return merchantType === 'business';
+    return true;
+  });
   const isCurrent = subscription?.packageId === selectedPackageId && subscription?.status === 'ACTIVE';
   const isPendingPlan = subscription?.packageId === selectedPackageId && subscription?.status === 'PENDING_APPROVAL';
   const addonsTotal     = computeAddonsTotal(addonState);
@@ -155,6 +171,8 @@ export default function BillingPage() {
         const addons = typeof rawAddons === 'string' ? JSON.parse(rawAddons) : (rawAddons || {});
         setAddonState({ mobileApp: addons.mobileApp || false, whatsapp: addons.whatsapp || false, crm: addons.crm || false, pos: addons.pos || false, extraPos: addons.extraPos || 0 });
         setSelectedPackageId(subData.subscription.packageId || '');
+        // Store merchant type for package filtering
+        if (subData.merchantType) setMerchantType(subData.merchantType);
       }
       if (pkgData.success) setPackages(pkgData.packages || []);
       if (invData.success) setInvoices(invData.invoices || []);
@@ -175,6 +193,11 @@ export default function BillingPage() {
   useEffect(() => {
     if (user?.id) {
       fetchData();
+      // Fetch existing appeal if any
+      fetch(`/api/seller/appeal?userId=${user.id}`)
+        .then(r => r.json())
+        .then(d => { if (d.success && d.appeal) setExistingAppeal(d.appeal); })
+        .catch(() => {});
     }
   }, [user?.id]);
 
@@ -211,6 +234,36 @@ export default function BillingPage() {
     // Only calculate if we are selecting a new package or changing billing cycle/addons
     fetchUpgradeCalc();
   }, [selectedPackageId, billingCycle, addonState, user?.id]);
+
+  // ─── Submit Suspension Appeal ─────────────────────────────────────────────
+  const handleSubmitAppeal = async () => {
+    if (!appealReason.trim()) {
+      toast.error(t(locale, 'يرجى كتابة سبب الاستئناف', 'Please write the reason for your appeal'));
+      return;
+    }
+    setIsSubmittingAppeal(true);
+    try {
+      const res = await fetch('/api/seller/appeal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user?.id, reason: appealReason, documentUrl: appealDocUrl }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(t(locale, 'تم إرسال طلب الاستئناف بنجاح. سيراجعه فريقنا قريباً.', 'Appeal submitted! Our team will review it shortly.'));
+        setExistingAppeal(data.appeal);
+        setShowAppealForm(false);
+        setAppealReason('');
+        setAppealDocUrl('');
+      } else {
+        toast.error(locale === 'ar' ? (data.error || 'فشل إرسال الاستئناف') : (data.errorEn || data.error));
+      }
+    } catch (err: any) {
+      toast.error(err.message || t(locale, 'فشل إرسال الاستئناف', 'Failed to submit appeal'));
+    } finally {
+      setIsSubmittingAppeal(false);
+    }
+  };
 
   // ─── Subscribe / Upgrade ──────────────────────────────────────────────────
   const handleSubscribe = async () => {
@@ -376,18 +429,78 @@ export default function BillingPage() {
     );
 
     if (isSuspended) return (
-      <div className="rounded-2xl border-2 border-red-500/40 bg-red-500/5 p-5 flex flex-col sm:flex-row items-center gap-4">
-        <div className="p-3 rounded-xl bg-red-500/10"><ShieldAlert className="h-6 w-6 text-red-500" /></div>
-        <div className="flex-1 text-center sm:text-start">
-          <h3 className="font-bold text-base text-red-500">
-            {t(locale, '⛔ متجرك معلق حالياً', '⛔ Your store is currently suspended')} <span className="font-normal opacity-80 text-sm ml-1">{planInfo}</span>
-          </h3>
-          <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'يرجى تسديد الاشتراك المستحق لإعادة تفعيل متجرك فوراً', 'Please pay your outstanding subscription to reactivate your store')}</p>
+      <div className="space-y-4">
+        <div className="rounded-2xl border-2 border-red-500/40 bg-red-500/5 p-5 flex flex-col sm:flex-row items-center gap-4">
+          <div className="p-3 rounded-xl bg-red-500/10"><ShieldAlert className="h-6 w-6 text-red-500" /></div>
+          <div className="flex-1 text-center sm:text-start">
+            <h3 className="font-bold text-base text-red-500">
+              {t(locale, '⛔ حسابك معلق حالياً', '⛔ Your account is currently suspended')} <span className="font-normal opacity-80 text-sm ml-1">{planInfo}</span>
+            </h3>
+            <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'يرجى تسديد الاشتراك المستحق أو تقديم استئناف لإعادة تفعيل حسابك.', 'Please pay your outstanding subscription or submit an appeal to reactivate your account.')}</p>
+          </div>
+          <div className="flex gap-2 shrink-0 flex-wrap">
+            <Button size="sm" className="gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
+              <CreditCard className="h-4 w-4" />
+              {t(locale, 'ادفع الآن', 'Pay Now')}
+            </Button>
+            {!existingAppeal || existingAppeal.status === 'rejected' ? (
+              <Button size="sm" variant="outline" className="gap-2 rounded-xl border-red-500/40 text-red-500 font-bold" onClick={() => setShowAppealForm(v => !v)}>
+                <FileText className="h-4 w-4" />
+                {t(locale, 'تقديم استئناف', 'Submit Appeal')}
+              </Button>
+            ) : existingAppeal.status === 'pending' ? (
+              <div className="flex items-center gap-2 text-amber-500 text-sm font-bold">
+                <Clock className="h-4 w-4" />
+                {t(locale, 'الاستئناف قيد المراجعة', 'Appeal under review')}
+              </div>
+            ) : null}
+          </div>
         </div>
-        <Button size="sm" className="gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold shrink-0" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
-          <CreditCard className="h-4 w-4" />
-          {t(locale, 'ادفع الآن', 'Pay Now')}
-        </Button>
+
+        {/* Appeal Form */}
+        {showAppealForm && (
+          <div className="rounded-2xl border border-red-500/20 bg-card p-5 space-y-4">
+            <h4 className="font-bold text-base flex items-center gap-2">
+              <FileText className="h-5 w-5 text-red-500" />
+              {t(locale, 'طلب استئناف التعليق', 'Suspension Appeal Request')}
+            </h4>
+            <p className="text-sm text-muted-foreground">{t(locale, 'أخبرنا بسبب رفع تعليق حسابك. سيتم مراجعة طلبك خلال 24-48 ساعة.', 'Tell us why you think the suspension should be lifted. We will review your request within 24-48 hours.')}</p>
+            <div className="space-y-2">
+              <Label className="text-sm font-bold">{t(locale, 'سبب الاستئناف *', 'Reason for Appeal *')}</Label>
+              <Textarea
+                value={appealReason}
+                onChange={e => setAppealReason(e.target.value)}
+                placeholder={t(locale, 'اشرح سبب طلبك لرفع التعليق...', 'Explain why you believe the suspension should be lifted...')}
+                rows={4}
+                className="rounded-xl resize-none"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-bold">{t(locale, 'رابط المستند الداعم (اختياري)', 'Supporting Document URL (optional)')}</Label>
+              <Input
+                value={appealDocUrl}
+                onChange={e => setAppealDocUrl(e.target.value)}
+                placeholder="https://..."
+                className="rounded-xl"
+              />
+            </div>
+            {existingAppeal?.status === 'rejected' && (
+              <div className="p-3 bg-red-500/10 rounded-xl border border-red-500/20">
+                <p className="text-sm text-red-500 font-bold">{t(locale, 'تم رفض آخر استئناف لك:', 'Your previous appeal was rejected:')}</p>
+                <p className="text-sm text-muted-foreground mt-1">{existingAppeal.adminNote || t(locale, 'لا يوجد سبب مذكور.', 'No reason provided.')}</p>
+              </div>
+            )}
+            <div className="flex gap-3">
+              <Button className="rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold gap-2" onClick={handleSubmitAppeal} disabled={isSubmittingAppeal}>
+                {isSubmittingAppeal ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {t(locale, 'إرسال الاستئناف', 'Submit Appeal')}
+              </Button>
+              <Button variant="ghost" className="rounded-xl" onClick={() => setShowAppealForm(false)}>
+                {t(locale, 'إلغاء', 'Cancel')}
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     );
 
@@ -635,7 +748,7 @@ export default function BillingPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 items-center max-w-7xl mx-auto py-8">
-            {packages.map((pkg: any, idx: number) => {
+            {visiblePackages.map((pkg: any, idx: number) => {
               const isSelected = selectedPackageId === pkg.id;
               const isCurrent  = sub?.packageId === pkg.id;
               const price = billingCycle === 'ANNUAL' ? pkg.price * 0.8 : pkg.price;

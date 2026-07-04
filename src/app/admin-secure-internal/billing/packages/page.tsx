@@ -46,7 +46,8 @@ const INITIAL_PACKAGE = {
   color: '#6B7280',
   icon: 'Package',
   isActive: true,
-  sortOrder: 0
+  sortOrder: 0,
+  targetRole: 'ALL'
 };
 
 export default function BillingPackagesPage() {
@@ -255,6 +256,14 @@ export default function BillingPackagesPage() {
                           {!pkg.isActive && (
                             <Badge variant="secondary" className="text-[9px] px-1 py-0">{t(locale, 'معطلة', 'Inactive')}</Badge>
                           )}
+                          <Badge variant="outline" className="text-[9px] px-1 py-0 border-white/10 bg-white/5 text-muted-foreground shrink-0 font-bold">
+                            {pkg.targetRole === 'INDIVIDUAL' 
+                              ? t(locale, 'مستقلين فقط', 'Freelancers only') 
+                              : pkg.targetRole === 'BUSINESS' 
+                              ? t(locale, 'متاجر فقط', 'Stores only') 
+                              : t(locale, 'الجميع', 'All')
+                            }
+                          </Badge>
                         </div>
                         <p className="text-xs text-muted-foreground line-clamp-2">
                           {pkg.description || t(locale, 'لا يوجد وصف مضاف', 'No description')}
@@ -353,6 +362,19 @@ export default function BillingPackagesPage() {
                         onChange={e => setEditingPackage({ ...editingPackage, description: e.target.value })}
                         className="h-9 rounded-xl text-xs"
                       />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold">{t(locale, 'الفئة المستهدفة للباقة', 'Target Audience / Role')}</Label>
+                      <select
+                        value={editingPackage.targetRole || 'ALL'}
+                        onChange={e => setEditingPackage({ ...editingPackage, targetRole: e.target.value })}
+                        className="flex h-9 w-full rounded-xl border border-white/10 bg-background/50 px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      >
+                        <option value="ALL" className="bg-popover text-popover-foreground">{t(locale, 'الجميع (تظهر لكافة الحسابات)', 'All Roles / General')}</option>
+                        <option value="INDIVIDUAL" className="bg-popover text-popover-foreground">{t(locale, 'التجار المستقلين فقط (Freelancer)', 'Freelancers / Individuals only')}</option>
+                        <option value="BUSINESS" className="bg-popover text-popover-foreground">{t(locale, 'المتاجر والشركات فقط (Business)', 'Business / Stores only')}</option>
+                      </select>
                     </div>
 
                     {/* Pricing & Limits */}

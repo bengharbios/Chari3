@@ -108,6 +108,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { label: locale === 'ar' ? 'الأدوار والصلاحيات' : 'Roles & Permissions', path: 'security/roles' },
         { label: t('security.auth_logs', 'Auth Logs'), path: 'security/auth-logs' },
         { label: t('security.ban_list', 'Ban List'), path: 'security/bans' },
+        { label: locale === 'ar' ? 'استئنافات التعليق' : 'Suspension Appeals', path: 'appeals' },
         { label: locale === 'ar' ? 'إعدادات التوثيق والدخول' : 'Auth & OTP', path: 'settings/otp' },
         { label: locale === 'ar' ? 'إعدادات الأمان المتقدمة' : 'Advanced Security', path: 'security/settings' },
       ]
