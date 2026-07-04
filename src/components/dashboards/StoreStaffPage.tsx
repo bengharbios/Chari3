@@ -118,8 +118,8 @@ export default function StoreStaffPage() {
   const [isSessionsLoading, setIsSessionsLoading] = useState(false);
   const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
 
-  // Check if current user is admin or store_manager
-  const hasManagerPermission = user?.role === 'store_manager' || user?.role === 'admin';
+  // Check if current user is admin, store owner, or store_manager
+  const hasManagerPermission = user?.role === 'store_manager' || user?.role === 'admin' || user?.role === 'store' || user?.role === 'seller' || user?.role === 'freelancer';
 
   const checkPermission = (action: string) => {
     if (!hasManagerPermission) {
