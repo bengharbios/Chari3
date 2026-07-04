@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { Toaster } from 'sonner';
 import FloatingCart from './FloatingCart';
@@ -8,7 +8,7 @@ import AuthSync from '@/components/auth/AuthSync';
 import AppInitializer from '@/components/layout/AppInitializer';
 import ResizeObserverPatcher from '@/components/layout/ResizeObserverPatcher';
 
-import { Wrench } from 'lucide-react';
+import { Wrench, Eye, Loader2 } from 'lucide-react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 
 interface AppShellProps {
@@ -19,11 +19,16 @@ export default function AppShell({ children }: AppShellProps) {
   const { locale, theme, isMaintenance } = useAppStore();
   const { isAuthenticated, user } = useAuthStore();
   const { isAdminAuthenticated } = useAdminAuthStore();
+  const [isImpersonating, setIsImpersonating] = useState(false);
+  const [isReverting, setIsReverting] = useState(false);
 
   useEffect(() => {
     const dir = locale === 'ar' ? 'rtl' : 'ltr';
     document.documentElement.setAttribute('dir', dir);
     document.documentElement.setAttribute('lang', locale);
+    if (typeof document !== 'undefined') {
+      setIsImpersonating(document.cookie.includes('chari_impersonator_id'));
+    }
   }, [locale]);
 
   if (isMaintenance && !isAdminAuthenticated && user?.role !== 'admin') {
@@ -92,6 +97,43 @@ export default function AppShell({ children }: AppShellProps) {
               ? '⚠️ وضع الصيانة نشط حالياً — المنصة مغلقة أمام الزوار، وتظهر لك فقط بصفتك مسؤولاً للنظام.' 
               : '⚠️ Maintenance Mode Active — Storefront is offline for visitors, visible to you as administrator.'}
           </span>
+        </div>
+      )}
+
+      {/* Impersonation Banner */}
+      {isImpersonating && (
+        <div className="bg-purple-600 text-white py-2 px-4 text-center text-xs md:text-sm font-bold flex flex-wrap items-center justify-center gap-3 z-50 relative font-cairo shadow-md">
+          <div className="flex items-center gap-2">
+            <Eye className="h-4 w-4 animate-pulse" />
+            <span>
+              {locale === 'ar' 
+                ? 'أنت تتصفح المنصة حالياً بهوية هذا المستخدم (Login As).' 
+                : 'You are currently impersonating this user (Login As).'}
+            </span>
+          </div>
+          <button 
+            disabled={isReverting}
+            onClick={async () => {
+              try {
+                setIsReverting(true);
+                toast.info(locale === 'ar' ? 'جاري العودة للوحة التحكم...' : 'Returning to Admin...');
+                const res = await fetch('/api/admin/impersonate/revert', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                  window.location.href = data.redirectUrl;
+                } else {
+                  toast.error(data.error);
+                  setIsReverting(false);
+                }
+              } catch (err) {
+                toast.error('Error returning to admin');
+                setIsReverting(false);
+              }
+            }}
+            className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded-full text-xs transition-colors disabled:opacity-50"
+          >
+            {isReverting ? <Loader2 className="h-3 w-3 animate-spin" /> : (locale === 'ar' ? 'العودة للوحة الإدارة' : 'Return to Admin')}
+          </button>
         </div>
       )}
 

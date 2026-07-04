@@ -10,8 +10,11 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import {
-  Shield, UserPlus, Users, Key, Lock, Unlock, Mail, Phone, Calendar, MoreHorizontal, Circle, Activity, AlertCircle, Trash2, CheckCircle2, X, Loader2
+  Shield, UserPlus, Users, Key, Lock, Unlock, Mail, Phone, Calendar, MoreHorizontal, Circle, Activity, AlertCircle, Trash2, CheckCircle2, X, Loader2,
+  Laptop, Smartphone, Globe, RefreshCw, Tablet, MapPin, Clock, LogOut
 } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { ar as dateFnsAr, enUS as dateFnsEn } from 'date-fns/locale';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
@@ -63,23 +66,56 @@ export default function StoreStaffPage() {
   const [currentTeamSize, setCurrentTeamSize] = useState(0);
 
   // Stateful activity logs
-  const [activities, setActivities] = useState([
-    { id: 'act-1', user: 'فاطمة الزهراء', action: 'قامت بتعديل سعر', item: 'سماعات برو', time: 'منذ 10 دقائق', timeEn: '10m ago', actionEn: 'updated price of' },
-    { id: 'act-2', user: 'ياسين بوعلام', action: 'قام بشحن طلب', item: '#ORD-5840', time: 'منذ ساعة', timeEn: '1h ago', actionEn: 'shipped order' },
-    { id: 'act-3', user: 'محمد الصالح', action: 'قام بتسجيل الدخول', item: '', time: 'منذ 3 ساعات', timeEn: '3h ago', actionEn: 'logged in' },
-  ]);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+
+  const fetchAuditLogs = async () => {
+    try {
+      setIsLoadingLogs(true);
+      const res = await fetch(`/api/seller/audit-logs?userId=${user?.id}`);
+      const data = await res.json();
+      if (data.success) {
+        setActivities(data.logs.map((log: any) => {
+          const date = new Date(log.createdAt);
+          const timeFormatted = date.toLocaleTimeString(locale === 'ar' ? 'ar-SA' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+          const dateFormatted = date.toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { month: 'short', day: 'numeric' });
+          return {
+            id: log.id,
+            user: locale === 'ar' ? log.user : log.userEn,
+            action: log.details, // details holds formatted action note
+            actionEn: log.detailsEn,
+            item: '',
+            time: `${dateFormatted} ${timeFormatted}`,
+            timeEn: `${dateFormatted} ${timeFormatted}`,
+          };
+        }));
+      }
+    } catch (e) {
+      console.error('Failed to fetch store audit logs', e);
+    } finally {
+      setIsLoadingLogs(false);
+    }
+  };
 
   // Inviting Staff Form State
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteName, setInviteName] = useState('');
   const [inviteEmail, setInviteEmail] = useState('');
   const [invitePhone, setInvitePhone] = useState('');
+  const [invitePassword, setInvitePassword] = useState('');
   const [inviteRole, setInviteRole] = useState<'admin' | 'editor' | 'support' | 'viewer'>('editor');
 
   // Editing Role Dialog State
   const [isEditRoleOpen, setIsEditRoleOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   const [selectedRole, setSelectedRole] = useState<'admin' | 'editor' | 'support' | 'viewer'>('editor');
+
+  // Active Sessions/Device Management State
+  const [isSessionsOpen, setIsSessionsOpen] = useState(false);
+  const [sessionsStaff, setSessionsStaff] = useState<StaffMember | null>(null);
+  const [sessionsList, setSessionsList] = useState<any[]>([]);
+  const [isSessionsLoading, setIsSessionsLoading] = useState(false);
+  const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
 
   // Check if current user is admin or store_manager
   const hasManagerPermission = user?.role === 'store_manager' || user?.role === 'admin';
@@ -108,8 +144,11 @@ export default function StoreStaffPage() {
   };
 
   useEffect(() => {
-    if (user?.id) fetchStaff();
-  }, [user]);
+    if (user?.id) {
+      fetchStaff();
+      fetchAuditLogs();
+    }
+  }, [user, locale]);
 
   const fetchStaff = async () => {
     try {
@@ -148,12 +187,13 @@ export default function StoreStaffPage() {
         user: actorName,
         action: actionAr,
         item,
-        time: 'الآن',
+        time: locale === 'ar' ? 'الآن' : 'Just now',
         timeEn: 'Just now',
         actionEn,
       },
       ...prev
     ]);
+    fetchAuditLogs();
   };
 
   const handleOpenInvite = () => {
@@ -178,6 +218,7 @@ export default function StoreStaffPage() {
           name: inviteName,
           email: inviteEmail,
           phone: invitePhone,
+          password: invitePassword,
           role: inviteRole,
         }),
       });
@@ -195,6 +236,7 @@ export default function StoreStaffPage() {
         setInviteName('');
         setInviteEmail('');
         setInvitePhone('');
+        setInvitePassword('');
         setInviteRole('editor');
         setIsInviteOpen(false);
       } else {
@@ -345,6 +387,92 @@ export default function StoreStaffPage() {
     }
   };
 
+  const fetchStaffSessions = async (staffUserId: string) => {
+    setIsSessionsLoading(true);
+    try {
+      const res = await fetch(`/api/seller/staff/sessions?userId=${user?.id}&staffUserId=${staffUserId}`);
+      const data = await res.json();
+      if (data.success) {
+        setSessionsList(data.sessions);
+      } else {
+        toast.error(data.error || t('فشل في جلب الجلسات', 'Failed to fetch sessions'));
+      }
+    } catch (err) {
+      toast.error(t('خطأ في الاتصال بالخادم', 'Server connection error'));
+    } finally {
+      setIsSessionsLoading(false);
+    }
+  };
+
+  const handleOpenSessions = (staff: StaffMember) => {
+    if (checkPermission(t('إدارة الأجهزة والجلسات', 'Manage Devices & Sessions'))) {
+      setSessionsStaff(staff);
+      setIsSessionsOpen(true);
+      if (staff.userId) {
+        fetchStaffSessions(staff.userId);
+      }
+    }
+  };
+
+  const handleRevokeStaffSession = async (sessionId: string) => {
+    if (!sessionsStaff) return;
+    setRevokingSessionId(sessionId);
+    try {
+      const res = await fetch(
+        `/api/seller/staff/sessions?userId=${user?.id}&staffUserId=${sessionsStaff.userId}&sessionId=${sessionId}`,
+        { method: 'DELETE' }
+      );
+      const data = await res.json();
+      if (data.success) {
+        setSessionsList(prev => prev.filter(s => s.id !== sessionId));
+        toast.success(t('تم إنهاء جلسة الموظف بنجاح', 'Staff session terminated successfully'));
+        addActivity(
+          user?.name || t('المدير', 'Manager'),
+          `قام بإنهاء جلسة نشطة للموظف`,
+          `terminated active session for staff member`,
+          sessionsStaff.name
+        );
+      } else {
+        toast.error(data.error || t('فشل في إنهاء الجلسة', 'Failed to terminate session'));
+      }
+    } catch (err) {
+      toast.error(t('حدث خطأ في الاتصال بالخادم', 'Server connection error'));
+    } finally {
+      setRevokingSessionId(null);
+    }
+  };
+
+  const handleRevokeAllStaffSessions = async () => {
+    if (!sessionsStaff) return;
+    if (!window.confirm(t('هل أنت متأكد من إنهاء جميع جلسات هذا الموظف؟', 'Are you sure you want to terminate all sessions for this staff member?'))) {
+      return;
+    }
+    setIsSessionsLoading(true);
+    try {
+      const res = await fetch(
+        `/api/seller/staff/sessions?userId=${user?.id}&staffUserId=${sessionsStaff.userId}&sessionId=all`,
+        { method: 'DELETE' }
+      );
+      const data = await res.json();
+      if (data.success) {
+        setSessionsList([]);
+        toast.success(t('تم إنهاء جميع جلسات الموظف بنجاح', 'All staff sessions terminated successfully'));
+        addActivity(
+          user?.name || t('المدير', 'Manager'),
+          `قام بإنهاء جميع الجلسات النشطة للموظف`,
+          `terminated all active sessions for staff member`,
+          sessionsStaff.name
+        );
+      } else {
+        toast.error(data.error || t('فشل في إنهاء الجلسات', 'Failed to terminate sessions'));
+      }
+    } catch (err) {
+      toast.error(t('حدث خطأ في الاتصال بالخادم', 'Server connection error'));
+    } finally {
+      setIsSessionsLoading(false);
+    }
+  };
+
   const getRoleStyle = (role: string) => {
     switch(role) {
       case 'admin': return 'bg-purple-500/10 text-purple-500 border-purple-500/20';
@@ -484,6 +612,12 @@ export default function StoreStaffPage() {
                               >
                                 <Shield className="h-4 w-4 me-2 text-blue-500" /> {t('تعديل الصلاحيات', 'Edit Roles')}
                               </DropdownMenuItem>
+                               <DropdownMenuItem 
+                                onClick={() => handleOpenSessions(staff)}
+                                className="cursor-pointer font-semibold"
+                              >
+                                <Laptop className="h-4 w-4 me-2 text-emerald-500" /> {t('إدارة الأجهزة', 'Manage Devices')}
+                              </DropdownMenuItem>
                               <DropdownMenuItem 
                                 onClick={() => handleResetPassword(staff)}
                                 className="cursor-pointer font-semibold"
@@ -565,22 +699,31 @@ export default function StoreStaffPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <AnimatePresence initial={false}>
-                  {activities.map((act) => (
-                    <motion.div 
-                      key={act.id} 
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="text-sm border-b border-border/10 pb-2 last:border-0 last:pb-0"
-                    >
-                      <span className="font-bold text-foreground">{act.user}</span>{' '}
-                      <span className="text-muted-foreground">{locale === 'ar' ? act.action : act.actionEn}</span>{' '}
-                      <span className="font-semibold text-primary">{act.item}</span>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{locale === 'ar' ? act.time : act.timeEn}</p>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+                {isLoadingLogs && activities.length === 0 ? (
+                  <div className="py-6 flex flex-col items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                    <span className="text-[10px] text-muted-foreground">{t('جاري جلب سجل النشاط...', 'Fetching activity log...')}</span>
+                  </div>
+                ) : activities.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">{t('لا يوجد سجل نشاط حالياً.', 'No recent activity.')}</p>
+                ) : (
+                  <AnimatePresence initial={false}>
+                    {activities.map((act) => (
+                      <motion.div 
+                        key={act.id} 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="text-sm border-b border-border/10 pb-2 last:border-0 last:pb-0"
+                      >
+                        <span className="font-bold text-foreground">{act.user}</span>{' '}
+                        <span className="text-muted-foreground">{locale === 'ar' ? act.action : act.actionEn}</span>{' '}
+                        <span className="font-semibold text-primary">{act.item}</span>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{locale === 'ar' ? act.time : act.timeEn}</p>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -640,6 +783,19 @@ export default function StoreStaffPage() {
             </div>
 
             <div className="space-y-1">
+              <Label htmlFor="invite-password" className="text-xs font-bold">{t('كلمة المرور الابتدائية', 'Initial Password')}</Label>
+              <Input 
+                id="invite-password" 
+                type="text"
+                placeholder={t('سيطلب النظام تغييره عند أول دخول', 'System will prompt to change on first login')} 
+                value={invitePassword} 
+                onChange={(e) => setInvitePassword(e.target.value)}
+                className="rounded-xl border-white/10 bg-background/50 focus:border-primary text-start"
+                required
+              />
+            </div>
+
+            <div className="space-y-1">
               <Label htmlFor="invite-role" className="text-xs font-bold">{t('الدور والصلاحيات', 'Role & Permissions')}</Label>
               <Select 
                 value={inviteRole} 
@@ -648,7 +804,7 @@ export default function StoreStaffPage() {
                 <SelectTrigger id="invite-role" className="rounded-xl border-white/10 bg-background/50">
                   <SelectValue placeholder={t('اختر الدور', 'Select Role')} />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-white/10 bg-background/95 backdrop-blur-xl">
+                <SelectContent className="z-[9999] rounded-xl border-white/10 bg-background/95 backdrop-blur-xl">
                   <SelectItem value="admin" className="cursor-pointer">{t('مدير المتجر (تحكم كامل)', 'Store Manager (Full)')}</SelectItem>
                   <SelectItem value="editor" className="cursor-pointer">{t('إدارة المحتوى (منتجات وعروض)', 'Content Editor (Products)')}</SelectItem>
                   <SelectItem value="support" className="cursor-pointer">{t('دعم العملاء (طلبات ومحادثات)', 'Customer Support (Orders)')}</SelectItem>
@@ -694,7 +850,7 @@ export default function StoreStaffPage() {
                 <SelectTrigger id="edit-role-select" className="rounded-xl border-white/10 bg-background/50">
                   <SelectValue placeholder={t('اختر الدور', 'Select Role')} />
                 </SelectTrigger>
-                <SelectContent className="rounded-xl border-white/10 bg-background/95 backdrop-blur-xl">
+                <SelectContent className="z-[9999] rounded-xl border-white/10 bg-background/95 backdrop-blur-xl">
                   <SelectItem value="admin" className="cursor-pointer">{t('مدير المتجر (تحكم كامل)', 'Store Manager (Full)')}</SelectItem>
                   <SelectItem value="editor" className="cursor-pointer">{t('إدارة المحتوى (منتجات وعروض)', 'Content Editor (Products)')}</SelectItem>
                   <SelectItem value="support" className="cursor-pointer">{t('دعم العملاء (طلبات ومحادثات)', 'Customer Support (Orders)')}</SelectItem>
@@ -717,7 +873,121 @@ export default function StoreStaffPage() {
         </DialogContent>
       </Dialog>
 
+      {/* dialog for MANAGING DEVICES (Staff Sessions) */}
+      <Dialog open={isSessionsOpen} onOpenChange={setIsSessionsOpen}>
+        <DialogContent className="sm:max-w-lg rounded-2xl border-white/10 bg-background/95 backdrop-blur-xl max-h-[85vh] flex flex-col overflow-hidden">
+          <DialogHeader className="text-start pb-2 border-b border-white/5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Laptop className="h-5 w-5 text-primary" />
+                <DialogTitle className="text-lg font-bold">
+                  {t(`إدارة أجهزة الموظف: ${sessionsStaff?.name}`, `Manage Devices for: ${sessionsStaff?.name}`)}
+                </DialogTitle>
+              </div>
+              {sessionsList.length > 0 && (
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={handleRevokeAllStaffSessions}
+                  disabled={isSessionsLoading}
+                  className="rounded-xl font-bold flex items-center gap-1.5 text-xs shadow-md shadow-destructive/10"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  {t('إنهاء جميع الجلسات', 'Terminate All Sessions')}
+                </Button>
+              )}
+            </div>
+            <DialogDescription className="text-xs text-muted-foreground mt-1">
+              {t('عرض جميع الأجهزة والنشاطات الحالية لهذا الموظف، مع إمكانية طرد أي جلسة مشبوهة أو منتهية الصلاحية.', 'View current devices and activity for this staff member. You can terminate any session.')}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto py-4 space-y-3 pe-1 text-start">
+            {isSessionsLoading && sessionsList.length === 0 ? (
+              <div className="p-12 flex flex-col items-center justify-center text-muted-foreground gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="font-semibold text-sm">{t('جاري جلب قائمة الأجهزة...', 'Loading devices list...')}</span>
+              </div>
+            ) : sessionsList.length === 0 ? (
+              <div className="py-12 text-center text-muted-foreground flex flex-col items-center justify-center gap-2">
+                <Laptop className="h-10 w-10 text-muted-foreground/30" />
+                <p className="font-semibold text-sm">{t('لا توجد جلسات نشطة لهذا الموظف حالياً', 'No active sessions found for this staff member')}</p>
+                <p className="text-xs text-muted-foreground/80">{t('هذا الموظف غير متصل بأي جهاز حالياً.', 'This staff member is not currently logged into any device.')}</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {sessionsList.map(session => (
+                  <div
+                    key={session.id}
+                    className="flex items-center justify-between gap-4 p-4 rounded-2xl border border-white/5 bg-background/50 backdrop-blur-md hover:border-white/10 transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 shrink-0">
+                        <DeviceIcon type={session.deviceType} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-sm text-foreground">
+                          {session.browser} — {session.os}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3.5 w-3.5" />
+                            {session.city ? `${session.city}, ` : ''}{session.countryCode || 'Unknown'}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Globe className="h-3.5 w-3.5" />
+                            {session.ipAddress}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5" />
+                            {formatDistanceToNow(new Date(session.createdAt), {
+                              addSuffix: true,
+                              locale: locale === 'ar' ? dateFnsAr : dateFnsEn
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRevokeStaffSession(session.id)}
+                      disabled={revokingSessionId === session.id}
+                      className="gap-1.5 rounded-xl text-red-500 hover:text-red-500 hover:bg-red-500/10 shrink-0 font-semibold"
+                    >
+                      {revokingSessionId === session.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <LogOut className="h-3.5 w-3.5" />
+                      )}
+                      {t('إنهاء الجلسة', 'End Session')}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="pt-2 border-t border-white/5 flex gap-2 justify-end">
+            <DialogClose asChild>
+              <Button type="button" variant="outline" className="rounded-xl font-bold">
+                {t('إغلاق', 'Close')}
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
     </motion.div>
   );
 }
+
+function DeviceIcon({ type }: { type: string }) {
+  const cls = 'h-5 w-5 text-primary';
+  if (type === 'Mobile') return <Smartphone className={cls} />;
+  if (type === 'Tablet') return <Tablet className={cls} />;
+  return <Laptop className={cls} />;
+}
+
 

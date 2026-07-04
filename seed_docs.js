@@ -171,6 +171,134 @@ When enabled by the admin, users can skip phone verification during registration
       `,
       sortOrder: 2,
       isPublished: true
+    },
+    {
+      title: 'نظام الصلاحيات والأدوار والقيود الذكية للمتاجر والموظفين',
+      titleEn: 'Store Roles, Permissions & Smart Security Controls Guide',
+      slug: 'roles-permissions-controls',
+      category: 'settings',
+      content: `
+# 🛡️ نظام الصلاحيات والأدوار والقيود الذكية للشركاء والموظفين
+
+صُمم نظام الصلاحيات والأمان في منصة **ChariDay** ليوفر حماية متطورة وفصلاً دقيقاً للمسؤوليات بين التاجر المالك (Seller)، وبين فريق عمله وموظفيه (Store Managers & Staff)، مع قيود آلية ذكية تمنع عمليات الاحتيال وتضمن سلامة العمليات المالية للمنصة.
+
+---
+
+## 👥 مستويات الصلاحيات للأدوار (Roles & Permissions)
+
+يدعم النظام التدرج الهرمي الآتي للتحكم بالوصول:
+
+### 1. التاجر المالك (Store Owner/Seller)
+يملك الصلاحية الكاملة والمطلقة على المتجر، المحفظة المالية، الحساب البنكي، والتحكم المطلق بفريق العمل.
+
+### 2. مدير المتجر (Store Manager)
+يمثل الذراع التشغيلي الأول للتاجر المالك ويملك وصولاً واسعاً لإدارة المنتجات، الطلبات، والموظفين الآخرين.
+* **⚠️ القيود الأمنية المفروضة عليه:** يتم حظر وصوله تماماً عن العمليات المالية الحساسة للمالك لحمايتها من السرقة أو التلاعب، مثل:
+  * المحفظة المالية وسجل السحوبات (\`/seller/wallet\`).
+  * الفواتير وتفاصيل الباقات والاشتراكات (\`/seller/billing\`).
+  * طلبات الترقية والخصومات (\`/seller/upgrade\`).
+  * سداد المديونيات وعمولات المنصة (\`/seller/debts\`).
+
+### 3. إدارة المحتوى (Content Editor)
+دور مخصص للموظفين المسؤولين عن الكتالوج والمخزون.
+* **الوصول المتاح:** إضافة وتعديل المنتجات والعروض، وإعداد كوبونات الخصم.
+* **القيود:** لا يمكنهم إدارة الطلبات، أو تغيير إعدادات المتجر الرئيسية، أو الوصول للمراسلات.
+
+### 4. دعم العملاء (Customer Support)
+دور مخصص لتشغيل المتجر وخدمة العملاء.
+* **الوصول المتاح:** إدارة الطلبات والشحنات، قراءة الرسائل والرد عليها، إدارة التقييمات.
+* **القيود:** لا يملكون صلاحية تعديل المنتجات أو الأسعار أو إعدادات المتجر.
+
+### 5. متابعة الأداء (Viewer)
+وصول للقراءة فقط للمحللين والمحاسبين.
+* **الوصول المتاح:** قراءة التقارير والمبيعات والإحصائيات.
+* **القيود:** لا يملكون أي صلاحية تعديل أو تحديث في أي مكان بالمتجر.
+
+---
+
+## 🔒 إدارة الأجهزة والأمان (Device & Session Management)
+
+يوفر النظام للتاجر المالك والمدير أداة أمنية لمراقبة نشاط الفريق وحماية المتجر من الوصول غير المصرح به:
+* **مراقبة الجلسات:** يمكن للمالك والمدير عرض قائمة بجميع الأجهزة النشطة الحالية لكل موظف، مع تفاصيل نظام التشغيل، المتصفح، عنوان IP، والموقع التقريبي للجهاز.
+* **طرد الأجهزة (Revoke Sessions):** يمكن للمالك بضغطة زر إنهاء أي جلسة فوراً (طرد الجهاز) للموظف، أو طرد جميع جلساته دفعة واحدة في حال الاشتباه باختراق حسابه أو انتهاء فترة عمله.
+
+---
+
+## 🚨 قيود الحماية المالية ومنع الاحتيال
+
+يتضمن النظام آليتين للحماية التلقائية من التلاعب المالي:
+
+### 1. تجميد السحوبات المؤقت (Withdrawal Hold Period)
+عندما يقوم التاجر بتعديل معلومات حساسة في حسابه (مثل: البريد الإلكتروني، رقم الهاتف، أو الحساب البنكي / رقم الـ RIB/IBAN)، يقوم النظام فوراً بـ:
+* تسجيل نشاط حساس في سجل التدقيق (\`AuditLog\`).
+* تجميد إمكانية طلب سحب الرصيد من المحفظة مؤقتاً لمدة **48 ساعة** (أو حسب القيمة المحددة من الإدارة العليا).
+* يمنع هذا التجميد أي مخترق نجح في الوصول للحساب من تحويل الأرباح لحسابه الشخصي، مما يمنح المالك والمنصة وقتاً كافياً لاستعادة الحساب والتحقق من الهوية.
+
+### 2. إعادة التحقق من التوثيق (Re-verification System)
+في حال قام التاجر بتعديل بيانات الحساب البنكي (CCP أو IBAN)، يتم إرجاع حالة توثيق المتجر تلقائياً إلى **قيد المراجعة (Pending)**، ويتم إخفاء شارة التوثيق من المتجر العام لحين قيام إدارة المنصة بالتحقق اليدوي من تطابق اسم صاحب الحساب البنكي الجديد مع وثيقة الهوية (KYC) المرفوعة مسبقاً.
+      `,
+      contentEn: `
+# 🛡️ Roles, Permissions & Smart Security Controls Guide
+
+The permission and security system in **ChariDay** is designed to provide robust protection and separation of duties between the Store Owner (Seller) and their team members (Store Managers & Staff). Additionally, it implements automated fraud prevention rules to secure financial transactions.
+
+---
+
+## 👥 Role Access Levels & Permissions
+
+The platform supports the following hierarchical roles:
+
+### 1. Store Owner (Seller)
+Has complete and unrestricted access over the store, wallet, bank account settings, and staff management.
+
+### 2. Store Manager
+Acts as the primary operations manager.
+* **⚠️ Security Restriction:** Their access is strictly blocked from sensitive owner-related financial pages, including:
+  * Wallet and withdrawals (\`/seller/wallet\`).
+  * Invoices, packages, and subscriptions (\`/seller/billing\`).
+  * Upgrades and plan discount requests (\`/seller/upgrade\`).
+  * Debt settlement (\`/seller/debts\`).
+
+### 3. Content Editor
+Responsible for catalog and inventory.
+* **Allowed Access:** Add/edit products, promotions, and configure coupons.
+* **Restrictions:** Cannot manage orders, modify store settings, or view chat messages.
+
+### 4. Customer Support
+Responsible for operations and customer service.
+* **Allowed Access:** Manage orders, process shipments, view/reply to chat messages, and manage product reviews.
+* **Restrictions:** Cannot edit product details/prices or modify store settings.
+
+### 5. Viewer
+Read-only access for analysts and accountants.
+* **Allowed Access:** View reports, sales data, and analytics dashboards.
+* **Restrictions:** No write permissions anywhere on the platform.
+
+---
+
+## 🔒 Device & Session Management
+
+Allows the store owner and managers to monitor team activity and secure accounts:
+* **Session Monitoring:** View a list of all active logged-in devices for each staff member, showing OS, browser, IP address, and approximate location.
+* **Revoke Sessions:** Terminate specific active sessions or revoke all sessions at once if an account compromise is suspected.
+
+---
+
+## 🚨 Fraud Prevention & Financial Holds
+
+The platform automatically triggers security safeguards on sensitive events:
+
+### 1. Temporary Withdrawal Hold
+If a seller updates sensitive information (e.g., email, phone number, or banking/RIB details):
+* The system logs a sensitive action in the \`AuditLog\`.
+* Requesting payouts/withdrawals is automatically frozen for **48 hours** (configurable).
+* This hold prevents hackers from diverting funds if they gain access to the account, giving the owner time to secure it.
+
+### 2. Mandatory Onboarding Re-verification
+If a seller changes their bank details (CCP or IBAN), their verification status reverts to **Pending**. The store's verification badge is hidden until platform admins manually review the new banking document to ensure the account holder's name matches the KYC documents.
+      `,
+      sortOrder: 3,
+      isPublished: true
     }
   ];
 

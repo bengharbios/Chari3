@@ -3,11 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useSession } from '@/lib/auth-client';
 import { useAuthStore } from '@/lib/store';
+import { useRouter, usePathname } from 'next/navigation';
 
 export default function AuthSync() {
   const { data, isPending, error } = useSession();
   const { isAuthenticated, loginWithUser, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
@@ -63,5 +66,19 @@ export default function AuthSync() {
     }
   }, [mounted, isPending, data, error, isAuthenticated, loginWithUser, logout]);
 
+  // Force password change redirect: if user has the flag set, redirect them immediately
+  useEffect(() => {
+    if (!mounted) return;
+    const currentUser = useAuthStore.getState().user;
+    if (
+      currentUser &&
+      (currentUser as any).forcePasswordChange === true &&
+      pathname !== '/force-password-change'
+    ) {
+      router.replace('/force-password-change');
+    }
+  }, [mounted, pathname, router]);
+
   return null;
 }
+

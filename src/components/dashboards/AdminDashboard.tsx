@@ -1061,9 +1061,52 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                           
-                          <div className="mt-3 text-xs flex items-center gap-2 text-muted-foreground">
-                             <UserCog className="h-3.5 w-3.5 shrink-0" />
-                             <span className="truncate">{store.manager?.name} ({store.manager?.email})</span>
+                          <div className="mt-3 text-xs flex flex-wrap items-center justify-between gap-2 text-muted-foreground pt-2 border-t border-border/50">
+                             <div className="flex items-center gap-2 max-w-[65%]">
+                               <UserCog className="h-3.5 w-3.5 shrink-0" />
+                               <span className="truncate">{store.manager?.name} ({store.manager?.email})</span>
+                             </div>
+                             <div className="flex items-center gap-1 shrink-0">
+                               <Button 
+                                 variant="ghost" 
+                                 size="icon" 
+                                 className="h-7 w-7 text-blue-500 hover:text-blue-600 hover:bg-blue-500/10" 
+                                 title={t(locale, 'فريق عمل المتجر', 'Store Staff')}
+                                 onClick={() => {
+                                   toast.success(t(locale, 'انتقل إلى تبويب فريق العمل للبحث عن موظفي المتجر', 'Go to Staff tab to search for store staff'));
+                                 }}
+                               >
+                                 <Users className="h-4 w-4" />
+                               </Button>
+                               <Button 
+                                 variant="ghost" 
+                                 size="icon" 
+                                 className="h-7 w-7 text-purple-500 hover:text-purple-600 hover:bg-purple-500/10" 
+                                 title={t(locale, 'الدخول كتاجر (Login As)', 'Login As Merchant')}
+                                 onClick={async () => {
+                                   try {
+                                     toast.info(t(locale, 'جاري تهيئة جلسة الدخول...', 'Initializing session...'));
+                                     const res = await fetch('/api/admin/impersonate', {
+                                       method: 'POST',
+                                       headers: { 'Content-Type': 'application/json' },
+                                       body: JSON.stringify({ userId: store.managerId }) // or store.manager.id if available
+                                     });
+                                     const data = await res.json();
+                                     if (data.success) {
+                                       toast.success(t(locale, 'تم تسجيل الدخول بنجاح', 'Logged in successfully'));
+                                       // Reload to apply the new cookie
+                                       window.location.href = data.redirectUrl;
+                                     } else {
+                                       toast.error(data.error);
+                                     }
+                                   } catch (err) {
+                                     toast.error('Error during impersonation');
+                                   }
+                                 }}
+                               >
+                                 <Eye className="h-4 w-4" />
+                               </Button>
+                             </div>
                           </div>
                         </div>
                       </div>
@@ -1137,11 +1180,40 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                           
-                          <div className="mt-3 text-xs flex items-center gap-2 text-muted-foreground">
-                            <Activity className="h-3.5 w-3.5 shrink-0" />
-                            <span>
-                              {t(locale, 'مستوى الإكمال:', 'Completion Rate:')} <strong className="text-foreground">{seller.completionRate}%</strong>
-                            </span>
+                          <div className="mt-3 text-xs flex items-center justify-between gap-2 text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                              <Activity className="h-3.5 w-3.5 shrink-0" />
+                              <span>
+                                {t(locale, 'مستوى الإكمال:', 'Completion Rate:')} <strong className="text-foreground">{seller.completionRate}%</strong>
+                              </span>
+                            </div>
+                            <Button 
+                               variant="ghost" 
+                               size="icon" 
+                               className="h-7 w-7 text-purple-500 hover:text-purple-600 hover:bg-purple-500/10" 
+                               title={t(locale, 'الدخول كتاجر (Login As)', 'Login As Merchant')}
+                               onClick={async () => {
+                                 try {
+                                   toast.info(t(locale, 'جاري تهيئة جلسة الدخول...', 'Initializing session...'));
+                                   const res = await fetch('/api/admin/impersonate', {
+                                     method: 'POST',
+                                     headers: { 'Content-Type': 'application/json' },
+                                     body: JSON.stringify({ userId: seller.userId }) // target user ID
+                                   });
+                                   const data = await res.json();
+                                   if (data.success) {
+                                     toast.success(t(locale, 'تم تسجيل الدخول بنجاح', 'Logged in successfully'));
+                                     window.location.href = data.redirectUrl;
+                                   } else {
+                                     toast.error(data.error);
+                                   }
+                                 } catch (err) {
+                                   toast.error('Error during impersonation');
+                                 }
+                               }}
+                             >
+                               <Eye className="h-4 w-4" />
+                             </Button>
                           </div>
                         </div>
                       </div>

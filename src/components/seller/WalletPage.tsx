@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Wallet, Loader2, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, XCircle, CreditCard, Building2, Banknote, HelpCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 
 const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
 
@@ -19,6 +20,15 @@ export default function WalletPage() {
   const { user } = useAuthStore();
   const { locale } = useAppStore();
   const isRTL = locale === 'ar';
+  const router = useRouter();
+  const tStr = (ar: string, en: string) => locale === 'ar' ? ar : en;
+
+  useEffect(() => {
+    if (user && ['staff', 'editor', 'viewer', 'support'].includes(user.role)) {
+      toast.error(tStr('عذراً، هذه الصفحة مخصصة لمدير المتجر فقط.', 'Sorry, this page is restricted to the store manager.'));
+      router.push('/seller/dashboard');
+    }
+  }, [user, router]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [withdrawals, setWithdrawals] = useState<any[]>([]);

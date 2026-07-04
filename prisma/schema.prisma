@@ -29,6 +29,7 @@ model User {
   emailVerified   Boolean   @default(false)
   twoFactorEnabled Boolean   @default(false)
   locale          String    @default("ar")
+  forcePasswordChange Boolean @default(false)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -123,6 +124,7 @@ model StoreStaff {
 model SellerProfile {
   id                  String    @id @default(cuid())
   merchantType        String    @default("individual") // individual, business
+  merchantSubType     String    @default("freelancer") // freelancer, business, wholesaler
   storeName           String?
   storeNameEn         String?
   bio                 String?

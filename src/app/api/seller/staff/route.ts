@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, name, email, phone, role } = body;
+    const { userId, name, email, phone, role, password } = body;
 
     if (!userId || !email || !name) {
       return NextResponse.json({ success: false, error: 'userId, name, and email are required' }, { status: 400 });
@@ -75,8 +75,9 @@ export async function POST(req: NextRequest) {
     let staffUser = await db.user.findUnique({ where: { email } });
 
     if (!staffUser) {
-      // Create new user with default password 'password123'
-      const hashedPassword = await bcrypt.hash('password123', 10);
+      // Create new user with provided password or default 'password123'
+      const pwd = password || 'password123';
+      const hashedPassword = await bcrypt.hash(pwd, 10);
       staffUser = await db.user.create({
         data: {
           email,

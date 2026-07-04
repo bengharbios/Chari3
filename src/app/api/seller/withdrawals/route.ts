@@ -8,8 +8,23 @@ export async function GET(req: NextRequest) {
     const sellerId = req.nextUrl.searchParams.get('sellerId');
     if (!sellerId) return NextResponse.json({ success: false, error: 'sellerId required' }, { status: 400 });
 
+    // Try finding seller by id, fallback to userId
+    let seller = await db.sellerProfile.findUnique({
+      where: { id: sellerId }
+    });
+
+    if (!seller) {
+      seller = await db.sellerProfile.findUnique({
+        where: { userId: sellerId }
+      });
+    }
+
+    if (!seller) {
+      return NextResponse.json({ success: false, error: 'Seller profile not found' }, { status: 404 });
+    }
+
     const withdrawals = await db.withdrawalRequest.findMany({
-      where: { sellerId },
+      where: { sellerId: seller.id },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -55,10 +70,17 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Get Seller Wallet & Pending Withdrawals
-    const seller = await db.sellerProfile.findUnique({
+    let seller = await db.sellerProfile.findUnique({
       where: { id: sellerId },
-      select: { userId: true }
+      select: { id: true, userId: true }
     });
+
+    if (!seller) {
+      seller = await db.sellerProfile.findUnique({
+        where: { userId: sellerId },
+        select: { id: true, userId: true }
+      });
+    }
 
     if (!seller) {
       return NextResponse.json({ success: false, error: 'Seller not found' }, { status: 404 });
@@ -90,7 +112,7 @@ export async function POST(req: NextRequest) {
     }
 
     const pendingRequests = await db.withdrawalRequest.findMany({
-      where: { sellerId, status: 'pending' },
+      where: { sellerId: seller.id, status: 'pending' },
     });
 
     const totalPending = pendingRequests.reduce((sum, req) => sum + req.amount, 0);
@@ -106,7 +128,7 @@ export async function POST(req: NextRequest) {
     // 3. Create Request
     const request = await db.withdrawalRequest.create({
       data: {
-        sellerId,
+        sellerId: seller.id,
         amount: numAmount,
         method,
         accountNumber,

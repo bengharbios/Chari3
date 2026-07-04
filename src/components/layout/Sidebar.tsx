@@ -340,10 +340,45 @@ interface SidebarProps {
     }
   }, [user, isBuyerMode]);
 
+  const isStoreStaff = ['editor', 'support', 'viewer', 'staff'].includes(user?.role || '');
+
+  const getStaffNavGroups = (): NavGroup[] => {
+    return STORE_NAV_GROUPS.map(group => {
+      // Hide billing and settings for staff
+      if (group.id === 'billing-group' || group.id === 'settings-group') return null;
+
+      let items = [...group.items];
+      
+      if (user?.role === 'viewer') {
+        items = items.filter(i => ['store', 'store-analytics'].includes(i.id));
+      } else if (user?.role === 'support') {
+        items = items.filter(i => ['store', 'store-orders', 'seller-messages'].includes(i.id));
+      } else if (user?.role === 'editor') {
+        items = items.filter(i => ['store', 'store-products', 'store-coupons'].includes(i.id));
+      }
+
+      return { ...group, items };
+    }).filter(Boolean) as NavGroup[];
+  };
+
+  // store_manager sees store operations but NOT billing/finance (those belong to the owning seller)
+  const getStoreManagerNavGroups = (): NavGroup[] => {
+    return STORE_NAV_GROUPS.map(group => {
+      // Completely hide billing and settings groups from store managers
+      if (group.id === 'billing-group') return null;
+      if (group.id === 'settings-group') return null;
+      return group;
+    }).filter(Boolean) as NavGroup[];
+  };
+
   const navGroups = effectiveBuyerMode
     ? BUYER_NAV_GROUPS
     : user?.role === 'store_manager'
+    ? getStoreManagerNavGroups()
+    : user?.role === 'admin'
     ? STORE_NAV_GROUPS
+    : isStoreStaff
+    ? getStaffNavGroups()
     : user?.role === 'seller'
     ? getSellerNavGroups(paymentModel, merchantType)
     : user?.role === 'supplier'

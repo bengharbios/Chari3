@@ -19,6 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import TwoFactorSettings from '@/components/seller/settings/TwoFactorSettings';
+import DeviceManagement from '@/components/seller/settings/DeviceManagement';
 
 const STAGGER_CONTAINER = {
   hidden: { opacity: 0 },
@@ -2073,8 +2074,9 @@ export default function StoreSettingsPage() {
 
             {/* Security Tab */}
             <TabsContent value="security" className="mt-0 outline-none">
-              <div className="max-w-4xl mx-auto">
+              <div className="max-w-4xl mx-auto space-y-6">
                 <TwoFactorSettings />
+                <DeviceManagement />
               </div>
             </TabsContent>
 
