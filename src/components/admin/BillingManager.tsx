@@ -690,7 +690,7 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
                       <div className="space-y-1.5">
                         <Label className="text-xs font-semibold">{t(locale, 'أعضاء الفريق', 'Team Members')}</Label>
                         <Input type="number" value={editingPackage.maxTeamMembers}
-                          onChange={e => setEditingPackage({ ...editingPackage, maxTeamMembers: parseInt(e.target.value) || 1 })}
+                          onChange={e => setEditingPackage({ ...editingPackage, maxTeamMembers: parseInt(e.target.value) === 0 ? 0 : (parseInt(e.target.value) || 1) })}
                           className="h-9 rounded-xl font-bold font-mono" />
                       </div>
                     </div>

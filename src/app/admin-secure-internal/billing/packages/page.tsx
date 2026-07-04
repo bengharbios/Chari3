@@ -386,9 +386,9 @@ export default function BillingPackagesPage() {
                         <Label className="text-xs font-bold">{t(locale, 'أعضاء الفريق', 'Team Members')}</Label>
                         <Input
                           type="number"
-                          min="1"
+                          min="0"
                           value={editingPackage.maxTeamMembers}
-                          onChange={e => setEditingPackage({ ...editingPackage, maxTeamMembers: parseInt(e.target.value) || 1 })}
+                          onChange={e => setEditingPackage({ ...editingPackage, maxTeamMembers: parseInt(e.target.value) === 0 ? 0 : (parseInt(e.target.value) || 1) })}
                           className="h-9 rounded-xl font-mono font-bold"
                         />
                       </div>
