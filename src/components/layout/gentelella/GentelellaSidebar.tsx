@@ -256,7 +256,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
   const [paymentModel, setPaymentModel] = useState<string>('mixed');
 
   useEffect(() => {
-    if (user?.role === 'seller' && !isBuyerMode) {
+    if ((user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer') && !isBuyerMode) {
       fetch('/api/settings/public')
         .then(res => res.json())
         .then(pub => {
@@ -281,7 +281,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
 
   // Open the tree that contains the current page automatically on load
   useEffect(() => {
-    const groups = user?.role === 'store_manager' ? STORE_GROUPS : user?.role === 'seller' ? SELLER_GROUPS : [];
+    const groups = user?.role === 'store_manager' ? STORE_GROUPS : (user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer') ? SELLER_GROUPS : [];
     const newOpenTrees = { ...openTrees };
     let changed = false;
     
@@ -303,9 +303,9 @@ export default function GentelellaSidebar({ className }: { className?: string })
   if (!user) return null;
 
   // Filter wallet/debts based on payment model
-  let activeGroups = user.role === 'store_manager' ? STORE_GROUPS : user.role === 'seller' ? SELLER_GROUPS : [];
-  
-  if (user.role === 'seller') {
+  let activeGroups = user.role === 'store_manager' ? STORE_GROUPS : (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer') ? SELLER_GROUPS : [];
+
+  if (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer') {
     activeGroups = activeGroups.map(group => {
       if (group.id !== 'finance') return group;
       return {

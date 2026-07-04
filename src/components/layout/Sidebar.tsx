@@ -307,7 +307,7 @@ interface SidebarProps {
   };
 
   useEffect(() => {
-    if (user?.role === 'seller' && !isBuyerMode) {
+    if ((user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer') && !isBuyerMode) {
       // 1. Fetch Global Settings First
       fetch('/api/settings/public')
         .then(res => res.json())
@@ -379,7 +379,7 @@ interface SidebarProps {
     ? STORE_NAV_GROUPS
     : isStoreStaff
     ? getStaffNavGroups()
-    : user?.role === 'seller'
+    : (user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer')
     ? getSellerNavGroups(paymentModel, merchantType)
     : user?.role === 'supplier'
     ? SUPPLIER_NAV_GROUPS
@@ -450,8 +450,8 @@ interface SidebarProps {
                 <p className="text-sm font-semibold truncate">{user.name}</p>
                 <Badge variant="secondary" className="text-[10px] mt-0.5 bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-border">
                   {t(locale,
-                    effectiveBuyerMode ? 'مشتري' : { admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', supplier: 'مورد', logistics: 'مندوب شحن', buyer: 'مشتري' }[user?.role || 'buyer'] || 'مشتري',
-                    effectiveBuyerMode ? 'Buyer' : { admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', supplier: 'Supplier', logistics: 'Courier', buyer: 'Buyer' }[user?.role || 'buyer'] || 'Buyer'
+                    effectiveBuyerMode ? 'مشتري' : { admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', store: 'تاجر مستقل', freelancer: 'تاجر مستقل', supplier: 'مورد', logistics: 'مندوب شحن', buyer: 'مشتري' }[user?.role || 'buyer'] || 'مشتري',
+                    effectiveBuyerMode ? 'Buyer' : { admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', store: 'Seller', freelancer: 'Seller', supplier: 'Supplier', logistics: 'Courier', buyer: 'Buyer' }[user?.role || 'buyer'] || 'Buyer'
                   )}
                 </Badge>
               </div>

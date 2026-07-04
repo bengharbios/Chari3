@@ -75,6 +75,17 @@ export async function POST(req: NextRequest) {
     // Check if user exists
     let staffUser = await db.user.findUnique({ where: { email } });
 
+    // Validate phone number uniqueness before database insert/operation
+    if (phone) {
+      const existingPhoneUser = await db.user.findUnique({ where: { phone } });
+      if (existingPhoneUser && existingPhoneUser.email !== email) {
+        return NextResponse.json({
+          success: false,
+          error: 'رقم الهاتف هذا مسجل بالفعل لحساب مستخدم آخر بالمنصة.'
+        }, { status: 400 });
+      }
+    }
+
     if (staffUser) {
       // Check if user is already a merchant/partner account
       const isMerchantOrAdmin = 

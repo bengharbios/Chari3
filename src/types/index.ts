@@ -3,7 +3,7 @@ import React from 'react';
 // USER & AUTH TYPES
 // ============================================
 
-export type UserRole = 'admin' | 'store_manager' | 'seller' | 'supplier' | 'logistics' | 'buyer';
+export type UserRole = 'admin' | 'store_manager' | 'seller' | 'store' | 'freelancer' | 'supplier' | 'logistics' | 'buyer';
 export type Locale = 'ar' | 'en' | 'fr';
 export type Theme = 'light' | 'dark';
 

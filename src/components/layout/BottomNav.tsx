@@ -76,7 +76,7 @@ export default function BottomNav() {
   
   if (isAuthenticated && user) {
     if (user.role === 'store_manager') navItems = STORE_BOTTOM_NAV;
-    else if (user.role === 'seller') navItems = SELLER_BOTTOM_NAV;
+    else if (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer') navItems = SELLER_BOTTOM_NAV;
     else if (user.role === 'supplier') navItems = SUPPLIER_BOTTOM_NAV;
     else if (user.role === 'logistics') navItems = LOGISTICS_BOTTOM_NAV;
     else navItems = BUYER_BOTTOM_NAV;

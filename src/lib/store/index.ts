@@ -269,6 +269,8 @@ const ROLE_TO_PAGE: Record<UserRole, PageType> = {
   admin: 'admin',
   store_manager: 'store',
   seller: 'seller',
+  store: 'seller',
+  freelancer: 'seller',
   supplier: 'supplier',
   logistics: 'logistics',
   buyer: 'buyer',
