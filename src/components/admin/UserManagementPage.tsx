@@ -889,16 +889,18 @@ export default function UserManagementPage() {
             </div>
           )}
 
-          <div className="overflow-x-auto" dir={dir}>
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-12 ps-4">
-                    <Checkbox
-                      checked={allSelected}
-                      {...(someSelected ? { 'data-state': 'indeterminate' } : {})}
-                      onCheckedChange={toggleAll}
-                    />
+                  <TableHead className="w-12">
+                    <div className="flex items-center justify-center">
+                      <Checkbox
+                        checked={allSelected}
+                        {...(someSelected ? { 'data-state': 'indeterminate' } : {})}
+                        onCheckedChange={toggleAll}
+                      />
+                    </div>
                   </TableHead>
                   <TableHead className="text-start min-w-[240px]">
                     {t(locale, 'المستخدم', 'User')}
@@ -949,11 +951,13 @@ export default function UserManagementPage() {
                       )}
                     >
                       {/* Checkbox */}
-                      <TableCell className="ps-4">
-                        <Checkbox
-                          checked={selectedUsers.has(user.id)}
-                          onCheckedChange={() => toggleUser(user.id)}
-                        />
+                      <TableCell className="w-12">
+                        <div className="flex items-center justify-center">
+                          <Checkbox
+                            checked={selectedUsers.has(user.id)}
+                            onCheckedChange={() => toggleUser(user.id)}
+                          />
+                        </div>
                       </TableCell>
 
                       {/* User Info */}
@@ -1038,9 +1042,9 @@ export default function UserManagementPage() {
                               </span>
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-48">
+                          <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-52">
                             <DropdownMenuLabel>
-                              {t(locale, 'إجرا؍ات', 'Actions')}
+                              {t(locale, 'الإجراءات', 'Actions')}
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleViewDetails(user)} className="gap-2 cursor-pointer">
@@ -1051,6 +1055,17 @@ export default function UserManagementPage() {
                               <Pencil className="h-4 w-4" />
                               {t(locale, 'تعديل الدور', 'Edit Role')}
                             </DropdownMenuItem>
+                            {(user.role === 'seller' || user.role === 'store_manager' || user.role === 'supplier') && (
+                              <DropdownMenuItem
+                                onClick={() => handleUserToggleVerify(user.id, user.isVerified)}
+                                className="gap-2 cursor-pointer text-blue-600 dark:text-blue-400"
+                              >
+                                <ShieldCheck className="h-4 w-4" />
+                                {user.isVerified
+                                  ? t(locale, 'إلغاء التوثيق', 'Remove Verification')
+                                  : t(locale, 'توثيق الحساب', 'Verify Account')}
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             {user.accountStatus === 'suspended' ? (
                               <DropdownMenuItem onClick={() => handleActivate(user)} className="gap-2 cursor-pointer text-green-600 dark:text-green-400">
@@ -1301,47 +1316,81 @@ export default function UserManagementPage() {
 
                 <Separator />
 
-                {/* Quick Stats */}
+                {/* Quick Stats — role-based */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                     {t(locale, 'إحصائيات سريعة', 'Quick Stats')}
                   </h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Orders */}
-                    <div className="p-3 rounded-xl border bg-surface/50">
-                      <div className="flex items-center gap-2 mb-1">
-                        <ShoppingCart className="h-4 w-4 text-blue-500" />
-                        <span className="text-xs text-muted-foreground">{t(locale, 'الطلبات', 'Orders')}</span>
-                      </div>
-                      <p className="text-lg font-bold">{selectedUser._count?.orders ?? 0}</p>
-                    </div>
-                    {/* Wallet Balance */}
-                    <div className="p-3 rounded-xl border bg-surface/50">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Wallet className="h-4 w-4 text-green-500" />
-                        <span className="text-xs text-muted-foreground">{t(locale, 'الرصيد', 'Balance')}</span>
-                      </div>
-                      <p className="text-lg font-bold text-green-600">{formatBalance(selectedUser.wallet?.balance ?? 0)}</p>
-                    </div>
-                    {/* Debt */}
-                    <div className="p-3 rounded-xl border bg-surface/50">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Wallet className="h-4 w-4 text-red-500" />
-                        <span className="text-xs text-muted-foreground">{t(locale, 'المديونية', 'Debt')}</span>
-                      </div>
-                      <p className="text-lg font-bold text-red-600">{formatBalance(selectedUser.wallet?.debt ?? 0)}</p>
-                    </div>
-                    {/* Rating (sellers/suppliers only) */}
-                    {(selectedUser.role === 'seller' || selectedUser.role === 'supplier') && selectedUser.sellerProfile && (
-                      <div className="p-3 rounded-xl border bg-surface/50 col-span-2">
+
+                  {/* Buyer: orders only */}
+                  {selectedUser.role === 'buyer' && (
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="p-3 rounded-xl border bg-surface/50">
                         <div className="flex items-center gap-2 mb-1">
-                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                          <span className="text-xs text-muted-foreground">{t(locale, 'التقييم', 'Rating')}</span>
+                          <ShoppingCart className="h-4 w-4 text-blue-500" />
+                          <span className="text-xs text-muted-foreground">{t(locale, 'الطلبات المُنفَّذة', 'Orders Placed')}</span>
                         </div>
-                        <p className="text-lg font-bold">{selectedUser.sellerProfile.rating.toFixed(1)}</p>
+                        <p className="text-lg font-bold">{selectedUser._count?.orders ?? 0}</p>
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  )}
+
+                  {/* Admin / logistics: no financial stats shown */}
+                  {(selectedUser.role === 'admin' || selectedUser.role === 'logistics') && (
+                    <p className="text-xs text-muted-foreground italic">
+                      {t(locale, 'لا توجد إحصائيات مالية لهذا الدور', 'No financial stats for this role')}
+                    </p>
+                  )}
+
+                  {/* Sellers / Suppliers / Store Managers: full financial stats */}
+                  {(selectedUser.role === 'seller' || selectedUser.role === 'supplier' || selectedUser.role === 'store_manager') && (
+                    <div className="grid grid-cols-2 gap-3">
+                      {/* Wallet Balance */}
+                      <div className="p-3 rounded-xl border bg-surface/50">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Wallet className="h-4 w-4 text-green-500" />
+                          <span className="text-xs text-muted-foreground">{t(locale, 'الرصيد', 'Balance')}</span>
+                        </div>
+                        <p className="text-lg font-bold text-green-600">{formatBalance(selectedUser.wallet?.balance ?? 0)}</p>
+                      </div>
+                      {/* Debt */}
+                      <div className="p-3 rounded-xl border bg-surface/50">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Wallet className="h-4 w-4 text-red-500" />
+                          <span className="text-xs text-muted-foreground">{t(locale, 'المديونية', 'Debt')}</span>
+                        </div>
+                        <p className="text-lg font-bold text-red-600">{formatBalance(selectedUser.wallet?.debt ?? 0)}</p>
+                      </div>
+                      {/* Orders for sellers */}
+                      <div className="p-3 rounded-xl border bg-surface/50">
+                        <div className="flex items-center gap-2 mb-1">
+                          <ShoppingCart className="h-4 w-4 text-blue-500" />
+                          <span className="text-xs text-muted-foreground">{t(locale, 'الطلبات', 'Orders')}</span>
+                        </div>
+                        <p className="text-lg font-bold">{selectedUser._count?.orders ?? 0}</p>
+                      </div>
+                      {/* Rating for seller/supplier */}
+                      {(selectedUser.role === 'seller' || selectedUser.role === 'supplier') && selectedUser.sellerProfile && (
+                        <div className="p-3 rounded-xl border bg-surface/50">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                            <span className="text-xs text-muted-foreground">{t(locale, 'التقييم', 'Rating')}</span>
+                          </div>
+                          <p className="text-lg font-bold">{selectedUser.sellerProfile.rating.toFixed(1)}</p>
+                        </div>
+                      )}
+                      {/* Rating for store_manager */}
+                      {selectedUser.role === 'store_manager' && selectedUser.store && (
+                        <div className="p-3 rounded-xl border bg-surface/50">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                            <span className="text-xs text-muted-foreground">{t(locale, 'تقييم المتجر', 'Store Rating')}</span>
+                          </div>
+                          <p className="text-lg font-bold">{(selectedUser.store as any).rating?.toFixed(1) ?? '—'}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Store Info (store_manager only) */}
