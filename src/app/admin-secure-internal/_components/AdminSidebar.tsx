@@ -69,8 +69,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
       title: t('admin.accounts'),
       icon: Users,
       items: [
-        { label: locale === 'ar' ? 'إدارة المستخدمين (متقدم)' : 'User Management (Advanced)', path: 'users' },
-        { label: t('admin.userAccounts'), path: '?tab=users' },
+        { label: locale === 'ar' ? 'إدارة المستخدمين' : 'User Management', path: 'users' },
         { label: t('admin.storesSellers'), path: '?tab=stores-sellers' },
         { label: locale === 'ar' ? 'توثيق المتاجر (KYC/KYB)' : 'KYC/KYB Verification', path: 'verifications' },
         { label: locale === 'ar' ? 'مختبر سحب البيانات (OCR)' : 'OCR Sandbox', path: 'ocr-sandbox' },

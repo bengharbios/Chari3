@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
@@ -889,7 +889,7 @@ export default function UserManagementPage() {
             </div>
           )}
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" dir={dir}>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -916,7 +916,7 @@ export default function UserManagementPage() {
                     {t(locale, 'تاريخ التسجيل', 'Joined')}
                   </TableHead>
                   <TableHead className="text-end pe-4">
-                    {t(locale, 'الإجرا؍ات', 'Actions')}
+                    {t(locale, 'الإجراءات', 'Actions')}
                   </TableHead>
                 </TableRow>
               </TableHeader>
