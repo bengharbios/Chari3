@@ -17,7 +17,8 @@ export default function DocsClientLayout({ children, allDocs }: { children: Reac
     general: isRTL ? 'عام' : 'General',
     buyers: isRTL ? 'المشترين' : 'Buyers',
     sellers: isRTL ? 'التجار' : 'Sellers',
-    developers: isRTL ? 'المطورين' : 'Developers'
+    developers: isRTL ? 'المطورين' : 'Developers',
+    security: isRTL ? 'الأمان والحماية' : 'Security'
   };
 
   const groupedDocs = allDocs.reduce((acc: any, doc) => {
