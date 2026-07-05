@@ -472,6 +472,27 @@ export default function UserManagementPage() {
     });
   };
 
+  const handleUserToggleVerify = async (userId: string, currentStatus: boolean) => {
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: userId, isVerified: !currentStatus }),
+      });
+      if (res.ok) {
+        const actionText = !currentStatus 
+          ? t(locale, 'تم توثيق الحساب بنجاح', 'Account verified successfully') 
+          : t(locale, 'تم إلغاء التوثيق', 'Verification removed');
+        toast.success(actionText);
+        fetchUsers();
+      } else {
+        toast.error(t(locale, 'فشل تحديث التوثيق', 'Failed to update verification'));
+      }
+    } catch {
+      toast.error(t(locale, 'حدث خطأ غير متوقع', 'Unexpected error occurred'));
+    }
+  };
+
   // ---- Action Handlers ----
   const handleViewDetails = (user: UserRecord) => {
     setSelectedUser(user);
