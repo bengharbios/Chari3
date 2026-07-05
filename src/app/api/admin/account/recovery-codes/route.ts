@@ -93,9 +93,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, error: '2FA not configured' }, { status: 400 });
       }
 
-      // Verify TOTP
-      const { authenticator } = await import('otplib');
-      const valid = authenticator.verify({ token: totpCode, secret: twoFactorRecord.secret });
+      // Verify TOTP using local helper
+      const { verifyTOTP } = await import('@/app/api/auth/2fa/route');
+      const valid = verifyTOTP(totpCode, twoFactorRecord.secret);
       if (!valid) {
         return NextResponse.json(
           { success: false, error: 'رمز TOTP غير صحيح', errorEn: 'Invalid TOTP code' },

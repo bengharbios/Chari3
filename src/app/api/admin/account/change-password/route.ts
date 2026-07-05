@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
-import { authenticator } from 'otplib';
+import { verifyTOTP } from '@/app/api/auth/2fa/route';
 
 export const dynamic = 'force-dynamic';
 
@@ -77,10 +77,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, error: '2FA record not found' }, { status: 404 });
       }
 
-      const isValidTotp = authenticator.verify({
-        token: totpCode,
-        secret: twoFactorRecord.secret,
-      });
+      const isValidTotp = verifyTOTP(totpCode, twoFactorRecord.secret);
 
       if (!isValidTotp) {
         return NextResponse.json(
