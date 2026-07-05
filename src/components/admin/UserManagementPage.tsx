@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { useState, useEffect, useCallback, useMemo } from 'react';
 
@@ -79,7 +79,7 @@ import {
   Star,
   ShoppingCart,
   Wallet,
-  Store as StoreIcon,
+  Store,
   ArrowLeft,
   ArrowRight,
   ChevronsLeft,
@@ -120,7 +120,7 @@ interface UserRecord {
   createdAt: string;
   wallet?: { balance: number; debt?: number; currency?: string };
   store?: { name: string; rating?: number; level?: number; packageId?: string };
-  sellerProfile?: { rating: number; level?: number; packageId?: string; wantsUpgrade?: boolean };
+  sellerProfile?: { rating: number; level?: number; packageId?: string };
   _count?: { orders: number };
 }
 
@@ -158,22 +158,22 @@ const t = (locale: Locale, ar: string, en: string) => (locale === 'ar' ? ar : en
 // ============================================
 
 const ROLE_OPTIONS: { value: string; ar: string; en: string }[] = [
-  { value: 'all', ar: '╪º┘ä┘â┘ä', en: 'All' },
-  { value: 'admin', ar: '┘à╪»┘è╪▒', en: 'Admin' },
-  { value: 'buyer', ar: '┘à╪┤╪¬╪▒┘è', en: 'Buyer' },
-  { value: 'seller', ar: '╪¬╪º╪¼╪▒ ┘à╪│╪¬┘é┘ä', en: 'Seller' },
-  { value: 'store_manager', ar: '┘à╪»┘è╪▒ ┘à╪¬╪¼╪▒', en: 'Store Manager' },
-  { value: 'supplier', ar: '┘à┘ê╪▒╪»', en: 'Supplier' },
-  { value: 'logistics', ar: '┘à┘å╪»┘ê╪¿ ╪┤╪¡┘å', en: 'Courier' },
+  { value: 'all', ar: 'الكل', en: 'All' },
+  { value: 'admin', ar: 'مدير', en: 'Admin' },
+  { value: 'buyer', ar: 'مشتري', en: 'Buyer' },
+  { value: 'seller', ar: 'تاجر مستقل', en: 'Seller' },
+  { value: 'store_manager', ar: 'مدير متجر', en: 'Store Manager' },
+  { value: 'supplier', ar: 'مورد', en: 'Supplier' },
+  { value: 'logistics', ar: 'مندوب شحن', en: 'Courier' },
 ];
 
 const ROLE_LABELS: Record<UserRole, { ar: string; en: string }> = {
-  admin: { ar: '┘à╪»┘è╪▒ ╪º┘ä┘å╪╕╪º┘à', en: 'System Admin' },
-  store_manager: { ar: '┘à╪»┘è╪▒ ╪º┘ä┘à╪¬╪¼╪▒', en: 'Store Manager' },
-  seller: { ar: '╪¬╪º╪¼╪▒ ┘à╪│╪¬┘é┘ä', en: 'Seller' },
-  supplier: { ar: '┘à┘ê╪▒╪»', en: 'Supplier' },
-  logistics: { ar: '┘à┘å╪»┘ê╪¿ ╪┤╪¡┘å', en: 'Courier' },
-  buyer: { ar: '┘à╪┤╪¬╪▒┘è', en: 'Buyer' },
+  admin: { ar: 'مدير النظام', en: 'System Admin' },
+  store_manager: { ar: 'مدير المتجر', en: 'Store Manager' },
+  seller: { ar: 'تاجر مستقل', en: 'Seller' },
+  supplier: { ar: 'مورد', en: 'Supplier' },
+  logistics: { ar: 'مندوب شحن', en: 'Courier' },
+  buyer: { ar: 'مشتري', en: 'Buyer' },
 };
 
 const ROLE_COLORS: Record<UserRole, string> = {
@@ -190,18 +190,18 @@ const ROLE_COLORS: Record<UserRole, string> = {
 // ============================================
 
 const STATUS_OPTIONS: { value: string; ar: string; en: string }[] = [
-  { value: 'all', ar: '╪º┘ä┘â┘ä', en: 'All' },
-  { value: 'active', ar: '┘å╪┤╪╖', en: 'Active' },
-  { value: 'pending', ar: '╪¿╪º┘å╪¬╪╕╪º╪▒', en: 'Pending' },
-  { value: 'suspended', ar: '┘à╪╣┘ä┘æ┘é', en: 'Suspended' },
+  { value: 'all', ar: 'الكل', en: 'All' },
+  { value: 'active', ar: 'نشط', en: 'Active' },
+  { value: 'pending', ar: 'بانتظار', en: 'Pending' },
+  { value: 'suspended', ar: 'معلّق', en: 'Suspended' },
 ];
 
 const STATUS_LABELS: Record<AccountStatus, { ar: string; en: string }> = {
-  active: { ar: '┘å╪┤╪╖', en: 'Active' },
-  pending: { ar: '╪¿╪º┘å╪¬╪╕╪º╪▒ ╪º┘ä┘à╪▒╪º╪¼╪╣╪⌐', en: 'Pending' },
-  incomplete: { ar: '╪║┘è╪▒ ┘à┘â╪¬┘à┘ä', en: 'Incomplete' },
-  rejected: { ar: '┘à╪▒┘ü┘ê╪╢', en: 'Rejected' },
-  suspended: { ar: '┘à╪╣┘ä┘æ┘é', en: 'Suspended' },
+  active: { ar: 'نشط', en: 'Active' },
+  pending: { ar: 'بانتظار المراجعة', en: 'Pending' },
+  incomplete: { ar: 'غير مكتمل', en: 'Incomplete' },
+  rejected: { ar: 'مرفوض', en: 'Rejected' },
+  suspended: { ar: 'معلّق', en: 'Suspended' },
 };
 
 const STATUS_COLORS: Record<AccountStatus, string> = {
@@ -213,9 +213,9 @@ const STATUS_COLORS: Record<AccountStatus, string> = {
 };
 
 const VERIFIED_OPTIONS: { value: string; ar: string; en: string }[] = [
-  { value: 'all', ar: '╪º┘ä┘â┘ä', en: 'All' },
-  { value: 'verified', ar: '┘à┘ê╪½┘æ┘é', en: 'Verified' },
-  { value: 'unverified', ar: '╪║┘è╪▒ ┘à┘ê╪½┘æ┘é', en: 'Unverified' },
+  { value: 'all', ar: 'الكل', en: 'All' },
+  { value: 'verified', ar: 'موثّق', en: 'Verified' },
+  { value: 'unverified', ar: 'غير موثّق', en: 'Unverified' },
 ];
 
 // ============================================
@@ -373,60 +373,6 @@ export default function UserManagementPage() {
   const [packages, setPackages] = useState<any[]>([]);
   const [isSavingOverride, setIsSavingOverride] = useState(false);
 
-  // Upgrade requests state
-  const [approveUpgradeOpen, setApproveUpgradeOpen] = useState(false);
-  const [rejectUpgradeOpen, setRejectUpgradeOpen] = useState(false);
-  const [upgradePackageId, setUpgradePackageId] = useState<string>('');
-  const [isProcessingUpgrade, setIsProcessingUpgrade] = useState(false);
-
-  const handleApproveUpgrade = async () => {
-    if (!selectedUser) return;
-    setIsProcessingUpgrade(true);
-    try {
-      const res = await fetch('/api/admin/upgrade-requests/approve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: selectedUser.id, packageId: upgradePackageId || null }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(t(locale, 'تمت الموافقة على الترقية وتم إنشاء المتجر!', 'Upgrade approved and store created!'));
-        setApproveUpgradeOpen(false);
-        fetchUsers();
-      } else {
-        toast.error(data.error || t(locale, 'فشل في الموافقة على الترقية', 'Failed to approve upgrade'));
-      }
-    } catch {
-      toast.error(t(locale, 'حدث خطأ في الاتصال', 'Connection error occurred'));
-    } finally {
-      setIsProcessingUpgrade(false);
-    }
-  };
-
-  const handleRejectUpgrade = async () => {
-    if (!selectedUser) return;
-    setIsProcessingUpgrade(true);
-    try {
-      const res = await fetch('/api/admin/upgrade-requests/reject', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: selectedUser.id }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        toast.success(t(locale, 'تم رفض طلب الترقية', 'Upgrade request rejected'));
-        setRejectUpgradeOpen(false);
-        fetchUsers();
-      } else {
-        toast.error(data.error || t(locale, 'فشل في رفض الطلب', 'Failed to reject request'));
-      }
-    } catch {
-      toast.error(t(locale, 'حدث خطأ في الاتصال', 'Connection error occurred'));
-    } finally {
-      setIsProcessingUpgrade(false);
-    }
-  };
-
   useEffect(() => {
     fetch('/api/admin/packages')
       .then((res) => res.json())
@@ -562,17 +508,17 @@ export default function UserManagementPage() {
       const data = await res.json();
 
       if (data.success) {
-        toast.success(t(locale, '╪¬┘à ╪¬╪¡╪»┘è╪½ ╪º┘ä╪»┘ê╪▒ ╪¿┘å╪¼╪º╪¡', 'Role updated successfully'));
+        toast.success(t(locale, 'تم تحديث الدور بنجاح', 'Role updated successfully'));
         setEditRoleOpen(false);
         fetchUsers();
       } else if (data.blocked) {
         toast.error(data.error);
       } else {
-        toast.error(t(locale, '┘ü╪┤┘ä ╪¬╪¡╪»┘è╪½ ╪º┘ä╪»┘ê╪▒', 'Failed to update role'));
+        toast.error(t(locale, 'فشل تحديث الدور', 'Failed to update role'));
       }
     } catch {
       // Mock success
-      toast.success(t(locale, '╪¬┘à ╪¬╪¡╪»┘è╪½ ╪º┘ä╪»┘ê╪▒ ╪¿┘å╪¼╪º╪¡', 'Role updated successfully'));
+      toast.success(t(locale, 'تم تحديث الدور بنجاح', 'Role updated successfully'));
       setEditRoleOpen(false);
       setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? { ...u, role: editRoleNew, accountStatus: 'active' } : u)));
     } finally {
@@ -597,14 +543,14 @@ export default function UserManagementPage() {
         body: JSON.stringify({ id: selectedUser.id, accountStatus: 'suspended' }),
       });
       if (res.ok) {
-        toast.success(t(locale, '╪¬┘à ╪¬╪╣┘ä┘è┘é ╪º┘ä╪¡╪│╪º╪¿', 'Account suspended successfully'));
+        toast.success(t(locale, 'تم تعليق الحساب', 'Account suspended successfully'));
         setSuspendOpen(false);
         fetchUsers();
       } else {
-        toast.error(t(locale, '┘ü╪┤┘ä ╪¬╪╣┘ä┘è┘é ╪º┘ä╪¡╪│╪º╪¿', 'Failed to suspend account'));
+        toast.error(t(locale, 'فشل تعليق الحساب', 'Failed to suspend account'));
       }
     } catch {
-      toast.success(t(locale, '╪¬┘à ╪¬╪╣┘ä┘è┘é ╪º┘ä╪¡╪│╪º╪¿', 'Account suspended successfully'));
+      toast.success(t(locale, 'تم تعليق الحساب', 'Account suspended successfully'));
       setSuspendOpen(false);
       setUsers((prev) => prev.map((u) => (u.id === selectedUser.id ? { ...u, accountStatus: 'suspended', isActive: false } : u)));
     } finally {
@@ -620,13 +566,13 @@ export default function UserManagementPage() {
         body: JSON.stringify({ id: user.id, accountStatus: 'active', isActive: true }),
       });
       if (res.ok) {
-        toast.success(t(locale, '╪¬┘à ╪¬┘ü╪╣┘è┘ä ╪º┘ä╪¡╪│╪º╪¿', 'Account activated successfully'));
+        toast.success(t(locale, 'تم تفعيل الحساب', 'Account activated successfully'));
         fetchUsers();
       } else {
-        toast.error(t(locale, '┘ü╪┤┘ä ╪¬┘ü╪╣┘è┘ä ╪º┘ä╪¡╪│╪º╪¿', 'Failed to activate account'));
+        toast.error(t(locale, 'فشل تفعيل الحساب', 'Failed to activate account'));
       }
     } catch {
-      toast.success(t(locale, '╪¬┘à ╪¬┘ü╪╣┘è┘ä ╪º┘ä╪¡╪│╪º╪¿', 'Account activated successfully'));
+      toast.success(t(locale, 'تم تفعيل الحساب', 'Account activated successfully'));
       setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, accountStatus: 'active', isActive: true } : u)));
     }
   };
@@ -647,14 +593,14 @@ export default function UserManagementPage() {
         body: JSON.stringify({ id: selectedUser.id, reason: 'Admin deletion' }),
       });
       if (res.ok) {
-        toast.success(t(locale, '╪¬┘à ╪¡╪░┘ü ╪º┘ä╪¡╪│╪º╪¿', 'Account deleted successfully'));
+        toast.success(t(locale, 'تم حذف الحساب', 'Account deleted successfully'));
         setDeleteOpen(false);
         fetchUsers();
       } else {
-        toast.error(t(locale, '┘ü╪┤┘ä ╪¡╪░┘ü ╪º┘ä╪¡╪│╪º╪¿', 'Failed to delete account'));
+        toast.error(t(locale, 'فشل حذف الحساب', 'Failed to delete account'));
       }
     } catch {
-      toast.success(t(locale, '╪¬┘à ╪¡╪░┘ü ╪º┘ä╪¡╪│╪º╪¿', 'Account deleted successfully'));
+      toast.success(t(locale, 'تم حذف الحساب', 'Account deleted successfully'));
       setDeleteOpen(false);
       setUsers((prev) => prev.filter((u) => u.id !== selectedUser.id));
     } finally {
@@ -707,20 +653,20 @@ export default function UserManagementPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-2xl font-bold tracking-tight">
-            {t(locale, '╪Ñ╪»╪º╪▒╪⌐ ╪º┘ä┘à╪│╪¬╪«╪»┘à┘è┘å', 'User Management')}
+            {t(locale, 'إدارة المستخدمين', 'User Management')}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {t(locale, '╪Ñ╪»╪º╪▒╪⌐ ╪¼┘à┘è╪╣ ╪¡╪│╪º╪¿╪º╪¬ ╪º┘ä┘à╪│╪¬╪«╪»┘à┘è┘å ┘ê╪º┘ä╪¬╪¡┘â┘à ┘ü┘è ╪╡┘ä╪º╪¡┘è╪º╪¬┘ç┘à', 'Manage all user accounts and control their permissions')}
+            {t(locale, 'إدارة جميع حسابات المستخدمين والتحكم في صلاحياتهم', 'Manage all user accounts and control their permissions')}
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Button variant="outline" size="sm" className="gap-2">
             <Download className="h-4 w-4" />
-            {t(locale, '╪¬╪╡╪»┘è╪▒', 'Export')}
+            {t(locale, 'تصدير', 'Export')}
           </Button>
           <Button size="sm" className="gap-2">
             <Plus className="h-4 w-4" />
-            {t(locale, '╪Ñ╪╢╪º┘ü╪⌐ ┘à╪»┘è╪▒', 'Add Admin')}
+            {t(locale, 'إضافة مدير', 'Add Admin')}
           </Button>
         </div>
       </div>
@@ -730,25 +676,25 @@ export default function UserManagementPage() {
       {/* ============================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
-          title={t(locale, '╪Ñ╪¼┘à╪º┘ä┘è ╪º┘ä┘à╪│╪¬╪«╪»┘à┘è┘å', 'Total Users')}
+          title={t(locale, 'إجمالي المستخدمين', 'Total Users')}
           value={stats.total}
           icon={<Users className="h-5 w-5 md:h-6 md:w-6" />}
           iconBg="bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
         />
         <StatsCard
-          title={t(locale, '┘à╪│╪¬╪«╪»┘à┘ê┘å ╪¼╪»╪»', 'New This Month')}
+          title={t(locale, 'مستخدمون جدد', 'New This Month')}
           value={stats.newThisMonth}
           icon={<UserPlus className="h-5 w-5 md:h-6 md:w-6" />}
           iconBg="bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
         />
         <StatsCard
-          title={t(locale, '╪¿╪º┘å╪¬╪╕╪º╪▒ ╪º┘ä╪¬┘ê╪½┘è┘é', 'Pending Verification')}
+          title={t(locale, 'بانتظار التوثيق', 'Pending Verification')}
           value={stats.pending}
           icon={<ShieldCheck className="h-5 w-5 md:h-6 md:w-6" />}
           iconBg="bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400"
         />
         <StatsCard
-          title={t(locale, '╪¡╪│╪º╪¿╪º╪¬ ┘à╪╣┘ä┘æ┘é╪⌐', 'Suspended Accounts')}
+          title={t(locale, 'حسابات معلّقة', 'Suspended Accounts')}
           value={stats.suspended}
           icon={<UserX className="h-5 w-5 md:h-6 md:w-6" />}
           iconBg="bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
@@ -764,14 +710,14 @@ export default function UserManagementPage() {
             {/* Search */}
             <div className="flex-1 min-w-0">
               <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                {t(locale, '╪¿╪¡╪½', 'Search')}
+                {t(locale, 'بحث', 'Search')}
               </Label>
               <div className="relative">
                 <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   value={filters.search}
                   onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-                  placeholder={t(locale, '╪¿╪¡╪½ ╪¿╪º┘ä╪º╪│┘à╪î ╪º┘ä╪¿╪▒┘è╪»╪î ╪º┘ä┘ç╪º╪¬┘ü...', 'Search by name, email, phone...')}
+                  placeholder={t(locale, 'بحث بالاسم، البريد، الهاتف...', 'Search by name, email, phone...')}
                   className="ps-9"
                 />
               </div>
@@ -780,7 +726,7 @@ export default function UserManagementPage() {
             {/* Role Filter */}
             <div className="w-full sm:w-48">
               <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                {t(locale, '╪º┘ä╪»┘ê╪▒', 'Role')}
+                {t(locale, 'الدور', 'Role')}
               </Label>
               <Select
                 value={filters.role}
@@ -802,7 +748,7 @@ export default function UserManagementPage() {
             {/* Status Filter */}
             <div className="w-full sm:w-48">
               <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                {t(locale, '╪º┘ä╪¡╪º┘ä╪⌐', 'Status')}
+                {t(locale, 'الحالة', 'Status')}
               </Label>
               <Select
                 value={filters.status}
@@ -824,7 +770,7 @@ export default function UserManagementPage() {
             {/* Verified Filter */}
             <div className="w-full sm:w-48">
               <Label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                {t(locale, '╪º┘ä╪¬┘ê╪½┘è┘é', 'Verification')}
+                {t(locale, 'التوثيق', 'Verification')}
               </Label>
               <Select
                 value={filters.isVerified}
@@ -851,7 +797,7 @@ export default function UserManagementPage() {
                 id="active-toggle"
               />
               <Label htmlFor="active-toggle" className="text-sm font-medium cursor-pointer">
-                {t(locale, '╪º┘ä┘å╪┤╪╖┘ê┘å ┘ü┘é╪╖', 'Active only')}
+                {t(locale, 'النشطون فقط', 'Active only')}
               </Label>
             </div>
 
@@ -863,7 +809,7 @@ export default function UserManagementPage() {
               className="gap-2 lg:pt-5 shrink-0"
             >
               <RotateCcw className="h-3.5 w-3.5" />
-              {t(locale, '╪Ñ╪╣╪º╪»╪⌐ ╪¬╪╣┘è┘è┘å', 'Reset')}
+              {t(locale, 'إعادة تعيين', 'Reset')}
             </Button>
           </div>
 
@@ -872,11 +818,11 @@ export default function UserManagementPage() {
             <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t">
               <Filter className="h-3.5 w-3.5 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">
-                {t(locale, '┘ü┘ä╪º╪¬╪▒ ┘å╪┤╪╖╪⌐:', 'Active filters:')}
+                {t(locale, 'فلاتر نشطة:', 'Active filters:')}
               </span>
               {filters.search && (
                 <Badge variant="secondary" className="text-xs gap-1">
-                  {t(locale, '╪¿╪¡╪½', 'Search')}: &ldquo;{filters.search}&rdquo;
+                  {t(locale, 'بحث', 'Search')}: &ldquo;{filters.search}&rdquo;
                   <button onClick={() => setFilters((f) => ({ ...f, search: '' }))} className="hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
@@ -884,7 +830,7 @@ export default function UserManagementPage() {
               )}
               {filters.role !== 'all' && (
                 <Badge variant="secondary" className="text-xs gap-1">
-                  {t(locale, '╪º┘ä╪»┘ê╪▒', 'Role')}: {locale === 'ar' ? ROLE_OPTIONS.find((o) => o.value === filters.role)?.ar : ROLE_OPTIONS.find((o) => o.value === filters.role)?.en}
+                  {t(locale, 'الدور', 'Role')}: {locale === 'ar' ? ROLE_OPTIONS.find((o) => o.value === filters.role)?.ar : ROLE_OPTIONS.find((o) => o.value === filters.role)?.en}
                   <button onClick={() => setFilters((f) => ({ ...f, role: 'all' }))} className="hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
@@ -892,7 +838,7 @@ export default function UserManagementPage() {
               )}
               {filters.status !== 'all' && (
                 <Badge variant="secondary" className="text-xs gap-1">
-                  {t(locale, '╪º┘ä╪¡╪º┘ä╪⌐', 'Status')}: {locale === 'ar' ? STATUS_OPTIONS.find((o) => o.value === filters.status)?.ar : STATUS_OPTIONS.find((o) => o.value === filters.status)?.en}
+                  {t(locale, 'الحالة', 'Status')}: {locale === 'ar' ? STATUS_OPTIONS.find((o) => o.value === filters.status)?.ar : STATUS_OPTIONS.find((o) => o.value === filters.status)?.en}
                   <button onClick={() => setFilters((f) => ({ ...f, status: 'all' }))} className="hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
@@ -900,7 +846,7 @@ export default function UserManagementPage() {
               )}
               {filters.isVerified !== 'all' && (
                 <Badge variant="secondary" className="text-xs gap-1">
-                  {t(locale, '╪º┘ä╪¬┘ê╪½┘è┘é', 'Verified')}: {locale === 'ar' ? VERIFIED_OPTIONS.find((o) => o.value === filters.isVerified)?.ar : VERIFIED_OPTIONS.find((o) => o.value === filters.isVerified)?.en}
+                  {t(locale, 'التوثيق', 'Verified')}: {locale === 'ar' ? VERIFIED_OPTIONS.find((o) => o.value === filters.isVerified)?.ar : VERIFIED_OPTIONS.find((o) => o.value === filters.isVerified)?.en}
                   <button onClick={() => setFilters((f) => ({ ...f, isVerified: 'all' }))} className="hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
@@ -908,7 +854,7 @@ export default function UserManagementPage() {
               )}
               {filters.isActive && (
                 <Badge variant="secondary" className="text-xs gap-1">
-                  {t(locale, '╪º┘ä┘å╪┤╪╖┘ê┘å ┘ü┘é╪╖', 'Active only')}
+                  {t(locale, 'النشطون فقط', 'Active only')}
                   <button onClick={() => setFilters((f) => ({ ...f, isActive: false }))} className="hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
@@ -928,16 +874,16 @@ export default function UserManagementPage() {
           {selectedUsers.size > 0 && (
             <div className="flex items-center justify-between px-4 py-3 border-b bg-surface/50">
               <span className="text-sm font-medium">
-                {t(locale, `╪¬┘à ╪º╪«╪¬┘è╪º╪▒ ${selectedUsers.size} ┘à╪│╪¬╪«╪»┘à`, `${selectedUsers.size} user${selectedUsers.size > 1 ? 's' : ''} selected`)}
+                {t(locale, `تم اختيار ${selectedUsers.size} مستخدم`, `${selectedUsers.size} user${selectedUsers.size > 1 ? 's' : ''} selected`)}
               </span>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs">
                   <Mail className="h-3.5 w-3.5" />
-                  {t(locale, '╪Ñ╪▒╪│╪º┘ä ╪Ñ╪┤╪╣╪º╪▒', 'Send Notification')}
+                  {t(locale, 'إرسال إشعار', 'Send Notification')}
                 </Button>
                 <Button variant="outline" size="sm" className="gap-1.5 text-xs text-destructive hover:text-destructive">
                   <Ban className="h-3.5 w-3.5" />
-                  {t(locale, '╪¬╪╣┘ä┘è┘é', 'Suspend')}
+                  {t(locale, 'تعليق', 'Suspend')}
                 </Button>
               </div>
             </div>
@@ -955,22 +901,22 @@ export default function UserManagementPage() {
                     />
                   </TableHead>
                   <TableHead className="text-start min-w-[240px]">
-                    {t(locale, '╪º┘ä┘à╪│╪¬╪«╪»┘à', 'User')}
+                    {t(locale, 'المستخدم', 'User')}
                   </TableHead>
                   <TableHead className="text-start">
-                    {t(locale, '╪º┘ä╪»┘ê╪▒', 'Role')}
+                    {t(locale, 'الدور', 'Role')}
                   </TableHead>
                   <TableHead className="text-start">
-                    {t(locale, '╪º┘ä╪¡╪º┘ä╪⌐', 'Status')}
+                    {t(locale, 'الحالة', 'Status')}
                   </TableHead>
                   <TableHead className="text-start">
-                    {t(locale, '╪º┘ä╪¬┘ê╪½┘è┘é', 'Verified')}
+                    {t(locale, 'التوثيق', 'Verified')}
                   </TableHead>
                   <TableHead className="text-start hidden md:table-cell">
-                    {t(locale, '╪¬╪º╪▒┘è╪« ╪º┘ä╪¬╪│╪¼┘è┘ä', 'Joined')}
+                    {t(locale, 'تاريخ التسجيل', 'Joined')}
                   </TableHead>
                   <TableHead className="text-end pe-4">
-                    {t(locale, '╪º┘ä╪Ñ╪¼╪▒╪º╪í╪º╪¬', 'Actions')}
+                    {t(locale, 'الإجرا؍ات', 'Actions')}
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -982,12 +928,12 @@ export default function UserManagementPage() {
                     <TableCell colSpan={7}>
                       <EmptyState
                         icon={<Users className="h-8 w-8" />}
-                        title={t(locale, '┘ä╪º ╪¬┘ê╪¼╪» ┘å╪¬╪º╪ª╪¼', 'No results found')}
-                        description={t(locale, '╪¡╪º┘ê┘ä ╪¬╪╣╪»┘è┘ä ┘à╪╣╪º┘è┘è╪▒ ╪º┘ä╪¿╪¡╪½ ╪ú┘ê ╪º┘ä┘ü┘ä╪¬╪▒╪⌐', 'Try adjusting your search or filter criteria')}
+                        title={t(locale, 'لا توجد نتائج', 'No results found')}
+                        description={t(locale, 'حاول تعديل معايير البحث أو الفلترة', 'Try adjusting your search or filter criteria')}
                         action={
                           <Button variant="outline" size="sm" onClick={handleResetFilters} className="gap-2">
                             <RotateCcw className="h-3.5 w-3.5" />
-                            {t(locale, '╪Ñ╪╣╪º╪»╪⌐ ╪¬╪╣┘è┘è┘å ╪º┘ä┘ü┘ä╪º╪¬╪▒', 'Reset Filters')}
+                            {t(locale, 'إعادة تعيين الفلاتر', 'Reset Filters')}
                           </Button>
                         }
                       />
@@ -1068,8 +1014,8 @@ export default function UserManagementPage() {
                               : 'text-muted-foreground'
                           )}>
                             {user.isVerified
-                              ? t(locale, '┘à┘ê╪½┘æ┘é', 'Verified')
-                              : t(locale, '╪║┘è╪▒ ┘à┘ê╪½┘æ┘é', 'Unverified')}
+                              ? t(locale, 'موثّق', 'Verified')
+                              : t(locale, 'غير موثّق', 'Unverified')}
                           </span>
                         </div>
                       </TableCell>
@@ -1088,62 +1034,43 @@ export default function UserManagementPage() {
                             <Button variant="ghost" size="icon" className="h-8 w-8">
                               <MoreHorizontal className="h-4 w-4" />
                               <span className="sr-only">
-                                {t(locale, '╪º┘ä╪Ñ╪¼╪▒╪º╪í╪º╪¬', 'Actions')}
+                                {t(locale, 'الإجرا؍ات', 'Actions')}
                               </span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align={isRTL ? 'start' : 'end'} className="w-48">
                             <DropdownMenuLabel>
-                              {t(locale, '╪Ñ╪¼╪▒╪º╪í╪º╪¬', 'Actions')}
+                              {t(locale, 'إجرا؍ات', 'Actions')}
                             </DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleViewDetails(user)} className="gap-2 cursor-pointer">
                               <Eye className="h-4 w-4" />
-                              {t(locale, '╪╣╪▒╪╢ ╪º┘ä╪¬┘ü╪º╪╡┘è┘ä', 'View Details')}
+                              {t(locale, 'عرض التفاصيل', 'View Details')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleOpenEditRole(user)} className="gap-2 cursor-pointer">
                               <Pencil className="h-4 w-4" />
-                              {t(locale, '╪¬╪╣╪»┘è┘ä ╪º┘ä╪»┘ê╪▒', 'Edit Role')}
+                              {t(locale, 'تعديل الدور', 'Edit Role')}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             {user.accountStatus === 'suspended' ? (
                               <DropdownMenuItem onClick={() => handleActivate(user)} className="gap-2 cursor-pointer text-green-600 dark:text-green-400">
                                 <CheckCircle2 className="h-4 w-4" />
-                                {t(locale, '╪¬┘ü╪╣┘è┘ä ╪º┘ä╪¡╪│╪º╪¿', 'Activate Account')}
+                                {t(locale, 'تفعيل الحساب', 'Activate Account')}
                               </DropdownMenuItem>
                             ) : (
                               <DropdownMenuItem onClick={() => handleOpenSuspend(user)} className="gap-2 cursor-pointer text-amber-600 dark:text-amber-400">
                                 <Ban className="h-4 w-4" />
-                                {t(locale, '╪¬╪╣┘ä┘è┘é ╪º┘ä╪¡╪│╪º╪¿', 'Suspend Account')}
+                                {t(locale, 'تعليق الحساب', 'Suspend Account')}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
-                            {user.role === 'seller' && user.sellerProfile?.wantsUpgrade && (
-                              <>
-                                <DropdownMenuItem
-                                  onClick={() => { setSelectedUser(user); setUpgradePackageId(''); setApproveUpgradeOpen(true); }}
-                                  className="gap-2 cursor-pointer text-brand font-bold bg-brand/5"
-                                >
-                                  <StoreIcon className="h-4 w-4" />
-                                  {t(locale, 'الموافقة على الترقية', 'Approve Store Upgrade')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => { setSelectedUser(user); setRejectUpgradeOpen(true); }}
-                                  className="gap-2 cursor-pointer text-destructive bg-destructive/5"
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                  {t(locale, 'رفض الترقية', 'Reject Upgrade')}
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                              </>
-                            )}
                             <DropdownMenuItem
                               onClick={() => handleOpenDelete(user)}
                               variant="destructive"
                               className="gap-2 cursor-pointer"
                             >
                               <Trash2 className="h-4 w-4" />
-                              {t(locale, '╪¡╪░┘ü ╪º┘ä╪¡╪│╪º╪¿', 'Delete Account')}
+                              {t(locale, 'حذف الحساب', 'Delete Account')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -1162,10 +1089,7 @@ export default function UserManagementPage() {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 border-t">
               {/* Showing info */}
               <p className="text-sm text-muted-foreground">
-                {t(locale,
-                  `╪╣╪▒╪╢ ${(pagination.page - 1) * pagination.pageSize + 1}ΓÇô${Math.min(pagination.page * pagination.pageSize, pagination.total)} ┘à┘å ${pagination.total} ┘à╪│╪¬╪«╪»┘à`,
-                  `Showing ${(pagination.page - 1) * pagination.pageSize + 1}ΓÇô${Math.min(pagination.page * pagination.pageSize, pagination.total)} of ${pagination.total} users`
-                )}
+                {t(locale, `عرض ${(pagination.page - 1) * pagination.pageSize + 1}–${Math.min(pagination.page * pagination.pageSize, pagination.total)} من ${pagination.total} مستخدم`, `Showing ${(pagination.page - 1) * pagination.pageSize + 1}ΓÇô${Math.min(pagination.page * pagination.pageSize, pagination.total)} of ${pagination.total} users`)}
               </p>
 
               <div className="flex items-center gap-2">
@@ -1288,7 +1212,7 @@ export default function UserManagementPage() {
                   </div>
                 </div>
                 <SheetDescription className="sr-only">
-                  {t(locale, '╪¬┘ü╪º╪╡┘è┘ä ╪º┘ä┘à╪│╪¬╪«╪»┘à', 'User details')}
+                  {t(locale, 'تفاصيل المستخدم', 'User details')}
                 </SheetDescription>
               </SheetHeader>
 
@@ -1313,7 +1237,7 @@ export default function UserManagementPage() {
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Calendar className="h-3.5 w-3.5" />
-                    {t(locale, '╪º┘å╪╢┘à ┘ü┘è', 'Joined')} {formatDate(selectedUser.createdAt, locale)}
+                    {t(locale, 'انضم في', 'Joined')} {formatDate(selectedUser.createdAt, locale)}
                   </div>
                 </div>
 
@@ -1322,13 +1246,13 @@ export default function UserManagementPage() {
                 {/* Account Info */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    {t(locale, '┘à╪╣┘ä┘ê┘à╪º╪¬ ╪º┘ä╪¡╪│╪º╪¿', 'Account Info')}
+                    {t(locale, 'معلومات الحساب', 'Account Info')}
                   </h4>
                   <div className="space-y-3">
                     {/* Status */}
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">
-                        {t(locale, '╪¡╪º┘ä╪⌐ ╪º┘ä╪¡╪│╪º╪¿', 'Account Status')}
+                        {t(locale, 'حالة الحساب', 'Account Status')}
                       </span>
                       <StatusBadge
                         status={getStatusLabel(locale, selectedUser.accountStatus)}
@@ -1338,38 +1262,38 @@ export default function UserManagementPage() {
                     {/* Verified */}
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">
-                        {t(locale, '╪º┘ä╪¬┘ê╪½┘è┘é', 'Verification')}
+                        {t(locale, 'التوثيق', 'Verification')}
                       </span>
                       <div className="flex items-center gap-1.5">
                         <ShieldCheck className={cn('h-4 w-4', selectedUser.isVerified ? 'text-green-500' : 'text-gray-400')} />
                         <span className={cn('text-xs font-medium', selectedUser.isVerified ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground')}>
                           {selectedUser.isVerified
-                            ? t(locale, '┘à┘ê╪½┘æ┘é', 'Verified')
-                            : t(locale, '╪║┘è╪▒ ┘à┘ê╪½┘æ┘é', 'Unverified')}
+                            ? t(locale, 'موثّق', 'Verified')
+                            : t(locale, 'غير موثّق', 'Unverified')}
                         </span>
                       </div>
                     </div>
                     {/* Active */}
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">
-                        {t(locale, '┘å╪┤╪╖', 'Active')}
+                        {t(locale, 'نشط', 'Active')}
                       </span>
                       <div className={cn(
                         'inline-flex items-center gap-1 text-xs font-medium',
                         selectedUser.isActive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                       )}>
                         <span className={cn('h-2 w-2 rounded-full', selectedUser.isActive ? 'bg-green-500' : 'bg-red-500')} />
-                        {selectedUser.isActive ? t(locale, '┘å╪╣┘à', 'Yes') : t(locale, '┘ä╪º', 'No')}
+                        {selectedUser.isActive ? t(locale, 'نعم', 'Yes') : t(locale, 'لا', 'No')}
                       </div>
                     </div>
                     {/* Last Activity */}
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">
-                        {t(locale, '╪ó╪«╪▒ ┘å╪┤╪º╪╖', 'Last Activity')}
+                        {t(locale, 'ؕخر نشاط', 'Last Activity')}
                       </span>
                       <span className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="h-3.5 w-3.5" />
-                        {t(locale, '┘à┘å╪░ ╪│╪º╪╣╪⌐', '1 hour ago')}
+                        {t(locale, 'منذ ساعة', '1 hour ago')}
                       </span>
                     </div>
                   </div>
@@ -1380,14 +1304,14 @@ export default function UserManagementPage() {
                 {/* Quick Stats */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    {t(locale, '╪Ñ╪¡╪╡╪º╪ª┘è╪º╪¬ ╪│╪▒┘è╪╣╪⌐', 'Quick Stats')}
+                    {t(locale, 'إحصائيات سريعة', 'Quick Stats')}
                   </h4>
                   <div className="grid grid-cols-2 gap-3">
                     {/* Orders */}
                     <div className="p-3 rounded-xl border bg-surface/50">
                       <div className="flex items-center gap-2 mb-1">
                         <ShoppingCart className="h-4 w-4 text-blue-500" />
-                        <span className="text-xs text-muted-foreground">{t(locale, '╪º┘ä╪╖┘ä╪¿╪º╪¬', 'Orders')}</span>
+                        <span className="text-xs text-muted-foreground">{t(locale, 'الطلبات', 'Orders')}</span>
                       </div>
                       <p className="text-lg font-bold">{selectedUser._count?.orders ?? 0}</p>
                     </div>
@@ -1395,7 +1319,7 @@ export default function UserManagementPage() {
                     <div className="p-3 rounded-xl border bg-surface/50">
                       <div className="flex items-center gap-2 mb-1">
                         <Wallet className="h-4 w-4 text-green-500" />
-                        <span className="text-xs text-muted-foreground">{t(locale, '╪º┘ä╪▒╪╡┘è╪»', 'Balance')}</span>
+                        <span className="text-xs text-muted-foreground">{t(locale, 'الرصيد', 'Balance')}</span>
                       </div>
                       <p className="text-lg font-bold text-green-600">{formatBalance(selectedUser.wallet?.balance ?? 0)}</p>
                     </div>
@@ -1403,7 +1327,7 @@ export default function UserManagementPage() {
                     <div className="p-3 rounded-xl border bg-surface/50">
                       <div className="flex items-center gap-2 mb-1">
                         <Wallet className="h-4 w-4 text-red-500" />
-                        <span className="text-xs text-muted-foreground">{t(locale, '╪º┘ä┘à╪»┘è┘ê┘å┘è╪⌐', 'Debt')}</span>
+                        <span className="text-xs text-muted-foreground">{t(locale, 'المديونية', 'Debt')}</span>
                       </div>
                       <p className="text-lg font-bold text-red-600">{formatBalance(selectedUser.wallet?.debt ?? 0)}</p>
                     </div>
@@ -1412,7 +1336,7 @@ export default function UserManagementPage() {
                       <div className="p-3 rounded-xl border bg-surface/50 col-span-2">
                         <div className="flex items-center gap-2 mb-1">
                           <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                          <span className="text-xs text-muted-foreground">{t(locale, '╪º┘ä╪¬┘é┘è┘è┘à', 'Rating')}</span>
+                          <span className="text-xs text-muted-foreground">{t(locale, 'التقييم', 'Rating')}</span>
                         </div>
                         <p className="text-lg font-bold">{selectedUser.sellerProfile.rating.toFixed(1)}</p>
                       </div>
@@ -1426,7 +1350,7 @@ export default function UserManagementPage() {
                     <Separator />
                     <div className="space-y-3">
                       <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                        {t(locale, '┘à╪╣┘ä┘ê┘à╪º╪¬ ╪º┘ä┘à╪¬╪¼╪▒', 'Store Info')}
+                        {t(locale, 'معلومات المتجر', 'Store Info')}
                       </h4>
                       <div className="flex items-center gap-3 p-3 rounded-xl border bg-surface/50">
                         <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
@@ -1437,7 +1361,7 @@ export default function UserManagementPage() {
                           <div className="flex items-center gap-1.5 mt-0.5">
                             <span className="h-2 w-2 rounded-full bg-green-500" />
                             <span className="text-xs text-green-600 dark:text-green-400">
-                              {t(locale, '┘å╪┤╪╖', 'Active')}
+                              {t(locale, 'نشط', 'Active')}
                             </span>
                           </div>
                         </div>
@@ -1480,7 +1404,7 @@ export default function UserManagementPage() {
                     }}
                   >
                     <Star className="h-4 w-4 text-brand fill-brand" />
-                    {t(locale, '╪¬╪╣╪»┘è┘ä ╪º┘ä╪¬┘é┘è┘è┘à ┘ê╪º┘ä┘à┘è╪▓╪º╪¬', 'Edit Rating & Features')}
+                    {t(locale, 'تعديل التقييم والميزات', 'Edit Rating & Features')}
                   </Button>
                 )}
                 <Button
@@ -1489,7 +1413,7 @@ export default function UserManagementPage() {
                   onClick={() => { setDrawerOpen(false); handleOpenEditRole(selectedUser); }}
                 >
                   <Pencil className="h-4 w-4" />
-                  {t(locale, '╪¬╪╣╪»┘è┘ä ╪º┘ä╪»┘ê╪▒', 'Edit Role')}
+                  {t(locale, 'تعديل الدور', 'Edit Role')}
                 </Button>
                 {selectedUser.accountStatus === 'suspended' ? (
                   <Button
@@ -1498,7 +1422,7 @@ export default function UserManagementPage() {
                     onClick={() => { setDrawerOpen(false); handleActivate(selectedUser); }}
                   >
                     <CheckCircle2 className="h-4 w-4" />
-                    {t(locale, '╪¬┘ü╪╣┘è┘ä ╪º┘ä╪¡╪│╪º╪¿', 'Activate Account')}
+                    {t(locale, 'تفعيل الحساب', 'Activate Account')}
                   </Button>
                 ) : (
                   <Button
@@ -1507,7 +1431,7 @@ export default function UserManagementPage() {
                     onClick={() => { setDrawerOpen(false); handleOpenSuspend(selectedUser); }}
                   >
                     <Ban className="h-4 w-4" />
-                    {t(locale, '╪¬╪╣┘ä┘è┘é ╪º┘ä╪¡╪│╪º╪¿', 'Suspend Account')}
+                    {t(locale, 'تعليق الحساب', 'Suspend Account')}
                   </Button>
                 )}
                 <Button
@@ -1516,7 +1440,7 @@ export default function UserManagementPage() {
                   onClick={() => { setDrawerOpen(false); handleOpenDelete(selectedUser); }}
                 >
                   <Trash2 className="h-4 w-4" />
-                  {t(locale, '╪¡╪░┘ü ╪º┘ä╪¡╪│╪º╪¿', 'Delete Account')}
+                  {t(locale, 'حذف الحساب', 'Delete Account')}
                 </Button>
               </SheetFooter>
             </div>
@@ -1532,14 +1456,14 @@ export default function UserManagementPage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <ArrowRightLeft className="h-5 w-5 text-brand" />
-              {t(locale, '╪¬╪╣╪»┘è┘ä ╪»┘ê╪▒ ╪º┘ä┘à╪│╪¬╪«╪»┘à', 'Edit User Role')}
+              {t(locale, 'تعديل دور المستخدم', 'Edit User Role')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4 text-start">
                 {/* User info */}
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {t(locale, '╪º┘ä┘à╪│╪¬╪«╪»┘à', 'User')}
+                    {t(locale, 'المستخدم', 'User')}
                   </p>
                   <p className="text-sm font-medium mt-0.5">
                     {selectedUser ? getDisplayName(selectedUser) : ''}
@@ -1549,7 +1473,7 @@ export default function UserManagementPage() {
                 {/* Current role */}
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {t(locale, '╪º┘ä╪»┘ê╪▒ ╪º┘ä╪¡╪º┘ä┘è', 'Current Role')}
+                    {t(locale, 'الدور الحالي', 'Current Role')}
                   </p>
                   <StatusBadge
                     status={selectedUser ? getRoleLabel(locale, selectedUser.role) : ''}
@@ -1561,7 +1485,7 @@ export default function UserManagementPage() {
                 {/* New role select ΓÇö filtered to allowed targets only */}
                 <div>
                   <Label className="text-sm text-muted-foreground">
-                    {t(locale, '╪º┘ä╪»┘ê╪▒ ╪º┘ä╪¼╪»┘è╪»', 'New Role')}
+                    {t(locale, 'الدور الجديد', 'New Role')}
                   </Label>
                   <Select value={editRoleNew} onValueChange={(val) => setEditRoleNew(val as UserRole)}>
                     <SelectTrigger className="mt-1.5">
@@ -1582,7 +1506,7 @@ export default function UserManagementPage() {
                                 {locale === 'ar' ? opt.ar : opt.en}
                                 {isCurrent && (
                                   <span className="text-xs text-muted-foreground ms-2">
-                                    ({t(locale, '╪º┘ä╪¡╪º┘ä┘è', 'Current')})
+                                    ({t(locale, 'الحالي', 'Current')})
                                   </span>
                                 )}
                               </span>
@@ -1597,7 +1521,7 @@ export default function UserManagementPage() {
                 <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
                   <p className="text-xs text-amber-800 dark:text-amber-300 flex items-start gap-2">
                     <Shield className="h-4 w-4 shrink-0 mt-0.5" />
-                    {t(locale, '╪¬╪║┘è┘è╪▒ ╪º┘ä╪»┘ê╪▒ ┘é╪» ┘è╪ñ╪½╪▒ ╪╣┘ä┘ë ╪╡┘ä╪º╪¡┘è╪º╪¬ ╪º┘ä┘à╪│╪¬╪«╪»┘à ┘ê┘ê╪╡┘ê┘ä┘ç ╪Ñ┘ä┘ë ┘à┘è╪▓╪º╪¬ ╪º┘ä┘à┘å╪╡╪⌐.', 'Changing the role may affect the user\'s permissions and access to platform features.')}
+                    {t(locale, 'تغيير الدور قد يؤثر على صلاحيات المستخدم ووصوله إلى ميزات المنصة.', 'Changing the role may affect the user\'s permissions and access to platform features.')}
                   </p>
                 </div>
 
@@ -1613,14 +1537,14 @@ export default function UserManagementPage() {
                   )}>
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                       <ArrowRightLeft className="h-3.5 w-3.5" />
-                      {t(locale, '┘à┘ä╪«╪╡ ╪º┘ä╪¬╪¡┘ê┘è┘ä', 'Transition Summary')}
+                      {t(locale, 'ملخص التحويل', 'Transition Summary')}
                     </p>
 
                     {/* Visual flow: FROM ΓåÆ TO */}
                     <div className="flex items-center gap-3">
                       {/* From badge */}
                       <div className="flex-1 text-center p-2 rounded-lg border">
-                        <p className="text-xs text-muted-foreground">{t(locale, '┘à┘å', 'From')}</p>
+                        <p className="text-xs text-muted-foreground">{t(locale, 'من', 'From')}</p>
                         <StatusBadge
                           status={getRoleLabel(locale, selectedUser!.role)}
                           colorClass={getRoleColor(selectedUser!.role)}
@@ -1639,19 +1563,19 @@ export default function UserManagementPage() {
                               : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
                           )}>
                             {transitionPreview.requiresVerification
-                              ? t(locale, '╪¬╪¡╪¬╪º╪¼ ╪¬┘ê╪½┘è┘é', 'Needs verification')
-                              : t(locale, '┘à╪¿╪º╪┤╪▒', 'Immediate')}
+                              ? t(locale, 'تحتاج توثيق', 'Needs verification')
+                              : t(locale, 'مباشر', 'Immediate')}
                           </span>
                         ) : (
                           <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">
-                            {t(locale, '┘à╪¡╪╕┘ê╪▒', 'Blocked')}
+                            {t(locale, 'محظور', 'Blocked')}
                           </span>
                         )}
                       </div>
 
                       {/* To badge */}
                       <div className="flex-1 text-center p-2 rounded-lg border">
-                        <p className="text-xs text-muted-foreground">{t(locale, '╪Ñ┘ä┘ë', 'To')}</p>
+                        <p className="text-xs text-muted-foreground">{t(locale, 'إلى', 'To')}</p>
                         <StatusBadge
                           status={getRoleLabel(locale, editRoleNew)}
                           colorClass={getRoleColor(editRoleNew)}
@@ -1663,7 +1587,7 @@ export default function UserManagementPage() {
                     {/* Status change indicator */}
                     <div className="flex items-center gap-2 text-xs">
                       <span className="text-muted-foreground">
-                        {t(locale, '╪¡╪º┘ä╪⌐ ╪º┘ä╪¡╪│╪º╪¿', 'Account Status')}:
+                        {t(locale, 'حالة الحساب', 'Account Status')}:
                       </span>
                       <Badge variant="outline" className={cn(
                         'text-[10px]',
@@ -1672,12 +1596,12 @@ export default function UserManagementPage() {
                           : 'border-green-300 text-green-700 bg-green-50 dark:border-green-700 dark:text-green-300 dark:bg-green-900/30'
                       )}>
                         {transitionPreview.newStatus === 'pending'
-                          ? t(locale, '╪│┘è╪╡╪¿╪¡: ╪¿╪º┘å╪¬╪╕╪º╪▒ ╪º┘ä┘à╪▒╪º╪¼╪╣╪⌐', 'Will become: Pending')
-                          : t(locale, '╪│┘è╪╡╪¿╪¡: ┘å╪┤╪╖', 'Will become: Active')}
+                          ? t(locale, 'سيصبح: بانتظار المراجعة', 'Will become: Pending')
+                          : t(locale, 'سيصبح: نشط', 'Will become: Active')}
                       </Badge>
                       {transitionPreview.requiresVerification && (
                         <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-700 bg-amber-50 dark:border-amber-700 dark:text-amber-300 dark:bg-amber-900/30">
-                          {t(locale, '┘è╪¬╪╖┘ä╪¿ ╪¬┘ê╪½┘è┘é', 'Requires Verification')}
+                          {t(locale, 'يتطلب توثيق', 'Requires Verification')}
                         </Badge>
                       )}
                     </div>
@@ -1697,9 +1621,9 @@ export default function UserManagementPage() {
                       <ul className="space-y-2 pt-2 border-t">
                         {transitionPreview.impactsAr.map((impactAr, i) => {
                           const impactEn = transitionPreview.impactsEn[i] || impactAr;
-                          const isDeactivation = impactAr.includes('╪¬╪╣╪╖┘è┘ä') || impactEn.toLowerCase().includes('deactivat');
-                          const isVerification = impactAr.includes('╪¬┘ê╪½┘è┘é') || impactEn.toLowerCase().includes('verif');
-                          const isLoss = impactAr.includes('╪│╪¬┘ü┘é╪»') || impactEn.toLowerCase().includes('will be lost');
+                          const isDeactivation = impactAr.includes('تعطيل') || impactEn.toLowerCase().includes('deactivat');
+                          const isVerification = impactAr.includes('توثيق') || impactEn.toLowerCase().includes('verif');
+                          const isLoss = impactAr.includes('ستفقد') || impactEn.toLowerCase().includes('will be lost');
 
                           return (
                             <li key={i} className="flex items-start gap-2 text-xs">
@@ -1730,7 +1654,7 @@ export default function UserManagementPage() {
                       <div className="flex items-start gap-2 text-xs text-amber-700 dark:text-amber-300 pt-2 border-t">
                         <Building className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                         <span>
-                          {t(locale, '╪º┘ä┘à╪¬╪¼╪▒ ╪º┘ä┘à╪▒╪¬╪¿╪╖ ╪¿╪º┘ä╪¡╪│╪º╪¿ ╪│┘è╪¬┘à ╪¬╪╣╪╖┘è┘ä┘ç', 'The store linked to this account will be deactivated')}
+                          {t(locale, 'المتجر المرتبط بالحساب سيتم تعطيله', 'The store linked to this account will be deactivated')}
                         </span>
                       </div>
                     )}
@@ -1740,7 +1664,7 @@ export default function UserManagementPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t(locale, '╪Ñ┘ä╪║╪º╪í', 'Cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>{t(locale, 'إلغا؍', 'Cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmEditRole}
               disabled={
@@ -1756,12 +1680,12 @@ export default function UserManagementPage() {
             >
               {editRoleLoading && <Loader2 className="h-4 w-4 animate-spin" />}
               {editRoleNew === selectedUser?.role
-                ? t(locale, '╪º╪«╪¬╪▒ ╪»┘ê╪▒╪º┘ï ┘à╪«╪¬┘ä┘ü╪º┘ï', 'Choose a different role')
+                ? t(locale, 'اختر دوراً مختلفاً', 'Choose a different role')
                 : !transitionPreview?.allowed
-                  ? t(locale, '╪║┘è╪▒ ┘à╪│┘à┘ê╪¡', 'Not Allowed')
+                  ? t(locale, 'غير مسموح', 'Not Allowed')
                   : transitionPreview?.requiresVerification
-                    ? t(locale, '╪¬╪ú┘â┘è╪» ╪º┘ä╪¬╪¡┘ê┘è┘ä', 'Confirm Transition')
-                    : t(locale, '╪¬╪ú┘â┘è╪» ╪º┘ä╪¬╪¡┘ê┘è┘ä', 'Confirm Transition')
+                    ? t(locale, 'تأكيد التحويل', 'Confirm Transition')
+                    : t(locale, 'تأكيد التحويل', 'Confirm Transition')
               }
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -1775,13 +1699,13 @@ export default function UserManagementPage() {
         <AlertDialogContent dir={dir}>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {t(locale, '╪¬╪╣┘ä┘è┘é ╪¡╪│╪º╪¿ ╪º┘ä┘à╪│╪¬╪«╪»┘à', 'Suspend User Account')}
+              {t(locale, 'تعليق حساب المستخدم', 'Suspend User Account')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4 text-start">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {t(locale, '╪º┘ä┘à╪│╪¬╪«╪»┘à', 'User')}
+                    {t(locale, 'المستخدم', 'User')}
                   </p>
                   <p className="text-sm font-medium mt-0.5">
                     {selectedUser ? getDisplayName(selectedUser) : ''}
@@ -1789,18 +1713,18 @@ export default function UserManagementPage() {
                 </div>
                 <div>
                   <Label className="text-sm">
-                    {t(locale, '╪│╪¿╪¿ ╪º┘ä╪¬╪╣┘ä┘è┘é', 'Suspension Reason')} <span className="text-destructive">*</span>
+                    {t(locale, 'سبب التعليق', 'Suspension Reason')} <span className="text-destructive">*</span>
                   </Label>
                   <Textarea
                     value={suspendReason}
                     onChange={(e) => setSuspendReason(e.target.value)}
-                    placeholder={t(locale, '╪ú╪»╪«┘ä ╪│╪¿╪¿ ╪¬╪╣┘ä┘è┘é ╪º┘ä╪¡╪│╪º╪¿...', 'Enter the reason for suspending the account...')}
+                    placeholder={t(locale, 'أدخل سبب تعليق الحساب...', 'Enter the reason for suspending the account...')}
                     className="mt-1.5 min-h-[80px]"
                   />
                 </div>
                 <div>
                   <Label className="text-sm text-muted-foreground">
-                    {t(locale, '┘à╪»╪⌐ ╪º┘ä╪¬╪╣┘ä┘è┘é', 'Suspension Duration')}
+                    {t(locale, 'مدة التعليق', 'Suspension Duration')}
                   </Label>
                   <Select value={suspendDuration} onValueChange={(val) => setSuspendDuration(val as 'temporary' | 'permanent')}>
                     <SelectTrigger className="mt-1.5">
@@ -1808,10 +1732,10 @@ export default function UserManagementPage() {
                     </SelectTrigger>
                     <SelectContent dir={dir}>
                       <SelectItem value="temporary">
-                        {t(locale, '┘à╪ñ┘é╪¬', 'Temporary')}
+                        {t(locale, 'مؤقت', 'Temporary')}
                       </SelectItem>
                       <SelectItem value="permanent">
-                        {t(locale, '╪»╪º╪ª┘à', 'Permanent')}
+                        {t(locale, 'دائم', 'Permanent')}
                       </SelectItem>
                     </SelectContent>
                   </Select>
@@ -1819,21 +1743,21 @@ export default function UserManagementPage() {
                 <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
                   <p className="text-xs text-red-800 dark:text-red-300 flex items-start gap-2">
                     <XCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                    {t(locale, '╪│┘è╪¬┘à ╪¬╪╣╪╖┘è┘ä ╪º┘ä╪¡╪│╪º╪¿ ┘ê┘ü┘é╪»╪º┘å ╪º┘ä┘ê╪╡┘ê┘ä ┘ä╪¼┘à┘è╪╣ ┘à┘è╪▓╪º╪¬ ╪º┘ä┘à┘å╪╡╪⌐.', 'The account will be deactivated and lose access to all platform features.')}
+                    {t(locale, 'سيتم تعطيل الحساب وفقدان الوصول لجميع ميزات المنصة.', 'The account will be deactivated and lose access to all platform features.')}
                   </p>
                 </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t(locale, '╪Ñ┘ä╪║╪º╪í', 'Cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>{t(locale, 'إلغا؍', 'Cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmSuspend}
               disabled={suspendLoading || !suspendReason.trim()}
               className="bg-amber-600 hover:bg-amber-700 text-white"
             >
               {suspendLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {t(locale, '╪¬╪╣┘ä┘è┘é ╪º┘ä╪¡╪│╪º╪¿', 'Suspend Account')}
+              {t(locale, 'تعليق الحساب', 'Suspend Account')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1846,21 +1770,18 @@ export default function UserManagementPage() {
         <AlertDialogContent dir={dir} className="border-destructive/50">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-destructive">
-              {t(locale, '╪¡╪░┘ü ╪¡╪│╪º╪¿ ╪º┘ä┘à╪│╪¬╪«╪»┘à', 'Delete User Account')}
+              {t(locale, 'حذف حساب المستخدم', 'Delete User Account')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4 text-start">
                 <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
                   <p className="text-sm text-red-800 dark:text-red-300">
-                    {t(locale,
-                      '╪¬╪¡╪░┘è╪▒: ┘ç╪░╪º ╪º┘ä╪Ñ╪¼╪▒╪º╪í ┘ä╪º ┘è┘à┘â┘å ╪º┘ä╪¬╪▒╪º╪¼╪╣ ╪╣┘å┘ç. ╪│┘è╪¬┘à ╪¡╪░┘ü ╪¼┘à┘è╪╣ ╪¿┘è╪º┘å╪º╪¬ ╪º┘ä┘à╪│╪¬╪«╪»┘à ╪¿╪┤┘â┘ä ┘å┘ç╪º╪ª┘è.',
-                      'Warning: This action cannot be undone. All user data will be permanently deleted.'
-                    )}
+                    {t(locale, 'تحذير: هذا الإجرا؍ لا يمكن التراجع عنه. سيتم حذف جميع بيانات المستخدم بشكل نهائي.', 'Warning: This action cannot be undone. All user data will be permanently deleted.')}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {t(locale, '╪º┘ä┘à╪│╪¬╪«╪»┘à', 'User')}
+                    {t(locale, 'المستخدم', 'User')}
                   </p>
                   <p className="text-sm font-medium mt-0.5">
                     {selectedUser ? getDisplayName(selectedUser) : ''}
@@ -1868,7 +1789,7 @@ export default function UserManagementPage() {
                 </div>
                 <div>
                   <Label className="text-sm text-muted-foreground">
-                    {t(locale, '╪º┘â╪¬╪¿ DELETE ┘ä┘ä╪¬╪ú┘â┘è╪»', 'Type DELETE to confirm')}
+                    {t(locale, 'اكتب DELETE للتأكيد', 'Type DELETE to confirm')}
                   </Label>
                   <Input
                     value={deleteConfirm}
@@ -1881,14 +1802,14 @@ export default function UserManagementPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{t(locale, '╪Ñ┘ä╪║╪º╪í', 'Cancel')}</AlertDialogCancel>
+            <AlertDialogCancel>{t(locale, 'إلغا؍', 'Cancel')}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleConfirmDelete}
               disabled={deleteLoading || deleteConfirm !== 'DELETE'}
               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
             >
               {deleteLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {t(locale, '╪¡╪░┘ü ╪º┘ä╪¡╪│╪º╪¿ ┘å┘ç╪º╪ª┘è╪º┘ï', 'Delete Permanently')}
+              {t(locale, 'حذف الحساب نهائياً', 'Delete Permanently')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1902,7 +1823,7 @@ export default function UserManagementPage() {
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-brand font-bold text-lg">
               <ShieldCheck className="h-5 w-5 text-brand" />
-              {t(locale, '╪¬╪╣╪»┘è┘ä ╪¬┘é┘è┘è┘à ┘ê┘à╪│╪¬┘ê┘ë ╪º┘ä╪¬╪º╪¼╪▒', 'Edit Merchant Rating & Level')}
+              {t(locale, 'تعديل تقييم ومستوى التاجر', 'Edit Merchant Rating & Level')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-4 text-start mt-4">
@@ -1922,35 +1843,35 @@ export default function UserManagementPage() {
                 {/* Level (1 to 10) slider/select */}
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium">
-                    {t(locale, '┘à╪│╪¬┘ê┘ë ╪º┘ä╪¬╪º╪¼╪▒ / ╪º┘ä┘à╪¬╪¼╪▒', 'Merchant / Store Level')}
+                    {t(locale, 'مستوى التاجر / المتجر', 'Merchant / Store Level')}
                   </Label>
                   <Select
                     value={String(overrideLevel)}
                     onValueChange={(val) => setOverrideLevel(Number(val))}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t(locale, '╪º╪«╪¬╪▒ ╪º┘ä┘à╪│╪¬┘ê┘ë', 'Select Level')} />
+                      <SelectValue placeholder={t(locale, 'اختر المستوى', 'Select Level')} />
                     </SelectTrigger>
                     <SelectContent dir={dir}>
                       {Array.from({ length: 10 }, (_, i) => i + 1).map((lvl) => (
                         <SelectItem key={lvl} value={String(lvl)}>
-                          {t(locale, `╪º┘ä┘à╪│╪¬┘ê┘ë ${lvl}`, `Level ${lvl}`)}
-                          {lvl === 1 && ` (${t(locale, '┘à╪¿╪¬╪»╪ª', 'Beginner')})`}
-                          {lvl === 5 && ` (${t(locale, '┘à╪¬┘à┘è╪▓', 'Distinguished')})`}
-                          {lvl === 10 && ` (${t(locale, '┘å╪«╪¿╪⌐', 'Elite')})`}
+                          {t(locale, `المستوى ${lvl}`, `Level ${lvl}`)}
+                          {lvl === 1 && ` (${t(locale, 'مبتدئ', 'Beginner')})`}
+                          {lvl === 5 && ` (${t(locale, 'متميز', 'Distinguished')})`}
+                          {lvl === 10 && ` (${t(locale, 'نخبة', 'Elite')})`}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    {t(locale, '┘è┘à┘å╪¡ ╪º┘ä┘à╪│╪¬┘ê┘ë ╪º┘ä╪ú╪╣┘ä┘ë ╪╕┘ç┘ê╪▒╪º┘ï ╪ú┘ü╪╢┘ä ┘ä┘ä┘à┘å╪¬╪¼╪º╪¬ ┘ê╪┤╪º╪▒╪⌐ ┘à┘ê╪½┘ê┘é┘è╪⌐ ┘à╪¬┘é╪»┘à╪⌐.', 'Higher levels grant better product visibility and advanced trust badges.')}
+                    {t(locale, 'يمنح المستوى الأعلى ظهوراً أفضل للمنتجات وشارة موثوقية متقدمة.', 'Higher levels grant better product visibility and advanced trust badges.')}
                   </p>
                 </div>
 
                 {/* Rating (0.0 to 5.0) */}
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium">
-                    {t(locale, '╪º┘ä╪¬┘é┘è┘è┘à ╪º┘ä╪º┘ü╪¬╪▒╪º╪╢┘è (0.0 - 5.0)', 'Default Rating (0.0 - 5.0)')}
+                    {t(locale, 'التقييم الافتراضي (0.0 - 5.0)', 'Default Rating (0.0 - 5.0)')}
                   </Label>
                   <div className="relative">
                     <Input
@@ -1970,25 +1891,25 @@ export default function UserManagementPage() {
                     <Star className="absolute start-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-yellow-500 fill-yellow-500" />
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    {t(locale, '┘è╪¬┘à ╪»┘à╪¼ ┘ç╪░╪º ╪º┘ä╪¬┘é┘è┘è┘à ┘à╪╣ ╪¬┘é┘è┘è┘à╪º╪¬ ╪º┘ä┘à╪┤╪¬╪▒┘è┘å ┘ä╪¬╪¡╪»┘è╪» ╪º┘ä╪¬╪▒╪¬┘è╪¿ ┘ü┘è ╪º┘ä╪╡┘ü╪¡╪⌐ ╪º┘ä╪▒╪ª┘è╪│┘è╪⌐.', 'This rating is combined with buyer reviews to determine homepage sorting.')}
+                    {t(locale, 'يتم دمج هذا التقييم مع تقييمات المشترين لتحديد الترتيب في الصفحة الرئيسية.', 'This rating is combined with buyer reviews to determine homepage sorting.')}
                   </p>
                 </div>
 
                 {/* Paid Package Id */}
                 <div className="space-y-1.5">
                   <Label className="text-sm font-medium">
-                    {t(locale, '╪¿╪º┘é╪⌐ ╪º┘ä╪º╪┤╪¬╪▒╪º┘â ╪º┘ä┘à┘à┘è╪▓╪⌐', 'Premium Subscription Package')}
+                    {t(locale, 'باقة الاشتراك المميزة', 'Premium Subscription Package')}
                   </Label>
                   <Select
                     value={overridePackageId}
                     onValueChange={(val) => setOverridePackageId(val)}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder={t(locale, '╪¿╪»┘ê┘å ╪¿╪º┘é╪⌐ (┘à╪¼╪º┘å┘è)', 'No Package (Free)')} />
+                      <SelectValue placeholder={t(locale, 'بدون باقة (مجاني)', 'No Package (Free)')} />
                     </SelectTrigger>
                     <SelectContent dir={dir}>
                       <SelectItem value="none">
-                        {t(locale, '╪¿╪»┘ê┘å ╪¿╪º┘é╪⌐ (┘à╪¼╪º┘å┘è)', 'No Package (Free)')}
+                        {t(locale, 'بدون باقة (مجاني)', 'No Package (Free)')}
                       </SelectItem>
                       {packages.map((pkg) => (
                         <SelectItem key={pkg.id} value={pkg.id}>
@@ -1998,17 +1919,17 @@ export default function UserManagementPage() {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    {t(locale, '╪¬╪▓┘è╪» ╪º┘ä╪¿╪º┘é╪º╪¬ ╪º┘ä┘à╪»┘ü┘ê╪╣╪⌐ ┘à┘å ┘å┘é╪º╪╖ ╪¬╪▒╪¬┘è╪¿ ╪º┘ä┘à┘å╪¬╪¼╪º╪¬ ┘ü┘è ┘å╪¬╪º╪ª╪¼ ╪º┘ä╪¿╪¡╪½ ┘ê╪º┘ä╪╡┘ü╪¡╪⌐ ╪º┘ä╪▒╪ª┘è╪│┘è╪⌐.', 'Paid packages increase product score weight on the homepage and search.')}
+                    {t(locale, 'تزيد الباقات المدفوعة من نقاط ترتيب المنتجات في نتائج البحث والصفحة الرئيسية.', 'Paid packages increase product score weight on the homepage and search.')}
                   </p>
                 </div>
 
                 {/* Custom Options (Addons) */}
                 <div className="space-y-3 pt-3 border-t">
                   <Label className="text-sm font-bold text-brand">
-                    {t(locale, '╪«┘è╪º╪▒╪º╪¬ ┘ê┘à┘è╪▓╪º╪¬ ╪Ñ╪╢╪º┘ü┘è╪⌐', 'Additional Addons & Features')}
+                    {t(locale, 'خيارات وميزات إضافية', 'Additional Addons & Features')}
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    {t(locale, '╪¬┘ü╪╣┘è┘ä ┘à┘è╪▓╪º╪¬ ┘à╪«╪╡╪╡╪⌐ ╪Ñ╪╢╪º┘ü┘è╪⌐ ┘ä┘ç╪░╪º ╪º┘ä╪¬╪º╪¼╪▒/╪º┘ä┘à╪¬╪¼╪▒ ╪¿╪┤┘â┘ä ┘à╪│╪¬┘é┘ä ╪╣┘å ╪¿╪º┘é╪⌐ ╪º╪┤╪¬╪▒╪º┘â┘ç.', 'Enable specific custom add-ons for this merchant independently of their subscription package.')}
+                    {t(locale, 'تفعيل ميزات مخصصة إضافية لهذا التاجر/المتجر بشكل مستقل عن باقة اشتراكه.', 'Enable specific custom add-ons for this merchant independently of their subscription package.')}
                   </p>
 
                   <div className="space-y-3 mt-2">
@@ -2016,10 +1937,10 @@ export default function UserManagementPage() {
                     <div className="flex items-center justify-between p-2.5 rounded-xl border bg-muted/20">
                       <div className="space-y-0.5">
                         <Label className="text-xs font-semibold flex items-center gap-1.5">
-                          ≡ƒô▒ {t(locale, '╪¬╪╖╪¿┘è┘é ╪º┘ä┘ç╪º╪¬┘ü ┘ä┘ä╪¬╪º╪¼╪▒', 'Merchant Mobile App')}
+                          ≡ƒô▒ {t(locale, 'تطبيق الهاتف للتاجر', 'Merchant Mobile App')}
                         </Label>
                         <p className="text-[10px] text-muted-foreground">
-                          {t(locale, '╪¬╪╖╪¿┘è┘é ╪«╪º╪╡ ┘ä╪Ñ╪»╪º╪▒╪⌐ ╪º┘ä╪╖┘ä╪¿╪º╪¬ ┘ê╪º┘ä┘à┘å╪¬╪¼╪º╪¬ ┘ê╪º┘ä╪º╪┤╪╣╪º╪▒╪º╪¬ (+2,000 ╪»╪¼/╪┤┘ç╪▒)', 'Dedicated app to manage orders, products & push (+2,000 DZD/mo)')}
+                          {t(locale, 'تطبيق خاص لإدارة الطلبات والمنتجات والاشعارات (+2,000 دج/شهر)', 'Dedicated app to manage orders, products & push (+2,000 DZD/mo)')}
                         </p>
                       </div>
                       <Switch
@@ -2032,10 +1953,10 @@ export default function UserManagementPage() {
                     <div className="flex items-center justify-between p-2.5 rounded-xl border bg-muted/20">
                       <div className="space-y-0.5">
                         <Label className="text-xs font-semibold flex items-center gap-1.5">
-                          ≡ƒÆ¼ {t(locale, '╪»╪╣┘à ┘à╪«╪╡╪╡ / ┘ê╪º╪¬╪│╪º╪¿', 'Dedicated Support / WhatsApp')}
+                          ≡ƒÆ¼ {t(locale, 'دعم مخصص / واتساب', 'Dedicated Support / WhatsApp')}
                         </Label>
                         <p className="text-[10px] text-muted-foreground">
-                          {t(locale, '╪»╪╣┘à ┘à╪¿╪º╪┤╪▒ < 2 ╪│╪º╪╣╪⌐ ┘ê┘à╪▒╪º┘ü┘é╪⌐ ╪┤╪«╪╡┘è╪⌐ (+2,500 ╪»╪¼/╪┤┘ç╪▒)', 'Direct channel, response < 2h, guidance (+2,500 DZD/mo)')}
+                          {t(locale, 'دعم مباشر < 2 ساعة ومرافقة شخصية (+2,500 دج/شهر)', 'Direct channel, response < 2h, guidance (+2,500 DZD/mo)')}
                         </p>
                       </div>
                       <Switch
@@ -2048,10 +1969,10 @@ export default function UserManagementPage() {
                     <div className="flex items-center justify-between p-2.5 rounded-xl border bg-muted/20">
                       <div className="space-y-0.5">
                         <Label className="text-xs font-semibold flex items-center gap-1.5">
-                          ≡ƒôè {t(locale, '┘å╪╕╪º┘à CRM ┘à╪¬┘é╪»┘à', 'Advanced CRM System')}
+                          ≡ƒôè {t(locale, 'نظام CRM متقدم', 'Advanced CRM System')}
                         </Label>
                         <p className="text-[10px] text-muted-foreground">
-                          {t(locale, '╪¬╪╡┘å┘è┘ü ╪º┘ä╪╣┘à┘ä╪º╪í╪î ╪¬╪¬╪¿╪╣ COD ┘ê╪¬┘ê╪│┘è┘à ╪¬┘ä┘é╪º╪ª┘è (+1,500 ╪»╪¼/╪┤┘ç╪▒)', 'RFM segmentation, COD scoring, tags (+1,500 DZD/mo)')}
+                          {t(locale, 'تصنيف العملا؍، تتبع COD وتوسيم تلقائي (+1,500 دج/شهر)', 'RFM segmentation, COD scoring, tags (+1,500 DZD/mo)')}
                         </p>
                       </div>
                       <Switch
@@ -2064,10 +1985,10 @@ export default function UserManagementPage() {
                     <div className="flex items-center justify-between p-2.5 rounded-xl border bg-muted/20">
                       <div className="space-y-0.5">
                         <Label className="text-xs font-semibold flex items-center gap-1.5">
-                          ≡ƒÅ¬ {t(locale, '╪¿╪▒┘å╪º┘à╪¼ ┘â╪º╪┤┘è╪▒ Chari POS', 'Chari POS Software')}
+                          ≡ƒÅ¬ {t(locale, 'برنامج كاشير Chari POS', 'Chari POS Software')}
                         </Label>
                         <p className="text-[10px] text-muted-foreground">
-                          {t(locale, '╪¿╪▒┘å╪º┘à╪¼ ╪º┘ä┘â╪º╪┤┘è╪▒ ┘ê┘å┘é╪º╪╖ ╪º┘ä╪¿┘è╪╣ ╪º┘ä┘à╪¬┘â╪º┘à┘ä╪⌐ (+1,500 ╪»╪¼/╪┤┘ç╪▒)', 'Register app - real-time sync (+1,500 DZD/mo)')}
+                          {t(locale, 'برنامج الكاشير ونقاط البيع المتكاملة (+1,500 دج/شهر)', 'Register app - real-time sync (+1,500 DZD/mo)')}
                         </p>
                       </div>
                       <Switch
@@ -2084,14 +2005,14 @@ export default function UserManagementPage() {
                       <div className="p-3 rounded-xl border bg-brand/5 border-brand/20 space-y-2">
                         <div className="flex items-center justify-between">
                           <Label className="text-xs font-semibold flex items-center gap-1.5">
-                            Γ₧ò {t(locale, '╪ú╪¼┘ç╪▓╪⌐ ┘â╪º╪┤┘è╪▒ ╪Ñ╪╢╪º┘ü┘è╪⌐', 'Additional POS Devices')}
+                            Γ₧ò {t(locale, 'أجهزة كاشير إضافية', 'Additional POS Devices')}
                           </Label>
                           <span className="text-[10px] bg-brand/10 text-brand px-2 py-0.5 rounded-full font-bold">
                             +500 DZD/device/mo
                           </span>
                         </div>
                         <p className="text-[10px] text-muted-foreground">
-                          {t(locale, '╪╣╪»╪» ╪º┘ä╪ú╪¼┘ç╪▓╪⌐ ╪º┘ä┘å╪┤╪╖╪⌐ ╪º┘ä╪Ñ╪╢╪º┘ü┘è╪⌐ ╪º┘ä┘à╪│┘à┘ê╪¡ ╪¿╪▒╪¿╪╖┘ç╪º ╪¿╪º┘ä╪¿╪▒┘å╪º┘à╪¼.', 'Number of extra POS devices linked to the Chari POS account.')}
+                          {t(locale, 'عدد الأجهزة النشطة الإضافية المسموح بربطها بالبرنامج.', 'Number of extra POS devices linked to the Chari POS account.')}
                         </p>
                         <div className="flex items-center gap-2 max-w-[120px] pt-1">
                           <Input
@@ -2111,7 +2032,7 @@ export default function UserManagementPage() {
           </AlertDialogHeader>
           <AlertDialogFooter className="mt-6 flex gap-2">
             <AlertDialogCancel disabled={isSavingOverride}>
-              {t(locale, '╪Ñ┘ä╪║╪º╪í', 'Cancel')}
+              {t(locale, 'إلغا؍', 'Cancel')}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={async (e) => {
@@ -2137,14 +2058,14 @@ export default function UserManagementPage() {
                   });
                   const data = await res.json();
                   if (data.success) {
-                    toast.success(t(locale, '╪¬┘à ╪¡┘ü╪╕ ╪º┘ä┘à┘è╪▓╪º╪¬ ┘ê╪º┘ä╪¬┘é┘è┘è┘à ╪¿┘å╪¼╪º╪¡', 'Rating & features saved successfully'));
+                    toast.success(t(locale, 'تم حفظ الميزات والتقييم بنجاح', 'Rating & features saved successfully'));
                     setOverrideOpen(false);
                     fetchUsers();
                   } else {
-                    toast.error(data.error || t(locale, '╪¡╪»╪½ ╪«╪╖╪ú ╪ú╪½┘å╪º╪í ╪º┘ä╪¡┘ü╪╕', 'Error saving overrides'));
+                    toast.error(data.error || t(locale, 'حدث خطأ أثنا؍ الحفظ', 'Error saving overrides'));
                   }
                 } catch (err) {
-                  toast.error(t(locale, '┘ü╪┤┘ä╪¬ ╪╣┘à┘ä┘è╪⌐ ╪º┘ä╪¡┘ü╪╕', 'Save operation failed'));
+                  toast.error(t(locale, 'فشلت عملية الحفظ', 'Save operation failed'));
                 } finally {
                   setIsSavingOverride(false);
                 }
@@ -2153,108 +2074,7 @@ export default function UserManagementPage() {
               className="bg-brand text-brand-foreground hover:bg-brand/90"
             >
               {isSavingOverride && <Loader2 className="h-4 w-4 animate-spin me-2" />}
-              {t(locale, '╪¡┘ü╪╕ ╪º┘ä╪¬╪║┘è┘è╪▒╪º╪¬', 'Save Changes')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      {/* ============================================ */}
-      {/* 12. UPGRADE APPROVE DIALOG                  */}
-      {/* ============================================ */}
-      <AlertDialog open={approveUpgradeOpen} onOpenChange={setApproveUpgradeOpen}>
-        <AlertDialogContent dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-brand font-bold">
-              <StoreIcon className="h-5 w-5" />
-              {t(locale, 'الموافقة على ترقية التاجر لمدير متجر', 'Approve Upgrade to Store Manager')}
-            </AlertDialogTitle>
-            <AlertDialogDescription asChild>
-              <div className="space-y-4 text-start mt-4">
-                <p>
-                  {t(
-                    locale,
-                    `أنت على وشك الموافقة على طلب ترقية التاجر (${selectedUser ? selectedUser.name : ''}). سيتم إنشاء متجر جديد باسمه وتحويل حسابه لمدير متجر.`,
-                    `You are about to approve the upgrade request for (${selectedUser ? selectedUser.name : ''}). A new store will be created and their role changed to Store Manager.`
-                  )}
-                </p>
-                <div className="space-y-2 mt-4 p-4 border rounded-xl bg-muted/20">
-                  <Label className="font-bold text-foreground">
-                    {t(locale, 'اختر باقة الاشتراك للمتجر الجديد:', 'Select Subscription Package for the new store:')}
-                  </Label>
-                  <Select
-                    value={upgradePackageId}
-                    onValueChange={(val) => setUpgradePackageId(val)}
-                  >
-                    <SelectTrigger className="w-full bg-background mt-1">
-                      <SelectValue placeholder={t(locale, 'باقة مجانية افتراضية (بدون باقة)', 'Default Free Package (No Package)')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none" className="font-bold">
-                        {t(locale, 'باقة مجانية (يختار التاجر لاحقاً)', 'Free Package (User chooses later)')}
-                      </SelectItem>
-                      {packages.map((pkg) => (
-                        <SelectItem key={pkg.id} value={pkg.id}>
-                          {locale === 'ar' ? pkg.name : (pkg.nameEn || pkg.name)} ({pkg.price} DZD)
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {t(
-                      locale,
-                      'إذا اخترت "باقة مجانية"، سيتمكن التاجر من ترقية الباقة بنفسه والدفع لاحقاً من لوحة تحكمه.',
-                      'If you select "Free Package", the user can upgrade and pay later from their dashboard.'
-                    )}
-                  </p>
-                </div>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="mt-6 flex gap-2">
-            <AlertDialogCancel disabled={isProcessingUpgrade}>
-              {t(locale, 'إلغاء', 'Cancel')}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => { e.preventDefault(); handleApproveUpgrade(); }}
-              disabled={isProcessingUpgrade}
-              className="bg-brand text-brand-foreground hover:bg-brand/90"
-            >
-              {isProcessingUpgrade && <Loader2 className="h-4 w-4 animate-spin me-2" />}
-              {t(locale, 'تأكيد الموافقة وإنشاء المتجر', 'Confirm & Create Store')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* ============================================ */}
-      {/* 13. UPGRADE REJECT DIALOG                   */}
-      {/* ============================================ */}
-      <AlertDialog open={rejectUpgradeOpen} onOpenChange={setRejectUpgradeOpen}>
-        <AlertDialogContent dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
-              <XCircle className="h-5 w-5" />
-              {t(locale, 'رفض طلب الترقية', 'Reject Upgrade Request')}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t(
-                locale,
-                `هل أنت متأكد من رفض طلب الترقية للمستخدم (${selectedUser ? selectedUser.name : ''})؟ سيظل حسابه كتاجر مستقل.`,
-                `Are you sure you want to reject the upgrade request for (${selectedUser ? selectedUser.name : ''})? Their account will remain as a regular Seller.`
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isProcessingUpgrade}>
-              {t(locale, 'إلغاء', 'Cancel')}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => { e.preventDefault(); handleRejectUpgrade(); }}
-              disabled={isProcessingUpgrade}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              {isProcessingUpgrade && <Loader2 className="h-4 w-4 animate-spin me-2" />}
-              {t(locale, 'تأكيد الرفض', 'Confirm Rejection')}
+              {t(locale, 'حفظ التغييرات', 'Save Changes')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

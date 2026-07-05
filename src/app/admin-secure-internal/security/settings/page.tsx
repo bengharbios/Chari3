@@ -25,6 +25,7 @@ interface SecuritySettings {
   mfa_grace_period_hours: number;
   alert_on_new_device: boolean;
   alert_on_sensitive_change: boolean;
+  require_two_person_approval: boolean;
 }
 
 const DEFAULTS: SecuritySettings = {
@@ -37,6 +38,7 @@ const DEFAULTS: SecuritySettings = {
   mfa_grace_period_hours: 0,
   alert_on_new_device: true,
   alert_on_sensitive_change: true,
+  require_two_person_approval: true,
 };
 
 export default function AdminSecuritySettingsPage() {
@@ -377,6 +379,43 @@ export default function AdminSecuritySettingsPage() {
                   'Grace period for merchant to complete 2FA setup after admin request (0 = immediate)'
                 )}
               </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Two-Person Approval (الرقابة الثنائية) */}
+        <Card className="border-purple-200 dark:border-purple-900/50">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-purple-500" />
+              <CardTitle className="text-base">
+                {tStr('الرقابة الثنائية (Two-Person Approval)', 'Two-Person Approval')}
+              </CardTitle>
+            </div>
+            <CardDescription>
+              {tStr('فرض موافقة إداري ثانٍ على العمليات الحساسة في لوحة الإدمن', 'Require a second admin to approve sensitive admin operations')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-sm">
+                  {tStr('تفعيل الرقابة الثنائية للإجراءات الحرجة', 'Enable Two-Person Rule')}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {tStr('يجبر المديرين العاديين على إرسال الطلبات للمراجعة قبل تنفيذها (يمكن للمدير الأعلى تجاوزها)', 'Forces standard admins to request approval before execution (exempts super admins)')}
+                </p>
+              </div>
+              <Switch
+                id="require-two-person-approval"
+                checked={!!settings.require_two_person_approval}
+                onCheckedChange={v => setToggle('require_two_person_approval', v)}
+              />
+            </div>
+            <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-xs text-purple-700 dark:text-purple-300">
+              {tStr('💡 الإجراءات المشمولة تشمل: حذف الحسابات، تعديل حدود الديون، إنشاء مدراء جدد، تعديل الباقات وتجاوز الاشتراكات.',
+                '💡 Affected actions: Deleting users, changing debt limits, creating admin accounts, manually overriding subscriptions.'
+              )}
             </div>
           </CardContent>
         </Card>

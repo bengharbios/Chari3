@@ -78,8 +78,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: `Unknown action type: ${actionType}` }, { status: 400 });
     }
 
-    // SUPER_ADMIN bypass — executes immediately without needing approval
-    if (isSuperAdmin) {
+    // Check if two-person approval is required globally in settings
+    const approvalSetting = await db.systemSetting.findUnique({
+      where: { key: 'security_require_two_person_approval' }
+    });
+    
+    // Default is true if setting does not exist in database yet
+    const isApprovalRequired = approvalSetting 
+      ? (approvalSetting.value === true || approvalSetting.value === 'true') 
+      : true;
+
+    // SUPER_ADMIN bypass or if the policy is disabled globally -> executes immediately
+    if (isSuperAdmin || !isApprovalRequired) {
       // Create with auto-approval
       const action = await db.pendingCriticalAction.create({
         data: {
@@ -94,7 +104,7 @@ export async function POST(req: NextRequest) {
         success: true,
         action,
         immediateExecution: true,
-        message: 'تم التنفيذ مباشرة (SUPER_ADMIN)',
+        message: isSuperAdmin ? 'تم التنفيذ مباشرة (SUPER_ADMIN)' : 'تم التنفيذ مباشرة (الرقابة الثنائية معطلة)',
       });
     }
 

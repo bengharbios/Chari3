@@ -16,6 +16,7 @@ const SECURITY_DEFAULTS: Record<string, string | number | boolean> = {
   mfa_grace_period_hours: 0,
   alert_on_new_device: true,
   alert_on_sensitive_change: true,
+  require_two_person_approval: true,
 };
 
 // GET /api/admin/security/settings

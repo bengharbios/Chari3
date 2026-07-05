@@ -587,7 +587,13 @@
       "email": "بريد إلكتروني",
       "whatsapp": "واتساب",
       "telegram": "تلغرام"
-    }
+    },
+    "my_account_security": "أمان حسابي",
+    "pending_actions": "الإجراءات المعلقة",
+    "require_two_person_approval": "تفعيل الرقابة الثنائية للإجراءات الحرجة",
+    "require_two_person_approval_desc": "فرض موافقة إداري ثانٍ على العمليات الحساسة في لوحة الإدمن",
+    "emergency_codes": "رموز الاسترداد الطارئة",
+    "emergency_codes_desc": "رموز أحادية الاستخدام تستخدم لاسترداد الحساب في حال فقدان المصادقة الثنائية"
   },
   "checkout": {
     "all_data_secured": "جميع البيانات مؤمنة",
