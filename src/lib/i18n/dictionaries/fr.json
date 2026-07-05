@@ -374,11 +374,17 @@
     "terminateAll": "Tout terminer",
     "noSessions": "Aucune session active",
     "disable2FATitle": "Désactiver l'authentification à deux facteurs",
-    "disable2FADesc": "Pour désactiver la 2FA, entrez le code de vérification de votre application.",
+    "disable2FADesc": "Pour désactiver la 2FA, entez le code de vérification de votre application.",
     "verificationCode": "Code de vérification (6 chiffres)",
     "saveSettings": "Enregistrer les paramètres",
     "settingsSaved": "Paramètres de sécurité enregistrés ✓",
-    "securitySummary": "Résumé de la politique de sécurité"
+    "securitySummary": "Résumé de la politique de sécurité",
+    "my_account_security": "Sécurité de mon compte",
+    "pending_actions": "Actions en attente",
+    "require_two_person_approval": "Activer la règle de double approbation",
+    "require_two_person_approval_desc": "Exiger un second administrateur pour approuver les opérations sensibles",
+    "emergency_codes": "Codes de récupération d'urgence",
+    "emergency_codes_desc": "Codes à usage unique pour récupérer le compte si la 2FA est perdue"
   },
   "onboarding": {
     "title": "Enregistrement de l'entreprise",

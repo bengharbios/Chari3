@@ -587,7 +587,13 @@
       "email": "Email",
       "whatsapp": "WhatsApp",
       "telegram": "Telegram"
-    }
+    },
+    "my_account_security": "My Account Security",
+    "pending_actions": "Pending Actions",
+    "require_two_person_approval": "Enable Two-Person Rule for Critical Actions",
+    "require_two_person_approval_desc": "Require a second admin to approve sensitive operations in the admin panel",
+    "emergency_codes": "Emergency Recovery Codes",
+    "emergency_codes_desc": "One-time use recovery codes to access your account if you lose your 2FA device"
   },
   "checkout": {
     "all_data_secured": "All data is secured",

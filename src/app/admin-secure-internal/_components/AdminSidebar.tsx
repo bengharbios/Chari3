@@ -105,6 +105,8 @@ export default function AdminSidebar({ className }: { className?: string }) {
       title: t('security.section_title', 'Security & Access'),
       icon: ShieldAlert,
       items: [
+        { label: locale === 'ar' ? 'أمان حسابي' : 'My Account Security', path: 'security/my-account' },
+        { label: locale === 'ar' ? 'الإجراءات المعلقة' : 'Pending Actions', path: 'security/pending-actions' },
         { label: locale === 'ar' ? 'الأدوار والصلاحيات' : 'Roles & Permissions', path: 'security/roles' },
         { label: t('security.auth_logs', 'Auth Logs'), path: 'security/auth-logs' },
         { label: t('security.ban_list', 'Ban List'), path: 'security/bans' },

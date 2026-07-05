@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getTransition, ALL_ROLES } from '@/lib/role-transitions';
 import type { RoleTransition } from '@/lib/role-transitions';
+import { guardAgainstSuperAdminModification } from '@/lib/admin-guards';
 
 // ============================================
 // ROLE TRANSITION ENGINE (shared config)
@@ -131,6 +132,11 @@ export async function PATCH(request: Request) {
         { status: 400 }
       );
     }
+
+    // ━━ SUPER_ADMIN PROTECTION ━━
+    const superAdminGuard = await guardAgainstSuperAdminModification(id, body.locale);
+    if (superAdminGuard) return superAdminGuard;
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     const existing = await db.user.findUnique({
       where: { id },
@@ -468,6 +474,11 @@ export async function DELETE(request: Request) {
         { status: 400 }
       );
     }
+
+    // ━━ SUPER_ADMIN PROTECTION ━━
+    const superAdminGuard = await guardAgainstSuperAdminModification(id, body.locale);
+    if (superAdminGuard) return superAdminGuard;
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
     const existing = await db.user.findUnique({ where: { id } });
     if (!existing) {
