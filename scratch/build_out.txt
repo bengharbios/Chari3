@@ -1,0 +1,255 @@
+▲ Next.js 16.2.6 (Turbopack)
+- Environments: .env
+- Experiments (use with caution):
+  · serverActions
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+Turbopack build encountered 1 warnings:
+./next.config.ts
+Encountered unexpected file in NFT list
+A file was traced that indicates that the whole project was traced unintentionally. Somewhere in the import trace below, there are:
+- filesystem operations (like path.join, path.resolve or fs.readFile), or
+- very dynamic requires (like require('./' + foo)).
+To resolve this, you can
+- remove them if possible, or
+- only use them in development, or
+- make sure they are statically scoped to some subfolder: path.join(process.cwd(), 'data', bar), or
+- add ignore comments: path.join(/*turbopackIgnore: true*/ process.cwd(), bar)
+
+Import trace:
+  App Route:
+    ./next.config.ts
+    ./src/app/api/upload/route.ts
+
+
+✓ Compiled successfully in 38.6s
+  Skipping validation of types
+  Finished TypeScript config validation in 22ms ...
+  Collecting page data using 15 workers ...
+[PaymentEngine] Plugin registered: chargily
+[PaymentEngine] Plugin registered: chargily
+  Generating static pages using 15 workers (0/100) ...
+[PaymentEngine] Plugin registered: chargily
+  Generating static pages using 15 workers (25/100) 
+  Generating static pages using 15 workers (50/100) 
+  Generating static pages using 15 workers (75/100) 
+✓ Generating static pages using 15 workers (100/100) in 2.1s
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /admin
+├ ƒ /admin-secure-internal
+├ ƒ /admin-secure-internal/advertisements
+├ ƒ /admin-secure-internal/billing/merchants
+├ ƒ /admin-secure-internal/billing/packages
+├ ƒ /admin-secure-internal/billing/payment-engine
+├ ƒ /admin-secure-internal/billing/receipts
+├ ƒ /admin-secure-internal/billing/revenue
+├ ƒ /admin-secure-internal/billing/settings
+├ ƒ /admin-secure-internal/billing/wallets
+├ ƒ /admin-secure-internal/billing/withdrawals
+├ ƒ /admin-secure-internal/brands
+├ ƒ /admin-secure-internal/categories
+├ ƒ /admin-secure-internal/cms
+├ ƒ /admin-secure-internal/cms/docs
+├ ƒ /admin-secure-internal/cms/layout-blocks
+├ ƒ /admin-secure-internal/cms/saada-builder
+├ ƒ /admin-secure-internal/coupons
+├ ƒ /admin-secure-internal/flags
+├ ƒ /admin-secure-internal/login
+├ ƒ /admin-secure-internal/notifications
+├ ƒ /admin-secure-internal/ocr-sandbox
+├ ƒ /admin-secure-internal/payment-methods
+├ ƒ /admin-secure-internal/plugins
+├ ƒ /admin-secure-internal/security/auth-logs
+├ ƒ /admin-secure-internal/security/bans
+├ ƒ /admin-secure-internal/security/roles
+├ ƒ /admin-secure-internal/security/sessions
+├ ƒ /admin-secure-internal/security/settings
+├ ƒ /admin-secure-internal/settings
+├ ƒ /admin-secure-internal/settings/homepage
+├ ƒ /admin-secure-internal/settings/maps
+├ ƒ /admin-secure-internal/settings/otp
+├ ƒ /admin-secure-internal/settings/theme
+├ ƒ /admin-secure-internal/settings/translations
+├ ƒ /admin-secure-internal/shipping
+├ ƒ /admin-secure-internal/verifications
+├ ƒ /api
+├ ƒ /api/admin/addons
+├ ƒ /api/admin/advertisements
+├ ƒ /api/admin/announcements
+├ ƒ /api/admin/brands
+├ ƒ /api/admin/categories
+├ ƒ /api/admin/categories/requests
+├ ƒ /api/admin/chat-settings
+├ ƒ /api/admin/cms
+├ ƒ /api/admin/coupons
+├ ƒ /api/admin/dashboard
+├ ƒ /api/admin/db-push
+├ ƒ /api/admin/docs
+├ ƒ /api/admin/docs/[id]
+├ ƒ /api/admin/flags
+├ ƒ /api/admin/homepage
+├ ƒ /api/admin/levels
+├ ƒ /api/admin/notifications/send
+├ ƒ /api/admin/packages
+├ ƒ /api/admin/payment-methods
+├ ƒ /api/admin/plugins
+├ ƒ /api/admin/review
+├ ƒ /api/admin/review/[userId]
+├ ƒ /api/admin/roles
+├ ƒ /api/admin/roles/[id]
+├ ƒ /api/admin/saada-homepage
+├ ƒ /api/admin/security/auth-logs
+├ ƒ /api/admin/security/bans
+├ ƒ /api/admin/security/bans/[id]
+├ ƒ /api/admin/security/sessions
+├ ƒ /api/admin/security/settings
+├ ƒ /api/admin/seed
+├ ƒ /api/admin/seed-algeria
+├ ƒ /api/admin/settings
+├ ƒ /api/admin/settings/maps
+├ ƒ /api/admin/settings/test-sms
+├ ƒ /api/admin/settings/test-smtp
+├ ƒ /api/admin/settings/test-telegram
+├ ƒ /api/admin/shipping-methods
+├ ƒ /api/admin/subscriptions
+├ ƒ /api/admin/subscriptions/[id]
+├ ƒ /api/admin/translations
+├ ƒ /api/admin/upgrade-requests/approve
+├ ƒ /api/admin/upgrade-requests/reject
+├ ƒ /api/admin/users
+├ ƒ /api/admin/verifications
+├ ƒ /api/admin/verifications/[id]
+├ ƒ /api/admin/verifications/check-expired
+├ ƒ /api/admin/withdrawals
+├ ƒ /api/admin/withdrawals/[id]
+├ ƒ /api/analytics
+├ ƒ /api/auth/[...all]
+├ ƒ /api/auth/2fa
+├ ƒ /api/auth/config
+├ ƒ /api/auth/login-password
+├ ƒ /api/auth/logout
+├ ƒ /api/auth/register
+├ ƒ /api/auth/send-otp
+├ ƒ /api/auth/verify-otp
+├ ƒ /api/billing/addons
+├ ƒ /api/billing/calculate-upgrade
+├ ƒ /api/billing/invoices
+├ ƒ /api/billing/receipts
+├ ƒ /api/billing/renew
+├ ƒ /api/billing/subscribe
+├ ƒ /api/billing/subscription
+├ ƒ /api/billing/subscription/cron
+├ ƒ /api/billing/transactions
+├ ƒ /api/brands
+├ ƒ /api/buyer/addresses
+├ ƒ /api/buyer/addresses/[id]
+├ ƒ /api/buyer/orders
+├ ƒ /api/buyer/orders/[id]
+├ ƒ /api/buyer/orders/[id]/cancel-items
+├ ƒ /api/buyer/stats
+├ ƒ /api/categories
+├ ƒ /api/categories/requests
+├ ƒ /api/chat/messages
+├ ƒ /api/chat/rooms
+├ ƒ /api/checkout/chargily/create
+├ ƒ /api/checkout/config
+├ ƒ /api/coupons/validate
+├ ƒ /api/debug/db
+├ ƒ /api/files/[...path]
+├ ƒ /api/fix-dates
+├ ƒ /api/homepage
+├ ƒ /api/notifications
+├ ƒ /api/onboarding
+├ ƒ /api/onboarding/draft
+├ ƒ /api/onboarding/status
+├ ƒ /api/order-statuses
+├ ƒ /api/orders
+├ ƒ /api/payment-methods/public
+├ ƒ /api/payments/create
+├ ƒ /api/payments/webhooks/[gatewayId]
+├ ƒ /api/products
+├ ƒ /api/products/[id]
+├ ƒ /api/products/qa
+├ ƒ /api/products/search
+├ ƒ /api/regions/cities
+├ ƒ /api/regions/countries
+├ ƒ /api/regions/states
+├ ƒ /api/reviews
+├ ƒ /api/seller/coupons
+├ ƒ /api/seller/coupons/global
+├ ƒ /api/seller/coupons/opt-in
+├ ƒ /api/seller/dashboard
+├ ƒ /api/seller/debts
+├ ƒ /api/seller/onboarding
+├ ƒ /api/seller/orders
+├ ƒ /api/seller/settings
+├ ƒ /api/seller/upgrade-request
+├ ƒ /api/seller/verification
+├ ƒ /api/seller/verification/files/[fileName]
+├ ƒ /api/seller/verification/upload
+├ ƒ /api/seller/withdrawals
+├ ƒ /api/sellers
+├ ƒ /api/sellers/[id]
+├ ƒ /api/settings/public
+├ ƒ /api/setup
+├ ƒ /api/stores
+├ ƒ /api/stores/[slug]
+├ ƒ /api/translations
+├ ƒ /api/upload
+├ ƒ /api/user/profile
+├ ƒ /api/user/profile/change-password
+├ ƒ /api/user/profile/update-sensitive
+├ ƒ /api/user/sessions
+├ ƒ /api/users
+├ ƒ /api/webhooks/chargily
+├ ƒ /api/webhooks/telegram
+├ ○ /buyer
+├ ○ /buyer/addresses
+├ ○ /buyer/orders
+├ ƒ /buyer/orders/[id]
+├ ○ /buyer/reviews
+├ ○ /buyer/wallet
+├ ○ /buyer/wishlist
+├ ○ /checkout
+├ ƒ /docs/[[...slug]]
+├ ○ /login
+├ ○ /logistics
+├ ƒ /products/[id]
+├ ○ /search
+├ ○ /security
+├ ○ /seller
+├ ○ /seller/analytics
+├ ○ /seller/billing
+├ ○ /seller/billing/addons
+├ ○ /seller/billing/history
+├ ○ /seller/billing/pay
+├ ○ /seller/billing/plans
+├ ○ /seller/coupons
+├ ○ /seller/dashboard
+├ ○ /seller/debts
+├ ○ /seller/messages
+├ ○ /seller/onboarding
+├ ○ /seller/orders
+├ ○ /seller/products
+├ ○ /seller/settings
+├ ○ /seller/staff
+├ ○ /seller/upgrade
+├ ○ /seller/wallet
+├ ƒ /sellers/[id]
+├ ○ /store
+├ ƒ /store/[slug]
+├ ƒ /store/[slug]/product/[productId]
+├ ○ /supplier
+└ ○ /verification
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
