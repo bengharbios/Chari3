@@ -25,7 +25,8 @@ export async function middleware(request: NextRequest) {
   if (!isMainPlatform && !isApiOrInternal) {
     // Look up which store owns this custom domain via internal API route
     try {
-      const lookupUrl = new URL(`/api/stores/domain-lookup?domain=${cleanHost}`, request.url);
+      const port = process.env.PORT || '3000';
+      const lookupUrl = new URL(`/api/stores/domain-lookup?domain=${cleanHost}`, `http://127.0.0.1:${port}`);
       const res = await fetch(lookupUrl.toString());
       const data = await res.json();
 
