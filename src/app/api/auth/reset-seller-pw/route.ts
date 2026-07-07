@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { auth } from '@/lib/better-auth';
+import { hashPassword } from 'better-auth/crypto';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,10 +15,8 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
-    // Hash the password using Better Auth's own crypto provider with the current secret/pepper
-    const passwordHash = await auth.api.hashPassword({
-      password: 'password123'
-    });
+    // Hash the password using Better Auth's own crypto (scrypt) — same format used internally
+    const passwordHash = await hashPassword('password123');
 
     // Update the User table
     await db.user.update({
@@ -26,7 +24,7 @@ export async function GET() {
       data: { password: passwordHash }
     });
 
-    // Update or create the Account table record
+    // Update the Account table record (Better Auth credential provider)
     await db.account.updateMany({
       where: { accountId: email, providerId: 'credential' },
       data: { password: passwordHash }
@@ -34,8 +32,8 @@ export async function GET() {
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Password successfully reset using Better Auth instance!',
-      hashSample: passwordHash.slice(0, 15) + '...'
+      message: 'Password successfully reset!',
+      hashSample: passwordHash.slice(0, 20) + '...'
     });
   } catch (error) {
     console.error('Password reset failed:', error);
