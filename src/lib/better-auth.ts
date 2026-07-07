@@ -89,6 +89,13 @@ export const auth = betterAuth({
         return await bcrypt.hash(password, 10);
       },
       verify: async ({ hash, password }: { hash: string; password: string }) => {
+        // Auto-detect hash format:
+        // scrypt (better-auth/crypto): "salt:hash" — contains a colon separator
+        // bcrypt: starts with "$2a$" or "$2b$"
+        if (hash && hash.includes(":") && !hash.startsWith("$")) {
+          const { verifyPassword } = require("better-auth/crypto");
+          return await verifyPassword({ hash, password });
+        }
         const bcrypt = require("bcryptjs");
         return await bcrypt.compare(password, hash);
       }
