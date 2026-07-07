@@ -30,7 +30,7 @@ export default function IdentityStep({ data, updateData, onPreviewFile }: { data
   const [polygonPoints, setPolygonPoints] = useState<{x: number, y: number}[] | null>(null);
   const latestPointsRef = React.useRef<{x: number, y: number}[] | null>(null);
   const hiddenCanvasRef = React.useRef<HTMLCanvasElement>(null);
-  const requestRef = React.useRef<number>();
+  const requestRef = React.useRef<number | null>(null);
 
   React.useEffect(() => {
     if (!useCamera || !cvLoaded || !webcamRef.current?.video || !hiddenCanvasRef.current) return;
@@ -80,7 +80,7 @@ export default function IdentityStep({ data, updateData, onPreviewFile }: { data
         }
 
         if (largestContourIndex !== -1) {
-          const points = [];
+          const points: { x: number; y: number }[] = [];
           for (let i = 0; i < 4; i++) {
             points.push({ x: (bestPoly.data32S[i * 2] / width) * 100, y: (bestPoly.data32S[i * 2 + 1] / height) * 100 });
           }

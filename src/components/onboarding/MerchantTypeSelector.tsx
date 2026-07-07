@@ -3,7 +3,7 @@
 import React from 'react';
 import { useOnboardingStore } from '@/lib/store/onboarding';
 import { User, Building2, CheckCircle2 } from 'lucide-react';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { cn } from '@/lib/utils';
 
 interface MerchantTypeSelectorProps {

@@ -128,7 +128,7 @@ async function approveUser(
     }
   }
 
-  // Update verification table
+  // Update verification table depending on the role
   if (role === 'store' || role === 'store_manager') {
     if (user.storeVerification) {
       await db.storeVerification.update({
@@ -138,24 +138,6 @@ async function approveUser(
           reviewedBy: adminId,
           reviewedAt: new Date(),
         },
-      });
-    }
-
-    // Create Store if not exists
-    if (!user.store) {
-      await db.store.create({
-        data: {
-          name: user.name,
-          nameEn: user.nameEn || user.name,
-          slug: `store-${user.id}`,
-          managerId: user.id,
-          packageId: assignedPackageId,
-        },
-      });
-    } else if (assignedPackageId) {
-      await db.store.update({
-        where: { id: user.store.id },
-        data: { packageId: assignedPackageId },
       });
     }
   }
@@ -171,22 +153,6 @@ async function approveUser(
         },
       });
     }
-
-    // Sync isVerified flag to SellerProfile (upsert to guarantee record exists)
-    await db.sellerProfile.upsert({
-      where: { userId: user.id },
-      update: { 
-        isVerified: true,
-        packageId: assignedPackageId,
-      },
-      create: {
-        userId: user.id,
-        isVerified: true,
-        storeName: user.name,
-        storeNameEn: user.nameEn || user.name,
-        packageId: assignedPackageId,
-      },
-    });
   }
 
   if (role === 'supplier') {
@@ -198,6 +164,56 @@ async function approveUser(
           reviewedBy: adminId,
           reviewedAt: new Date(),
         },
+      });
+    }
+  }
+
+  // Ensure all selling roles have a SellerProfile and a Store storefront
+  const sellingRoles = ['store', 'store_manager', 'freelancer', 'seller', 'supplier'];
+  if (sellingRoles.includes(role)) {
+    // 1. Sync isVerified flag to SellerProfile
+    await db.sellerProfile.upsert({
+      where: { userId: user.id },
+      update: {
+        isVerified: true,
+        packageId: assignedPackageId,
+      },
+      create: {
+        userId: user.id,
+        isVerified: true,
+        storeName: user.name,
+        storeNameEn: user.nameEn || user.name,
+        packageId: assignedPackageId,
+      },
+    });
+
+    // 2. Create Store if not exists
+    if (!user.store) {
+      let cleanSlug = `store-${user.id}`;
+      if (user.nameEn) {
+        cleanSlug = user.nameEn.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        if (!cleanSlug) cleanSlug = `store-${user.id}`;
+      }
+
+      // Check for slug uniqueness
+      const existingSlug = await db.store.findUnique({ where: { slug: cleanSlug } });
+      if (existingSlug) {
+        cleanSlug = `store-${user.id}`;
+      }
+
+      await db.store.create({
+        data: {
+          name: user.name,
+          nameEn: user.nameEn || user.name,
+          slug: cleanSlug,
+          managerId: user.id,
+          packageId: assignedPackageId,
+        },
+      });
+    } else if (assignedPackageId) {
+      await db.store.update({
+        where: { id: user.store.id },
+        data: { packageId: assignedPackageId },
       });
     }
   }

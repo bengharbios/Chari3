@@ -323,6 +323,7 @@ export interface PendingMerchant {
   verificationItems: VerificationItem[];
   priority: 'urgent' | 'standard';
   rejectionReason?: string;
+  details?: Record<string, any>;
 }
 
 export interface PendingDocument {

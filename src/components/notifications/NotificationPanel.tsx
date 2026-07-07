@@ -344,7 +344,7 @@ export default function NotificationPanel() {
           let actionUrl: string | null = null;
           let urgency = dbNotif.type === 'new_order' ? 'high' : 'normal';
 
-          const isAdmin = user.role === 'admin' || user.role === 'SUPER_ADMIN';
+          const isAdmin = user.role === 'admin' || (user.role as string) === 'SUPER_ADMIN';
 
           if (cat === 'verification') {
             if (isAdmin) {

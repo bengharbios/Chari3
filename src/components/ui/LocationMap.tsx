@@ -12,6 +12,12 @@ interface LocationMapProps {
   className?: string;
 }
 
+declare global {
+  interface Window {
+    google: any;
+  }
+}
+
 export default function LocationMap({ apiKey, defaultLat = 36.7538, defaultLng = 3.0588, onLocationSelect, className = '' }: LocationMapProps) {
   const { locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';

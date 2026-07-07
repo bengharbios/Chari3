@@ -101,8 +101,8 @@ export default function VerificationStatusPage() {
     setNewOtpInput('');
     
     const hasOld = method === 'email'
-      ? (user.email && !user.email.includes('@charyday.local'))
-      : !!user.phone;
+      ? (user?.email && !user.email.includes('@charyday.local'))
+      : !!user?.phone;
 
     if (hasOld) {
       setUpdateStep(1);
@@ -177,7 +177,7 @@ export default function VerificationStatusPage() {
       return;
     }
 
-    const currentValue = updateMethod === 'email' ? user.email : user.phone;
+    const currentValue = updateMethod === 'email' ? user?.email : user?.phone;
     if (newValueInput.trim().toLowerCase() === currentValue?.trim().toLowerCase()) {
       toast.error(
         updateMethod === 'email'
@@ -571,7 +571,7 @@ export default function VerificationStatusPage() {
                         </Badge>
 
                         {/* Edit Email/Phone Button */}
-                        {isContact && (
+                        {!!isContact && (
                           <Button 
                             size="sm" 
                             variant="outline" 

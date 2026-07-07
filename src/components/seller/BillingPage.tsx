@@ -59,7 +59,7 @@ const PLAN_ICONS: Record<string, React.ReactNode> = {
 };
 
 export default function BillingPage() {
-  const { locale } = useAppStore();
+  const { locale, setCurrentPage } = useAppStore();
   const { user } = useAuthStore();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const isRTL = locale === 'ar';

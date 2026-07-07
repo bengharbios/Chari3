@@ -16,7 +16,6 @@ async function deleteOldFile(oldUrl: string | null | undefined) {
   if (!oldUrl || !oldUrl.startsWith('/api/files/')) return;
   try {
     const filename = oldUrl.replace('/api/files/', '');
-    // Ensure filename is safe (alphanumeric and dots only)
     if (!/^[a-zA-Z0-9._-]+$/.test(filename)) return;
 
     const UPLOAD_DIR = getUploadDir();
@@ -28,6 +27,12 @@ async function deleteOldFile(oldUrl: string | null | undefined) {
   }
 }
 
+const RESERVED_SLUGS = [
+  'admin', 'api', 'login', 'register', 'checkout', 'settings', 'store',
+  'seller', 'dashboard', 'support', 'help', 'search', 'terms', 'privacy',
+  'blog', 'news', 'auth', 'signup', 'signin', 'verification', 'onboarding',
+  'suppliers', 'freelancers', 'logistics', 'buyer', 'orders', 'products'
+];
 
 // GET /api/seller/settings?userId=xxx&storeId=yyy&sellerId=zzz
 export async function GET(req: NextRequest) {
@@ -37,87 +42,89 @@ export async function GET(req: NextRequest) {
     const sellerId = req.nextUrl.searchParams.get('sellerId');
 
     let store: any = null;
-    let seller: any = null;
 
-    if (userId) {
-      // 1. Try to find Store as StoreManager
+    if (storeId) {
+      store = await db.store.findFirst({
+        where: userId ? { id: storeId, managerId: userId } : { id: storeId }
+      });
+    } else if (userId) {
       store = await db.store.findFirst({
         where: { managerId: userId }
       });
-
-      if (!store) {
-        // 2. Try to find SellerProfile
-        seller = await db.sellerProfile.findUnique({
-          where: { userId }
-        });
-      }
-    } else if (storeId) {
-      store = await db.store.findUnique({
-        where: { id: storeId }
-      });
     } else if (sellerId) {
-      seller = await db.sellerProfile.findUnique({
+      const sellerProfile = await db.sellerProfile.findUnique({
         where: { id: sellerId }
       });
+      if (sellerProfile) {
+        store = await db.store.findFirst({
+          where: { managerId: sellerProfile.userId }
+        });
+      }
     } else {
       return NextResponse.json({ success: false, error: 'userId, storeId, or sellerId required' }, { status: 400 });
     }
 
+    if (!store) {
+      return NextResponse.json({ success: false, error: 'Store profile not found' }, { status: 404 });
+    }
+
     let currency = 'DZD';
-    if (userId) {
-      const wallet = await db.wallet.findUnique({ where: { userId } });
-      if (wallet?.currency) currency = wallet.currency;
+    const wallet = await db.wallet.findUnique({ where: { userId: store.managerId } });
+    if (wallet?.currency) currency = wallet.currency;
+
+    // Fetch active package defaults
+    let pkg: any = null;
+    if (store.packageId) {
+      pkg = await db.sellerPackage.findUnique({ where: { id: store.packageId } });
     }
 
-    if (store) {
-      const themeParsed = store.themeSettings ? JSON.parse(store.themeSettings) : null;
-      return NextResponse.json({
-        success: true,
-        type: 'store',
-        settings: {
-          id: store.id,
-          name: store.name,
-          nameEn: store.nameEn,
-          description: store.description,
-          logo: store.logo,
-          coverImage: store.coverImage,
-          isActive: store.isActive,
-          shippingRates: store.shippingRates ? JSON.parse(store.shippingRates) : null,
-          shippingIntegrations: store.shippingIntegrations ? JSON.parse(store.shippingIntegrations) : null,
-          paymentDetails: store.paymentDetails ? JSON.parse(store.paymentDetails) : null,
-          themeSettings: themeParsed,
-          storeConfig: themeParsed?.storeConfig || null,
-          currency,
-        }
-      });
-    }
+    const checkAllowed = (pkgField: string, overrideField: string, defaultValue: boolean) => {
+      if (store[overrideField] !== null && store[overrideField] !== undefined) {
+        return store[overrideField];
+      }
+      if (pkg && pkg[pkgField] !== undefined && pkg[pkgField] !== null) {
+        return pkg[pkgField];
+      }
+      return defaultValue;
+    };
 
-    if (seller) {
-      const themeParsed = seller.themeSettings ? JSON.parse(seller.themeSettings) : null;
-      return NextResponse.json({
-        success: true,
-        type: 'seller',
-        settings: {
-          id: seller.id,
-          name: seller.storeName,
-          nameEn: seller.storeNameEn,
-          description: seller.bio,
-          logo: seller.logo,
-          coverImage: seller.coverImage,
-          isActive: seller.isVerified,
-          shippingRates: seller.shippingRates ? JSON.parse(seller.shippingRates) : null,
-          shippingIntegrations: seller.shippingIntegrations ? JSON.parse(seller.shippingIntegrations) : null,
-          paymentDetails: seller.paymentDetails ? JSON.parse(seller.paymentDetails) : null,
-          themeSettings: themeParsed,
-          storeConfig: themeParsed?.storeConfig || null,
-          currency,
-          paymentModel: seller.paymentModel,
-          merchantType: seller.merchantType,
-        }
-      });
-    }
+    const permissions = {
+      allowIdentity: checkAllowed('allowIdentity', 'overrideIdentity', true),
+      allowShipping: checkAllowed('allowShipping', 'overrideShipping', true),
+      allowPayment: checkAllowed('allowPayment', 'overridePayment', true),
+      allowVisuals: checkAllowed('allowVisuals', 'overrideVisuals', true),
+      allowInventory: checkAllowed('allowInventory', 'overrideInventory', true),
+      allowPolicies: checkAllowed('allowPolicies', 'overridePolicies', true),
+      allowSocials: checkAllowed('allowSocials', 'overrideSocials', true),
+      allowSecurity: checkAllowed('allowSecurity', 'overrideSecurity', true),
+      allowSEO: checkAllowed('allowSEO', 'overrideSEO', false),
+      allowDomain: checkAllowed('allowDomain', 'overrideDomain', false),
+      allowNotifications: checkAllowed('allowNotifications', 'overrideNotifications', true),
+    };
 
-    return NextResponse.json({ success: false, error: 'Store or Seller profile not found' }, { status: 404 });
+    const themeParsed = store.themeSettings ? JSON.parse(store.themeSettings) : null;
+    return NextResponse.json({
+      success: true,
+      type: 'store',
+      permissions,
+      settings: {
+        id: store.id,
+        name: store.name,
+        nameEn: store.nameEn,
+        slug: store.slug,
+        slugUpdatedAt: store.slugUpdatedAt,
+        description: store.description,
+        logo: store.logo,
+        coverImage: store.coverImage,
+        isActive: store.isActive,
+        shippingRates: store.shippingRates ? JSON.parse(store.shippingRates) : null,
+        shippingIntegrations: store.shippingIntegrations ? JSON.parse(store.shippingIntegrations) : null,
+        paymentDetails: store.paymentDetails ? JSON.parse(store.paymentDetails) : null,
+        themeSettings: themeParsed,
+        storeConfig: themeParsed?.storeConfig || null,
+        currency,
+      }
+    });
   } catch (error) {
     console.error('[seller/settings GET]', error);
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
@@ -128,7 +135,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, type, settings } = body;
+    const { userId, storeId, settings } = body;
 
     if (!userId) {
       return NextResponse.json({ success: false, error: 'userId required' }, { status: 400 });
@@ -137,27 +144,69 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'settings data required' }, { status: 400 });
     }
 
+    const store = storeId
+      ? await db.store.findFirst({
+          where: { id: storeId, managerId: userId }
+        })
+      : await db.store.findFirst({
+          where: { managerId: userId }
+        });
+
+    if (!store) {
+      return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
+    }
+
+    // --- Slug update logic ---
+    let newSlug = store.slug;
+    if (settings.slug && settings.slug.toLowerCase().trim() !== store.slug) {
+      const slugToCheck = settings.slug.toLowerCase().trim();
+      const slugRegex = /^[a-z0-9-]+$/;
+      if (!slugRegex.test(slugToCheck) || slugToCheck.length < 3 || slugToCheck.length > 30 || RESERVED_SLUGS.includes(slugToCheck)) {
+        return NextResponse.json({ success: false, error: 'invalid_slug_format' }, { status: 400 });
+      }
+
+      // Check uniqueness
+      const conflictingStore = await db.store.findFirst({
+        where: {
+          slug: slugToCheck,
+          managerId: { not: userId }
+        }
+      });
+      if (conflictingStore) {
+        return NextResponse.json({ success: false, error: 'slug_already_taken' }, { status: 400 });
+      }
+
+      // Check 60-day limit
+      if (store.slugUpdatedAt) {
+        const diffMs = Date.now() - new Date(store.slugUpdatedAt).getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        if (diffDays < 60) {
+          return NextResponse.json({
+            success: false,
+            error: 'slug_cooldown_active',
+            daysRemaining: 60 - diffDays
+          }, { status: 400 });
+        }
+      }
+
+      newSlug = slugToCheck;
+    }
+
     const shippingRatesStr = settings.shippingRates ? JSON.stringify(settings.shippingRates) : null;
     const shippingIntegrationsStr = settings.shippingIntegrations ? JSON.stringify(settings.shippingIntegrations) : null;
-    
-    // Handle SellerPaymentConfig for Chargily
+
+    // Handle Chargily split payments
     if (settings.paymentDetails && settings.paymentDetails.chargilySecretKey && settings.paymentDetails.chargilySecretKey !== '********') {
       try {
         const encryptedKeys = SecurityService.encryptConfig({
           publicKey: settings.paymentDetails.chargilyPublicKey,
           secretKey: settings.paymentDetails.chargilySecretKey
         });
-        
-        // Find sellerId based on type
-        let sellerIdToUse: string | null = null;
-        if (type === 'store') {
-          const st = await db.store.findFirst({ where: { managerId: userId } });
-          sellerIdToUse = st?.sellerId || null;
-        } else {
-          const sp = await db.sellerProfile.findUnique({ where: { userId } });
-          sellerIdToUse = sp?.id || null;
-        }
 
+        const sellerProfile = await db.sellerProfile.findUnique({
+          where: { userId: store.managerId }
+        });
+        const sellerIdToUse = sellerProfile ? sellerProfile.id : null;
         if (sellerIdToUse) {
           await db.sellerPaymentConfig.upsert({
             where: { sellerId: sellerIdToUse },
@@ -168,13 +217,11 @@ export async function POST(req: NextRequest) {
             create: {
               sellerId: sellerIdToUse,
               gatewayId: 'chargily',
-              mode: 'split', // default
+              mode: 'split',
               encryptedKeys,
             }
           });
         }
-        
-        // Hide secret key before saving in plain JSON
         settings.paymentDetails.chargilySecretKey = '********';
       } catch (err) {
         console.error('Failed to encrypt payment keys:', err);
@@ -182,8 +229,7 @@ export async function POST(req: NextRequest) {
     }
 
     const paymentDetailsStr = settings.paymentDetails ? JSON.stringify(settings.paymentDetails) : null;
-    
-    // Merge storeConfig into themeSettings since storeConfig doesn't have its own column
+
     let finalThemeSettings = settings.themeSettings || {};
     if (settings.storeConfig) {
       finalThemeSettings.storeConfig = settings.storeConfig;
@@ -199,92 +245,47 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (type === 'store') {
-      const store = await db.store.findFirst({
-        where: { managerId: userId }
-      });
-
-      if (!store) {
-        return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
-      }
-
-      // Cleanup old files if new ones are uploaded
-      if (settings.logo && settings.logo !== store.logo) {
-        await deleteOldFile(store.logo);
-      }
-      if (settings.coverImage && settings.coverImage !== store.coverImage) {
-        await deleteOldFile(store.coverImage);
-      }
-
-      const updatedStore = await db.store.update({
-        where: { id: store.id },
-        data: {
-          name: settings.name ?? store.name,
-          nameEn: settings.nameEn ?? store.nameEn,
-          description: settings.description ?? store.description,
-          logo: settings.logo ?? store.logo,
-          coverImage: settings.coverImage ?? store.coverImage,
-          shippingRates: shippingRatesStr,
-          shippingIntegrations: shippingIntegrationsStr,
-          paymentDetails: paymentDetailsStr,
-          themeSettings: themeSettingsStr,
-        }
-      });
-
-      // Update the user's name as well
-      await db.user.update({
-        where: { id: userId },
-        data: {
-          name: settings.name ?? undefined,
-          nameEn: settings.nameEn ?? undefined,
-        }
-      });
-
-      return NextResponse.json({ success: true, settings: updatedStore });
-    } else {
-      // Independent Seller Profile
-      const seller = await db.sellerProfile.findUnique({
-        where: { userId }
-      });
-
-      if (!seller) {
-        return NextResponse.json({ success: false, error: 'Seller profile not found' }, { status: 404 });
-      }
-
-      // Cleanup old files if new ones are uploaded
-      if (settings.logo && settings.logo !== seller.logo) {
-        await deleteOldFile(seller.logo);
-      }
-      if (settings.coverImage && settings.coverImage !== seller.coverImage) {
-        await deleteOldFile(seller.coverImage);
-      }
-
-      const updatedSeller = await db.sellerProfile.update({
-        where: { id: seller.id },
-        data: {
-          storeName: settings.name ?? seller.storeName,
-          storeNameEn: settings.nameEn ?? seller.storeNameEn,
-          bio: settings.description ?? seller.bio,
-          logo: settings.logo ?? seller.logo,
-          coverImage: settings.coverImage ?? seller.coverImage,
-          shippingRates: shippingRatesStr,
-          shippingIntegrations: shippingIntegrationsStr,
-          paymentDetails: paymentDetailsStr,
-          themeSettings: themeSettingsStr,
-        }
-      });
-
-      // Update the user's name as well
-      await db.user.update({
-        where: { id: userId },
-        data: {
-          name: settings.name ?? undefined,
-          nameEn: settings.nameEn ?? undefined,
-        }
-      });
-
-      return NextResponse.json({ success: true, settings: updatedSeller });
+    // Cleanup old files
+    if (settings.logo && settings.logo !== store.logo) {
+      await deleteOldFile(store.logo);
     }
+    if (settings.coverImage && settings.coverImage !== store.coverImage) {
+      await deleteOldFile(store.coverImage);
+    }
+
+    // Prepare update payload
+    const updatePayload: Record<string, any> = {
+      name: settings.name ?? store.name,
+      nameEn: settings.nameEn ?? store.nameEn,
+      description: settings.description ?? store.description,
+      logo: settings.logo ?? store.logo,
+      coverImage: settings.coverImage ?? store.coverImage,
+      shippingRates: shippingRatesStr,
+      shippingIntegrations: shippingIntegrationsStr,
+      paymentDetails: paymentDetailsStr,
+      themeSettings: themeSettingsStr,
+    };
+
+    if (newSlug !== store.slug) {
+      updatePayload.slug = newSlug;
+      updatePayload.slugUpdatedAt = new Date();
+    }
+
+    const updatedStore = await db.store.update({
+      where: { id: store.id },
+      data: updatePayload
+    });
+
+    // Update user's name
+    await db.user.update({
+      where: { id: userId },
+      data: {
+        name: settings.name ?? undefined,
+        nameEn: settings.nameEn ?? undefined,
+      }
+    });
+
+    return NextResponse.json({ success: true, settings: updatedStore });
   } catch (error) {
     console.error('[seller/settings POST]', error);
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });

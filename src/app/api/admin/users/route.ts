@@ -76,7 +76,7 @@ export async function GET(request: Request) {
           createdAt: true,
           _count: { select: { orders: true } },
           wallet: { select: { balance: true, debt: true, currency: true } },
-          store: { select: { id: true, name: true, isActive: true, rating: true, level: true, packageId: true, addonMobileApp: true, addonWhatsAppSupport: true, addonAdvancedCRM: true, addonEchangoPOS: true, addonExtraPOSDevices: true } },
+          store: { select: { id: true, name: true, slug: true, isActive: true, rating: true, level: true, packageId: true, addonMobileApp: true, addonWhatsAppSupport: true, addonAdvancedCRM: true, addonEchangoPOS: true, addonExtraPOSDevices: true, overrideIdentity: true, overrideShipping: true, overridePayment: true, overrideVisuals: true, overrideInventory: true, overridePolicies: true, overrideSocials: true, overrideSecurity: true, overrideSEO: true, overrideDomain: true, overrideNotifications: true } },
           sellerProfile: { select: { id: true, rating: true, level: true, packageId: true, wantsUpgrade: true, upgradeRequestedAt: true, addonMobileApp: true, addonWhatsAppSupport: true, addonAdvancedCRM: true, addonEchangoPOS: true, addonExtraPOSDevices: true } },
           logisticsProfile: { select: { totalDeliveries: true } },
         },
@@ -383,7 +383,7 @@ export async function PATCH(request: Request) {
         }
       }
 
-      if (existing.role === 'store_manager' || existing.store) {
+      if (existing.role === 'store_manager' || existing.store || existing.role === 'seller' || existing.role === 'freelancer' || existing.role === 'supplier') {
         const storeUpdate: Record<string, any> = {};
         if (typeof body.level === 'number') storeUpdate.level = body.level;
         if (typeof body.rating === 'number') storeUpdate.rating = body.rating;
@@ -394,13 +394,32 @@ export async function PATCH(request: Request) {
         if (typeof body.addonEchangoPOS === 'boolean') storeUpdate.addonEchangoPOS = body.addonEchangoPOS;
         if (typeof body.addonExtraPOSDevices === 'number') storeUpdate.addonExtraPOSDevices = body.addonExtraPOSDevices;
 
+        const overrideFields = [
+          'overrideIdentity', 'overrideShipping', 'overridePayment', 'overrideVisuals',
+          'overrideInventory', 'overridePolicies', 'overrideSocials', 'overrideSecurity',
+          'overrideSEO', 'overrideDomain', 'overrideNotifications'
+        ];
+        for (const field of overrideFields) {
+          if (body[field] !== undefined) {
+            if (body[field] === 'null' || body[field] === null) {
+              storeUpdate[field] = null;
+            } else {
+              storeUpdate[field] = body[field] === true || body[field] === 'true';
+            }
+          }
+        }
+
         if (Object.keys(storeUpdate).length > 0) {
-          await db.store.update({
-            where: { managerId: id },
-            data: storeUpdate,
-          });
-          changes.push(`storeOverride:${Object.keys(storeUpdate).join(',')}`);
-          profileUpdated = true;
+          // Because any selling role now has a store, we check and update by managerId
+          const storeExists = await db.store.findUnique({ where: { managerId: id } });
+          if (storeExists) {
+            await db.store.update({
+              where: { managerId: id },
+              data: storeUpdate,
+            });
+            changes.push(`storeOverride:${Object.keys(storeUpdate).join(',')}`);
+            profileUpdated = true;
+          }
         }
       }
 

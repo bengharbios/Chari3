@@ -370,6 +370,20 @@ export default function UserManagementPage() {
   const [addonAdvancedCRM, setAddonAdvancedCRM] = useState<boolean>(false);
   const [addonEchangoPOS, setAddonEchangoPOS] = useState<boolean>(false);
   const [addonExtraPOSDevices, setAddonExtraPOSDevices] = useState<number>(0);
+  
+  // 11 Feature overrides
+  const [overrideIdentity, setOverrideIdentity] = useState<'default' | 'allow' | 'deny'>('default');
+  const [overrideShipping, setOverrideShipping] = useState<'default' | 'allow' | 'deny'>('default');
+  const [overridePayment, setOverridePayment] = useState<'default' | 'allow' | 'deny'>('default');
+  const [overrideVisuals, setOverrideVisuals] = useState<'default' | 'allow' | 'deny'>('default');
+  const [overrideInventory, setOverrideInventory] = useState<'default' | 'allow' | 'deny'>('default');
+  const [overridePolicies, setOverridePolicies] = useState<'default' | 'allow' | 'deny'>('default');
+  const [overrideSocials, setOverrideSocials] = useState<'default' | 'allow' | 'deny'>('default');
+  const [overrideSecurity, setOverrideSecurity] = useState<'default' | 'allow' | 'deny'>('default');
+  const [overrideSEO, setOverrideSEO] = useState<'default' | 'allow' | 'deny'>('default');
+  const [overrideDomain, setOverrideDomain] = useState<'default' | 'allow' | 'deny'>('default');
+  const [overrideNotifications, setOverrideNotifications] = useState<'default' | 'allow' | 'deny'>('default');
+
   const [packages, setPackages] = useState<any[]>([]);
   const [isSavingOverride, setIsSavingOverride] = useState(false);
 
@@ -1470,6 +1484,25 @@ export default function UserManagementPage() {
                       setAddonAdvancedCRM(profile?.addonAdvancedCRM ?? false);
                       setAddonEchangoPOS(profile?.addonEchangoPOS ?? false);
                       setAddonExtraPOSDevices(profile?.addonExtraPOSDevices ?? 0);
+
+                      const storeObj = selectedUser.store as any;
+                      const getVal = (val: boolean | null | undefined) => {
+                        if (val === true) return 'allow';
+                        if (val === false) return 'deny';
+                        return 'default';
+                      };
+                      setOverrideIdentity(getVal(storeObj?.overrideIdentity));
+                      setOverrideShipping(getVal(storeObj?.overrideShipping));
+                      setOverridePayment(getVal(storeObj?.overridePayment));
+                      setOverrideVisuals(getVal(storeObj?.overrideVisuals));
+                      setOverrideInventory(getVal(storeObj?.overrideInventory));
+                      setOverridePolicies(getVal(storeObj?.overridePolicies));
+                      setOverrideSocials(getVal(storeObj?.overrideSocials));
+                      setOverrideSecurity(getVal(storeObj?.overrideSecurity));
+                      setOverrideSEO(getVal(storeObj?.overrideSEO));
+                      setOverrideDomain(getVal(storeObj?.overrideDomain));
+                      setOverrideNotifications(getVal(storeObj?.overrideNotifications));
+
                       setOverrideOpen(true);
                     }}
                   >
@@ -1889,7 +1922,7 @@ export default function UserManagementPage() {
       {/* 11. EDIT MERCHANT OVERRIDES DIALOG          */}
       {/* ============================================ */}
       <AlertDialog open={overrideOpen} onOpenChange={setOverrideOpen}>
-        <AlertDialogContent dir={dir} className="max-w-md">
+        <AlertDialogContent dir={dir} className="max-w-xl max-h-[85vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-brand font-bold text-lg">
               <ShieldCheck className="h-5 w-5 text-brand" />
@@ -2097,6 +2130,183 @@ export default function UserManagementPage() {
                     )}
                   </div>
                 </div>
+
+                {/* 11 Feature Overrides Section */}
+                <div className="space-y-3 pt-3 border-t">
+                  <Label className="text-sm font-bold text-brand">
+                    {t(locale, 'تجاوز صلاحيات الميزات (Feature Overrides)', 'Feature Overrides & Permissions')}
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t(locale, 'تخصيص الصلاحيات الفردية للمتجر (تجاوز إعدادات باقة الاشتراك).', 'Customize individual store permissions (overriding default package settings).')}
+                  </p>
+
+                  <div className="space-y-3 mt-2 max-h-[220px] overflow-y-auto pr-1 border rounded-xl p-3 bg-muted/10">
+                    {/* 1. Identity */}
+                    <div className="flex items-center justify-between gap-4">
+                      <Label className="text-xs font-semibold">{t(locale, 'الهوية والمعلومات', 'Identity & Info')}</Label>
+                      <Select value={overrideIdentity} onValueChange={setOverrideIdentity}>
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={dir}>
+                          <SelectItem value="default">{t(locale, 'بناءً على الباقة', 'Follow Package')}</SelectItem>
+                          <SelectItem value="allow">{t(locale, 'تفعيل إجباري', 'Force Allow')}</SelectItem>
+                          <SelectItem value="deny">{t(locale, 'تعطيل إجباري', 'Force Deny')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* 2. Shipping */}
+                    <div className="flex items-center justify-between gap-4">
+                      <Label className="text-xs font-semibold">{t(locale, 'الشحن والتوصيل', 'Shipping & Delivery')}</Label>
+                      <Select value={overrideShipping} onValueChange={setOverrideShipping}>
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={dir}>
+                          <SelectItem value="default">{t(locale, 'بناءً على الباقة', 'Follow Package')}</SelectItem>
+                          <SelectItem value="allow">{t(locale, 'تفعيل إجباري', 'Force Allow')}</SelectItem>
+                          <SelectItem value="deny">{t(locale, 'تعطيل إجباري', 'Force Deny')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* 3. Payment */}
+                    <div className="flex items-center justify-between gap-4">
+                      <Label className="text-xs font-semibold">{t(locale, 'بوابات الدفع', 'Payment Gateways')}</Label>
+                      <Select value={overridePayment} onValueChange={setOverridePayment}>
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={dir}>
+                          <SelectItem value="default">{t(locale, 'بناءً على الباقة', 'Follow Package')}</SelectItem>
+                          <SelectItem value="allow">{t(locale, 'تفعيل إجباري', 'Force Allow')}</SelectItem>
+                          <SelectItem value="deny">{t(locale, 'تعطيل إجباري', 'Force Deny')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* 4. Visuals */}
+                    <div className="flex items-center justify-between gap-4">
+                      <Label className="text-xs font-semibold">{t(locale, 'المظهر والهوية البصرية', 'Theme & Visuals')}</Label>
+                      <Select value={overrideVisuals} onValueChange={setOverrideVisuals}>
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={dir}>
+                          <SelectItem value="default">{t(locale, 'بناءً على الباقة', 'Follow Package')}</SelectItem>
+                          <SelectItem value="allow">{t(locale, 'تفعيل إجباري', 'Force Allow')}</SelectItem>
+                          <SelectItem value="deny">{t(locale, 'تعطيل إجباري', 'Force Deny')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* 5. Inventory */}
+                    <div className="flex items-center justify-between gap-4">
+                      <Label className="text-xs font-semibold">{t(locale, 'الطلبات والمخزون', 'Orders & Inventory')}</Label>
+                      <Select value={overrideInventory} onValueChange={setOverrideInventory}>
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={dir}>
+                          <SelectItem value="default">{t(locale, 'بناءً على الباقة', 'Follow Package')}</SelectItem>
+                          <SelectItem value="allow">{t(locale, 'تفعيل إجباري', 'Force Allow')}</SelectItem>
+                          <SelectItem value="deny">{t(locale, 'تعطيل إجباري', 'Force Deny')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* 6. Policies */}
+                    <div className="flex items-center justify-between gap-4">
+                      <Label className="text-xs font-semibold">{t(locale, 'السياسات والشروط', 'Policies & Legal')}</Label>
+                      <Select value={overridePolicies} onValueChange={setOverridePolicies}>
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={dir}>
+                          <SelectItem value="default">{t(locale, 'بناءً على الباقة', 'Follow Package')}</SelectItem>
+                          <SelectItem value="allow">{t(locale, 'تفعيل إجباري', 'Force Allow')}</SelectItem>
+                          <SelectItem value="deny">{t(locale, 'تعطيل إجباري', 'Force Deny')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* 7. Socials */}
+                    <div className="flex items-center justify-between gap-4">
+                      <Label className="text-xs font-semibold">{t(locale, 'التواصل الاجتماعي', 'Social Links')}</Label>
+                      <Select value={overrideSocials} onValueChange={setOverrideSocials}>
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={dir}>
+                          <SelectItem value="default">{t(locale, 'بناءً على الباقة', 'Follow Package')}</SelectItem>
+                          <SelectItem value="allow">{t(locale, 'تفعيل إجباري', 'Force Allow')}</SelectItem>
+                          <SelectItem value="deny">{t(locale, 'تعطيل إجباري', 'Force Deny')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* 8. Security */}
+                    <div className="flex items-center justify-between gap-4">
+                      <Label className="text-xs font-semibold">{t(locale, 'الأمان والتحقق', 'Security Settings')}</Label>
+                      <Select value={overrideSecurity} onValueChange={setOverrideSecurity}>
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={dir}>
+                          <SelectItem value="default">{t(locale, 'بناءً على الباقة', 'Follow Package')}</SelectItem>
+                          <SelectItem value="allow">{t(locale, 'تفعيل إجباري', 'Force Allow')}</SelectItem>
+                          <SelectItem value="deny">{t(locale, 'تعطيل إجباري', 'Force Deny')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* 9. SEO */}
+                    <div className="flex items-center justify-between gap-4">
+                      <Label className="text-xs font-semibold">{t(locale, 'إعدادات السيو (SEO)', 'SEO Settings')}</Label>
+                      <Select value={overrideSEO} onValueChange={setOverrideSEO}>
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={dir}>
+                          <SelectItem value="default">{t(locale, 'بناءً على الباقة', 'Follow Package')}</SelectItem>
+                          <SelectItem value="allow">{t(locale, 'تفعيل إجباري', 'Force Allow')}</SelectItem>
+                          <SelectItem value="deny">{t(locale, 'تعطيل إجباري', 'Force Deny')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* 10. Domain */}
+                    <div className="flex items-center justify-between gap-4">
+                      <Label className="text-xs font-semibold">{t(locale, 'النطاق المخصص (Domain)', 'Custom Domain')}</Label>
+                      <Select value={overrideDomain} onValueChange={setOverrideDomain}>
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={dir}>
+                          <SelectItem value="default">{t(locale, 'بناءً على الباقة', 'Follow Package')}</SelectItem>
+                          <SelectItem value="allow">{t(locale, 'تفعيل إجباري', 'Force Allow')}</SelectItem>
+                          <SelectItem value="deny">{t(locale, 'تعطيل إجباري', 'Force Deny')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* 11. Notifications */}
+                    <div className="flex items-center justify-between gap-4">
+                      <Label className="text-xs font-semibold">{t(locale, 'الإشعارات والتنبيهات', 'Notifications')}</Label>
+                      <Select value={overrideNotifications} onValueChange={setOverrideNotifications}>
+                        <SelectTrigger className="w-36 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent dir={dir}>
+                          <SelectItem value="default">{t(locale, 'بناءً على الباقة', 'Follow Package')}</SelectItem>
+                          <SelectItem value="allow">{t(locale, 'تفعيل إجباري', 'Force Allow')}</SelectItem>
+                          <SelectItem value="deny">{t(locale, 'تعطيل إجباري', 'Force Deny')}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -2111,6 +2321,12 @@ export default function UserManagementPage() {
                 setIsSavingOverride(true);
                 try {
                   const ratingNum = Number(overrideRating) || 0;
+                  const mapVal = (val: 'default' | 'allow' | 'deny') => {
+                    if (val === 'allow') return true;
+                    if (val === 'deny') return false;
+                    return null;
+                  };
+
                   const res = await fetch('/api/admin/users', {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
@@ -2124,6 +2340,17 @@ export default function UserManagementPage() {
                       addonAdvancedCRM,
                       addonEchangoPOS,
                       addonExtraPOSDevices,
+                      overrideIdentity: mapVal(overrideIdentity),
+                      overrideShipping: mapVal(overrideShipping),
+                      overridePayment: mapVal(overridePayment),
+                      overrideVisuals: mapVal(overrideVisuals),
+                      overrideInventory: mapVal(overrideInventory),
+                      overridePolicies: mapVal(overridePolicies),
+                      overrideSocials: mapVal(overrideSocials),
+                      overrideSecurity: mapVal(overrideSecurity),
+                      overrideSEO: mapVal(overrideSEO),
+                      overrideDomain: mapVal(overrideDomain),
+                      overrideNotifications: mapVal(overrideNotifications),
                     }),
                   });
                   const data = await res.json();

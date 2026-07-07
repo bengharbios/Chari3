@@ -8,7 +8,8 @@ import {
   Search, ShoppingCart, Moon, Sun,
   Menu, X, ChevronDown, User, LogOut, Settings,
   ClipboardCheck, Trash2, Plus, Minus, Loader2, CheckSquare,
-  ArrowLeft, ArrowRight, ShoppingBag, Truck, Tag, AlertCircle, ShieldCheck
+  ArrowLeft, ArrowRight, ShoppingBag, Truck, Tag, AlertCircle, ShieldCheck,
+  CheckCircle, Store as StoreIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
@@ -113,9 +114,42 @@ export default function Header() {
   useEffect(() => {
     setMounted(true);
   }, []);
-  const { locale, setLocale, toggleMobileMenu, setSidebarOpen, isSidebarOpen, allowGuestCheckout, setAllowGuestCheckout, currentPage } = useAppStore();
-  const [enableDeliverTo, setEnableDeliverTo] = useState(true);
+  const { 
+    locale, 
+    setLocale, 
+    toggleMobileMenu, 
+    setSidebarOpen, 
+    isSidebarOpen, 
+    allowGuestCheckout, 
+    setAllowGuestCheckout, 
+    currentPage,
+    activeStoreId,
+    setActiveStoreId
+  } = useAppStore();
   const { user, isAuthenticated, logout, isBuyerMode } = useAuthStore();
+  const [enableDeliverTo, setEnableDeliverTo] = useState(true);
+  const [userStores, setUserStores] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.id && (user.role === 'seller' || user.role === 'store_manager' || user.role === 'store' || user.role === 'freelancer')) {
+      fetch(`/api/seller/stores?userId=${user.id}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.stores)) {
+            setUserStores(data.stores);
+            const exists = data.stores.some((s: any) => s.id === activeStoreId);
+            if (!exists && data.stores.length > 0) {
+              setActiveStoreId(data.stores[0].id);
+            }
+          }
+        })
+        .catch(err => console.error('Failed to fetch user stores:', err));
+    } else {
+      setUserStores([]);
+    }
+  }, [isAuthenticated, user?.id, activeStoreId, setActiveStoreId]);
+
+
   const {
     itemCount,
     items,
@@ -772,6 +806,53 @@ export default function Header() {
 
             {/* Notifications */}
             {isAuthenticated && <NotificationPanel />}
+
+            {/* Store / Branch Switcher — visible to multi-store sellers */}
+            {isAuthenticated && user && userStores.length > 1 && !isBuyerMode && (
+              <DropdownMenu dir={isRTL ? 'rtl' : 'ltr'}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="hidden sm:flex items-center gap-2 rounded-xl border-primary/30 text-xs font-bold h-9 px-3 max-w-[160px]"
+                  >
+                    <StoreIcon className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span className="truncate">
+                      {userStores.find(s => s.id === activeStoreId)?.name || t('المتجر النشط', 'Active Store')}
+                    </span>
+                    <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 z-[var(--z-modal)]">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground font-bold uppercase tracking-wider">
+                    {t('تبديل الفرع / المتجر', 'Switch Store / Branch')}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {userStores.map((store) => (
+                    <DropdownMenuItem
+                      key={store.id}
+                      className={`flex items-center gap-2 font-medium cursor-pointer ${store.id === activeStoreId ? 'bg-primary/10 text-primary' : ''}`}
+                      onClick={() => {
+                        setActiveStoreId(store.id);
+                        // Reload the current page to refresh data for the new store
+                        window.location.reload();
+                      }}
+                    >
+                      <StoreIcon className={`h-4 w-4 shrink-0 ${store.id === activeStoreId ? 'text-primary' : 'text-muted-foreground'}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm">{isRTL ? store.name : (store.nameEn || store.name)}</p>
+                        {store.slug && (
+                          <p className="text-xs text-muted-foreground font-mono truncate">/{store.slug}</p>
+                        )}
+                      </div>
+                      {store.id === activeStoreId && (
+                        <CheckCircle className="h-3.5 w-3.5 text-primary shrink-0" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             {/* Cart — visible to everyone */}
             <Button

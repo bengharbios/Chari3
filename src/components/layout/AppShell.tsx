@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import FloatingCart from './FloatingCart';
 import AuthSync from '@/components/auth/AuthSync';
 import AppInitializer from '@/components/layout/AppInitializer';

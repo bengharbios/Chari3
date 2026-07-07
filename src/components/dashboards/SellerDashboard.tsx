@@ -1,5 +1,6 @@
 'use client';
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 import { useState, useEffect } from 'react';
 import {
@@ -17,6 +18,13 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { useOnboardingStore } from '@/lib/store/onboarding';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useAppStore as appStore } from '@/lib/store';
 import { toast } from 'sonner';
 import SellerChatTab from '@/components/seller/chat/SellerChatTab';
@@ -83,6 +91,7 @@ interface DashboardData {
     walletBalance: number;
     walletCurrency?: string;
   };
+  stores?: { id: string; name: string; nameEn?: string | null; slug: string }[];
   currency?: string;
   storeStatus?: {
     isActive: boolean;
@@ -251,7 +260,8 @@ function SuspensionBanner({ storeStatus, t, isAr }: {
   );
 }
 export default function SellerDashboard() {
-  const { locale } = useAppStore();
+  const router = useRouter();
+  const { locale, activeStoreId, setActiveStoreId } = useAppStore();
   const { user } = useAuthStore();
   const pathname = require('next/navigation').usePathname();
   const isAr = locale === 'ar';
@@ -277,8 +287,13 @@ export default function SellerDashboard() {
     if (!user?.id) return;
     setIsLoading(true);
     
+    const params = new URLSearchParams({ userId: user.id });
+    if (activeStoreId) {
+      params.set('storeId', activeStoreId);
+    }
+
     Promise.all([
-      fetch(`/api/seller/dashboard?userId=${user.id}`).then(r => r.json()),
+      fetch(`/api/seller/dashboard?${params.toString()}`).then(r => r.json()),
       fetch(`/api/seller/verification`).then(r => r.json())
     ])
       .then(([dashboardRes, verificationRes]) => {
@@ -291,7 +306,7 @@ export default function SellerDashboard() {
 
   useEffect(() => {
     refreshData();
-  }, [user?.id]);
+  }, [user?.id, activeStoreId]);
 
   // Store suspension check
   const isSuspended = data?.storeStatus?.isSuspended === true;
@@ -401,9 +416,32 @@ export default function SellerDashboard() {
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
+        <div className="flex flex-col gap-1.5">
           <h1 className="text-2xl font-black">{t('لوحة تحكم التاجر', 'Seller Dashboard')}</h1>
-          <p className="text-muted-foreground text-sm">{data?.seller?.storeName || user?.name}</p>
+          <div className="flex items-center gap-3">
+            <p className="text-muted-foreground text-sm">{data?.seller?.storeName || user?.name}</p>
+            
+            {/* Store / Branch Switcher */}
+            {data?.stores && data.stores.length > 1 && (
+              <div className="flex items-center gap-2 border-s border-border ps-3">
+                <Select
+                  value={activeStoreId || (data.stores[0]?.id)}
+                  onValueChange={(val) => setActiveStoreId(val)}
+                >
+                  <SelectTrigger className="w-48 h-8 rounded-xl border-border bg-card text-xs font-bold px-3 py-1 shadow-sm">
+                    <SelectValue placeholder={t('اختر الفرع/المتجر', 'Select Branch/Store')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {data.stores.map((s) => (
+                      <SelectItem key={s.id} value={s.id} className="text-xs font-bold">
+                        {isAr ? s.name : (s.nameEn || s.name)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
         </div>
         <div className={`flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r ${lvlInfo.color} text-white`}>
           <span className="text-xl">{lvlInfo.badge}</span>

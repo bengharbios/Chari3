@@ -21,6 +21,21 @@ import { toast } from 'sonner';
 import TwoFactorSettings from '@/components/seller/settings/TwoFactorSettings';
 import DeviceManagement from '@/components/seller/settings/DeviceManagement';
 
+function LockedSection({ title, description }: { title: string; description: string }) {
+  return (
+    <Card className="border-white/10 bg-background/40 backdrop-blur-xl shadow-xl rounded-3xl p-8 text-center flex flex-col items-center justify-center min-h-[300px]">
+      <div className="p-4 bg-amber-500/10 text-amber-500 rounded-full mb-4">
+        <Shield className="h-8 w-8 animate-pulse" />
+      </div>
+      <h3 className="text-xl font-bold mb-2 text-foreground">{title}</h3>
+      <p className="text-sm text-muted-foreground max-w-md mb-6">{description}</p>
+      <Button onClick={() => window.location.href = '/seller/billing'} variant="default" className="rounded-xl font-bold px-6">
+        🚀 ترقية الباقة الآن | Upgrade Now
+      </Button>
+    </Card>
+  );
+}
+
 const STAGGER_CONTAINER = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
@@ -103,7 +118,7 @@ const ALGERIAN_WILAYAS = [
 ];
 
 export default function StoreSettingsPage() {
-  const { locale } = useAppStore();
+  const { locale, activeStoreId } = useAppStore();
   const { user, updateProfile } = useAuthStore();
   const t = (ar: string, en: string) => locale === 'ar' ? ar : en;
   const isAr = locale === 'ar';
@@ -112,6 +127,11 @@ export default function StoreSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [accountType, setAccountType] = useState<'store' | 'seller'>('store');
   const [searchWilaya, setSearchWilaya] = useState('');
+  const [permissions, setPermissions] = useState<any>(null);
+  const [slug, setSlug] = useState('');
+  const [originalSlug, setOriginalSlug] = useState('');
+  const [slugUpdatedAt, setSlugUpdatedAt] = useState<string | null>(null);
+  const [slugCheckStatus, setSlugCheckStatus] = useState<{ status: 'idle' | 'checking' | 'available' | 'taken' | 'invalid' | 'cooldown'; daysRemaining?: number }>({ status: 'idle' });
   
   // Settings Form States
   const [generalSettings, setGeneralSettings] = useState({
@@ -327,12 +347,22 @@ export default function StoreSettingsPage() {
       }
 
       // 2. Fetch seller settings
-      const res = await fetch(`/api/seller/settings?userId=${user.id}`);
+      const res = await fetch(`/api/seller/settings?userId=${user.id}${activeStoreId ? `&storeId=${activeStoreId}` : ''}`);
       if (!res.ok) throw new Error('Settings fetch failed');
       const data = await res.json();
       if (data.success && data.settings) {
         setAccountType(data.type);
+        if (data.permissions) {
+          setPermissions(data.permissions);
+        }
         const s = data.settings;
+        if (s.slug) {
+          setSlug(s.slug);
+          setOriginalSlug(s.slug);
+        }
+        if (s.slugUpdatedAt) {
+          setSlugUpdatedAt(s.slugUpdatedAt);
+        }
         setGeneralSettings(prev => ({
           ...prev,
           name: s.name || '',
@@ -393,7 +423,65 @@ export default function StoreSettingsPage() {
 
   useEffect(() => {
     loadSettings();
-  }, [user?.id]);
+  }, [user?.id, activeStoreId]);
+
+  // Slug debounce validation
+  useEffect(() => {
+    if (!slug) {
+      setSlugCheckStatus({ status: 'idle' });
+      return;
+    }
+
+    if (slug === originalSlug) {
+      setSlugCheckStatus({ status: 'idle' });
+      return;
+    }
+
+    // Cooldown Validation (60 days)
+    if (slugUpdatedAt) {
+      const lastUpdated = new Date(slugUpdatedAt);
+      const diffMs = Date.now() - lastUpdated.getTime();
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+      if (diffDays < 60) {
+        setSlugCheckStatus({ status: 'cooldown', daysRemaining: 60 - diffDays });
+        return;
+      }
+    }
+
+    // Syntax validation
+    if (slug.length < 3 || slug.length > 30) {
+      setSlugCheckStatus({ status: 'invalid' });
+      return;
+    }
+
+    setSlugCheckStatus({ status: 'checking' });
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/seller/settings/slug-check?slug=${slug}&userId=${user?.id}`);
+        const data = await res.json();
+        if (data.success) {
+          if (data.available) {
+            setSlugCheckStatus({ status: 'available' });
+          } else {
+            if (data.reason === 'cooldown_active') {
+              setSlugCheckStatus({ status: 'cooldown', daysRemaining: data.daysRemaining });
+            } else if (data.reason === 'invalid_format' || data.reason === 'invalid_length' || data.reason === 'reserved_word') {
+              setSlugCheckStatus({ status: 'invalid' });
+            } else {
+              setSlugCheckStatus({ status: 'taken' });
+            }
+          }
+        } else {
+          setSlugCheckStatus({ status: 'invalid' });
+        }
+      } catch (err) {
+        console.error(err);
+        setSlugCheckStatus({ status: 'idle' });
+      }
+    }, 600);
+
+    return () => clearTimeout(delayDebounce);
+  }, [slug, originalSlug, slugUpdatedAt, user?.id]);
 
   // Fetch dynamic states when country changes
   useEffect(() => {
@@ -426,6 +514,18 @@ export default function StoreSettingsPage() {
   // Save Settings to API
   const handleSave = async () => {
     if (!user?.id) return;
+    if (slugCheckStatus.status === 'taken') {
+      toast.error(t('عذراً، هذا الرابط مستخدم من قبل متجر آخر.', 'Sorry, this link is already taken by another store.'));
+      return;
+    }
+    if (slugCheckStatus.status === 'invalid') {
+      toast.error(t('يجب أن يتكون الرابط من 3 إلى 30 حرفاً إنجليزياً وأرقام وعلامات وصل (-) فقط.', 'The link must consist of 3 to 30 lowercase letters, numbers, and hyphens (-) only.'));
+      return;
+    }
+    if (slugCheckStatus.status === 'cooldown') {
+      toast.error(t(`الرابط مغلق لحماية الأرشفة. متاح التغيير بعد ${slugCheckStatus.daysRemaining} يوم/أيام.`, `Link is locked for SEO protection. Changeable in ${slugCheckStatus.daysRemaining} days.`));
+      return;
+    }
     setIsSaving(true);
     try {
       const storeConfig = {
@@ -448,9 +548,11 @@ export default function StoreSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.id,
+          storeId: activeStoreId,
           type: accountType,
           settings: {
             ...generalSettings,
+            slug, // Include custom slug
             shippingRates,
             shippingIntegrations,
             paymentDetails,
@@ -461,6 +563,12 @@ export default function StoreSettingsPage() {
       });
       const data = await res.json();
       if (data.success) {
+        if (slug) {
+          setOriginalSlug(slug);
+        }
+        if (data.slugUpdatedAt) {
+          setSlugUpdatedAt(data.slugUpdatedAt);
+        }
         if (generalSettings.name || generalSettings.nameEn) {
           updateProfile({
             name: generalSettings.name || user?.name || '',
@@ -755,6 +863,12 @@ export default function StoreSettingsPage() {
 
           {/* 2. Shipping & Delivery Tab */}
           <TabsContent value="shipping" className="mt-0 outline-none">
+            {permissions?.allowShipping === false ? (
+              <LockedSection 
+                title={t('إعدادات الشحن والتوصيل غير مفعلة', 'Shipping & Delivery Locked')} 
+                description={t('إعدادات الشحن المتقدمة وحساب التكاليف متوفرة في الباقات المدفوعة.', 'Advanced shipping rules and custom logistics calculation are available on paid plans.')} 
+              />
+            ) : (
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               {/* Shipping Rules */}
               <div className="xl:col-span-2 space-y-6">
@@ -1289,10 +1403,17 @@ export default function StoreSettingsPage() {
                 </Card>
               </div>
             </div>
+            )}
           </TabsContent>
 
           {/* 3. Payments Tab */}
           <TabsContent value="payment" className="mt-0 outline-none">
+            {permissions?.allowPayment === false ? (
+              <LockedSection 
+                title={t('إعدادات الدفع وبوابات الدفع غير مفعلة', 'Payment Gateways Locked')} 
+                description={t('إعدادات الدفع المتقدمة والربط الإلكتروني وبوابات الدفع متوفرة في الباقات المدفوعة.', 'Advanced payment gateway configurations and integrations are available on paid plans.')} 
+              />
+            ) : (
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               <div className="xl:col-span-2 space-y-6">
                 <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
@@ -1527,10 +1648,17 @@ export default function StoreSettingsPage() {
                 </Card>
               </div>
             </div>
+            )}
           </TabsContent>
 
           {/* 4. Branding & Visuals Tab */}
           <TabsContent value="branding" className="mt-0 outline-none">
+            {permissions?.allowVisuals === false ? (
+              <LockedSection 
+                title={t('إعدادات الهوية البصرية والقوالب غير مفعلة', 'Visual Branding Locked')} 
+                description={t('تخصيص ألوان الهوية والشعارات والسمات متوفر في الباقات المدفوعة.', 'Custom brand colors, themes, and visual styles are available on paid plans.')} 
+              />
+            ) : (
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
               <div className="xl:col-span-2 space-y-6">
                 <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
@@ -1690,10 +1818,17 @@ export default function StoreSettingsPage() {
                 </Card>
               </div>
             </div>
+            )}
           </TabsContent>
 
           {/* 5. Orders & Inventory Tab */}
           <TabsContent value="orders" className="mt-0 outline-none">
+            {permissions?.allowInventory === false ? (
+              <LockedSection 
+                title={t('إعدادات الطلبات والمخازن غير مفعلة', 'Order Settings Locked')} 
+                description={t('التحكم المتقدم في الطلبات وإرسال إشعارات التجهيز متوفر في الباقات المدفوعة.', 'Advanced order rules and automation are available on paid plans.')} 
+              />
+            ) : (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
                 <CardHeader>
@@ -1761,10 +1896,17 @@ export default function StoreSettingsPage() {
                 </CardContent>
               </Card>
             </div>
+            )}
           </TabsContent>
 
           {/* 6. Policies Tab */}
           <TabsContent value="policies" className="mt-0 outline-none">
+            {permissions?.allowPolicies === false ? (
+              <LockedSection 
+                title={t('إعدادات سياسات المتجر غير مفعلة', 'Store Policies Locked')} 
+                description={t('كتابة وتعديل الشروط والأحكام وسياسة الخصوصية متوفرة في الباقات المدفوعة.', 'Custom privacy policy and terms of service pages are available on paid plans.')} 
+              />
+            ) : (
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
               <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
                 <CardHeader>
@@ -1823,10 +1965,17 @@ export default function StoreSettingsPage() {
                 </CardContent>
               </Card>
             </div>
+            )}
           </TabsContent>
 
           {/* 7. Social & Contact Tab */}
           <TabsContent value="social" className="mt-0 outline-none">
+            {permissions?.allowSocials === false ? (
+              <LockedSection 
+                title={t('إعدادات شبكات التواصل غير مفعلة', 'Social Links Locked')} 
+                description={t('ربط حسابات فيسبوك وإنستقرام وتيك توك متوفر في الباقات المدفوعة.', 'Linking Facebook, Instagram, TikTok, and other platforms is available on paid plans.')} 
+              />
+            ) : (
             <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2"><Share2 className="h-5 w-5 text-primary" />{t('روابط التواصل الاجتماعي', 'Social Media Links')}</CardTitle>
@@ -1900,10 +2049,17 @@ export default function StoreSettingsPage() {
                 </div>
               </CardContent>
             </Card>
+            )}
           </TabsContent>
 
           {/* 8. SEO Tab */}
           <TabsContent value="seo" className="mt-0 outline-none">
+            {permissions?.allowSEO === false ? (
+              <LockedSection 
+                title={t('إعدادات محركات البحث غير مفعلة', 'SEO Settings Locked')} 
+                description={t('تخصيص عنوان ووصف البحث وإضافة الكلمات المفتاحية متوفر في الباقات المدفوعة.', 'Custom SEO tags, metadata, and description options are available on paid plans.')} 
+              />
+            ) : (
             <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2"><Search className="h-5 w-5 text-primary" />{t('تحسين محركات البحث (SEO)', 'Search Engine Optimization (SEO)')}</CardTitle>
@@ -1962,10 +2118,17 @@ export default function StoreSettingsPage() {
                 )}
               </CardContent>
             </Card>
+            )}
           </TabsContent>
 
           {/* 9. Notifications Tab */}
           <TabsContent value="notifications" className="mt-0 outline-none">
+            {permissions?.allowNotifications === false ? (
+              <LockedSection 
+                title={t('إعدادات الإشعارات غير مفعلة', 'Notification Settings Locked')} 
+                description={t('تنبيهات البريد الإلكتروني وتنبيهات الطلبات المخصصة متوفرة في الباقات المدفوعة.', 'Email and order notification settings are available on paid plans.')} 
+              />
+            ) : (
             <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2"><Bell className="h-5 w-5 text-primary" />{t('إعدادات الإشعارات', 'Notification Settings')}</CardTitle>
@@ -2024,60 +2187,122 @@ export default function StoreSettingsPage() {
                 </div>
               </CardContent>
             </Card>
+            )}
           </TabsContent>
           {/* Domains Tab */}
           <TabsContent value="domains" className="mt-0 outline-none">
-            <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl mb-6">
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Globe className="h-5 w-5 text-primary" />
-                  {t('إعدادات النطاق المخصص', 'Custom Domain Settings')}
-                </CardTitle>
-                <CardDescription>
-                  {t('اربط متجرك بنطاق مخصص خاص بك (مثل: www.mystore.com) بدلاً من النطاق الافتراضي.', 'Link your store to your own custom domain (e.g. www.mystore.com) instead of the default subdomain.')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="space-y-2">
-                  <Label>{t('النطاق الافتراضي الحالي', 'Current Default Link')}</Label>
-                  <div className="flex items-center gap-2">
-                    <Input 
-                      readOnly 
-                      value={`chariday.com/store/${generalSettings.nameEn.toLowerCase().replace(/\s+/g, '-') || user?.id}`}
-                      className="bg-muted/30 border-white/10 rounded-xl font-mono text-muted-foreground" 
-                      dir="ltr"
-                    />
+            <div className="space-y-6">
+              {/* Default Subdomain / Slug Settings */}
+              <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <StoreIcon className="h-5 w-5 text-primary" />
+                    {t('رابط المتجر الافتراضي', 'Default Store Link')}
+                  </CardTitle>
+                  <CardDescription>
+                    {t('تخصيص المعرف الخاص بمتجرك على المنصة (مثال: chariday.com/store/mybrand). يمكن تغييره مرة واحدة كل شهرين.', 'Customize your default store identifier on the platform. It can be changed once every two months.')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>{t('معرف رابط المتجر (Slug)', 'Store Slug')}</Label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-muted-foreground bg-muted/40 px-3 py-2 border border-white/10 rounded-xl select-none" dir="ltr">
+                        chariday.com/store/
+                      </span>
+                      <Input 
+                        placeholder="mybrand"
+                        value={slug}
+                        onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, ''))}
+                        className="bg-muted/30 border-white/10 rounded-xl font-mono flex-1 text-start" 
+                        dir="ltr"
+                      />
+                    </div>
+                    {/* Status helper text */}
+                    {slugCheckStatus.status === 'checking' && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1 animate-pulse">
+                        <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                        {t('جاري التحقق من توفر الاسم...', 'Checking link availability...')}
+                      </p>
+                    )}
+                    {slugCheckStatus.status === 'available' && (
+                      <p className="text-xs text-emerald-500 font-bold flex items-center gap-1.5 mt-1">
+                        ✨ {t('هذا الاسم متاح ومطابق للمعايير!', 'This link is available!')}
+                      </p>
+                    )}
+                    {slugCheckStatus.status === 'taken' && (
+                      <p className="text-xs text-red-500 font-bold flex items-center gap-1.5 mt-1">
+                        ❌ {t('عذراً، هذا الاسم محجوز لمتجر آخر.', 'Sorry, this link is already taken.')}
+                      </p>
+                    )}
+                    {slugCheckStatus.status === 'invalid' && (
+                      <p className="text-xs text-red-500 font-bold flex items-center gap-1.5 mt-1">
+                        ⚠️ {t('يجب أن يتكون الرابط من 3 إلى 30 حرفاً إنجليزياً وأرقام وعلامات وصل (-) فقط.', 'Must be 3-30 letters, numbers, and hyphens (-) only.')}
+                      </p>
+                    )}
+                    {slugCheckStatus.status === 'cooldown' && (
+                      <p className="text-xs text-amber-500 font-bold flex items-center gap-1.5 mt-1">
+                        ⏳ {t(`مغلق لحماية الأرشفة. يمكنك تغييره مجدداً بعد ${slugCheckStatus.daysRemaining} يوم/أيام.`, `Locked. You can change it again in ${slugCheckStatus.daysRemaining} days.`)}
+                      </p>
+                    )}
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t('هذا هو رابط متجرك الافتراضي على منصتنا.', 'This is your default store link on our platform.')}
-                  </p>
-                </div>
+                </CardContent>
+              </Card>
 
-                <div className="space-y-2">
-                  <Label>{t('النطاق المخصص (Custom Domain)', 'Custom Domain')}</Label>
-                  <div className="flex items-center gap-2">
-                    <Input 
-                      placeholder="e.g. mystore.com"
-                      value={domainSettings.customDomain}
-                      onChange={(e) => setDomainSettings({ ...domainSettings, customDomain: e.target.value })}
-                      className="bg-muted/30 border-primary/30 focus-visible:ring-primary rounded-xl font-mono" 
-                      dir="ltr"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {t('أدخل اسم النطاق الخاص بك بدون http:// (مثال: mystore.com). يجب توجيه النطاق إلى خوادمنا أولاً.', 'Enter your domain name without http:// (e.g. mystore.com). You must point your domain to our servers first.')}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            </TabsContent>
+              {/* Custom Domain Settings (Premium) */}
+              {permissions?.allowDomain === false ? (
+                <LockedSection 
+                  title={t('النطاق المخصص (Custom Domain) غير مفعل', 'Custom Domain Locked')} 
+                  description={t('ربط نطاق خاص بك (مثل: www.mystore.com) متوفر في الباقات المدفوعة.', 'Linking your own domain is available on paid plans.')} 
+                />
+              ) : (
+                <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl mb-6">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Globe className="h-5 w-5 text-primary" />
+                      {t('إعدادات النطاق المخصص', 'Custom Domain Settings')}
+                    </CardTitle>
+                    <CardDescription>
+                      {t('اربط متجرك بنطاق مخصص خاص بك بدلاً من النطاق الافتراضي.', 'Link your store to your own custom domain.')}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                      <Label>{t('النطاق المخصص (Custom Domain)', 'Custom Domain')}</Label>
+                      <div className="flex items-center gap-2">
+                        <Input 
+                          placeholder="e.g. mystore.com"
+                          value={domainSettings.customDomain}
+                          onChange={(e) => setDomainSettings({ ...domainSettings, customDomain: e.target.value })}
+                          className="bg-muted/30 border-primary/30 focus-visible:ring-primary rounded-xl font-mono text-start" 
+                          dir="ltr"
+                        />
+                      </div>
+                      <div className="text-xs text-muted-foreground leading-normal mt-2 space-y-1">
+                        <p className="font-bold">{t('قم بتوجيه سجلات الـ DNS لنطاقك كالتالي:', 'Point your DNS settings to our servers:')}</p>
+                        <p>• CNAME record: <code className="bg-muted px-1.5 py-0.5 rounded font-mono">cname.chariday.com</code></p>
+                        <p>• A record: <code className="bg-muted px-1.5 py-0.5 rounded font-mono">15.188.10.20</code></p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
 
             {/* Security Tab */}
             <TabsContent value="security" className="mt-0 outline-none">
-              <div className="max-w-4xl mx-auto space-y-6">
-                <TwoFactorSettings />
-                <DeviceManagement />
-              </div>
+              {permissions?.allowSecurity === false ? (
+                <LockedSection 
+                  title={t('إعدادات الأمان غير مفعلة', 'Security Settings Locked')} 
+                  description={t('إعدادات الأمان المتقدمة وإدارة الأجهزة والمصادقة الثنائية متوفرة في الباقات المدفوعة.', 'Advanced security controls, device management, and 2FA are available on paid plans.')} 
+                />
+              ) : (
+                <div className="max-w-4xl mx-auto space-y-6">
+                  <TwoFactorSettings />
+                  <DeviceManagement />
+                </div>
+              )}
             </TabsContent>
 
         </Tabs>

@@ -1,4 +1,4 @@
-import { ChargilyClient } from '@chargily/chargily-pay';
+import { ChargilyClient, verifySignature } from '@chargily/chargily-pay';
 import { 
   PaymentGatewayInterface, 
   PaymentConfig, 
@@ -95,7 +95,7 @@ export class ChargilyProvider implements PaymentGatewayInterface {
     const client = this.getClient(config);
 
     // Verify signature
-    const isValid = client.verifySignature(JSON.stringify(payload), signature);
+    const isValid = verifySignature(Buffer.from(JSON.stringify(payload)), signature, config.secretKey || '');
     if (!isValid) {
       throw new Error('Invalid signature');
     }

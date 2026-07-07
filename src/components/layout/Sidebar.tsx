@@ -349,11 +349,11 @@ interface SidebarProps {
 
       let items = [...group.items];
       
-      if (user?.role === 'viewer') {
+      if ((user?.role as string) === 'viewer') {
         items = items.filter(i => ['store', 'store-analytics'].includes(i.id));
-      } else if (user?.role === 'support') {
+      } else if ((user?.role as string) === 'support') {
         items = items.filter(i => ['store', 'store-orders', 'seller-messages'].includes(i.id));
-      } else if (user?.role === 'editor') {
+      } else if ((user?.role as string) === 'editor') {
         items = items.filter(i => ['store', 'store-products', 'store-coupons'].includes(i.id));
       }
 

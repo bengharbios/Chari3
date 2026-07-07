@@ -113,6 +113,8 @@ interface AppState {
   selectedProductId: string | null;
   selectedSellerId: string | null;
   allowGuestCheckout: boolean;
+  isMaintenance: boolean;
+  activeStoreId: string | null;
 
   setLocale: (locale: Locale) => void;
   setTheme: (theme: Theme) => void;
@@ -129,6 +131,7 @@ interface AppState {
   setSelectedSellerId: (id: string | null) => void;
   setAllowGuestCheckout: (allow: boolean) => void;
   setIsMaintenance: (val: boolean) => void;
+  setActiveStoreId: (id: string | null) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -146,6 +149,7 @@ export const useAppStore = create<AppState>()(
       selectedSellerId: null,
       allowGuestCheckout: true,
       isMaintenance: false,
+      activeStoreId: null,
 
       setLocale: (locale) => set({ locale }),
       setTheme: (theme) => set({ theme }),
@@ -162,10 +166,11 @@ export const useAppStore = create<AppState>()(
       setSelectedSellerId: (selectedSellerId) => set({ selectedSellerId }),
       setAllowGuestCheckout: (allow) => set({ allowGuestCheckout: allow }),
       setIsMaintenance: (isMaintenance) => set({ isMaintenance }),
+      setActiveStoreId: (activeStoreId) => set({ activeStoreId }),
     }),
     {
       name: 'platform-app-store',
-      partialize: (state) => ({ locale: state.locale, theme: state.theme, currentPage: state.currentPage }),
+      partialize: (state) => ({ locale: state.locale, theme: state.theme, currentPage: state.currentPage, activeStoreId: state.activeStoreId }),
     }
   )
 );
@@ -227,6 +232,31 @@ const DEMO_USERS: Record<UserRole, User> = {
     locale: 'ar',
     createdAt: new Date().toISOString(),
   },
+  store: {
+    id: 'store-demo-001',
+    email: 'store-demo@charyday.com',
+    name: 'متجر فرعي',
+    nameEn: 'Branch Store',
+    avatar: undefined,
+    role: 'store',
+    isActive: true,
+    isVerified: true,
+    locale: 'ar',
+    createdAt: new Date().toISOString(),
+  },
+  freelancer: {
+    id: 'freelancer-001',
+    email: 'freelancer@charyday.com',
+    name: 'فريد المستقل',
+    nameEn: 'Farid Freelancer',
+    avatar: undefined,
+    role: 'freelancer',
+    isActive: true,
+    isVerified: true,
+    locale: 'ar',
+    createdAt: new Date().toISOString(),
+  },
+
   supplier: {
     id: 'supplier-001',
     email: 'supplier@charyday.com',
@@ -414,8 +444,9 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         try {
           const { signOut } = await import('@/lib/auth-client');
-          await signOut({ redirect: false });
+          await signOut();
         } catch (e) {
+
           console.error('[logout] better-auth signOut failed:', e);
         }
 

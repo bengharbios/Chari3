@@ -9,6 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Card as TremorCard,
   Metric,
   Text,
@@ -67,7 +74,7 @@ const STAGGER_CONTAINER = {
 };
 
 export default function StoreDashboard() {
-  const { locale, setCurrentPage } = useAppStore();
+  const { locale, setCurrentPage, activeStoreId, setActiveStoreId } = useAppStore();
   const { user } = useAuthStore();
   const isAr = locale === 'ar';
 
@@ -80,7 +87,9 @@ export default function StoreDashboard() {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/seller/dashboard?userId=${user.id}`);
+      const params = new URLSearchParams({ userId: user.id });
+      if (activeStoreId) params.set('storeId', activeStoreId);
+      const res = await fetch(`/api/seller/dashboard?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to load dashboard statistics.');
       const d = await res.json();
       if (d.success) {
@@ -97,7 +106,7 @@ export default function StoreDashboard() {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [user?.id]);
+  }, [user?.id, activeStoreId]);
 
   const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
     pending: { label: t(locale, 'معلق', 'Pending'), color: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
@@ -174,11 +183,34 @@ export default function StoreDashboard() {
     >
       {/* Page Header */}
       <motion.div variants={FADE_IN_VARIANTS} className="flex items-center justify-between flex-wrap gap-4 mb-3 px-1">
-        <div>
-          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">
-            {t(locale, 'نظرة عامة', 'OVERVIEW')}
-          </p>
-          <h1 className="text-[26px] leading-tight font-bold text-[var(--gentelella-heading)]">{t(locale, 'لوحة التحكم', 'Dashboard')}</h1>
+        <div className="flex items-end gap-3 flex-wrap">
+          <div>
+            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">
+              {t(locale, 'نظرة عامة', 'OVERVIEW')}
+            </p>
+            <h1 className="text-[26px] leading-tight font-bold text-[var(--gentelella-heading)]">{t(locale, 'لوحة التحكم', 'Dashboard')}</h1>
+          </div>
+          
+          {/* Store / Branch Switcher */}
+          {dashboardData?.stores && dashboardData.stores.length > 1 && (
+            <div className="flex items-center gap-2 border-s border-border ps-3 mb-1">
+              <Select
+                value={activeStoreId || (dashboardData.stores[0]?.id)}
+                onValueChange={(val) => setActiveStoreId(val)}
+              >
+                <SelectTrigger className="w-48 h-8 rounded border-border bg-card text-xs font-bold px-3 py-1 shadow-sm">
+                  <SelectValue placeholder={t(locale, 'اختر الفرع/المتجر', 'Select Branch/Store')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {dashboardData.stores.map((s: any) => (
+                    <SelectItem key={s.id} value={s.id} className="text-xs font-bold">
+                      {isAr ? s.name : (s.nameEn || s.name)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-3">
            <Button variant="outline" size="sm" className="font-bold rounded border-border text-xs h-8">

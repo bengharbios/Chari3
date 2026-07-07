@@ -1,11 +1,53 @@
 import type { auth } from "@/lib/better-auth";
 import { NextResponse, type NextRequest } from "next/server";
+import { db } from "@/lib/db";
 
 const protectedRoutes = ["/admin-secure-internal", "/seller", "/checkout", "/buyer", "/logistics", "/supplier"];
 
+// The primary platform hostname(s) — custom domains will differ from these
+const PLATFORM_HOSTS = [
+  'chariday.com',
+  'www.chariday.com',
+  'localhost',
+  '127.0.0.1',
+];
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const hostname = request.headers.get('host') || '';
+  const cleanHost = hostname.split(':')[0]; // strip port if present
 
+  // ─── Custom Domain Routing ─────────────────────────────────────────────────
+  // If the request comes from a custom domain (not the main platform), rewrite
+  // to the store's storefront page transparently (without changing the URL bar).
+  const isMainPlatform = PLATFORM_HOSTS.some(h => cleanHost === h || cleanHost.endsWith(`.${h}`));
+  const isApiOrInternal = pathname.startsWith('/api') || pathname.startsWith('/_next') || pathname.startsWith('/static');
+
+  if (!isMainPlatform && !isApiOrInternal) {
+    // Look up which store owns this custom domain
+    try {
+      const store = await (db as any).store.findFirst({
+        where: { customDomain: cleanHost },
+        select: { slug: true, isActive: true },
+      });
+
+      if (store && store.isActive && store.slug) {
+        // Internally rewrite the request to the store's storefront
+        const rewriteUrl = request.nextUrl.clone();
+        // Keep the original path suffix (e.g. /products/abc) but prefix with /store/[slug]
+        rewriteUrl.pathname = `/store/${store.slug}${pathname === '/' ? '' : pathname}`;
+        const response = NextResponse.rewrite(rewriteUrl);
+        // Tell browser it's still on the custom domain
+        response.headers.set('x-matched-store-slug', store.slug);
+        return response;
+      }
+    } catch (err) {
+      // DB not available in edge, fall through gracefully
+      console.error('[Middleware] Custom domain lookup failed:', err);
+    }
+  }
+
+  // ─── Protected Route Guard ─────────────────────────────────────────────────
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
   const isLoginPage = pathname.endsWith('/login') || pathname === '/login';
 
@@ -18,8 +60,6 @@ export async function middleware(request: NextRequest) {
     if (!sessionToken) {
       // NOTE: Redirect is disabled because Hostinger's Edge proxy strips or obscures cookies 
       // in middleware. Client-side layout (AdminLayoutWrapper) handles the redirect securely.
-      // const url = new URL(pathname.startsWith('/admin-secure-internal') ? '/admin-secure-internal/login' : '/?login=true', request.url);
-      // return NextResponse.redirect(url);
       console.log("[Middleware] Unauthenticated access to", pathname);
     }
   }
@@ -35,3 +75,4 @@ export const config = {
     '/(api|trpc)(.*)',
   ],
 };
+

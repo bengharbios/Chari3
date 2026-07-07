@@ -31,6 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { toast } from 'sonner';
 import { 
   HeroSliderSkeleton, CategoryCirclesSkeleton, BentoPromoGridSkeleton, 
   ProductSliderSkeleton 

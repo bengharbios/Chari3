@@ -162,7 +162,7 @@ export default function AdminLayoutWrapper({
   };
 
   const handleLogout = async () => {
-    await signOut({ redirect: false });
+    await signOut();
     window.location.href = getAdminPath('login');
   };
 

@@ -96,9 +96,11 @@ export interface NavItem {
   labelEn: string;
   icon?: string;
   badge?: number;
+  path?: string;
   children?: NavItem[];
   isSection?: boolean;
 }
+
 
 // ============================================
 // PRODUCT TYPES

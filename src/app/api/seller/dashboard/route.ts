@@ -14,33 +14,56 @@ export async function GET(req: NextRequest) {
     await checkAndUpdateExpiredSubscriptions(userId);
 
 
-    let seller: any = await db.sellerProfile.findUnique({
-      where: { userId },
-      include: {
-        package: true,
-        user: { select: { name: true, email: true, phone: true } },
-      },
-    });
-
+    const storeId = req.nextUrl.searchParams.get('storeId');
+    let seller: any = null;
     let isStoreManager = false;
 
-    if (!seller) {
-      // Look up in Store model for StoreManager
-      const store = await db.store.findFirst({
-        where: { managerId: userId },
-        include: {
-          package: true,
-          manager: { select: { name: true, email: true, phone: true } },
-        },
-      });
-
-      if (!store) {
-        return NextResponse.json({ success: false, error: 'Seller or Store not found' }, { status: 404 });
+    // Fetch all stores this user has access to (owned or as staff)
+    const userStores = await db.store.findMany({
+      where: {
+        OR: [
+          { managerId: userId },
+          { staff: { some: { userId } } }
+        ]
+      },
+      select: {
+        id: true,
+        name: true,
+        nameEn: true,
+        slug: true,
       }
+    });
 
+    // 1. Try to find a Store first (since every merchant has a store, including branches)
+    const store = storeId 
+      ? await db.store.findFirst({
+          where: {
+            id: storeId,
+            OR: [
+              { managerId: userId },
+              { staff: { some: { userId } } }
+            ]
+          },
+          include: {
+            package: true,
+            manager: { select: { name: true, email: true, phone: true } },
+          },
+        })
+      : await db.store.findFirst({
+          where: {
+            OR: [
+              { managerId: userId },
+              { staff: { some: { userId } } }
+            ]
+          },
+          include: {
+            package: true,
+            manager: { select: { name: true, email: true, phone: true } },
+          },
+        });
+
+    if (store) {
       isStoreManager = true;
-
-      // Polymorphically map the Store to look exactly like seller profile
       seller = {
         id: store.id,
         userId: store.managerId,
@@ -55,11 +78,24 @@ export async function GET(req: NextRequest) {
         totalSales: store.totalSales,
         totalEarnings: store.totalEarnings,
         completionRate: store.completionRate,
-        responseRate: 98, // default fallback
+        responseRate: 98,
         packageId: store.packageId,
         package: store.package,
         user: store.manager,
       };
+    } else {
+      // Fallback to SellerProfile if no Store found
+      seller = await db.sellerProfile.findUnique({
+        where: { userId },
+        include: {
+          package: true,
+          user: { select: { name: true, email: true, phone: true } },
+        },
+      });
+    }
+
+    if (!seller) {
+      return NextResponse.json({ success: false, error: 'Seller or Store not found' }, { status: 404 });
     }
 
     // Get products (polymorphic: store manager queries storeId, independent seller queries sellerId)
@@ -213,6 +249,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       seller,
+      stores: userStores,
       currency: wallet?.currency ?? 'DZD',
       storeStatus: {
         isActive: seller.isActive !== false,
