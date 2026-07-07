@@ -1,6 +1,5 @@
 import type { auth } from "@/lib/better-auth";
 import { NextResponse, type NextRequest } from "next/server";
-import { db } from "@/lib/db";
 
 const protectedRoutes = ["/admin-secure-internal", "/seller", "/checkout", "/buyer", "/logistics", "/supplier"];
 
@@ -24,25 +23,27 @@ export async function middleware(request: NextRequest) {
   const isApiOrInternal = pathname.startsWith('/api') || pathname.startsWith('/_next') || pathname.startsWith('/static');
 
   if (!isMainPlatform && !isApiOrInternal) {
-    // Look up which store owns this custom domain
+    // Look up which store owns this custom domain via internal API route
     try {
-      const store = await (db as any).store.findFirst({
-        where: { customDomain: cleanHost },
-        select: { slug: true, isActive: true },
-      });
+      const lookupUrl = new URL(`/api/stores/domain-lookup?domain=${cleanHost}`, request.url);
+      const res = await fetch(lookupUrl.toString());
+      const data = await res.json();
 
-      if (store && store.isActive && store.slug) {
-        // Internally rewrite the request to the store's storefront
-        const rewriteUrl = request.nextUrl.clone();
-        // Keep the original path suffix (e.g. /products/abc) but prefix with /store/[slug]
-        rewriteUrl.pathname = `/store/${store.slug}${pathname === '/' ? '' : pathname}`;
-        const response = NextResponse.rewrite(rewriteUrl);
-        // Tell browser it's still on the custom domain
-        response.headers.set('x-matched-store-slug', store.slug);
-        return response;
+      if (data.success && data.store) {
+        const store = data.store;
+        if (store.isActive && store.slug) {
+          // Internally rewrite the request to the store's storefront
+          const rewriteUrl = request.nextUrl.clone();
+          // Keep the original path suffix (e.g. /products/abc) but prefix with /store/[slug]
+          rewriteUrl.pathname = `/store/${store.slug}${pathname === '/' ? '' : pathname}`;
+          const response = NextResponse.rewrite(rewriteUrl);
+          // Tell browser it's still on the custom domain
+          response.headers.set('x-matched-store-slug', store.slug);
+          return response;
+        }
       }
     } catch (err) {
-      // DB not available in edge, fall through gracefully
+      // API not available, fall through gracefully
       console.error('[Middleware] Custom domain lookup failed:', err);
     }
   }
