@@ -418,11 +418,12 @@ export default function UserManagementPage() {
           setUsers(data.users || []);
           setPagination(data.pagination || pagination);
           if (data.stats) setStats(data.stats);
+          setLoading(false);
           return;
         }
       }
     } catch {
-      // API not available ΓÇö fall back to mock data
+      // API not available — fall back to mock data
     }
 
     // Fallback to mock data
