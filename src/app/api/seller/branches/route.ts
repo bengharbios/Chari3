@@ -12,6 +12,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'userId required' }, { status: 400 });
     }
 
+    // Verify user is business type
+    const user = await db.user.findUnique({
+      where: { id: userId },
+      select: {
+        sellerProfile: { select: { merchantType: true } }
+      }
+    });
+    if (!user || user.sellerProfile?.merchantType !== 'business') {
+      return NextResponse.json({ success: false, error: 'only_business_sellers_allowed' }, { status: 403 });
+    }
+
     const stores = await db.store.findMany({
       where: {
         OR: [
@@ -75,13 +86,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'branch_name_required' }, { status: 400 });
     }
 
-    // Verify user exists and has a seller/business role
+    // Verify user exists and check merchantType
     const user = await db.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, role: true }
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        sellerProfile: { select: { merchantType: true } }
+      }
     });
     if (!user) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+    }
+    if (user.sellerProfile?.merchantType !== 'business') {
+      return NextResponse.json({ success: false, error: 'only_business_sellers_allowed' }, { status: 403 });
     }
 
     // Check current branch count for this user (limit to reasonable number)

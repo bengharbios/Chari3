@@ -67,6 +67,7 @@ export default function SellerBranchesPage() {
 
   const [branches, setBranches] = useState<Branch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newBranchName, setNewBranchName] = useState('');
@@ -78,6 +79,10 @@ export default function SellerBranchesPage() {
     try {
       const res = await fetch(`/api/seller/branches?userId=${user.id}`);
       const data = await res.json();
+      if (res.status === 403 || data.error === 'only_business_sellers_allowed') {
+        setIsUnauthorized(true);
+        return;
+      }
       if (data.success) {
         setBranches(data.branches || []);
       } else {
@@ -156,6 +161,35 @@ export default function SellerBranchesPage() {
         <p className="text-sm text-muted-foreground font-medium">
           {t(locale, 'جاري تحميل الفروع...', 'Loading branches...')}
         </p>
+      </div>
+    );
+  }
+
+  if (isUnauthorized) {
+    return (
+      <div className="h-[60vh] flex flex-col items-center justify-center">
+        <Card className="max-w-md w-full border-red-200 bg-red-50/10 dark:bg-red-950/5">
+          <CardContent className="pt-8 pb-8 text-center space-y-4">
+            <div className="mx-auto w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+              <XCircle className="w-6 h-6" />
+            </div>
+            <h2 className="text-lg font-bold text-red-900 dark:text-red-200">
+              {t(locale, 'عذرًا، الميزة غير متاحة لنوع حسابك', 'Feature Not Available for Your Account Type')}
+            </h2>
+            <p className="text-sm text-red-700/80 dark:text-red-300/80 leading-relaxed">
+              {t(
+                locale,
+                'ميزة إدارة الفروع وتعديل صلاحيات الموظفين للمتاجر المتعددة متاحة فقط للحسابات من نوع متجر (أعمال). بصفتك تاجر مستقل، يمكنك إدارة متجرك الفردي فقط.',
+                'The branch management and multi-store staff permissions feature is exclusively available for business accounts. As an individual seller, you can manage your single storefront.'
+              )}
+            </p>
+            <div className="pt-2">
+              <Button onClick={() => window.location.href = '/seller/dashboard'} variant="outline" className="border-red-200 hover:bg-red-50">
+                {t(locale, 'العودة للوحة التحكم', 'Back to Dashboard')}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }

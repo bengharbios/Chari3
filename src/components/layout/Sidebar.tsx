@@ -125,7 +125,7 @@ const getSellerNavGroups = (paymentModel: string, merchantType: string): NavGrou
     let items = [...group.items];
     
     if (group.id === 'seller-group') {
-      // Inject business items for 'business' merchantType
+      // Inject business items only for 'business' merchantType
       if (merchantType === 'business') {
         items.splice(2, 0, ...BUSINESS_SELLER_ITEMS); // Insert after products
       }
@@ -450,8 +450,16 @@ interface SidebarProps {
                 <p className="text-sm font-semibold truncate">{user.name}</p>
                 <Badge variant="secondary" className="text-[10px] mt-0.5 bg-sidebar-accent text-sidebar-accent-foreground border-sidebar-border">
                   {t(locale,
-                    effectiveBuyerMode ? 'مشتري' : { admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', store: 'تاجر مستقل', freelancer: 'تاجر مستقل', supplier: 'مورد', logistics: 'مندوب شحن', buyer: 'مشتري' }[user?.role || 'buyer'] || 'مشتري',
-                    effectiveBuyerMode ? 'Buyer' : { admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', store: 'Seller', freelancer: 'Seller', supplier: 'Supplier', logistics: 'Courier', buyer: 'Buyer' }[user?.role || 'buyer'] || 'Buyer'
+                    effectiveBuyerMode
+                      ? 'مشتري'
+                      : user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer'
+                      ? (merchantType === 'business' ? 'تاجر - شركة/أعمال' : 'تاجر فردي')
+                      : { admin: 'مدير النظام', store_manager: 'مدير متجر', supplier: 'مورد', logistics: 'مندوب شحن', buyer: 'مشتري' }[user?.role || 'buyer'] || 'مشتري',
+                    effectiveBuyerMode
+                      ? 'Buyer'
+                      : user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer'
+                      ? (merchantType === 'business' ? 'Business Seller' : 'Individual Seller')
+                      : { admin: 'Admin', store_manager: 'Store Manager', supplier: 'Supplier', logistics: 'Courier', buyer: 'Buyer' }[user?.role || 'buyer'] || 'Buyer'
                   )}
                 </Badge>
               </div>

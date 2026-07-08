@@ -12,6 +12,7 @@ import {
   CheckCircle, Store as StoreIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +22,6 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import SearchBarMobile from './SearchBarMobile';
 import QuickLoginModal from '@/components/auth/QuickLoginModal';
 import MinimumOrderModal from '@/components/storefront/MinimumOrderModal';
 
@@ -129,6 +129,20 @@ export default function Header() {
   const { user, isAuthenticated, logout, isBuyerMode } = useAuthStore();
   const [enableDeliverTo, setEnableDeliverTo] = useState(true);
   const [userStores, setUserStores] = useState<any[]>([]);
+  const [merchantType, setMerchantType] = useState<string>('individual');
+
+  useEffect(() => {
+    if (isAuthenticated && user?.id && (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer')) {
+      fetch(`/api/seller/settings?userId=${user.id}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && data.settings && data.settings.merchantType) {
+            setMerchantType(data.settings.merchantType);
+          }
+        })
+        .catch(err => console.error('Failed to fetch merchant type:', err));
+    }
+  }, [isAuthenticated, user?.id]);
 
   useEffect(() => {
     if (isAuthenticated && user?.id && (user.role === 'seller' || user.role === 'store_manager' || user.role === 'store' || user.role === 'freelancer')) {
@@ -907,12 +921,22 @@ export default function Header() {
                     <div className="flex flex-col gap-1 text-start">
                       <p className="text-sm font-medium">{user.name}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
-                      <Badge variant="secondary" className="w-fit text-xs mt-1">
-                        {t(
-                          ({ admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', logistics: 'مندوب شحن', buyer: 'مشتري' } as Record<string, string>)[user?.role || ''] || user?.role,
-                          ({ admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', logistics: 'Courier', buyer: 'Buyer' } as Record<string, string>)[user?.role || ''] || user?.role
+                      <div className="flex flex-col gap-1 mt-1">
+                        <Badge variant="secondary" className="w-fit text-xs">
+                          {t(
+                            ({ admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', logistics: 'مندوب شحن', buyer: 'مشتري' } as Record<string, string>)[user?.role || ''] || user?.role,
+                            ({ admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', logistics: 'Courier', buyer: 'Buyer' } as Record<string, string>)[user?.role || ''] || user?.role
+                          )}
+                        </Badge>
+                        {(user.role === 'seller' || user.role === 'store' || user.role === 'freelancer') && (
+                          <span className="text-[10px] font-bold text-brand bg-brand/10 border border-brand/20 px-2 py-0.5 rounded w-fit">
+                            {isRTL 
+                              ? (merchantType === 'business' ? 'شركة / أعمال' : 'تاجر فردي')
+                              : (merchantType === 'business' ? 'Business Seller' : 'Individual Seller')
+                            }
+                          </span>
                         )}
-                      </Badge>
+                      </div>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
