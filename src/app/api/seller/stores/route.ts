@@ -11,7 +11,12 @@ export async function GET(req: NextRequest) {
     }
 
     const stores = await db.store.findMany({
-      where: { managerId: userId },
+      where: {
+        OR: [
+          { managerId: userId },
+          { staff: { some: { userId, status: 'active' } } }
+        ]
+      },
       select: {
         id: true,
         name: true,

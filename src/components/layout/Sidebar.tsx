@@ -114,9 +114,9 @@ const SELLER_NAV_GROUPS: NavGroup[] = [
 
 // Items exclusively for business accounts
 const BUSINESS_SELLER_ITEMS = [
-  { id: 'seller-staff', labelAr: 'الفريق', labelEn: 'Team', icon: 'Users' },
+  { id: 'seller-staff', labelAr: 'الفريق', labelEn: 'Team', icon: 'Users', path: '/seller/staff' },
   { id: 'seller-taxes', labelAr: 'التقارير الضريبية (B2B)', labelEn: 'Taxes (B2B)', icon: 'Receipt' },
-  { id: 'seller-branches', labelAr: 'إدارة الفروع', labelEn: 'Branches', icon: 'Store' },
+  { id: 'seller-branches', labelAr: 'إدارة الفروع', labelEn: 'Branches', icon: 'Store', path: '/seller/branches' },
 ];
 
 // Helper to filter nav items based on payment model and merchantType

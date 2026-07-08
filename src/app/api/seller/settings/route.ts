@@ -43,13 +43,23 @@ export async function GET(req: NextRequest) {
 
     let store: any = null;
 
+    // Shared OR condition: direct manager OR active staff member
+    const staffAccessCondition = (id: string) => ({
+      OR: [
+        { managerId: id },
+        { staff: { some: { userId: id, status: 'active' } } }
+      ]
+    });
+
     if (storeId) {
       store = await db.store.findFirst({
-        where: userId ? { id: storeId, managerId: userId } : { id: storeId }
+        where: userId
+          ? { id: storeId, ...staffAccessCondition(userId) }
+          : { id: storeId }
       });
     } else if (userId) {
       store = await db.store.findFirst({
-        where: { managerId: userId }
+        where: staffAccessCondition(userId)
       });
     } else if (sellerId) {
       const sellerProfile = await db.sellerProfile.findUnique({
@@ -57,7 +67,7 @@ export async function GET(req: NextRequest) {
       });
       if (sellerProfile) {
         store = await db.store.findFirst({
-          where: { managerId: sellerProfile.userId }
+          where: staffAccessCondition(sellerProfile.userId)
         });
       }
     } else {
@@ -102,6 +112,21 @@ export async function GET(req: NextRequest) {
       allowNotifications: checkAllowed('allowNotifications', 'overrideNotifications', true),
     };
 
+    // Fetch merchantType and paymentModel from the logged-in user's SellerProfile
+    let merchantType = 'individual';
+    let paymentModel = 'default';
+    const resolvedUserId = userId || (sellerId ? store.managerId : null);
+    if (resolvedUserId) {
+      const sellerProf = await db.sellerProfile.findUnique({
+        where: { userId: resolvedUserId },
+        select: { merchantType: true, paymentModel: true }
+      });
+      if (sellerProf) {
+        merchantType = sellerProf.merchantType ?? 'individual';
+        paymentModel = sellerProf.paymentModel ?? 'default';
+      }
+    }
+
     const themeParsed = store.themeSettings ? JSON.parse(store.themeSettings) : null;
     return NextResponse.json({
       success: true,
@@ -123,6 +148,8 @@ export async function GET(req: NextRequest) {
         themeSettings: themeParsed,
         storeConfig: themeParsed?.storeConfig || null,
         currency,
+        merchantType,
+        paymentModel,
       }
     });
   } catch (error) {
@@ -144,12 +171,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'settings data required' }, { status: 400 });
     }
 
+    // Allow access if user is direct manager OR active staff with manager/admin role
+    const staffWriteCondition = {
+      OR: [
+        { managerId: userId },
+        { staff: { some: { userId, status: 'active', role: { in: ['store_manager', 'admin'] } } } }
+      ]
+    };
     const store = storeId
       ? await db.store.findFirst({
-          where: { id: storeId, managerId: userId }
+          where: { id: storeId, ...staffWriteCondition }
         })
       : await db.store.findFirst({
-          where: { managerId: userId }
+          where: staffWriteCondition
         });
 
     if (!store) {
