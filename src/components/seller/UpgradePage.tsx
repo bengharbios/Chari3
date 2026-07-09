@@ -214,68 +214,72 @@ export default function UpgradePage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Feature 1 */}
-            <Card className="border border-border/50 bg-card/45 hover:border-brand/40 transition-all rounded-xl">
-              <CardContent className="pt-5 space-y-2">
-                <div className="w-10 h-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
-                  <Building2 className="w-5 h-5" />
+            <Card className="group relative border border-border/40 bg-card/30 backdrop-blur-md hover:bg-card/60 hover:shadow-lg hover:shadow-brand/5 hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-brand/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <CardContent className="p-5 space-y-3 relative z-10">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand/10 to-brand/5 text-brand flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm border border-brand/10">
+                  <Building2 className="w-6 h-6" />
                 </div>
-                <h3 className="font-bold text-sm">{t(locale, 'إدارة فروع متعددة', 'Multi-Branch Management')}</h3>
+                <h3 className="font-bold text-sm text-foreground">{t(locale, 'إدارة الفروع المتعددة', 'Manage Multiple Branches')}</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {t(
                     locale,
-                    'إمكانية إنشاء متاجر فرعية لنفس التاجر مع عزل تام للمنتجات والمبيعات والمخازن.',
-                    'Create multiple sub-store outlets under your main account with isolated orders and stock.'
+                    'إمكانية إنشاء متاجر فرعية لنفس التاجر مع عزل تام للمنتجات، المبيعات، والمخزون.',
+                    'Create multiple sub-store outlets under your main account with completely isolated orders and stock.'
                   )}
                 </p>
               </CardContent>
             </Card>
 
             {/* Feature 2 */}
-            <Card className="border border-border/50 bg-card/45 hover:border-brand/40 transition-all rounded-xl">
-              <CardContent className="pt-5 space-y-2">
-                <div className="w-10 h-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
-                  <Users className="w-5 h-5" />
+            <Card className="group relative border border-border/40 bg-card/30 backdrop-blur-md hover:bg-card/60 hover:shadow-lg hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <CardContent className="p-5 space-y-3 relative z-10">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-500/5 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm border border-blue-500/10">
+                  <Users className="w-6 h-6" />
                 </div>
-                <h3 className="font-bold text-sm">{t(locale, 'طاقم العمل والصلاحيات', 'Team Staff Roles')}</h3>
+                <h3 className="font-bold text-sm text-foreground">{t(locale, 'إدارة طاقم العمل والصلاحيات', 'Team & Role Management')}</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {t(
                     locale,
                     'دعوة الموظفين وتعيين صلاحياتهم كمدراء فروع، محررين، دعم فني أو محاسبين.',
-                    'Invite employees and assign roles such as Branch Manager, Editor, or Support Agent.'
+                    'Invite employees and assign specific roles such as Branch Manager, Editor, or Support Agent.'
                   )}
                 </p>
               </CardContent>
             </Card>
 
             {/* Feature 3 */}
-            <Card className="border border-border/50 bg-card/45 hover:border-brand/40 transition-all rounded-xl">
-              <CardContent className="pt-5 space-y-2">
-                <div className="w-10 h-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
-                  <FileSpreadsheet className="w-5 h-5" />
+            <Card className="group relative border border-border/40 bg-card/30 backdrop-blur-md hover:bg-card/60 hover:shadow-lg hover:shadow-purple-500/5 hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <CardContent className="p-5 space-y-3 relative z-10">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-500/5 text-purple-600 dark:text-purple-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm border border-purple-500/10">
+                  <FileSpreadsheet className="w-6 h-6" />
                 </div>
-                <h3 className="font-bold text-sm">{t(locale, 'تقارير ضريبية و B2B', 'Tax Reports & B2B Invoices')}</h3>
+                <h3 className="font-bold text-sm text-foreground">{t(locale, 'تقارير ضريبية وحلول B2B', 'Tax Reports & B2B Solutions')}</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {t(
                     locale,
-                    'توليد الفواتير المطابقة للمعايير الضريبية ودعم عمليات البيع للشركات B2B.',
-                    'Generate tax-compliant invoices and utilize B2B merchant configurations.'
+                    'توليد فواتير مطابقة للمعايير الضريبية ودعم متقدم لعمليات البيع للشركات B2B.',
+                    'Generate tax-compliant invoices and utilize advanced B2B merchant configurations.'
                   )}
                 </p>
               </CardContent>
             </Card>
 
             {/* Feature 4 */}
-            <Card className="border border-border/50 bg-card/45 hover:border-brand/40 transition-all rounded-xl">
-              <CardContent className="pt-5 space-y-2">
-                <div className="w-10 h-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
-                  <Sparkles className="w-5 h-5" />
+            <Card className="group relative border border-border/40 bg-card/30 backdrop-blur-md hover:bg-card/60 hover:shadow-lg hover:shadow-amber-500/5 hover:-translate-y-1 transition-all duration-300 rounded-2xl overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <CardContent className="p-5 space-y-3 relative z-10">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-sm border border-amber-500/10">
+                  <Sparkles className="w-6 h-6" />
                 </div>
-                <h3 className="font-bold text-sm">{t(locale, 'دعم فني وأولوية قصوى', 'Priority VIP Support')}</h3>
+                <h3 className="font-bold text-sm text-foreground">{t(locale, 'أولوية قصوى في الدعم الفني', 'VIP Priority Support')}</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {t(
                     locale,
-                    'دعم فني مباشر ومخصص لحل المشكلات وتقديم الاستشارات التقنية لنمو تجارتك.',
-                    'Priority customer care and consulting services to ensure your multi-store operational success.'
+                    'دعم فني مباشر ومخصص لحل المشكلات وتقديم استشارات تقنية لنمو تجارتك.',
+                    'Priority customer care and customized consulting to ensure your multi-store operational success.'
                   )}
                 </p>
               </CardContent>
