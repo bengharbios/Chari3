@@ -5,11 +5,12 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { t } from '@/lib/i18n';
 import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
 
 export function AdminUpgradeQueue() {
-  const { t, locale } = useTranslation();
+  const { locale } = useTranslation();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
