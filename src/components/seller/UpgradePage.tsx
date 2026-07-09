@@ -1,0 +1,350 @@
+'use client';
+
+import React, { useEffect, useState, useCallback } from 'react';
+import { useAuthStore, useAppStore } from '@/lib/store';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  TrendingUp, 
+  Store as StoreIcon, 
+  Users, 
+  Clock, 
+  CheckCircle2, 
+  ArrowLeft, 
+  Building2, 
+  ShieldCheck, 
+  FileSpreadsheet, 
+  Sparkles,
+  ChevronRight
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { motion } from 'framer-motion';
+
+const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
+
+export default function UpgradePage() {
+  const { user } = useAuthStore();
+  const { locale } = useAppStore();
+  const isAr = locale === 'ar';
+  
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [merchantType, setMerchantType] = useState('individual');
+  const [wantsUpgrade, setWantsUpgrade] = useState(false);
+
+  const fetchStatus = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      setIsLoading(true);
+      // Fetch settings to check current merchant type
+      const settingsRes = await fetch(`/api/seller/settings?userId=${user.id}`);
+      const settingsData = await settingsRes.json();
+      
+      if (settingsData.success && settingsData.settings) {
+        setMerchantType(settingsData.settings.merchantType || 'individual');
+      }
+
+      // Fetch dashboard to check WantsUpgrade status
+      const dashRes = await fetch(`/api/seller/dashboard?userId=${user.id}`);
+      const dashData = await dashRes.json();
+      
+      if (dashData.success && dashData.seller) {
+        setWantsUpgrade(!!dashData.seller.wantsUpgrade);
+      }
+    } catch (err) {
+      toast.error(t(locale, 'فشل جلب تفاصيل الحساب', 'Failed to fetch account details'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user?.id, locale]);
+
+  useEffect(() => {
+    fetchStatus();
+  }, [fetchStatus]);
+
+  const handleRequestUpgrade = async () => {
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/seller/upgrade-request', {
+        method: 'POST',
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        toast.success(t(locale, 'تم إرسال طلب الترقية بنجاح!', 'Upgrade request sent successfully!'));
+        setWantsUpgrade(true);
+      } else {
+        toast.error(data.error || t(locale, 'حدث خطأ أثناء إرسال الطلب', 'Error sending request'));
+      }
+    } catch (err) {
+      toast.error(t(locale, 'خطأ في الاتصال بالخادم', 'Server connection error'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4">
+        <Clock className="w-10 h-10 animate-spin text-brand" />
+        <p className="text-sm text-muted-foreground">
+          {t(locale, 'جاري تحميل تفاصيل الحساب...', 'Loading account details...')}
+        </p>
+      </div>
+    );
+  }
+
+  // Already upgraded to Business Account
+  if (merchantType === 'business') {
+    return (
+      <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-2xl p-6 md:p-8 text-center space-y-4"
+        >
+          <div className="mx-auto w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
+            <CheckCircle2 className="w-10 h-10" />
+          </div>
+          <h1 className="text-2xl font-black text-emerald-950 dark:text-emerald-300">
+            {t(locale, 'تهانينا! حسابك نشط كمتجر أعمال', 'Congratulations! Active Business Store Account')}
+          </h1>
+          <p className="text-muted-foreground max-w-xl mx-auto text-sm leading-relaxed">
+            {t(
+              locale,
+              'لقد تمت ترقية حسابك إلى فئة الأعمال. يمكنك الآن الوصول إلى جميع الميزات المتقدمة كإضافة فروع جديدة للمتجر، تعيين الموظفين وتوزيع الأدوار، ومراجعة التقارير الضريبية.',
+              'Your account has been upgraded to Business status. You now have full access to advanced features such as adding store branches, assigning team staff roles, and generating business tax reports.'
+            )}
+          </p>
+          <div className="flex flex-wrap justify-center gap-3 pt-4">
+            <Button 
+              onClick={() => window.location.href = '/seller/branches'} 
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl"
+            >
+              <Building2 className="w-4 h-4 mr-2 ml-2" />
+              {t(locale, 'إدارة الفروع', 'Manage Branches')}
+            </Button>
+            <Button 
+              onClick={() => window.location.href = '/seller/staff'} 
+              variant="outline" 
+              className="border-emerald-200 hover:bg-emerald-50 dark:border-emerald-800 dark:hover:bg-emerald-950 rounded-xl"
+            >
+              <Users className="w-4 h-4 mr-2 ml-2" />
+              {t(locale, 'طاقم العمل والشركاء', 'Manage Team')}
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Request already submitted and pending approval
+  if (wantsUpgrade) {
+    return (
+      <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6 md:p-8 text-center space-y-4"
+        >
+          <div className="mx-auto w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 dark:bg-amber-950 dark:text-amber-400 animate-pulse">
+            <Clock className="w-10 h-10" />
+          </div>
+          <h1 className="text-2xl font-black text-amber-900 dark:text-amber-300">
+            {t(locale, 'طلب الترقية لمتجر قيد المراجعة', 'Store Upgrade Pending Review')}
+          </h1>
+          <p className="text-muted-foreground max-w-xl mx-auto text-sm leading-relaxed">
+            {t(
+              locale,
+              'لقد تم استلام طلبك للترقية بنجاح وهو قيد المراجعة والتدقيق حالياً من قبل الإدارة. سيتم إخطارك فور تفعيل الميزات الإضافية لحسابك خلال ساعات العمل.',
+              'Your request to upgrade is successfully received and is currently being evaluated by our team. You will be notified once the business store capabilities are activated.'
+            )}
+          </p>
+          <div className="pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.href = '/seller/dashboard'}
+              className="rounded-xl border-amber-200 hover:bg-amber-50 dark:border-amber-900 dark:hover:bg-amber-950"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2 ml-2" />
+              {t(locale, 'العودة للوحة التحكم', 'Back to Dashboard')}
+            </Button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
+      {/* Header Info */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b pb-6">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-2">
+            <TrendingUp className="text-brand w-7 h-7" />
+            {t(locale, 'ترقية الحساب إلى متجر أعمال', 'Upgrade Account to Business Store')}
+          </h1>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {t(
+              locale,
+              'انتقل بحسابك التجاري إلى مستوى متقدم وأدر شبكة فروعك وموظفيك من مكان واحد.',
+              'Scale your sales operations, manage branch channels and your team from a centralized system.'
+            )}
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => window.location.href = '/seller/dashboard'}
+          className="rounded-xl"
+        >
+          {isAr ? <ChevronRight className="w-4 h-4 mr-1 ml-1" /> : <ArrowLeft className="w-4 h-4 mr-1 ml-1" />}
+          {t(locale, 'لوحة التحكم', 'Dashboard')}
+        </Button>
+      </div>
+
+      {/* Main Promo Card */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Features Column */}
+        <div className="md:col-span-2 space-y-4">
+          <h2 className="text-lg font-bold text-foreground mb-4">
+            {t(locale, 'ما الذي ستحصل عليه عند الترقية؟', 'What features will you unlock?')}
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Feature 1 */}
+            <Card className="border border-border/50 bg-card/45 hover:border-brand/40 transition-all rounded-xl">
+              <CardContent className="pt-5 space-y-2">
+                <div className="w-10 h-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <h3 className="font-bold text-sm">{t(locale, 'إدارة فروع متعددة', 'Multi-Branch Management')}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {t(
+                    locale,
+                    'إمكانية إنشاء متاجر فرعية لنفس التاجر مع عزل تام للمنتجات والمبيعات والمخازن.',
+                    'Create multiple sub-store outlets under your main account with isolated orders and stock.'
+                  )}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Feature 2 */}
+            <Card className="border border-border/50 bg-card/45 hover:border-brand/40 transition-all rounded-xl">
+              <CardContent className="pt-5 space-y-2">
+                <div className="w-10 h-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
+                  <Users className="w-5 h-5" />
+                </div>
+                <h3 className="font-bold text-sm">{t(locale, 'طاقم العمل والصلاحيات', 'Team Staff Roles')}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {t(
+                    locale,
+                    'دعوة الموظفين وتعيين صلاحياتهم كمدراء فروع، محررين، دعم فني أو محاسبين.',
+                    'Invite employees and assign roles such as Branch Manager, Editor, or Support Agent.'
+                  )}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Feature 3 */}
+            <Card className="border border-border/50 bg-card/45 hover:border-brand/40 transition-all rounded-xl">
+              <CardContent className="pt-5 space-y-2">
+                <div className="w-10 h-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
+                  <FileSpreadsheet className="w-5 h-5" />
+                </div>
+                <h3 className="font-bold text-sm">{t(locale, 'تقارير ضريبية و B2B', 'Tax Reports & B2B Invoices')}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {t(
+                    locale,
+                    'توليد الفواتير المطابقة للمعايير الضريبية ودعم عمليات البيع للشركات B2B.',
+                    'Generate tax-compliant invoices and utilize B2B merchant configurations.'
+                  )}
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Feature 4 */}
+            <Card className="border border-border/50 bg-card/45 hover:border-brand/40 transition-all rounded-xl">
+              <CardContent className="pt-5 space-y-2">
+                <div className="w-10 h-10 rounded-lg bg-brand/10 text-brand flex items-center justify-center">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <h3 className="font-bold text-sm">{t(locale, 'دعم فني وأولوية قصوى', 'Priority VIP Support')}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {t(
+                    locale,
+                    'دعم فني مباشر ومخصص لحل المشكلات وتقديم الاستشارات التقنية لنمو تجارتك.',
+                    'Priority customer care and consulting services to ensure your multi-store operational success.'
+                  )}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* CTA Card */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-bold text-foreground mb-4">
+            {t(locale, 'طلب التفعيل', 'Request Activation')}
+          </h2>
+
+          <Card className="border-brand/30 bg-brand/[0.02] shadow-sm rounded-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-3 bg-brand/10 text-brand text-xs font-bold rounded-bl-xl">
+              {t(locale, 'مجاني مؤقتاً', 'Free promotion')}
+            </div>
+
+            <CardContent className="pt-8 space-y-6">
+              <div className="space-y-2">
+                <Badge variant="outline" className="bg-brand/10 text-brand border-brand/20">
+                  {t(locale, 'حساب تاجر حالي: فردي', 'Current Type: Individual')}
+                </Badge>
+                <div className="flex items-baseline gap-1 mt-2">
+                  <span className="text-3xl font-black text-foreground">DZD 0</span>
+                  <span className="text-xs text-muted-foreground">/ {t(locale, 'طلب الترقية', 'per upgrade request')}</span>
+                </div>
+              </div>
+
+              <div className="text-xs text-muted-foreground space-y-3">
+                <div className="flex items-start gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span>{t(locale, 'مراجعة أمنية سريعة لبيانات التاجر', 'Quick security check of seller data')}</span>
+                </div>
+                <div className="flex items-start gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                  <span>{t(locale, 'لا تؤثر على فواتيرك وباقاتك الحالية', 'Does not affect your current invoices or plans')}</span>
+                </div>
+              </div>
+
+              <Button
+                onClick={handleRequestUpgrade}
+                disabled={isSubmitting}
+                className="w-full bg-gradient-to-r from-brand to-brand/80 text-navy font-bold rounded-xl shadow-md py-6 hover:shadow-lg transition-all"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Clock className="w-4 h-4 mr-2 ml-2 animate-spin" />
+                    {t(locale, 'جاري إرسال الطلب...', 'Sending Request...')}
+                  </>
+                ) : (
+                  <>
+                    <StoreIcon className="w-5 h-5 mr-2 ml-2" />
+                    {t(locale, 'تقديم طلب ترقية الحساب', 'Submit Upgrade Request')}
+                  </>
+                )}
+              </Button>
+
+              <p className="text-[10px] text-center text-muted-foreground">
+                {t(
+                  locale,
+                  'بتقديمك لهذا الطلب، فإنك توافق على مراجعة فريق الإدارة لمعلومات متجرك.',
+                  'By submitting this request, you agree to the admin review process of your store profile.'
+                )}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}

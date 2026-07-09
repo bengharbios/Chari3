@@ -252,7 +252,7 @@ export default function StoreStaffPage() {
   const handleOpenEditRole = (staff: StaffMember) => {
     if (checkPermission(t('تعديل الصلاحيات', 'Edit Roles'))) {
       setSelectedStaff(staff);
-      setSelectedRole(staff.role);
+      setSelectedRole(staff.role as any);
       setIsEditRoleOpen(true);
     }
   };
