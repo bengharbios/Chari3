@@ -1,5 +1,5 @@
 import React from 'react';
-import AdminUpgradeQueue from '@/components/admin/AdminUpgradeQueue';
+import { AdminUpgradeQueue } from '@/components/admin/AdminUpgradeQueue';
 import { getSession } from '@/lib/better-auth';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
