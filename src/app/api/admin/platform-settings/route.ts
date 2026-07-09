@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { getServerSession } from '@/lib/auth';
+import { getSession } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 
 export async function PUT(req: Request) {
   try {
-    const session = await getServerSession();
-    if (!session || session.user.role !== 'admin') {
+    const session = await getSession(await headers());
+    if (!session || !session.user || (session.user as any).role !== 'admin') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
     }
 
