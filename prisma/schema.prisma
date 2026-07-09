@@ -1552,7 +1552,7 @@ model PlatformSettings {
 
 model UpgradeRequest {
   id             String    @id @default(cuid())
-  storeId        String
+  storeId        String?
   userId         String
   feeSnapshot    Float
   isFreeSnapshot Boolean

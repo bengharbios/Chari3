@@ -345,6 +345,18 @@ export default function UpgradePage() {
                   <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                   <span>{t(locale, 'لا تؤثر على فواتيرك وباقاتك الحالية', 'Does not affect your current invoices or plans')}</span>
                 </div>
+                {!isFreePromo && fee > 0 && (
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>
+                      {t(
+                        locale, 
+                        'طريقة الدفع: سيتم إنشاء فاتورة في قسم الفواتير، تقوم بتسديدها بنفس طريقة اشتراكات الباقات (تحويل بنكي وإرفاق الوصل).', 
+                        'Payment Method: An invoice will be created in your billing section. Pay it using the same method as subscription plans (bank transfer and receipt upload).'
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <Button

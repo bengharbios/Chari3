@@ -11,15 +11,11 @@ export async function POST(req: Request) {
     }
 
     const userId = session.user.id;
-    const store = await db.store.findFirst({ where: { managerId: userId } });
-    if (!store) {
-      return NextResponse.json({ success: false, error: 'Store not found' }, { status: 404 });
-    }
 
     // Check if an existing pending or awaiting payment request exists
     const existingRequest = await db.upgradeRequest.findFirst({
       where: {
-        storeId: store.id,
+        userId: userId,
         status: { in: ['PENDING', 'AWAITING_PAYMENT', 'READY_FOR_REVIEW'] }
       }
     });
@@ -59,7 +55,6 @@ export async function POST(req: Request) {
 
       const request = await tx.upgradeRequest.create({
         data: {
-          storeId: store.id,
           userId,
           feeSnapshot: actualFee,
           isFreeSnapshot,

@@ -60,8 +60,13 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch('/api/admin/settings');
+        const [res, platRes] = await Promise.all([
+          fetch('/api/admin/settings'),
+          fetch('/api/platform-settings')
+        ]);
         const data = await res.json();
+        const platData = await platRes.json();
+
         if (data.success && data.settings) {
           setSettings((prev) => ({
             ...prev,
@@ -92,6 +97,14 @@ export default function AdminSettingsPage() {
             enable_store_registration: data.settings.enable_store_registration !== undefined ? String(data.settings.enable_store_registration) : 'true',
           }));
         }
+
+        if (platData.success && platData.data) {
+          setSettings((prev) => ({
+            ...prev,
+            upgrade_price: String(platData.data.price || 0),
+            is_upgrade_free_promo: String(platData.data.isFreePromo)
+          }));
+        }
       } catch (err) {
         console.error('Failed to load settings', err);
       } finally {
@@ -108,19 +121,39 @@ export default function AdminSettingsPage() {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch('/api/admin/settings', {
+      // 1. Save global UI settings
+      const p1 = fetch('/api/admin/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           settings,
           adminId: adminUser?.id,
         }),
-      });
-      const data = await res.json();
-      if (data.success) {
+      }).then(res => res.json());
+
+      // 2. Save Business Upgrade settings (PlatformSettings & BillingAddon)
+      const p2 = fetch('/api/admin/platform-settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          isUpgradeFreePromo: settings.is_upgrade_free_promo === 'true',
+        }),
+      }).then(res => res.json());
+
+      const p3 = fetch('/api/admin/billing-addons/business_upgrade', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          price: Number(settings.upgrade_price || 0),
+        }),
+      }).then(res => res.json());
+
+      const [data1, data2, data3] = await Promise.all([p1, p2, p3]);
+
+      if (data1.success && data2.success && data3.success) {
         toast.success(locale === 'ar' ? 'تم حفظ الإعدادات بنجاح' : 'Settings saved successfully');
       } else {
-        throw new Error(data.error);
+        throw new Error(data1.error || data2.error || data3.error || 'Unknown error');
       }
     } catch (err: any) {
       toast.error(locale === 'ar' ? 'فشل حفظ الإعدادات' : 'Failed to save settings');
