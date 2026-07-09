@@ -20,7 +20,7 @@ export function AdminUpgradeQueue() {
   return (
     <Card className="card-surface mt-6">
       <CardHeader>
-        <CardTitle>{t('طابور ترقيات الأعمال', 'Business Upgrade Queue')}</CardTitle>
+        <CardTitle>{t(locale, 'طابور ترقيات الأعمال', 'Business Upgrade Queue')}</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (

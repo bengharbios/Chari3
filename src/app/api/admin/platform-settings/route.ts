@@ -17,17 +17,21 @@ export async function PUT(req: Request) {
       where: { id: 'global' }
     });
 
+    const updateData: any = {
+      isUpgradeFreePromo,
+      updatedBy: session.user.id
+    };
+    if (upgradeFeaturesConfig !== undefined) {
+      updateData.upgradeFeaturesConfig = JSON.stringify(upgradeFeaturesConfig);
+    }
+
     const settings = await db.platformSettings.upsert({
       where: { id: 'global' },
-      update: {
-        isUpgradeFreePromo,
-        upgradeFeaturesConfig: JSON.stringify(upgradeFeaturesConfig),
-        updatedBy: session.user.id
-      },
+      update: updateData,
       create: {
         id: 'global',
         isUpgradeFreePromo,
-        upgradeFeaturesConfig: JSON.stringify(upgradeFeaturesConfig),
+        upgradeFeaturesConfig: upgradeFeaturesConfig ? JSON.stringify(upgradeFeaturesConfig) : '{}',
         updatedBy: session.user.id
       }
     });

@@ -3,14 +3,14 @@ import { db } from '@/lib/db';
 import { getSession } from '@/lib/better-auth';
 import { headers } from 'next/headers';
 
-export async function PUT(req: Request, { params }: { params: { key: string } }) {
+export async function PUT(req: Request, props: { params: Promise<{ key: string }> }) {
   try {
     const session = await getSession(await headers());
     if (!session || !session.user || (session.user as any).role !== 'admin') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
     }
 
-    const { key } = params;
+    const { key } = await props.params;
     const body = await req.json();
     const { price, isActive } = body;
 

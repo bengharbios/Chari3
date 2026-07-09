@@ -101,6 +101,7 @@ model Store {
   themeSettings         String?   @db.LongText
 
   slugUpdatedAt         DateTime?
+  customDomain          String?   @unique
 
   overrideIdentity      Boolean?
   overrideShipping      Boolean?
