@@ -26,8 +26,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid user or not a seller' }, { status: 400 });
     }
 
-    if (!user.sellerProfile.wantsUpgrade) {
-      return NextResponse.json({ success: false, error: 'Seller has not requested an upgrade' }, { status: 400 });
+    const upgradeRequest = await db.upgradeRequest.findFirst({
+      where: { userId: userId, status: 'READY_FOR_REVIEW' }
+    });
+
+    if (!user.sellerProfile.wantsUpgrade && !upgradeRequest) {
+      return NextResponse.json({ success: false, error: 'Seller has not requested an upgrade or request is not ready for review' }, { status: 400 });
     }
 
     // Determine store name (slug needs to be unique)
@@ -70,6 +74,7 @@ export async function POST(req: NextRequest) {
           packageId: packageId || null,
           logo: user.sellerProfile!.logo,
           coverImage: user.sellerProfile!.coverImage,
+          addonBusinessUpgrade: true
         }
       });
 
@@ -81,6 +86,17 @@ export async function POST(req: NextRequest) {
           userId: user.id
         }
       });
+
+      if (upgradeRequest) {
+        await tx.upgradeRequest.update({
+          where: { id: upgradeRequest.id },
+          data: {
+            status: 'APPROVED',
+            reviewedBy: session.user.id,
+            reviewedAt: new Date()
+          }
+        });
+      }
     });
 
     return NextResponse.json({ success: true });

@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId } = await req.json();
+    const { userId, rejectionNote } = await req.json();
 
     if (!userId) {
       return NextResponse.json({ success: false, error: 'User ID is required' }, { status: 400 });
@@ -25,13 +25,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Invalid user or not a seller' }, { status: 400 });
     }
 
-    if (!user.sellerProfile.wantsUpgrade) {
+    const upgradeRequest = await db.upgradeRequest.findFirst({
+      where: { userId: userId, status: { in: ['PENDING', 'AWAITING_PAYMENT', 'READY_FOR_REVIEW'] } }
+    });
+
+    if (!user.sellerProfile.wantsUpgrade && !upgradeRequest) {
       return NextResponse.json({ success: false, error: 'Seller has not requested an upgrade' }, { status: 400 });
     }
 
-    await db.sellerProfile.update({
-      where: { id: user.sellerProfile.id },
-      data: { wantsUpgrade: false, upgradeRequestedAt: null }
+    await db.$transaction(async (tx) => {
+      await tx.sellerProfile.update({
+        where: { id: user.sellerProfile!.id },
+        data: { wantsUpgrade: false, upgradeRequestedAt: null }
+      });
+
+      if (upgradeRequest) {
+        await tx.upgradeRequest.update({
+          where: { id: upgradeRequest.id },
+          data: {
+            status: 'REJECTED',
+            rejectionNote: rejectionNote || null,
+            reviewedBy: session.user.id,
+            reviewedAt: new Date()
+          }
+        });
+      }
     });
 
     return NextResponse.json({ success: true });

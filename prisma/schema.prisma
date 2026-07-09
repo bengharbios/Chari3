@@ -118,6 +118,7 @@ model Store {
   addonWhatsAppSupport  Boolean  @default(false)
   addonAdvancedCRM      Boolean  @default(false)
   addonEchangoPOS       Boolean  @default(false)
+  addonBusinessUpgrade  Boolean  @default(false)
   addonExtraPOSDevices  Int      @default(0)
 
   globalCoupons         Coupon[]  @relation("GlobalCouponOptInStores")
@@ -198,6 +199,7 @@ model SellerProfile {
   addonWhatsAppSupport  Boolean  @default(false)
   addonAdvancedCRM      Boolean  @default(false)
   addonEchangoPOS       Boolean  @default(false)
+  addonBusinessUpgrade  Boolean  @default(false)
   addonExtraPOSDevices  Int      @default(0)
 
   globalCoupons         Coupon[]  @relation("GlobalCouponOptInSellers")
@@ -1279,7 +1281,8 @@ model VerificationToken {
   expires    DateTime
   @@unique([identifier, token])
 }
-// ============================================
+
+// ============================================
 // SECURITY & AUTH LOGGING
 // ============================================
 
@@ -1534,3 +1537,43 @@ model PendingCriticalAction {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
+
+// ============================================
+// BUSINESS UPGRADE & PLATFORM SETTINGS
+// ============================================
+
+model PlatformSettings {
+  id                    String   @id @default("global")
+  isUpgradeFreePromo    Boolean  @default(true)
+  upgradeFeaturesConfig String   @db.LongText // JSON
+  updatedBy             String?
+  updatedAt             DateTime @updatedAt
+}
+
+model UpgradeRequest {
+  id             String    @id @default(cuid())
+  storeId        String
+  userId         String
+  feeSnapshot    Float
+  isFreeSnapshot Boolean
+  status         String    @default("PENDING") // PENDING | AWAITING_PAYMENT | READY_FOR_REVIEW | APPROVED | REJECTED
+  invoiceId      String?
+  reviewedBy     String?
+  reviewedAt     DateTime?
+  rejectionNote  String?
+  createdAt      DateTime  @default(now())
+
+  @@index([storeId])
+  @@index([status])
+}
+
+model SettingsAuditLog {
+  id        String   @id @default(cuid())
+  entity    String
+  field     String
+  oldValue  String   @db.LongText
+  newValue  String   @db.LongText
+  changedBy String
+  createdAt DateTime @default(now())
+}
+

@@ -426,6 +426,52 @@ export default function AdminSettingsPage() {
             </CardContent>
           </Card>
 
+          {/* New Card for Business Upgrade Settings */}
+          <Card className="card-surface">
+            <CardHeader>
+              <CardTitle className="text-lg font-bold">{t('إعدادات ترقية الأعمال', 'Business Upgrade Settings')}</CardTitle>
+              <CardDescription>
+                {t('التحكم في سعر ترقية التاجر الفردي إلى متجر أعمال وإدارة العروض المجانية.', 'Control the pricing for upgrading individual sellers to business stores and manage free promos.')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="upgrade_price">{t('سعر الترقية (DZD)', 'Upgrade Price (DZD)')}</Label>
+                <Input
+                  id="upgrade_price"
+                  name="upgrade_price"
+                  type="number"
+                  value={settings.upgrade_price || '0'}
+                  onChange={handleChange}
+                  className="font-mono bg-background"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="is_upgrade_free_promo">{t('حالة العرض (ترقية مجانية مؤقتاً)', 'Promo Status (Free Upgrade Temporary)')}</Label>
+                <select
+                  id="is_upgrade_free_promo"
+                  name="is_upgrade_free_promo"
+                  value={settings.is_upgrade_free_promo || 'true'}
+                  onChange={(e) => setSettings(prev => ({ ...prev, is_upgrade_free_promo: e.target.value }))}
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                >
+                  <option value="true">{t('تفعيل العرض المجاني', 'Enable Free Promo')}</option>
+                  <option value="false">{t('تعطيل (تطبيق السعر الأساسي)', 'Disable (Apply Base Price)')}</option>
+                </select>
+              </div>
+
+              <Button 
+                onClick={handleSave} 
+                disabled={isSaving}
+                className="w-full mt-10 font-bold gap-2"
+              >
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                {t('حفظ التعديلات', 'Save Changes')}
+              </Button>
+            </CardContent>
+          </Card>
+
           <Card className="card-surface md:col-span-2">
             <CardHeader>
               <CardTitle className="text-lg font-bold">{t('إدارة وتصميم الصفحة الرئيسية', 'Homepage Manager & Designer')}</CardTitle>

@@ -119,21 +119,23 @@ const BUSINESS_SELLER_ITEMS = [
   { id: 'seller-branches', labelAr: 'إدارة الفروع', labelEn: 'Branches', icon: 'Store', path: '/seller/branches' },
 ];
 
-// Helper to filter nav items based on payment model and merchantType
-const getSellerNavGroups = (paymentModel: string, merchantType: string): NavGroup[] => {
+// Helper to filter nav items based on payment model and merchantType/role
+const getSellerNavGroups = (paymentModel: string, merchantType: string, userRole?: string): NavGroup[] => {
   return SELLER_NAV_GROUPS.map(group => {
     let items = [...group.items];
     
+    const isBusiness = merchantType === 'business' || userRole === 'store_manager';
+
     if (group.id === 'seller-group') {
-      // Inject business items only for 'business' merchantType
-      if (merchantType === 'business') {
+      // Inject business items only for business or store_manager accounts
+      if (isBusiness) {
         items.splice(2, 0, ...BUSINESS_SELLER_ITEMS); // Insert after products
       }
     }
     
     if (group.id === 'settings-group') {
-      // Hide 'Upgrade to Store' if they are already 'business'
-      if (merchantType === 'business') {
+      // Hide 'Upgrade to Store' if they are already upgraded
+      if (isBusiness) {
         items = items.filter(item => item.id !== 'seller-upgrade');
       }
     }
@@ -380,7 +382,7 @@ interface SidebarProps {
     : isStoreStaff
     ? getStaffNavGroups()
     : (user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer')
-    ? getSellerNavGroups(paymentModel, merchantType)
+    ? getSellerNavGroups(paymentModel, merchantType, user?.role)
     : user?.role === 'supplier'
     ? SUPPLIER_NAV_GROUPS
     : user?.role === 'logistics'

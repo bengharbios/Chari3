@@ -722,3 +722,8 @@ export function isValidPermission(key: string): boolean {
 export function filterValidPermissions(keys: string[]): string[] {
   return keys.filter(isValidPermission);
 }
+
+export function isBusinessAccount(user: { role?: string } | null | undefined): boolean {
+  if (!user || !user.role) return false;
+  return user.role === 'business' || user.role === 'store_manager';
+}

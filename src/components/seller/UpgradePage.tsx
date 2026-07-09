@@ -33,6 +33,9 @@ export default function UpgradePage() {
   const [merchantType, setMerchantType] = useState('individual');
   const [wantsUpgrade, setWantsUpgrade] = useState(false);
 
+  const [fee, setFee] = useState(0);
+  const [isFreePromo, setIsFreePromo] = useState(true);
+
   const fetchStatus = useCallback(async () => {
     if (!user?.id) return;
     try {
@@ -52,6 +55,15 @@ export default function UpgradePage() {
       if (dashData.success && dashData.seller) {
         setWantsUpgrade(!!dashData.seller.wantsUpgrade);
       }
+
+      // Fetch global platform settings for pricing
+      const platRes = await fetch('/api/platform-settings');
+      const platData = await platRes.json();
+      
+      if (platData.success && platData.data) {
+        setFee(platData.data.price || 0);
+        setIsFreePromo(platData.data.isFreePromo);
+      }
     } catch (err) {
       toast.error(t(locale, 'فشل جلب تفاصيل الحساب', 'Failed to fetch account details'));
     } finally {
@@ -66,7 +78,8 @@ export default function UpgradePage() {
   const handleRequestUpgrade = async () => {
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/seller/upgrade-request', {
+      // Create request and optionally an invoice
+      const res = await fetch('/api/upgrade-requests', {
         method: 'POST',
       });
       const data = await res.json();
@@ -74,6 +87,11 @@ export default function UpgradePage() {
       if (data.success) {
         toast.success(t(locale, 'تم إرسال طلب الترقية بنجاح!', 'Upgrade request sent successfully!'));
         setWantsUpgrade(true);
+        // If there is a fee, redirect to invoices or let the user know
+        if (data.data.invoiceId) {
+          toast.info(t(locale, 'الرجاء تسديد الفاتورة لتأكيد الطلب', 'Please pay the invoice to confirm request'));
+          window.location.href = `/seller/billing/invoices/${data.data.invoiceId}`;
+        }
       } else {
         toast.error(data.error || t(locale, 'حدث خطأ أثناء إرسال الطلب', 'Error sending request'));
       }
@@ -294,9 +312,11 @@ export default function UpgradePage() {
           </h2>
 
           <Card className="border-brand/30 bg-brand/[0.02] shadow-sm rounded-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-3 bg-brand/10 text-brand text-xs font-bold rounded-bl-xl">
-              {t(locale, 'مجاني مؤقتاً', 'Free promotion')}
-            </div>
+            {isFreePromo && (
+              <div className="absolute top-0 right-0 p-3 bg-brand/10 text-brand text-xs font-bold rounded-bl-xl">
+                {t(locale, 'مجاني مؤقتاً', 'Free promotion')}
+              </div>
+            )}
 
             <CardContent className="pt-8 space-y-6">
               <div className="space-y-2">
@@ -304,7 +324,14 @@ export default function UpgradePage() {
                   {t(locale, 'حساب تاجر حالي: فردي', 'Current Type: Individual')}
                 </Badge>
                 <div className="flex items-baseline gap-1 mt-2">
-                  <span className="text-3xl font-black text-foreground">DZD 0</span>
+                  {isFreePromo ? (
+                    <>
+                      <span className="text-3xl font-black text-foreground">DZD 0</span>
+                      {fee > 0 && <span className="text-sm line-through text-muted-foreground ml-2">DZD {fee}</span>}
+                    </>
+                  ) : (
+                    <span className="text-3xl font-black text-foreground">DZD {fee}</span>
+                  )}
                   <span className="text-xs text-muted-foreground">/ {t(locale, 'طلب الترقية', 'per upgrade request')}</span>
                 </div>
               </div>
