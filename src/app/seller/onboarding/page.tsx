@@ -19,12 +19,19 @@ export default function SellerOnboardingPage() {
   }, []);
 
   useEffect(() => {
-    if (mounted && (!isAuthenticated || !user)) {
-      router.push('/?login=true');
+    if (mounted) {
+      if (!isAuthenticated || !user) {
+        router.push('/?login=true');
+        return;
+      }
+      // Guard: Redirect to verification status page if account is pending or active
+      if (user.accountStatus === 'pending' || user.accountStatus === 'active') {
+        router.push('/seller/verification');
+      }
     }
   }, [mounted, isAuthenticated, user, router]);
 
-  if (!isAuthenticated || !user) return null;
+  if (!isAuthenticated || !user || user.accountStatus === 'pending' || user.accountStatus === 'active') return null;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-950 text-foreground py-6" dir={locale === 'ar' ? 'rtl' : 'ltr'}>

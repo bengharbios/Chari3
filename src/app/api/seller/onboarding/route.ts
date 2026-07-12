@@ -110,7 +110,7 @@ export async function POST(req: Request) {
         (dataToSave.ccpCle && dataToSave.ccpCle !== existing.ccpCle) ||
         (dataToSave.iban && dataToSave.iban !== existing.iban);
 
-      if (ribChanged) {
+      if (ribChanged && existing.verificationStatus === 'approved') {
         // Force re-verification
         dataToSave.verificationStatus = 'pending';
         // Log the change to trigger 24h/48h withdrawal freeze
