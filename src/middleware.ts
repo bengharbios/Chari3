@@ -16,6 +16,13 @@ export async function middleware(request: NextRequest) {
   const hostname = request.headers.get('host') || '';
   const cleanHost = hostname.split(':')[0]; // strip port if present
 
+  // Redirect www.chariday.com to chariday.com to avoid cookie domain issues
+  if (cleanHost === 'www.chariday.com') {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.hostname = 'chariday.com';
+    return NextResponse.redirect(redirectUrl, 301);
+  }
+
   // ─── Custom Domain Routing ─────────────────────────────────────────────────
   // If the request comes from a custom domain (not the main platform), rewrite
   // to the store's storefront page transparently (without changing the URL bar).
