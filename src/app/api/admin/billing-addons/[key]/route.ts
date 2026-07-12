@@ -14,9 +14,23 @@ export async function PUT(req: Request, props: { params: Promise<{ key: string }
     const body = await req.json();
     const { price, isActive } = body;
 
-    const oldAddon = await db.billingAddon.findUnique({
+    let oldAddon = await db.billingAddon.findUnique({
       where: { key }
     });
+
+    if (!oldAddon && key === 'business_upgrade') {
+      oldAddon = await db.billingAddon.create({
+        data: {
+          key: 'business_upgrade',
+          nameAr: 'ترقية الأعمال',
+          nameEn: 'Business Upgrade',
+          descriptionAr: 'ترقية الحساب من تاجر فردي إلى متجر أعمال متكامل',
+          descriptionEn: 'Upgrade account from individual seller to business store',
+          price: 0,
+          isActive: true
+        }
+      });
+    }
 
     if (!oldAddon) {
       return NextResponse.json({ success: false, error: 'Addon not found' }, { status: 404 });
