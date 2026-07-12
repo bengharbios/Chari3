@@ -32,6 +32,7 @@ export default function UpgradePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [merchantType, setMerchantType] = useState('individual');
   const [wantsUpgrade, setWantsUpgrade] = useState(false);
+  const [upgradeRequest, setUpgradeRequest] = useState<any>(null);
 
   const [fee, setFee] = useState(0);
   const [isFreePromo, setIsFreePromo] = useState(true);
@@ -52,8 +53,9 @@ export default function UpgradePage() {
       const dashRes = await fetch(`/api/seller/dashboard?userId=${user.id}`);
       const dashData = await dashRes.json();
       
-      if (dashData.success && dashData.seller) {
-        setWantsUpgrade(!!dashData.seller.wantsUpgrade);
+      if (dashData.success) {
+        setWantsUpgrade(!!dashData.seller?.wantsUpgrade);
+        setUpgradeRequest(dashData.upgradeRequest || null);
       }
 
       // Fetch global platform settings for pricing
@@ -93,7 +95,11 @@ export default function UpgradePage() {
           window.location.href = '/seller/billing/pay';
         }
       } else {
-        toast.error(data.error || t(locale, 'حدث خطأ أثناء إرسال الطلب', 'Error sending request'));
+        let errMsg = data.error;
+        if (data.error === 'Request already exists') {
+          errMsg = t(locale, 'طلب الترقية موجود بالفعل وهو قيد المراجعة أو معلق.', 'An upgrade request already exists and is pending.');
+        }
+        toast.error(errMsg || t(locale, 'حدث خطأ أثناء إرسال الطلب', 'Error sending request'));
       }
     } catch (err) {
       toast.error(t(locale, 'خطأ في الاتصال بالخادم', 'Server connection error'));
@@ -158,32 +164,69 @@ export default function UpgradePage() {
   }
 
   // Request already submitted and pending approval
-  if (wantsUpgrade) {
+  if (wantsUpgrade || upgradeRequest) {
+    const isAwaitingPayment = upgradeRequest?.status === 'AWAITING_PAYMENT';
+    const reqFee = upgradeRequest?.feeSnapshot ?? fee;
+    const reqInvoiceId = upgradeRequest?.invoiceId;
+
     return (
       <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6 md:p-8 text-center space-y-4"
+          className={`border rounded-2xl p-6 md:p-8 text-center space-y-4 ${
+            isAwaitingPayment 
+              ? 'bg-blue-500/5 border-blue-500/20' 
+              : 'bg-amber-500/5 border-amber-500/20'
+          }`}
         >
-          <div className="mx-auto w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 dark:bg-amber-950 dark:text-amber-400 animate-pulse">
+          <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center animate-pulse ${
+            isAwaitingPayment 
+              ? 'bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400' 
+              : 'bg-amber-100 text-amber-600 dark:bg-amber-950 dark:text-amber-400'
+          }`}>
             <Clock className="w-10 h-10" />
           </div>
-          <h1 className="text-2xl font-black text-amber-900 dark:text-amber-300">
-            {t(locale, 'طلب الترقية لمتجر قيد المراجعة', 'Store Upgrade Pending Review')}
+          <h1 className="text-2xl font-black text-foreground">
+            {isAwaitingPayment 
+              ? t(locale, 'بانتظار دفع رسوم الترقية', 'Awaiting Payment for Upgrade')
+              : t(locale, 'طلب الترقية لمتجر قيد المراجعة', 'Store Upgrade Pending Review')
+            }
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto text-sm leading-relaxed">
-            {t(
-              locale,
-              'لقد تم استلام طلبك للترقية بنجاح وهو قيد المراجعة والتدقيق حالياً من قبل الإدارة. سيتم إخطارك فور تفعيل الميزات الإضافية لحسابك خلال ساعات العمل.',
-              'Your request to upgrade is successfully received and is currently being evaluated by our team. You will be notified once the business store capabilities are activated.'
-            )}
+            {isAwaitingPayment
+              ? t(
+                  locale,
+                  `تمت الموافقة المبدئية على طلب الترقية الخاص بك وبانتظار سداد الفاتورة بقيمة ${reqFee} د.ج. يرجى إتمام الدفع وإرفاق وصل التحويل لتفعيل حسابك فوراً.`,
+                  `Your upgrade request has been approved. Please pay the invoice of ${reqFee} DZD and attach the receipt to activate immediately.`
+                )
+              : t(
+                  locale,
+                  'لقد تم استلام طلبك للترقية بنجاح وهو قيد المراجعة والتدقيق حالياً من قبل الإدارة. سيتم إخطارك فور تفعيل الميزات الإضافية لحسابك خلال ساعات العمل.',
+                  'Your request to upgrade is successfully received and is currently being evaluated by our team. You will be notified once the business store capabilities are activated.'
+                )
+            }
           </p>
-          <div className="pt-4">
+          <div className="flex flex-wrap justify-center gap-3 pt-4">
+            {isAwaitingPayment && (
+              <Button 
+                onClick={() => {
+                  window.location.href = `/seller/billing/pay?invoiceId=${reqInvoiceId || ''}&amount=${reqFee}`;
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl"
+              >
+                <CreditCard className="w-4 h-4 mr-2 ml-2" />
+                {t(locale, 'الذهاب لتسديد الفاتورة', 'Go to Invoices & Payment')}
+              </Button>
+            )}
             <Button 
               variant="outline" 
               onClick={() => window.location.href = '/seller/dashboard'}
-              className="rounded-xl border-amber-200 hover:bg-amber-50 dark:border-amber-900 dark:hover:bg-amber-950"
+              className={`rounded-xl ${
+                isAwaitingPayment
+                  ? 'border-blue-200 hover:bg-blue-50 dark:border-blue-900 dark:hover:bg-blue-950'
+                  : 'border-amber-200 hover:bg-amber-50 dark:border-amber-900 dark:hover:bg-amber-950'
+              }`}
             >
               <ArrowLeft className="w-4 h-4 mr-2 ml-2" />
               {t(locale, 'العودة للوحة التحكم', 'Back to Dashboard')}

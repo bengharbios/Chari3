@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,6 +64,7 @@ export default function BillingPage() {
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const isRTL = locale === 'ar';
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const activeTab = pathname.includes('/plans') ? 'plans' : pathname.includes('/addons') ? 'addons' : pathname.includes('/pay') ? 'pay' : pathname.includes('/history') ? 'history' : 'invoice';
 
   // ─── State ────────────────────────────────────────────────────────────────
@@ -200,6 +201,18 @@ export default function BillingPage() {
         .catch(() => {});
     }
   }, [user?.id]);
+
+  useEffect(() => {
+    const invId = searchParams.get('invoiceId');
+    const amt = searchParams.get('amount');
+    if (invId) {
+      setPendingInvoiceId(invId);
+    }
+    if (amt) {
+      setPayAmount(amt);
+      setCardAmt(amt);
+    }
+  }, [searchParams]);
 
   // Calculate upgrade cost dynamically
   useEffect(() => {
@@ -717,7 +730,12 @@ export default function BillingPage() {
                           </div>
                         )}
                         {inv.status !== 'PAID' && (
-                          <Button className="w-full rounded-xl gap-2 bg-brand hover:bg-brand/90 text-navy font-bold" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
+                          <Button 
+                            className="w-full rounded-xl gap-2 bg-brand hover:bg-brand/90 text-navy font-bold" 
+                            onClick={() => {
+                              window.location.href = `/seller/billing/pay?invoiceId=${inv.id}&amount=${inv.amount}`;
+                            }}
+                          >
                             <CreditCard className="h-4 w-4" />
                             {t(locale, 'ادفع هذه الفاتورة', 'Pay This Invoice')}
                             <ChevronRight className="h-4 w-4" />

@@ -162,9 +162,14 @@ export function AdminUpgradeQueue() {
                   </div>
                   <div className="flex gap-2 items-center">
                     {req.status === 'AWAITING_PAYMENT' && (
-                      <Button variant="outline" onClick={() => handleAction(req.id, 'approve')} disabled={actionLoading === req.id}>
-                        {actionLoading === req.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t(locale, 'تأكيد الدفع وموافقة', 'Confirm Payment & Approve')}
-                      </Button>
+                      <>
+                        <Button variant="outline" onClick={() => handleAction(req.id, 'approve')} disabled={actionLoading === req.id}>
+                          {actionLoading === req.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t(locale, 'تأكيد الدفع وموافقة', 'Confirm Payment & Approve')}
+                        </Button>
+                        <Button variant="destructive" onClick={() => handleRejectClick(req.id)} disabled={actionLoading === req.id}>
+                          {actionLoading === req.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t(locale, 'رفض', 'Reject')}
+                        </Button>
+                      </>
                     )}
                     {req.status === 'READY_FOR_REVIEW' && (
                       <>

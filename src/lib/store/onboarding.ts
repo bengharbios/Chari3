@@ -140,13 +140,20 @@ const OTP_STEP_ORDER: OtpLoginStep[] = ['phone', 'otp', 'role', 'basic-info'];
 export const getVerificationItemsForRole = (role: UserRole): VerificationItem[] => {
   switch (role) {
     case 'store_manager':
-    case 'seller':
       return [
         { id: 'phone', labelAr: 'رقم الهاتف', labelEn: 'Phone Number', status: 'verified' },
         { id: 'email', labelAr: 'البريد الإلكتروني', labelEn: 'Email Address', status: 'required' },
         { id: 'commercial_register', labelAr: 'السجل التجاري', labelEn: 'Commercial Register', status: 'pending' },
         { id: 'bank_account', labelAr: 'الحساب البنكي', labelEn: 'Bank Account', status: 'pending' },
         { id: 'manager_id', labelAr: 'هوية المدير', labelEn: 'Manager ID', status: 'pending' },
+      ];
+    case 'seller':
+      return [
+        { id: 'phone', labelAr: 'رقم الهاتف', labelEn: 'Phone Number', status: 'verified' },
+        { id: 'email', labelAr: 'البريد الإلكتروني', labelEn: 'Email Address', status: 'required' },
+        { id: 'commercial_register', labelAr: 'وثيقة النشاط (بطاقة مقاول ذاتي / حرفي)', labelEn: 'Activity Document (Freelance / Artisan Card)', status: 'pending' },
+        { id: 'bank_account', labelAr: 'الحساب البنكي / CCP', labelEn: 'Bank Account / CCP', status: 'pending' },
+        { id: 'manager_id', labelAr: 'إثبات الهوية الشخصية', labelEn: 'Personal Identity Proof', status: 'pending' },
       ];
     case 'supplier':
       return [

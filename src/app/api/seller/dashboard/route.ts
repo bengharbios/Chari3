@@ -62,6 +62,11 @@ export async function GET(req: NextRequest) {
           },
         });
 
+    const sellerProfile = await db.sellerProfile.findUnique({
+      where: { userId },
+      select: { wantsUpgrade: true }
+    });
+
     if (store) {
       isStoreManager = true;
       seller = {
@@ -82,6 +87,7 @@ export async function GET(req: NextRequest) {
         packageId: store.packageId,
         package: store.package,
         user: store.manager,
+        wantsUpgrade: sellerProfile?.wantsUpgrade ?? false,
       };
     } else {
       // Fallback to SellerProfile if no Store found
@@ -246,9 +252,18 @@ export async function GET(req: NextRequest) {
       else suspensionReason = 'ADMIN_DISABLED';
     }
 
+    // Active upgrade request
+    const activeUpgradeRequest = await db.upgradeRequest.findFirst({
+      where: {
+        userId,
+        status: { in: ['PENDING', 'AWAITING_PAYMENT', 'READY_FOR_REVIEW'] }
+      }
+    });
+
     return NextResponse.json({
       success: true,
       seller,
+      upgradeRequest: activeUpgradeRequest,
       stores: userStores,
       currency: wallet?.currency ?? 'DZD',
       storeStatus: {

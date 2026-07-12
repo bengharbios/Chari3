@@ -53,6 +53,7 @@ export default function VerificationStatusPage() {
   const { user, updateProfile } = useAuthStore();
   const { accountStatus, verificationItems, rejectionReason, rejectedItems, setAccountStatus, isWizardOpen } = useOnboardingStore();
   const isAr = locale === 'ar';
+  const isBusiness = user?.role !== 'seller';
 
   // State for fetched document details from API
   const [details, setDetails] = useState<Record<string, unknown> | null>(null);
@@ -557,9 +558,19 @@ export default function VerificationStatusPage() {
                           </div>
                           {item.status === 'verified' && !isContact && details && (
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              {item.id === 'vi-commercial_register' && typeof details.commercialRegisterNumber === 'string' && `${t(isAr, 'رقم السجل:', 'CR No:')} ${details.commercialRegisterNumber}`}
-                              {item.id === 'vi-bank_account' && typeof details.iban === 'string' && `${t(isAr, 'الآيبان:', 'IBAN:')} ${details.iban}`}
-                              {item.id === 'vi-manager_id' && `${t(isAr, 'الهوية مفحوصة ومعتمدة', 'ID verified and approved')}`}
+                              {item.id === 'commercial_register' && typeof details.commercialRegisterNumber === 'string' && (
+                                isBusiness 
+                                  ? `${t(isAr, 'رقم السجل:', 'CR No:')} ${details.commercialRegisterNumber}`
+                                  : `${t(isAr, 'رقم بطاقة النشاط:', 'Activity Card No:')} ${details.commercialRegisterNumber}`
+                              )}
+                              {item.id === 'bank_account' && (
+                                isBusiness
+                                  ? (typeof details.iban === 'string' && `${t(isAr, 'الآيبان:', 'IBAN:')} ${details.iban}`)
+                                  : (details.ccpNumber 
+                                      ? `${t(isAr, 'رقم CCP:', 'CCP No:')} ${details.ccpNumber} (${details.ccpCle || ''})` 
+                                      : (typeof details.iban === 'string' && `${t(isAr, 'الآيبان:', 'IBAN:')} ${details.iban}`))
+                              )}
+                              {item.id === 'manager_id' && `${t(isAr, 'الهوية مفحوصة ومعتمدة', 'ID verified and approved')}`}
                             </p>
                           )}
                         </div>
