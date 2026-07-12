@@ -629,6 +629,87 @@ export async function GET(req: NextRequest) {
       results.push(`Error creating BillingAddon table: ${e.message}`);
     }
 
+    // 27. Ensure StoreVerification isArchived and archivedAt fields exist
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE StoreVerification ADD COLUMN isArchived BOOLEAN NOT NULL DEFAULT false;`);
+      results.push('Added isArchived to StoreVerification');
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) results.push(`StoreVerification isArchived: ${e.message}`);
+    }
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE StoreVerification ADD COLUMN archivedAt DATETIME(3) NULL;`);
+      results.push('Added archivedAt to StoreVerification');
+    } catch (e: any) {
+      if (!e.message?.includes('Duplicate column')) results.push(`StoreVerification archivedAt: ${e.message}`);
+    }
+
+    // 28. Upgrade UpgradeRequest Table (Handle modifications / drop old fields if necessary, or just alter)
+    const upgradeReqColumns = [
+      "isActive BOOLEAN NOT NULL DEFAULT true",
+      "businessRegisterNumber VARCHAR(191) NULL",
+      "businessRegisterFile LONGTEXT NULL",
+      "businessNisNumber VARCHAR(191) NULL",
+      "businessIban VARCHAR(191) NULL",
+      "businessBankName VARCHAR(191) NULL",
+      "businessBankLetterFile LONGTEXT NULL",
+      "businessManagerIdFront LONGTEXT NULL",
+      "businessManagerIdBack LONGTEXT NULL",
+      "paymentReceiptFile LONGTEXT NULL",
+      "paymentReceiptNote VARCHAR(191) NULL",
+      "paymentConfirmedAt DATETIME(3) NULL",
+      "rejectionReason VARCHAR(191) NULL",
+      "paymentRejectionReason VARCHAR(191) NULL",
+      "updatedAt DATETIME(3) NULL"
+    ];
+
+    for (const col of upgradeReqColumns) {
+      try {
+        await db.$executeRawUnsafe(`ALTER TABLE UpgradeRequest ADD COLUMN ${col};`);
+        results.push(`Added column ${col.split(' ')[0]} to UpgradeRequest`);
+      } catch (e: any) {
+        if (!e.message?.includes('Duplicate column')) {
+          results.push(`Error adding ${col.split(' ')[0]} to UpgradeRequest: ${e.message}`);
+        }
+      }
+    }
+
+    // FeeSnapshot might need to be converted to Decimal or altered
+    try {
+      await db.$executeRawUnsafe(`ALTER TABLE UpgradeRequest MODIFY COLUMN feeSnapshot DECIMAL(65,30) NULL;`);
+      results.push('Modified UpgradeRequest feeSnapshot to Decimal type');
+    } catch (e: any) {
+      results.push(`Error modifying feeSnapshot: ${e.message}`);
+    }
+
+    // 29. Create BusinessVerification Table
+    try {
+      await db.$executeRawUnsafe(`
+        CREATE TABLE IF NOT EXISTS BusinessVerification (
+          id VARCHAR(191) NOT NULL,
+          userId VARCHAR(191) NOT NULL,
+          upgradeRequestId VARCHAR(191) NULL,
+          companyName VARCHAR(191) NULL,
+          businessRegisterNumber VARCHAR(191) NULL,
+          businessRegisterFile LONGTEXT NULL,
+          businessNisNumber VARCHAR(191) NULL,
+          managerName VARCHAR(191) NULL,
+          managerIdFront LONGTEXT NULL,
+          managerIdBack LONGTEXT NULL,
+          iban VARCHAR(191) NULL,
+          bankName VARCHAR(191) NULL,
+          bankLetterFile LONGTEXT NULL,
+          verificationStatus VARCHAR(191) NOT NULL DEFAULT 'approved',
+          createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+          updatedAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+          PRIMARY KEY (id),
+          UNIQUE KEY BusinessVerification_userId_key (userId)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      `);
+      results.push('Ensured BusinessVerification table exists');
+    } catch (e: any) {
+      results.push(`Error creating BusinessVerification table: ${e.message}`);
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: 'Database schema sync executed',

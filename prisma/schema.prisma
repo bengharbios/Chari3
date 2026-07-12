@@ -56,6 +56,8 @@ model User {
   chatRoomsAsSeller  ChatRoom[]       @relation("ChatRoomSeller")
   sentMessages       ChatMessage[]    @relation("MessageSender")
   suspensionAppeals  SuspensionAppeal[]
+  businessVerification BusinessVerification?
+  upgradeRequests    UpgradeRequest[]
 
   // Better Auth Relations
   sessions           Session[]
@@ -933,6 +935,9 @@ model StoreVerification {
   reviewedAt                  DateTime?
   submittedAt                 DateTime?
   
+  isArchived                  Boolean   @default(false)
+  archivedAt                  DateTime?
+  
   createdAt                   DateTime  @default(now())
   updatedAt                   DateTime  @updatedAt
 }
@@ -1552,20 +1557,67 @@ model PlatformSettings {
 }
 
 model UpgradeRequest {
-  id             String    @id @default(cuid())
-  storeId        String?
-  userId         String
-  feeSnapshot    Float
-  isFreeSnapshot Boolean
-  status         String    @default("PENDING") // PENDING | AWAITING_PAYMENT | READY_FOR_REVIEW | APPROVED | REJECTED
-  invoiceId      String?
-  reviewedBy     String?
-  reviewedAt     DateTime?
-  rejectionNote  String?
-  createdAt      DateTime  @default(now())
+  id                      String    @id @default(cuid())
+  userId                  String
+  status                  String    @default("PENDING") // PENDING | REJECTED | AWAITING_PAYMENT | PAYMENT_SUBMITTED | APPROVED
+  feeSnapshot             Decimal?
+  invoiceId               String?
+  isActive                Boolean   @default(true)
 
-  @@index([storeId])
+  // Document Fields
+  businessRegisterNumber  String?
+  businessRegisterFile    String?   @db.LongText
+  businessNisNumber       String?
+  businessIban            String?
+  businessBankName        String?
+  businessBankLetterFile  String?   @db.LongText
+  businessManagerIdFront  String?   @db.LongText
+  businessManagerIdBack   String?   @db.LongText
+
+  // Payment Fields
+  paymentReceiptFile      String?   @db.LongText
+  paymentReceiptNote      String?
+  paymentConfirmedAt      DateTime?
+
+  // Audit Fields
+  rejectionReason         String?
+  paymentRejectionReason  String?
+  reviewedBy              String?
+  reviewedAt              DateTime?
+
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @default(now()) @updatedAt
+
+  user                    User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([isActive])
   @@index([status])
+}
+
+model BusinessVerification {
+  id                     String    @id @default(cuid())
+  userId                 String    @unique
+  upgradeRequestId       String?
+
+  companyName            String?
+  businessRegisterNumber String?
+  businessRegisterFile   String?   @db.LongText
+  businessNisNumber      String?
+  
+  managerName            String?
+  managerIdFront         String?   @db.LongText
+  managerIdBack          String?   @db.LongText
+  
+  iban                   String?
+  bankName               String?
+  bankLetterFile         String?   @db.LongText
+  
+  verificationStatus     String    @default("approved")
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  user                   User      @relation(fields: [userId], references: [id])
 }
 
 model SettingsAuditLog {

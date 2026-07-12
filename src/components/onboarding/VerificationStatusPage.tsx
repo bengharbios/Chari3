@@ -57,6 +57,7 @@ export default function VerificationStatusPage() {
 
   // State for fetched document details from API
   const [details, setDetails] = useState<Record<string, unknown> | null>(null);
+  const [archivedVerification, setArchivedVerification] = useState<any>(null);
 
   // States for sensitive profile update (sequential flow)
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -277,6 +278,12 @@ export default function VerificationStatusPage() {
           }
           store.setRejectionReason(data.adminNotes || null);
           store.setRejectedItems(data.rejectionReasons || []);
+
+          if (data.archivedVerification) {
+            setArchivedVerification(data.archivedVerification);
+          } else {
+            setArchivedVerification(null);
+          }
 
           if (data.items && data.items.length > 0) {
             store.setVerificationItems(data.items.map((i: any) => ({
@@ -765,6 +772,89 @@ export default function VerificationStatusPage() {
           </CardContent>
         </Card>
       )}
+      {/* Archived Individual Verification Section */}
+      {archivedVerification && (
+        <Card className="border border-border/40 bg-muted/20 rounded-2xl overflow-hidden mt-6">
+          <CardHeader className="bg-muted/40 pb-4">
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-muted-foreground" />
+              {t(isAr, 'ملف التوثيق الفردي القديم (مؤرشف)', 'Archived Freelancer Verification File (Read-Only)')}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {t(
+                isAr,
+                `أرشيف الوثائق المرفوعة مسبقاً قبل الترقية لمتجر أعمال. تمت أرشفتها بتاريخ ${new Date(archivedVerification.archivedAt).toLocaleDateString(isAr ? 'ar-SA' : 'en-US')}`,
+                `Archive of previously verified documents before upgrading to corporate account. Archived on ${new Date(archivedVerification.archivedAt).toLocaleDateString(isAr ? 'ar-SA' : 'en-US')}`
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-5 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+              
+              {/* Doc 1: Activity Card */}
+              {archivedVerification.commercialRegisterFile && (
+                <div className="bg-card p-3 rounded-xl border space-y-2 flex flex-col justify-between">
+                  <div>
+                    <span className="text-muted-foreground block mb-1">{t(isAr, 'وثيقة النشاط (مقاول ذاتي)', 'Activity Document')}</span>
+                    <span className="font-semibold text-foreground truncate block">{archivedVerification.commercialRegisterNumber || t(isAr, 'غير متوفر', 'N/A')}</span>
+                  </div>
+                  <Button size="sm" variant="outline" className="w-full text-[10px]" asChild>
+                    <a href={archivedVerification.commercialRegisterFile} target="_blank" rel="noreferrer">
+                      {t(isAr, 'تحميل الوثيقة', 'Download File')}
+                    </a>
+                  </Button>
+                </div>
+              )}
+
+              {/* Doc 2: Bank CCP */}
+              {archivedVerification.bankLetterFile && (
+                <div className="bg-card p-3 rounded-xl border space-y-2 flex flex-col justify-between">
+                  <div>
+                    <span className="text-muted-foreground block mb-1">{t(isAr, 'الحساب البنكي / CCP', 'Bank CCP Details')}</span>
+                    <span className="font-semibold text-foreground truncate block">
+                      {archivedVerification.ccpNumber 
+                        ? `${archivedVerification.ccpNumber} / ${archivedVerification.ccpCle}` 
+                        : archivedVerification.iban || t(isAr, 'غير متوفر', 'N/A')
+                      }
+                    </span>
+                  </div>
+                  <Button size="sm" variant="outline" className="w-full text-[10px]" asChild>
+                    <a href={archivedVerification.bankLetterFile} target="_blank" rel="noreferrer">
+                      {t(isAr, 'تحميل الوثيقة', 'Download File')}
+                    </a>
+                  </Button>
+                </div>
+              )}
+
+              {/* Doc 3: Manager ID */}
+              {archivedVerification.managerIdFront && (
+                <div className="bg-card p-3 rounded-xl border space-y-2 flex flex-col justify-between">
+                  <div>
+                    <span className="text-muted-foreground block mb-1">{t(isAr, 'إثبات الهوية الوطنية', 'National Identity Proof')}</span>
+                    <span className="font-semibold text-foreground truncate block">{t(isAr, 'بطاقة هوية مؤرشفة', 'Archived Identity ID')}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" className="w-full text-[9px] px-1" asChild>
+                      <a href={archivedVerification.managerIdFront} target="_blank" rel="noreferrer">
+                        {t(isAr, 'الوجه الأول', 'Front')}
+                      </a>
+                    </Button>
+                    {archivedVerification.managerIdBack && (
+                      <Button size="sm" variant="outline" className="w-full text-[9px] px-1" asChild>
+                        <a href={archivedVerification.managerIdBack} target="_blank" rel="noreferrer">
+                          {t(isAr, 'الوجه الثاني', 'Back')}
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Sensitive Profile Update Dialog (Sequential step-by-step flow) */}
       <Dialog open={isUpdateModalOpen} onOpenChange={setIsUpdateModalOpen}>
         <DialogContent dir={isAr ? 'rtl' : 'ltr'} className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>

@@ -301,12 +301,133 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         success: true,
         step: 5,
-        message: '🎉 All seed data completed successfully!',
+        next: '?token=' + TOKEN + '&step=6',
         details: results,
       });
     }
 
-    return NextResponse.json({ success: false, error: 'Invalid step. Use step=1 through step=5' });
+    // =====================================================
+    // STEP 6: Dev Docs Articles for Business Upgrade System
+    // =====================================================
+    if (step === '6') {
+      const articleSlug = 'developers/business-upgrade-architecture';
+      const title = 'نظام ترقية الحسابات وهندسة طبقات التوثيق للأعمال';
+      const titleEn = 'Business Account Upgrade & Layered Identity Architecture';
+
+      const content = `
+# هندسة طبقات التوثيق للترقية لمتجر أعمال (Business Store Upgrade)
+
+يوثق هذا المقال البنية الهندسية وتدفق الحالات المتبع لترقية الحسابات من تاجر مستقل (Individual Seller) إلى متجر رسمي مسجل للشركات (Business Store).
+
+## 1. مبدأ الهوية الطبقية (Layered Identity)
+لا يتم حذف بيانات أو وثائق التاجر المستقل السابقة (مثل بطاقة المقاول الذاتي أو وصل الـ CCP الفردي) عند ترقيته، بل يتم وضع علامة الأرشفة عليها (\`isArchived = true\`) وتخزينها كسجل تاريخي قانوني للرجوع إليه أو التدقيق فيه. ويتم إنشاء كيان توثيقي جديد باسم \`BusinessVerification\` يحتوي على مستندات الشركة القانونية.
+
+## 2. مخطط الحالات لعملية الترقية (Upgrade State Machine)
+تتبع عملية الترقية الخطوات التالية:
+1. **تقديم طلب الترقية (Guarded Submit):** يقوم البائع برفع مستندات الشركة (السجل التجاري RC، الرقم الضريبي NIS، رقم الحساب التجاري IBAN، وبطاقة هوية المدير المفوض). يُحفظ الطلب بالحالة \`PENDING\`.
+2. **الموافقة المبدئية على المستندات (Documents Pre-Approval):** يراجع الإداري المستندات؛ في حال الموافقة، تتحول الحالة إلى \`AWAITING_PAYMENT\` ويقوم النظام تلقائياً بإنشاء فاتورة سداد رسوم الترقية وإرسال تنبيه للبائع.
+3. **رفع إثبات الدفع (Payment Submission):** يقوم البائع برفع صورة وصل السداد البنكي أو البريدي. تتحول الحالة إلى \`PAYMENT_SUBMITTED\` ويُبلّغ الإداريون تلقائياً للتحقق من الدفع.
+4. **التفعيل النهائي (Final Activation):** بعد مطابقة الوصل، يؤكد الإدمن الدفع وتتحول الحالة إلى \`APPROVED\`. في هذه اللحظة يتم تلقائياً:
+   * أرشفة التوثيق الفردي القديم.
+   * إنشاء سجل \`BusinessVerification\` المعتمد.
+   * ترقية رتبة المستخدم إلى \`store_manager\`.
+   * إنشاء المتجر (Store) وربط فريق العمل والمنتجات به دون إحداث أي انكسار أو تغيير في المعرفات.
+
+## 3. سجل المراجعة والتراجع (Audit & Rollback)
+* يتم تسجيل معرّف الإدمن المراجع والوقت لكل عملية في حقول \`reviewedBy\` و \`reviewedAt\`.
+* في حال رفض مستندات الترقية، يُنبه البائع بسبب الرفض (\`rejectionReason\`) ويُتاح له تقديم طلب جديد.
+* في حال رفض وصل السداد، يُعاد الطلب خطوة للخلف إلى \`AWAITING_PAYMENT\` مع توضيح السبب (\`paymentRejectionReason\`) لإعادة رفع وصل صحيح دون الحاجة لإعادة رفع وثائق الشركة مرة أخرى.
+      `;
+
+      const contentEn = `
+# Business Account Upgrade & Layered Identity Architecture
+
+This documentation describes the technical architecture and state machine flow for upgrading individual freelancer merchant accounts to verified corporate business stores.
+
+## 1. Layered Identity Principle
+Freelancer documents (such as Individual Activity Card or personal CCP account) are never deleted upon upgrade. Instead, they are archived using the \`isArchived = true\` flag for legal and auditing history. A new active layer, \`BusinessVerification\`, is then created to house corporate papers.
+
+## 2. State Machine Workflow
+The upgrade process follows this progression:
+1. **Guarded Submission:** Verified sellers upload corporate documents (Commercial Register RC, NIS Tax code, Business IBAN, and manager ID proofs). Status transitions to \`PENDING\`.
+2. **Pre-Approval of Documents:** Admin reviews papers. If approved, status transitions to \`AWAITING_PAYMENT\`, generating an automated fee invoice and alerting the merchant.
+3. **Payment Receipt Submission:** The merchant uploads the wire receipt. Status transitions to \`PAYMENT_SUBMITTED\`, alerting administrators.
+4. **Final Activation:** Upon receipt confirmation, admin approves the transfer. Status transitions to \`APPROVED\`, which triggers:
+   * Archiving the old freelancer verification.
+   * Instantiating the \`BusinessVerification\` record.
+   * Upgrading user role to \`store_manager\`.
+   * Generating the Store outlet, staff permissions, and mapping products without breaking existing identifiers.
+
+## 3. Audit & Rollback
+* Reviewer tracking is saved via \`reviewedBy\` and \`reviewedAt\` fields.
+* If documents are rejected, status is set to \`REJECTED\`, showing the \`rejectionReason\`.
+* If a payment receipt is rejected, status rolls back to \`AWAITING_PAYMENT\` with a \`paymentRejectionReason\`, allowing the merchant to re-upload the receipt without resubmitting company records.
+      `;
+
+      const translations = {
+        fr: {
+          title: "Mise à niveau du compte d'entreprise et architecture d'identité",
+          content: `
+# Architecture de mise à niveau du compte d'entreprise (Business Store Upgrade)
+
+Cette documentation décrit l'architecture technique et le flux de la machine d'état pour la mise à niveau des comptes de vendeurs indépendants vers des boutiques officielles enregistrées pour les entreprises.
+
+## 1. Principe d'identité stratifiée (Layered Identity)
+Les documents de pigiste ne sont jamais supprimés lors de la mise à niveau. Au lieu de cela, ils sont archivés avec le drapeau \`isArchived = true\` pour l'audit. Un nouveau document \`BusinessVerification\` est ensuite créé pour stocker les pièces de l'entreprise.
+
+## 2. Flux de la machine d'état
+Le processus suit ces étapes:
+1. **Soumission sécurisée:** Le vendeur télécharge les documents (Registre du commerce RC, code NIS, IBAN professionnel, et pièce d'identité du gestionnaire). L'état passe à \`PENDING\`.
+2. **Pré-approbation des documents:** L'administrateur examine les documents. S'ils sont approuvés, l'état passe à \`AWAITING_PAYMENT\` avec facturation automatique.
+3. **Soumission du reçu de paiement:** Le vendeur télécharge le reçu. L'état passe à \`PAYMENT_SUBMITTED\`.
+4. **Activation finale:** L'administrateur confirme le paiement. L'état passe à \`APPROVED\`, ce qui archive l'ancien profil, active \`BusinessVerification\`, met à jour le rôle de l'utilisateur à \`store_manager\` et crée la boutique sans rompre les identifiants existants.
+          `
+        }
+      };
+
+      const existing = await db.docArticle.findUnique({
+        where: { slug: articleSlug }
+      });
+
+      if (!existing) {
+        await db.docArticle.create({
+          data: {
+            title,
+            titleEn,
+            slug: articleSlug,
+            content,
+            contentEn,
+            translations: translations as any,
+            category: 'developers',
+            sortOrder: 10,
+            isPublished: true
+          }
+        });
+        results.push('✅ Created Developer Doc article: business-upgrade-architecture');
+      } else {
+        await db.docArticle.update({
+          where: { slug: articleSlug },
+          data: {
+            title,
+            titleEn,
+            content,
+            contentEn,
+            translations: translations as any,
+            isPublished: true
+          }
+        });
+        results.push('✅ Updated Developer Doc article: business-upgrade-architecture');
+      }
+
+      return NextResponse.json({
+        success: true,
+        step: 6,
+        message: '🎉 All seed data completed successfully, including Developer Docs!',
+        details: results,
+      });
+    }
+
+    return NextResponse.json({ success: false, error: 'Invalid step. Use step=1 through step=6' });
 
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);

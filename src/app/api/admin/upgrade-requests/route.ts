@@ -14,9 +14,7 @@ export async function GET(req: NextRequest) {
 
     const requests = await db.upgradeRequest.findMany({
       where: {
-        status: {
-          in: ['PENDING', 'AWAITING_PAYMENT', 'READY_FOR_REVIEW']
-        }
+        isActive: true
       },
       orderBy: { createdAt: 'desc' }
     });

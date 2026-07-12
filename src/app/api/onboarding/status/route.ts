@@ -99,6 +99,7 @@ export async function GET(request: NextRequest) {
         role: true,
         accountStatus: true,
         storeVerification: true,
+        businessVerification: true,
         freelancerVerification: true,
         supplierVerification: true,
         logisticsVerification: true,
@@ -128,7 +129,59 @@ export async function GET(request: NextRequest) {
 
     switch (user.role) {
       case 'store_manager': {
+        const bv = user.businessVerification;
         const v = user.storeVerification;
+        
+        // Upgraded state (BusinessVerification exists)
+        if (bv) {
+          items = [
+            {
+              key: 'commercial_register',
+              labelAr: 'السجل التجاري للشركة',
+              labelEn: 'Corporate Commercial Register',
+              status: 'verified',
+              uploaded: !!bv.businessRegisterFile
+            },
+            {
+              key: 'bank_account',
+              labelAr: 'الحساب البنكي للشركة (IBAN)',
+              labelEn: 'Corporate Bank Account (IBAN)',
+              status: 'verified',
+              uploaded: !!bv.bankLetterFile
+            },
+            {
+              key: 'manager_id',
+              labelAr: 'هوية المدير المفوض',
+              labelEn: 'Manager ID Proof',
+              status: 'verified',
+              uploaded: !!(bv.managerIdFront && bv.managerIdBack)
+            }
+          ];
+
+          return NextResponse.json({
+            success: true,
+            accountStatus: user.accountStatus,
+            role: user.role,
+            step: 'done',
+            progress: 100,
+            items,
+            details: bv,
+            archivedVerification: v ? {
+              entityType: v.entityType,
+              commercialRegisterNumber: v.commercialRegisterNumber,
+              commercialRegisterFile: v.commercialRegisterFile,
+              iban: v.iban,
+              ccpNumber: v.ccpNumber,
+              ccpCle: v.ccpCle,
+              bankLetterFile: v.bankLetterFile,
+              managerIdFront: v.managerIdFront,
+              managerIdBack: v.managerIdBack,
+              archivedAt: v.archivedAt?.toISOString() || v.updatedAt.toISOString()
+            } : null
+          });
+        }
+
+        // Regular state (Not yet upgraded but has manager status)
         const hasVerification = !!v;
         const rejectionFields = parseRejectionReasons(v?.rejectionReasons ?? null);
         rejectionReasons = rejectionFields;
@@ -206,7 +259,7 @@ export async function GET(request: NextRequest) {
           rejectionReasons: rejectionReasons.length > 0 ? rejectionReasons : undefined,
           adminNotes,
           details: v || {},
-        } satisfies StatusResponse & { details: Record<string, unknown> });
+        });
       }
 
       case 'seller': {
