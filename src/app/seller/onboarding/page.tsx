@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import OnboardingWizard from '@/components/seller/onboarding/OnboardingWizard';
 import { useAuthStore, useAppStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import { Loader2 } from 'lucide-react';
 
 export default function SellerOnboardingPage() {
   const { isAuthenticated, user } = useAuthStore();
@@ -12,6 +12,7 @@ export default function SellerOnboardingPage() {
   const router = useRouter();
 
   const [mounted, setMounted] = useState(false);
+  const [checkingLiveStatus, setCheckingLiveStatus] = useState(true);
 
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 50);
@@ -19,22 +20,52 @@ export default function SellerOnboardingPage() {
   }, []);
 
   useEffect(() => {
-    if (mounted) {
-      if (!isAuthenticated || !user) {
-        router.push('/?login=true');
-        return;
-      }
-      // Guard: Redirect to verification status page if account is pending or active
-      if (user.accountStatus === 'pending' || user.accountStatus === 'active') {
-        router.push('/seller/verification');
-      }
+    if (!mounted) return;
+
+    if (!isAuthenticated || !user) {
+      router.push('/?login=true');
+      return;
     }
+
+    const verifyLiveStatus = async () => {
+      try {
+        const res = await fetch(`/api/onboarding/status?userId=${user.id}&t=${Date.now()}`, {
+          cache: 'no-store'
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (data.accountStatus === 'pending' || data.accountStatus === 'active') {
+            router.push('/seller/verification');
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to verify onboarding live status:', err);
+      } finally {
+        setCheckingLiveStatus(false);
+      }
+    };
+
+    verifyLiveStatus();
   }, [mounted, isAuthenticated, user, router]);
 
-  if (!isAuthenticated || !user || user.accountStatus === 'pending' || user.accountStatus === 'active') return null;
+  if (!mounted || !isAuthenticated || !user) return null;
+
+  if (checkingLiveStatus) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-slate-955 text-foreground">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-sm font-semibold">
+            {locale === 'ar' ? 'جاري التحقق من حالة حسابك...' : 'Verifying your account status...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 text-foreground py-6" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-955 text-foreground py-6" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       <div className="max-w-4xl mx-auto px-4 mb-6">
         <a href="/seller/verification" className="inline-flex items-center text-sm text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
           <svg className="w-4 h-4 mr-1 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
