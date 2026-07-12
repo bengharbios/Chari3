@@ -51,19 +51,58 @@ export function useTranslation() {
       }
     }
 
+    // Fallback 1: Look in static dictionary of the current active locale
+    if (result === undefined && dynamicDicts[activeLocale]) {
+      let staticDict = staticDictionaries[activeLocale];
+      let staticResult: any = staticDict;
+      for (const k of keys) {
+        if (staticResult && typeof staticResult === 'object' && k in staticResult) {
+          staticResult = staticResult[k];
+        } else {
+          staticResult = undefined;
+          break;
+        }
+      }
+      if (staticResult !== undefined) {
+        result = staticResult;
+      }
+    }
+
+    // Fallback 2: Look in English/Arabic dynamic and static fallback dictionaries
     if (result === undefined) {
       const fallbackLocales = ['en', 'ar'];
       for (const fallback of fallbackLocales) {
-        let fallbackDict = dynamicDicts[fallback] || staticDictionaries[fallback];
+        // Search dynamic
+        let fallbackDict = dynamicDicts[fallback];
         let fallbackResult: any = fallbackDict;
-        for (const k of keys) {
-          if (fallbackResult && typeof fallbackResult === 'object' && k in fallbackResult) {
-            fallbackResult = fallbackResult[k];
-          } else {
-            fallbackResult = undefined;
-            break;
+        if (fallbackDict) {
+          for (const k of keys) {
+            if (fallbackResult && typeof fallbackResult === 'object' && k in fallbackResult) {
+              fallbackResult = fallbackResult[k];
+            } else {
+              fallbackResult = undefined;
+              break;
+            }
           }
         }
+        
+        // Search static if not found in dynamic fallback
+        if (fallbackResult === undefined) {
+          let staticFallbackDict = staticDictionaries[fallback];
+          let staticFallbackResult: any = staticFallbackDict;
+          for (const k of keys) {
+            if (staticFallbackResult && typeof staticFallbackResult === 'object' && k in staticFallbackResult) {
+              staticFallbackResult = staticFallbackResult[k];
+            } else {
+              staticFallbackResult = undefined;
+              break;
+            }
+          }
+          if (staticFallbackResult !== undefined) {
+            fallbackResult = staticFallbackResult;
+          }
+        }
+
         if (fallbackResult !== undefined) {
           result = fallbackResult;
           break;
@@ -85,7 +124,7 @@ export function useTranslation() {
     }
 
     return text;
-  }, [dict, dynamicDicts]);
+  }, [dict, dynamicDicts, activeLocale]);
 
   return { t, locale: activeLocale };
 }
