@@ -146,11 +146,30 @@ async function getPendingMerchants() {
           });
           verificationItems.push({
             id: 'commercial_register',
-            labelAr: 'السجل التجاري',
-            labelEn: 'Commercial Register',
+            labelAr: 'مستند السجل التجاري المرفوع',
+            labelEn: 'Commercial Register File',
             status: storeVer.verificationStatus === 'approved' ? 'verified' : (storeVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
           });
         }
+
+        if (storeVer.commercialRegisterNumber) {
+          verificationItems.push({
+            id: 'commercial_register_number',
+            labelAr: 'رقم السجل التجاري (الرقم المدخل)',
+            labelEn: 'Commercial Register Number',
+            status: storeVer.verificationStatus === 'approved' ? 'verified' : (storeVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
+          });
+        }
+
+        if (storeVer.expiryDate) {
+          verificationItems.push({
+            id: 'expiry_date',
+            labelAr: 'تاريخ انتهاء الرخصة / السجل',
+            labelEn: 'License Expiry Date',
+            status: storeVer.verificationStatus === 'approved' ? 'verified' : (storeVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
+          });
+        }
+
         if (storeVer.bankLetterFile) {
           documents.push({
             id: 'bank_account',
@@ -161,11 +180,21 @@ async function getPendingMerchants() {
           });
           verificationItems.push({
             id: 'bank_account',
-            labelAr: 'الحساب البنكي',
-            labelEn: 'Bank Account',
+            labelAr: 'مستند إثبات الحساب البنكي المرفوع',
+            labelEn: 'Bank Letter File',
             status: storeVer.verificationStatus === 'approved' ? 'verified' : (storeVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
           });
         }
+
+        if (storeVer.iban || storeVer.ccpNumber) {
+          verificationItems.push({
+            id: 'bank_details',
+            labelAr: 'تفاصيل الحساب المالي (CCP أو الآيبان البنكي)',
+            labelEn: 'CCP or IBAN financial details',
+            status: storeVer.verificationStatus === 'approved' ? 'verified' : (storeVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
+          });
+        }
+
         if (storeVer.managerIdFront) {
           documents.push({
             id: 'manager_id_front',
@@ -187,11 +216,21 @@ async function getPendingMerchants() {
         if (storeVer.managerIdFront || storeVer.managerIdBack) {
           verificationItems.push({
             id: 'manager_id',
-            labelAr: 'هوية المدير',
-            labelEn: 'Manager ID',
+            labelAr: 'مستند هوية المدير المرفوعة (الوجهين)',
+            labelEn: 'Manager ID Document',
             status: storeVer.verificationStatus === 'approved' ? 'verified' : (storeVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
           });
         }
+
+        if (storeVer.signatoryName || storeVer.signatoryEmail) {
+          verificationItems.push({
+            id: 'signatory_info',
+            labelAr: 'بيانات المدير / المفوض بالتوقيع (الاسم والبريد)',
+            labelEn: 'Signatory Name and Email info',
+            status: storeVer.verificationStatus === 'approved' ? 'verified' : (storeVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
+          });
+        }
+
         if (storeVer.powerOfAttorneyFile) {
           documents.push({
             id: 'power_of_attorney',
@@ -199,6 +238,12 @@ async function getPendingMerchants() {
             nameEn: 'Power of Attorney',
             url: storeVer.powerOfAttorneyFile,
             status: storeVer.verificationStatus || 'pending',
+          });
+          verificationItems.push({
+            id: 'power_of_attorney',
+            labelAr: 'مستند تفويض التوقيع (POA)',
+            labelEn: 'Power of Attorney file',
+            status: storeVer.verificationStatus === 'approved' ? 'verified' : (storeVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
           });
         }
         if (storeVer.vatCertificateFile) {
@@ -208,6 +253,12 @@ async function getPendingMerchants() {
             nameEn: 'VAT Certificate',
             url: storeVer.vatCertificateFile,
             status: storeVer.verificationStatus || 'pending',
+          });
+          verificationItems.push({
+            id: 'vat_certificate',
+            labelAr: 'شهادة الضريبة الرقمية المرفوعة',
+            labelEn: 'VAT Certificate file',
+            status: storeVer.verificationStatus === 'approved' ? 'verified' : (storeVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
           });
         }
       }
@@ -229,8 +280,8 @@ async function getPendingMerchants() {
           });
           verificationItems.push({
             id: 'freelance_document',
-            labelAr: 'وثيقة العمل الحر',
-            labelEn: 'Freelance Document',
+            labelAr: 'مستند وثيقة العمل الحر / حرفي المرفوع',
+            labelEn: 'Freelance Document file',
             status: freeVer.verificationStatus === 'approved' ? 'verified' : (freeVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
           });
         }
@@ -255,16 +306,16 @@ async function getPendingMerchants() {
         if (freeVer.nationalIdFront || freeVer.nationalIdBack) {
           verificationItems.push({
             id: 'national_id',
-            labelAr: 'الهوية الوطنية',
-            labelEn: 'National ID',
+            labelAr: 'مستند بطاقة الهوية الوطنية المرفوع',
+            labelEn: 'National ID card files',
             status: freeVer.verificationStatus === 'approved' ? 'verified' : (freeVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
           });
         }
         if (freeVer.iban) {
           verificationItems.push({
             id: 'bank_account',
-            labelAr: 'الحساب البنكي (الآيبان)',
-            labelEn: 'Bank Account (IBAN)',
+            labelAr: 'تفاصيل الحساب المالي (الآيبان البنكي)',
+            labelEn: 'Bank Account (IBAN) info',
             status: freeVer.verificationStatus === 'approved' ? 'verified' : (freeVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
           });
         }
@@ -287,8 +338,8 @@ async function getPendingMerchants() {
           });
           verificationItems.push({
             id: 'commercial_license',
-            labelAr: 'رخصة النشاط',
-            labelEn: 'Commercial License',
+            labelAr: 'مستند رخصة النشاط التجاري المرفوع',
+            labelEn: 'Commercial License file',
             status: supplierVer.verificationStatus === 'approved' ? 'verified' : (supplierVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
           });
         }
@@ -300,12 +351,18 @@ async function getPendingMerchants() {
             url: supplierVer.importLicense,
             status: supplierVer.verificationStatus || 'pending',
           });
+          verificationItems.push({
+            id: 'import_license',
+            labelAr: 'مستند رخصة الاستيراد المرفوع',
+            labelEn: 'Import License file',
+            status: supplierVer.verificationStatus === 'approved' ? 'verified' : (supplierVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
+          });
         }
         if (supplierVer.iban) {
           verificationItems.push({
             id: 'bank_account',
-            labelAr: 'الحساب البنكي (الآيبان)',
-            labelEn: 'Bank Account (IBAN)',
+            labelAr: 'تفاصيل الحساب المالي (الآيبان البنكي)',
+            labelEn: 'Bank Account (IBAN) info',
             status: supplierVer.verificationStatus === 'approved' ? 'verified' : (supplierVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
           });
         }
@@ -330,8 +387,8 @@ async function getPendingMerchants() {
           });
           verificationItems.push({
             id: 'transport_license',
-            labelAr: 'رخصة النقل',
-            labelEn: 'Transport License',
+            labelAr: 'مستند رخصة النقل المرفوع',
+            labelEn: 'Transport License file',
             status: logVer.verificationStatus === 'approved' ? 'verified' : (logVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
           });
         }
@@ -343,12 +400,18 @@ async function getPendingMerchants() {
             url: logVer.insuranceCertificateFile,
             status: logVer.verificationStatus || 'pending',
           });
+          verificationItems.push({
+            id: 'insurance_certificate',
+            labelAr: 'مستند شهادة التأمين المرفوع',
+            labelEn: 'Insurance Certificate file',
+            status: logVer.verificationStatus === 'approved' ? 'verified' : (logVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
+          });
         }
         if (logVer.iban) {
           verificationItems.push({
             id: 'bank_account',
-            labelAr: 'الحساب البنكي (الآيبان)',
-            labelEn: 'Bank Account (IBAN)',
+            labelAr: 'تفاصيل الحساب المالي (الآيبان البنكي)',
+            labelEn: 'Bank Account (IBAN) info',
             status: logVer.verificationStatus === 'approved' ? 'verified' : (logVer.verificationStatus === 'rejected' ? 'rejected' : 'pending'),
           });
         }

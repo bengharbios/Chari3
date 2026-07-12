@@ -397,12 +397,47 @@ function DetailModal({
                         <p className="font-semibold text-sm text-foreground">{new Date(merchant.details.issueDate).toLocaleDateString(isAr ? 'ar-SA' : 'en-US')}</p>
                       </div>
                     )}
-                    {merchant.details.expiryDate && (
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'تاريخ الانتهاء' : 'Expiry Date'}</span>
-                        <p className="font-semibold text-sm text-foreground">{new Date(merchant.details.expiryDate).toLocaleDateString(isAr ? 'ar-SA' : 'en-US')}</p>
-                      </div>
-                    )}
+                    {merchant.details.expiryDate && (() => {
+                      const expiry = new Date(merchant.details.expiryDate);
+                      const now = new Date();
+                      now.setHours(0, 0, 0, 0);
+                      expiry.setHours(0, 0, 0, 0);
+                      const diffTime = expiry.getTime() - now.getTime();
+                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                      
+                      let alertColor = 'text-green-600 bg-green-50 dark:bg-green-950/10 border-green-200 dark:border-green-900/20';
+                      let label = isAr ? `سارية الصلاحية (متبقي ${Math.round(diffDays / 30)} أشهر)` : `Valid (${Math.round(diffDays / 30)} months left)`;
+
+                      if (diffDays < 0) {
+                        alertColor = 'text-red-600 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/30 font-bold';
+                        label = isAr ? `منتهية الصلاحية (منذ ${Math.abs(diffDays)} يوم)` : `Expired (${Math.abs(diffDays)} days ago)`;
+                      } else if (diffDays === 0) {
+                        alertColor = 'text-red-600 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/30 font-bold animate-pulse';
+                        label = isAr ? 'منتهية اليوم!' : 'Expires today!';
+                      } else if (diffDays <= 7) {
+                        alertColor = 'text-red-600 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/30';
+                        label = isAr ? `تنتهي خلال ${diffDays} أيام!` : `Expires in ${diffDays} days!`;
+                      } else if (diffDays <= 90) {
+                        alertColor = 'text-amber-600 bg-amber-50 dark:bg-amber-955/20 border-amber-200 dark:border-amber-900/30 font-semibold';
+                        label = isAr ? `صلاحية حرجة (متبقي ${diffDays} يوم ~ ${Math.round(diffDays / 30)} أشهر)` : `Critical validity (${diffDays} days remaining)`;
+                      } else if (diffDays <= 180) {
+                        alertColor = 'text-amber-500 bg-amber-50/50 dark:bg-amber-955/10 border-amber-100 dark:border-amber-900/20';
+                        label = isAr ? `صلاحية قصيرة (متبقي ${Math.round(diffDays / 30)} أشهر)` : `Short validity (${Math.round(diffDays / 30)} months left)`;
+                      }
+
+                      return (
+                        <div className="col-span-1 sm:col-span-2 p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-muted/30">
+                          <div>
+                            <span className="text-muted-foreground block mb-0.5">{isAr ? 'تاريخ انتهاء الرخصة / السجل' : 'License Expiry Date'}</span>
+                            <p className="font-semibold text-sm text-foreground">{new Date(merchant.details.expiryDate).toLocaleDateString(isAr ? 'ar-SA' : 'en-US')}</p>
+                          </div>
+                          <Badge variant="outline" className={`px-2.5 py-1 text-xs border ${alertColor}`}>
+                            <AlertTriangle className="w-3.5 h-3.5 mr-1 ml-1 shrink-0" />
+                            {label}
+                          </Badge>
+                        </div>
+                      );
+                    })()}
                     {merchant.details.state && (
                       <div>
                         <span className="text-muted-foreground block mb-0.5">{isAr ? 'الولاية / المقاطعة' : 'State / Region'}</span>
