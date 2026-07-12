@@ -50,10 +50,10 @@ const USER_SELECT = {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { method, value, fullName, role, storeName, locale, merchantType } = body;
-
+    const { method, value, fullName, role, storeName, locale, merchantType, password } = body;
+    
     // ── Validate required fields ──
-    if (!method || !value || !fullName || !role) {
+    if (!method || !value || !fullName || !role || !password) {
       return NextResponse.json(
         { success: false, message: 'Missing required fields' },
         { status: 400 }
@@ -151,12 +151,16 @@ export async function POST(request: Request) {
         ? `user_${value.replace(/\D/g, '')}@charyday.local`
         : value;
 
+      const bcrypt = require("bcryptjs");
+      const passwordHash = await bcrypt.hash(password, 10);
+
       const created = await withTimeout(
         db.user.create({
           data: {
             email: defaultEmail,
             phone: method === 'phone' ? value : null,
             name: sanitizedName,
+            password: passwordHash,
             role,
             accountStatus,
             isActive: true,
