@@ -1,5 +1,10 @@
+import { Suspense } from 'react';
 import BillingPage from '@/components/seller/BillingPage';
 
 export default function SellerBillingPlansPage() {
-  return <BillingPage />;
+  return (
+    <Suspense>
+      <BillingPage />
+    </Suspense>
+  );
 }
