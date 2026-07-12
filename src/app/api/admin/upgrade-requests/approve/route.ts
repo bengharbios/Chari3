@@ -55,10 +55,12 @@ export async function POST(req: NextRequest) {
 
     // Transaction to update role, create store, and reset wantsUpgrade
     await db.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id: user.id },
-        data: { role: 'store_manager' }
-      });
+      if (user.role !== 'admin' && user.role !== 'SUPER_ADMIN') {
+        await tx.user.update({
+          where: { id: user.id },
+          data: { role: 'store_manager' }
+        });
+      }
 
       if (user.sellerProfile) {
         await tx.sellerProfile.update({
