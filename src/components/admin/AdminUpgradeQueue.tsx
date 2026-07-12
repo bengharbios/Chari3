@@ -57,6 +57,42 @@ export function AdminUpgradeQueue() {
     }
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return (
+          <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-none">
+            {t(locale, 'تمت الموافقة', 'Approved')}
+          </Badge>
+        );
+      case 'REJECTED':
+        return (
+          <Badge className="bg-rose-500 hover:bg-rose-600 text-white border-none">
+            {t(locale, 'مرفوض', 'Rejected')}
+          </Badge>
+        );
+      case 'READY_FOR_REVIEW':
+        return (
+          <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-none">
+            {t(locale, 'جاهز للمراجعة', 'Ready for Review')}
+          </Badge>
+        );
+      case 'AWAITING_PAYMENT':
+        return (
+          <Badge className="bg-blue-500 hover:bg-blue-600 text-white border-none">
+            {t(locale, 'بانتظار الدفع', 'Awaiting Payment')}
+          </Badge>
+        );
+      case 'PENDING':
+      default:
+        return (
+          <Badge variant="secondary">
+            {t(locale, 'قيد الانتظار', 'Pending')}
+          </Badge>
+        );
+    }
+  };
+
   return (
     <Card className="card-surface mt-6">
       <CardHeader>
@@ -72,15 +108,22 @@ export function AdminUpgradeQueue() {
         ) : (
           <div className="space-y-4">
             {requests.map(req => (
-              <div key={req.id} className="flex justify-between items-center p-4 border rounded-xl">
-                <div>
-                  <h4 className="font-bold">{req.user?.name || req.user?.email || 'Unknown User'}</h4>
-                  <div className="flex gap-2 mt-1">
-                    <Badge variant="outline">{req.status}</Badge>
-                    <Badge variant="secondary">{req.feeSnapshot} DZD</Badge>
+              <div key={req.id} className="flex justify-between items-center p-4 border rounded-xl min-h-[80px]">
+                <div className="space-y-1">
+                  <h4 className="font-bold text-base">{req.user?.name || req.user?.email || 'Unknown User'}</h4>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {getStatusBadge(req.status)}
+                    <Badge variant="outline">{req.feeSnapshot} DZD</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(req.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      })}
+                    </span>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
                   {req.status === 'AWAITING_PAYMENT' && (
                     <Button variant="outline" onClick={() => handleAction(req.id, 'approve')} disabled={actionLoading === req.id}>
                       {actionLoading === req.id ? <Loader2 className="h-4 w-4 animate-spin" /> : t(locale, 'تأكيد الدفع وموافقة', 'Confirm Payment & Approve')}

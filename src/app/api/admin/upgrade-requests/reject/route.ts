@@ -21,23 +21,25 @@ export async function POST(req: NextRequest) {
       include: { sellerProfile: true }
     });
 
-    if (!user || user.role !== 'seller' || !user.sellerProfile) {
-      return NextResponse.json({ success: false, error: 'Invalid user or not a seller' }, { status: 400 });
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
     const upgradeRequest = await db.upgradeRequest.findFirst({
       where: { userId: userId, status: { in: ['PENDING', 'AWAITING_PAYMENT', 'READY_FOR_REVIEW'] } }
     });
 
-    if (!user.sellerProfile.wantsUpgrade && !upgradeRequest) {
-      return NextResponse.json({ success: false, error: 'Seller has not requested an upgrade' }, { status: 400 });
+    if (!upgradeRequest && (!user.sellerProfile || !user.sellerProfile.wantsUpgrade)) {
+      return NextResponse.json({ success: false, error: 'No active upgrade request found for this user' }, { status: 400 });
     }
 
     await db.$transaction(async (tx) => {
-      await tx.sellerProfile.update({
-        where: { id: user.sellerProfile!.id },
-        data: { wantsUpgrade: false, upgradeRequestedAt: null }
-      });
+      if (user.sellerProfile) {
+        await tx.sellerProfile.update({
+          where: { id: user.sellerProfile.id },
+          data: { wantsUpgrade: false, upgradeRequestedAt: null }
+        });
+      }
 
       if (upgradeRequest) {
         await tx.upgradeRequest.update({

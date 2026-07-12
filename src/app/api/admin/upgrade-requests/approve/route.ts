@@ -22,20 +22,20 @@ export async function POST(req: NextRequest) {
       include: { sellerProfile: true }
     });
 
-    if (!user || user.role !== 'seller' || !user.sellerProfile) {
-      return NextResponse.json({ success: false, error: 'Invalid user or not a seller' }, { status: 400 });
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
     const upgradeRequest = await db.upgradeRequest.findFirst({
       where: { userId: userId, status: 'READY_FOR_REVIEW' }
     });
 
-    if (!user.sellerProfile.wantsUpgrade && !upgradeRequest) {
+    if (!upgradeRequest && (!user.sellerProfile || !user.sellerProfile.wantsUpgrade)) {
       return NextResponse.json({ success: false, error: 'Seller has not requested an upgrade or request is not ready for review' }, { status: 400 });
     }
 
     // Determine store name (slug needs to be unique)
-    let storeName = user.sellerProfile.storeName || user.name || 'Store';
+    let storeName = user.sellerProfile?.storeName || user.name || 'Store';
     let slug = storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     if (!slug) slug = 'store-' + crypto.randomBytes(4).toString('hex');
     
@@ -60,20 +60,22 @@ export async function POST(req: NextRequest) {
         data: { role: 'store_manager' }
       });
 
-      await tx.sellerProfile.update({
-        where: { id: user.sellerProfile!.id },
-        data: { wantsUpgrade: false, upgradeRequestedAt: null }
-      });
+      if (user.sellerProfile) {
+        await tx.sellerProfile.update({
+          where: { id: user.sellerProfile.id },
+          data: { wantsUpgrade: false, upgradeRequestedAt: null }
+        });
+      }
 
       const store = await tx.store.create({
         data: {
           name: storeName,
-          nameEn: user.sellerProfile!.storeNameEn || user.name || 'Store',
+          nameEn: user.sellerProfile?.storeNameEn || user.name || 'Store',
           slug: finalSlug,
           managerId: user.id,
           packageId: packageId || null,
-          logo: user.sellerProfile!.logo,
-          coverImage: user.sellerProfile!.coverImage,
+          logo: user.sellerProfile?.logo || null,
+          coverImage: user.sellerProfile?.coverImage || null,
           addonBusinessUpgrade: true
         }
       });
