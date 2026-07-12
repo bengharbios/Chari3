@@ -394,9 +394,21 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
           return false;
         }
 
-        // Trigger login
+        // Trigger login on client store
         const { loginWithUser } = useAuthStore.getState();
         loginWithUser(data.user as unknown as User);
+
+        // Sign in via better-auth client to set session cookie on the backend
+        try {
+          const { signIn } = await import('@/lib/auth-client');
+          await signIn.email({
+            email: data.user.email,
+            password: passwordSetup,
+            dontRedirect: true
+          });
+        } catch (signInErr) {
+          console.error('[Register] Client-side signIn failed:', signInErr);
+        }
 
         set({ step: 'success' });
         return true;

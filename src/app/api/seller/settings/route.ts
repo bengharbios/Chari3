@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (!store) {
-      return NextResponse.json({ success: false, error: 'Store profile not found' }, { status: 404 });
+      return NextResponse.json({ success: true, store: null, settings: null });
     }
 
     let currency = 'DZD';
