@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { toast } from 'sonner';
 
-export default function BankStep({ data, updateData, onPreviewFile }: { data: any; updateData: (d: any) => void; onPreviewFile: (url: string) => void }) {
+export default function BankStep({ data, updateData, onPreviewFile, isBusiness = true }: { data: any; updateData: (d: any) => void; onPreviewFile: (url: string) => void; isBusiness?: boolean }) {
   const { t } = useTranslation();
   const [paymentType, setPaymentType] = useState<'bank' | 'ccp'>(data.swiftCode ? 'bank' : 'ccp');
 
@@ -127,11 +127,15 @@ export default function BankStep({ data, updateData, onPreviewFile }: { data: an
         >
           <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
             <RadioGroupItem value="yes" id="match-yes" />
-            <Label htmlFor="match-yes" className="cursor-pointer">{t('onboarding.bank.sameAsCompany')}</Label>
+            <Label htmlFor="match-yes" className="cursor-pointer">
+              {isBusiness ? t('onboarding.bank.sameAsCompany') : t('onboarding.bank.sameAsPersonal', 'نعم، اسم المستفيد يطابق اسمي الشخصي')}
+            </Label>
           </div>
           <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
             <RadioGroupItem value="no" id="match-no" />
-            <Label htmlFor="match-no" className="cursor-pointer">{t('onboarding.bank.diffFromCompany')}</Label>
+            <Label htmlFor="match-no" className="cursor-pointer">
+              {isBusiness ? t('onboarding.bank.diffFromCompany') : t('onboarding.bank.diffFromPersonal', 'لا، اسم المستفيد يختلف عن اسمي الشخصي')}
+            </Label>
           </div>
         </RadioGroup>
       </div>

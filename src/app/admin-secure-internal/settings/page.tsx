@@ -42,6 +42,7 @@ export default function AdminSettingsPage() {
     enable_supplier_registration: 'true',
     enable_logistics_registration: 'true',
     enable_store_registration: 'true',
+    tax_rate_auto_entrepreneur: '0.5',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -95,6 +96,7 @@ export default function AdminSettingsPage() {
             enable_supplier_registration: data.settings.enable_supplier_registration !== undefined ? String(data.settings.enable_supplier_registration) : 'true',
             enable_logistics_registration: data.settings.enable_logistics_registration !== undefined ? String(data.settings.enable_logistics_registration) : 'true',
             enable_store_registration: data.settings.enable_store_registration !== undefined ? String(data.settings.enable_store_registration) : 'true',
+            tax_rate_auto_entrepreneur: data.settings.tax_rate_auto_entrepreneur !== undefined ? String(data.settings.tax_rate_auto_entrepreneur) : '0.5',
           }));
         }
 
@@ -343,6 +345,20 @@ export default function AdminSettingsPage() {
                 </select>
                 <p className="text-xs text-muted-foreground mt-1">
                   {t('اختر التصميم الذي سيظهر للتجار في لوحات التحكم الخاصة بهم.', 'Select the design template for the seller dashboards.')}
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tax_rate_auto_entrepreneur">{t('نسبة ضريبة المقاول الذاتي (%)', 'Auto-Entrepreneur Tax Rate (%)')}</Label>
+                <Input
+                  id="tax_rate_auto_entrepreneur"
+                  type="text"
+                  value={settings.tax_rate_auto_entrepreneur}
+                  onChange={(e) => setSettings(prev => ({ ...prev, tax_rate_auto_entrepreneur: e.target.value }))}
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm font-bold"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('تحديد نسبة الضريبة الجزافية الوحيدة (IFU) للمقاولين الذاتيين والحرفيين.', 'Specify the simplified tax rate (IFU) for auto-entrepreneurs and freelancers.')}
                 </p>
               </div>
 

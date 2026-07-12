@@ -23,7 +23,8 @@ export async function GET() {
       'enable_buyer_registration',
       'enable_supplier_registration',
       'enable_logistics_registration',
-      'enable_store_registration'
+      'enable_store_registration',
+      'tax_rate_auto_entrepreneur'
     ];
 
     const settings = await db.systemSetting.findMany({
@@ -68,6 +69,7 @@ export async function GET() {
         enable_supplier_registration: settingsMap.enable_supplier_registration !== undefined ? settingsMap.enable_supplier_registration : 'true',
         enable_logistics_registration: settingsMap.enable_logistics_registration !== undefined ? settingsMap.enable_logistics_registration : 'true',
         enable_store_registration: settingsMap.enable_store_registration !== undefined ? settingsMap.enable_store_registration : 'true',
+        tax_rate_auto_entrepreneur: settingsMap.tax_rate_auto_entrepreneur || '0.5',
       }
     });
   } catch (error) {

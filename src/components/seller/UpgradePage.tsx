@@ -90,7 +90,7 @@ export default function UpgradePage() {
         // If there is a fee, redirect to invoices or let the user know
         if (data.data.invoiceId) {
           toast.info(t(locale, 'الرجاء تسديد الفاتورة لتأكيد الطلب', 'Please pay the invoice to confirm request'));
-          window.location.href = `/seller/billing/invoices/${data.data.invoiceId}`;
+          window.location.href = '/seller/billing/pay';
         }
       } else {
         toast.error(data.error || t(locale, 'حدث خطأ أثناء إرسال الطلب', 'Error sending request'));

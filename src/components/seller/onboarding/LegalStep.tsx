@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
-export default function LegalStep({ data, updateData, onPreviewFile }: { data: any; updateData: (d: any) => void; onPreviewFile: (url: string) => void }) {
+export default function LegalStep({ data, updateData, onPreviewFile, isBusiness = true }: { data: any; updateData: (d: any) => void; onPreviewFile: (url: string) => void; isBusiness?: boolean }) {
   const { t, locale } = useTranslation();
   
   // Parsing existing CR number if any: e.g. "16/00-21A1234567"
@@ -113,34 +113,36 @@ export default function LegalStep({ data, updateData, onPreviewFile }: { data: a
 
   return (
     <div className="space-y-6">
-      <div>
-        <Label className="text-base font-bold mb-4 block">{t('onboarding.legal.activityType')}</Label>
-        <RadioGroup 
-          value={crParts.type} 
-          onValueChange={(val) => {
-            handleCrChange('type', val);
-            // Also map it to entityType for backend
-            let eType = 'natural';
-            if (val === 'B') eType = 'legal';
-            if (val === 'D') eType = 'mobile';
-            updateData({ entityType: eType });
-          }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
-        >
-          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 text-sm">
-            <RadioGroupItem value="A" id="type-a" />
-            <Label htmlFor="type-a" className="cursor-pointer">{t('onboarding.legal.typeNatural')}</Label>
-          </div>
-          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 text-sm">
-            <RadioGroupItem value="B" id="type-b" />
-            <Label htmlFor="type-b" className="cursor-pointer">{t('onboarding.legal.typeLegal')}</Label>
-          </div>
-          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 text-sm">
-            <RadioGroupItem value="D" id="type-d" />
-            <Label htmlFor="type-d" className="cursor-pointer">{t('onboarding.legal.typeMobile')}</Label>
-          </div>
-        </RadioGroup>
-      </div>
+      {isBusiness && (
+        <div>
+          <Label className="text-base font-bold mb-4 block">{t('onboarding.legal.activityType')}</Label>
+          <RadioGroup 
+            value={crParts.type} 
+            onValueChange={(val) => {
+              handleCrChange('type', val);
+              // Also map it to entityType for backend
+              let eType = 'natural';
+              if (val === 'B') eType = 'legal';
+              if (val === 'D') eType = 'mobile';
+              updateData({ entityType: eType });
+            }}
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          >
+            <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 text-sm">
+              <RadioGroupItem value="A" id="type-a" />
+              <Label htmlFor="type-a" className="cursor-pointer">{t('onboarding.legal.typeNatural')}</Label>
+            </div>
+            <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 text-sm">
+              <RadioGroupItem value="B" id="type-b" />
+              <Label htmlFor="type-b" className="cursor-pointer">{t('onboarding.legal.typeLegal')}</Label>
+            </div>
+            <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50 text-sm">
+              <RadioGroupItem value="D" id="type-d" />
+              <Label htmlFor="type-d" className="cursor-pointer">{t('onboarding.legal.typeMobile')}</Label>
+            </div>
+          </RadioGroup>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t dark:border-slate-800">
         <div className="space-y-2">
@@ -187,9 +189,9 @@ export default function LegalStep({ data, updateData, onPreviewFile }: { data: a
         </div>
         
         <div className="space-y-2">
-          <Label>{t('onboarding.legal.companyNameLabel')}</Label>
+          <Label>{isBusiness ? t('onboarding.legal.companyNameLabel') : t('onboarding.legal.merchantName', 'اسم النشاط التجاري / الاسم المستعار')}</Label>
           <Input 
-            placeholder={t('onboarding.legal.companyNamePlaceholder')} 
+            placeholder={isBusiness ? t('onboarding.legal.companyNamePlaceholder') : t('onboarding.legal.merchantNamePlaceholder', 'مثال: متجري الخاص')} 
             value={data.companyName || ''} 
             onChange={(e) => updateData({ companyName: e.target.value })} 
             dir="auto"
@@ -197,85 +199,100 @@ export default function LegalStep({ data, updateData, onPreviewFile }: { data: a
           />
         </div>
 
-        {selectedCountry === 'DZ' && (
-          <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-100 dark:bg-slate-800/30 rounded-lg border dark:border-slate-800">
-            <Label className="font-bold block mb-2">{t('onboarding.legal.crFormatLabel')}</Label>
-            <RadioGroup
-              value={crFormat}
-              onValueChange={(val) => {
-                setCrFormat(val);
-                if (val === 'structured') {
-                  const formattedCR = `${crParts.wilaya}/${crParts.branch}-${crParts.year}${crParts.type}${crParts.sn}`;
-                  updateData({ commercialRegisterNumber: formattedCR });
-                }
-              }}
-              className="flex gap-4 mb-2"
-            >
-              <div className="flex items-center space-x-2 space-x-reverse">
-                <RadioGroupItem value="structured" id="fmt-structured" />
-                <Label htmlFor="fmt-structured" className="cursor-pointer text-xs">{t('onboarding.legal.crFormatStructured')}</Label>
+        {isBusiness ? (
+          <>
+            {selectedCountry === 'DZ' && (
+              <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-100 dark:bg-slate-800/30 rounded-lg border dark:border-slate-800">
+                <Label className="font-bold block mb-2">{t('onboarding.legal.crFormatLabel')}</Label>
+                <RadioGroup
+                  value={crFormat}
+                  onValueChange={(val) => {
+                    setCrFormat(val);
+                    if (val === 'structured') {
+                      const formattedCR = `${crParts.wilaya}/${crParts.branch}-${crParts.year}${crParts.type}${crParts.sn}`;
+                      updateData({ commercialRegisterNumber: formattedCR });
+                    }
+                  }}
+                  className="flex gap-4 mb-2"
+                >
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <RadioGroupItem value="structured" id="fmt-structured" />
+                    <Label htmlFor="fmt-structured" className="cursor-pointer text-xs">{t('onboarding.legal.crFormatStructured')}</Label>
+                  </div>
+                  <div className="flex items-center space-x-2 space-x-reverse">
+                    <RadioGroupItem value="freeform" id="fmt-freeform" />
+                    <Label htmlFor="fmt-freeform" className="cursor-pointer text-xs">{t('onboarding.legal.crFormatFreeform')}</Label>
+                  </div>
+                </RadioGroup>
               </div>
-              <div className="flex items-center space-x-2 space-x-reverse">
-                <RadioGroupItem value="freeform" id="fmt-freeform" />
-                <Label htmlFor="fmt-freeform" className="cursor-pointer text-xs">{t('onboarding.legal.crFormatFreeform')}</Label>
-              </div>
-            </RadioGroup>
-          </div>
-        )}
+            )}
 
-        {selectedCountry === 'DZ' && crFormat === 'structured' ? (
-          <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-800">
-            <Label className="text-base font-bold mb-2 block">{t('onboarding.legal.crNumberLabel')}</Label>
-            <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">{t('onboarding.legal.crExample')}</p>
-            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap" dir="ltr">
-              {/* Wilaya */}
-              <Input 
-                className="text-center font-mono w-16 shrink-0 dark:bg-slate-900 dark:border-slate-800" 
-                placeholder="16" 
-                maxLength={2}
-                value={crParts.wilaya} 
-                onChange={(e) => handleCrChange('wilaya', e.target.value.replace(/\D/g, ''))} 
-              />
-              <span className="font-bold text-gray-400">/</span>
-              {/* Branch */}
-              <Input 
-                className="text-center font-mono w-16 shrink-0 dark:bg-slate-900 dark:border-slate-800" 
-                placeholder="00" 
-                maxLength={2}
-                value={crParts.branch} 
-                onChange={(e) => handleCrChange('branch', e.target.value.replace(/\D/g, ''))} 
-              />
-              <span className="font-bold text-gray-400">-</span>
-              {/* Year */}
-              <Input 
-                className="text-center font-mono w-16 shrink-0 dark:bg-slate-900 dark:border-slate-800" 
-                placeholder="21" 
-                maxLength={2}
-                value={crParts.year} 
-                onChange={(e) => handleCrChange('year', e.target.value.replace(/\D/g, ''))} 
-              />
-              {/* Type */}
-              <div className="px-4 py-2 border rounded bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 font-mono font-bold text-center w-16 shrink-0">
-                {crParts.type}
+            {selectedCountry === 'DZ' && crFormat === 'structured' ? (
+              <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-800">
+                <Label className="text-base font-bold mb-2 block">{t('onboarding.legal.crNumberLabel')}</Label>
+                <p className="text-xs text-gray-500 dark:text-slate-400 mb-4">{t('onboarding.legal.crExample')}</p>
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap" dir="ltr">
+                  {/* Wilaya */}
+                  <Input 
+                    className="text-center font-mono w-16 shrink-0 dark:bg-slate-900 dark:border-slate-800" 
+                    placeholder="16" 
+                    maxLength={2}
+                    value={crParts.wilaya} 
+                    onChange={(e) => handleCrChange('wilaya', e.target.value.replace(/\D/g, ''))} 
+                  />
+                  <span className="font-bold text-gray-400">/</span>
+                  {/* Branch */}
+                  <Input 
+                    className="text-center font-mono w-16 shrink-0 dark:bg-slate-900 dark:border-slate-800" 
+                    placeholder="00" 
+                    maxLength={2}
+                    value={crParts.branch} 
+                    onChange={(e) => handleCrChange('branch', e.target.value.replace(/\D/g, ''))} 
+                  />
+                  <span className="font-bold text-gray-400">-</span>
+                  {/* Year */}
+                  <Input 
+                    className="text-center font-mono w-16 shrink-0 dark:bg-slate-900 dark:border-slate-800" 
+                    placeholder="21" 
+                    maxLength={2}
+                    value={crParts.year} 
+                    onChange={(e) => handleCrChange('year', e.target.value.replace(/\D/g, ''))} 
+                  />
+                  {/* Type */}
+                  <div className="px-4 py-2 border rounded bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-800 font-mono font-bold text-center w-16 shrink-0">
+                    {crParts.type}
+                  </div>
+                  <span className="font-bold text-gray-400"> </span>
+                  {/* SN */}
+                  <Input 
+                    className="text-center font-mono dark:bg-slate-900 dark:border-slate-800" 
+                    placeholder="" 
+                    value={crParts.sn} 
+                    onChange={(e) => handleCrChange('sn', e.target.value.replace(/\D/g, ''))} 
+                  />
+                </div>
+                <div className="mt-3 text-sm text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/30 p-2 rounded" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+                  <strong>{t('onboarding.legal.crCombined')}</strong> <span dir="ltr" className="inline-block">{crParts.wilaya}/{crParts.branch}-{crParts.year}{crParts.type}{crParts.sn}</span>
+                </div>
               </div>
-              <span className="font-bold text-gray-400"> </span>
-              {/* SN */}
-              <Input 
-                className="text-center font-mono dark:bg-slate-900 dark:border-slate-800" 
-                placeholder="" 
-                value={crParts.sn} 
-                onChange={(e) => handleCrChange('sn', e.target.value.replace(/\D/g, ''))} 
-              />
-            </div>
-            <div className="mt-3 text-sm text-blue-600 bg-blue-50 dark:text-blue-400 dark:bg-blue-950/30 p-2 rounded" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-              <strong>{t('onboarding.legal.crCombined')}</strong> <span dir="ltr" className="inline-block">{crParts.wilaya}/{crParts.branch}-{crParts.year}{crParts.type}{crParts.sn}</span>
-            </div>
-          </div>
+            ) : (
+              <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-800">
+                <Label className="text-base font-bold mb-2 block">{t('onboarding.legal.crNumberLabel')}</Label>
+                <Input 
+                  placeholder={t('onboarding.legal.crOtherPlaceholder')} 
+                  value={data.commercialRegisterNumber || ''} 
+                  onChange={(e) => updateData({ commercialRegisterNumber: e.target.value })} 
+                  dir="auto"
+                  className="dark:bg-slate-900 dark:border-slate-800"
+                />
+              </div>
+            )}
+          </>
         ) : (
           <div className="space-y-2 col-span-1 md:col-span-2 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-lg border dark:border-slate-800">
-            <Label className="text-base font-bold mb-2 block">{t('onboarding.legal.crNumberLabel')}</Label>
+            <Label className="text-base font-bold mb-2 block">{t('onboarding.activityCardNumLabel', 'رقم بطاقة النشاط')}</Label>
             <Input 
-              placeholder={t('onboarding.legal.crOtherPlaceholder')} 
+              placeholder={t('onboarding.activityCardNumPlaceholder', 'مثال: 23/00-123456')} 
               value={data.commercialRegisterNumber || ''} 
               onChange={(e) => updateData({ commercialRegisterNumber: e.target.value })} 
               dir="auto"
@@ -345,8 +362,8 @@ export default function LegalStep({ data, updateData, onPreviewFile }: { data: a
       </div>
 
       <div className="mt-8 border-t dark:border-slate-800 pt-6 space-y-4">
-        <Label className="text-base font-bold">{t('onboarding.legal.crFile')}</Label>
-        <p className="text-sm text-gray-500 dark:text-slate-400">{t('onboarding.legal.crFileDesc')}</p>
+        <Label className="text-base font-bold">{isBusiness ? t('onboarding.legal.crFile') : t('onboarding.activityCardFileLabel', 'صورة بطاقة النشاط')}</Label>
+        <p className="text-sm text-gray-500 dark:text-slate-400">{isBusiness ? t('onboarding.legal.crFileDesc') : t('onboarding.legal.crFileDesc')}</p>
         <Input 
           type="file" 
           accept=".pdf,.jpg,.jpeg,.png" 
@@ -355,7 +372,11 @@ export default function LegalStep({ data, updateData, onPreviewFile }: { data: a
             const file = e.target.files?.[0];
             if (!file) return;
 
-            const uploadToast = toast.loading(locale === 'ar' ? 'جاري رفع السجل التجاري...' : 'Uploading Commercial Register...');
+            const uploadToast = toast.loading(
+              isBusiness 
+                ? (locale === 'ar' ? 'جاري رفع السجل التجاري...' : 'Uploading Commercial Register...')
+                : (locale === 'ar' ? 'جاري رفع صورة بطاقة النشاط...' : 'Uploading Activity Card...')
+            );
             const formData = new FormData();
             formData.append('file', file);
 
@@ -367,7 +388,12 @@ export default function LegalStep({ data, updateData, onPreviewFile }: { data: a
               const json = await res.json();
               if (json.success) {
                 updateData({ commercialRegisterFile: json.url });
-                toast.success(locale === 'ar' ? 'تم رفع السجل التجاري بنجاح!' : 'Commercial Register uploaded successfully!', { id: uploadToast });
+                toast.success(
+                  isBusiness 
+                    ? (locale === 'ar' ? 'تم رفع السجل التجاري بنجاح!' : 'Commercial Register uploaded successfully!')
+                    : (locale === 'ar' ? 'تم رفع صورة بطاقة النشاط بنجاح!' : 'Activity Card uploaded successfully!'),
+                  { id: uploadToast }
+                );
               } else {
                 toast.error(json.error || (locale === 'ar' ? 'فشل رفع الملف' : 'Upload failed'), { id: uploadToast });
               }

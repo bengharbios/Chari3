@@ -124,7 +124,7 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
         labelKey: 'header.verificationStatus',
         icon: ShieldCheck,
         directPageId: 'verification',
-        path: '/verification'
+        path: '/seller/verification'
       },
       {
         id: 'settings-tree',
@@ -209,7 +209,8 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         id: 'verification-tree',
         labelKey: 'header.verificationStatus',
         icon: ShieldCheck,
-        directPageId: 'verification'
+        directPageId: 'verification',
+        path: '/seller/verification'
       },
       {
         id: 'settings-tree',

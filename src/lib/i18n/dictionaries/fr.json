@@ -531,5 +531,16 @@
     "invalid_credentials": "Identifiants invalides",
     "server_error": "Erreur de connexion au serveur",
     "google_redirect": "Redirection vers Google..."
+  },
+  "onboarding": {
+    "activityCardLabel": "Document d'Activité (Carte d'Auto-Entrepreneur / Artisan)",
+    "activityCardNumLabel": "Numéro de la Carte d'Activité",
+    "activityCardFileLabel": "Copie de la Carte d'Activité (Image)",
+    "taxIdLabel": "Numéro d'Identification Fiscale (NIF)",
+    "taxIdFileLabel": "Carte Fiscale / Certificat NIF",
+    "statisticalIdLabel": "Numéro d'Identification Statistique (NIS)",
+    "bankAccountLabel": "Détails du Compte Financier (Postal ou Bancaire)",
+    "managerIdLabel": "Preuve d'Identité Personnelle (Carte d'Identité / Passeport)",
+    "termsLabel": "Acceptation des Conditions Générales"
   }
 }

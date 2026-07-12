@@ -612,5 +612,16 @@
     "invalid_credentials": "Invalid credentials",
     "server_error": "Server connection error",
     "google_redirect": "Redirecting to Google..."
+  },
+  "onboarding": {
+    "activityCardLabel": "Activity Document (Freelance / Artisan Card)",
+    "activityCardNumLabel": "Activity Card Number",
+    "activityCardFileLabel": "Activity Card Copy (Image)",
+    "taxIdLabel": "Tax Identification Number (TIN/NIF)",
+    "taxIdFileLabel": "Tax Card / TIN Certificate",
+    "statisticalIdLabel": "Statistical Identification Number (NIS)",
+    "bankAccountLabel": "Financial Account Details (Postal or Bank)",
+    "managerIdLabel": "Personal Identity Proof (ID Card / Passport)",
+    "termsLabel": "Agreement to Terms & Conditions"
   }
 }

@@ -612,5 +612,16 @@
     "invalid_credentials": "بيانات الدخول غير صحيحة",
     "server_error": "حدث خطأ أثناء الاتصال بالخادم",
     "google_redirect": "سيتم توجيهك إلى Google..."
+  },
+  "onboarding": {
+    "activityCardLabel": "وثيقة النشاط (بطاقة مقاول ذاتي / حرفي)",
+    "activityCardNumLabel": "رقم بطاقة النشاط",
+    "activityCardFileLabel": "صورة بطاقة النشاط",
+    "taxIdLabel": "الرقم الجبائي (NIF)",
+    "taxIdFileLabel": "شهادة الرقم الجبائي / بطاقة جبائية",
+    "statisticalIdLabel": "الرقم الإحصائي (NIS)",
+    "bankAccountLabel": "تفاصيل الحساب المالي (CCP أو بنكي)",
+    "managerIdLabel": "إثبات الهوية الشخصية (بطاقة هوية / جواز سفر)",
+    "termsLabel": "الموافقة على الشروط والأحكام"
   }
 }

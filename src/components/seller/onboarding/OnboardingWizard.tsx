@@ -26,7 +26,23 @@ export default function OnboardingWizard() {
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<any>({});
   const [previewFileUrl, setPreviewFileUrl] = useState<string | null>(null);
-  
+  const [taxRate, setTaxRate] = useState('0.5');
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await fetch('/api/settings/public');
+        const data = await res.json();
+        if (data.success && data.settings) {
+          setTaxRate(data.settings.tax_rate_auto_entrepreneur || '0.5');
+        }
+      } catch (e) {
+        console.error("Failed to fetch public settings", e);
+      }
+    };
+    fetchSettings();
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       if (!user?.id) return;
@@ -92,19 +108,29 @@ export default function OnboardingWizard() {
 
   const isRTL = locale === 'ar';
   
+  const isBusiness = user?.role === 'store_manager';
+
   // Status Logic
   const hasLegal = !!formData.commercialRegisterNumber && !!formData.commercialRegisterFile;
-  const hasTax = formData.hasVat === false || (formData.hasVat && !!formData.vatNumber);
-  const hasBank = !!formData.iban && !!formData.bankLetterFile;
+  const hasTax = isBusiness 
+    ? (formData.hasVat === false || (formData.hasVat && !!formData.vatNumber))
+    : (!!formData.vatNumber && !!formData.vatCertificateFile);
+  const hasBank = (!!formData.iban || (!!formData.ccpNumber && !!formData.ccpCle)) && !!formData.bankLetterFile;
   const hasIdentity = !!formData.signatoryName && !!formData.managerIdFront;
   const hasTerms = !!formData.agreedToTerms;
 
-  const stepsList = [
-    { id: 0, title: locale === 'ar' ? 'السجل التجاري' : 'Commercial Register', tabTitle: locale === 'ar' ? 'السجل التجاري' : 'Register', icon: <StoreIcon className="w-5 h-5" />, done: hasLegal, component: <LegalStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} /> },
-    { id: 1, title: locale === 'ar' ? 'الضريبة' : 'Tax Details', tabTitle: locale === 'ar' ? 'الضريبة' : 'Tax', icon: <FileText className="w-5 h-5" />, done: hasTax, component: <TaxStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} /> },
-    { id: 2, title: locale === 'ar' ? 'البنك' : 'Financials', tabTitle: locale === 'ar' ? 'البنك' : 'Bank', icon: <Landmark className="w-5 h-5" />, done: hasBank, component: <BankStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} /> },
-    { id: 3, title: locale === 'ar' ? 'هوية المدير أو المالك أو الممثل القانوني للشركة' : 'Identity (Manager/Owner/Representative)', tabTitle: locale === 'ar' ? 'الهوية' : 'Identity', icon: <UserCheck className="w-5 h-5" />, done: hasIdentity, component: <IdentityStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} /> },
-    { id: 4, title: locale === 'ar' ? 'الشروط' : 'Terms', tabTitle: locale === 'ar' ? 'الشروط' : 'Terms', icon: <ShieldCheck className="w-5 h-5" />, done: hasTerms, component: <TermsStep data={formData} updateData={handleUpdateData} /> },
+  const stepsList = isBusiness ? [
+    { id: 0, title: t('onboarding.activityCardLabel', 'Commercial Register'), tabTitle: t('onboarding.activityCardLabel', 'Register'), icon: <StoreIcon className="w-5 h-5" />, done: hasLegal, component: <LegalStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={true} /> },
+    { id: 1, title: t('onboarding.taxIdLabel', 'Tax Details'), tabTitle: t('onboarding.taxIdLabel', 'Tax'), icon: <FileText className="w-5 h-5" />, done: hasTax, component: <TaxStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={true} /> },
+    { id: 2, title: t('onboarding.bankAccountLabel', 'Financials'), tabTitle: t('onboarding.bankAccountLabel', 'Bank'), icon: <Landmark className="w-5 h-5" />, done: hasBank, component: <BankStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={true} /> },
+    { id: 3, title: t('onboarding.managerIdLabel', 'Identity (Manager/Owner/Representative)'), tabTitle: t('onboarding.managerIdLabel', 'Identity'), icon: <UserCheck className="w-5 h-5" />, done: hasIdentity, component: <IdentityStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={true} /> },
+    { id: 4, title: t('onboarding.termsLabel', 'Terms'), tabTitle: t('onboarding.termsLabel', 'Terms'), icon: <ShieldCheck className="w-5 h-5" />, done: hasTerms, component: <TermsStep data={formData} updateData={handleUpdateData} /> },
+  ] : [
+    { id: 0, title: t('onboarding.activityCardLabel', 'Activity Document (Freelance / Artisan Card)'), tabTitle: t('onboarding.activityCardLabel', 'Activity Card'), icon: <StoreIcon className="w-5 h-5" />, done: hasLegal, component: <LegalStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={false} /> },
+    { id: 1, title: t('onboarding.taxIdLabel', 'Tax Identification Number (TIN/NIF)'), tabTitle: t('onboarding.taxIdLabel', 'Tax Card'), icon: <FileText className="w-5 h-5" />, done: hasTax, component: <TaxStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={false} taxRate={taxRate} /> },
+    { id: 2, title: t('onboarding.bankAccountLabel', 'Financial Account Details (Postal or Bank)'), tabTitle: t('onboarding.bankAccountLabel', 'Bank/CCP'), icon: <Landmark className="w-5 h-5" />, done: hasBank, component: <BankStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={false} /> },
+    { id: 3, title: t('onboarding.managerIdLabel', 'Personal Identity Proof (ID Card / Passport)'), tabTitle: t('onboarding.managerIdLabel', 'Identity'), icon: <UserCheck className="w-5 h-5" />, done: hasIdentity, component: <IdentityStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={false} /> },
+    { id: 4, title: t('onboarding.termsLabel', 'Terms'), tabTitle: t('onboarding.termsLabel', 'Terms'), icon: <ShieldCheck className="w-5 h-5" />, done: hasTerms, component: <TermsStep data={formData} updateData={handleUpdateData} /> },
   ];
 
   const totalSteps = stepsList.length;

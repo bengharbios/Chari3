@@ -12,7 +12,7 @@ import Script from 'next/script';
 import { createWorker } from 'tesseract.js';
 import { toast } from 'sonner';
 
-export default function IdentityStep({ data, updateData, onPreviewFile }: { data: any; updateData: (d: any) => void; onPreviewFile: (url: string) => void }) {
+export default function IdentityStep({ data, updateData, onPreviewFile, isBusiness = true }: { data: any; updateData: (d: any) => void; onPreviewFile: (url: string) => void; isBusiness?: boolean }) {
   const { t } = useTranslation();
 
   // Camera & Multi-step State
@@ -283,80 +283,84 @@ export default function IdentityStep({ data, updateData, onPreviewFile }: { data
         </div>
       </div>
 
-      <div className="pt-4 border-t dark:border-slate-800">
-        <Label className="text-base font-bold mb-4 block">{t('onboarding.identity.isOwner')}</Label>
-        <RadioGroup 
-          value={data.isLegalOwner ? 'yes' : 'no'} 
-          onValueChange={(val) => updateData({ isLegalOwner: val === 'yes' })}
-          className="flex flex-col sm:flex-row gap-4"
-        >
-          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg flex-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
-            <RadioGroupItem value="yes" id="owner-yes" />
-            <Label htmlFor="owner-yes" className="cursor-pointer">{t('onboarding.identity.yes')}</Label>
-          </div>
-          <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg flex-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
-            <RadioGroupItem value="no" id="owner-no" />
-            <Label htmlFor="owner-no" className="cursor-pointer">{t('onboarding.identity.no')}</Label>
-          </div>
-        </RadioGroup>
-      </div>
-
-      {!data.isLegalOwner && (
-        <div className="pt-4 space-y-4">
-          <Label className="text-base font-bold text-red-600">{t('onboarding.identity.poa')}</Label>
-          <p className="text-sm text-gray-500 dark:text-slate-400">{t('onboarding.identity.poaDesc')}</p>
-          <Input 
-            type="file" 
-            accept=".pdf,.jpg,.png" 
-            className="dark:bg-slate-900 dark:border-slate-800"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-
-              const uploadToast = toast.loading('جاري رفع مستند التفويض...');
-              const formData = new FormData();
-              formData.append('file', file);
-
-              try {
-                const res = await fetch('/api/upload', {
-                  method: 'POST',
-                  body: formData,
-                });
-                const json = await res.json();
-                if (json.success) {
-                  updateData({ powerOfAttorneyFile: json.url });
-                  toast.success('تم رفع تفويض التوقيع بنجاح!', { id: uploadToast });
-                } else {
-                  toast.error(json.error || 'فشل رفع الملف', { id: uploadToast });
-                }
-              } catch (err) {
-                toast.error('حدث خطأ أثناء رفع الملف', { id: uploadToast });
-              }
-            }} 
-          />
-          {data.powerOfAttorneyFile && (
-            <div className="mt-2 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-100 dark:border-green-900/30 flex items-center justify-between">
-              <p className="text-sm text-green-600 dark:text-green-400 font-medium">{t('onboarding.common.uploadSuccess')}</p>
-              <div className="flex items-center gap-2">
-                <button 
-                  type="button"
-                  onClick={() => onPreviewFile(data.powerOfAttorneyFile)}
-                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                >
-                  {t('onboarding.common.previewFile')}
-                </button>
-                <span className="text-gray-300 dark:text-slate-700">|</span>
-                <a 
-                  href={data.powerOfAttorneyFile} 
-                  download
-                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                >
-                  {t('onboarding.common.downloadFile')}
-                </a>
+      {isBusiness && (
+        <>
+          <div className="pt-4 border-t dark:border-slate-800">
+            <Label className="text-base font-bold mb-4 block">{t('onboarding.identity.isOwner')}</Label>
+            <RadioGroup 
+              value={data.isLegalOwner ? 'yes' : 'no'} 
+              onValueChange={(val) => updateData({ isLegalOwner: val === 'yes' })}
+              className="flex flex-col sm:flex-row gap-4"
+            >
+              <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg flex-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
+                <RadioGroupItem value="yes" id="owner-yes" />
+                <Label htmlFor="owner-yes" className="cursor-pointer">{t('onboarding.identity.yes')}</Label>
               </div>
+              <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg flex-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
+                <RadioGroupItem value="no" id="owner-no" />
+                <Label htmlFor="owner-no" className="cursor-pointer">{t('onboarding.identity.no')}</Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {!data.isLegalOwner && (
+            <div className="pt-4 space-y-4">
+              <Label className="text-base font-bold text-red-600">{t('onboarding.identity.poa')}</Label>
+              <p className="text-sm text-gray-500 dark:text-slate-400">{t('onboarding.identity.poaDesc')}</p>
+              <Input 
+                type="file" 
+                accept=".pdf,.jpg,.png" 
+                className="dark:bg-slate-900 dark:border-slate-800"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+
+                  const uploadToast = toast.loading('جاري رفع مستند التفويض...');
+                  const formData = new FormData();
+                  formData.append('file', file);
+
+                  try {
+                    const res = await fetch('/api/upload', {
+                      method: 'POST',
+                      body: formData,
+                    });
+                    const json = await res.json();
+                    if (json.success) {
+                      updateData({ powerOfAttorneyFile: json.url });
+                      toast.success('تم رفع تفويض التوقيع بنجاح!', { id: uploadToast });
+                    } else {
+                      toast.error(json.error || 'فشل رفع الملف', { id: uploadToast });
+                    }
+                  } catch (err) {
+                    toast.error('حدث خطأ أثناء رفع الملف', { id: uploadToast });
+                  }
+                }} 
+              />
+              {data.powerOfAttorneyFile && (
+                <div className="mt-2 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-100 dark:border-green-900/30 flex items-center justify-between">
+                  <p className="text-sm text-green-600 dark:text-green-400 font-medium">{t('onboarding.common.uploadSuccess')}</p>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      type="button"
+                      onClick={() => onPreviewFile(data.powerOfAttorneyFile)}
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                    >
+                      {t('onboarding.common.previewFile')}
+                    </button>
+                    <span className="text-gray-300 dark:text-slate-700">|</span>
+                    <a 
+                      href={data.powerOfAttorneyFile} 
+                      download
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                    >
+                      {t('onboarding.common.downloadFile')}
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
           )}
-        </div>
+        </>
       )}
 
       <div className="pt-6 border-t dark:border-slate-800 space-y-4">

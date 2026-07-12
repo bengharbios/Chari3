@@ -56,7 +56,11 @@ export default function GentelellaHeader() {
     if (view === 'home') {
       router.push('/');
     } else if (view === 'verification') {
-      router.push('/verification');
+      if (user?.role === 'seller' || user?.role === 'store_manager') {
+        router.push('/seller/verification');
+      } else {
+        router.push('/verification');
+      }
     } else if (view === 'security') {
       router.push('/security');
     } else if (['seller', 'store', 'logistics', 'buyer', 'admin'].includes(view)) {
