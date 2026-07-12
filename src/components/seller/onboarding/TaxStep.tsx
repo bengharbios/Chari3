@@ -124,9 +124,9 @@ export default function TaxStep({
           </div>
 
           <div className="space-y-2">
-            <Label>{t('onboarding.taxIdLabel', 'الرقم الجبائي (NIF)')}</Label>
+            <Label>{t('الرقم الجبائي (NIF)', 'Tax ID (NIF)')}</Label>
             <Input 
-              placeholder={t('onboarding.taxIdPlaceholder', 'مثال: 1823456789...')} 
+              placeholder={t('مثال: 1823456789...', 'e.g. 1823456789...')} 
               value={data.vatNumber || ''} 
               onChange={(e) => updateData({ vatNumber: e.target.value })} 
               className="dark:bg-slate-900 dark:border-slate-800"
@@ -134,7 +134,7 @@ export default function TaxStep({
           </div>
 
           <div className="space-y-4">
-            <Label className="text-base font-bold">{t('onboarding.taxIdFileLabel', 'شهادة الرقم الجبائي / بطاقة جبائية')}</Label>
+            <Label className="text-base font-bold">{t('شهادة الرقم الجبائي / بطاقة جبائية', 'Tax ID Certificate / Tax Card')}</Label>
             <p className="text-sm text-gray-500 dark:text-slate-400">
               {t(
                 'الرجاء إرفاق نسخة ضوئية من البطاقة الجبائية الخاصة بك أو شهادة الرقم الجبائي الصادرة من مصلحة الضرائب.',
