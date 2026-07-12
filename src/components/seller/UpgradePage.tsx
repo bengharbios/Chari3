@@ -16,7 +16,8 @@ import {
   ShieldCheck, 
   FileSpreadsheet, 
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  CreditCard
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -88,12 +89,8 @@ export default function UpgradePage() {
       
       if (data.success) {
         toast.success(t(locale, 'تم إرسال طلب الترقية بنجاح!', 'Upgrade request sent successfully!'));
-        setWantsUpgrade(true);
-        // If there is a fee, redirect to invoices or let the user know
-        if (data.data.invoiceId) {
-          toast.info(t(locale, 'الرجاء تسديد الفاتورة لتأكيد الطلب', 'Please pay the invoice to confirm request'));
-          window.location.href = '/seller/billing/pay';
-        }
+        // Refresh the page to show the pending state correctly
+        window.location.href = '/seller/upgrade';
       } else {
         let errMsg = data.error;
         if (data.error === 'Request already exists') {
@@ -164,7 +161,7 @@ export default function UpgradePage() {
   }
 
   // Request already submitted and pending approval
-  if (wantsUpgrade || upgradeRequest) {
+  if (upgradeRequest) {
     const isAwaitingPayment = upgradeRequest?.status === 'AWAITING_PAYMENT';
     const reqFee = upgradeRequest?.feeSnapshot ?? fee;
     const reqInvoiceId = upgradeRequest?.invoiceId;

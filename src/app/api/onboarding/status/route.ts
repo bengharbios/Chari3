@@ -226,8 +226,8 @@ export async function GET(request: NextRequest) {
         items = [
           {
             key: 'commercial_register',
-            labelAr: 'السجل التجاري',
-            labelEn: 'Commercial Register',
+            labelAr: 'وثيقة النشاط (بطاقة مقاول ذاتي / حرفي)',
+            labelEn: 'Activity Document (Freelance / Artisan Card)',
             status: isApproved
               ? 'verified'
               : v?.commercialRegisterNumber && v?.commercialRegisterFile
@@ -236,30 +236,30 @@ export async function GET(request: NextRequest) {
                   : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('commercial_register'))
-              ? (adminNotes || ITEM_KEY_LABELS['commercial_register'])
+              ? (adminNotes || 'وثيقة النشاط')
               : undefined,
             uploaded: !!v?.commercialRegisterFile,
           },
           {
             key: 'bank_account',
-            labelAr: 'الحساب البنكي (IBAN)',
-            labelEn: 'Bank Account (IBAN)',
+            labelAr: 'الحساب البنكي / CCP',
+            labelEn: 'Bank Account / CCP',
             status: isApproved
               ? 'verified'
-              : v?.iban && v?.beneficiaryName && v?.bankLetterFile
+              : (v?.iban || v?.ccpNumber) && v?.bankLetterFile
                 ? isRejected && rejectionFields.includes('bank_account')
                   ? 'rejected'
                   : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('bank_account'))
-              ? (adminNotes || ITEM_KEY_LABELS['bank_account'])
+              ? (adminNotes || 'الحساب البنكي / CCP')
               : undefined,
             uploaded: !!v?.bankLetterFile,
           },
           {
             key: 'manager_id',
-            labelAr: 'هوية المدير',
-            labelEn: 'Manager ID',
+            labelAr: 'إثبات الهوية الشخصية',
+            labelEn: 'Personal Identity Proof',
             status: isApproved
               ? 'verified'
               : v?.managerIdFront && v?.managerIdBack
@@ -268,7 +268,7 @@ export async function GET(request: NextRequest) {
                   : v.submittedAt ? 'pending' : 'required'
                 : 'required',
             rejectionReason: (isRejected && rejectionFields.includes('manager_id'))
-              ? (adminNotes || ITEM_KEY_LABELS['manager_id'])
+              ? (adminNotes || 'إثبات الهوية الشخصية')
               : undefined,
             uploaded: !!(v?.managerIdFront && v?.managerIdBack),
           },
