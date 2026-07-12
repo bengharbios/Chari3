@@ -417,6 +417,30 @@ async function getPendingMerchants() {
         }
       }
 
+      // Append Security / Contact settings for edit selection
+      if (user.phone) {
+        verificationItems.push({
+          id: 'phone',
+          labelAr: `رقم الهاتف المرتبط بالمتجر (${user.phone})`,
+          labelEn: `Merchant phone number (${user.phone})`,
+          status: user.accountStatus === 'approved' ? 'verified' : (user.accountStatus === 'rejected' ? 'rejected' : 'pending'),
+        });
+      }
+      if (user.email) {
+        verificationItems.push({
+          id: 'email',
+          labelAr: `البريد الإلكتروني للاتصال (${user.email})`,
+          labelEn: `Merchant email address (${user.email})`,
+          status: user.accountStatus === 'approved' ? 'verified' : (user.accountStatus === 'rejected' ? 'rejected' : 'pending'),
+        });
+      }
+      verificationItems.push({
+        id: 'two_factor',
+        labelAr: 'المطالبة بتفعيل المصادقة الثنائية (2FA) للأمان',
+        labelEn: 'Require Two-Factor Authentication (2FA)',
+        status: user.twoFactorEnabled ? 'verified' : 'required',
+      });
+
       return {
         id: user.id,
         name: user.name,

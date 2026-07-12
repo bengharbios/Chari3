@@ -197,53 +197,85 @@ export async function GET(request: NextRequest) {
         items = [
           {
             key: 'commercial_register',
-            labelAr: 'السجل التجاري',
-            labelEn: 'Commercial Register',
+            labelAr: 'السجل التجاري ورخصة النشاط',
+            labelEn: 'Commercial Register & License',
             status: isApproved
               ? 'verified'
               : v?.commercialRegisterNumber && v?.commercialRegisterFile
-                ? isRejected && rejectionFields.includes('commercial_register')
+                ? isRejected && (rejectionFields.includes('commercial_register') || rejectionFields.includes('commercial_register_number') || rejectionFields.includes('expiry_date'))
                   ? 'rejected'
                   : v.submittedAt ? 'pending' : 'required'
                 : 'required',
-            rejectionReason: (isRejected && rejectionFields.includes('commercial_register'))
-              ? (adminNotes || ITEM_KEY_LABELS['commercial_register'])
+            rejectionReason: (isRejected && (rejectionFields.includes('commercial_register') || rejectionFields.includes('commercial_register_number') || rejectionFields.includes('expiry_date')))
+              ? (adminNotes || 'يرجى مراجعة رقم السجل التجاري وتاريخ الانتهاء المرفق.')
               : undefined,
             uploaded: !!v?.commercialRegisterFile,
           },
           {
             key: 'bank_account',
-            labelAr: 'الحساب البنكي (IBAN)',
-            labelEn: 'Bank Account (IBAN)',
+            labelAr: 'الحساب المالي والبنكي (IBAN / CCP)',
+            labelEn: 'Bank Account & CCP (IBAN)',
             status: isApproved
               ? 'verified'
               : v?.iban && v?.beneficiaryName && v?.bankLetterFile
-                ? isRejected && rejectionFields.includes('bank_account')
+                ? isRejected && (rejectionFields.includes('bank_account') || rejectionFields.includes('bank_details'))
                   ? 'rejected'
                   : v.submittedAt ? 'pending' : 'required'
                 : 'required',
-            rejectionReason: (isRejected && rejectionFields.includes('bank_account'))
-              ? (adminNotes || ITEM_KEY_LABELS['bank_account'])
+            rejectionReason: (isRejected && (rejectionFields.includes('bank_account') || rejectionFields.includes('bank_details')))
+              ? (adminNotes || 'يرجى تصحيح تفاصيل الحساب المالي أو إرفاق إثبات بنكي واضح.')
               : undefined,
             uploaded: !!v?.bankLetterFile,
           },
           {
             key: 'manager_id',
-            labelAr: 'هوية المدير',
-            labelEn: 'Manager ID',
+            labelAr: 'هوية المدير وصاحب المتجر',
+            labelEn: 'Manager ID & Signatory details',
             status: isApproved
               ? 'verified'
               : v?.managerIdFront && v?.managerIdBack
-                ? isRejected && rejectionFields.includes('manager_id')
+                ? isRejected && (rejectionFields.includes('manager_id') || rejectionFields.includes('signatory_info'))
                   ? 'rejected'
                   : v.submittedAt ? 'pending' : 'required'
                 : 'required',
-            rejectionReason: (isRejected && rejectionFields.includes('manager_id'))
-              ? (adminNotes || ITEM_KEY_LABELS['manager_id'])
+            rejectionReason: (isRejected && (rejectionFields.includes('manager_id') || rejectionFields.includes('signatory_info')))
+              ? (adminNotes || 'يرجى التحقق من وضوح بطاقة الهوية الوطنية من كلا الوجهين ومعلومات المفوض بالتوقيع.')
               : undefined,
             uploaded: !!(v?.managerIdFront && v?.managerIdBack),
           },
         ];
+
+        // Append Security / Settings items if rejected
+        if (rejectionFields.includes('phone')) {
+          items.push({
+            key: 'phone',
+            labelAr: 'رقم الهاتف الشخصي للتاجر',
+            labelEn: 'Merchant Phone number',
+            status: 'rejected',
+            rejectionReason: 'طلب الإدمن تعديل رقم الهاتف المرتبط بالحساب.',
+            uploaded: true,
+          });
+        }
+        if (rejectionFields.includes('email')) {
+          items.push({
+            key: 'email',
+            labelAr: 'البريد الإلكتروني للاتصال',
+            labelEn: 'Merchant Email address',
+            status: 'rejected',
+            rejectionReason: 'طلب الإدمن تعديل البريد الإلكتروني للاتصال.',
+            uploaded: true,
+          });
+        }
+        if (rejectionFields.includes('two_factor')) {
+          items.push({
+            key: 'two_factor',
+            labelAr: 'تفعيل المصادقة الثنائية (2FA)',
+            labelEn: 'Enable Two-Factor Authentication (2FA)',
+            status: 'rejected',
+            rejectionReason: 'يتطلب الإدمن تفعيل المصادقة الثنائية (2FA) لتعزيز حماية متجرك.',
+            uploaded: false,
+          });
+        }
 
         const step = getStepFromStatus(user.accountStatus, hasVerification);
         const progress = computeProgress(items);
@@ -279,53 +311,85 @@ export async function GET(request: NextRequest) {
         items = [
           {
             key: 'commercial_register',
-            labelAr: 'وثيقة النشاط (بطاقة مقاول ذاتي / حرفي)',
-            labelEn: 'Activity Document (Freelance / Artisan Card)',
+            labelAr: 'وثيقة النشاط (بطاقة مقاول ذاتي / سجل)',
+            labelEn: 'Activity Document (Freelance / Commercial Register)',
             status: isApproved
               ? 'verified'
               : v?.commercialRegisterNumber && v?.commercialRegisterFile
-                ? isRejected && rejectionFields.includes('commercial_register')
+                ? isRejected && (rejectionFields.includes('commercial_register') || rejectionFields.includes('commercial_register_number') || rejectionFields.includes('expiry_date'))
                   ? 'rejected'
                   : v.submittedAt ? 'pending' : 'required'
                 : 'required',
-            rejectionReason: (isRejected && rejectionFields.includes('commercial_register'))
-              ? (adminNotes || 'وثيقة النشاط')
+            rejectionReason: (isRejected && (rejectionFields.includes('commercial_register') || rejectionFields.includes('commercial_register_number') || rejectionFields.includes('expiry_date')))
+              ? (adminNotes || 'يرجى التحقق من صلاحية بطاقة المقاول الذاتي أو وثيقة النشاط المرفوعة.')
               : undefined,
             uploaded: !!v?.commercialRegisterFile,
           },
           {
             key: 'bank_account',
-            labelAr: 'الحساب البنكي / CCP',
-            labelEn: 'Bank Account / CCP',
+            labelAr: 'الحساب المالي والبريدي (IBAN / CCP)',
+            labelEn: 'Bank Account & CCP (IBAN)',
             status: isApproved
               ? 'verified'
               : (v?.iban || v?.ccpNumber) && v?.bankLetterFile
-                ? isRejected && rejectionFields.includes('bank_account')
+                ? isRejected && (rejectionFields.includes('bank_account') || rejectionFields.includes('bank_details'))
                   ? 'rejected'
                   : v.submittedAt ? 'pending' : 'required'
                 : 'required',
-            rejectionReason: (isRejected && rejectionFields.includes('bank_account'))
-              ? (adminNotes || 'الحساب البنكي / CCP')
+            rejectionReason: (isRejected && (rejectionFields.includes('bank_account') || rejectionFields.includes('bank_details')))
+              ? (adminNotes || 'يرجى تصحيح تفاصيل الحساب المالي أو إرفاق إثبات بنكي واضح.')
               : undefined,
             uploaded: !!v?.bankLetterFile,
           },
           {
             key: 'manager_id',
-            labelAr: 'إثبات الهوية الشخصية',
+            labelAr: 'إثبات الهوية الشخصية للمدير',
             labelEn: 'Personal Identity Proof',
             status: isApproved
               ? 'verified'
               : v?.managerIdFront && v?.managerIdBack
-                ? isRejected && rejectionFields.includes('manager_id')
+                ? isRejected && (rejectionFields.includes('manager_id') || rejectionFields.includes('signatory_info'))
                   ? 'rejected'
                   : v.submittedAt ? 'pending' : 'required'
                 : 'required',
-            rejectionReason: (isRejected && rejectionFields.includes('manager_id'))
-              ? (adminNotes || 'إثبات الهوية الشخصية')
+            rejectionReason: (isRejected && (rejectionFields.includes('manager_id') || rejectionFields.includes('signatory_info')))
+              ? (adminNotes || 'يرجى التحقق من وضوح بطاقة الهوية الوطنية من كلا الوجهين.')
               : undefined,
             uploaded: !!(v?.managerIdFront && v?.managerIdBack),
           },
         ];
+
+        // Append Security / Settings items if rejected
+        if (rejectionFields.includes('phone')) {
+          items.push({
+            key: 'phone',
+            labelAr: 'رقم الهاتف الشخصي للتاجر',
+            labelEn: 'Merchant Phone number',
+            status: 'rejected',
+            rejectionReason: 'طلب الإدمن تعديل رقم الهاتف المرتبط بالحساب.',
+            uploaded: true,
+          });
+        }
+        if (rejectionFields.includes('email')) {
+          items.push({
+            key: 'email',
+            labelAr: 'البريد الإلكتروني للاتصال',
+            labelEn: 'Merchant Email address',
+            status: 'rejected',
+            rejectionReason: 'طلب الإدمن تعديل البريد الإلكتروني للاتصال.',
+            uploaded: true,
+          });
+        }
+        if (rejectionFields.includes('two_factor')) {
+          items.push({
+            key: 'two_factor',
+            labelAr: 'تفعيل المصادقة الثنائية (2FA)',
+            labelEn: 'Enable Two-Factor Authentication (2FA)',
+            status: 'rejected',
+            rejectionReason: 'يتطلب الإدمن تفعيل المصادقة الثنائية (2FA) لتعزيز حماية متجرك.',
+            uploaded: false,
+          });
+        }
 
         const step = getStepFromStatus(user.accountStatus, hasVerification);
         const progress = computeProgress(items);
@@ -341,7 +405,7 @@ export async function GET(request: NextRequest) {
           rejectionReasons: rejectionReasons.length > 0 ? rejectionReasons : undefined,
           adminNotes,
           details: v || {},
-        } satisfies StatusResponse & { details: Record<string, unknown> });
+        });
       }
 
       case 'logistics': {

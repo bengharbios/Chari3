@@ -354,7 +354,7 @@ export default function NotificationPanel() {
             } else {
               actionLabelAr = dbNotif.type === 'VERIFICATION_EDIT_REQUIRED' ? 'تعديل طلب التوثيق' : 'عرض حالة التوثيق';
               actionLabelEn = dbNotif.type === 'VERIFICATION_EDIT_REQUIRED' ? 'Edit Verification' : 'View Verification Status';
-              actionPage = 'verification';
+              actionUrl = '/seller/verification';
             }
           } else if (cat === 'order') {
             actionLabelAr = 'عرض الطلبات';

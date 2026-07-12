@@ -753,6 +753,16 @@ export default function VerificationStatusPage() {
                       : t(isAr, `${requiredCount} عنصر مطلوب لإكمال التحقق`, `${requiredCount} items required to complete verification`)
                     }
                   </p>
+                  {accountStatus === 'rejected' && rejectionReason && (
+                    <div className="mt-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 rounded-lg">
+                      <p className="text-xs font-semibold text-red-800 dark:text-red-300 mb-1">
+                        {t(isAr, 'ملاحظة الإدارة للتعديل:', 'Admin Edit Note:')}
+                      </p>
+                      <p className="text-xs text-red-600 dark:text-red-400 font-medium">
+                        {rejectionReason}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
               <Button onClick={handleGoComplete} className="gradient-navy text-white shrink-0">
