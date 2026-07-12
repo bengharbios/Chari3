@@ -13,7 +13,7 @@ import { createWorker } from 'tesseract.js';
 import { toast } from 'sonner';
 
 export default function IdentityStep({ data, updateData, onPreviewFile, isBusiness = true }: { data: any; updateData: (d: any) => void; onPreviewFile: (url: string) => void; isBusiness?: boolean }) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
 
   // Camera & Multi-step State
   const [captureStep, setCaptureStep] = useState<'front' | 'back' | 'done'>('front');
@@ -140,109 +140,59 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
     });
   };
 
-  const handleCapture = React.useCallback(async () => {
-    if (isCapturing) return;
+  const handleCapture = async () => {
+    if (!webcamRef.current) return;
     setIsCapturing(true);
+    const screenshot = webcamRef.current.getScreenshot();
+    if (!screenshot) { setIsCapturing(false); return; }
 
-    try {
-      let imageSrc = webcamRef.current?.getScreenshot();
-      try {
-        const track = (webcamRef.current?.video as any)?.srcObject?.getVideoTracks()[0];
-        if (track && 'ImageCapture' in window) {
-          const imageCapture = new (window as any).ImageCapture(track);
-          const photoBlob = await imageCapture.takePhoto();
-          imageSrc = await new Promise<string>((resolve) => {
-            const reader = new FileReader(); reader.onloadend = () => resolve(reader.result as string); reader.readAsDataURL(photoBlob);
-          });
-        }
-      } catch (e) {}
+    const cropped = await cropImageWithOpenCV(screenshot, latestPointsRef.current);
 
-      if (imageSrc) {
-        const activePoints = latestPointsRef.current;
-        toast.info(activePoints ? 'جاري معالجة البطاقة...' : 'تم الالتقاط (بدون رصد الحواف)');
-        
-        const finalImageSrc = await cropImageWithOpenCV(imageSrc, activePoints);
-        
-        if (captureStep === 'front') {
-          updateData({ managerIdFront: finalImageSrc });
-          setCaptureStep('back');
-          toast.success('الآن قم بقلب البطاقة للوجه الخلفي');
-        } else if (captureStep === 'back') {
-          updateData({ managerIdBack: finalImageSrc });
-          setCaptureStep('done');
-          setUseCamera(false);
-          toast.success('اكتمل التقاط الوجهين بنجاح!');
-          handleExtract(data.managerIdFront || finalImageSrc, finalImageSrc);
-        }
-      }
-    } finally {
-      setIsCapturing(false);
+    if (captureStep === 'front') {
+      updateData({ managerIdFront: cropped });
+      setCaptureStep('back');
+    } else if (captureStep === 'back') {
+      updateData({ managerIdBack: cropped });
+      setCaptureStep('done');
+      setUseCamera(false);
+      handleExtract(data.managerIdFront, cropped);
     }
-  }, [webcamRef, captureStep, isCapturing, data.managerIdFront]);
-
-  const dataURLtoFile = (dataurl: string, filename: string) => {
-    let arr = dataurl.split(','), mimeMatch = arr[0].match(/:(.*?);/), mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
-    let bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-    while(n--){ u8arr[n] = bstr.charCodeAt(n); }
-    return new File([u8arr], filename, {type:mime});
+    setIsCapturing(false);
   };
 
-  const handleExtract = async (frontData: string, backData: string) => {
+  const handleExtract = async (front: string, back: string) => {
+    if (!front || !back) return;
     setLoading(true);
-    setProgressMsg('جاري استخراج وقراءة البيانات...');
+    setProgressMsg(locale === 'ar' ? 'جاري تهيئة الماسح الذكي...' : 'Initializing scanner...');
     try {
-      const worker = await createWorker('eng', 1, {
-        logger: m => {
-          if (m.status.includes('recognizing text')) setProgressMsg('جاري استخراج وقراءة البيانات الخلفية...');
-        }
+      const worker = await createWorker();
+      await worker.loadLanguage('ara+eng');
+      await worker.setParameters({
+        tessedit_char_whitelist: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ',
       });
 
-      const backFile = dataURLtoFile(backData, 'back.jpg');
-      const { data: { text: backText } } = await worker.recognize(backFile);
-      const mrzRegex = /(?:[A-Z0-9<]{30,}\n?){2,3}/g;
-      const mrzMatches = backText.match(mrzRegex);
+      setProgressMsg(locale === 'ar' ? 'جاري قراءة بيانات الوجه الأمامي...' : 'Reading front side data...');
+      const { data: { text: textFront } } = await worker.recognize(front);
       
-      let parsedId: any = {};
-      
-      if (mrzMatches && mrzMatches.length > 0) {
-        const mrz = mrzMatches[0].replace(/\s+/g, '');
-        if (mrz.length >= 90) {
-           const line1 = mrz.substring(0, 30); const line2 = mrz.substring(30, 60); const line3 = mrz.substring(60, 90);
-           parsedId.nin = line1.substring(5, 14).replace(/</g, '');
-           const dobRaw = line2.substring(0, 6);
-           parsedId.dob = `${parseInt(dobRaw.substring(0,2)) > 24 ? '19' : '20'}${dobRaw.substring(0,2)}-${dobRaw.substring(2,4)}-${dobRaw.substring(4,6)}`;
-           parsedId.gender = line2.substring(7, 8) === 'M' ? 'ذكر' : 'أنثى';
-           const names = line3.split('<<');
-           if (names.length >= 2) {
-             parsedId.lastName = names[0].replace(/</g, ' ').trim();
-             parsedId.firstName = names[1].replace(/</g, ' ').trim();
-           }
-        }
-      }
-
-      await worker.reinitialize('ara+fra+eng');
-      const frontFile = dataURLtoFile(frontData, 'front.jpg');
-      const { data: { text: frontText } } = await worker.recognize(frontFile);
-      
-      const ninMatch = frontText.match(/(?:الوطني|رقم|التعويف|التعريف)[^\d]*(\d{18})/i) || frontText.match(/\b\d{18}\b/);
-      if (ninMatch && !parsedId.nin) parsedId.nin = ninMatch[1];
-      const arabicLastName = frontText.match(/(?:اللقب|النقب)[^\n:]*[:;\-]\s*([^\n]+)/i);
-      if (arabicLastName) parsedId.lastNameAr = arabicLastName[1].trim();
-      const arabicFirstName = frontText.match(/(?:الاسم|السم)[^\n:]*[:;\-]\s*([^\n]+)/i);
-      if (arabicFirstName) parsedId.firstNameAr = arabicFirstName[1].trim();
+      setProgressMsg(locale === 'ar' ? 'جاري قراءة بيانات الوجه الخلفي...' : 'Reading back side data...');
+      const { data: { text: textBack } } = await worker.recognize(back);
 
       await worker.terminate();
 
-      // Auto-fill form
-      const name = `${parsedId.firstNameAr || parsedId.firstName || ''} ${parsedId.lastNameAr || parsedId.lastName || ''}`.trim();
-      
-      updateData({ 
-        extractedIdData: JSON.stringify(parsedId),
-        signatoryName: data.signatoryName || name || ''
-      });
-      toast.success('تم قراءة الهوية وتعبئة البيانات بنجاح!');
+      const combinedText = (textFront + ' ' + textBack).toUpperCase();
+
+      const idMatch = combinedText.match(/\b\d{18}\b/);
+      const nameMatch = combinedText.match(/NAME:\s*([A-Z\s]+)/) || combinedText.match(/FULLNAME:\s*([A-Z\s]+)/);
+
+      if (idMatch) {
+        updateData({ signatoryIdNumber: idMatch[0] });
+        toast.success(locale === 'ar' ? 'تم استخراج رقم الهوية تلقائياً!' : 'ID number extracted successfully!');
+      }
+      if (nameMatch) {
+        updateData({ signatoryName: nameMatch[1].trim() });
+      }
     } catch (e) {
-      toast.error('حدث خطأ أثناء القراءة التلقائية');
+      console.error(e);
     } finally {
       setLoading(false);
     }
@@ -251,31 +201,37 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
   return (
     <div className="space-y-6">
       <Script 
-        src="https://docs.opencv.org/4.8.0/opencv.js" 
-        strategy="afterInteractive" 
-        onReady={() => {
-          const checkCv = setInterval(() => {
-            if ((window as any).cv && (window as any).cv.Mat) { clearInterval(checkCv); setCvLoaded(true); }
-          }, 200);
-          setTimeout(() => clearInterval(checkCv), 15000);
-        }} 
+        src="https://docs.opencv.org/4.5.4/opencv.js"
+        strategy="lazyOnload"
+        onLoad={() => setCvLoaded(true)}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label>{t('onboarding.identity.signatoryName')}</Label>
+        <div className="space-y-2 col-span-1 md:col-span-2">
+          <Label>{t('الاسم الكامل للمدير / الممثل القانوني *', 'Signatory Full Name *')}</Label>
           <Input 
-            placeholder={t('onboarding.identity.signatoryName')} 
+            placeholder={t('أدخل الاسم الكامل كما في بطاقة الهوية', 'Enter full name as in ID')} 
             value={data.signatoryName || ''} 
             onChange={(e) => updateData({ signatoryName: e.target.value })} 
             className="dark:bg-slate-900 dark:border-slate-800"
           />
         </div>
+        
         <div className="space-y-2">
-          <Label>{t('onboarding.identity.signatoryEmail')}</Label>
+          <Label>{t('رقم بطاقة الهوية الشخصية / جواز السفر *', 'ID Card / Passport Number *')}</Label>
+          <Input 
+            placeholder={t('مثال: 123456789012345678', 'e.g. 123456789012345678')} 
+            value={data.signatoryIdNumber || ''} 
+            onChange={(e) => updateData({ signatoryIdNumber: e.target.value })} 
+            className="dark:bg-slate-900 dark:border-slate-800"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>{t('البريد الإلكتروني للتواصل *', 'Contact Email Address *')}</Label>
           <Input 
             type="email"
-            placeholder={t('onboarding.identity.signatoryEmail')} 
+            placeholder={t('example@domain.com', 'example@domain.com')} 
             value={data.signatoryEmail || ''} 
             onChange={(e) => updateData({ signatoryEmail: e.target.value })} 
             className="dark:bg-slate-900 dark:border-slate-800"
@@ -286,7 +242,7 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
       {isBusiness && (
         <>
           <div className="pt-4 border-t dark:border-slate-800">
-            <Label className="text-base font-bold mb-4 block">{t('onboarding.identity.isOwner')}</Label>
+            <Label className="text-base font-bold mb-4 block">{t('هل أنت المالك القانوني للشركة؟ *', 'Are you the legal owner of the company? *')}</Label>
             <RadioGroup 
               value={data.isLegalOwner ? 'yes' : 'no'} 
               onValueChange={(val) => updateData({ isLegalOwner: val === 'yes' })}
@@ -294,19 +250,21 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
             >
               <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg flex-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
                 <RadioGroupItem value="yes" id="owner-yes" />
-                <Label htmlFor="owner-yes" className="cursor-pointer">{t('onboarding.identity.yes')}</Label>
+                <Label htmlFor="owner-yes" className="cursor-pointer">{t('نعم، أنا المالك', 'Yes')}</Label>
               </div>
               <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg flex-1 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
                 <RadioGroupItem value="no" id="owner-no" />
-                <Label htmlFor="owner-no" className="cursor-pointer">{t('onboarding.identity.no')}</Label>
+                <Label htmlFor="owner-no" className="cursor-pointer">{t('لا، لست المالك (أحمل تفويض رسمي)', 'No')}</Label>
               </div>
             </RadioGroup>
           </div>
 
           {!data.isLegalOwner && (
             <div className="pt-4 space-y-4">
-              <Label className="text-base font-bold text-red-600">{t('onboarding.identity.poa')}</Label>
-              <p className="text-sm text-gray-500 dark:text-slate-400">{t('onboarding.identity.poaDesc')}</p>
+              <Label className="text-base font-bold text-red-600">{t('وثيقة التفويض القانوني (POA) *', 'Power of Attorney Document (POA) *')}</Label>
+              <p className="text-sm text-gray-500 dark:text-slate-400">
+                {t('يرجى إرفاق وثيقة الوكالة أو التوكيل الرسمي المعتمد للتوقيع نيابة عن الشركة.', 'Please attach the official POA or proxy authorization document.')}
+              </p>
               <Input 
                 type="file" 
                 accept=".pdf,.jpg,.png" 
@@ -315,7 +273,7 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
                   const file = e.target.files?.[0];
                   if (!file) return;
 
-                  const uploadToast = toast.loading('جاري رفع مستند التفويض...');
+                  const uploadToast = toast.loading(locale === 'ar' ? 'جاري رفع مستند التفويض...' : 'Uploading POA...');
                   const formData = new FormData();
                   formData.append('file', file);
 
@@ -327,7 +285,7 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
                     const json = await res.json();
                     if (json.success) {
                       updateData({ powerOfAttorneyFile: json.url });
-                      toast.success('تم رفع تفويض التوقيع بنجاح!', { id: uploadToast });
+                      toast.success(locale === 'ar' ? 'تم رفع تفويض التوقيع بنجاح!' : 'POA uploaded successfully!', { id: uploadToast });
                     } else {
                       toast.error(json.error || 'فشل رفع الملف', { id: uploadToast });
                     }
@@ -338,14 +296,14 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
               />
               {data.powerOfAttorneyFile && (
                 <div className="mt-2 p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-100 dark:border-green-900/30 flex items-center justify-between">
-                  <p className="text-sm text-green-600 dark:text-green-400 font-medium">{t('onboarding.common.uploadSuccess')}</p>
+                  <p className="text-sm text-green-600 dark:text-green-400 font-medium">{t('تم الرفع بنجاح', 'Uploaded successfully')}</p>
                   <div className="flex items-center gap-2">
                     <button 
                       type="button"
                       onClick={() => onPreviewFile(data.powerOfAttorneyFile)}
                       className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
                     >
-                      {t('onboarding.common.previewFile')}
+                      {t('معاينة الملف', 'Preview File')}
                     </button>
                     <span className="text-gray-300 dark:text-slate-700">|</span>
                     <a 
@@ -353,7 +311,7 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
                       download
                       className="text-xs text-blue-600 dark:text-blue-400 hover:underline font-medium"
                     >
-                      {t('onboarding.common.downloadFile')}
+                      {t('تحميل الملف', 'Download File')}
                     </a>
                   </div>
                 </div>
@@ -364,8 +322,10 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
       )}
 
       <div className="pt-6 border-t dark:border-slate-800 space-y-4">
-        <Label className="text-base font-bold">{t('onboarding.identity.uploadId')}</Label>
-        <p className="text-sm text-gray-500 dark:text-slate-400">{t('onboarding.identity.idDesc')}</p>
+        <Label className="text-base font-bold">{t('إثبات الهوية الشخصية للمدير أو الممثل القانوني *', 'Identity Proof (Manager / Owner) *')}</Label>
+        <p className="text-sm text-gray-500 dark:text-slate-400">
+          {t('يرجى تحميل نسخة ضوئية ملونة لبطاقة الهوية الوطنية من الوجهين (أو جواز السفر).', 'Please upload a clear color scan of both sides of the identity card (or passport).')}
+        </p>
         
         {!useCamera ? (
           <div className="space-y-4">
@@ -377,7 +337,6 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
                       type="button"
                       onClick={() => onPreviewFile(data.managerIdFront)}
                       className="cursor-zoom-in hover:opacity-80 transition-opacity"
-                      title={t('onboarding.common.previewFile')}
                     >
                       <img src={data.managerIdFront} alt="Front" className="w-full h-24 object-contain rounded" />
                     </button>
@@ -385,16 +344,15 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
                       type="button"
                       onClick={() => updateData({ managerIdFront: null })}
                       className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md transition-colors"
-                      title={t('onboarding.identity.deleteImage')}
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
-                    <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">{t('onboarding.identity.frontUploaded')}</p>
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">{t('تم رفع الوجه الأول', 'Front face uploaded')}</p>
                   </div>
                 ) : (
                   <label className="cursor-pointer block w-full h-full">
                     <Upload className="h-6 w-6 text-muted-foreground mb-2 mx-auto" />
-                    <p className="text-sm font-medium">{t('onboarding.identity.frontUpload')}</p>
+                    <p className="text-sm font-medium">{t('الوجه الأول (اضغط للرفع)', 'Front Side (Click to upload)')}</p>
                     <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">PNG, JPG, JPEG</p>
                     <input
                       type="file"
@@ -424,7 +382,6 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
                       type="button"
                       onClick={() => onPreviewFile(data.managerIdBack)}
                       className="cursor-zoom-in hover:opacity-80 transition-opacity"
-                      title={t('onboarding.common.previewFile')}
                     >
                       <img src={data.managerIdBack} alt="Back" className="w-full h-24 object-contain rounded" />
                     </button>
@@ -432,16 +389,15 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
                       type="button"
                       onClick={() => updateData({ managerIdBack: null })}
                       className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 shadow-md transition-colors"
-                      title={t('onboarding.identity.deleteImage')}
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
-                    <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">{t('onboarding.identity.backUploaded')}</p>
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">{t('تم رفع الوجه الثاني', 'Back face uploaded')}</p>
                   </div>
                 ) : (
                   <label className="cursor-pointer block w-full h-full">
                     <Upload className="h-6 w-6 text-muted-foreground mb-2 mx-auto" />
-                    <p className="text-sm font-medium">{t('onboarding.identity.backUpload')}</p>
+                    <p className="text-sm font-medium">{t('الوجه الثاني (اضغط للرفع)', 'Back Side (Click to upload)')}</p>
                     <p className="text-xs text-gray-400 dark:text-slate-500 mt-1">PNG, JPG, JPEG</p>
                     <input
                       type="file"
@@ -465,68 +421,56 @@ export default function IdentityStep({ data, updateData, onPreviewFile, isBusine
                 )}
               </div>
             </div>
-
-            <Button 
-              variant="outline" 
-              className="w-full flex items-center gap-2 border-brand text-brand hover:bg-brand hover:text-white dark:border-brand dark:text-brand dark:hover:bg-brand dark:hover:text-slate-900" 
-              onClick={() => {
-                setUseCamera(true);
-                setCaptureStep('front');
-              }}
-            >
-              <ScanLine className="h-4 w-4" />
-              {t('onboarding.identity.ocrScanner')}
-            </Button>
+            
+            <div className="flex justify-center">
+              <Button type="button" variant="outline" size="sm" className="text-xs rounded-xl" onClick={() => setUseCamera(true)}>
+                <Camera className="h-3.5 w-3.5 mr-1 ml-1" />
+                {t('استخدام كاميرا الجهاز المباشرة', 'Use Device Live Camera')}
+              </Button>
+            </div>
           </div>
         ) : (
-          <div className="relative rounded-lg overflow-hidden border dark:border-slate-800 bg-black">
-            <Webcam
-              audio={false}
-              ref={webcamRef}
-              screenshotFormat="image/jpeg"
-              screenshotQuality={1}
-              videoConstraints={{ width: { ideal: 4096 }, height: { ideal: 2160 }, facingMode }}
-              className="w-full h-auto max-h-[60vh] object-contain bg-black"
-            />
-            <div className="absolute inset-0 pointer-events-none">
-              {polygonPoints ? (
-                <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
-                  <polygon points={polygonPoints.map(p => `${p.x},${p.y}`).join(' ')} fill="rgba(26, 187, 156, 0.2)" stroke="#1ABB9C" strokeWidth="0.5" />
-                </svg>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="w-[80%] h-[50%] border-2 border-dashed border-white/40 rounded-xl relative">
-                    <div className="absolute -top-8 w-full text-center text-white font-bold text-sm bg-black/40 py-1 rounded">
-                      {!cvLoaded ? t('onboarding.identity.loadingOpenCV') : captureStep === 'front' ? t('onboarding.identity.frameFront') : t('onboarding.identity.frameBack')}
-                    </div>
-                  </div>
-                </div>
-              )}
+          <div className="space-y-4 max-w-md mx-auto">
+            <div className="relative border rounded-xl overflow-hidden aspect-video bg-black flex items-center justify-center">
+              <Webcam
+                audio={false}
+                ref={webcamRef}
+                screenshotFormat="image/jpeg"
+                videoConstraints={{ facingMode }}
+                className="w-full h-full object-cover"
+              />
+              {/* Box Overlay Guide */}
+              <div className="absolute inset-4 border-2 border-dashed border-white/50 rounded-lg pointer-events-none flex items-center justify-center">
+                <span className="text-white text-[10px] bg-black/40 px-2 py-0.5 rounded">
+                  {captureStep === 'front' 
+                    ? t('ضع وجه الهوية الأمامي هنا', 'Align ID Front') 
+                    : t('ضع ظهر الهوية هنا', 'Align ID Back')
+                  }
+                </span>
+              </div>
             </div>
-            <canvas ref={hiddenCanvasRef} className="hidden" />
 
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 px-4">
-              <Button variant="secondary" size="icon" className="rounded-full bg-white/20 text-white" onClick={() => setFacingMode(f => f === 'environment' ? 'user' : 'environment')}>
-                <SwitchCamera className="h-5 w-5" />
+            <div className="flex justify-between items-center">
+              <Button type="button" variant="ghost" size="sm" className="text-xs" onClick={() => setUseCamera(false)}>
+                {t('إلغاء الكاميرا', 'Cancel Camera')}
               </Button>
-              <Button className="rounded-full px-8 bg-brand text-white disabled:opacity-50" onClick={handleCapture} disabled={isCapturing}>
-                {isCapturing ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div> : <Camera className="mr-2 h-4 w-4" />}
-                {isCapturing ? t('onboarding.identity.capturing') : captureStep === 'front' ? t('onboarding.identity.captureFront') : t('onboarding.identity.captureBack')}
+              <Button type="button" size="sm" className="bg-primary text-white rounded-xl text-xs px-6" onClick={handleCapture} disabled={isCapturing}>
+                {isCapturing ? '...' : t('التقاط الصورة', 'Capture Image')}
               </Button>
-              <Button variant="destructive" size="icon" className="rounded-full opacity-80" onClick={() => setUseCamera(false)}>
-                <X className="h-5 w-5" />
+              <Button type="button" variant="outline" size="sm" className="rounded-xl" onClick={() => setFacingMode(facingMode === 'user' ? 'environment' : 'user')}>
+                <SwitchCamera className="h-3.5 w-3.5" />
               </Button>
             </div>
-          </div>
-        )}
-
-        {loading && (
-          <div className="p-4 bg-blue-50 text-blue-800 dark:bg-blue-950/30 dark:text-blue-400 rounded-lg flex items-center gap-3">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-800 dark:border-blue-400"></div>
-            <span>{progressMsg}</span>
           </div>
         )}
       </div>
+
+      {loading && (
+        <div className="p-4 bg-muted/40 rounded-xl flex items-center justify-center gap-3">
+          <ScanLine className="h-5 w-5 text-primary animate-pulse" />
+          <p className="text-xs font-semibold">{progressMsg}</p>
+        </div>
+      )}
     </div>
   );
 }
