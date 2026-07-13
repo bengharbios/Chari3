@@ -605,6 +605,9 @@
   },
   "upgrade": {
     "already_upgraded_title": "Félicitations! Compte de boutique d'entreprise actif",
-    "already_upgraded_desc": "Votre compte a été mis à niveau vers le statut Entreprise. Vous disposez désormais d'un accès complet à des fonctionnalités avancées telles que l'ajout de succursales, la gestion du personnel et la création de rapports fiscaux."
+    "already_upgraded_desc": "Votre compte a été mis à niveau vers le statut Entreprise. Vous disposez désormais d'un accès complet à des fonctionnalités avancées telles que l'ajout de succursales, la gestion du personnel et la création de rapports fiscaux.",
+    "verification_required_title": "Vérification individuelle requise d'abord",
+    "verification_required_desc": "La mise à niveau vers une boutique d'entreprise nécessite que votre compte vendeur individuel soit d'abord entièrement vérifié et actif. Veuillez compléter la vérification de votre identité et de votre activité.",
+    "go_to_verification": "Aller à la vérification d'identité"
   }
 }

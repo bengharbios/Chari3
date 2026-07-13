@@ -237,7 +237,9 @@ export default function UpgradePage() {
   }
 
   // Guard: User is not active/fully verified yet
-  if (accountStatus !== 'active' && merchantType !== 'business') {
+  const isUpgraded = merchantType === 'business' || ['store_manager', 'store'].includes(user?.role || '');
+
+  if (accountStatus !== 'active' && !isUpgraded) {
     return (
       <div className="max-w-3xl mx-auto p-4 md:p-8">
         <motion.div
@@ -249,21 +251,17 @@ export default function UpgradePage() {
             <AlertTriangle className="w-10 h-10" />
           </div>
           <h1 className="text-2xl font-black text-foreground">
-            {t(locale, 'يرجى إكمال توثيق حسابك الشخصي أولاً', 'Freelancer Verification Required First')}
+            {translate('upgrade.verification_required_title')}
           </h1>
           <p className="text-muted-foreground text-sm max-w-lg mx-auto leading-relaxed">
-            {t(
-              locale,
-              'تتطلب ترقية الحساب إلى متجر أعمال أن يكون حسابك الفردي موثقاً بالكامل ونشطاً أولاً. يرجى التوجه لصفحة التوثيق وإرسال مستندات الهوية وبطاقة المقاول الذاتي للموافقة.',
-              'Upgrading to a business store requires your individual seller account to be fully verified and active first. Please complete your identity and activity card verification.'
-            )}
+            {translate('upgrade.verification_required_desc')}
           </p>
           <div className="pt-4">
             <Button
               onClick={() => window.location.href = '/seller/verification'}
               className="bg-brand text-navy font-bold rounded-xl shadow-md py-6 hover:shadow-lg transition-all"
             >
-              {t(locale, 'الذهاب لصفحة التوثيق الشخصي', 'Go to Identity Verification')}
+              {translate('upgrade.go_to_verification')}
             </Button>
           </div>
         </motion.div>
@@ -272,7 +270,7 @@ export default function UpgradePage() {
   }
 
   // Already upgraded to Business Account
-  if (merchantType === 'business') {
+  if (isUpgraded) {
     return (
       <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
         <motion.div

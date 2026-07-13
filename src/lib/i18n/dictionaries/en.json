@@ -686,6 +686,9 @@
   },
   "upgrade": {
     "already_upgraded_title": "Congratulations! Active Business Store Account",
-    "already_upgraded_desc": "Your account has been upgraded to Business status. You now have full access to advanced features such as adding store branches, assigning team staff roles, and generating business tax reports."
+    "already_upgraded_desc": "Your account has been upgraded to Business status. You now have full access to advanced features such as adding store branches, assigning team staff roles, and generating business tax reports.",
+    "verification_required_title": "Freelancer Verification Required First",
+    "verification_required_desc": "Upgrading to a business store requires your individual seller account to be fully verified and active first. Please complete your identity and activity verification.",
+    "go_to_verification": "Go to Identity Verification"
   }
 }
