@@ -935,8 +935,8 @@ export default function Header() {
                         {(user.role === 'seller' || user.role === 'store' || user.role === 'freelancer' || user.role === 'store_manager') && (
                           <span className="text-[10px] font-bold text-brand bg-brand/10 border border-brand/20 px-2 py-0.5 rounded w-fit">
                             {isRTL 
-                              ? (user.role === 'store_manager' || merchantType === 'business' ? 'شركة / متجر معتمد' : 'تاجر فردي مستقل')
-                              : (user.role === 'store_manager' || merchantType === 'business' ? 'Verified Store' : 'Individual Seller')
+                              ? (['store_manager', 'store'].includes(user.role) || merchantType === 'business' ? 'شركة / متجر معتمد' : 'تاجر فردي مستقل')
+                              : (['store_manager', 'store'].includes(user.role) || merchantType === 'business' ? 'Verified Store' : 'Individual Seller')
                             }
                           </span>
                         )}

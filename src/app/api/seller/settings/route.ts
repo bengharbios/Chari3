@@ -170,7 +170,10 @@ export async function GET(req: NextRequest) {
             }
           }
         }
-      }
+    }
+
+    if (isOwner && resolvedUserId && ['store_manager', 'store'].includes(user?.role || '')) {
+      merchantType = 'business';
     }
 
     const themeParsed = store.themeSettings ? JSON.parse(store.themeSettings) : null;

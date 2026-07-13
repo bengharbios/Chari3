@@ -304,8 +304,8 @@ export default function GentelellaHeader() {
                 {(user.role === 'seller' || user.role === 'store' || user.role === 'freelancer' || user.role === 'store_manager') && (
                   <span className="text-[10px] font-bold text-[#1ABB9C] bg-[#1ABB9C]/10 border border-[#1ABB9C]/20 px-1.5 py-0.5 rounded">
                     {t(locale,
-                      (user.role === 'store_manager' || merchantType === 'business' ? 'شركة / متجر معتمد' : 'تاجر فردي مستقل'),
-                      (user.role === 'store_manager' || merchantType === 'business' ? 'Verified Store' : 'Individual Seller')
+                      (['store_manager', 'store'].includes(user.role) || merchantType === 'business' ? 'شركة / متجر معتمد' : 'تاجر فردي مستقل'),
+                      (['store_manager', 'store'].includes(user.role) || merchantType === 'business' ? 'Verified Store' : 'Individual Seller')
                     )}
                   </span>
                 )}
