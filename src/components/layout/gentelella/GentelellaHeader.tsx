@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import NotificationPanel from '@/components/notifications/NotificationPanel';
