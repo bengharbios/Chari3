@@ -138,24 +138,38 @@ export async function GET(req: NextRequest) {
     }
 
     // Determine if this user is the true owner of the store.
-    // Signal 1: Direct managerId match (traditional freelancer stores)
-    // Signal 2: Has an APPROVED upgrade request (business upgrade owner - dummy user is set as managerId)
-    // Signal 3: Has a BusinessVerification record (confirmed business entity)
-    let isOwner = resolvedUserId ? store.managerId === resolvedUserId : false;
+    // Signal 0 (PRIMARY): store.ownerId — the clean, explicit ownership field (new stores)
+    // Signal 1 (LEGACY): store.managerId match — traditional stores without ownerId
+    // Signal 2 (LEGACY): APPROVED UpgradeRequest — business upgrade owners on old data
+    // Signal 3 (LEGACY): BusinessVerification — final fallback
+    let isOwner = false;
 
-    if (!isOwner && resolvedUserId && ['store_manager', 'store'].includes(user?.role || '')) {
-      // Check if user has an approved upgrade request → they ARE the business owner
-      const approvedUpgrade = await db.upgradeRequest.findFirst({
-        where: { userId: resolvedUserId, status: 'APPROVED' }
-      });
-      if (approvedUpgrade) {
-        isOwner = true;
+    if (resolvedUserId) {
+      if (store.ownerId) {
+        // New stores: single clean check
+        isOwner = store.ownerId === resolvedUserId;
       } else {
-        // Check BusinessVerification as fallback
-        const bizVerif = await db.businessVerification.findFirst({
-          where: { userId: resolvedUserId }
-        });
-        if (bizVerif) isOwner = true;
+        // Legacy stores without ownerId: multi-signal fallback
+        isOwner = store.managerId === resolvedUserId;
+
+        if (!isOwner && ['store_manager', 'store'].includes(user?.role || '')) {
+          const approvedUpgrade = await db.upgradeRequest.findFirst({
+            where: { userId: resolvedUserId, status: 'APPROVED' }
+          });
+          if (approvedUpgrade) {
+            isOwner = true;
+            // Backfill ownerId for this store to avoid future lookups
+            await db.store.update({ where: { id: store.id }, data: { ownerId: resolvedUserId } });
+          } else {
+            const bizVerif = await db.businessVerification.findFirst({
+              where: { userId: resolvedUserId }
+            });
+            if (bizVerif) {
+              isOwner = true;
+              await db.store.update({ where: { id: store.id }, data: { ownerId: resolvedUserId } });
+            }
+          }
+        }
       }
     }
 

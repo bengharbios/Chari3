@@ -34,6 +34,7 @@ model User {
   updatedAt       DateTime  @updatedAt
 
   store              Store?           @relation("StoreManager")
+  ownedStores        Store[]          @relation("StoreOwner")
   sellerProfile      SellerProfile?
   logisticsProfile   LogisticsProfile?
   buyerProfile       BuyerProfile?
@@ -82,6 +83,10 @@ model Store {
 
   managerId     String    @unique
   manager       User      @relation("StoreManager", fields: [managerId], references: [id])
+
+  // The real human owner of this store (never a dummy user)
+  ownerId       String?
+  owner         User?     @relation("StoreOwner", fields: [ownerId], references: [id])
 
   packageId     String?
   package       SellerPackage? @relation(fields: [packageId], references: [id])

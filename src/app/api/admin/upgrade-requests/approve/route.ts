@@ -193,6 +193,7 @@ export async function POST(req: NextRequest) {
             nameEn: user.sellerProfile?.storeNameEn || user.name || 'Store',
             slug: finalSlug,
             managerId: user.id,
+            ownerId: user.id,      // ← explicit real owner
             packageId: packageId || null,
             logo: user.sellerProfile?.logo || null,
             coverImage: user.sellerProfile?.coverImage || null,

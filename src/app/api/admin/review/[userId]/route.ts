@@ -207,6 +207,7 @@ async function approveUser(
           nameEn: user.nameEn || user.name,
           slug: cleanSlug,
           managerId: user.id,
+          ownerId: user.id,      // ← real human owner
           packageId: assignedPackageId,
         },
       });
