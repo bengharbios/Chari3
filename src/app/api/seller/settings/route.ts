@@ -132,6 +132,7 @@ export async function GET(req: NextRequest) {
       success: true,
       type: 'store',
       permissions,
+      isOwner: resolvedUserId ? store.managerId === resolvedUserId : false,
       settings: {
         id: store.id,
         name: store.name,

@@ -124,7 +124,7 @@ const getSellerNavGroups = (paymentModel: string, merchantType: string, userRole
   return SELLER_NAV_GROUPS.map(group => {
     let items = [...group.items];
     
-    const isBusiness = merchantType === 'business' || userRole === 'store_manager';
+    const isBusiness = merchantType === 'business' || ['store_manager', 'store'].includes(userRole || '');
 
     if (group.id === 'seller-group') {
       // Inject business items only for business or store_manager accounts
@@ -302,6 +302,7 @@ interface SidebarProps {
 
   const [paymentModel, setPaymentModel] = useState<string>('mixed');
   const [merchantType, setMerchantType] = useState<string>('individual');
+  const [isOwner, setIsOwner] = useState(false);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
   const toggleSection = (sectionId: string) => {
@@ -309,7 +310,7 @@ interface SidebarProps {
   };
 
   useEffect(() => {
-    if ((user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer') && !isBuyerMode) {
+    if (['seller', 'store', 'freelancer', 'store_manager'].includes(user?.role || '') && !isBuyerMode) {
       // 1. Fetch Global Settings First
       fetch('/api/settings/public')
         .then(res => res.json())
@@ -320,10 +321,11 @@ interface SidebarProps {
           }
           
           // 2. Fetch Seller Profile Override
-          fetch(`/api/seller/settings?userId=${user.id}`)
+          fetch(`/api/seller/settings?userId=${user?.id}`)
             .then(res => res.json())
             .then(data => {
               if (data.success && data.settings) {
+                setIsOwner(!!data.isOwner);
                 if (data.settings.paymentModel && data.settings.paymentModel !== 'default') {
                   setPaymentModel(data.settings.paymentModel);
                 } else {
@@ -334,9 +336,13 @@ interface SidebarProps {
                 }
               } else {
                 setPaymentModel(model); // fallback to global
+                setIsOwner(false);
               }
             })
-            .catch(() => setPaymentModel(model)); // fallback to global
+            .catch(() => {
+              setPaymentModel(model);
+              setIsOwner(false);
+            });
         })
         .catch(() => {});
     }
@@ -375,13 +381,13 @@ interface SidebarProps {
 
   const navGroups = effectiveBuyerMode
     ? BUYER_NAV_GROUPS
-    : user?.role === 'store_manager'
+    : (user?.role === 'store_manager' && !isOwner)
     ? getStoreManagerNavGroups()
     : user?.role === 'admin'
     ? STORE_NAV_GROUPS
     : isStoreStaff
     ? getStaffNavGroups()
-    : (user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer')
+    : (user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer' || (user?.role === 'store_manager' && isOwner))
     ? getSellerNavGroups(paymentModel, merchantType, user?.role)
     : user?.role === 'supplier'
     ? SUPPLIER_NAV_GROUPS

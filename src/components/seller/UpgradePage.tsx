@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useAuthStore, useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +33,7 @@ const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en
 export default function UpgradePage() {
   const { user } = useAuthStore();
   const { locale } = useAppStore();
+  const { t: translate } = useTranslation();
   const isAr = locale === 'ar';
 
   const [isLoading, setIsLoading] = useState(true);
@@ -282,14 +284,10 @@ export default function UpgradePage() {
             <CheckCircle2 className="w-10 h-10" />
           </div>
           <h1 className="text-2xl font-black text-emerald-950 dark:text-emerald-300">
-            {t(locale, 'تهانينا! حسابك نشط كمتجر أعمال', 'Congratulations! Active Business Store Account')}
+            {translate('upgrade.already_upgraded_title')}
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto text-sm leading-relaxed">
-            {t(
-              locale,
-              'لقد تمت ترقية حسابك إلى فئة الأعمال. يمكنك الآن الوصول إلى جميع الميزات المتقدمة كإضافة فروع جديدة للمتجر، تعيين الموظفين وتوزيع الأدوار، ومراجعة التقارير الضريبية.',
-              'Your account has been upgraded to Business status. You now have full access to advanced features such as adding store branches, assigning team staff roles, and generating business tax reports.'
-            )}
+            {translate('upgrade.already_upgraded_desc')}
           </p>
           <div className="flex flex-wrap justify-center gap-3 pt-4">
             <Button 

@@ -683,5 +683,9 @@
     "bankAccountLabel": "Financial Account Details (Postal or Bank)",
     "managerIdLabel": "Personal Identity Proof (ID Card / Passport)",
     "termsLabel": "Agreement to Terms & Conditions"
+  },
+  "upgrade": {
+    "already_upgraded_title": "Congratulations! Active Business Store Account",
+    "already_upgraded_desc": "Your account has been upgraded to Business status. You now have full access to advanced features such as adding store branches, assigning team staff roles, and generating business tax reports."
   }
 }

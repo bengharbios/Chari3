@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuthStore, useAppStore } from '@/lib/store';
 import { useRouter } from 'next/navigation';
 import { ShieldOff, ArrowLeft } from 'lucide-react';
@@ -26,11 +26,60 @@ export default function SellerRoleGuard({ allowedRoles, children }: SellerRoleGu
 
   const userRole = user?.role || '';
 
-  const isDenied = allowedRoles
-    ? !allowedRoles.includes(userRole) // explicit allowlist
-    : BLOCKED_ROLES.includes(userRole); // default blocklist
+  const [checking, setChecking] = useState(true);
+  const [isDeniedState, setIsDeniedState] = useState(true);
 
-  if (!isDenied) return <>{children}</>;
+  useEffect(() => {
+    if (!user?.id) {
+      setIsDeniedState(true);
+      setChecking(false);
+      return;
+    }
+
+    // Default static rule
+    const staticDenied = allowedRoles
+      ? !allowedRoles.includes(userRole)
+      : BLOCKED_ROLES.includes(userRole);
+
+    // If statically not denied, no need to check ownership (e.g. freelancer / seller)
+    if (!staticDenied) {
+      setIsDeniedState(false);
+      setChecking(false);
+      return;
+    }
+
+    // If statically denied but they hold a store/manager role, check ownership
+    if (['store_manager', 'store'].includes(userRole)) {
+      fetch(`/api/seller/settings?userId=${user.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.isOwner) {
+            setIsDeniedState(false);
+          } else {
+            setIsDeniedState(true);
+          }
+        })
+        .catch(() => {
+          setIsDeniedState(true);
+        })
+        .finally(() => {
+          setChecking(false);
+        });
+    } else {
+      setIsDeniedState(true);
+      setChecking(false);
+    }
+  }, [user?.id, userRole, allowedRoles]);
+
+  if (checking) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand" />
+      </div>
+    );
+  }
+
+  if (!isDeniedState) return <>{children}</>;
 
   return (
     <motion.div

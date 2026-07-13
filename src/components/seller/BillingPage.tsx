@@ -434,7 +434,7 @@ export default function BillingPage() {
           <h3 className="font-bold text-base">{t(locale, 'لا يوجد اشتراك نشط', 'No active subscription')}</h3>
           <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'اختر الباقة المناسبة لبدء رحلتك مع شاري داي', 'Choose the right plan to start your ChariDay journey')}</p>
         </div>
-        <Button size="sm" className="gap-2 rounded-xl bg-brand hover:bg-brand/90 text-navy font-bold shrink-0" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-plans' : 'seller-billing-plans')}>
+        <Button size="sm" className="gap-2 rounded-xl bg-brand hover:bg-brand/90 text-navy font-bold shrink-0" onClick={() => setCurrentPage(['store_manager', 'store'].includes(user?.role || '') ? 'store-billing-plans' : 'seller-billing-plans')}>
           <Package className="h-4 w-4" />
           {t(locale, 'اختر باقة', 'Choose a Plan')}
         </Button>
@@ -452,7 +452,7 @@ export default function BillingPage() {
             <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'يرجى تسديد الاشتراك المستحق أو تقديم استئناف لإعادة تفعيل حسابك.', 'Please pay your outstanding subscription or submit an appeal to reactivate your account.')}</p>
           </div>
           <div className="flex gap-2 shrink-0 flex-wrap">
-            <Button size="sm" className="gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
+            <Button size="sm" className="gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold" onClick={() => setCurrentPage(['store_manager', 'store'].includes(user?.role || '') ? 'store-billing-pay' : 'seller-billing-pay')}>
               <CreditCard className="h-4 w-4" />
               {t(locale, 'ادفع الآن', 'Pay Now')}
             </Button>
@@ -526,7 +526,7 @@ export default function BillingPage() {
           </h3>
           <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'قم بالتجديد الآن لتجنب تعليق متجرك', 'Renew now to avoid your store being suspended')}</p>
         </div>
-        <Button size="sm" className="gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shrink-0" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
+        <Button size="sm" className="gap-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold shrink-0" onClick={() => setCurrentPage(['store_manager', 'store'].includes(user?.role || '') ? 'store-billing-pay' : 'seller-billing-pay')}>
           <RefreshCw className="h-4 w-4" />
           {t(locale, 'جدد الاشتراك', 'Renew Now')}
         </Button>
@@ -542,7 +542,7 @@ export default function BillingPage() {
           </h3>
           <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'يرجى انتظار موافقة الإدارة أو تأكيد دفعتك. حسابك سيكون مفعلاً قريباً.', 'Please wait for admin approval or payment confirmation. Your account will be active soon.')}</p>
         </div>
-        <Button size="sm" className="gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold shrink-0" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
+        <Button size="sm" className="gap-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold shrink-0" onClick={() => setCurrentPage(['store_manager', 'store'].includes(user?.role || '') ? 'store-billing-pay' : 'seller-billing-pay')}>
           <Send className="h-4 w-4" />
           {t(locale, 'إرسال الوصل', 'Submit Receipt')}
         </Button>
@@ -558,7 +558,7 @@ export default function BillingPage() {
           </h3>
           <p className="text-sm text-muted-foreground mt-0.5">{t(locale, 'استمتع بجميع ميزات الباقة مجاناً. يمكنك الدفع في أي وقت.', 'Enjoy all plan features for free. You can pay anytime before it ends.')}</p>
         </div>
-        <Button size="sm" variant="outline" className="gap-2 rounded-xl font-bold shrink-0 border-blue-500/40 text-blue-500" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
+        <Button size="sm" variant="outline" className="gap-2 rounded-xl font-bold shrink-0 border-blue-500/40 text-blue-500" onClick={() => setCurrentPage(['store_manager', 'store'].includes(user?.role || '') ? 'store-billing-pay' : 'seller-billing-pay')}>
           <CreditCard className="h-4 w-4" />
           {t(locale, 'ادفع مسبقاً', 'Pay Early')}
         </Button>
@@ -578,7 +578,7 @@ export default function BillingPage() {
           </p>
         </div>
         {daysRemaining !== null && daysRemaining <= 10 && (
-          <Button size="sm" className="gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold shrink-0" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-pay' : 'seller-billing-pay')}>
+          <Button size="sm" className="gap-2 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold shrink-0" onClick={() => setCurrentPage(['store_manager', 'store'].includes(user?.role || '') ? 'store-billing-pay' : 'seller-billing-pay')}>
             <RefreshCw className="h-4 w-4" />
             {t(locale, 'جدد مبكراً', 'Renew Early')}
           </Button>
@@ -704,7 +704,7 @@ export default function BillingPage() {
                           {t(locale, 'لا توجد أي رسوم مستحقة للدفع في هذه الفاتورة. اشتراكك فعال ويمكنك استخدام المنصة.', 'There are no fees due for this invoice. Your subscription is active.')}
                         </p>
                         <div className="pt-2">
-                          <Button variant="outline" className="rounded-xl gap-2 font-bold" onClick={() => setCurrentPage(user?.role === 'store_manager' ? 'store-billing-plans' : 'seller-billing-plans')}>
+                          <Button variant="outline" className="rounded-xl gap-2 font-bold" onClick={() => setCurrentPage(['store_manager', 'store'].includes(user?.role || '') ? 'store-billing-plans' : 'seller-billing-plans')}>
                             <Sparkles className="h-4 w-4 text-brand" />
                             {t(locale, 'ترقية الباقة', 'Upgrade Plan')}
                           </Button>

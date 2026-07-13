@@ -602,5 +602,9 @@
     "bankAccountLabel": "Détails du Compte Financier (Postal ou Bancaire)",
     "managerIdLabel": "Preuve d'Identité Personnelle (Carte d'Identité / Passeport)",
     "termsLabel": "Acceptation des Conditions Générales"
+  },
+  "upgrade": {
+    "already_upgraded_title": "Félicitations! Compte de boutique d'entreprise actif",
+    "already_upgraded_desc": "Votre compte a été mis à niveau vers le statut Entreprise. Vous disposez désormais d'un accès complet à des fonctionnalités avancées telles que l'ajout de succursales, la gestion du personnel et la création de rapports fiscaux."
   }
 }
