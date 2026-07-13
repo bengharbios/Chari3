@@ -609,5 +609,9 @@
     "verification_required_title": "Vérification individuelle requise d'abord",
     "verification_required_desc": "La mise à niveau vers une boutique d'entreprise nécessite que votre compte vendeur individuel soit d'abord entièrement vérifié et actif. Veuillez compléter la vérification de votre identité et de votre activité.",
     "go_to_verification": "Aller à la vérification d'identité"
+  },
+  "branches": {
+    "limit_info": "Utilisation de %current% sur %max% succursales (Limite du plan: %max% succursales)",
+    "limit_reached": "Limite de succursales atteinte"
   }
 }

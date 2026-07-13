@@ -825,8 +825,8 @@ export default function Header() {
             {/* Notifications */}
             {isAuthenticated && <NotificationPanel />}
 
-            {/* Store / Branch Switcher — visible to multi-store sellers */}
-            {isAuthenticated && user && userStores.length > 1 && !isBuyerMode && (
+            {/* Store / Branch Switcher — visible to store owners and multi-store sellers */}
+            {isAuthenticated && user && userStores.length >= 1 && !isBuyerMode && ['store_manager', 'store'].includes(user.role) && (
               <DropdownMenu dir={isRTL ? 'rtl' : 'ltr'}>
                 <DropdownMenuTrigger asChild>
                   <Button

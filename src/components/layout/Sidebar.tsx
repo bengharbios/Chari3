@@ -86,6 +86,17 @@ const SELLER_NAV_GROUPS: NavGroup[] = [
     ]
   },
   {
+    id: 'business-group',
+    labelAr: 'إدارة الأعمال',
+    labelEn: 'Business Management',
+    icon: 'Layers',
+    items: [
+      { id: 'seller-branches', labelAr: 'إدارة الفروع', labelEn: 'Branches', icon: 'Store', path: '/seller/branches' },
+      { id: 'seller-staff', labelAr: 'طاقم العمل والشركاء', labelEn: 'Team & Staff', icon: 'Users', path: '/seller/staff' },
+      { id: 'seller-taxes', labelAr: 'التقارير الضريبية (B2B)', labelEn: 'Taxes (B2B)', icon: 'Receipt' },
+    ]
+  },
+  {
     id: 'billing-group',
     labelAr: 'المالية والاشتراكات',
     labelEn: 'Billing & Subscriptions',
@@ -112,26 +123,16 @@ const SELLER_NAV_GROUPS: NavGroup[] = [
   }
 ];
 
-// Items exclusively for business accounts
-const BUSINESS_SELLER_ITEMS = [
-  { id: 'seller-staff', labelAr: 'الفريق', labelEn: 'Team', icon: 'Users', path: '/seller/staff' },
-  { id: 'seller-taxes', labelAr: 'التقارير الضريبية (B2B)', labelEn: 'Taxes (B2B)', icon: 'Receipt' },
-  { id: 'seller-branches', labelAr: 'إدارة الفروع', labelEn: 'Branches', icon: 'Store', path: '/seller/branches' },
-];
-
 // Helper to filter nav items based on payment model and merchantType/role
 const getSellerNavGroups = (paymentModel: string, merchantType: string, userRole?: string): NavGroup[] => {
-  return SELLER_NAV_GROUPS.map(group => {
-    let items = [...group.items];
-    
-    const isBusiness = merchantType === 'business' || ['store_manager', 'store'].includes(userRole || '');
+  const isBusiness = merchantType === 'business' || ['store_manager', 'store'].includes(userRole || '');
 
-    if (group.id === 'seller-group') {
-      // Inject business items only for business or store_manager accounts
-      if (isBusiness) {
-        items.splice(2, 0, ...BUSINESS_SELLER_ITEMS); // Insert after products
-      }
+  return SELLER_NAV_GROUPS.map(group => {
+    if (group.id === 'business-group' && !isBusiness) {
+      return null;
     }
+
+    let items = [...group.items];
     
     if (group.id === 'settings-group') {
       // Hide 'Upgrade to Store' if they are already upgraded
@@ -149,7 +150,7 @@ const getSellerNavGroups = (paymentModel: string, merchantType: string, userRole
     }
 
     return { ...group, items };
-  });
+  }).filter(Boolean) as NavGroup[];
 };
 
 const SUPPLIER_NAV_GROUPS: NavGroup[] = [

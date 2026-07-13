@@ -690,5 +690,9 @@
     "verification_required_title": "Freelancer Verification Required First",
     "verification_required_desc": "Upgrading to a business store requires your individual seller account to be fully verified and active first. Please complete your identity and activity verification.",
     "go_to_verification": "Go to Identity Verification"
+  },
+  "branches": {
+    "limit_info": "Using %current% of %max% branches (Plan limit: %max% branches)",
+    "limit_reached": "Branch limit reached"
   }
 }

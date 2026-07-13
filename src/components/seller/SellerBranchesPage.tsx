@@ -72,11 +72,13 @@ export default function SellerBranchesPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newBranchName, setNewBranchName] = useState('');
   const [newBranchNameEn, setNewBranchNameEn] = useState('');
+  const [branchLimit, setBranchLimit] = useState<number>(10); // default fallback
 
   const fetchBranches = useCallback(async () => {
     if (!user?.id) return;
     setIsLoading(true);
     try {
+      // Fetch branches
       const res = await fetch(`/api/seller/branches?userId=${user.id}`);
       const data = await res.json();
       if (res.status === 403 || data.error === 'only_business_sellers_allowed') {
@@ -87,6 +89,14 @@ export default function SellerBranchesPage() {
         setBranches(data.branches || []);
       } else {
         toast.error(t(locale, 'فشل تحميل الفروع', 'Failed to load branches'));
+      }
+
+      // Fetch subscription to know plan branch limit
+      const subRes = await fetch('/api/billing/subscription');
+      const subData = await subRes.json();
+      if (subData.success && subData.subscription?.package?.maxTeamMembers) {
+        // Use maxTeamMembers as a proxy for branch limit, or default to 10
+        setBranchLimit(subData.subscription.package.maxTeamMembers || 10);
       }
     } catch {
       toast.error(t(locale, 'خطأ في الاتصال بالخادم', 'Server connection error'));
@@ -194,6 +204,9 @@ export default function SellerBranchesPage() {
     );
   }
 
+  const limitPercent = Math.min(100, Math.round((branches.length / branchLimit) * 100));
+  const atLimit = branches.length >= branchLimit;
+
   return (
     <div className="space-y-6 pb-12">
       {/* Page Header */}
@@ -208,8 +221,8 @@ export default function SellerBranchesPage() {
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {t(locale,
-              `${branches.length} ${branches.length === 1 ? 'فرع' : 'فروع'} مرتبطة بحسابك`,
-              `${branches.length} ${branches.length === 1 ? 'branch' : 'branches'} linked to your account`
+              `${branches.length} ${branches.length === 1 ? 'فرع' : 'فروع'} من أصل ${branchLimit} مرتبطة بحسابك`,
+              `${branches.length} of ${branchLimit} branches linked to your account`
             )}
           </p>
         </div>
@@ -218,11 +231,50 @@ export default function SellerBranchesPage() {
             <RefreshCw className="h-4 w-4" />
             {t(locale, 'تحديث', 'Refresh')}
           </Button>
-          <Button size="sm" onClick={() => setShowCreateDialog(true)} className="gap-2 font-bold">
+          <Button
+            size="sm"
+            onClick={() => setShowCreateDialog(true)}
+            className="gap-2 font-bold"
+            disabled={atLimit}
+            title={atLimit ? t(locale, 'تم الوصول للحد الأقصى للفروع', 'Branch limit reached') : undefined}
+          >
             <Plus className="h-4 w-4" />
             {t(locale, 'فرع جديد', 'New Branch')}
           </Button>
         </div>
+      </div>
+
+      {/* Branch Limit Progress Bar */}
+      <div className="rounded-xl border bg-muted/30 p-4 flex items-center gap-4">
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs font-semibold text-muted-foreground">
+              {t(locale, 'استهلاك حصة الفروع', 'Branch Quota Usage')}
+            </span>
+            <span className={`text-xs font-bold ${atLimit ? 'text-red-500' : 'text-primary'}`}>
+              {branches.length} / {branchLimit}
+            </span>
+          </div>
+          <div className="h-2 rounded-full bg-muted overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                atLimit ? 'bg-red-500' : limitPercent > 75 ? 'bg-amber-500' : 'bg-primary'
+              }`}
+              style={{ width: `${limitPercent}%` }}
+            />
+          </div>
+          {atLimit && (
+            <p className="text-xs text-red-500 mt-1 font-medium">
+              {t(locale, 'تم الوصول للحد الأقصى — قم بترقية باقتك لإضافة المزيد', 'Limit reached — upgrade your plan for more branches')}
+            </p>
+          )}
+        </div>
+        {branches.length > 1 && (
+          <div className="text-xs text-muted-foreground text-center">
+            <span className="block font-bold text-foreground text-lg">{branches.length}</span>
+            {t(locale, 'فروع', 'Branches')}
+          </div>
+        )}
       </div>
 
       {/* Branch Cards */}

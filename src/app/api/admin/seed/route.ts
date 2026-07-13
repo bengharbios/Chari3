@@ -427,7 +427,161 @@ Le processus suit ces étapes:
       });
     }
 
-    return NextResponse.json({ success: false, error: 'Invalid step. Use step=1 through step=6' });
+    // =====================================================
+    // STEP 7: Branches & Business Management Doc Article
+    // =====================================================
+    if (step === '7') {
+      const articleSlug = 'branches-business-management';
+      const title = 'إدارة الفروع وإدارة الأعمال للمتاجر';
+      const titleEn = 'Branch Management & Business Operations';
+
+      const content = `
+## إدارة الفروع للمتاجر
+
+تتيح لك ميزة **إدارة الفروع** إنشاء وإدارة متعدد من الفروع والمتاجر المرتبطة بحسابك التجاري الواحد، وذلك بكل سهولة من مكان واحد.
+
+---
+
+### 📋 شروط الوصول لإدارة الفروع
+
+- يجب أن يكون حسابك من نوع **متجر أعمال** (أي أن دورك في النظام إما \`store\` أو \`store_manager\`).
+- يظهر قسم **إدارة الأعمال** تلقائياً في القائمة الجانبية للمستخدمين المؤهلين.
+- يمكن الوصول إلى الفروع والفريق من قسم **إدارة الأعمال** في القائمة الجانبية.
+
+---
+
+### 🏗️ إنشاء فرع جديد
+
+1. اذهب إلى **إدارة الأعمال → إدارة الفروع**.
+2. اضغط على زر **فرع جديد**.
+3. أدخل اسم الفرع باللغتين العربية والإنجليزية.
+4. سيتم إنشاء الفرع وربطك به كمدير فرع تلقائياً.
+
+---
+
+### 📊 حصة الفروع (Branch Quota)
+
+- تظهر في أعلى الصفحة شريط تقدم يوضح عدد الفروع المستخدمة مقابل الحد الأقصى المسموح به في باقتك.
+- عند الوصول للحد الأقصى، سيتم تعطيل زر **فرع جديد** تلقائياً.
+- لزيادة الحد الأقصى، يمكنك ترقية باقتك من صفحة **اختر باقة**.
+
+---
+
+### 🔄 تبديل الفروع
+
+- يظهر أيقونة **تبديل المتجر/الفرع** في شريط التنقل العلوي لأصحاب المتاجر.
+- يمكنك التبديل بين فروعك المختلفة بضغطة واحدة وسيتم تحديث البيانات المعروضة وفق الفرع المختار.
+
+---
+
+### 👥 طاقم العمل والشركاء
+
+- من **إدارة الأعمال → طاقم العمل والشركاء** يمكنك دعوة موظفين وتعيين أدوارهم في كل فرع.
+- الأدوار المتاحة: مدير فرع، مشرف، موظف، محرر.
+      `;
+
+      const contentEn = `
+## Branch Management for Business Stores
+
+The **Branch Management** feature allows you to create and manage multiple branches linked to your single business account from one unified dashboard.
+
+---
+
+### 📋 Access Requirements
+
+- Your account must be a **Business Store** (role must be either \`store\` or \`store_manager\`).
+- The **Business Management** section appears automatically in the sidebar for eligible users.
+- Access Branches and Team from the **Business Management** group in the sidebar.
+
+---
+
+### 🏗️ Creating a New Branch
+
+1. Go to **Business Management → Branch Management**.
+2. Click the **New Branch** button.
+3. Enter the branch name in Arabic and English.
+4. The branch will be created and you'll be linked as its manager automatically.
+
+---
+
+### 📊 Branch Quota
+
+- A progress bar at the top of the page shows how many branches you've used vs. your plan limit.
+- When the limit is reached, the **New Branch** button will be automatically disabled.
+- To increase your limit, upgrade your plan from the **Choose Plan** page.
+
+---
+
+### 🔄 Branch Switching
+
+- Store owners see a **Switch Store/Branch** button in the top navigation bar.
+- You can switch between your branches with a single click, and the dashboard data updates accordingly.
+
+---
+
+### 👥 Team & Staff
+
+- From **Business Management → Team & Staff** you can invite employees and assign their roles per branch.
+- Available roles: Branch Manager, Admin, Staff, Editor.
+      `;
+
+      const translations = {
+        fr: {
+          title: 'Gestion des succursales et opérations commerciales',
+          content: `
+## Gestion des succursales
+
+La fonctionnalité de **gestion des succursales** vous permet de créer et de gérer plusieurs succursales liées à votre compte professionnel depuis un seul endroit.
+
+### Conditions d'accès
+- Votre compte doit être de type **Boutique Professionnelle** (rôle \`store\` ou \`store_manager\`).
+- La section **Gestion des affaires** apparaît automatiquement dans la barre latérale.
+
+### Création d'une succursale
+1. Allez à **Gestion des affaires → Gestion des succursales**.
+2. Cliquez sur **Nouvelle succursale**.
+3. Saisissez le nom en arabe et en anglais.
+
+### Quota de succursales
+- Une barre de progression affiche les succursales utilisées par rapport à la limite de votre abonnement.
+- Mettez à niveau votre abonnement pour augmenter cette limite.
+          `
+        }
+      };
+
+      const existing = await db.docArticle.findUnique({ where: { slug: articleSlug } });
+      if (!existing) {
+        await db.docArticle.create({
+          data: {
+            title,
+            titleEn,
+            slug: articleSlug,
+            content,
+            contentEn,
+            translations: translations as any,
+            category: 'sellers',
+            sortOrder: 11,
+            isPublished: true
+          }
+        });
+        results.push('✅ Created Doc article: branches-business-management');
+      } else {
+        await db.docArticle.update({
+          where: { slug: articleSlug },
+          data: { title, titleEn, content, contentEn, translations: translations as any, isPublished: true }
+        });
+        results.push('✅ Updated Doc article: branches-business-management');
+      }
+
+      return NextResponse.json({
+        success: true,
+        step: 7,
+        message: '🎉 Branch Management doc article seeded!',
+        details: results,
+      });
+    }
+
+    return NextResponse.json({ success: false, error: 'Invalid step. Use step=1 through step=7' });
 
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
