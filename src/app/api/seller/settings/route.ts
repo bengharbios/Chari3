@@ -78,6 +78,16 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, store: null, settings: null });
     }
 
+    // Fetch the requesting user's role for ownership determination
+    const resolvedUserIdForRole = userId || null;
+    let user: { role: string } | null = null;
+    if (resolvedUserIdForRole) {
+      user = await db.user.findUnique({
+        where: { id: resolvedUserIdForRole },
+        select: { role: true }
+      });
+    }
+
     let currency = 'DZD';
     const wallet = await db.wallet.findUnique({ where: { userId: store.managerId } });
     if (wallet?.currency) currency = wallet.currency;
@@ -127,12 +137,34 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // Determine if this user is the true owner of the store.
+    // Signal 1: Direct managerId match (traditional freelancer stores)
+    // Signal 2: Has an APPROVED upgrade request (business upgrade owner - dummy user is set as managerId)
+    // Signal 3: Has a BusinessVerification record (confirmed business entity)
+    let isOwner = resolvedUserId ? store.managerId === resolvedUserId : false;
+
+    if (!isOwner && resolvedUserId && ['store_manager', 'store'].includes(user?.role || '')) {
+      // Check if user has an approved upgrade request → they ARE the business owner
+      const approvedUpgrade = await db.upgradeRequest.findFirst({
+        where: { userId: resolvedUserId, status: 'APPROVED' }
+      });
+      if (approvedUpgrade) {
+        isOwner = true;
+      } else {
+        // Check BusinessVerification as fallback
+        const bizVerif = await db.businessVerification.findFirst({
+          where: { userId: resolvedUserId }
+        });
+        if (bizVerif) isOwner = true;
+      }
+    }
+
     const themeParsed = store.themeSettings ? JSON.parse(store.themeSettings) : null;
     return NextResponse.json({
       success: true,
       type: 'store',
       permissions,
-      isOwner: resolvedUserId ? store.managerId === resolvedUserId : false,
+      isOwner,
       settings: {
         id: store.id,
         name: store.name,

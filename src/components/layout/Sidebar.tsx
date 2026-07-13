@@ -335,6 +335,11 @@ interface SidebarProps {
                 if (data.settings.merchantType) {
                   setMerchantType(data.settings.merchantType);
                 }
+                // If isOwner is true via upgrade signals, force merchantType to 'business'
+                // so the Business Management sidebar group appears correctly
+                if (data.isOwner && ['store_manager', 'store'].includes(user?.role || '')) {
+                  setMerchantType('business');
+                }
               } else {
                 setPaymentModel(model); // fallback to global
                 setIsOwner(false);
