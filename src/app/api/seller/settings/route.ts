@@ -168,9 +168,10 @@ export async function GET(req: NextRequest) {
               isOwner = true;
               await db.store.update({ where: { id: store.id }, data: { ownerId: resolvedUserId } });
             }
-          }
         }
+      }
     }
+  }
 
     if (isOwner && resolvedUserId && ['store_manager', 'store'].includes(user?.role || '')) {
       merchantType = 'business';
