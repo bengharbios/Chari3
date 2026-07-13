@@ -16,10 +16,12 @@ export async function GET(req: NextRequest) {
     const user = await db.user.findUnique({
       where: { id: userId },
       select: {
+        role: true,
         sellerProfile: { select: { merchantType: true } }
       }
     });
-    if (!user || user.sellerProfile?.merchantType !== 'business') {
+    const isBusiness = user && (user.sellerProfile?.merchantType === 'business' || ['store_manager', 'store'].includes(user.role));
+    if (!user || !isBusiness) {
       return NextResponse.json({ success: false, error: 'only_business_sellers_allowed' }, { status: 403 });
     }
 
@@ -99,7 +101,8 @@ export async function POST(req: NextRequest) {
     if (!user) {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
-    if (user.sellerProfile?.merchantType !== 'business') {
+    const isBusiness = user.sellerProfile?.merchantType === 'business' || ['store_manager', 'store'].includes(user.role);
+    if (!isBusiness) {
       return NextResponse.json({ success: false, error: 'only_business_sellers_allowed' }, { status: 403 });
     }
 
