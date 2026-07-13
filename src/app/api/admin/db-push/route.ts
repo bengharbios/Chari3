@@ -62,7 +62,8 @@ export async function GET(req: NextRequest) {
       "totalCustomers INTEGER NOT NULL DEFAULT 0",
       "totalEarnings DOUBLE NOT NULL DEFAULT 0",
       "completionRate DOUBLE NOT NULL DEFAULT 100",
-      "packageId VARCHAR(191) NULL"
+      "packageId VARCHAR(191) NULL",
+      "ownerId VARCHAR(191) NULL"
     ];
 
     for (const col of storeColumns) {
