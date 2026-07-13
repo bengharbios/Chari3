@@ -65,7 +65,11 @@
     "history": "سجل الفواتير",
     "upgrade": "ترقية",
     "buyer-group": "المشتري",
-    "settings": "الإعدادات"
+    "settings": "الإعدادات",
+    "sectionBusinessManagement": "إدارة الأعمال",
+    "branches": "إدارة الفروع",
+    "team": "طاقم العمل والشركاء",
+    "taxes": "التقارير الضريبية (B2B)"
   },
   "admin": {
     "title": "الإدارة العامة",

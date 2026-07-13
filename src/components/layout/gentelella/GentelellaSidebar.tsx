@@ -175,6 +175,22 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
     ]
   },
   {
+    id: 'business',
+    labelKey: 'sidebar.sectionBusinessManagement',
+    trees: [
+      {
+        id: 'business-tree',
+        labelKey: 'sidebar.sectionBusinessManagement',
+        icon: Layers,
+        children: [
+          { id: 'seller-branches', labelKey: 'sidebar.branches', path: '/seller/branches' },
+          { id: 'seller-staff', labelKey: 'sidebar.team', path: '/seller/staff' },
+          { id: 'seller-taxes', labelKey: 'sidebar.taxes', path: '#' }
+        ]
+      }
+    ]
+  },
+  {
     id: 'finance',
     labelKey: 'sidebar.finance',
     trees: [
@@ -255,9 +271,11 @@ export default function GentelellaSidebar({ className }: { className?: string })
   }, [isSidebarOpen, setSidebarOpen]);
 
   const [paymentModel, setPaymentModel] = useState<string>('mixed');
+  const [merchantType, setMerchantType] = useState<string>('individual');
+  const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
-    if ((user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer') && !isBuyerMode) {
+    if ((user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer' || user?.role === 'store_manager') && !isBuyerMode) {
       fetch('/api/settings/public')
         .then(res => res.json())
         .then(pub => {
@@ -268,13 +286,28 @@ export default function GentelellaSidebar({ className }: { className?: string })
           fetch(`/api/seller/settings?userId=${user.id}`)
             .then(res => res.json())
             .then(data => {
-              if (data.success && data.settings?.paymentModel && data.settings.paymentModel !== 'default') {
-                setPaymentModel(data.settings.paymentModel);
+              if (data.success && data.settings) {
+                setIsOwner(!!data.isOwner);
+                if (data.settings.paymentModel && data.settings.paymentModel !== 'default') {
+                  setPaymentModel(data.settings.paymentModel);
+                } else {
+                  setPaymentModel(model);
+                }
+                if (data.settings.merchantType) {
+                  setMerchantType(data.settings.merchantType);
+                }
+                if (data.isOwner && ['store_manager', 'store'].includes(user?.role || '')) {
+                  setMerchantType('business');
+                }
               } else {
                 setPaymentModel(model);
+                setIsOwner(false);
               }
             })
-            .catch(() => setPaymentModel(model));
+            .catch(() => {
+              setPaymentModel(model);
+              setIsOwner(false);
+            });
         })
         .catch(() => {});
     }
@@ -306,8 +339,19 @@ export default function GentelellaSidebar({ className }: { className?: string })
   // Filter wallet/debts based on payment model
   let activeGroups = user.role === 'store_manager' ? STORE_GROUPS : (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer') ? SELLER_GROUPS : [];
 
+  const isBusiness = merchantType === 'business' || ['store_manager', 'store'].includes(user.role) || (user.role === 'store_manager' && isOwner);
+
   if (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer') {
     activeGroups = activeGroups.map(group => {
+      if (group.id === 'business' && !isBusiness) return null;
+
+      if (group.id === 'admin' && isBusiness) {
+        return {
+          ...group,
+          trees: group.trees.filter(tree => tree.id !== 'upgrade-tree')
+        };
+      }
+
       if (group.id !== 'finance') return group;
       return {
         ...group,
@@ -316,15 +360,15 @@ export default function GentelellaSidebar({ className }: { className?: string })
           return {
             ...tree,
             children: tree.children?.filter(child => {
-        if ((child.id as string) === 'seller-wallet' && paymentModel === 'decentralized') return false;
-        if ((child.id as string) === 'seller-debts' && paymentModel === 'centralized') return false;
+              if ((child.id as string) === 'seller-wallet' && paymentModel === 'decentralized') return false;
+              if ((child.id as string) === 'seller-debts' && paymentModel === 'centralized') return false;
 
               return true;
             })
           };
         }).filter(tree => tree.children && tree.children.length > 0)
       };
-    });
+    }).filter(Boolean) as GentelellaNavGroup[];
   }
 
   const initials = user.name

@@ -65,7 +65,11 @@
     "history": "History",
     "upgrade": "Upgrade",
     "buyer-group": "Buyer",
-    "settings": "Settings"
+    "settings": "Settings",
+    "sectionBusinessManagement": "Business Management",
+    "branches": "Branches",
+    "team": "Team & Staff",
+    "taxes": "Taxes (B2B)"
   },
   "admin": {
     "title": "Admin Panel",

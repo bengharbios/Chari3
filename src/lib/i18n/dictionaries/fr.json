@@ -62,7 +62,11 @@
     "addons": "Extensions",
     "payment": "Paiement",
     "history": "Historique",
-    "upgrade": "Mettre à niveau"
+    "upgrade": "Mettre à niveau",
+    "sectionBusinessManagement": "Gestion d'entreprise",
+    "branches": "Succursales",
+    "team": "Équipe et personnel",
+    "taxes": "Taxes (B2B)"
   },
   "admin": {
     "title": "Panneau d'administration",
