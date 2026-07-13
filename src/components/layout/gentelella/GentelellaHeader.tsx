@@ -41,6 +41,20 @@ export default function GentelellaHeader() {
   const { setTheme } = useTheme();
   const router = useRouter();
   const isRTL = localeDirections[locale] === 'rtl';
+  const [merchantType, setMerchantType] = React.useState<string>('individual');
+
+  React.useEffect(() => {
+    if (user?.id && (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer' || user.role === 'store_manager')) {
+      fetch(`/api/seller/settings?userId=${user.id}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && data.settings && data.settings.merchantType) {
+            setMerchantType(data.settings.merchantType);
+          }
+        })
+        .catch(err => console.error('Failed to fetch merchant type in GentelellaHeader:', err));
+    }
+  }, [user?.id, user?.role]);
 
   if (!user) return null;
 
@@ -277,9 +291,25 @@ export default function GentelellaHeader() {
                 : 'bg-white border-[#e4e9f0] text-[#555]'
             )}
           >
-            <div className="px-3 py-3 border-b border-current/10">
+            <div className="px-3 py-3 border-b border-current/10 text-start flex flex-col gap-1">
               <div className="font-semibold truncate">{user.name}</div>
-              <div className="text-[11px] opacity-60 truncate mt-0.5">{user.email || user.role}</div>
+              <div className="text-[11px] opacity-60 truncate">{user.email || user.role}</div>
+              <div className="flex flex-wrap gap-1 mt-1">
+                <span className="text-[10px] font-medium bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
+                  {t(locale,
+                    ({ admin: 'مدير النظام', store_manager: 'مدير متجر', seller: 'تاجر مستقل', logistics: 'مندوب شحن', buyer: 'مشتري' } as Record<string, string>)[user?.role || ''] || user?.role,
+                    ({ admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', logistics: 'Courier', buyer: 'Buyer' } as Record<string, string>)[user?.role || ''] || user?.role
+                  )}
+                </span>
+                {(user.role === 'seller' || user.role === 'store' || user.role === 'freelancer' || user.role === 'store_manager') && (
+                  <span className="text-[10px] font-bold text-[#1ABB9C] bg-[#1ABB9C]/10 border border-[#1ABB9C]/20 px-1.5 py-0.5 rounded">
+                    {t(locale,
+                      (user.role === 'store_manager' || merchantType === 'business' ? 'شركة / متجر معتمد' : 'تاجر فردي مستقل'),
+                      (user.role === 'store_manager' || merchantType === 'business' ? 'Verified Store' : 'Individual Seller')
+                    )}
+                  </span>
+                )}
+              </div>
             </div>
 
             <DropdownMenuItem onClick={() => navigateToDashboard(isBuyerMode ? 'buyer' : (rolePages[user.role] || 'buyer'))} className={cn('py-2.5 px-3 cursor-pointer gap-2', isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50')}>

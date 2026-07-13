@@ -329,7 +329,6 @@ export default function LegalStep({ data, updateData, onPreviewFile, isBusiness 
           <Label>{t('تاريخ الانتهاء', 'Expiry Date')}</Label>
           <Input 
             type="date" 
-            min={new Date().toISOString().split('T')[0]} 
             value={data.expiryDate ? data.expiryDate.split('T')[0] : ''} 
             onChange={(e) => {
               if (!e.target.value) {
@@ -337,20 +336,45 @@ export default function LegalStep({ data, updateData, onPreviewFile, isBusiness 
                 return;
               }
               const selectedDate = new Date(e.target.value + 'T00:00:00');
-              const today = new Date();
-              today.setHours(0,0,0,0);
-              if (selectedDate < today) {
-                alert(t('تاريخ الرخصة منتهي الصلاحية، يرجى إدخال رخصة صالحة.', 'License has expired, please enter a valid license date.'));
-                updateData({ expiryDate: null });
-                return;
-              }
               updateData({ expiryDate: selectedDate.toISOString() });
             }} 
             className="dark:bg-slate-900 dark:border-slate-800"
           />
-          {data.expiryDate && new Date(data.expiryDate) < new Date(new Date().setHours(0,0,0,0)) && (
-            <p className="text-xs text-red-500 mt-1">{t('الرخصة منتهية الصلاحية.', 'License is expired.')}</p>
-          )}
+          {(() => {
+            if (!data.expiryDate) return null;
+            const expiry = new Date(data.expiryDate);
+            const now = new Date();
+            now.setHours(0,0,0,0);
+            const diffTime = expiry.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays <= 0) {
+              return (
+                <p className="text-xs text-red-500 font-bold mt-1">
+                  {t('⚠️ هذا المستند منتهي الصلاحية! سيتم رفضه تلقائياً من قبل الإدارة.', '⚠️ This document is expired! It will be rejected automatically by admin.')}
+                </p>
+              );
+            } else if (diffDays <= 30) {
+              return (
+                <p className="text-xs text-red-500 font-semibold mt-1 animate-pulse">
+                  {t(`⚠️ تنبيه: المستند ينتهي خلال ${diffDays} يوم! يرجى رفع وثيقة مجددة لتفادي الرفض.`, `⚠️ Warning: Document expires in ${diffDays} days! Please upload a renewed document.`)}
+                </p>
+              );
+            } else if (diffDays <= 180) {
+              const months = Math.floor(diffDays / 30);
+              return (
+                <p className="text-xs text-amber-600 dark:text-amber-500 font-medium mt-1">
+                  {t(`⚠️ تحذير: الصلاحية المتبقية قصيرة (حوالي ${months || 1} أشهر). قد يطلب الإدمن تجديدها.`, `⚠️ Warning: Short validity remaining (about ${months || 1} months). Admin may request renewal.`)}
+                </p>
+              );
+            } else {
+              return (
+                <p className="text-xs text-emerald-600 dark:text-emerald-500 font-medium mt-1">
+                  {t('✓ تاريخ الصلاحية كافٍ ومقبول لدى الإدارة.', '✓ Document validity is sufficient and acceptable.')}
+                </p>
+              );
+            }
+          })()}
         </div>
       </div>
 

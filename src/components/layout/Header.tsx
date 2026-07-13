@@ -932,11 +932,11 @@ export default function Header() {
                             ({ admin: 'Admin', store_manager: 'Store Manager', seller: 'Seller', logistics: 'Courier', buyer: 'Buyer' } as Record<string, string>)[user?.role || ''] || user?.role
                           )}
                         </Badge>
-                        {(user.role === 'seller' || user.role === 'store' || user.role === 'freelancer') && (
+                        {(user.role === 'seller' || user.role === 'store' || user.role === 'freelancer' || user.role === 'store_manager') && (
                           <span className="text-[10px] font-bold text-brand bg-brand/10 border border-brand/20 px-2 py-0.5 rounded w-fit">
                             {isRTL 
-                              ? (merchantType === 'business' ? 'شركة / أعمال' : 'تاجر فردي')
-                              : (merchantType === 'business' ? 'Business Seller' : 'Individual Seller')
+                              ? (user.role === 'store_manager' || merchantType === 'business' ? 'شركة / متجر معتمد' : 'تاجر فردي مستقل')
+                              : (user.role === 'store_manager' || merchantType === 'business' ? 'Verified Store' : 'Individual Seller')
                             }
                           </span>
                         )}
