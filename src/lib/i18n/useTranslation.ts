@@ -38,7 +38,18 @@ export function useTranslation() {
     return staticDictionaries[activeLocale] || staticDictionaries.ar;
   }, [activeLocale, dynamicDicts]);
 
-  const t = useCallback((key: string, values?: Record<string, string | number>) => {
+  const t = useCallback((key: string, values?: any, arg3?: any) => {
+    const isLiteralText = /[\u0600-\u06FF\s]/.test(key);
+    if (isLiteralText) {
+      if (typeof values === 'string') {
+        if (activeLocale === 'ar') return key;
+        if (activeLocale === 'en') return values;
+        if (activeLocale === 'fr') return arg3 || values || key;
+        return values;
+      }
+      return key;
+    }
+
     const keys = key.split('.');
     let result: any = dict;
     

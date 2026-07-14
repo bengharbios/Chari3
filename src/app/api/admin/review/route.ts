@@ -548,11 +548,22 @@ async function getAuditLogs() {
       let detailsEn = '';
 
       if (log.details) {
+        let parsed: any = null;
         try {
-          const d = JSON.parse(log.details);
-          details = d.reason || d.note || d.message || '';
-          detailsEn = d.reasonEn || d.noteEn || d.messageEn || details;
-        } catch {
+          parsed = JSON.parse(log.details);
+        } catch (e) {
+          const reasonMatch = log.details.match(/"reason"\s*:\s*"([^"]*)"/);
+          const reasonEnMatch = log.details.match(/"reasonEn"\s*:\s*"([^"]*)"/);
+          const partialReason = log.details.match(/"reason"\s*:\s*"([^"]*)$/);
+          const partialReasonEn = log.details.match(/"reasonEn"\s*:\s*"([^"]*)$/);
+          const r = reasonMatch ? reasonMatch[1] : (partialReason ? partialReason[1] : '');
+          const rEn = reasonEnMatch ? reasonEnMatch[1] : (partialReasonEn ? partialReasonEn[1] : '');
+          parsed = { reason: r, reasonEn: rEn || r };
+        }
+        if (parsed) {
+          details = parsed.reason || parsed.note || parsed.message || '';
+          detailsEn = parsed.reasonEn || parsed.noteEn || parsed.messageEn || details;
+        } else {
           details = log.details;
           detailsEn = log.details;
         }

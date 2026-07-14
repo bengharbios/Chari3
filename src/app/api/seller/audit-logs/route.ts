@@ -64,12 +64,18 @@ export async function GET(req: NextRequest) {
     // Formatting for client presentation
     const formattedLogs = logs.map(log => {
       let detailsObj: any = {};
-      try {
-        if (log.details) {
+      if (log.details) {
+        try {
           detailsObj = JSON.parse(log.details);
+        } catch (e) {
+          const reasonMatch = log.details.match(/"reason"\s*:\s*"([^"]*)"/);
+          const reasonEnMatch = log.details.match(/"reasonEn"\s*:\s*"([^"]*)"/);
+          const partialReason = log.details.match(/"reason"\s*:\s*"([^"]*)$/);
+          const partialReasonEn = log.details.match(/"reasonEn"\s*:\s*"([^"]*)$/);
+          const r = reasonMatch ? reasonMatch[1] : (partialReason ? partialReason[1] : '');
+          const rEn = reasonEnMatch ? reasonEnMatch[1] : (partialReasonEn ? partialReasonEn[1] : '');
+          detailsObj = { reason: r, reasonEn: rEn || r };
         }
-      } catch {
-        detailsObj = { note: log.details };
       }
 
       return {
