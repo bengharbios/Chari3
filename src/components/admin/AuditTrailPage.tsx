@@ -16,7 +16,7 @@ import {
   ArrowLeft,
   ArrowRight,
 } from 'lucide-react';
-import { useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -164,7 +164,7 @@ function LogSkeleton({ count = 5 }: { count?: number }) {
 // ============================================
 
 export default function AuditTrailPage() {
-  const { locale } = useAppStore();
+  const { t, locale } = useTranslation();
   const isAr = locale === 'ar';
   const dir = isAr ? 'rtl' : 'ltr';
   const isRTL = isAr;
@@ -280,12 +280,10 @@ export default function AuditTrailPage() {
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <ClipboardList className="size-6" />
-          {isAr ? 'سجل التدقيق' : 'Audit Trail'}
+          {t('auditTrail.pageTitle')}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {isAr
-            ? 'سجل شامل لجميع إجراءات مراجعة التحقق والتوثيق'
-            : 'Complete log of all verification review actions'}
+          {t('auditTrail.pageDesc')}
         </p>
       </div>
 
@@ -299,7 +297,7 @@ export default function AuditTrailPage() {
               <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 id="audit-search"
-                placeholder={isAr ? 'بحث بالاسم، الإجراء، التفاصيل...' : 'Search by name, action, details...'}
+                placeholder={t('auditTrail.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="ps-9 h-9"
@@ -310,15 +308,15 @@ export default function AuditTrailPage() {
             <Select value={actionFilter} onValueChange={setActionFilter}>
               <SelectTrigger className="w-full sm:w-44 h-9" id="action-filter">
                 <Filter className="h-3.5 w-3.5 me-1 text-muted-foreground" />
-                <SelectValue placeholder={isAr ? 'الإجراء' : 'Action'} />
+                <SelectValue placeholder={t('auditTrail.filterAction')} />
               </SelectTrigger>
               <SelectContent dir={dir}>
-                <SelectItem value="all">{isAr ? 'كل الإجراءات' : 'All Actions'}</SelectItem>
-                <SelectItem value="approved">{isAr ? 'تفعيل' : 'Approved'}</SelectItem>
-                <SelectItem value="rejected">{isAr ? 'رفض' : 'Rejected'}</SelectItem>
-                <SelectItem value="request_edit">{isAr ? 'طلب تعديل' : 'Request Edit'}</SelectItem>
-                <SelectItem value="submitted">{isAr ? 'تقديم' : 'Submitted'}</SelectItem>
-                <SelectItem value="note">{isAr ? 'ملاحظة' : 'Note'}</SelectItem>
+                <SelectItem value="all">{t('auditTrail.filterAllActions')}</SelectItem>
+                <SelectItem value="approved">{t('تفعيل', 'Approved')}</SelectItem>
+                <SelectItem value="rejected">{t('رفض', 'Rejected')}</SelectItem>
+                <SelectItem value="request_edit">{t('طلب تعديل', 'Request Edit')}</SelectItem>
+                <SelectItem value="submitted">{t('تقديم', 'Submitted')}</SelectItem>
+                <SelectItem value="note">{t('ملاحظة', 'Note')}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -333,7 +331,7 @@ export default function AuditTrailPage() {
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                isAr ? 'تحديث' : 'Refresh'
+                t('auditTrail.refreshBtn')
               )}
             </Button>
           </div>
@@ -348,8 +346,8 @@ export default function AuditTrailPage() {
               <ClipboardList className="size-10 mx-auto mb-3 opacity-30" />
               <p className="text-sm">
                 {searchQuery || actionFilter !== 'all'
-                  ? (isAr ? 'لا توجد نتائج تطابق بحثك' : 'No results match your search')
-                  : (isAr ? 'لا توجد سجلات تدقيق' : 'No audit logs yet')}
+                  ? t('auditTrail.noResults')
+                  : t('auditTrail.noLogs')}
               </p>
             </div>
           ) : (
@@ -392,7 +390,7 @@ export default function AuditTrailPage() {
                         <span>{formatTimestamp(log.timestamp, isAr)}</span>
                         {log.adminName && (
                           <span>
-                            {isAr ? `بواسطة ${log.adminName}` : `by ${log.adminName}`}
+                            {t('auditTrail.byAdmin')} {log.adminName}
                           </span>
                         )}
                       </div>
@@ -407,9 +405,10 @@ export default function AuditTrailPage() {
           {!loading && auditLogs.length > 0 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-3 border-t">
               <p className="text-sm text-muted-foreground">
-                {isAr
-                  ? `عرض ${(pagination.page - 1) * pagination.pageSize + 1}–${Math.min(pagination.page * pagination.pageSize, pagination.total)} من ${pagination.total} سجل`
-                  : `Showing ${(pagination.page - 1) * pagination.pageSize + 1}–${Math.min(pagination.page * pagination.pageSize, pagination.total)} of ${pagination.total} entries`}
+                {t('auditTrail.showingOf')
+                  .replace('%from%', String((pagination.page - 1) * pagination.pageSize + 1))
+                  .replace('%to%', String(Math.min(pagination.page * pagination.pageSize, pagination.total)))
+                  .replace('%total%', String(pagination.total))}
               </p>
 
               <div className="flex items-center gap-2">

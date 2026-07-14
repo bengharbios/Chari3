@@ -13,8 +13,8 @@ export default function AdminVerificationsPage() {
   const { locale } = useAppStore();
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-      <div className="flex items-center gap-3 mb-6">
+    <div className="space-y-6" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+      <div className="flex items-center gap-3">
         <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
           <ShieldCheck className="h-6 w-6 text-primary" />
         </div>
