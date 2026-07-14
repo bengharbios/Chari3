@@ -39,7 +39,7 @@ export function useTranslation() {
   }, [activeLocale, dynamicDicts]);
 
   const t = useCallback((key: string, values?: any, arg3?: any) => {
-    const isLiteralText = /[\u0600-\u06FF\s]/.test(key);
+    const isLiteralText = /[^a-zA-Z0-9._-]/.test(key);
     if (isLiteralText) {
       if (typeof values === 'string') {
         if (activeLocale === 'ar') return key;
