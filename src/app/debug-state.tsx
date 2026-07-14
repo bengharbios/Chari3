@@ -12,7 +12,7 @@ export default function DebugState() {
   const [mounted, setMounted] = useState(false);
   
   useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
+  if (!mounted || process.env.NODE_ENV !== 'development') return null;
 
   const isAdmin = pathname?.startsWith('/admin-secure-internal');
   const isAuthenticated = isAdmin ? adminAuthState.isAdminAuthenticated : authState.isAuthenticated;
