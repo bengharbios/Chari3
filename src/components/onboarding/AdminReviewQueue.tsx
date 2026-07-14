@@ -11,7 +11,6 @@ import {
   Truck,
   Package,
   Eye,
-  Download,
   FileText,
   Edit,
   BarChart3,
@@ -19,7 +18,12 @@ import {
   TrendingDown,
   Timer,
   Loader2,
-  X,
+  Search,
+  ChevronsLeft,
+  ChevronsRight,
+  ArrowLeft,
+  ArrowRight,
+  Filter,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppStore } from '@/lib/store';
@@ -39,12 +43,28 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // ============================================
 // TYPES
@@ -69,6 +89,13 @@ interface ReviewStats {
   approvedToday: number;
   rejectedToday: number;
   avgReviewTime: string;
+}
+
+interface PaginationData {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
 }
 
 // ============================================
@@ -105,69 +132,6 @@ const ROLE_CONFIG: Record<
   },
 };
 
-const AUDIT_ACTION_CONFIG: Record<
-  string,
-  { labelAr: string; labelEn: string; color: string; icon: React.ElementType }
-> = {
-  approve: {
-    labelAr: 'تفعيل',
-    labelEn: 'Approve',
-    color: 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400',
-    icon: CheckCircle,
-  },
-  approved: {
-    labelAr: 'تفعيل',
-    labelEn: 'Approved',
-    color: 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400',
-    icon: CheckCircle,
-  },
-  reject: {
-    labelAr: 'رفض',
-    labelEn: 'Reject',
-    color: 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400',
-    icon: XCircle,
-  },
-  rejected: {
-    labelAr: 'رفض',
-    labelEn: 'Rejected',
-    color: 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400',
-    icon: XCircle,
-  },
-  request_edit: {
-    labelAr: 'طلب تعديل',
-    labelEn: 'Request Edit',
-    color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400',
-    icon: Edit,
-  },
-  note: {
-    labelAr: 'ملاحظة',
-    labelEn: 'Note',
-    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
-    icon: FileText,
-  },
-  auto_assign: {
-    labelAr: 'توزيع تلقائي',
-    labelEn: 'Auto-assign',
-    color: 'bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400',
-    icon: Timer,
-  },
-  submitted: {
-    labelAr: 'تقديم',
-    labelEn: 'Submitted',
-    color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400',
-    icon: FileText,
-  },
-};
-
-function getActionConfig(action: string) {
-  return AUDIT_ACTION_CONFIG[action] || {
-    labelAr: action,
-    labelEn: action,
-    color: 'bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400',
-    icon: FileText,
-  };
-}
-
 function getRelativeTime(dateStr: string, isAr: boolean): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const hours = Math.floor(diff / (1000 * 60 * 60));
@@ -188,87 +152,31 @@ function formatTimestamp(ts: string, isAr: boolean): string {
 }
 
 // ============================================
-// REQUEST CARD
+// TABLE SKELETON
 // ============================================
 
-interface RequestCardProps {
-  merchant: PendingMerchant;
-  isAr: boolean;
-  onViewDetails: (m: PendingMerchant) => void;
-}
-
-function RequestCard({ merchant, isAr, onViewDetails }: RequestCardProps) {
-  const roleCfg = ROLE_CONFIG[merchant.role];
-  const RoleIcon = roleCfg.icon;
-  const isUrgent = merchant.priority === 'urgent';
-
+function TableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <Card className="hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <Avatar className="size-10">
-            <AvatarFallback className={roleCfg.color}>
-              <RoleIcon className="size-5" />
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-medium text-sm truncate">
-                {isAr ? merchant.name : merchant.nameEn}
-              </span>
-              {isUrgent && (
-                <Badge className="bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-0 text-[10px] px-1.5">
-                  {isAr ? 'عاجل' : 'Urgent'}
-                </Badge>
-              )}
-              <Badge variant="secondary" className={`text-[10px] px-1.5 border-0 ${roleCfg.color}`}>
-                {isAr ? roleCfg.labelAr : roleCfg.labelEn}
-              </Badge>
+    <>
+      {Array.from({ length: rows }).map((_, i) => (
+        <TableRow key={i}>
+          <TableCell className="ps-4">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-9 w-9 rounded-full" />
+              <div className="space-y-1.5">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-3 w-20" />
+              </div>
             </div>
-            {merchant.storeName && (
-              <p className="text-xs text-muted-foreground truncate">
-                {isAr ? merchant.storeName : merchant.storeNameEn}
-              </p>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              {getRelativeTime(merchant.registeredAt, isAr)}
-            </p>
-            <div className="flex items-center gap-3 mt-2">
-              {merchant.phoneVerified ? (
-                <span className="text-xs text-green-600 flex items-center gap-1">
-                  <CheckCircle className="size-3" />
-                  {isAr ? 'هاتف' : 'Phone'}
-                </span>
-              ) : (
-                <span className="text-xs text-yellow-600 flex items-center gap-1">
-                  <Clock className="size-3" />
-                  {isAr ? 'هاتف' : 'Phone'}
-                </span>
-              )}
-              {merchant.emailVerified ? (
-                <span className="text-xs text-green-600 flex items-center gap-1">
-                  <CheckCircle className="size-3" />
-                  {isAr ? 'بريد' : 'Email'}
-                </span>
-              ) : (
-                <span className="text-xs text-yellow-600 flex items-center gap-1">
-                  <Clock className="size-3" />
-                  {isAr ? 'بريد' : 'Email'}
-                </span>
-              )}
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="shrink-0 text-xs"
-            onClick={() => onViewDetails(merchant)}
-          >
-            {isAr ? 'عرض التفاصيل' : 'View Details'}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          </TableCell>
+          <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+          <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+          <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+          <TableCell><Skeleton className="h-8 w-24 rounded" /></TableCell>
+        </TableRow>
+      ))}
+    </>
   );
 }
 
@@ -299,354 +207,204 @@ function DetailModal({
 }: DetailModalProps) {
   const [activePreviewDoc, setActivePreviewDoc] = useState<any>(null);
 
-  React.useEffect(() => {
-    if (!open) {
-      setActivePreviewDoc(null);
-    }
-  }, [open]);
-
   if (!merchant) return null;
+
   const roleCfg = ROLE_CONFIG[merchant.role];
+  const RoleIcon = roleCfg.icon;
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh]">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {isAr ? merchant.name : merchant.nameEn}
-            <Badge variant="secondary" className={`text-xs border-0 ${roleCfg.color}`}>
-              {isAr ? roleCfg.labelAr : roleCfg.labelEn}
-            </Badge>
+            <Avatar className="size-8">
+              <AvatarFallback className={roleCfg.color}>
+                <RoleIcon className="size-4" />
+              </AvatarFallback>
+            </Avatar>
+            <span>{isAr ? merchant.name : merchant.nameEn}</span>
+            {merchant.priority === 'urgent' && (
+              <Badge className="bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-0 text-[10px]">
+                {isAr ? 'عاجل' : 'Urgent'}
+              </Badge>
+            )}
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {isAr ? 'تفاصيل طلب التوثيق' : 'Verification request details'}
+          </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[60vh] pr-2">
-          <div className="space-y-4">
-            {/* Merchant Info */}
+
+        <ScrollArea className="flex-1 overflow-auto">
+          <div className="space-y-4 px-1">
+            {/* Basic Info */}
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <span className="text-muted-foreground">{isAr ? 'البريد' : 'Email'}</span>
-                <p className="font-medium">{merchant.email}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">{isAr ? 'الهاتف' : 'Phone'}</span>
-                <p className="font-medium">{merchant.phone}</p>
+                <p className="text-muted-foreground text-xs">{isAr ? 'النوع' : 'Role'}</p>
+                <Badge variant="secondary" className={`text-[10px] border-0 ${roleCfg.color}`}>
+                  {isAr ? roleCfg.labelAr : roleCfg.labelEn}
+                </Badge>
               </div>
               {merchant.storeName && (
-                <div className="col-span-2">
-                  <span className="text-muted-foreground">{isAr ? 'اسم المتجر' : 'Store Name'}</span>
+                <div>
+                  <p className="text-muted-foreground text-xs">{isAr ? 'اسم المتجر' : 'Store Name'}</p>
                   <p className="font-medium">{isAr ? merchant.storeName : merchant.storeNameEn}</p>
                 </div>
               )}
               <div>
-                <span className="text-muted-foreground">{isAr ? 'تاريخ التسجيل' : 'Registered'}</span>
-                <p className="font-medium">{getRelativeTime(merchant.registeredAt, isAr)}</p>
+                <p className="text-muted-foreground text-xs">{isAr ? 'البريد الإلكتروني' : 'Email'}</p>
+                <p className="font-medium">{merchant.email || '—'}</p>
               </div>
               <div>
-                <span className="text-muted-foreground">{isAr ? 'الأولوية' : 'Priority'}</span>
-                <Badge
-                  className={
-                    merchant.priority === 'urgent'
-                      ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-0'
-                      : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 border-0'
-                  }
-                >
-                  {merchant.priority === 'urgent'
-                    ? isAr ? 'عاجل' : 'Urgent'
-                    : isAr ? 'عادي' : 'Standard'}
-                </Badge>
+                <p className="text-muted-foreground text-xs">{isAr ? 'الهاتف' : 'Phone'}</p>
+                <p className="font-medium">{merchant.phone || '—'}</p>
               </div>
-            </div>
-
-            {merchant.details && (
-              <>
-                <Separator />
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold">
-                    {isAr ? '📝 البيانات المدخلة للتحقق' : '📝 Application Details'}
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs p-4 rounded-xl border bg-muted/20">
-                    {merchant.details.companyName && (
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'اسم الشركة' : 'Company Name'}</span>
-                        <p className="font-semibold text-sm text-foreground">{merchant.details.companyName}</p>
-                      </div>
-                    )}
-                    {merchant.details.entityType && (
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'نوع الكيان' : 'Entity Type'}</span>
-                        <p className="font-semibold text-sm text-foreground">
-                          {merchant.details.entityType === 'legal' ? (isAr ? 'شركة / شخص معنوي' : 'Legal Entity') : (isAr ? 'شخص طبيعي' : 'Natural Person')}
-                        </p>
-                      </div>
-                    )}
-                    {merchant.details.commercialRegisterNumber && (
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'رقم السجل التجاري' : 'Commercial Register Number'}</span>
-                        <p className="font-semibold text-sm text-foreground font-mono">{merchant.details.commercialRegisterNumber}</p>
-                      </div>
-                    )}
-                    {merchant.details.issueAuthority && (
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'جهة الإصدار' : 'Issue Authority'}</span>
-                        <p className="font-semibold text-sm text-foreground">{merchant.details.issueAuthority}</p>
-                      </div>
-                    )}
-                    {merchant.details.issueDate && (
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'تاريخ الإصدار' : 'Issue Date'}</span>
-                        <p className="font-semibold text-sm text-foreground">{new Date(merchant.details.issueDate).toLocaleDateString(isAr ? 'ar-SA' : 'en-US')}</p>
-                      </div>
-                    )}
-                    {merchant.details.expiryDate && (() => {
-                      const expiry = new Date(merchant.details.expiryDate);
-                      const now = new Date();
-                      now.setHours(0, 0, 0, 0);
-                      expiry.setHours(0, 0, 0, 0);
-                      const diffTime = expiry.getTime() - now.getTime();
-                      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                      
-                      let alertColor = 'text-green-600 bg-green-50 dark:bg-green-950/10 border-green-200 dark:border-green-900/20';
-                      let label = isAr ? `سارية الصلاحية (متبقي ${Math.round(diffDays / 30)} أشهر)` : `Valid (${Math.round(diffDays / 30)} months left)`;
-
-                      if (diffDays < 0) {
-                        alertColor = 'text-red-600 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/30 font-bold';
-                        label = isAr ? `منتهية الصلاحية (منذ ${Math.abs(diffDays)} يوم)` : `Expired (${Math.abs(diffDays)} days ago)`;
-                      } else if (diffDays === 0) {
-                        alertColor = 'text-red-600 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/30 font-bold animate-pulse';
-                        label = isAr ? 'منتهية اليوم!' : 'Expires today!';
-                      } else if (diffDays <= 7) {
-                        alertColor = 'text-red-600 bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/30';
-                        label = isAr ? `تنتهي خلال ${diffDays} أيام!` : `Expires in ${diffDays} days!`;
-                      } else if (diffDays <= 90) {
-                        alertColor = 'text-amber-600 bg-amber-50 dark:bg-amber-955/20 border-amber-200 dark:border-amber-900/30 font-semibold';
-                        label = isAr ? `صلاحية حرجة (متبقي ${diffDays} يوم ~ ${Math.round(diffDays / 30)} أشهر)` : `Critical validity (${diffDays} days remaining)`;
-                      } else if (diffDays <= 180) {
-                        alertColor = 'text-amber-500 bg-amber-50/50 dark:bg-amber-955/10 border-amber-100 dark:border-amber-900/20';
-                        label = isAr ? `صلاحية قصيرة (متبقي ${Math.round(diffDays / 30)} أشهر)` : `Short validity (${Math.round(diffDays / 30)} months left)`;
-                      }
-
-                      return (
-                        <div className="col-span-1 sm:col-span-2 p-3 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-muted/30">
-                          <div>
-                            <span className="text-muted-foreground block mb-0.5">{isAr ? 'تاريخ انتهاء الرخصة / السجل' : 'License Expiry Date'}</span>
-                            <p className="font-semibold text-sm text-foreground">{new Date(merchant.details.expiryDate).toLocaleDateString(isAr ? 'ar-SA' : 'en-US')}</p>
-                          </div>
-                          <Badge variant="outline" className={`px-2.5 py-1 text-xs border ${alertColor}`}>
-                            <AlertTriangle className="w-3.5 h-3.5 mr-1 ml-1 shrink-0" />
-                            {label}
-                          </Badge>
-                        </div>
-                      );
-                    })()}
-                    {merchant.details.state && (
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'الولاية / المقاطعة' : 'State / Region'}</span>
-                        <p className="font-semibold text-sm text-foreground">{merchant.details.state}</p>
-                      </div>
-                    )}
-                    {merchant.details.companyAddress && (
-                      <div className="col-span-1 sm:col-span-2">
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'العنوان الكامل' : 'Full Address'}</span>
-                        <p className="font-semibold text-sm text-foreground">{merchant.details.companyAddress}</p>
-                      </div>
-                    )}
-
-                    <div className="col-span-1 sm:col-span-2 my-1 border-t border-dashed" />
-
-                    {merchant.details.beneficiaryName && (
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'صاحب الحساب (المستفيد)' : 'Beneficiary Name'}</span>
-                        <p className="font-semibold text-sm text-foreground">{merchant.details.beneficiaryName}</p>
-                      </div>
-                    )}
-                    {merchant.details.bankName && (
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'اسم البنك / البريد' : 'Bank Name'}</span>
-                        <p className="font-semibold text-sm text-foreground">{merchant.details.bankName}</p>
-                      </div>
-                    )}
-                    {merchant.details.iban && (
-                      <div className="col-span-1 sm:col-span-2">
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'رقم الآيبان (IBAN / RIP)' : 'IBAN / RIP'}</span>
-                        <p className="font-semibold text-sm text-foreground font-mono">{merchant.details.iban}</p>
-                      </div>
-                    )}
-                    {merchant.details.ccpNumber && (
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'رقم الحساب الجاري (CCP)' : 'CCP Number'}</span>
-                        <p className="font-semibold text-sm text-foreground font-mono">{merchant.details.ccpNumber}</p>
-                      </div>
-                    )}
-                    {merchant.details.ccpCle && (
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'مفتاح الحساب الجاري (Key)' : 'CCP Key'}</span>
-                        <p className="font-semibold text-sm text-foreground font-mono">{merchant.details.ccpCle}</p>
-                      </div>
-                    )}
-
-                    <div className="col-span-1 sm:col-span-2 my-1 border-t border-dashed" />
-
-                    {merchant.details.signatoryName && (
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'اسم المفوض بالتوقيع' : 'Authorized Signatory Name'}</span>
-                        <p className="font-semibold text-sm text-foreground">{merchant.details.signatoryName}</p>
-                      </div>
-                    )}
-                    {merchant.details.signatoryEmail && (
-                      <div>
-                        <span className="text-muted-foreground block mb-0.5">{isAr ? 'بريد المفوض بالتوقيع' : 'Authorized Signatory Email'}</span>
-                        <p className="font-semibold text-sm text-foreground">{merchant.details.signatoryEmail}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </>
-            )}
-
-            <Separator />
-
-            {/* Documents */}
-            <div>
-              <h4 className="text-sm font-semibold mb-3">
-                {isAr ? '📋 المستندات' : '📋 Documents'}
-              </h4>
-              <div className="space-y-2">
-                {merchant.documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${activePreviewDoc?.id === doc.id ? 'border-indigo-500 bg-indigo-50/10' : 'bg-muted/30 border-border'}`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <FileText className="size-4 text-muted-foreground" />
-                      <span className="text-sm">{isAr ? doc.name : doc.nameEn}</span>
-                      {doc.status === 'pending' && (
-                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 border-0 text-[10px]">
-                          {isAr ? 'قيد المراجعة' : 'Pending'}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="size-8"
-                        onClick={() => setActivePreviewDoc(doc)}
-                        title={isAr ? 'معاينة المستند' : 'Preview'}
-                      >
-                        <Eye className="size-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="size-8" asChild title={isAr ? 'تحميل' : 'Download'}>
-                        <a href={doc.url} download>
-                          <Download className="size-4" />
-                        </a>
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+              <div>
+                <p className="text-muted-foreground text-xs">{isAr ? 'تاريخ التسجيل' : 'Registered'}</p>
+                <p className="font-medium">{formatTimestamp(merchant.registeredAt, isAr)}</p>
               </div>
-              {/* Document preview panel */}
-              {activePreviewDoc ? (
-                <div className="mt-4 p-4 rounded-xl border border-indigo-100 dark:border-slate-800 bg-gray-50 dark:bg-slate-950 space-y-3">
-                  <div className="flex justify-between items-center pb-2 border-b dark:border-slate-800">
-                    <span className="text-xs font-bold text-gray-900 dark:text-slate-100 flex items-center gap-1">
-                      <FileText className="size-3.5 text-indigo-500" />
-                      {isAr ? activePreviewDoc.name : activePreviewDoc.nameEn}
-                    </span>
-                    <Button variant="ghost" size="icon" className="size-6 text-muted-foreground hover:bg-muted" onClick={() => setActivePreviewDoc(null)}>
-                      <X className="size-3.5" />
-                    </Button>
-                  </div>
-                  <div className="rounded-lg overflow-hidden border bg-white dark:bg-slate-900 aspect-video flex flex-col items-center justify-center relative min-h-[280px]">
-                    {activePreviewDoc.url.toLowerCase().endsWith('.pdf') || activePreviewDoc.url.includes('.pdf?') ? (
-                      <div className="w-full h-full flex flex-col">
-                        <p className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/20 p-1.5 rounded text-center font-medium border-b border-amber-100 dark:border-amber-900/10">
-                          {isAr 
-                            ? 'تلميح أمان: إذا لم تظهر المعاينة أدناه تلقائياً، فهذا بسبب قيود الأمان (X-Frame-Options) المفروضة من خادم الاستضافة.' 
-                            : 'Security Tip: If the preview does not load below, it is due to security restrictions (X-Frame-Options) enforced by your hosting provider.'}
-                          <a href={activePreviewDoc.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 underline mx-1 font-bold inline-block">
-                            {isAr ? 'اضغط هنا لفتح الملف بأمان في نافذة مستقلة ↗' : 'Click here to open the file securely in a new window ↗'}
-                          </a>
-                        </p>
-                        <iframe
-                          src={activePreviewDoc.url}
-                          className="w-full flex-1 border-0 bg-white"
-                          title="Admin Document Preview"
-                        />
-                      </div>
-                    ) : (
-                      <img
-                        src={activePreviewDoc.url}
-                        alt="Document Preview"
-                        className="max-h-[350px] max-w-full object-contain p-2"
-                      />
-                    )}
-                  </div>
+              <div>
+                <p className="text-muted-foreground text-xs">{isAr ? 'التحقق' : 'Verification'}</p>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs flex items-center gap-1 ${merchant.phoneVerified ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {merchant.phoneVerified ? <CheckCircle className="size-3" /> : <Clock className="size-3" />}
+                    {isAr ? 'هاتف' : 'Phone'}
+                  </span>
+                  <span className={`text-xs flex items-center gap-1 ${merchant.emailVerified ? 'text-green-600' : 'text-yellow-600'}`}>
+                    {merchant.emailVerified ? <CheckCircle className="size-3" /> : <Clock className="size-3" />}
+                    {isAr ? 'بريد' : 'Email'}
+                  </span>
                 </div>
-              ) : (
-                <div className="mt-3 p-8 rounded-lg border-2 border-dashed bg-muted/20 text-center">
-                  <FileText className="size-8 mx-auto text-muted-foreground/50" />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {isAr ? 'معاينة المستند ستظهر هنا (اضغط على أيقونة العين 👁️ لمشاهدة المرفق)' : 'Document preview will appear here (Click the Eye icon 👁️ to view attachment)'}
-                  </p>
-                </div>
-              )}
+              </div>
             </div>
 
             <Separator />
 
             {/* Verification Items */}
             <div>
-              <h4 className="text-sm font-semibold mb-3">
-                {isAr ? '✅ عناصر التوثيق' : '✅ Verification Items'}
-              </h4>
+              <p className="text-sm font-semibold mb-3">
+                {isAr ? 'مستندات التوثيق' : 'Verification Documents'}
+              </p>
               <div className="space-y-2">
-                {merchant.verificationItems.map((item) => {
-                  const statusIcon =
-                    item.status === 'verified' ? (
-                      <CheckCircle className="size-4 text-green-600" />
-                    ) : item.status === 'pending' ? (
-                      <Clock className="size-4 text-yellow-600" />
-                    ) : item.status === 'rejected' ? (
-                      <XCircle className="size-4 text-red-600" />
-                    ) : (
-                      <AlertTriangle className="size-4 text-orange-600" />
-                    );
-                  return (
-                    <div key={item.id} className="flex items-center gap-2 text-sm">
-                      {statusIcon}
-                      <span>{isAr ? item.labelAr : item.labelEn}</span>
+                {merchant.verificationItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+                  >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <FileText className="size-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {isAr ? item.labelAr : item.labelEn}
+                        </p>
+                        {item.rejectionReason && (
+                          <p className="text-xs text-red-600 mt-0.5">{item.rejectionReason}</p>
+                        )}
+                      </div>
                     </div>
-                  );
-                })}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {item.status === 'pending' && (
+                        <Badge className="bg-yellow-100 text-yellow-700 border-0 text-[10px]">
+                          {isAr ? 'معلق' : 'Pending'}
+                        </Badge>
+                      )}
+                      {item.status === 'approved' && (
+                        <Badge className="bg-green-100 text-green-700 border-0 text-[10px]">
+                          {isAr ? 'مفعّل' : 'Approved'}
+                        </Badge>
+                      )}
+                      {item.status === 'rejected' && (
+                        <Badge className="bg-red-100 text-red-700 border-0 text-[10px]">
+                          {isAr ? 'مرفوض' : 'Rejected'}
+                        </Badge>
+                      )}
+                      {item.fileUrl && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-6 text-xs px-2"
+                          onClick={() => setActivePreviewDoc(item)}
+                        >
+                          <Eye className="size-3 me-1" />
+                          {isAr ? 'عرض' : 'View'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
+
+            {/* Document Preview */}
+            {activePreviewDoc && (
+              <div className="rounded-lg border overflow-hidden">
+                <div className="flex items-center justify-between px-3 py-2 bg-muted">
+                  <p className="text-xs font-medium">
+                    {isAr ? activePreviewDoc.labelAr : activePreviewDoc.labelEn}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 text-xs"
+                    onClick={() => setActivePreviewDoc(null)}
+                  >
+                    {isAr ? 'إغلاق' : 'Close'}
+                  </Button>
+                </div>
+                <div className="p-4 flex items-center justify-center bg-muted/20 min-h-32">
+                  {activePreviewDoc.fileUrl?.match(/\.(jpg|jpeg|png|webp|gif)$/i) ? (
+                    <img
+                      src={activePreviewDoc.fileUrl}
+                      alt={activePreviewDoc.labelEn}
+                      className="max-h-64 max-w-full object-contain rounded"
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <FileText className="size-8 text-muted-foreground mx-auto mb-2" />
+                      <a
+                        href={activePreviewDoc.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-primary underline"
+                      >
+                        {isAr ? 'فتح الملف' : 'Open File'}
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </ScrollArea>
-        <DialogFooter className="flex-row gap-2 sm:justify-start">
-          <Button
-            className="bg-green-600 hover:bg-green-700 text-white"
-            onClick={() => onApprove(merchant)}
-            disabled={loading}
-          >
-            {loading ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle className="size-4" />}
-            {isAr ? 'تفعيل الحساب' : 'Approve'}
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={() => onReject(merchant)}
-            disabled={loading}
-          >
-            <XCircle className="size-4" />
-            {isAr ? 'رفض الطلب' : 'Reject'}
+
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={onClose} disabled={loading} className="sm:me-auto">
+            {isAr ? 'إغلاق' : 'Close'}
           </Button>
           <Button
             variant="outline"
-            className="border-yellow-300 text-yellow-700 hover:bg-yellow-50 dark:border-yellow-700 dark:text-yellow-400 dark:hover:bg-yellow-900/20"
+            className="border-yellow-400 text-yellow-700 hover:bg-yellow-50 gap-2"
             onClick={() => onRequestEdit(merchant)}
             disabled={loading}
           >
             <Edit className="size-4" />
             {isAr ? 'طلب تعديل' : 'Request Edit'}
+          </Button>
+          <Button
+            variant="outline"
+            className="border-red-400 text-red-700 hover:bg-red-50 gap-2"
+            onClick={() => onReject(merchant)}
+            disabled={loading}
+          >
+            <XCircle className="size-4" />
+            {isAr ? 'رفض' : 'Reject'}
+          </Button>
+          <Button
+            className="bg-green-600 hover:bg-green-700 text-white gap-2"
+            onClick={() => onApprove(merchant)}
+            disabled={loading}
+          >
+            {loading ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle className="size-4" />}
+            {isAr ? 'تفعيل' : 'Approve'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -662,79 +420,42 @@ interface RejectionDialogProps {
   merchant: PendingMerchant | null;
   open: boolean;
   onClose: () => void;
-  onSubmit: (merchant: PendingMerchant, reason: string) => void;
+  onSubmit: (m: PendingMerchant, reason: string) => void;
   isAr: boolean;
   loading: boolean;
 }
 
-function RejectionDialog({
-  merchant,
-  open,
-  onClose,
-  onSubmit,
-  isAr,
-  loading,
-}: RejectionDialogProps) {
+function RejectionDialog({ merchant, open, onClose, onSubmit, isAr, loading }: RejectionDialogProps) {
   const [reason, setReason] = useState('');
 
-  const predefinedReasons = isAr
-    ? ['مستندات غير واضحة', 'بيانات غير مطابقة', 'مستند منتهي الصلاحية']
-    : ['Unclear documents', 'Data mismatch', 'Expired document'];
-
-  const handlePredefinedClick = (r: string) => {
-    setReason((prev) => (prev ? `${prev}، ${r}` : r));
-  };
-
-  const handleSubmit = () => {
-    if (!reason.trim() || !merchant) return;
-    onSubmit(merchant, reason.trim());
-    setReason('');
-  };
+  React.useEffect(() => {
+    if (!open) setReason('');
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-red-600 flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 text-red-700 dark:text-red-400">
             <XCircle className="size-5" />
-            {isAr ? 'رفض طلب التفعيل' : 'Reject Activation Request'}
+            {isAr ? 'رفض الطلب' : 'Reject Request'}
           </DialogTitle>
           <DialogDescription className="sr-only">
-            {isAr ? 'نموذج لتوضيح سبب رفض طلب التفعيل للتاجر' : 'Form to specify the rejection reason for this activation request'}
+            {isAr ? 'أدخل سبب الرفض' : 'Enter rejection reason'}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
             {isAr
-              ? `يرجى إدخال سبب الرفض لطلب "${merchant ? (isAr ? merchant.name : merchant.nameEn) : ''}"`
-              : `Please enter rejection reason for "${merchant ? (isAr ? merchant.name : merchant.nameEn) : ''}"`}
+              ? `سيتم إشعار "${merchant?.name}" بسبب الرفض.`
+              : `"${merchant?.nameEn}" will be notified with this rejection reason.`}
           </p>
           <Textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
-            placeholder={
-              isAr
-                ? 'اكتب سبب الرفض هنا...'
-                : 'Write rejection reason here...'
-            }
+            placeholder={isAr ? 'أدخل سبب الرفض...' : 'Enter rejection reason...'}
             rows={3}
           />
-          <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">
-              {isAr ? 'أسباب شائعة:' : 'Common reasons:'}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {predefinedReasons.map((r) => (
-                <button
-                  key={r}
-                  onClick={() => handlePredefinedClick(r)}
-                  className="text-xs px-2 py-1 rounded border hover:bg-muted transition-colors"
-                >
-                  {r}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={loading}>
@@ -742,11 +463,11 @@ function RejectionDialog({
           </Button>
           <Button
             variant="destructive"
-            onClick={handleSubmit}
+            onClick={() => merchant && onSubmit(merchant, reason)}
             disabled={!reason.trim() || loading}
           >
-            {loading ? <Loader2 className="size-4 animate-spin" /> : null}
-            {isAr ? 'تأكيد الرفض' : 'Confirm Rejection'}
+            {loading ? <Loader2 className="size-4 animate-spin" /> : <XCircle className="size-4" />}
+            {isAr ? 'تأكيد الرفض' : 'Confirm Reject'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -762,19 +483,12 @@ interface RequestEditDialogProps {
   merchant: PendingMerchant | null;
   open: boolean;
   onClose: () => void;
-  onSubmit: (merchant: PendingMerchant, items: string[], message: string) => void;
+  onSubmit: (m: PendingMerchant, items: string[], message: string) => void;
   isAr: boolean;
   loading: boolean;
 }
 
-function RequestEditDialog({
-  merchant,
-  open,
-  onClose,
-  onSubmit,
-  isAr,
-  loading,
-}: RequestEditDialogProps) {
+function RequestEditDialog({ merchant, open, onClose, onSubmit, isAr, loading }: RequestEditDialogProps) {
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
   const [message, setMessage] = useState('');
 
@@ -865,79 +579,6 @@ function RequestEditDialog({
 }
 
 // ============================================
-// AUDIT TRAIL
-// ============================================
-
-interface AuditTrailProps {
-  isAr: boolean;
-  auditLogs: AuditLogEntry[];
-  loading: boolean;
-}
-
-function AuditTrail({ isAr, auditLogs, loading }: AuditTrailProps) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">
-          {isAr ? '📝 سجل التدقيق' : '📝 Audit Trail'}
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : auditLogs.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            {isAr ? 'لا توجد سجلات' : 'No audit logs'}
-          </p>
-        ) : (
-          <div className="relative space-y-0">
-            {auditLogs.map((log, i) => {
-              const actionCfg = getActionConfig(log.action);
-              const ActionIcon = actionCfg.icon;
-              return (
-                <div key={log.id} className="flex gap-3 pb-4 last:pb-0">
-                  {/* Timeline dot & line */}
-                  <div className="flex flex-col items-center">
-                    <div className={`p-1.5 rounded-full ${actionCfg.color} shrink-0`}>
-                      <ActionIcon className="size-3" />
-                    </div>
-                    {i < auditLogs.length - 1 && (
-                      <div className="w-px flex-1 bg-border mt-1" />
-                    )}
-                  </div>
-                  {/* Content */}
-                  <div className="flex-1 min-w-0 pb-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Badge variant="secondary" className={`text-[10px] border-0 ${actionCfg.color}`}>
-                        {isAr ? actionCfg.labelAr : actionCfg.labelEn}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {formatTimestamp(log.timestamp, isAr)}
-                      </span>
-                    </div>
-                    <p className="text-sm font-medium mt-0.5">
-                      {isAr ? log.merchantName : log.merchantNameEn}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {isAr ? log.details : log.detailsEn}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      {isAr ? 'بواسطة' : 'by'} {log.adminName}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-// ============================================
 // STATS ROW
 // ============================================
 
@@ -1013,25 +654,40 @@ function StatsRow({ isAr, stats, merchantsCount }: StatsRowProps) {
 export default function AdminReviewQueue() {
   const { locale } = useAppStore();
   const isAr = locale === 'ar';
+  const isRTL = isAr;
+  const dir = isAr ? 'rtl' : 'ltr';
 
-  const [activeTab, setActiveTab] = useState<string>('all');
+  // Modals state
   const [selectedMerchant, setSelectedMerchant] = useState<PendingMerchant | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+
+  // Data state
   const [merchants, setMerchants] = useState<PendingMerchant[]>([]);
-  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [stats, setStats] = useState<ReviewStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Fetch pending merchants on mount
+  // Filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+
+  // Pagination state
+  const [pagination, setPagination] = useState<PaginationData>({
+    page: 1,
+    pageSize: 10,
+    total: 0,
+    totalPages: 0,
+  });
+
+  // ---- Fetch data ----
   const fetchMerchants = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/admin/review');
       if (!res.ok) {
-        // Server error - set empty data silently instead of showing error toast
         setMerchants([]);
         setStats({ totalPending: 0, approvedToday: 0, rejectedToday: 0, avgReviewTime: '—' });
         return;
@@ -1041,13 +697,11 @@ export default function AdminReviewQueue() {
         setMerchants(data.merchants || []);
         setStats(data.stats || null);
       } else {
-        // API returned success: false - set empty data silently
         setMerchants([]);
         setStats({ totalPending: 0, approvedToday: 0, rejectedToday: 0, avgReviewTime: '—' });
       }
     } catch (error) {
       console.error('Failed to fetch merchants:', error);
-      // Network error - set empty data silently, don't show error toast
       setMerchants([]);
       setStats({ totalPending: 0, approvedToday: 0, rejectedToday: 0, avgReviewTime: '—' });
     } finally {
@@ -1055,41 +709,78 @@ export default function AdminReviewQueue() {
     }
   }, []);
 
-  // Fetch audit logs
-  const fetchAuditLogs = useCallback(async () => {
-    try {
-      const res = await fetch('/api/admin/review?action=audit');
-      if (!res.ok) return; // Silently ignore audit log errors
-      const data = await res.json();
-      if (data.success) {
-        setAuditLogs(data.auditLogs || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch audit logs:', error);
-      // Audit logs don't block the main view
-    }
-  }, []);
-
   useEffect(() => {
     fetchMerchants();
-    fetchAuditLogs();
-  }, [fetchMerchants, fetchAuditLogs]);
+  }, [fetchMerchants]);
 
-  // Filter merchants
+  // ---- Filter & sort ----
   const filteredMerchants = useMemo(() => {
-    if (activeTab === 'all') return merchants;
-    return merchants.filter((m) => m.role === activeTab);
-  }, [merchants, activeTab]);
+    const q = searchQuery.toLowerCase().trim();
+    return merchants
+      .filter((m) => {
+        if (roleFilter !== 'all' && m.role !== roleFilter) return false;
+        if (priorityFilter !== 'all' && m.priority !== priorityFilter) return false;
+        if (q) {
+          const matchName = m.name?.toLowerCase().includes(q) || m.nameEn?.toLowerCase().includes(q);
+          const matchStore = m.storeName?.toLowerCase().includes(q) || m.storeNameEn?.toLowerCase().includes(q);
+          const matchEmail = m.email?.toLowerCase().includes(q);
+          const matchPhone = m.phone?.toLowerCase().includes(q);
+          if (!matchName && !matchStore && !matchEmail && !matchPhone) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => {
+        if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
+        if (a.priority !== 'urgent' && b.priority === 'urgent') return 1;
+        return new Date(a.registeredAt).getTime() - new Date(b.registeredAt).getTime();
+      });
+  }, [merchants, searchQuery, roleFilter, priorityFilter]);
 
-  // Sort: urgent first
-  const sortedMerchants = useMemo(() => {
-    return [...filteredMerchants].sort((a, b) => {
-      if (a.priority === 'urgent' && b.priority !== 'urgent') return -1;
-      if (a.priority !== 'urgent' && b.priority === 'urgent') return 1;
-      return new Date(a.registeredAt).getTime() - new Date(b.registeredAt).getTime();
-    });
-  }, [filteredMerchants]);
+  // Compute pagination
+  const paginatedMerchants = useMemo(() => {
+    const total = filteredMerchants.length;
+    const totalPages = Math.ceil(total / pagination.pageSize) || 1;
+    const page = Math.min(pagination.page, totalPages);
+    const start = (page - 1) * pagination.pageSize;
+    const end = start + pagination.pageSize;
+    setPagination((prev) => ({ ...prev, total, totalPages, page }));
+    return filteredMerchants.slice(start, end);
+  }, [filteredMerchants, pagination.page, pagination.pageSize]);
 
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPagination((prev) => ({ ...prev, page: 1 }));
+  }, [searchQuery, roleFilter, priorityFilter]);
+
+  const goToPage = useCallback(
+    (page: number) => {
+      setPagination((prev) => ({
+        ...prev,
+        page: Math.max(1, Math.min(page, prev.totalPages)),
+      }));
+    },
+    []
+  );
+
+  const handlePageSizeChange = (val: string) => {
+    setPagination((prev) => ({ ...prev, pageSize: Number(val), page: 1 }));
+  };
+
+  const pageNumbers = useMemo(() => {
+    const { page, totalPages } = pagination;
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages: number[] = [];
+    if (page <= 3) {
+      pages.push(1, 2, 3, 4, totalPages);
+    } else if (page >= totalPages - 2) {
+      pages.push(1, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pages.push(1, page - 1, page, page + 1, totalPages);
+    }
+    return pages;
+  }, [pagination]);
+
+  // ---- Handlers ----
   const handleViewDetails = (m: PendingMerchant) => {
     setSelectedMerchant(m);
     setDetailOpen(true);
@@ -1109,9 +800,7 @@ export default function AdminReviewQueue() {
         setMerchants((prev) => prev.filter((item) => item.id !== m.id));
         setDetailOpen(false);
         setSelectedMerchant(null);
-        toast.success(isAr ? `تم تفعيل حساب "${isAr ? m.name : m.nameEn}"` : `Approved "${isAr ? m.name : m.nameEn}"`);
-        // Refresh audit logs and stats
-        fetchAuditLogs();
+        toast.success(isAr ? `تم تفعيل حساب "${m.name}"` : `Approved "${m.nameEn}"`);
         fetchMerchants();
       }
     } catch (error) {
@@ -1141,8 +830,7 @@ export default function AdminReviewQueue() {
       if (data.success) {
         setRejectOpen(false);
         setSelectedMerchant(null);
-        toast.success(isAr ? `تم رفض طلب "${isAr ? m.name : m.nameEn}"` : `Rejected "${isAr ? m.name : m.nameEn}"`);
-        fetchAuditLogs();
+        toast.success(isAr ? `تم رفض طلب "${m.name}"` : `Rejected "${m.nameEn}"`);
         fetchMerchants();
       }
     } catch (error) {
@@ -1172,8 +860,7 @@ export default function AdminReviewQueue() {
       if (data.success) {
         setEditOpen(false);
         setSelectedMerchant(null);
-        toast.success(isAr ? `تم إرسال طلب تعديل لـ "${isAr ? m.name : m.nameEn}"` : `Edit request sent to "${isAr ? m.name : m.nameEn}"`);
-        fetchAuditLogs();
+        toast.success(isAr ? `تم إرسال طلب تعديل لـ "${m.name}"` : `Edit request sent to "${m.nameEn}"`);
         fetchMerchants();
       }
     } catch (error) {
@@ -1184,72 +871,300 @@ export default function AdminReviewQueue() {
     }
   };
 
-  const tabFilters = [
-    { value: 'all', labelAr: 'الكل', labelEn: 'All' },
-    { value: 'store', labelAr: 'متجر', labelEn: 'Store' },
-    { value: 'freelancer', labelAr: 'مستقل', labelEn: 'Freelancer' },
-    { value: 'supplier', labelAr: 'مورد', labelEn: 'Supplier' },
-    { value: 'logistics', labelAr: 'لوجستيات', labelEn: 'Logistics' },
-  ];
+  // ============================================
+  // RENDER
+  // ============================================
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={dir}>
       {/* Stats Row */}
       <StatsRow isAr={isAr} stats={stats} merchantsCount={merchants.length} />
 
-      {/* Review Queue */}
+      {/* Main Table Card */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <BarChart3 className="size-5" />
-            <span>{isAr ? 'طلبات التفعيل المعلقة' : 'Pending Activation Requests'}</span>
-            <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 border-0">
-              {merchants.length}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Filter Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList>
-              {tabFilters.map((t) => (
-                <TabsTrigger key={t.value} value={t.value}>
-                  {isAr ? t.labelAr : t.labelEn}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+        {/* ---- Header ---- */}
+        <CardHeader className="border-b pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <BarChart3 className="size-5" />
+              <span>{isAr ? 'طلبات التفعيل المعلقة' : 'Pending Activation Requests'}</span>
+              <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400 border-0">
+                {filteredMerchants.length}
+              </Badge>
+            </CardTitle>
+          </div>
 
-            <TabsContent value={activeTab} className="mt-4">
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="size-8 animate-spin text-muted-foreground" />
+          {/* ---- Filters ---- */}
+          <div className="flex flex-col sm:flex-row gap-3 mt-3">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <Input
+                id="verification-search"
+                placeholder={isAr ? 'بحث بالاسم، المتجر، البريد، الهاتف...' : 'Search by name, store, email, phone...'}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="ps-9 h-9"
+              />
+            </div>
+
+            {/* Role filter */}
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-full sm:w-40 h-9" id="role-filter">
+                <Filter className="h-3.5 w-3.5 me-1 text-muted-foreground" />
+                <SelectValue placeholder={isAr ? 'النوع' : 'Role'} />
+              </SelectTrigger>
+              <SelectContent dir={dir}>
+                <SelectItem value="all">{isAr ? 'كل الأنواع' : 'All Roles'}</SelectItem>
+                <SelectItem value="store">{isAr ? 'متجر' : 'Store'}</SelectItem>
+                <SelectItem value="freelancer">{isAr ? 'مستقل' : 'Freelancer'}</SelectItem>
+                <SelectItem value="supplier">{isAr ? 'مورد' : 'Supplier'}</SelectItem>
+                <SelectItem value="logistics">{isAr ? 'لوجستيات' : 'Logistics'}</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Priority filter */}
+            <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+              <SelectTrigger className="w-full sm:w-40 h-9" id="priority-filter">
+                <AlertTriangle className="h-3.5 w-3.5 me-1 text-muted-foreground" />
+                <SelectValue placeholder={isAr ? 'الأولوية' : 'Priority'} />
+              </SelectTrigger>
+              <SelectContent dir={dir}>
+                <SelectItem value="all">{isAr ? 'كل الأولويات' : 'All Priorities'}</SelectItem>
+                <SelectItem value="urgent">{isAr ? 'عاجل' : 'Urgent'}</SelectItem>
+                <SelectItem value="standard">{isAr ? 'عادي' : 'Standard'}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+
+        {/* ---- Table ---- */}
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="ps-6 min-w-[220px]">
+                    {isAr ? 'التاجر' : 'Merchant'}
+                  </TableHead>
+                  <TableHead className="text-start">
+                    {isAr ? 'النوع' : 'Role'}
+                  </TableHead>
+                  <TableHead className="text-start">
+                    {isAr ? 'الأولوية' : 'Priority'}
+                  </TableHead>
+                  <TableHead className="text-start hidden md:table-cell">
+                    {isAr ? 'التحقق' : 'Verification'}
+                  </TableHead>
+                  <TableHead className="text-start hidden md:table-cell">
+                    {isAr ? 'تاريخ التسجيل' : 'Registered'}
+                  </TableHead>
+                  <TableHead className="text-end pe-6">
+                    {isAr ? 'الإجراء' : 'Action'}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableSkeleton rows={5} />
+                ) : paginatedMerchants.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-16">
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <CheckCircle className="size-10 text-green-400" />
+                        <p className="text-sm font-medium">
+                          {searchQuery || roleFilter !== 'all' || priorityFilter !== 'all'
+                            ? (isAr ? 'لا توجد نتائج تطابق بحثك' : 'No results match your filters')
+                            : (isAr ? 'لا توجد طلبات معلقة' : 'No pending requests')}
+                        </p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedMerchants.map((m) => {
+                    const roleCfg = ROLE_CONFIG[m.role];
+                    const RoleIcon = roleCfg.icon;
+                    const isUrgent = m.priority === 'urgent';
+
+                    return (
+                      <TableRow key={m.id} className="hover:bg-muted/40 transition-colors">
+                        {/* Merchant */}
+                        <TableCell className="ps-6">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="size-9">
+                              <AvatarFallback className={roleCfg.color}>
+                                <RoleIcon className="size-4" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium truncate">
+                                {isAr ? m.name : m.nameEn}
+                              </p>
+                              {m.storeName && (
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {isAr ? m.storeName : m.storeNameEn}
+                                </p>
+                              )}
+                              {m.email && (
+                                <p className="text-xs text-muted-foreground truncate">{m.email}</p>
+                              )}
+                            </div>
+                          </div>
+                        </TableCell>
+
+                        {/* Role */}
+                        <TableCell>
+                          <Badge variant="secondary" className={`text-[10px] border-0 ${roleCfg.color}`}>
+                            {isAr ? roleCfg.labelAr : roleCfg.labelEn}
+                          </Badge>
+                        </TableCell>
+
+                        {/* Priority */}
+                        <TableCell>
+                          {isUrgent ? (
+                            <Badge className="bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400 border-0 text-[10px] gap-1">
+                              <AlertTriangle className="size-2.5" />
+                              {isAr ? 'عاجل' : 'Urgent'}
+                            </Badge>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">
+                              {isAr ? 'عادي' : 'Standard'}
+                            </span>
+                          )}
+                        </TableCell>
+
+                        {/* Verification badges */}
+                        <TableCell className="hidden md:table-cell">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs flex items-center gap-1 ${m.phoneVerified ? 'text-green-600' : 'text-yellow-600'}`}>
+                              {m.phoneVerified ? <CheckCircle className="size-3" /> : <Clock className="size-3" />}
+                              {isAr ? 'هاتف' : 'Phone'}
+                            </span>
+                            <span className={`text-xs flex items-center gap-1 ${m.emailVerified ? 'text-green-600' : 'text-yellow-600'}`}>
+                              {m.emailVerified ? <CheckCircle className="size-3" /> : <Clock className="size-3" />}
+                              {isAr ? 'بريد' : 'Email'}
+                            </span>
+                          </div>
+                        </TableCell>
+
+                        {/* Registered */}
+                        <TableCell className="hidden md:table-cell">
+                          <p className="text-xs text-muted-foreground">
+                            {getRelativeTime(m.registeredAt, isAr)}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground/70">
+                            {formatTimestamp(m.registeredAt, isAr)}
+                          </p>
+                        </TableCell>
+
+                        {/* Action */}
+                        <TableCell className="text-end pe-6">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 text-xs gap-1.5"
+                            onClick={() => handleViewDetails(m)}
+                          >
+                            <Eye className="size-3.5" />
+                            {isAr ? 'عرض' : 'View'}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* ---- Pagination ---- */}
+          {!loading && merchants.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-3 border-t">
+              {/* Showing info */}
+              <p className="text-sm text-muted-foreground">
+                {isAr
+                  ? `عرض ${(pagination.page - 1) * pagination.pageSize + 1}–${Math.min(pagination.page * pagination.pageSize, pagination.total)} من ${pagination.total} طلب`
+                  : `Showing ${(pagination.page - 1) * pagination.pageSize + 1}–${Math.min(pagination.page * pagination.pageSize, pagination.total)} of ${pagination.total} requests`}
+              </p>
+
+              <div className="flex items-center gap-2">
+                {/* Page size selector */}
+                <Select value={String(pagination.pageSize)} onValueChange={handlePageSizeChange}>
+                  <SelectTrigger className="w-20 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent dir={dir}>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Pagination buttons */}
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(1)}
+                    disabled={pagination.page <= 1}
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(pagination.page - 1)}
+                    disabled={pagination.page <= 1}
+                  >
+                    {isRTL ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
+                  </Button>
+
+                  {pageNumbers.map((pageNum, idx) => {
+                    const prevNum = pageNumbers[idx - 1];
+                    const showEllipsisBefore = prevNum !== undefined && pageNum - prevNum > 1;
+                    return (
+                      <span key={pageNum} className="flex items-center">
+                        {showEllipsisBefore && (
+                          <span className="px-1 text-xs text-muted-foreground">...</span>
+                        )}
+                        <Button
+                          variant={pagination.page === pageNum ? 'default' : 'outline'}
+                          size="icon"
+                          className="h-8 w-8 text-xs"
+                          onClick={() => goToPage(pageNum)}
+                        >
+                          {pageNum}
+                        </Button>
+                      </span>
+                    );
+                  })}
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(pagination.page + 1)}
+                    disabled={pagination.page >= pagination.totalPages}
+                  >
+                    {isRTL ? <ArrowLeft className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => goToPage(pagination.totalPages)}
+                    disabled={pagination.page >= pagination.totalPages}
+                  >
+                    <ChevronsRight className="h-4 w-4" />
+                  </Button>
                 </div>
-              ) : sortedMerchants.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground">
-                  <CheckCircle className="size-12 mx-auto mb-3 text-green-400" />
-                  <p className="text-sm">
-                    {isAr ? 'لا توجد طلبات معلقة' : 'No pending requests'}
-                  </p>
-                </div>
-              ) : (
-                <div className="grid gap-3 md:grid-cols-2">
-                  {sortedMerchants.map((m) => (
-                    <RequestCard
-                      key={m.id}
-                      merchant={m}
-                      isAr={isAr}
-                      onViewDetails={handleViewDetails}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      {/* Audit Trail */}
-      <AuditTrail isAr={isAr} auditLogs={auditLogs} loading={false} />
 
       {/* Detail Modal */}
       <DetailModal

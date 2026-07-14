@@ -42,8 +42,20 @@ export default function AdminSidebar({ className }: { className?: string }) {
     if (path === '') {
       return isBasePage && currentTab === 'overview';
     }
-    return pathname.includes(path);
+    // Exact segment matching: split both paths and compare
+    const pathSegments = path.split('/').filter(Boolean);
+    const pathnameSegments = pathname.split('/').filter(Boolean);
+    // The admin base segment is 'admin-secure-internal'
+    const adminBase = pathnameSegments.findIndex((s) => s === 'admin-secure-internal');
+    if (adminBase === -1) return false;
+    const relativeSegments = pathnameSegments.slice(adminBase + 1);
+    if (pathSegments.length === 0) return relativeSegments.length === 0;
+    // Compare segments position by position up to the path length
+    if (pathSegments.length > relativeSegments.length) return false;
+    return pathSegments.every((seg, i) => relativeSegments[i] === seg) &&
+      relativeSegments.length === pathSegments.length;
   };
+
 
   const navGroups = [
     {
@@ -72,6 +84,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { label: locale === 'ar' ? 'إدارة المستخدمين' : 'User Management', path: 'users' },
         { label: t('admin.storesSellers'), path: '?tab=stores-sellers' },
         { label: locale === 'ar' ? 'توثيق المتاجر (KYC/KYB)' : 'KYC/KYB Verification', path: 'verifications' },
+        { label: locale === 'ar' ? 'سجل التدقيق' : 'Audit Trail', path: 'verifications/audit' },
         { label: locale === 'ar' ? 'طلبات ترقية الأعمال' : 'Business Upgrades', path: 'upgrade-requests' },
         { label: locale === 'ar' ? 'مختبر سحب البيانات (OCR)' : 'OCR Sandbox', path: 'ocr-sandbox' },
       ]
