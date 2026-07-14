@@ -444,11 +444,11 @@ export default function GentelellaSidebar({ className }: { className?: string })
         {/* Fixed Logo Section */}
         <div className="flex items-center gap-3 px-6 h-[72px] shrink-0 border-b border-white/5 cursor-pointer" onClick={() => useAppStore.getState().toggleDesktopSidebar()}>
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#1ABB9C] text-white font-bold text-lg shrink-0 shadow-[0_0_15px_rgba(26,187,156,0.3)]">
-            G
+            C
           </div>
           <div className={cn("flex flex-col transition-opacity duration-300", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
             <span className="text-white text-lg font-bold tracking-wide">
-              Gentelella <span className="text-[11px] text-[#1ABB9C] align-top ml-1">v4</span>
+              ChariDay <span className="text-[11px] text-[#1ABB9C] align-top ml-1">v4</span>
             </span>
           </div>
         </div>
