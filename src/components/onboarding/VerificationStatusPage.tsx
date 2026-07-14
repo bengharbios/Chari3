@@ -1,6 +1,6 @@
 'use client';
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Clock, CheckCircle, XCircle, AlertTriangle, ShieldCheck, Lock, FileText, Phone, Mail, ArrowLeft, ArrowRight, Edit2, ExternalLink, Building2, UserCircle } from 'lucide-react';
+import { Clock, CheckCircle, XCircle, AlertTriangle, ShieldCheck, Lock, FileText, Phone, Mail, ArrowLeft, ArrowRight, Edit2, ExternalLink, Building2, UserCircle, Loader2 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { useOnboardingStore, getVerificationItemsForRole, restoreDraftFields, calcResumeStep } from '@/lib/store/onboarding';
 import type { VerificationStatus } from '@/lib/store/onboarding';
@@ -58,6 +58,7 @@ export default function VerificationStatusPage() {
   // State for fetched document details from API
   const [details, setDetails] = useState<Record<string, unknown> | null>(null);
   const [archivedVerification, setArchivedVerification] = useState<any>(null);
+  const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
   // States for sensitive profile update (sequential flow)
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -262,7 +263,11 @@ export default function VerificationStatusPage() {
 
   // Fetch full verification details
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setIsLoadingStatus(false);
+      return;
+    }
+    setIsLoadingStatus(true);
     fetch(`/api/onboarding/status?userId=${user.id}&t=${Date.now()}`, {
       cache: 'no-store'
     })
@@ -297,7 +302,10 @@ export default function VerificationStatusPage() {
           }
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        setIsLoadingStatus(false);
+      });
   }, [user?.id]);
 
 
@@ -424,6 +432,14 @@ export default function VerificationStatusPage() {
   };
 
   // The wizard is now rendered on a separate page (/seller/onboarding)
+
+  if (isLoadingStatus) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="size-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto animate-fade-in pb-12">

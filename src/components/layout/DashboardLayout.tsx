@@ -23,7 +23,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isSidebarOpen } = useAppStore();
   const { user, isBuyerMode, setBuyerMode } = useAuthStore();
   const pathname = usePathname();
-  const [dashboardTemplate, setDashboardTemplate] = useState<string>('default');
+  const [dashboardTemplate, setDashboardTemplate] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('chari_dashboard_template') || 'gentelella';
+    }
+    return 'gentelella';
+  });
   
   const isBuyerRoute = pathname?.startsWith('/buyer') || false;
   const isSellerRoute = pathname?.startsWith('/seller') || false;
