@@ -131,22 +131,9 @@ async function approveUser(
   }
 
   // Update verification table depending on the role
-  if (role === 'store' || role === 'store_manager') {
+  if (['store', 'store_manager', 'seller', 'freelancer'].includes(role)) {
     if (user.storeVerification) {
       await db.storeVerification.update({
-        where: { userId: user.id },
-        data: {
-          verificationStatus: 'approved',
-          reviewedBy: adminId,
-          reviewedAt: new Date(),
-        },
-      });
-    }
-  }
-
-  if (role === 'freelancer' || role === 'seller') {
-    if (user.freelancerVerification) {
-      await db.freelancerVerification.update({
         where: { userId: user.id },
         data: {
           verificationStatus: 'approved',
@@ -338,24 +325,9 @@ async function rejectUser(
     },
   });
 
-  if (role === 'store' || role === 'store_manager') {
+  if (['store', 'store_manager', 'seller', 'freelancer'].includes(role)) {
     if (user.storeVerification) {
       await db.storeVerification.update({
-        where: { userId: user.id },
-        data: {
-          verificationStatus: 'rejected',
-          rejectionReasons,
-          adminNotes: reason || null,
-          reviewedBy: adminId,
-          reviewedAt: new Date(),
-        },
-      });
-    }
-  }
-
-  if (role === 'freelancer' || role === 'seller') {
-    if (user.freelancerVerification) {
-      await db.freelancerVerification.update({
         where: { userId: user.id },
         data: {
           verificationStatus: 'rejected',
@@ -461,24 +433,9 @@ async function requestEditUser(
     ? JSON.stringify(editItems)
     : null;
 
-  if (role === 'store' || role === 'store_manager') {
+  if (['store', 'store_manager', 'seller', 'freelancer'].includes(role)) {
     if (user.storeVerification) {
       await db.storeVerification.update({
-        where: { userId: user.id },
-        data: {
-          verificationStatus: 'rejected',
-          rejectionReasons,
-          adminNotes: reason || null,
-          reviewedBy: adminId,
-          reviewedAt: new Date(),
-        },
-      });
-    }
-  }
-
-  if (role === 'freelancer' || role === 'seller') {
-    if (user.freelancerVerification) {
-      await db.freelancerVerification.update({
         where: { userId: user.id },
         data: {
           verificationStatus: 'rejected',
