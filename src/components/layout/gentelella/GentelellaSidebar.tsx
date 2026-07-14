@@ -258,7 +258,26 @@ export default function GentelellaSidebar({ className }: { className?: string })
   const router = useRouter();
   
   // Track open accordion trees
-  const [openTrees, setOpenTrees] = useState<Record<string, boolean>>({});
+  const [openTrees, setOpenTrees] = useState<Record<string, boolean>>(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      const initialOpen: Record<string, boolean> = {};
+      const allGroups = [...STORE_GROUPS, ...SELLER_GROUPS];
+      allGroups.forEach((group) => {
+        group.trees.forEach((tree) => {
+          const hasActiveChild = tree.children?.some(
+            (c) => c.path && (path === c.path || path.startsWith(c.path + '/'))
+          );
+          const hasActiveDirect = tree.path && (path === tree.path || path.startsWith(tree.path + '/'));
+          if (hasActiveChild || hasActiveDirect) {
+            initialOpen[tree.id] = true;
+          }
+        });
+      });
+      return initialOpen;
+    }
+    return {};
+  });
 
   useEffect(() => {
     const handleResize = () => {

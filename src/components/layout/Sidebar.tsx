@@ -304,7 +304,27 @@ interface SidebarProps {
   const [paymentModel, setPaymentModel] = useState<string>('mixed');
   const [merchantType, setMerchantType] = useState<string>('individual');
   const [isOwner, setIsOwner] = useState(false);
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      const initialCollapsed: Record<string, boolean> = {};
+      const allGroups = [
+        ...STORE_NAV_GROUPS,
+        ...SELLER_NAV_GROUPS,
+        ...SUPPLIER_NAV_GROUPS,
+        ...LOGISTICS_NAV_GROUPS,
+        ...BUYER_NAV_GROUPS,
+      ];
+      allGroups.forEach((group) => {
+        const hasActive = group.items.some(
+          (item) => item.path && (path === item.path || path.startsWith(item.path + '/'))
+        );
+        initialCollapsed[group.id] = !hasActive;
+      });
+      return initialCollapsed;
+    }
+    return {};
+  });
 
   const toggleSection = (sectionId: string) => {
     setCollapsedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
