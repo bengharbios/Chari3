@@ -433,7 +433,7 @@ export default function VerificationStatusPage() {
 
   // The wizard is now rendered on a separate page (/seller/onboarding)
 
-  if (isLoadingStatus) {
+  if (isLoadingStatus && verificationItems.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <Loader2 className="size-8 animate-spin text-primary" />
