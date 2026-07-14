@@ -118,16 +118,64 @@ export default function StoreDashboard() {
 
   if (isLoading) {
     return (
-      <div className="h-[80vh] w-full flex flex-col items-center justify-center space-y-4">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-        >
-          <Loader2 className="h-12 w-12 text-primary" />
-        </motion.div>
-        <p className="text-sm font-bold text-muted-foreground animate-pulse">
-          {t(locale, 'جاري جلب بيانات المتجر المتطورة...', 'Loading advanced store metrics...')}
-        </p>
+      <div className="space-y-6 text-start w-full animate-pulse">
+        {/* Header Skeleton */}
+        <div className="flex items-center justify-between flex-wrap gap-4 mb-3 px-1">
+          <div className="space-y-2">
+            <div className="h-3 w-16 bg-muted rounded" />
+            <div className="h-8 w-44 bg-muted rounded" />
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-24 bg-muted rounded" />
+            <div className="h-8 w-32 bg-muted rounded" />
+          </div>
+        </div>
+
+        {/* 6 KPI Cards Skeletons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-5">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="bg-card border border-border rounded p-4 h-[110px] flex gap-4 relative overflow-hidden">
+              <div className="h-10 w-10 bg-muted rounded shrink-0" />
+              <div className="flex-1 space-y-2 min-w-0">
+                <div className="h-3 w-28 bg-muted rounded" />
+                <div className="h-6 w-20 bg-muted rounded" />
+                <div className="h-3 w-36 bg-muted rounded" />
+              </div>
+              <div className="absolute bottom-3 end-4 flex items-end gap-[2px] h-6 opacity-30">
+                {Array.from({ length: 6 }).map((_, j) => (
+                  <div key={j} className="w-[3px] bg-muted rounded-t-sm" style={{ height: `${(j % 3 + 1) * 30}%` }} />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Charts & Grid Skeletons */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <div className="xl:col-span-2 bg-card border border-border rounded p-5 h-[340px] flex flex-col justify-between">
+            <div className="flex items-center justify-between pb-3 border-b border-border/50">
+              <div className="h-4 w-32 bg-muted rounded" />
+              <div className="h-6 w-48 bg-muted rounded" />
+            </div>
+            <div className="flex-1 flex items-end gap-3 pt-6 pb-2">
+              {Array.from({ length: 12 }).map((_, j) => (
+                <div key={j} className="flex-1 bg-muted rounded-t-sm" style={{ height: `${(Math.sin(j) + 1.5) * 30}%` }} />
+              ))}
+            </div>
+          </div>
+          <div className="bg-card border border-border rounded p-5 h-[340px] flex flex-col justify-between">
+            <div className="pb-3 border-b border-border/50">
+              <div className="h-4 w-36 bg-muted rounded" />
+            </div>
+            <div className="flex-1 flex items-center justify-center py-6">
+              <div className="h-32 w-32 rounded-full border-8 border-muted shrink-0" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-3 w-full bg-muted rounded" />
+              <div className="h-3 w-2/3 bg-muted rounded" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
