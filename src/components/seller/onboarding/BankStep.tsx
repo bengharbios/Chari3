@@ -20,7 +20,7 @@ export default function BankStep({ data, updateData, onPreviewFile, isBusiness =
           onValueChange={(val: 'bank' | 'ccp') => {
             setPaymentType(val);
             if (val === 'ccp') {
-              updateData({ swiftCode: '', bankName: 'Algerie Poste' });
+              updateData({ swiftCode: '', bankName: t('الخدمة البريدية الوطنية', 'National Postal Service') });
             } else {
               updateData({ bankName: '' });
             }
@@ -33,7 +33,7 @@ export default function BankStep({ data, updateData, onPreviewFile, isBusiness =
           </div>
           <div className="flex items-center space-x-2 space-x-reverse border dark:border-slate-800 p-4 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-800/50">
             <RadioGroupItem value="ccp" id="type-ccp" />
-            <Label htmlFor="type-ccp" className="cursor-pointer">{t('حساب بريدي جاري (CCP / RIP)', 'CCP / RIP Account')}</Label>
+            <Label htmlFor="type-ccp" className="cursor-pointer">{t('حساب بريدي / محلي (CCP / RIP)', 'Postal / Local Account (CCP / RIP)')}</Label>
           </div>
         </RadioGroup>
       </div>

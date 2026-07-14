@@ -298,7 +298,7 @@ export default function LegalStep({ data, updateData, onPreviewFile, isBusiness 
         <div className="space-y-2">
           <Label>{t('جهة إصدار الرخصة / السجل *', 'Issuing Authority *')}</Label>
           <Input 
-            placeholder={t('مثال: المركز الوطني للسجل التجاري - فرع الجزائر', 'e.g. National Center of Commercial Registry')} 
+            placeholder={t('مثال: المركز الوطني للسجل التجاري / مصلحة التسجيل التجاري', 'e.g. National Center of Commercial Registry / Registration Authority')} 
             value={data.issueAuthority || ''} 
             onChange={(e) => updateData({ issueAuthority: e.target.value })} 
             dir="auto"

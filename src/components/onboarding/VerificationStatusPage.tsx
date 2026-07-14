@@ -447,7 +447,7 @@ export default function VerificationStatusPage() {
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-              {user.role === 'store_manager' ? <Building2 className="size-6" /> : <UserCircle className="size-6" />}
+              {['store_manager', 'store'].includes(user.role) ? <Building2 className="size-6" /> : <UserCircle className="size-6" />}
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -455,11 +455,11 @@ export default function VerificationStatusPage() {
                   {t(isAr, 'نوع التوثيق الحالي', 'Current Verification Type')}
                 </span>
                 <Badge variant="outline" className="border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-300">
-                  {user.role === 'store_manager' ? t(isAr, 'متجر رسمي معتمد', 'Verified Store Manager') : t(isAr, 'تاجر مستقل', 'Independent Seller')}
+                  {['store_manager', 'store'].includes(user.role) ? t(isAr, 'متجر رسمي معتمد', 'Verified Store Manager') : t(isAr, 'تاجر مستقل', 'Independent Seller')}
                 </Badge>
               </div>
               <p className="text-sm font-medium mt-1">
-                {user.role === 'store_manager'
+                {['store_manager', 'store'].includes(user.role)
                   ? t(isAr, 'توثيق متكامل يشمل السجل التجاري، الحساب البنكي للشركة، وهوية المدير المفوض.', 'Comprehensive verification including Commercial Register, Corporate Bank Account, and Authorized Manager ID.')
                   : t(isAr, 'توثيق شخصي يشمل الهوية الوطنية، وثيقة العمل الحر، والحساب البنكي.', 'Personal verification including National ID, Freelance Certificate, and Bank Account.')
                 }

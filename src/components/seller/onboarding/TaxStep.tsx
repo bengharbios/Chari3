@@ -118,13 +118,13 @@ export default function TaxStep({
         <div className="space-y-6">
           <div className="p-4 bg-blue-50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-200 border border-blue-100 dark:border-blue-900/30 rounded-xl text-sm font-medium">
             {t(
-              `بصفتك تاجر مستقل (مقاول ذاتي أو حرفي)، فإنك تخضع لنظام الضريبة الجزافية الوحيدة (IFU) بنسبة ${taxRate}% فقط، وتعتبر معفى من الرسم على القيمة المضافة (VAT/TVA).`,
-              `As an independent merchant (auto-entrepreneur or artisan), you are subject to the simplified flat-rate tax (IFU) of ${taxRate}% only, and you are exempt from Value Added Tax (VAT/TVA).`
+              `بصفتك تاجر مستقل (عمل حر / مهني)، فإنك تخضع لنظام الضريبة المبسطة بنسبة ${taxRate}% فقط، وتعتبر معفى من الرسم على القيمة المضافة (VAT/TVA).`,
+              `As an independent merchant (freelancer or artisan), you are subject to the simplified flat-rate tax of ${taxRate}% only, and you are exempt from Value Added Tax (VAT/TVA).`
             )}
           </div>
 
           <div className="space-y-2">
-            <Label>{t('الرقم الجبائي (NIF)', 'Tax ID (NIF)')}</Label>
+            <Label>{t('الرقم الجبائي / المعرف الضريبي (TIN)', 'Tax ID (TIN)')}</Label>
             <Input 
               placeholder={t('مثال: 1823456789...', 'e.g. 1823456789...')} 
               value={data.vatNumber || ''} 

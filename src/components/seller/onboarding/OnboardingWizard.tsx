@@ -108,7 +108,7 @@ export default function OnboardingWizard() {
 
   const isRTL = locale === 'ar';
   
-  const isBusiness = user?.role === 'store_manager';
+  const isBusiness = user?.role === 'store_manager' || user?.role === 'store';
 
   // Status Logic
   const hasLegal = !!formData.commercialRegisterNumber && !!formData.commercialRegisterFile;
@@ -126,9 +126,9 @@ export default function OnboardingWizard() {
     { id: 3, title: t('هوية المدير أو الممثل القانوني للشركة', 'Identity (Manager/Owner/Representative)'), tabTitle: t('هوية المدير', 'Identity'), icon: <UserCheck className="w-5 h-5" />, done: hasIdentity, component: <IdentityStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={true} /> },
     { id: 4, title: t('الشروط والأحكام', 'Terms'), tabTitle: t('الشروط', 'Terms'), icon: <ShieldCheck className="w-5 h-5" />, done: hasTerms, component: <TermsStep data={formData} updateData={handleUpdateData} /> },
   ] : [
-    { id: 0, title: t('وثيقة النشاط (بطاقة مقاول ذاتي / حرفي)', 'Activity Document (Freelance / Artisan Card)'), tabTitle: t('وثيقة النشاط', 'Activity Card'), icon: <StoreIcon className="w-5 h-5" />, done: hasLegal, component: <LegalStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={false} /> },
-    { id: 1, title: t('الرقم الجبائي (NIF)', 'Tax Identification Number (TIN/NIF)'), tabTitle: t('الرقم الجبائي', 'Tax Card'), icon: <FileText className="w-5 h-5" />, done: hasTax, component: <TaxStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={false} taxRate={taxRate} /> },
-    { id: 2, title: t('تفاصيل الحساب المالي (CCP أو بنكي)', 'Financial Account Details (Postal or Bank)'), tabTitle: t('تفاصيل الحساب', 'Bank/CCP'), icon: <Landmark className="w-5 h-5" />, done: hasBank, component: <BankStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={false} /> },
+    { id: 0, title: t('وثيقة النشاط (رخصة عمل حر / بطاقة مهنية)', 'Activity Document (Freelance License / Professional Card)'), tabTitle: t('وثيقة النشاط', 'Activity Card'), icon: <StoreIcon className="w-5 h-5" />, done: hasLegal, component: <LegalStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={false} /> },
+    { id: 1, title: t('الرقم الجبائي / المعرف الضريبي (TIN)', 'Tax Identification Number (TIN)'), tabTitle: t('الرقم الجبائي', 'Tax Card'), icon: <FileText className="w-5 h-5" />, done: hasTax, component: <TaxStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={false} taxRate={taxRate} /> },
+    { id: 2, title: t('تفاصيل الحساب المالي (بريدي أو بنكي)', 'Financial Account Details (Postal or Bank)'), tabTitle: t('تفاصيل الحساب', 'Bank/Postal'), icon: <Landmark className="w-5 h-5" />, done: hasBank, component: <BankStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={false} /> },
     { id: 3, title: t('إثبات الهوية الشخصية (بطاقة هوية / جواز سفر)', 'Personal Identity Proof (ID Card / Passport)'), tabTitle: t('إثبات الهوية', 'Identity'), icon: <UserCheck className="w-5 h-5" />, done: hasIdentity, component: <IdentityStep data={formData} updateData={handleUpdateData} onPreviewFile={setPreviewFileUrl} isBusiness={false} /> },
     { id: 4, title: t('الموافقة على الشروط والأحكام', 'Terms'), tabTitle: t('الشروط والأحكام', 'Terms'), icon: <ShieldCheck className="w-5 h-5" />, done: hasTerms, component: <TermsStep data={formData} updateData={handleUpdateData} /> },
   ];

@@ -139,6 +139,7 @@ const OTP_STEP_ORDER: OtpLoginStep[] = ['phone', 'otp', 'role', 'basic-info'];
 
 export const getVerificationItemsForRole = (role: UserRole): VerificationItem[] => {
   switch (role) {
+    case 'store':
     case 'store_manager':
       return [
         { id: 'phone', labelAr: 'رقم الهاتف', labelEn: 'Phone Number', status: 'verified' },
@@ -500,6 +501,7 @@ export function restoreDraftFields(role: string, data: Record<string, unknown>) 
   const store = useOnboardingStore.getState();
 
   switch (role) {
+    case 'store':
     case 'store_manager':
     case 'seller':
       if (data.commercialRegisterNumber) store.setField('commercialRegisterNumber', data.commercialRegisterNumber);
@@ -530,6 +532,7 @@ export function restoreDraftFields(role: string, data: Record<string, unknown>) 
  */
 export function calcResumeStep(role: string, data: Record<string, unknown>): number {
   switch (role) {
+    case 'store':
     case 'store_manager':
     case 'seller': {
       if (!data.commercialRegisterNumber && !data.commercialRegisterFile) return 0;
