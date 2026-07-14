@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import OnboardingWizard from '@/components/seller/onboarding/OnboardingWizard';
 import { useAuthStore, useAppStore } from '@/lib/store';
+import { useOnboardingStore } from '@/lib/store/onboarding';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 
@@ -27,6 +28,13 @@ export default function SellerOnboardingPage() {
       return;
     }
 
+    // Bypass check if state is already pending or active to prevent layout lag
+    const cachedStatus = useOnboardingStore.getState().accountStatus;
+    if (cachedStatus === 'pending' || cachedStatus === 'active') {
+      router.push('/seller/verification');
+      return;
+    }
+
     const verifyLiveStatus = async () => {
       try {
         const res = await fetch(`/api/onboarding/status?userId=${user.id}&t=${Date.now()}`, {
@@ -35,6 +43,7 @@ export default function SellerOnboardingPage() {
         const data = await res.json();
         if (data.success) {
           if (data.accountStatus === 'pending' || data.accountStatus === 'active') {
+            useOnboardingStore.getState().setAccountStatus(data.accountStatus);
             router.push('/seller/verification');
             return;
           }
