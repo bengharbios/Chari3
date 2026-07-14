@@ -104,7 +104,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             setDashboardTemplate('default');
             localStorage.removeItem('chari_dashboard_template');
           }
-        } else {
+        } else if (user) {
           setDashboardTemplate('default');
           localStorage.removeItem('chari_dashboard_template');
         }

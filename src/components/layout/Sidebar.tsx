@@ -220,6 +220,7 @@ interface SidebarProps {
       const idMap: Record<string, string> = {
         'store-group': 'sidebar.sectionStore',
         'seller-group': 'sidebar.sectionSeller',
+        'business-group': 'sidebar.sectionBusinessManagement',
         'supplier-group': 'sidebar.sectionSupplier',
         'logistics-group': 'sidebar.sectionLogistics',
         'buyer-group': 'sidebar.sectionBuyer',
