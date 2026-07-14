@@ -145,8 +145,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return null;
   }
 
-  // Prevent flash by waiting for theme load or at least showing cached theme
-  if (!isThemeLoaded && !theme.colors) {
+  // Prevent flash by waiting for theme load completely
+  if (!isThemeLoaded) {
      return <div className="min-h-screen bg-background flex items-center justify-center">...</div>;
   }
 

@@ -7,17 +7,17 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { toast } from 'sonner';
 
 const ITEM_LABELS: Record<string, { ar: string; en: string }> = {
-  commercial_register: { ar: '????? ???????', en: 'Commercial Register' },
-  bank_account: { ar: '?????? ??????', en: 'Bank Account' },
-  manager_id: { ar: '???? ??????', en: 'Manager ID' },
-  national_id: { ar: '?????? ???????', en: 'National ID' },
-  freelance_document: { ar: '????? ????? ????', en: 'Freelance Document' },
-  liveness: { ar: '?????? ????', en: 'Liveness Check' },
-  commercial_license: { ar: '???? ??????', en: 'Commercial License' },
-  import_license: { ar: '???? ?????????', en: 'Import License' },
-  transport_license: { ar: '???? ?????', en: 'Transport License' },
-  insurance: { ar: '????? ???????', en: 'Insurance Certificate' },
-  fleet_info: { ar: '??????? ???????', en: 'Fleet Information' },
+  commercial_register: { ar: 'السجل التجاري', en: 'Commercial Register' },
+  bank_account: { ar: 'الحساب المالي والبنكي', en: 'Bank Account' },
+  manager_id: { ar: 'هوية المدير / الممثل القانوني', en: 'Manager ID' },
+  national_id: { ar: 'إثبات الهوية الشخصية', en: 'National ID' },
+  freelance_document: { ar: 'وثيقة النشاط / العمل الحر', en: 'Freelance Document' },
+  liveness: { ar: 'التحقق الحي', en: 'Liveness Check' },
+  commercial_license: { ar: 'الرخصة التجارية', en: 'Commercial License' },
+  import_license: { ar: 'رخصة الاستيراد', en: 'Import License' },
+  transport_license: { ar: 'رخصة النقل', en: 'Transport License' },
+  insurance: { ar: 'شهادة التأمين', en: 'Insurance Certificate' },
+  fleet_info: { ar: 'معلومات الأسطول', en: 'Fleet Information' },
 };
 
 export default function AppInitializer() {
