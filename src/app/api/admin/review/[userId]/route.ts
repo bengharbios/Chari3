@@ -6,8 +6,10 @@ import { syncStoreStatusWithSubscription } from '@/lib/billing';
 // Item keys per role — used for full rejection
 // ============================================
 const ROLE_REJECTION_ITEMS: Record<string, string[]> = {
+  store: ['commercial_register', 'bank_account', 'manager_id'],
   store_manager: ['commercial_register', 'bank_account', 'manager_id'],
-  seller: ['national_id', 'freelance_document', 'bank_account', 'liveness'],
+  seller: ['commercial_register', 'bank_account', 'manager_id'],
+  freelancer: ['commercial_register', 'bank_account', 'manager_id'],
   supplier: ['commercial_license', 'import_license', 'bank_account'],
   logistics: ['transport_license', 'insurance', 'fleet_info', 'bank_account'],
 };

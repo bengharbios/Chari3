@@ -128,6 +128,7 @@ export async function GET(request: NextRequest) {
     let adminNotes: string | null = null;
 
     switch (user.role) {
+      case 'store':
       case 'store_manager': {
         const bv = user.businessVerification;
         const v = user.storeVerification;
@@ -294,6 +295,7 @@ export async function GET(request: NextRequest) {
         });
       }
 
+      case 'freelancer':
       case 'seller': {
         const v = user.storeVerification;
         const hasVerification = !!v;
