@@ -153,6 +153,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { theme: globalTheme } = useTheme();
   const { isPending, data } = useSession();
 
+  // If loading finished and server session is invalid/missing but client thinks it's logged in, sign out client-side
+  useEffect(() => {
+    if (!isPending && !data?.user && user) {
+      console.log('[DashboardLayout] Server session missing, logging out client...');
+      useAuthStore.getState().logout();
+    }
+  }, [isPending, data, user]);
+
   if (isPending) {
     return <div className="min-h-screen bg-background flex items-center justify-center">...</div>;
   }

@@ -122,6 +122,14 @@ export function useTranslation() {
     }
 
     if (result === undefined) {
+      // Fallback: Check if key exists inside security namespace (useful for raw API errors)
+      const secDict = dict?.security || (staticDictionaries[activeLocale] as any)?.security;
+      if (secDict && typeof secDict === 'object' && key in secDict) {
+        result = secDict[key];
+      }
+    }
+
+    if (result === undefined) {
       console.warn(`[i18n] Missing translation for key: ${key}`);
       return key; // Fallback to key itself
     }

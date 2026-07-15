@@ -437,6 +437,8 @@
     "updateVerificationResetError": "Failed to request edit"
   },
   "security": {
+    "unauthorized": "Session expired, please log in again.",
+    "Unauthorized": "Session expired, please log in again.",
     "pwdLengthError": "Password must be at least 8 characters",
     "pwdStrengthError": "Password must contain: uppercase letter, lowercase letter, number, and special character (!@#$%^&* etc.)",
     "currentPasswordRequired": "Current password is required",
