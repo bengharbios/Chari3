@@ -118,13 +118,16 @@ export async function POST(req: NextRequest) {
         data: { password: hashedNewPassword },
       });
     } else {
+      const crypto = require('crypto');
       await prisma.account.create({
         data: {
+          id: crypto.randomUUID(),
           userId: session.user.id,
-          type: 'credentials',
+          accountId: user.email || session.user.id,
           providerId: 'credential',
-          providerAccountId: user.email || session.user.id,
           password: hashedNewPassword,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         },
       });
     }
