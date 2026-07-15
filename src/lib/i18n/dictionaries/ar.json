@@ -106,6 +106,9 @@
     "mapSettings": "إعدادات الخرائط"
   },
   "header": {
+    "notice": "تنبيه",
+    "switchToBuyerModeNotice": "الرجاء التبديل إلى وضع المشتري لعرض سلة التسوق وإتمام الطلب",
+    "switchNow": "التبديل الآن",
     "browseAsBuyerNote": "أنت الآن تتصفح المنصة كمشتري.",
     "returnToDashboard": "العودة للوحة التحكم",
     "brandName": "شاري داي",

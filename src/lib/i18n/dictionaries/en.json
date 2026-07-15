@@ -106,6 +106,9 @@
     "mapSettings": "Map Settings"
   },
   "header": {
+    "notice": "Notice",
+    "switchToBuyerModeNotice": "Please switch to buyer mode to view the cart and checkout",
+    "switchNow": "Switch Now",
     "browseAsBuyerNote": "You are currently browsing the platform as a buyer.",
     "returnToDashboard": "Return to Dashboard",
     "brandName": "ChariDay",

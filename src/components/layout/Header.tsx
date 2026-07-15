@@ -880,10 +880,10 @@ export default function Header() {
               onClick={() => {
                 const auth = useAuthStore.getState();
                 if (auth.isAuthenticated && auth.user && auth.user?.role !== 'admin' && auth.user?.role !== 'buyer' && !auth.isBuyerMode) {
-                  toast(t('تنبيه', 'Notice'), {
-                    description: t('الرجاء التبديل إلى وضع المشتري لعرض سلة التسوق وإتمام الطلب', 'Please switch to buyer mode to view the cart and checkout'),
+                  toast(t('header.notice'), {
+                    description: t('header.switchToBuyerModeNotice'),
                     action: {
-                      label: t('التبديل الآن', 'Switch Now'),
+                      label: t('header.switchNow'),
                       onClick: () => {
                         auth.setBuyerMode(true);
                         navigateToDashboard('home');
