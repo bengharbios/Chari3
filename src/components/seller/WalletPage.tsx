@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { useAuthStore, useAppStore } from '@/lib/store';
+import { useAuthStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,18 +15,15 @@ import { Wallet, Loader2, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, XCi
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
-const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
-
 export default function WalletPage() {
   const { user } = useAuthStore();
-  const { locale } = useAppStore();
+  const { t, locale } = useTranslation();
   const isRTL = locale === 'ar';
   const router = useRouter();
-  const tStr = (ar: string, en: string) => locale === 'ar' ? ar : en;
 
   useEffect(() => {
     if (user && ['staff', 'editor', 'viewer', 'support'].includes(user.role)) {
-      toast.error(tStr('عذراً، هذه الصفحة مخصصة لمدير المتجر فقط.', 'Sorry, this page is restricted to the store manager.'));
+      toast.error(t('wallet.restrictedAccess'));
       router.push('/seller/dashboard');
     }
   }, [user, router]);
@@ -79,11 +77,11 @@ export default function WalletPage() {
         setCurrency(dData.currency || 'DZD');
       }
     } catch (err) {
-      toast.error(tStr('فشل جلب البيانات', 'Failed to fetch data'));
+      toast.error(t('wallet.fetchFailed'));
     } finally {
       setIsLoading(false);
     }
-  }, [user, locale]);
+  }, [user, t]);
 
   useEffect(() => {
     fetchData();
@@ -92,17 +90,17 @@ export default function WalletPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formMethod || !formAmount || !formAccountName || !formAccountNumber) {
-      toast.error(tStr('يرجى ملء جميع الحقول المطلوبة', 'Please fill all required fields'));
+      toast.error(t('wallet.fieldsRequired'));
       return;
     }
 
     const amt = Number(formAmount);
     if (amt < minAmount) {
-      toast.error(tStr(`الحد الأدنى للسحب هو ${minAmount}`, `Minimum withdrawal is ${minAmount}`));
+      toast.error(t('wallet.minWithdrawalError', { minAmount }));
       return;
     }
     if (amt > availableBalance) {
-      toast.error(tStr('الرصيد المتاح غير كافٍ', 'Insufficient available balance'));
+      toast.error(t('wallet.insufficientBalance'));
       return;
     }
 
@@ -122,7 +120,7 @@ export default function WalletPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(tStr('تم إرسال طلب السحب بنجاح قيد المراجعة', 'Withdrawal request submitted successfully'));
+        toast.success(t('wallet.submitSuccess'));
         setIsModalOpen(false);
         setFormAmount('');
         fetchData();
@@ -130,7 +128,7 @@ export default function WalletPage() {
         toast.error(data.error);
       }
     } catch (err) {
-      toast.error(tStr('حدث خطأ أثناء إرسال الطلب', 'Error submitting request'));
+      toast.error(t('wallet.submitFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -140,8 +138,8 @@ export default function WalletPage() {
     switch (m) {
       case 'ccp': return { icon: <CreditCard className="h-4 w-4" />, label: 'CCP' };
       case 'cib': return { icon: <CreditCard className="h-4 w-4" />, label: 'CIB' };
-      case 'bank_transfer': return { icon: <Building2 className="h-4 w-4" />, label: tStr('تحويل بنكي', 'Bank Transfer') };
-      case 'cash': return { icon: <Banknote className="h-4 w-4" />, label: tStr('نقداً', 'Cash') };
+      case 'bank_transfer': return { icon: <Building2 className="h-4 w-4" />, label: t('wallet.bankTransfer') };
+      case 'cash': return { icon: <Banknote className="h-4 w-4" />, label: t('wallet.cash') };
       default: return { icon: <HelpCircle className="h-4 w-4" />, label: m };
     }
   };
@@ -160,10 +158,10 @@ export default function WalletPage() {
         <div>
           <h1 className="text-2xl font-black flex items-center gap-2 text-foreground">
             <Wallet className="h-6 w-6 text-emerald-500" />
-            {tStr('محفظتي وأرباحي', 'My Wallet & Earnings')}
+            {t('wallet.title')}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {tStr('اسحب أرباحك وتابع رصيدك المتاح وسجل السحوبات', 'Withdraw earnings and track your available balance')}
+            {t('wallet.desc')}
           </p>
         </div>
         <Button 
@@ -172,14 +170,14 @@ export default function WalletPage() {
           disabled={availableBalance < minAmount}
         >
           <ArrowUpRight className="h-4 w-4" />
-          {tStr('طلب سحب رصيد', 'Request Withdrawal')}
+          {t('wallet.requestButton')}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg border-0">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium opacity-90">{tStr('الرصيد الإجمالي', 'Total Balance')}</CardTitle>
+            <CardTitle className="text-sm font-medium opacity-90">{t('wallet.totalBalance')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black font-mono">
@@ -190,7 +188,7 @@ export default function WalletPage() {
 
         <Card className="border-border bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{tStr('الرصيد المتاح للسحب', 'Available for Withdrawal')}</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t('wallet.availableBalance')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black text-foreground font-mono">
@@ -198,7 +196,7 @@ export default function WalletPage() {
             </div>
             {availableBalance < minAmount && (
               <p className="text-xs text-rose-500 mt-1 font-semibold">
-                {tStr(`الحد الأدنى للسحب هو ${minAmount} ${currency}`, `Minimum withdrawal is ${minAmount} ${currency}`)}
+                {t('wallet.minWithdrawalLabel', { minAmount, currency })}
               </p>
             )}
           </CardContent>
@@ -206,7 +204,7 @@ export default function WalletPage() {
 
         <Card className="border-border bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{tStr('طلبات قيد المعالجة', 'Pending Requests')}</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t('wallet.pendingRequests')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-black text-amber-500 font-mono">
@@ -220,7 +218,7 @@ export default function WalletPage() {
         <CardHeader>
           <CardTitle className="text-lg font-bold flex items-center gap-2">
             <Clock className="h-5 w-5 text-indigo-500" />
-            {tStr('سجل السحوبات', 'Withdrawal History')}
+            {t('wallet.historyTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -228,18 +226,18 @@ export default function WalletPage() {
             <Table>
               <TableHeader className="bg-muted/30">
                 <TableRow>
-                  <TableHead className="text-start">{tStr('التاريخ', 'Date')}</TableHead>
-                  <TableHead className="text-start">{tStr('المبلغ', 'Amount')}</TableHead>
-                  <TableHead className="text-start">{tStr('وسيلة السحب', 'Method')}</TableHead>
-                  <TableHead className="text-center">{tStr('الحالة', 'Status')}</TableHead>
-                  <TableHead className="text-start">{tStr('ملاحظة', 'Note')}</TableHead>
+                  <TableHead className="text-start">{t('wallet.colDate')}</TableHead>
+                  <TableHead className="text-start">{t('wallet.colAmount')}</TableHead>
+                  <TableHead className="text-start">{t('wallet.colMethod')}</TableHead>
+                  <TableHead className="text-center">{t('wallet.colStatus')}</TableHead>
+                  <TableHead className="text-start">{t('wallet.colNote')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {withdrawals.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      {tStr('لا توجد طلبات سحب سابقة', 'No withdrawal history found')}
+                      {t('wallet.noHistory')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -258,9 +256,9 @@ export default function WalletPage() {
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
-                        {w.status === 'pending' ? <Badge variant="outline" className="border-amber-500 text-amber-500 bg-amber-500/10"><Clock className="h-3 w-3 me-1"/> {tStr('قيد المراجعة', 'Pending')}</Badge> :
-                         w.status === 'paid' ? <Badge variant="outline" className="border-emerald-500 text-emerald-500 bg-emerald-500/10"><CheckCircle2 className="h-3 w-3 me-1"/> {tStr('تم الدفع', 'Paid')}</Badge> :
-                         w.status === 'rejected' ? <Badge variant="outline" className="border-rose-500 text-rose-500 bg-rose-500/10"><XCircle className="h-3 w-3 me-1"/> {tStr('مرفوض', 'Rejected')}</Badge> :
+                        {w.status === 'pending' ? <Badge variant="outline" className="border-amber-500 text-amber-500 bg-amber-500/10"><Clock className="h-3 w-3 me-1"/> {t('wallet.statusPending')}</Badge> :
+                         w.status === 'paid' ? <Badge variant="outline" className="border-emerald-500 text-emerald-500 bg-emerald-500/10"><CheckCircle2 className="h-3 w-3 me-1"/> {t('wallet.statusPaid')}</Badge> :
+                         w.status === 'rejected' ? <Badge variant="outline" className="border-rose-500 text-rose-500 bg-rose-500/10"><XCircle className="h-3 w-3 me-1"/> {t('wallet.statusRejected')}</Badge> :
                          <Badge variant="secondary">{w.status}</Badge>}
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
@@ -278,14 +276,14 @@ export default function WalletPage() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent dir={isRTL ? 'rtl' : 'ltr'} className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="text-start">{tStr('طلب سحب رصيد', 'Request Withdrawal')}</DialogTitle>
+            <DialogTitle className="text-start">{t('wallet.dialogTitle')}</DialogTitle>
             <DialogDescription className="text-start">
-              {tStr('سيتم مراجعة طلبك من قبل الإدارة وإرسال المبلغ في أقرب وقت ممكن.', 'Your request will be reviewed by admin and transferred soon.')}
+              {t('wallet.dialogDesc')}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label className="text-start block">{tStr('المبلغ المطلوب (د.ج)', 'Amount (DZD)')}</Label>
+              <Label className="text-start block">{t('wallet.dialogAmountLabel')}</Label>
               <Input
                 type="number"
                 min={minAmount}
@@ -297,20 +295,20 @@ export default function WalletPage() {
                 required
               />
               <p className="text-[10px] text-muted-foreground text-start">
-                {tStr(`المتاح: ${availableBalance} دج`, `Available: ${availableBalance} DZD`)}
+                {t('wallet.dialogAvailableLabel', { availableBalance })}
               </p>
             </div>
             <div className="space-y-2 text-start block">
-              <Label>{tStr('طريقة السحب', 'Withdrawal Method')}</Label>
+              <Label>{t('wallet.dialogMethodLabel')}</Label>
               <Select value={formMethod} onValueChange={setFormMethod} required>
                 <SelectTrigger className="text-start w-full">
-                  <SelectValue placeholder={tStr('اختر الطريقة', 'Select Method')} />
+                  <SelectValue placeholder={t('wallet.dialogSelectMethodPlaceholder')} />
                 </SelectTrigger>
                 <SelectContent>
                   {methods.includes('ccp') && <SelectItem value="ccp">البريد الجزائري (CCP)</SelectItem>}
                   {methods.includes('cib') && <SelectItem value="cib">البطاقة الذهبية (CIB)</SelectItem>}
-                  {methods.includes('bank_transfer') && <SelectItem value="bank_transfer">{tStr('تحويل بنكي', 'Bank Transfer')}</SelectItem>}
-                  {methods.includes('cash') && <SelectItem value="cash">{tStr('استلام نقدي', 'Cash Pickup')}</SelectItem>}
+                  {methods.includes('bank_transfer') && <SelectItem value="bank_transfer">{t('wallet.bankTransfer')}</SelectItem>}
+                  {methods.includes('cash') && <SelectItem value="cash">{t('wallet.cashPickup')}</SelectItem>}
                 </SelectContent>
               </Select>
             </div>
@@ -319,16 +317,16 @@ export default function WalletPage() {
               <>
                 {formMethod === 'bank_transfer' && (
                   <div className="space-y-2">
-                    <Label className="text-start block">{tStr('اسم البنك', 'Bank Name')}</Label>
+                    <Label className="text-start block">{t('wallet.dialogBankNameLabel')}</Label>
                     <Input required value={formBankName} onChange={e => setFormBankName(e.target.value)} />
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label className="text-start block">{tStr('اسم صاحب الحساب', 'Account Holder Name')}</Label>
+                  <Label className="text-start block">{t('wallet.dialogAccountNameLabel')}</Label>
                   <Input required value={formAccountName} onChange={e => setFormAccountName(e.target.value)} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-start block">{tStr('رقم الحساب (RIP/RIB)', 'Account Number')}</Label>
+                  <Label className="text-start block">{t('wallet.dialogAccountNumberLabel')}</Label>
                   <Input required value={formAccountNumber} onChange={e => setFormAccountNumber(e.target.value)} className="font-mono text-start" />
                 </div>
               </>
@@ -336,11 +334,11 @@ export default function WalletPage() {
 
             <DialogFooter className="pt-4 flex sm:justify-start">
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
-                {tStr('إلغاء', 'Cancel')}
+                {t('wallet.dialogCancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting || !formMethod} className="bg-emerald-500 hover:bg-emerald-600">
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin ms-2" /> : null}
-                {tStr('تأكيد الطلب', 'Confirm Request')}
+                {t('wallet.dialogConfirm')}
               </Button>
             </DialogFooter>
           </form>
