@@ -434,6 +434,8 @@
     "updateVerificationResetError": "حدث خطأ أثناء طلب التعديل"
   },
   "security": {
+    "pwdLengthError": "كلمة المرور يجب أن تكون 8 أحرف على الأقل",
+    "pwdStrengthError": "يجب أن تحتوي كلمة المرور على: حرف كبير، وحرف صغير، ورقم، ورمز خاص (!@#$%^&* إلخ)",
     "currentPasswordRequired": "كلمة المرور الحالية مطلوبة",
     "newPasswordRequired": "كلمة المرور الجديدة وتأكيدها مطلوبان",
     "newPasswordMismatch": "كلمتا المرور غير متطابقتين",

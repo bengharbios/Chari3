@@ -287,6 +287,8 @@
     }
   },
   "security": {
+    "pwdLengthError": "Le mot de passe doit comporter au moins 8 caractères",
+    "pwdStrengthError": "Le mot de passe doit contenir: une lettre majuscule, une lettre minuscule, un chiffre et un caractère spécial (!@#$%^&* etc.)",
     "currentPasswordRequired": "Le mot de passe actuel est requis",
     "newPasswordRequired": "Le nouveau mot de passe et sa confirmation sont requis",
     "newPasswordMismatch": "Le nouveau mot de passe et sa confirmation ne correspondent pas",

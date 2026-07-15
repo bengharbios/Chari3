@@ -434,6 +434,8 @@
     "updateVerificationResetError": "Failed to request edit"
   },
   "security": {
+    "pwdLengthError": "Password must be at least 8 characters",
+    "pwdStrengthError": "Password must contain: uppercase letter, lowercase letter, number, and special character (!@#$%^&* etc.)",
     "currentPasswordRequired": "Current password is required",
     "newPasswordRequired": "New password and confirmation are required",
     "newPasswordMismatch": "New password and confirmation do not match",

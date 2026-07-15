@@ -16,13 +16,12 @@ const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]
 
 function validatePasswordStrength(password: string): { valid: boolean; message: string } {
   if (!password || password.length < PASSWORD_MIN_LENGTH) {
-    return { valid: false, message: `Password must be at least ${PASSWORD_MIN_LENGTH} characters` };
+    return { valid: false, message: 'security.pwdLengthError' };
   }
   if (!PASSWORD_REGEX.test(password)) {
     return {
       valid: false,
-      message:
-        'Password must contain: uppercase letter, lowercase letter, number, and special character (!@#$%^&* etc.)',
+      message: 'security.pwdStrengthError',
     };
   }
   return { valid: true, message: '' };
