@@ -444,7 +444,9 @@ export const useAuthStore = create<AuthState>()(
       logout: async () => {
         try {
           const { signOut } = await import('@/lib/auth-client');
-          await signOut();
+          await signOut({
+            redirect: false
+          });
         } catch (e) {
 
           console.error('[logout] better-auth signOut failed:', e);
