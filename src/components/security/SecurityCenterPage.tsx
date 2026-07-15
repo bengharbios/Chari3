@@ -437,6 +437,7 @@ export default function SecurityCenterPage() {
                   onChange={e => setCurrentPwd(e.target.value)}
                   placeholder="••••••••"
                   className={tStr('pl-10', 'pr-10')}
+                  autoComplete="current-password"
                   dir="ltr"
                 />
                 <button
@@ -464,6 +465,7 @@ export default function SecurityCenterPage() {
                   onChange={e => setNewPwd(e.target.value)}
                   placeholder="••••••••"
                   className={tStr('pl-10', 'pr-10')}
+                  autoComplete="new-password"
                   dir="ltr"
                 />
                 <button
@@ -532,6 +534,7 @@ export default function SecurityCenterPage() {
                   className={`${tStr('pl-10', 'pr-10')} ${
                     confirmPwd && (confirmPwd === newPwd ? 'border-green-500 focus-visible:ring-green-500' : 'border-red-500 focus-visible:ring-red-500')
                   }`}
+                  autoComplete="new-password"
                   dir="ltr"
                 />
                 <button

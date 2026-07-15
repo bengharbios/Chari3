@@ -35,7 +35,7 @@ function parseUserAgent(ua: string) {
 // GET /api/user/sessions - Get all active sessions for current user
 export async function GET(req: NextRequest) {
   try {
-    const sessionToken = req.cookies.get("better-auth.session_token")?.value;
+    const sessionToken = req.cookies.get("better-auth.session_token")?.value || req.cookies.get("__Secure-better-auth.session_token")?.value;
     
     if (!sessionToken) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
 // DELETE /api/user/sessions - Revoke / terminate a session
 export async function DELETE(req: NextRequest) {
   try {
-    const sessionToken = req.cookies.get("better-auth.session_token")?.value;
+    const sessionToken = req.cookies.get("better-auth.session_token")?.value || req.cookies.get("__Secure-better-auth.session_token")?.value;
     
     if (!sessionToken) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
