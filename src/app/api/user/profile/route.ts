@@ -29,7 +29,19 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, user });
+    const account = await prisma.account.findFirst({
+      where: {
+        userId: session.user.id,
+        providerId: 'credential',
+      },
+      select: { password: true },
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      user,
+      hasPassword: !!account?.password 
+    });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }

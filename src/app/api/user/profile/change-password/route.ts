@@ -39,10 +39,37 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { currentPassword, newPassword, confirmPassword } = body;
 
-    // ── 1. Validate inputs ───────────────────────────────────────────────────
-    if (!currentPassword || !newPassword || !confirmPassword) {
+    // ── 1. Fetch user & credential account ─────────────────────────
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { id: true, email: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+    }
+
+    let account = await prisma.account.findFirst({
+      where: {
+        userId: session.user.id,
+        providerId: 'credential',
+      },
+      select: { id: true, password: true },
+    });
+
+    const hasPassword = !!account?.password;
+
+    // ── 2. Validate inputs ───────────────────────────────────────────────────
+    if (hasPassword && !currentPassword) {
       return NextResponse.json(
-        { success: false, error: 'All fields are required' },
+        { success: false, error: 'Current password is required' },
+        { status: 400 }
+      );
+    }
+
+    if (!newPassword || !confirmPassword) {
+      return NextResponse.json(
+        { success: false, error: 'New password and confirmation are required' },
         { status: 400 }
       );
     }
@@ -54,7 +81,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── 2. Password strength check ───────────────────────────────────────────
+    // ── 3. Password strength check ───────────────────────────────────────────
     const strengthCheck = validatePasswordStrength(newPassword);
     if (!strengthCheck.valid) {
       return NextResponse.json(
@@ -63,56 +90,44 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── 3. Fetch user's current password hash ────────────────────────────────
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { id: true, email: true },
-    });
+    // ── 4. Verify old password if exists ─────────────────────────────────────
+    if (hasPassword && account) {
+      const isOldPasswordCorrect = await bcrypt.compare(currentPassword, account.password);
+      if (!isOldPasswordCorrect) {
+        return NextResponse.json(
+          { success: false, error: 'Current password is incorrect' },
+          { status: 400 }
+        );
+      }
 
-    if (!user) {
-      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
+      const isSameAsOld = await bcrypt.compare(newPassword, account.password);
+      if (isSameAsOld) {
+        return NextResponse.json(
+          { success: false, error: 'New password must be different from your current password' },
+          { status: 400 }
+        );
+      }
     }
 
-    const account = await prisma.account.findFirst({
-      where: {
-        userId: session.user.id,
-        providerId: 'credential',
-      },
-      select: { id: true, password: true },
-    });
-
-    if (!account?.password) {
-      return NextResponse.json(
-        { success: false, error: 'No password set on this account. Use social login.' },
-        { status: 400 }
-      );
-    }
-
-    // ── 4. Verify old password ───────────────────────────────────────────────
-    const isOldPasswordCorrect = await bcrypt.compare(currentPassword, account.password);
-    if (!isOldPasswordCorrect) {
-      return NextResponse.json(
-        { success: false, error: 'Current password is incorrect' },
-        { status: 400 }
-      );
-    }
-
-    // ── 5. Prevent same-as-old password ─────────────────────────────────────
-    const isSameAsOld = await bcrypt.compare(newPassword, account.password);
-    if (isSameAsOld) {
-      return NextResponse.json(
-        { success: false, error: 'New password must be different from your current password' },
-        { status: 400 }
-      );
-    }
-
-    // ── 6. Hash & save new password ──────────────────────────────────────────
+    // ── 5. Hash & save new password ──────────────────────────────────────────
     const hashedNewPassword = await bcrypt.hash(newPassword, 12); // cost factor 12
 
-    await prisma.account.update({
-      where: { id: account.id },
-      data: { password: hashedNewPassword },
-    });
+    if (account) {
+      await prisma.account.update({
+        where: { id: account.id },
+        data: { password: hashedNewPassword },
+      });
+    } else {
+      await prisma.account.create({
+        data: {
+          userId: session.user.id,
+          type: 'credentials',
+          providerId: 'credential',
+          providerAccountId: user.email || session.user.id,
+          password: hashedNewPassword,
+        },
+      });
+    }
 
     // ── 7. Revoke all sessions except current (security best practice) ───────
     const currentSessionToken = req.headers.get('x-session-token') || '';

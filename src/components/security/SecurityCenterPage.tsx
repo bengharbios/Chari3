@@ -127,14 +127,31 @@ export default function SecurityCenterPage() {
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
-  // Populate form from user store
-  useEffect(() => {
-    if (user) {
-      setProfileName(user.name || '');
-      setProfilePhone((user as any).phone || '');
-      setIs2FAEnabled(!!(user as any).twoFactorEnabled);
+  const [hasPassword, setHasPassword] = useState<boolean | null>(null);
+
+  // Populate form from user store & fetch fresh profile details
+  const fetchProfile = useCallback(async () => {
+    try {
+      const res = await fetch('/api/user/profile');
+      const data = await res.json();
+      if (data.success && data.user) {
+        setProfileName(data.user.name || '');
+        setProfilePhone(data.user.phone || '');
+        setIs2FAEnabled(!!data.user.twoFactorEnabled);
+        setHasPassword(data.hasPassword);
+      }
+    } catch {
+      if (user) {
+        setProfileName(user.name || '');
+        setProfilePhone((user as any).phone || '');
+        setIs2FAEnabled(!!(user as any).twoFactorEnabled);
+      }
     }
   }, [user]);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile, activeTab]);
 
   // ── API helpers ───────────────────────────────────────────────────────────
   const fetchSessions = useCallback(async () => {
@@ -189,7 +206,7 @@ export default function SecurityCenterPage() {
   };
 
   const handleChangePassword = async () => {
-    if (!currentPwd || !newPwd || !confirmPwd) {
+    if ((hasPassword && !currentPwd) || !newPwd || !confirmPwd) {
       toast.error(tStr('يرجى ملء جميع الحقول', 'Please fill all fields'));
       return;
     }
@@ -206,12 +223,17 @@ export default function SecurityCenterPage() {
       const res = await fetch('/api/user/profile/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword: currentPwd, newPassword: newPwd, confirmPassword: confirmPwd }),
+        body: JSON.stringify({ 
+          currentPassword: hasPassword ? currentPwd : '', 
+          newPassword: newPwd, 
+          confirmPassword: confirmPwd 
+        }),
       });
       const data = await res.json();
       if (data.success) {
         toast.success(tStr('✅ تم تغيير كلمة المرور، تم إنهاء جميع الجلسات الأخرى', '✅ Password changed! All other sessions were terminated.'));
         setCurrentPwd(''); setNewPwd(''); setConfirmPwd('');
+        setHasPassword(true);
       } else {
         toast.error(data.error);
       }
@@ -425,30 +447,36 @@ export default function SecurityCenterPage() {
           </CardHeader>
           <CardContent className="space-y-5">
             {/* Current password */}
-            <div className="space-y-1.5">
-              <Label htmlFor="current-pwd">
-                {tStr('كلمة المرور الحالية', 'Current Password')} <span className="text-destructive">*</span>
-              </Label>
-              <div className="relative">
-                <Input
-                  id="current-pwd"
-                  type={showCurrent ? 'text' : 'password'}
-                  value={currentPwd}
-                  onChange={e => setCurrentPwd(e.target.value)}
-                  placeholder="••••••••"
-                  className={tStr('pl-10', 'pr-10')}
-                  autoComplete="current-password"
-                  dir="ltr"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrent(v => !v)}
-                  className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground ${tStr('left-3', 'right-3')}`}
-                >
-                  {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+            {hasPassword !== false ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="current-pwd">
+                  {tStr('كلمة المرور الحالية', 'Current Password')} <span className="text-destructive">*</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="current-pwd"
+                    type={showCurrent ? 'text' : 'password'}
+                    value={currentPwd}
+                    onChange={e => setCurrentPwd(e.target.value)}
+                    placeholder="••••••••"
+                    className={tStr('pl-10', 'pr-10')}
+                    autoComplete="current-password"
+                    dir="ltr"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrent(v => !v)}
+                    className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground ${tStr('left-3', 'right-3')}`}
+                  >
+                    {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl text-xs text-blue-800 dark:text-blue-200 font-medium">
+                {tStr('حسابك مسجل حالياً عبر رمز التحقق (OTP) ولا يمتلك كلمة مرور. يرجى تعيين كلمة مرور جديدة مباشرة.', 'Your account is logged in via OTP and has no password. Please set a new password directly.')}
+              </div>
+            )}
 
             <Separator />
 
@@ -571,12 +599,15 @@ export default function SecurityCenterPage() {
             <Button
               id="change-password-btn"
               onClick={handleChangePassword}
-              disabled={pwdLoading || !currentPwd || !newPwd || !confirmPwd || newPwd !== confirmPwd || strengthScore < 4}
+              disabled={pwdLoading || (hasPassword && !currentPwd) || !newPwd || !confirmPwd || newPwd !== confirmPwd || strengthScore < 4}
               className="w-full gap-2"
               variant="default"
             >
               {pwdLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
-              {tStr('تغيير كلمة المرور', 'Change Password')}
+              {hasPassword === false 
+                ? tStr('تعيين كلمة المرور', 'Set Password')
+                : tStr('تغيير كلمة المرور', 'Change Password')
+              }
             </Button>
           </CardContent>
         </Card>
