@@ -434,6 +434,16 @@
     "updateVerificationResetError": "Failed to request edit"
   },
   "security": {
+    "pwdChangeSuccess": "✅ Password changed! All other sessions were terminated.",
+    "fieldsRequired": "Please fill all fields",
+    "pwdMismatch": "Passwords do not match",
+    "pwdTooWeak": "Password is too weak, please choose a stronger one",
+    "connError": "Connection error",
+    "nameMinLength": "Name must be at least 2 characters",
+    "profileSaveSuccess": "✅ Profile updated successfully",
+    "sessionsLoadError": "Error loading sessions",
+    "pwdChangeWarning": "After changing your password, all active sessions on other devices will be automatically terminated to protect your account.",
+    "otpAccountNotice": "Your account is logged in via OTP and has no password. Please set a new password directly to secure your account.",
     "title": "Security",
     "twoFactor": "Two-Factor Authentication (2FA)",
     "twoFactorDesc": "Extra protection using Google Authenticator or Authy apps",

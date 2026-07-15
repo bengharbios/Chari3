@@ -83,7 +83,7 @@ type TabKey = 'profile' | 'password' | '2fa' | 'sessions';
 
 export default function SecurityCenterPage() {
   const { t, locale } = useTranslation();
-  const { user } = useAuthStore();
+  const { user, hasPassword, setHasPassword } = useAuthStore();
   const isAr = locale === 'ar';
   const tStr = (ar: string, en: string, fr: string = en) => { if (locale === 'ar') return ar; if (locale === 'fr') return fr; return en; };
   const dateFnsLocale = isAr ? ar : enUS;
@@ -127,7 +127,6 @@ export default function SecurityCenterPage() {
   const [sessionsLoading, setSessionsLoading] = useState(false);
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
-  const [hasPassword, setHasPassword] = useState<boolean | null>(null);
 
   // Populate form from user store & fetch fresh profile details
   const fetchProfile = useCallback(async () => {
@@ -161,7 +160,7 @@ export default function SecurityCenterPage() {
       const data = await res.json();
       if (data.success) setSessions(data.sessions);
     } catch {
-      toast.error(tStr('خطأ في تحميل الجلسات', 'Error loading sessions'));
+      toast.error(t('security.sessionsLoadError'));
     } finally {
       setSessionsLoading(false);
     }
@@ -180,7 +179,7 @@ export default function SecurityCenterPage() {
 
   const handleProfileSave = async () => {
     if (!profileName.trim() || profileName.trim().length < 2) {
-      toast.error(tStr('الاسم يجب أن يكون حرفين على الأقل', 'Name must be at least 2 characters'));
+      toast.error(t('security.nameMinLength'));
       return;
     }
     setProfileLoading(true);
@@ -193,13 +192,13 @@ export default function SecurityCenterPage() {
       const data = await res.json();
       if (data.success) {
         setProfileSaved(true);
-        toast.success(tStr('✅ تم حفظ البيانات بنجاح', '✅ Profile updated successfully'));
+        toast.success(t('security.profileSaveSuccess'));
         setTimeout(() => setProfileSaved(false), 3000);
       } else {
         toast.error(data.error);
       }
     } catch {
-      toast.error(tStr('خطأ في الاتصال', 'Connection error'));
+      toast.error(t('security.connError'));
     } finally {
       setProfileLoading(false);
     }
@@ -207,15 +206,15 @@ export default function SecurityCenterPage() {
 
   const handleChangePassword = async () => {
     if ((hasPassword && !currentPwd) || !newPwd || !confirmPwd) {
-      toast.error(tStr('يرجى ملء جميع الحقول', 'Please fill all fields'));
+      toast.error(t('security.fieldsRequired'));
       return;
     }
     if (newPwd !== confirmPwd) {
-      toast.error(tStr('كلمة المرور الجديدة لا تتطابق مع التأكيد', 'Passwords do not match'));
+      toast.error(t('security.pwdMismatch'));
       return;
     }
     if (strengthScore < 4) {
-      toast.error(tStr('كلمة المرور ضعيفة جداً، الرجاء اختيار كلمة مرور أقوى', 'Password is too weak, please choose a stronger one'));
+      toast.error(t('security.pwdTooWeak'));
       return;
     }
     setPwdLoading(true);
@@ -224,21 +223,21 @@ export default function SecurityCenterPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          currentPassword: hasPassword ? currentPwd : '', 
+          currentPassword: currentPwd, 
           newPassword: newPwd, 
           confirmPassword: confirmPwd 
         }),
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(tStr('✅ تم تغيير كلمة المرور، تم إنهاء جميع الجلسات الأخرى', '✅ Password changed! All other sessions were terminated.'));
+        toast.success(t('security.pwdChangeSuccess'));
         setCurrentPwd(''); setNewPwd(''); setConfirmPwd('');
         setHasPassword(true);
       } else {
         toast.error(data.error);
       }
     } catch {
-      toast.error(tStr('خطأ في الاتصال', 'Connection error'));
+      toast.error(t('security.connError'));
     } finally {
       setPwdLoading(false);
     }
@@ -474,7 +473,7 @@ export default function SecurityCenterPage() {
               </div>
             ) : (
               <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl text-xs text-blue-800 dark:text-blue-200 font-medium">
-                {tStr('حسابك مسجل حالياً عبر رمز التحقق (OTP) ولا يمتلك كلمة مرور. يرجى تعيين كلمة مرور جديدة مباشرة.', 'Your account is logged in via OTP and has no password. Please set a new password directly.')}
+                {t('security.otpAccountNotice')}
               </div>
             )}
 
@@ -591,15 +590,14 @@ export default function SecurityCenterPage() {
             <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-xl border border-orange-200 dark:border-orange-800 flex gap-2 text-xs">
               <AlertTriangle className="h-4 w-4 text-orange-500 shrink-0 mt-0.5" />
               <p className="text-muted-foreground">
-                {tStr('بعد تغيير كلمة المرور، سيتم إنهاء جميع الجلسات النشطة على الأجهزة الأخرى تلقائياً لحماية حسابك.', 'After changing your password, all active sessions on other devices will be automatically terminated to protect your account.')
-                }
+                {t('security.pwdChangeWarning')}
               </p>
             </div>
 
             <Button
               id="change-password-btn"
               onClick={handleChangePassword}
-              disabled={pwdLoading || (hasPassword && !currentPwd) || !newPwd || !confirmPwd || newPwd !== confirmPwd || strengthScore < 4}
+              disabled={pwdLoading || (hasPassword === true && !currentPwd) || !newPwd || !confirmPwd || newPwd !== confirmPwd || strengthScore < 4}
               className="w-full gap-2"
               variant="default"
             >

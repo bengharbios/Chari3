@@ -287,6 +287,16 @@
     }
   },
   "security": {
+    "pwdChangeSuccess": "✅ Le mot de passe a été modifié ! Toutes les autres sessions ont été terminées.",
+    "fieldsRequired": "Veuillez remplir tous les champs",
+    "pwdMismatch": "Les nouveaux mots de passe ne correspondent pas",
+    "pwdTooWeak": "Le mot de passe est trop faible, veuillez en choisir un plus fort",
+    "connError": "Erreur de connexion",
+    "nameMinLength": "Le nom doit comporter au moins 2 caractères",
+    "profileSaveSuccess": "✅ Profil mis à jour avec succès",
+    "sessionsLoadError": "Erreur lors du chargement des sessions",
+    "pwdChangeWarning": "Après avoir modifié votre mot de passe, toutes les sessions actives sur d'autres appareils seront automatiquement terminées pour protéger votre compte.",
+    "otpAccountNotice": "Votre compte est connecté via OTP et n'a pas de mot de passe. Veuillez définir directement un nouveau mot de passe pour sécuriser votre compte.",
     "section_title": "Sécurité et Accès",
     "auth_logs": "Historique d'authentification",
     "ban_list": "Liste des bannissements",

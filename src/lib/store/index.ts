@@ -185,6 +185,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   isBuyerMode: boolean;
+  hasPassword: boolean | null;
 
   login: (email: string, password: string) => Promise<void>;
   loginAsDemo: (role: UserRole) => void;
@@ -193,6 +194,7 @@ interface AuthState {
   updateProfile: (data: Partial<User>) => void;
   clearError: () => void;
   setBuyerMode: (mode: boolean) => void;
+  setHasPassword: (hasPassword: boolean | null) => void;
 }
 
 const DEMO_USERS: Record<UserRole, User> = {
@@ -314,6 +316,7 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
       isBuyerMode: false,
+      hasPassword: null,
 
       setBuyerMode: (mode: boolean) => {
         set({ isBuyerMode: mode });
@@ -394,6 +397,7 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: true,
           isLoading: false,
           error: null,
+          hasPassword: hasPassword !== undefined ? hasPassword : null,
         });
         const { setCurrentPage, setLocale } = useAppStore.getState();
         setLocale(user.locale || 'ar');
@@ -478,6 +482,7 @@ export const useAuthStore = create<AuthState>()(
           isAuthenticated: false,
           isLoading: false,
           error: null,
+          hasPassword: null,
         });
         const { setCurrentPage } = useAppStore.getState();
         setCurrentPage('home');
@@ -499,6 +504,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       clearError: () => set({ error: null }),
+      setHasPassword: (hasPassword) => set({ hasPassword }),
     }),
     {
       name: 'platform-auth-store',

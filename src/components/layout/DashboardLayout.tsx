@@ -20,8 +20,8 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { isSidebarOpen } = useAppStore();
-  const { user, isBuyerMode, setBuyerMode } = useAuthStore();
+  const { isSidebarOpen, locale } = useAppStore();
+  const { user, isBuyerMode, setBuyerMode, hasPassword, setHasPassword } = useAuthStore();
   const pathname = usePathname();
   const [dashboardTemplate, setDashboardTemplate] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -135,6 +135,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [dashboardTemplate]);
 
+  // Load profile to check passwordless status
+  useEffect(() => {
+    if (user && hasPassword === null) {
+      fetch('/api/user/profile')
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setHasPassword(data.hasPassword);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user, hasPassword, setHasPassword]);
 
   const { isDark: gentelellaDark } = useGentelellaTheme();
   const { theme: globalTheme } = useTheme();
@@ -154,6 +167,42 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Prevent flash by waiting for theme load completely
   if (!isThemeLoaded) {
      return <div className="min-h-screen bg-background flex items-center justify-center">...</div>;
+  }
+
+  const isSecurityPage = pathname === '/security';
+  if (user && hasPassword === false && !isSecurityPage) {
+    const isAr = locale === 'ar';
+    return (
+      <div 
+        className="min-h-screen w-screen bg-slate-950 flex items-center justify-center p-4 font-cairo"
+        style={{ fontFamily: 'Cairo, sans-serif' }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(244,63,94,0.07)_0,transparent_100%)] pointer-events-none" />
+        <div className="relative w-full max-w-md bg-slate-900/80 border border-rose-500/20 backdrop-blur-xl rounded-2xl shadow-2xl p-6 md:p-8 text-center space-y-6">
+          <div className="mx-auto p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 w-fit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-10 w-10 text-rose-400 animate-pulse"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-white">
+              {isAr ? 'تعيين كلمة المرور مطلوب' : 'Password Setup Required'}
+            </h2>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              {isAr 
+                ? 'لحماية حسابك وتجنب نفاد رصيد رسائل التحقق (OTP)، يجب عليك تعيين كلمة مرور لحسابك قبل متابعة تصفح لوحة التحكم.'
+                : 'To protect your account and avoid running out of verification OTP credits, you must set a password for your account before you can proceed.'}
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              window.location.href = '/security';
+            }}
+            className="w-full py-3 px-4 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white rounded-xl font-medium transition duration-200 shadow-lg shadow-rose-500/20 flex items-center justify-center gap-2"
+          >
+            {isAr ? 'تعيين كلمة المرور الآن' : 'Set Password Now'}
+          </button>
+        </div>
+      </div>
+    );
   }
 
 
