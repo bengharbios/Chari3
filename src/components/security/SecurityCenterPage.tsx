@@ -234,7 +234,7 @@ export default function SecurityCenterPage() {
         setCurrentPwd(''); setNewPwd(''); setConfirmPwd('');
         setHasPassword(true);
       } else {
-        toast.error(data.error);
+        toast.error(t(data.error));
       }
     } catch {
       toast.error(t('security.connError'));

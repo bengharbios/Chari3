@@ -434,6 +434,11 @@
     "updateVerificationResetError": "حدث خطأ أثناء طلب التعديل"
   },
   "security": {
+    "currentPasswordRequired": "كلمة المرور الحالية مطلوبة",
+    "newPasswordRequired": "كلمة المرور الجديدة وتأكيدها مطلوبان",
+    "newPasswordMismatch": "كلمتا المرور غير متطابقتين",
+    "currentPasswordIncorrect": "كلمة المرور الحالية غير صحيحة",
+    "newPasswordSameAsCurrent": "يجب أن تكون كلمة المرور الجديدة مختلفة عن كلمة المرور الحالية",
     "pwdChangeSuccess": "✅ تم تغيير كلمة المرور، تم إنهاء جميع الجلسات الأخرى",
     "fieldsRequired": "يرجى ملء جميع الحقول",
     "pwdMismatch": "كلمة المرور الجديدة لا تتطابق مع التأكيد",

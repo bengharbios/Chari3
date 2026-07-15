@@ -287,6 +287,11 @@
     }
   },
   "security": {
+    "currentPasswordRequired": "Le mot de passe actuel est requis",
+    "newPasswordRequired": "Le nouveau mot de passe et sa confirmation sont requis",
+    "newPasswordMismatch": "Le nouveau mot de passe et sa confirmation ne correspondent pas",
+    "currentPasswordIncorrect": "Le mot de passe actuel est incorrect",
+    "newPasswordSameAsCurrent": "Le nouveau mot de passe doit être différent du mot de passe actuel",
     "pwdChangeSuccess": "✅ Le mot de passe a été modifié ! Toutes les autres sessions ont été terminées.",
     "fieldsRequired": "Veuillez remplir tous les champs",
     "pwdMismatch": "Les nouveaux mots de passe ne correspondent pas",

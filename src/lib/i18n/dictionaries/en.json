@@ -434,6 +434,11 @@
     "updateVerificationResetError": "Failed to request edit"
   },
   "security": {
+    "currentPasswordRequired": "Current password is required",
+    "newPasswordRequired": "New password and confirmation are required",
+    "newPasswordMismatch": "New password and confirmation do not match",
+    "currentPasswordIncorrect": "Current password is incorrect",
+    "newPasswordSameAsCurrent": "New password must be different from your current password",
     "pwdChangeSuccess": "✅ Password changed! All other sessions were terminated.",
     "fieldsRequired": "Please fill all fields",
     "pwdMismatch": "Passwords do not match",

@@ -62,21 +62,21 @@ export async function POST(req: NextRequest) {
     // ── 2. Validate inputs ───────────────────────────────────────────────────
     if (hasPassword && !currentPassword) {
       return NextResponse.json(
-        { success: false, error: 'Current password is required' },
+        { success: false, error: 'security.currentPasswordRequired' },
         { status: 400 }
       );
     }
 
     if (!newPassword || !confirmPassword) {
       return NextResponse.json(
-        { success: false, error: 'New password and confirmation are required' },
+        { success: false, error: 'security.newPasswordRequired' },
         { status: 400 }
       );
     }
 
     if (newPassword !== confirmPassword) {
       return NextResponse.json(
-        { success: false, error: 'New password and confirmation do not match' },
+        { success: false, error: 'security.newPasswordMismatch' },
         { status: 400 }
       );
     }
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
       const isOldPasswordCorrect = await bcrypt.compare(currentPassword, account.password);
       if (!isOldPasswordCorrect) {
         return NextResponse.json(
-          { success: false, error: 'Current password is incorrect' },
+          { success: false, error: 'security.currentPasswordIncorrect' },
           { status: 400 }
         );
       }
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
       const isSameAsOld = await bcrypt.compare(newPassword, account.password);
       if (isSameAsOld) {
         return NextResponse.json(
-          { success: false, error: 'New password must be different from your current password' },
+          { success: false, error: 'security.newPasswordSameAsCurrent' },
           { status: 400 }
         );
       }
