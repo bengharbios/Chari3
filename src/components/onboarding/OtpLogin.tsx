@@ -565,7 +565,7 @@ function OtpVerification({ locale }: { locale: Locale }) {
         if (data.user && !data.isNewUser) {
           setTimeout(() => {
             const { loginWithUser } = useAuthStore.getState();
-            loginWithUser(data.user as unknown as import('@/types').User);
+            loginWithUser(data.user as unknown as import('@/types').User, data.hasPassword);
             // Reset OTP flow so returning users don't see registration again
             store.resetOtpFlow();
           }, 1000);

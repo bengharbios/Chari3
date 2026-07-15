@@ -273,7 +273,7 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
 
           // Trigger login
           const { loginWithUser } = useAuthStore.getState();
-          loginWithUser(data.user as unknown as User);
+          loginWithUser(data.user as unknown as User, data.hasPassword);
 
           if (data.user.password) {
             // Should not usually hit this if sendOtp caught it, but just in case

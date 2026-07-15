@@ -188,7 +188,7 @@ interface AuthState {
 
   login: (email: string, password: string) => Promise<void>;
   loginAsDemo: (role: UserRole) => void;
-  loginWithUser: (user: User) => void;
+  loginWithUser: (user: User, hasPassword?: boolean) => void;
   logout: () => void;
   updateProfile: (data: Partial<User>) => void;
   clearError: () => void;
@@ -378,7 +378,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      loginWithUser: (user: User) => {
+      loginWithUser: (user: User, hasPassword?: boolean) => {
         // CRITICAL: Write new user to localStorage BEFORE set() to prevent
         // Zustand persist rehydration from overwriting us with stale data.
         // localStorage.removeItem alone is NOT enough because rehydration
@@ -400,10 +400,14 @@ export const useAuthStore = create<AuthState>()(
         setCurrentPage(user.role === 'buyer' ? 'home' : ROLE_TO_PAGE[user.role]);
         
         if (typeof window !== 'undefined') {
-          if (user.role === 'admin') window.location.href = '/admin-secure-internal';
-          else if (user.role === 'buyer') window.location.href = '/buyer';
-          else if (user.role === 'logistics') window.location.href = '/logistics';
-          else window.location.href = '/seller/dashboard';
+          if (hasPassword === false) {
+            window.location.href = '/security';
+          } else {
+            if (user.role === 'admin') window.location.href = '/admin-secure-internal';
+            else if (user.role === 'buyer') window.location.href = '/buyer';
+            else if (user.role === 'logistics') window.location.href = '/logistics';
+            else window.location.href = '/seller/dashboard';
+          }
         }
 
         // Sync onboarding store with user's account status from DB
