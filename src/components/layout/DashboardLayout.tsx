@@ -42,7 +42,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     } else if (isSellerRoute && isBuyerMode) {
       setBuyerMode(false);
     }
-  }, [pathname, isBuyerRoute, isSellerRoute, isBuyerMode, setBuyerMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, isBuyerRoute, isSellerRoute, setBuyerMode]);
 
   // Use correct default theme based on role
   const getInitialTheme = () => {
