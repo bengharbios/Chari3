@@ -151,7 +151,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const { isDark: gentelellaDark } = useGentelellaTheme();
   const { theme: globalTheme } = useTheme();
-  const { isPending, data } = useSession();
+  const { isPending, data, error } = useSession();
 
   // Helper: check if we just logged in/navigated within the last 30 seconds
   const isWithinLoginGuard = () => {
@@ -166,6 +166,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // If loading finished and server session is invalid/missing but client thinks it's logged in, sign out client-side
   useEffect(() => {
     if (!isPending && !data?.user && user) {
+      // Guard: if there is a network or server error (e.g., Cloudflare intercept or offline), don't falsely log out
+      if (error) {
+        console.warn('[DashboardLayout] Session fetch failed with error, preserving local session state.', error);
+        return;
+      }
       // Guard: skip if we just logged in or navigated from buyer mode (stale useSession cache)
       if (isWithinLoginGuard()) {
         console.log('[DashboardLayout] Skipping session sync logout — within 30s login guard');
@@ -174,7 +179,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       console.log('[DashboardLayout] Server session missing, logging out client...');
       useAuthStore.getState().logout();
     }
-  }, [isPending, data, user]);
+  }, [isPending, data, error, user]);
 
   if (isPending) {
     return <div className="min-h-screen bg-background flex items-center justify-center">...</div>;
