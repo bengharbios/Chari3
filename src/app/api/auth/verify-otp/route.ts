@@ -201,18 +201,13 @@ export async function POST(request: Request) {
           }
         });
         
-        const { makeSignature } = require('better-auth/crypto');
-        const secret = process.env.BETTER_AUTH_SECRET || "fallback_secret_please_change_in_production_12345";
-        const signature = await makeSignature(token, secret);
-        const signedCookieValue = `${token}.${signature}`;
-
         const { cookies } = require('next/headers');
         const cookieStore = await cookies();
         const cookieName = process.env.NODE_ENV === 'production' 
           ? '__Secure-better-auth.session_token' 
           : 'better-auth.session_token';
 
-        cookieStore.set(cookieName, signedCookieValue, {
+        cookieStore.set(cookieName, token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',

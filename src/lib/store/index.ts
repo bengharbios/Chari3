@@ -475,6 +475,11 @@ export const useAuthStore = create<AuthState>()(
         
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('just_logged_out', Date.now().toString());
+          try {
+            localStorage.removeItem('platform-auth-store');
+          } catch (e) {
+            console.error('[logout] Failed to clear localStorage', e);
+          }
         }
 
         set({
@@ -491,8 +496,10 @@ export const useAuthStore = create<AuthState>()(
         onboardingState.resetOtpFlow();
 
         if (typeof window !== 'undefined') {
-          // Redirect to login page
-          window.location.href = '/login';
+          // If we are already on the login page, don't force a reload, just let React update the UI
+          if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
         }
       },
 
