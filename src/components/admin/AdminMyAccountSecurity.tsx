@@ -244,6 +244,7 @@ export default function AdminMyAccountSecurity() {
                   className="rounded-xl pr-10"
                   placeholder="••••••••••••"
                   id="admin-current-password"
+                  autoComplete="new-password"
                 />
                 <button onClick={() => setShowPw(v => !v)} className="absolute inset-y-0 end-3 flex items-center text-muted-foreground">
                   {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

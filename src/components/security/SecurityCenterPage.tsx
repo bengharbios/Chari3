@@ -459,7 +459,7 @@ export default function SecurityCenterPage() {
                     onChange={e => setCurrentPwd(e.target.value)}
                     placeholder="••••••••"
                     className={tStr('pl-10', 'pr-10')}
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     dir="ltr"
                   />
                   <button
