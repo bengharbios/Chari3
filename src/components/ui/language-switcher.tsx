@@ -75,6 +75,8 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
     }
     
     // Force a hard reload so that server components (like Docs) get the new NEXT_LOCALE cookie
+    // Refresh the login guard so DashboardLayout doesn't falsely log out the user due to cancelled useSession fetches during reload
+    try { sessionStorage.setItem('just_logged_in', Date.now().toString()); } catch {}
     window.location.reload();
   };
 
