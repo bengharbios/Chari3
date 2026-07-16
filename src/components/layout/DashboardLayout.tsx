@@ -21,7 +21,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isSidebarOpen, locale } = useAppStore();
-  const { user, isBuyerMode, setBuyerMode, hasPassword, setHasPassword } = useAuthStore();
+  const { user, isBuyerMode, setBuyerMode, hasPassword, setHasPassword, _hasHydrated } = useAuthStore();
   const pathname = usePathname();
   const [dashboardTemplate, setDashboardTemplate] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -153,12 +153,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { theme: globalTheme } = useTheme();
   const { isPending, data, error } = useSession();
 
-  // We only block rendering if the session is still initially loading
-  if (isPending) {
+  // CRITICAL: Wait for Zustand to finish rehydrating from localStorage before
+  // making any auth decisions. Without this, on page navigation, user=null
+  // for one render tick before localStorage is read, causing false /login redirects.
+  if (!_hasHydrated || isPending) {
     return <div className="min-h-screen bg-background flex items-center justify-center">...</div>;
   }
 
-  // If Zustand has no user AND the server session is missing, they are truly logged out.
+  // Now that hydration is confirmed: if BOTH Zustand and server session have no user,
+  // they are definitively logged out.
   if (!user && !data?.user) {
     if (typeof window !== 'undefined') {
       window.location.href = '/login';

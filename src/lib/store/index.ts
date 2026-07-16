@@ -186,6 +186,10 @@ interface AuthState {
   error: string | null;
   isBuyerMode: boolean;
   hasPassword: boolean | null;
+  // Tracks whether Zustand persist has finished reading from localStorage.
+  // CRITICAL: Used by DashboardLayout to prevent premature /login redirects
+  // during the brief tick where user is null before rehydration completes.
+  _hasHydrated: boolean;
 
   login: (email: string, password: string) => Promise<void>;
   loginAsDemo: (role: UserRole) => void;
@@ -195,6 +199,7 @@ interface AuthState {
   clearError: () => void;
   setBuyerMode: (mode: boolean) => void;
   setHasPassword: (hasPassword: boolean | null) => void;
+  _setHasHydrated: (state: boolean) => void;
 }
 
 const DEMO_USERS: Record<UserRole, User> = {
@@ -317,6 +322,7 @@ export const useAuthStore = create<AuthState>()(
       error: null,
       isBuyerMode: false,
       hasPassword: null,
+      _hasHydrated: false,
 
       setBuyerMode: (mode: boolean) => {
         set({ isBuyerMode: mode });
@@ -520,6 +526,7 @@ export const useAuthStore = create<AuthState>()(
 
       clearError: () => set({ error: null }),
       setHasPassword: (hasPassword) => set({ hasPassword }),
+      _setHasHydrated: (state) => set({ _hasHydrated: state }),
     }),
     {
       name: 'platform-auth-store',
@@ -528,10 +535,12 @@ export const useAuthStore = create<AuthState>()(
         isAuthenticated: state.isAuthenticated,
         isBuyerMode: state.isBuyerMode,
       }),
-      // Prevent rehydration from overwriting a freshly logged-in user
       onRehydrateStorage: () => (state) => {
-        // Called after rehydration completes. If state is null, do nothing.
-        if (!state) return;
+        // Signal that rehydration is complete so DashboardLayout
+        // knows it can safely check authentication state.
+        if (state) {
+          state._setHasHydrated(true);
+        }
       },
     }
   )
