@@ -23,48 +23,40 @@ export default function AuthSync() {
       // User is authenticated on the server but not in Zustand
       loginWithUser(data.user as any); // Cast to any to map BetterAuth User to Zustand User
     } else if (!data?.user && isAuthenticated) {
-      // User is logged out on the server but still authenticated in Zustand
-      
-      // If there's a network or server error (like a DB connection panic), don't falsely log out the user
-      if (error) {
-        console.warn('[AuthSync] Session fetch failed with error, preserving local session state.', error);
-        return;
-      }
-      // Check if they just logged in within the last 10 seconds to prevent race conditions with cached useSession()
-      if (typeof window !== 'undefined') {
-        try {
-          const justLoggedInStr = sessionStorage.getItem('just_logged_in');
-          if (justLoggedInStr) {
-            const diff = Date.now() - parseInt(justLoggedInStr, 10);
-            if (diff < 10000) { // 10 seconds guard
-              return;
-            }
+      // Background session polling (useSession) returned null.
+      // We DO NOT force logout here because of Cloudflare Bot Fight Mode 
+      // intercepting background requests. Instead, we rely on the global 
+      // fetch interceptor below to catch definitive 401 Unauthorized errors.
+    }
+  }, [mounted, isPending, data, isAuthenticated, loginWithUser]);
+
+  // Global standard: Intercept fetch requests to catch 401 Unauthorized responses
+  // This definitively proves the session is dead without relying on flaky background polling.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Prevent attaching multiple times in strict mode
+    if ((window as any).__fetchIntercepted) return;
+    (window as any).__fetchIntercepted = true;
+
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      const response = await originalFetch(...args);
+      if (response.status === 401) {
+        const url = typeof args[0] === 'string' ? args[0] : (args[0] instanceof Request ? args[0].url : '');
+        // Do not intercept auth endpoints to prevent infinite logout loops
+        if (url && !url.includes('/api/auth/') && !url.includes('/login')) {
+          const authStore = useAuthStore.getState();
+          if (authStore.isAuthenticated) {
+            console.warn(`[GlobalFetch] 401 Unauthorized detected on ${url} - Logging out user.`);
+            authStore.logout();
+            window.location.href = '/login';
           }
-          
-          const justLoggedOutStr = sessionStorage.getItem('just_logged_out');
-          if (justLoggedOutStr) {
-            const diff = Date.now() - parseInt(justLoggedOutStr, 10);
-            if (diff < 5000) { // 5 seconds guard
-              console.log('[AuthSync] Ignoring session because user just logged out');
-              return;
-            }
-          }
-        } catch (e) {
-          console.error('[AuthSync] failed to read sessionStorage:', e);
         }
       }
-
-      const currentUser = useAuthStore.getState().user;
-      // Preserve demo users (whose IDs typically contain '-001')
-      if (currentUser?.id?.includes('-001')) {
-        return;
-      }
-      
-      // DISABLED: Cloudflare Bot Fight Mode intercepts the background session check
-      // and returns HTML (data: null, error: null), falsely logging out legitimate users.
-      // logout();
-    }
-  }, [mounted, isPending, data, error, isAuthenticated, loginWithUser, logout]);
+      return response;
+    };
+  }, []);
 
   // Force password change redirect: if user has the flag set, redirect them immediately
   useEffect(() => {

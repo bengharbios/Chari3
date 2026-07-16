@@ -699,9 +699,6 @@ export default function Header() {
           <button 
             onClick={() => {
               const { setBuyerMode } = useAuthStore.getState();
-              // Refresh the login guard timestamp so DashboardLayout's session check
-              // doesn't falsely log out the user due to a stale useSession() cache.
-              try { sessionStorage.setItem('just_logged_in', Date.now().toString()); } catch {}
               setBuyerMode(false);
               navigateToDashboard(rolePages[user?.role || 'buyer'] || 'seller');
             }}
@@ -855,8 +852,6 @@ export default function Header() {
                       className={`flex items-center gap-2 font-medium cursor-pointer ${store.id === activeStoreId ? 'bg-primary/10 text-primary' : ''}`}
                       onClick={() => {
                         setActiveStoreId(store.id);
-                        // Refresh the login guard so DashboardLayout doesn't falsely log out the user due to cancelled useSession fetches during reload
-                        try { sessionStorage.setItem('just_logged_in', Date.now().toString()); } catch {}
                         // Reload the current page to refresh data for the new store
                         window.location.reload();
                       }}

@@ -153,41 +153,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { theme: globalTheme } = useTheme();
   const { isPending, data, error } = useSession();
 
-  // Helper: check if we just logged in/navigated within the last 30 seconds
-  const isWithinLoginGuard = () => {
-    if (typeof window === 'undefined') return false;
-    try {
-      const ts = sessionStorage.getItem('just_logged_in');
-      if (ts && Date.now() - parseInt(ts, 10) < 30000) return true;
-    } catch {}
-    return false;
-  };
-
-  // If loading finished and server session is invalid/missing but client thinks it's logged in, sign out client-side
-  useEffect(() => {
-    if (!isPending && !data?.user && user) {
-      // Guard: if there is a network or server error (e.g., Cloudflare intercept or offline), don't falsely log out
-      if (error) {
-        console.warn('[DashboardLayout] Session fetch failed with error, preserving local session state.', error);
-        return;
-      }
-      // Guard: skip if we just logged in or navigated from buyer mode (stale useSession cache)
-      if (isWithinLoginGuard()) {
-        console.log('[DashboardLayout] Skipping session sync logout — within 30s login guard');
-        return;
-      }
-      console.log('[DashboardLayout] Server session missing, logging out client...');
-      useAuthStore.getState().logout();
-    }
-  }, [isPending, data, error, user]);
-
+  // We only block rendering if the session is still initially loading
   if (isPending) {
     return <div className="min-h-screen bg-background flex items-center justify-center">...</div>;
   }
 
+  // If Zustand has no user AND the server session is missing, they are truly logged out.
   if (!user && !data?.user) {
-    // Guard: if we just logged in, don't redirect — session cookie may not be synced yet
-    if (!isWithinLoginGuard() && typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') {
       window.location.href = '/login';
     }
     return null;
