@@ -48,9 +48,19 @@ export default function AuthSync() {
         if (url && !url.includes('/api/auth/') && !url.includes('/login')) {
           const authStore = useAuthStore.getState();
           if (authStore.isAuthenticated) {
+            // Grace period: ignore 401s for 5 seconds after a fresh login
+            // This handles race conditions where the session cookie is still
+            // propagating through Cloudflare or the browser cookie jar.
+            try {
+              const loginTs = sessionStorage.getItem('__login_ts');
+              if (loginTs && Date.now() - parseInt(loginTs, 10) < 5000) {
+                console.warn(`[GlobalFetch] 401 on ${url} within 5s of login — ignoring (cookie propagation race).`);
+                return response;
+              }
+            } catch {}
+
             console.warn(`[GlobalFetch] 401 Unauthorized detected on ${url} - Logging out user.`);
             authStore.logout();
-            window.location.href = '/login';
           }
         }
       }

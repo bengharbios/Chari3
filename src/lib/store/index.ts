@@ -384,12 +384,12 @@ export const useAuthStore = create<AuthState>()(
       loginWithUser: (user: User, hasPassword?: boolean) => {
         // CRITICAL: Write new user to localStorage BEFORE set() to prevent
         // Zustand persist rehydration from overwriting us with stale data.
-        // localStorage.removeItem alone is NOT enough because rehydration
-        // has already started reading and will apply the old value.
         const state = { user, isAuthenticated: true };
         if (typeof window !== 'undefined') {
           try { localStorage.setItem('platform-auth-store', JSON.stringify({ state, version: 0 })); } catch {}
-          try { sessionStorage.setItem('just_logged_in', Date.now().toString()); } catch {}
+          // Store login timestamp so the global 401 interceptor knows to
+          // ignore false 401s while the session cookie propagates to the browser jar.
+          try { sessionStorage.setItem('__login_ts', Date.now().toString()); } catch {}
         }
 
         set({
@@ -404,14 +404,22 @@ export const useAuthStore = create<AuthState>()(
         setCurrentPage(user.role === 'buyer' ? 'home' : ROLE_TO_PAGE[user.role]);
         
         if (typeof window !== 'undefined') {
-          if (hasPassword === false) {
-            window.location.href = '/security';
-          } else {
-            if (user.role === 'admin') window.location.href = '/admin-secure-internal';
-            else if (user.role === 'buyer') window.location.href = '/buyer';
-            else if (user.role === 'logistics') window.location.href = '/logistics';
-            else window.location.href = '/seller/dashboard';
-          }
+          // IMPORTANT: Delay redirect by one event loop tick so the browser 
+          // has time to commit Set-Cookie headers from the verify-otp response
+          // before the new page's fetches run. Without this, the first fetch 
+          // on the dashboard sees no cookie and returns 401, logging the user out.
+          const redirect = () => {
+            if (hasPassword === false) {
+              window.location.href = '/security';
+            } else {
+              if (user.role === 'admin') window.location.href = '/admin-secure-internal';
+              else if (user.role === 'buyer') window.location.href = '/buyer';
+              else if (user.role === 'logistics') window.location.href = '/logistics';
+              else window.location.href = '/seller/dashboard';
+            }
+          };
+          // 200ms is enough for cookie flush; requestAnimationFrame ensures React finishes rendering.
+          requestAnimationFrame(() => setTimeout(redirect, 200));
         }
 
         // Sync onboarding store with user's account status from DB
