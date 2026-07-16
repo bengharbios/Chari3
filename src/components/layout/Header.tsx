@@ -699,6 +699,9 @@ export default function Header() {
           <button 
             onClick={() => {
               const { setBuyerMode } = useAuthStore.getState();
+              // Refresh the login guard timestamp so DashboardLayout's session check
+              // doesn't falsely log out the user due to a stale useSession() cache.
+              try { sessionStorage.setItem('just_logged_in', Date.now().toString()); } catch {}
               setBuyerMode(false);
               navigateToDashboard(rolePages[user?.role || 'buyer'] || 'seller');
             }}

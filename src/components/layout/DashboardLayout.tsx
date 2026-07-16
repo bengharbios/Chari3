@@ -153,23 +153,24 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { theme: globalTheme } = useTheme();
   const { isPending, data } = useSession();
 
+  // Helper: check if we just logged in/navigated within the last 30 seconds
+  const isWithinLoginGuard = () => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const ts = sessionStorage.getItem('just_logged_in');
+      if (ts && Date.now() - parseInt(ts, 10) < 30000) return true;
+    } catch {}
+    return false;
+  };
+
   // If loading finished and server session is invalid/missing but client thinks it's logged in, sign out client-side
   useEffect(() => {
     if (!isPending && !data?.user && user) {
-      // Guard against race conditions right after login (cached useSession returns null)
-      if (typeof window !== 'undefined') {
-        try {
-          const justLoggedInStr = sessionStorage.getItem('just_logged_in');
-          if (justLoggedInStr) {
-            const diff = Date.now() - parseInt(justLoggedInStr, 10);
-            if (diff < 10000) { // 10 seconds guard
-              console.log('[DashboardLayout] Skipping session sync logout because user just logged in');
-              return;
-            }
-          }
-        } catch (e) {}
+      // Guard: skip if we just logged in or navigated from buyer mode (stale useSession cache)
+      if (isWithinLoginGuard()) {
+        console.log('[DashboardLayout] Skipping session sync logout — within 30s login guard');
+        return;
       }
-
       console.log('[DashboardLayout] Server session missing, logging out client...');
       useAuthStore.getState().logout();
     }
@@ -180,7 +181,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   if (!user && !data?.user) {
-    if (typeof window !== 'undefined') {
+    // Guard: if we just logged in, don't redirect — session cookie may not be synced yet
+    if (!isWithinLoginGuard() && typeof window !== 'undefined') {
       window.location.href = '/login';
     }
     return null;
