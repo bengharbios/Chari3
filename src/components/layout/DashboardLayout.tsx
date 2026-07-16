@@ -156,6 +156,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // If loading finished and server session is invalid/missing but client thinks it's logged in, sign out client-side
   useEffect(() => {
     if (!isPending && !data?.user && user) {
+      // Guard against race conditions right after login (cached useSession returns null)
+      if (typeof window !== 'undefined') {
+        try {
+          const justLoggedInStr = sessionStorage.getItem('just_logged_in');
+          if (justLoggedInStr) {
+            const diff = Date.now() - parseInt(justLoggedInStr, 10);
+            if (diff < 10000) { // 10 seconds guard
+              console.log('[DashboardLayout] Skipping session sync logout because user just logged in');
+              return;
+            }
+          }
+        } catch (e) {}
+      }
+
       console.log('[DashboardLayout] Server session missing, logging out client...');
       useAuthStore.getState().logout();
     }
