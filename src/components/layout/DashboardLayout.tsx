@@ -160,9 +160,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return <div className="min-h-screen bg-background flex items-center justify-center">...</div>;
   }
 
-  // Now that hydration is confirmed: if BOTH Zustand and server session have no user,
-  // they are definitively logged out.
-  if (!user && !data?.user) {
+  // Definitive logout check:
+  // Only redirect to /login when BOTH conditions are true:
+  // 1. Zustand store has no user (localStorage confirmed no session)
+  // 2. better-auth server also confirmed no session (data is not undefined due to an error)
+  //
+  // If useSession had an error (Cloudflare/network blocked the request), `error` is set
+  // and `data` is undefined — in this case we TRUST the Zustand persisted state to avoid
+  // false logouts caused by transient network failures or Bot Protection interference.
+  const sessionServerConfirmedLoggedOut = !error && data !== undefined && !data?.user;
+  if (!user && sessionServerConfirmedLoggedOut) {
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
     }

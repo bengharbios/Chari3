@@ -43,24 +43,68 @@ export default function AuthSync() {
     window.fetch = async (...args) => {
       const response = await originalFetch(...args);
       if (response.status === 401) {
-        const url = typeof args[0] === 'string' ? args[0] : (args[0] instanceof Request ? args[0].url : '');
-        // Do not intercept auth endpoints to prevent infinite logout loops
-        if (url && !url.includes('/api/auth/') && !url.includes('/login')) {
+        let url = '';
+        if (typeof args[0] === 'string') {
+          url = args[0];
+        } else if (args[0] instanceof Request) {
+          url = args[0].url;
+        } else if (args[0] && typeof args[0] === 'object' && 'url' in args[0]) {
+          url = (args[0] as any).url;
+        }
+
+        // Only intercept if it is a local API request on our domain
+        const isSelfOrigin = url.startsWith('/') || url.startsWith(window.location.origin);
+        const isApiRoute = url.includes('/api/');
+
+        if (isSelfOrigin && isApiRoute && !url.includes('/api/auth/') && !url.includes('/login')) {
           const authStore = useAuthStore.getState();
           if (authStore.isAuthenticated) {
-            // Grace period: ignore 401s for 5 seconds after a fresh login
-            // This handles race conditions where the session cookie is still
-            // propagating through Cloudflare or the browser cookie jar.
+            // Grace period: ignore 401s for 60 seconds after a fresh login.
+            // Cookie propagation and Cloudflare challenges can take longer than expected.
             try {
               const loginTs = sessionStorage.getItem('__login_ts');
-              if (loginTs && Date.now() - parseInt(loginTs, 10) < 5000) {
-                console.warn(`[GlobalFetch] 401 on ${url} within 5s of login — ignoring (cookie propagation race).`);
+              if (loginTs && Date.now() - parseInt(loginTs, 10) < 60000) {
+                console.warn(`[GlobalFetch] 401 on ${url} within 60s of login — ignoring.`);
                 return response;
               }
             } catch {}
 
-            console.warn(`[GlobalFetch] 401 Unauthorized detected on ${url} - Logging out user.`);
-            authStore.logout();
+            console.warn(`[GlobalFetch] 401 Unauthorized on ${url} — verifying session before logout...`);
+
+            // Save diagnostic details
+            try {
+              localStorage.setItem('__last_logout_reason', JSON.stringify({
+                url,
+                timestamp: Date.now(),
+                userAgent: navigator.userAgent
+              }));
+            } catch {}
+
+            // IMPORTANT: Do NOT logout immediately on the first 401.
+            // Wait 3 seconds and verify the session is truly dead.
+            // This prevents false logouts from Cloudflare transient errors or slow cookie propagation.
+            setTimeout(async () => {
+              try {
+                const { authClient } = await import('@/lib/auth-client');
+                const session = await authClient.getSession();
+                if (session?.data?.user) {
+                  // Session is still valid — the 401 was a transient error, ignore it
+                  console.warn(`[GlobalFetch] Session still valid after 401 on ${url} — NOT logging out.`);
+                  return;
+                }
+              } catch {
+                // If we can't verify, err on the side of caution and don't logout
+                console.warn(`[GlobalFetch] Could not verify session after 401 on ${url} — NOT logging out (network error).`);
+                return;
+              }
+
+              // Session is truly dead — logout
+              const currentAuthStore = useAuthStore.getState();
+              if (currentAuthStore.isAuthenticated) {
+                console.warn(`[GlobalFetch] Session confirmed dead after 401 on ${url} — logging out.`);
+                currentAuthStore.logout();
+              }
+            }, 3000);
           }
         }
       }
@@ -83,4 +127,3 @@ export default function AuthSync() {
 
   return null;
 }
-
