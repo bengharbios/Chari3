@@ -301,6 +301,7 @@
     "ERROR_RATE_LIMIT_IP_DAILY": "You have exceeded the daily request limit from this IP.",
     "ERROR_RATE_LIMIT_PHONE_DAILY": "You have exceeded the daily request limit for this number.",
     "ERROR_RATE_LIMIT_MINUTE": "Please wait a moment before requesting a new code.",
+    "forgot_password": "Forgot password?",
     "defaultError": "An unexpected error occurred. Please try again."
   },
   "onboarding": {

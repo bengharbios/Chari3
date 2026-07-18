@@ -220,10 +220,22 @@ export async function POST(request: Request) {
           { email: value },
           { phone: value }
         ]
+      },
+      include: {
+        accounts: {
+          where: {
+            providerId: 'credential'
+          }
+        }
       }
     });
 
-    if (!forceOtp && existingUser && existingUser.password) {
+    const hasPassword = existingUser && (
+      existingUser.password || 
+      existingUser.accounts.some(acc => acc.password)
+    );
+
+    if (!forceOtp && existingUser && hasPassword) {
       return NextResponse.json({
         success: true,
         userExistsWithPassword: true,

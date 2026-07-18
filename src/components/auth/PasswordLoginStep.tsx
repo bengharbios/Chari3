@@ -10,6 +10,7 @@ import { useAppStore, useAuthStore } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import type { Locale, User } from '@/types';
 import { Turnstile } from '@marsidev/react-turnstile';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 function t(locale: Locale, ar: string, en: string) {
   return locale === 'ar' ? ar : en;
@@ -17,6 +18,7 @@ function t(locale: Locale, ar: string, en: string) {
 
 export default function PasswordLoginStep() {
   const locale = useAppStore((s) => s.locale);
+  const { t: tg } = useTranslation();
   const {
     method,
     email,
@@ -121,9 +123,18 @@ export default function PasswordLoginStep() {
 
       {/* Password Input */}
       <div className="space-y-1.5">
-        <label className="text-sm font-medium text-[var(--foreground)]">
-          {t(locale, 'كلمة المرور', 'Password')}
-        </label>
+        <div className="flex items-center justify-between">
+          <label className="text-sm font-medium text-[var(--foreground)]">
+            {t(locale, 'كلمة المرور', 'Password')}
+          </label>
+          <button
+            type="button"
+            onClick={handleForgotPassword}
+            className="text-xs text-[var(--navy)] dark:text-blue-400 hover:underline"
+          >
+            {tg('auth.forgot_password')}
+          </button>
+        </div>
         <Input
           type="password"
           dir="ltr"

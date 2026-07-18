@@ -289,6 +289,9 @@
       "left": "Left"
     }
   },
+  "auth": {
+    "forgot_password": "Mot de passe oublié ?"
+  },
   "security": {
     "unauthorized": "Session expirée, veuillez vous reconnecter.",
     "Unauthorized": "Session expirée, veuillez vous reconnecter.",
