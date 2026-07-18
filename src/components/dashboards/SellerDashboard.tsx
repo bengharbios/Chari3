@@ -292,13 +292,19 @@ export default function SellerDashboard() {
       params.set('storeId', activeStoreId);
     }
 
-    Promise.all([
+    const isSellerRole = ['seller', 'store_manager', 'freelancer'].includes(user?.role || '');
+
+    const apiCalls: Promise<any>[] = [
       fetch(`/api/seller/dashboard?${params.toString()}`).then(r => r.json()),
-      fetch(`/api/seller/verification`).then(r => r.json())
-    ])
+    ];
+    if (isSellerRole) {
+      apiCalls.push(fetch(`/api/seller/verification`).then(r => r.json()));
+    }
+
+    Promise.all(apiCalls)
       .then(([dashboardRes, verificationRes]) => {
         if (dashboardRes.success) setData(dashboardRes);
-        if (verificationRes.success) setVerificationData(verificationRes.verification);
+        if (verificationRes?.success) setVerificationData(verificationRes.verification);
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
