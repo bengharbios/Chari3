@@ -92,11 +92,13 @@ export default function SellerBranchesPage() {
       }
 
       // Fetch subscription to know plan branch limit
-      const subRes = await fetch('/api/billing/subscription');
-      const subData = await subRes.json();
-      if (subData.success && subData.subscription?.package?.maxTeamMembers) {
-        // Use maxTeamMembers as a proxy for branch limit, or default to 10
-        setBranchLimit(subData.subscription.package.maxTeamMembers || 10);
+      if (user?.id) {
+        const subRes = await fetch(`/api/billing/subscription?userId=${user.id}`);
+        const subData = await subRes.json();
+        if (subData.subscription?.package?.maxTeamMembers) {
+          // Use maxTeamMembers as a proxy for branch limit, or default to 10
+          setBranchLimit(subData.subscription.package.maxTeamMembers || 10);
+        }
       }
     } catch {
       toast.error(t(locale, 'خطأ في الاتصال بالخادم', 'Server connection error'));

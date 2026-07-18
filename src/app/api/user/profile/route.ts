@@ -19,7 +19,7 @@ export async function GET() {
         name: true,
         email: true,
         phone: true,
-        image: true,
+        avatar: true,
         twoFactorEnabled: true,
         createdAt: true,
       },
