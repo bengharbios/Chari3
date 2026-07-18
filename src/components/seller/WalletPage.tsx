@@ -81,7 +81,7 @@ export default function WalletPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [user, t]);
+  }, [user]);
 
   useEffect(() => {
     fetchData();
