@@ -45,10 +45,14 @@ export async function POST(req: Request) {
     const isProduction = process.env.NODE_ENV === "production";
     const cookieName = isProduction ? "__Secure-better-auth.session_token" : "better-auth.session_token";
     
+    const secret = process.env.BETTER_AUTH_SECRET || "fallback_secret_please_change_in_production_12345";
+    const signature = crypto.createHmac('sha256', secret).update(token).digest('base64');
+    const signedToken = `${token}.${signature}`;
+
     // Overwrite the current session cookie with the new one
     cookieStore.set({
       name: cookieName,
-      value: token,
+      value: signedToken,
       expires: expiresAt,
       httpOnly: true,
       path: '/',
