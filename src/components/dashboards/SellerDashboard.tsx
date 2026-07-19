@@ -1897,8 +1897,17 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
     : [''];
   const [bulletsEn, setBulletsEn] = useState<string[]>(rawBulletsEn);
 
+  // Bullet Points — French
+  const rawBulletsFr = (initialSpecs.bulletsFr && Array.isArray(initialSpecs.bulletsFr) && initialSpecs.bulletsFr.filter(Boolean).length > 0)
+    ? initialSpecs.bulletsFr.filter(Boolean)
+    : [''];
+  const [bulletsFr, setBulletsFr] = useState<string[]>(rawBulletsFr);
+
   // English Description
   const [descriptionEn, setDescriptionEn] = useState(product?.descriptionEn || '');
+
+  // French Description
+  const [descriptionFr, setDescriptionFr] = useState(initialSpecs.descriptionFr || (product as any)?.descriptionFr || '');
 
   const [weight, setWeight] = useState(initialSpecs.weight || '0.85 كجم');
   const [dimensions, setDimensions] = useState(initialSpecs.dimensions || '40 × 30 × 10 سم');
@@ -1980,6 +1989,12 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
               }
               if (specs.bulletsEn && Array.isArray(specs.bulletsEn) && specs.bulletsEn.filter(Boolean).length > 0) {
                 setBulletsEn(specs.bulletsEn.filter(Boolean));
+              }
+              if (specs.bulletsFr && Array.isArray(specs.bulletsFr) && specs.bulletsFr.filter(Boolean).length > 0) {
+                setBulletsFr(specs.bulletsFr.filter(Boolean));
+              }
+              if (specs.descriptionFr) {
+                setDescriptionFr(specs.descriptionFr);
               }
               if (specs.dynamicSpecs && typeof specs.dynamicSpecs === 'object') {
                 setDynamicSpecValues(specs.dynamicSpecs);
@@ -2168,6 +2183,7 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
     setIsSaving(true);
     const bulletsFiltered = bullets.filter(Boolean);
     const bulletsEnFiltered = bulletsEn.filter(Boolean);
+    const bulletsFrFiltered = bulletsFr.filter(Boolean);
     const specData = {
       weight,
       dimensions,
@@ -2179,6 +2195,8 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
       sizes,
       bullets: bulletsFiltered,
       bulletsEn: bulletsEnFiltered,
+      bulletsFr: bulletsFrFiltered,
+      descriptionFr,
       dynamicSpecs: dynamicSpecValues,
       seoTitle: metaTitle,
       seoDescription: metaDesc
@@ -2638,6 +2656,52 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
                   className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
                 />
               </div>
+
+              {/* ── French Bullets ── */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-foreground">🇫🇷 مميزات المنتج (فرنسي)</label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (bulletsFr.length >= maxBullets) {
+                        toast.error(tk('productForm.maxFeaturesReached', { max: maxBullets }));
+                        return;
+                      }
+                      setBulletsFr([...bulletsFr, '']);
+                    }}
+                    className="text-xs text-primary hover:underline"
+                  >{tk('productForm.addFeature')}</button>
+                </div>
+                {bulletsFr.map((b, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={b}
+                      onChange={(e) => { const next = [...bulletsFr]; next[idx] = e.target.value; setBulletsFr(next); }}
+                      placeholder={`Caractéristique ${idx + 1} (ex: Cuir résistant à l'eau)`}
+                      className="flex-1 bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs"
+                      dir="ltr"
+                    />
+                    {bulletsFr.length > 1 && (
+                      <button type="button" onClick={() => setBulletsFr(bulletsFr.filter((_, i) => i !== idx))} className="text-red-400 hover:text-red-600 text-sm font-bold px-1">✕</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* ── French Description ── */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">🇫🇷 الوصف التفصيلي (فرنسي)</label>
+                <textarea
+                  value={descriptionFr}
+                  onChange={(e) => setDescriptionFr(e.target.value)}
+                  placeholder="Histoire du produit, pour qui, comment ça marche..."
+                  rows={3}
+                  dir="ltr"
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                />
+              </div>
             </div>
           )}
 
@@ -2657,7 +2721,16 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
                       const val = dynamicSpecValues[def.key] || '';
                       let options: string[] = [];
                       if (def.options) {
-                        try { options = typeof def.options === 'string' ? JSON.parse(def.options) : def.options; } catch {}
+                        try {
+                          const parsed = typeof def.options === 'string' ? JSON.parse(def.options) : def.options;
+                          if (Array.isArray(parsed)) {
+                            options = parsed.flatMap((x: string) => String(x).split(/[,;\n]/).map(s => s.trim())).filter(Boolean);
+                          } else {
+                            options = String(def.options).split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
+                          }
+                        } catch {
+                          options = String(def.options).split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
+                        }
                       }
 
                       return (

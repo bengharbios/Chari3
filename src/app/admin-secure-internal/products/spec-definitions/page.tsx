@@ -96,7 +96,11 @@ export default function SpecDefinitionsPage() {
     setForm({
       key: spec.key, labelAr: spec.labelAr, labelEn: spec.labelEn,
       labelFr: spec.labelFr || '', type: spec.type,
-      options: spec.options ? JSON.parse(spec.options).join(', ') : '',
+      options: spec.options
+        ? (typeof spec.options === 'string' && spec.options.startsWith('[')
+            ? JSON.parse(spec.options).join(', ')
+            : String(spec.options).split(/[,;\n]/).join(', '))
+        : '',
       isRequired: spec.isRequired, sortOrder: spec.sortOrder,
       categoryId: spec.categoryId || '',
     });

@@ -26,7 +26,7 @@ export async function PATCH(request: Request, context: { params: { id: string } 
         ...(body.type !== undefined && { type: body.type }),
         ...(body.options !== undefined && {
           options: body.options
-            ? JSON.stringify(String(body.options).split(',').map((s: string) => s.trim()).filter(Boolean))
+            ? JSON.stringify(String(body.options).split(/[,;\n]/).map((s: string) => s.trim()).filter(Boolean))
             : null,
         }),
         ...(body.isRequired !== undefined && { isRequired: !!body.isRequired }),

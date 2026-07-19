@@ -616,17 +616,23 @@ export default function ProductDetailPage() {
     }
   }
 
-  // Locale-aware bullets: use bulletsEn for non-Arabic, fallback to Arabic bullets
+  // Locale-aware bullets: check language (fr -> bulletsFr -> bulletsEn -> bullets)
   const displayBullets: string[] = (() => {
     if (isAr) return (specs.bullets && Array.isArray(specs.bullets)) ? specs.bullets.filter(Boolean) : [];
+    if (locale === 'fr') {
+      const fr = specs.bulletsFr && Array.isArray(specs.bulletsFr) ? specs.bulletsFr.filter(Boolean) : [];
+      if (fr.length > 0) return fr;
+    }
     const en = specs.bulletsEn && Array.isArray(specs.bulletsEn) ? specs.bulletsEn.filter(Boolean) : [];
     const ar = specs.bullets && Array.isArray(specs.bullets) ? specs.bullets.filter(Boolean) : [];
     return en.length > 0 ? en : ar;
   })();
 
-  // Locale-aware description: English/French use descriptionEn, fallback to Arabic
+  // Locale-aware description: fr -> descriptionFr -> descriptionEn -> description (ar)
   const displayDescription = isAr
     ? (product.description || '')
+    : locale === 'fr'
+    ? (specs.descriptionFr || (product as any).descriptionFr || (product as any).descriptionEn || product.description || '')
     : ((product as any).descriptionEn || product.description || '');
 
   // Generate JSON-LD Rich Snippet for SEO

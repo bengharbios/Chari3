@@ -46,7 +46,7 @@ export async function POST(request: Request) {
         labelFr: labelFr || null,
         type: type || 'text',
         options: options
-          ? JSON.stringify(String(options).split(',').map((s: string) => s.trim()).filter(Boolean))
+          ? JSON.stringify(String(options).split(/[,;\n]/).map((s: string) => s.trim()).filter(Boolean))
           : null,
         isRequired: !!isRequired,
         sortOrder: Number(sortOrder) || 0,
