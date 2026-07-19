@@ -11,6 +11,7 @@ import {
   ShieldAlert, Ban, Lock, Info, Activity, Store as StoreIcon
 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -1845,9 +1846,13 @@ export interface ProductFormProps {
 }
 
 export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t, isAr }: ProductFormProps) {
+  const { t: tk } = useTranslation(); // key-based translation for full i18n support
   const [activeTab, setActiveTab] = useState<'core' | 'specs' | 'seo' | 'variants' | 'advanced'>('core');
   const [isSaving, setIsSaving] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
+  const [specDefs, setSpecDefs] = useState<any[]>([]); // dynamic spec definitions from admin
+  const [dynamicSpecValues, setDynamicSpecValues] = useState<Record<string, string>>({}); // values filled by seller
+  const [maxBullets, setMaxBullets] = useState(10); // admin-controlled bullet limit
   const [showSuggestModal, setShowSuggestModal] = useState(false);
   const [suggestNameAr, setSuggestNameAr] = useState('');
   const [suggestNameEn, setSuggestNameEn] = useState('');
@@ -1976,6 +1981,9 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
               if (specs.bulletsEn && Array.isArray(specs.bulletsEn) && specs.bulletsEn.filter(Boolean).length > 0) {
                 setBulletsEn(specs.bulletsEn.filter(Boolean));
               }
+              if (specs.dynamicSpecs && typeof specs.dynamicSpecs === 'object') {
+                setDynamicSpecValues(specs.dynamicSpecs);
+              }
               setWeight(specs.weight || '0.85 كجم');
               setDimensions(specs.dimensions || '40 × 30 × 10 سم');
               setMaterial(specs.material || 'جلد طبيعي + بوليستر مبطن');
@@ -2074,13 +2082,17 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
       })
       .catch(() => {});
 
-    // Check system settings for brand toggle
+    // Check system settings for brand toggle & max bullet points
     fetch('/api/admin/settings')
       .then((r) => r.json())
       .then((data) => {
         if (data.success && data.settings) {
           const isBrandEnabled = data.settings.enable_brand_system !== 'false'; // default true
           setEnableBrandSystem(isBrandEnabled);
+          if (data.settings.max_bullet_points) {
+            const limit = parseInt(data.settings.max_bullet_points, 10);
+            if (!isNaN(limit) && limit > 0) setMaxBullets(limit);
+          }
         }
       })
       .catch(() => {});
@@ -2095,6 +2107,18 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
       })
       .catch(() => {});
   }, []);
+
+  // Fetch dynamic specification definitions based on selected categoryId
+  useEffect(() => {
+    fetch(`/api/admin/spec-definitions${categoryId ? `?categoryId=${categoryId}` : ''}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && Array.isArray(d.specs)) {
+          setSpecDefs(d.specs);
+        }
+      })
+      .catch(() => {});
+  }, [categoryId]);
 
   const handleSuggestCategory = async () => {
     if (!suggestNameAr.trim()) {
@@ -2155,6 +2179,7 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
       sizes,
       bullets: bulletsFiltered,
       bulletsEn: bulletsEnFiltered,
+      dynamicSpecs: dynamicSpecValues,
       seoTitle: metaTitle,
       seoDescription: metaDesc
     };
@@ -2525,12 +2550,18 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
               {/* ── Arabic Bullets ── */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-foreground">{isAr ? '🇸🇦 مميزات المنتج (عربي)' : '🇸🇦 Product Features (Arabic)'}</label>
+                  <label className="text-xs font-bold text-foreground">{tk('productForm.featuresArLabel')}</label>
                   <button
                     type="button"
-                    onClick={() => setBullets([...bullets, ''])}
+                    onClick={() => {
+                      if (bullets.length >= maxBullets) {
+                        toast.error(tk('productForm.maxFeaturesReached', { max: maxBullets }));
+                        return;
+                      }
+                      setBullets([...bullets, '']);
+                    }}
                     className="text-xs text-primary hover:underline"
-                  >{isAr ? '+ إضافة ميزة' : '+ Add feature'}</button>
+                  >{tk('productForm.addFeature')}</button>
                 </div>
                 {bullets.map((b, idx) => (
                   <div key={idx} className="flex gap-2 items-center">
@@ -2538,7 +2569,7 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
                       type="text"
                       value={b}
                       onChange={(e) => { const next = [...bullets]; next[idx] = e.target.value; setBullets(next); }}
-                      placeholder={isAr ? `الميزة ${idx + 1} (مثال: جلد طبيعي مضاد للماء)` : `Feature ${idx + 1} (e.g. Water-resistant)`}
+                      placeholder={tk('productForm.featurePlaceholderAr', { n: idx + 1 })}
                       className="flex-1 bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs"
                       dir="rtl"
                     />
@@ -2552,12 +2583,18 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
               {/* ── English Bullets ── */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-foreground">{isAr ? '🇬🇧 مميزات المنتج (إنجليزي)' : '🇬🇧 Product Features (English)'}</label>
+                  <label className="text-xs font-bold text-foreground">{tk('productForm.featuresEnLabel')}</label>
                   <button
                     type="button"
-                    onClick={() => setBulletsEn([...bulletsEn, ''])}
+                    onClick={() => {
+                      if (bulletsEn.length >= maxBullets) {
+                        toast.error(tk('productForm.maxFeaturesReached', { max: maxBullets }));
+                        return;
+                      }
+                      setBulletsEn([...bulletsEn, '']);
+                    }}
                     className="text-xs text-primary hover:underline"
-                  >{isAr ? '+ إضافة ميزة' : '+ Add feature'}</button>
+                  >{tk('productForm.addFeature')}</button>
                 </div>
                 {bulletsEn.map((b, idx) => (
                   <div key={idx} className="flex gap-2 items-center">
@@ -2565,7 +2602,7 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
                       type="text"
                       value={b}
                       onChange={(e) => { const next = [...bulletsEn]; next[idx] = e.target.value; setBulletsEn(next); }}
-                      placeholder={`Feature ${idx + 1} (e.g. Fast shipping nationwide)`}
+                      placeholder={tk('productForm.featurePlaceholderEn', { n: idx + 1 })}
                       className="flex-1 bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs"
                       dir="ltr"
                     />
@@ -2578,11 +2615,11 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
 
               {/* ── Arabic Description ── */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">{isAr ? '🇸🇦 الوصف التفصيلي (عربي)' : '🇸🇦 Detailed Description (Arabic)'}</label>
+                <label className="text-xs font-bold text-foreground">{tk('productForm.descriptionArLabel')}</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder={isAr ? 'قصة المنتج، لمن يصلح، وطريقة عمله...' : 'Product story, who it suits, how it works...'}
+                  placeholder={tk('productForm.descriptionPlaceholderAr')}
                   rows={3}
                   dir="rtl"
                   className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
@@ -2591,11 +2628,11 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
 
               {/* ── English Description ── */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">{isAr ? '🇬🇧 الوصف التفصيلي (إنجليزي)' : '🇬🇧 Detailed Description (English)'}</label>
+                <label className="text-xs font-bold text-foreground">{tk('productForm.descriptionEnLabel')}</label>
                 <textarea
                   value={descriptionEn}
                   onChange={(e) => setDescriptionEn(e.target.value)}
-                  placeholder="Product story, who it suits, and how it works..."
+                  placeholder={tk('productForm.descriptionPlaceholderEn')}
                   rows={3}
                   dir="ltr"
                   className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
@@ -2606,59 +2643,121 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
 
           {/* TAB CONTENT: Specifications */}
           {activeTab === 'specs' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">{isAr ? 'الوزن الكلي' : 'Product Weight'}</label>
-                  <input
-                    type="text"
-                    value={weight}
-                    onChange={(e) => setWeight(e.target.value)}
-                    className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
-                  />
+            <div className="space-y-6">
+              {/* Category-Specific Dynamic Specifications Defined by Admin */}
+              {specDefs.length > 0 && (
+                <div className="bg-primary/5 border border-primary/20 p-4 rounded-2xl space-y-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-foreground">{tk('productForm.dynamicSpecsTitle')}</h3>
+                    <p className="text-xs text-muted-foreground">{tk('productForm.dynamicSpecsSubtitle')}</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {specDefs.map((def: any) => {
+                      const label = isAr ? def.labelAr : (def.labelEn || def.labelAr);
+                      const val = dynamicSpecValues[def.key] || '';
+                      let options: string[] = [];
+                      if (def.options) {
+                        try { options = typeof def.options === 'string' ? JSON.parse(def.options) : def.options; } catch {}
+                      }
+
+                      return (
+                        <div key={def.id} className="space-y-1.5">
+                          <label className="text-xs font-bold text-foreground flex items-center justify-between">
+                            <span>{label}</span>
+                            {def.isRequired && <span className="text-red-500 text-[10px]">* {tk('productForm.specRequired')}</span>}
+                          </label>
+                          {def.type === 'select' ? (
+                            <select
+                              value={val}
+                              onChange={(e) => setDynamicSpecValues(prev => ({ ...prev, [def.key]: e.target.value }))}
+                              className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                            >
+                              <option value="">{isAr ? '-- اختر --' : '-- Select --'}</option>
+                              {options.map((opt: string) => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          ) : def.type === 'boolean' ? (
+                            <select
+                              value={val}
+                              onChange={(e) => setDynamicSpecValues(prev => ({ ...prev, [def.key]: e.target.value }))}
+                              className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                            >
+                              <option value="">{isAr ? '-- اختر --' : '-- Select --'}</option>
+                              <option value="true">{isAr ? 'نعم' : 'Yes'}</option>
+                              <option value="false">{isAr ? 'لا' : 'No'}</option>
+                            </select>
+                          ) : (
+                            <input
+                              type={def.type === 'number' ? 'number' : 'text'}
+                              value={val}
+                              onChange={(e) => setDynamicSpecValues(prev => ({ ...prev, [def.key]: e.target.value }))}
+                              placeholder={def.type === 'number' ? '0' : ''}
+                              className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Standard Specifications */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-foreground">{isAr ? 'الوزن الكلي' : 'Product Weight'}</label>
+                    <input
+                      type="text"
+                      value={weight}
+                      onChange={(e) => setWeight(e.target.value)}
+                      className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-foreground">{isAr ? 'أبعاد المنتج' : 'Dimensions'}</label>
+                    <input
+                      type="text"
+                      value={dimensions}
+                      onChange={(e) => setDimensions(e.target.value)}
+                      className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-foreground">{isAr ? 'الخامات المستخدمة' : 'Materials'}</label>
+                    <input
+                      type="text"
+                      value={material}
+                      onChange={(e) => setMaterial(e.target.value)}
+                      className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-foreground">{isAr ? 'بلد المنشأ' : 'Country of Origin'}</label>
+                    <input
+                      type="text"
+                      value={origin}
+                      onChange={(e) => setOrigin(e.target.value)}
+                      className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">{isAr ? 'أبعاد المنتج' : 'Dimensions'}</label>
+                  <label className="text-xs font-bold text-foreground">{isAr ? 'الضمان المعتمد للمنتج' : 'Product Warranty'}</label>
                   <input
                     type="text"
-                    value={dimensions}
-                    onChange={(e) => setDimensions(e.target.value)}
+                    value={warranty}
+                    onChange={(e) => setWarranty(e.target.value)}
                     className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">{isAr ? 'الخامات المستخدمة' : 'Materials'}</label>
-                  <input
-                    type="text"
-                    value={material}
-                    onChange={(e) => setMaterial(e.target.value)}
-                    className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">{isAr ? 'بلد المنشأ' : 'Country of Origin'}</label>
-                  <input
-                    type="text"
-                    value={origin}
-                    onChange={(e) => setOrigin(e.target.value)}
-                    className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">{isAr ? 'الضمان المعتمد للمنتج' : 'Product Warranty'}</label>
-                <input
-                  type="text"
-                  value={warranty}
-                  onChange={(e) => setWarranty(e.target.value)}
-                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
-                />
               </div>
             </div>
           )}

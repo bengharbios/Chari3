@@ -553,6 +553,19 @@ export default function ProductDetailPage() {
 
 
 
+  const [specDefs, setSpecDefs] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/admin/spec-definitions')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && Array.isArray(d.specs)) {
+          setSpecDefs(d.specs);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (activeVariant && activeVariant.image && images.length > 0) {
       const idx = images.indexOf(activeVariant.image);
@@ -1191,12 +1204,29 @@ export default function ProductDetailPage() {
           )}
 
           {/* Dynamic Technical Specifications Table */}
-          {Object.keys(specs).some(k => ['weight', 'dimensions', 'material', 'origin', 'warranty'].includes(k)) && (
+          {((specs.dynamicSpecs && typeof specs.dynamicSpecs === 'object' && Object.keys(specs.dynamicSpecs).length > 0) || Object.keys(specs).some(k => ['weight', 'dimensions', 'material', 'origin', 'warranty'].includes(k))) && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold text-foreground">{t('المواصفات الفنية المعتمدة', 'Approved Technical Specifications')}</h2>
-              <div className="p-5 bg-muted/30 rounded-2xl border border-border min-h-[220px] flex flex-col justify-center">
+              <div className="p-5 bg-muted/30 rounded-2xl border border-border min-h-[180px] flex flex-col justify-center">
                 <table className="w-full text-sm divide-y divide-border">
                   <tbody>
+                    {/* Dynamic Specs per Category */}
+                    {specs.dynamicSpecs && typeof specs.dynamicSpecs === 'object' && Object.entries(specs.dynamicSpecs).map(([key, val]) => {
+                      if (!val || String(val).trim() === '') return null;
+                      const def = specDefs.find((s: any) => s.key === key);
+                      const label = def
+                        ? (isAr ? def.labelAr : (locale === 'fr' ? (def.labelFr || def.labelEn || def.labelAr) : (def.labelEn || def.labelAr)))
+                        : key;
+                      const displayVal = val === 'true' ? (isAr ? 'نعم' : 'Yes') : val === 'false' ? (isAr ? 'لا' : 'No') : String(val);
+                      return (
+                        <tr key={key} className="py-2.5 flex justify-between">
+                          <td className="font-semibold text-muted-foreground">{label}</td>
+                          <td className="font-medium text-foreground">{displayVal}</td>
+                        </tr>
+                      );
+                    })}
+
+                    {/* Standard Fields */}
                     {specs.weight && (
                       <tr className="py-2.5 flex justify-between"><td className="font-semibold text-muted-foreground">{t('الوزن الكلي', 'Total Weight')}</td><td className="font-medium text-foreground">{typeof specs.weight === 'object' ? JSON.stringify(specs.weight) : String(specs.weight)}</td></tr>
                     )}

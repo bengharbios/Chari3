@@ -507,6 +507,7 @@ model Category {
   sellerProfiles  SellerProfile[]
 
   coupons         Coupon[]  @relation("CouponCategories")
+  specDefinitions ProductSpecDefinition[] @relation("CategorySpecDefs")
 }
 
 // ============================================
@@ -1635,3 +1636,26 @@ model SettingsAuditLog {
   createdAt DateTime @default(now())
 }
 
+// ============================================
+// PRODUCT SPECIFICATION DEFINITIONS (Dynamic)
+// ============================================
+// Admin defines which spec fields appear per product category.
+// Sellers fill in values; stored as JSON in Product.specifications.
+
+model ProductSpecDefinition {
+  id          String    @id @default(cuid())
+  key         String    // slug used as JSON key, e.g. "ram", "material"
+  labelAr     String    // "ذاكرة الوصول العشوائي"
+  labelEn     String    // "RAM"
+  labelFr     String?   // "Mémoire vive"
+  type        String    @default("text") // text | select | number | boolean
+  options     String?   @db.LongText    // JSON array: ["64GB","128GB"] for select type
+  isRequired  Boolean   @default(false)
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  categoryId  String?   // null = applies to all categories
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  category    Category? @relation("CategorySpecDefs", fields: [categoryId], references: [id], onDelete: SetNull)
+}
