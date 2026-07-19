@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { useTranslationStore } from '@/lib/store/translation-store';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -1847,6 +1848,9 @@ export interface ProductFormProps {
 
 export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t, isAr }: ProductFormProps) {
   const { t: tk } = useTranslation(); // key-based translation for full i18n support
+  const { languages } = useTranslationStore(); // active system languages
+  const isEnActive = languages.some((l) => l.code === 'en' && (l as any).isActive !== false);
+  const isFrActive = languages.some((l) => l.code === 'fr' && (l as any).isActive !== false);
   const [activeTab, setActiveTab] = useState<'core' | 'specs' | 'seo' | 'variants' | 'advanced'>('core');
   const [isSaving, setIsSaving] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
@@ -2395,16 +2399,18 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">{isAr ? 'الاسم بالإنجليزية (اختياري)' : 'Title in English (Optional)'}</label>
-                <input
-                  type="text"
-                  value={nameEn}
-                  onChange={(e) => setNameEn(e.target.value)}
-                  placeholder="Brand + Product Name + Main Feature"
-                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
-                />
-              </div>
+              {isEnActive && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">{isAr ? '🇬🇧 الاسم بالإنجليزية (اختياري)' : '🇬🇧 Title in English (Optional)'}</label>
+                  <input
+                    type="text"
+                    value={nameEn}
+                    onChange={(e) => setNameEn(e.target.value)}
+                    placeholder="Brand + Product Name + Main Feature"
+                    className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
@@ -2599,37 +2605,39 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
               </div>
 
               {/* ── English Bullets ── */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-foreground">{tk('productForm.featuresEnLabel')}</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (bulletsEn.length >= maxBullets) {
-                        toast.error(tk('productForm.maxFeaturesReached', { max: maxBullets }));
-                        return;
-                      }
-                      setBulletsEn([...bulletsEn, '']);
-                    }}
-                    className="text-xs text-primary hover:underline"
-                  >{tk('productForm.addFeature')}</button>
-                </div>
-                {bulletsEn.map((b, idx) => (
-                  <div key={idx} className="flex gap-2 items-center">
-                    <input
-                      type="text"
-                      value={b}
-                      onChange={(e) => { const next = [...bulletsEn]; next[idx] = e.target.value; setBulletsEn(next); }}
-                      placeholder={tk('productForm.featurePlaceholderEn', { n: idx + 1 })}
-                      className="flex-1 bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs"
-                      dir="ltr"
-                    />
-                    {bulletsEn.length > 1 && (
-                      <button type="button" onClick={() => setBulletsEn(bulletsEn.filter((_, i) => i !== idx))} className="text-red-400 hover:text-red-600 text-sm font-bold px-1">✕</button>
-                    )}
+              {isEnActive && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-foreground">{tk('productForm.featuresEnLabel')}</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (bulletsEn.length >= maxBullets) {
+                          toast.error(tk('productForm.maxFeaturesReached', { max: maxBullets }));
+                          return;
+                        }
+                        setBulletsEn([...bulletsEn, '']);
+                      }}
+                      className="text-xs text-primary hover:underline"
+                    >{tk('productForm.addFeature')}</button>
                   </div>
-                ))}
-              </div>
+                  {bulletsEn.map((b, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={b}
+                        onChange={(e) => { const next = [...bulletsEn]; next[idx] = e.target.value; setBulletsEn(next); }}
+                        placeholder={tk('productForm.featurePlaceholderEn', { n: idx + 1 })}
+                        className="flex-1 bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs"
+                        dir="ltr"
+                      />
+                      {bulletsEn.length > 1 && (
+                        <button type="button" onClick={() => setBulletsEn(bulletsEn.filter((_, i) => i !== idx))} className="text-red-400 hover:text-red-600 text-sm font-bold px-1">✕</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* ── Arabic Description ── */}
               <div className="space-y-1.5">
@@ -2645,63 +2653,69 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
               </div>
 
               {/* ── English Description ── */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">{tk('productForm.descriptionEnLabel')}</label>
-                <textarea
-                  value={descriptionEn}
-                  onChange={(e) => setDescriptionEn(e.target.value)}
-                  placeholder={tk('productForm.descriptionPlaceholderEn')}
-                  rows={3}
-                  dir="ltr"
-                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
-                />
-              </div>
+              {isEnActive && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">{tk('productForm.descriptionEnLabel')}</label>
+                  <textarea
+                    value={descriptionEn}
+                    onChange={(e) => setDescriptionEn(e.target.value)}
+                    placeholder={tk('productForm.descriptionPlaceholderEn')}
+                    rows={3}
+                    dir="ltr"
+                    className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                  />
+                </div>
+              )}
 
               {/* ── French Bullets ── */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-foreground">🇫🇷 مميزات المنتج (فرنسي)</label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (bulletsFr.length >= maxBullets) {
-                        toast.error(tk('productForm.maxFeaturesReached', { max: maxBullets }));
-                        return;
-                      }
-                      setBulletsFr([...bulletsFr, '']);
-                    }}
-                    className="text-xs text-primary hover:underline"
-                  >{tk('productForm.addFeature')}</button>
-                </div>
-                {bulletsFr.map((b, idx) => (
-                  <div key={idx} className="flex gap-2 items-center">
-                    <input
-                      type="text"
-                      value={b}
-                      onChange={(e) => { const next = [...bulletsFr]; next[idx] = e.target.value; setBulletsFr(next); }}
-                      placeholder={`Caractéristique ${idx + 1} (ex: Cuir résistant à l'eau)`}
-                      className="flex-1 bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs"
-                      dir="ltr"
-                    />
-                    {bulletsFr.length > 1 && (
-                      <button type="button" onClick={() => setBulletsFr(bulletsFr.filter((_, i) => i !== idx))} className="text-red-400 hover:text-red-600 text-sm font-bold px-1">✕</button>
-                    )}
+              {isFrActive && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-foreground">🇫🇷 مميزات المنتج (فرنسي)</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (bulletsFr.length >= maxBullets) {
+                          toast.error(tk('productForm.maxFeaturesReached', { max: maxBullets }));
+                          return;
+                        }
+                        setBulletsFr([...bulletsFr, '']);
+                      }}
+                      className="text-xs text-primary hover:underline"
+                    >{tk('productForm.addFeature')}</button>
                   </div>
-                ))}
-              </div>
+                  {bulletsFr.map((b, idx) => (
+                    <div key={idx} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={b}
+                        onChange={(e) => { const next = [...bulletsFr]; next[idx] = e.target.value; setBulletsFr(next); }}
+                        placeholder={`Caractéristique ${idx + 1} (ex: Cuir résistant à l'eau)`}
+                        className="flex-1 bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs"
+                        dir="ltr"
+                      />
+                      {bulletsFr.length > 1 && (
+                        <button type="button" onClick={() => setBulletsFr(bulletsFr.filter((_, i) => i !== idx))} className="text-red-400 hover:text-red-600 text-sm font-bold px-1">✕</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* ── French Description ── */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">🇫🇷 الوصف التفصيلي (فرنسي)</label>
-                <textarea
-                  value={descriptionFr}
-                  onChange={(e) => setDescriptionFr(e.target.value)}
-                  placeholder="Histoire du produit, pour qui, comment ça marche..."
-                  rows={3}
-                  dir="ltr"
-                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
-                />
-              </div>
+              {isFrActive && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">🇫🇷 الوصف التفصيلي (فرنسي)</label>
+                  <textarea
+                    value={descriptionFr}
+                    onChange={(e) => setDescriptionFr(e.target.value)}
+                    placeholder="Histoire du produit, pour qui, comment ça marche..."
+                    rows={3}
+                    dir="ltr"
+                    className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                  />
+                </div>
+              )}
             </div>
           )}
 
