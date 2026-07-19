@@ -4,15 +4,22 @@ import { db, ensureDbConnection } from '@/lib/db';
 export const dynamic = 'force-dynamic';
 
 // PATCH — Update a spec definition
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, context: { params: { id: string } | Promise<{ id: string }> }) {
   try {
     await ensureDbConnection();
+    const resolvedParams = await context.params;
+    const id = resolvedParams?.id;
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Missing spec definition ID' }, { status: 400 });
+    }
+
     const body = await request.json();
-    const { id } = params;
 
     const spec = await db.productSpecDefinition.update({
       where: { id },
       data: {
+        ...(body.key !== undefined && { key: String(body.key).trim().toLowerCase().replace(/\s+/g, '_') }),
         ...(body.labelAr !== undefined && { labelAr: body.labelAr }),
         ...(body.labelEn !== undefined && { labelEn: body.labelEn }),
         ...(body.labelFr !== undefined && { labelFr: body.labelFr || null }),
@@ -36,12 +43,20 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 }
 
 // DELETE — Hard-delete a spec definition
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_: Request, context: { params: { id: string } | Promise<{ id: string }> }) {
   try {
     await ensureDbConnection();
-    await db.productSpecDefinition.delete({ where: { id: params.id } });
+    const resolvedParams = await context.params;
+    const id = resolvedParams?.id;
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'Missing spec definition ID' }, { status: 400 });
+    }
+
+    await db.productSpecDefinition.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }
 }
+

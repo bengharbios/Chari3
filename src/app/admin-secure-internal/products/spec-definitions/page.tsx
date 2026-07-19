@@ -104,6 +104,25 @@ export default function SpecDefinitionsPage() {
     setShowForm(true);
   };
 
+  const handleToggleRequired = async (spec: SpecDef) => {
+    try {
+      const res = await fetch(`/api/admin/spec-definitions/${spec.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isRequired: !spec.isRequired }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(t('common.save'));
+        fetchData();
+      } else {
+        toast.error(data.error);
+      }
+    } catch (e) {
+      toast.error(String(e));
+    }
+  };
+
   const handleSaveBulletLimit = async () => {
     setSavingBullets(true);
     try {
@@ -336,10 +355,12 @@ export default function SpecDefinitionsPage() {
                     {spec.category ? spec.category.name : <span className="text-amber-500">الكل</span>}
                   </td>
                   <td className="px-4 py-3">
-                    {spec.isRequired
-                      ? <Badge className="bg-red-500/10 text-red-500 border-red-500/20 text-xs">إلزامي</Badge>
-                      : <Badge variant="outline" className="text-xs">اختياري</Badge>
-                    }
+                    <button type="button" onClick={() => handleToggleRequired(spec)} className="cursor-pointer">
+                      {spec.isRequired
+                        ? <Badge className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20 text-xs">إلزامي (انقر للتغيير)</Badge>
+                        : <Badge variant="outline" className="hover:bg-muted text-xs">اختياري (انقر للتغيير)</Badge>
+                      }
+                    </button>
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2 justify-end">

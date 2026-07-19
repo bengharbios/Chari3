@@ -53,6 +53,7 @@ function AdminBreadcrumb() {
       'revenue': 'admin.revenueReports',
       'coupons': 'admin.globalCoupons',
       'categories': 'admin.manageCategories',
+      'spec-definitions': 'productForm.specDefsPageTitle',
       'brands': 'admin.manageBrands',
       'cms': 'admin.storefrontCMS',
       'advertisements': 'admin.manageAdvertisements',

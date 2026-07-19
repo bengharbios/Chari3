@@ -135,6 +135,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
       items: [
         { label: t('admin.globalCoupons'), path: 'coupons' },
         { label: t('admin.manageCategories'), path: 'categories' },
+        { label: locale === 'ar' ? 'مواصفات المنتجات' : 'Product Specs', path: 'products/spec-definitions' },
         { label: t('admin.manageBrands'), path: 'brands' },
         { label: t('admin.storefrontCMS'), path: 'cms' },
         { label: 'SAADA Builder', path: 'cms/saada-builder' },
