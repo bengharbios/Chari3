@@ -328,6 +328,7 @@ export default function SellerDashboard() {
     if (showAddForm && !isSuspended) {
       return (
         <ProductFormTab
+          key={editingProduct?.id || 'new'}
           product={editingProduct}
           onClose={() => {
             setShowAddForm(false);
@@ -1879,19 +1880,20 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
     } catch {}
   }
 
-  // Bullet Points
-  let initialBullets = ['', '', ''];
-  if (initialSpecs.bullets && Array.isArray(initialSpecs.bullets)) {
-    initialBullets = [...initialSpecs.bullets, '', '', ''].slice(0, 3);
-  } else if (product?.shortDescription) {
-    try {
-      const parsed = JSON.parse(product.shortDescription);
-      if (Array.isArray(parsed)) initialBullets = [...parsed, '', '', ''].slice(0, 3);
-    } catch {}
-  }
-  const [bullet1, setBullet1] = useState(initialBullets[0]);
-  const [bullet2, setBullet2] = useState(initialBullets[1]);
-  const [bullet3, setBullet3] = useState(initialBullets[2]);
+  // Bullet Points — dynamic list (Arabic)
+  const rawBullets = (initialSpecs.bullets && Array.isArray(initialSpecs.bullets) && initialSpecs.bullets.filter(Boolean).length > 0)
+    ? initialSpecs.bullets.filter(Boolean)
+    : [''];
+  const [bullets, setBullets] = useState<string[]>(rawBullets);
+
+  // Bullet Points — English
+  const rawBulletsEn = (initialSpecs.bulletsEn && Array.isArray(initialSpecs.bulletsEn) && initialSpecs.bulletsEn.filter(Boolean).length > 0)
+    ? initialSpecs.bulletsEn.filter(Boolean)
+    : [''];
+  const [bulletsEn, setBulletsEn] = useState<string[]>(rawBulletsEn);
+
+  // English Description
+  const [descriptionEn, setDescriptionEn] = useState(product?.descriptionEn || '');
 
   const [weight, setWeight] = useState(initialSpecs.weight || '0.85 كجم');
   const [dimensions, setDimensions] = useState(initialSpecs.dimensions || '40 × 30 × 10 سم');
@@ -1964,13 +1966,15 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
               }
             } catch {}
           }
+          if (p.descriptionEn) setDescriptionEn(p.descriptionEn || '');
           if (p.specifications) {
             try {
               const specs = typeof p.specifications === 'string' ? JSON.parse(p.specifications) : p.specifications;
-              if (specs.bullets && Array.isArray(specs.bullets)) {
-                setBullet1(specs.bullets[0] || '');
-                setBullet2(specs.bullets[1] || '');
-                setBullet3(specs.bullets[2] || '');
+              if (specs.bullets && Array.isArray(specs.bullets) && specs.bullets.filter(Boolean).length > 0) {
+                setBullets(specs.bullets.filter(Boolean));
+              }
+              if (specs.bulletsEn && Array.isArray(specs.bulletsEn) && specs.bulletsEn.filter(Boolean).length > 0) {
+                setBulletsEn(specs.bulletsEn.filter(Boolean));
               }
               setWeight(specs.weight || '0.85 كجم');
               setDimensions(specs.dimensions || '40 × 30 × 10 سم');
@@ -2138,7 +2142,8 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
     }
 
     setIsSaving(true);
-    const shortDescArray = [bullet1, bullet2, bullet3].filter(Boolean);
+    const bulletsFiltered = bullets.filter(Boolean);
+    const bulletsEnFiltered = bulletsEn.filter(Boolean);
     const specData = {
       weight,
       dimensions,
@@ -2148,7 +2153,8 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
       color1,
       color2,
       sizes,
-      bullets: shortDescArray,
+      bullets: bulletsFiltered,
+      bulletsEn: bulletsEnFiltered,
       seoTitle: metaTitle,
       seoDescription: metaDesc
     };
@@ -2157,6 +2163,7 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
       name,
       nameEn: nameEn || name,
       description,
+      descriptionEn,
       price: Number(price),
       comparePrice: comparePrice ? Number(comparePrice) : null,
       sku,
@@ -2167,7 +2174,6 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
       storeId,
       sellerId,
       images: uploadedImages,
-      shortDescription: JSON.stringify(shortDescArray),
       specifications: specData,
       seoTitle: metaTitle,
       seoDescription: metaDesc,
@@ -2516,38 +2522,82 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
                 </div>
               </div>
 
+              {/* ── Arabic Bullets ── */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-foreground">{isAr ? 'نقاط الوصف الممتازة (Bullet Points)' : 'Bullet points (High converting)'}</label>
-                <input
-                  type="text"
-                  value={bullet1}
-                  onChange={(e) => setBullet1(e.target.value)}
-                  placeholder="الميزة والمنفعة 1 (مثال: جلد طبيعي مضاد للماء)"
-                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs"
-                />
-                <input
-                  type="text"
-                  value={bullet2}
-                  onChange={(e) => setBullet2(e.target.value)}
-                  placeholder="الميزة والمنفعة 2 (مثال: جيب مبطن ومقاوم للصدمات)"
-                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs"
-                />
-                <input
-                  type="text"
-                  value={bullet3}
-                  onChange={(e) => setBullet3(e.target.value)}
-                  placeholder="الميزة والمنفعة 3 (مثال: شحن سريع لجميع الولايات)"
-                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs"
-                />
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-foreground">{isAr ? '🇸🇦 مميزات المنتج (عربي)' : '🇸🇦 Product Features (Arabic)'}</label>
+                  <button
+                    type="button"
+                    onClick={() => setBullets([...bullets, ''])}
+                    className="text-xs text-primary hover:underline"
+                  >{isAr ? '+ إضافة ميزة' : '+ Add feature'}</button>
+                </div>
+                {bullets.map((b, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={b}
+                      onChange={(e) => { const next = [...bullets]; next[idx] = e.target.value; setBullets(next); }}
+                      placeholder={isAr ? `الميزة ${idx + 1} (مثال: جلد طبيعي مضاد للماء)` : `Feature ${idx + 1} (e.g. Water-resistant)`}
+                      className="flex-1 bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs"
+                      dir="rtl"
+                    />
+                    {bullets.length > 1 && (
+                      <button type="button" onClick={() => setBullets(bullets.filter((_, i) => i !== idx))} className="text-red-400 hover:text-red-600 text-sm font-bold px-1">✕</button>
+                    )}
+                  </div>
+                ))}
               </div>
 
+              {/* ── English Bullets ── */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-foreground">{isAr ? '🇬🇧 مميزات المنتج (إنجليزي)' : '🇬🇧 Product Features (English)'}</label>
+                  <button
+                    type="button"
+                    onClick={() => setBulletsEn([...bulletsEn, ''])}
+                    className="text-xs text-primary hover:underline"
+                  >{isAr ? '+ إضافة ميزة' : '+ Add feature'}</button>
+                </div>
+                {bulletsEn.map((b, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={b}
+                      onChange={(e) => { const next = [...bulletsEn]; next[idx] = e.target.value; setBulletsEn(next); }}
+                      placeholder={`Feature ${idx + 1} (e.g. Fast shipping nationwide)`}
+                      className="flex-1 bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs"
+                      dir="ltr"
+                    />
+                    {bulletsEn.length > 1 && (
+                      <button type="button" onClick={() => setBulletsEn(bulletsEn.filter((_, i) => i !== idx))} className="text-red-400 hover:text-red-600 text-sm font-bold px-1">✕</button>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* ── Arabic Description ── */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-foreground">{isAr ? 'الوصف التفصيلي للمنتج' : 'Product Detailed Description'}</label>
+                <label className="text-xs font-bold text-foreground">{isAr ? '🇸🇦 الوصف التفصيلي (عربي)' : '🇸🇦 Detailed Description (Arabic)'}</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="قصة المنتج، لمن يصلح، وطريقة عمله..."
+                  placeholder={isAr ? 'قصة المنتج، لمن يصلح، وطريقة عمله...' : 'Product story, who it suits, how it works...'}
                   rows={3}
+                  dir="rtl"
+                  className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                />
+              </div>
+
+              {/* ── English Description ── */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-foreground">{isAr ? '🇬🇧 الوصف التفصيلي (إنجليزي)' : '🇬🇧 Detailed Description (English)'}</label>
+                <textarea
+                  value={descriptionEn}
+                  onChange={(e) => setDescriptionEn(e.target.value)}
+                  placeholder="Product story, who it suits, and how it works..."
+                  rows={3}
+                  dir="ltr"
                   className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
                 />
               </div>
@@ -3097,9 +3147,10 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
             <div className="bg-white/5 border border-white/10 p-3.5 rounded-xl space-y-2">
               <p className="text-[10px] font-bold text-amber-400 uppercase tracking-wide">{isAr ? 'مميزات وفوائد المنتج:' : 'Key benefits:'}</p>
               <div className="space-y-1.5 text-xs text-slate-200">
-                {bullet1 && <div className="flex items-start gap-1.5"><span className="text-amber-400">✓</span><span>{bullet1}</span></div>}
-                {bullet2 && <div className="flex items-start gap-1.5"><span className="text-amber-400">✓</span><span>{bullet2}</span></div>}
-                {bullet3 && <div className="flex items-start gap-1.5"><span className="text-amber-400">✓</span><span>{bullet3}</span></div>}
+                {bullets.filter(Boolean).map((b, i) => (
+                  <div key={i} className="flex items-start gap-1.5"><span className="text-amber-400">✓</span><span>{b}</span></div>
+                ))}
+                {bullets.filter(Boolean).length === 0 && <p className="text-slate-500 text-[10px]">{isAr ? 'أضف مميزات المنتج...' : 'Add product features...'}</p>}
               </div>
             </div>
 

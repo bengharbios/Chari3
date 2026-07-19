@@ -109,7 +109,10 @@ export async function GET(req: NextRequest) {
       where: isStoreManager ? { storeId: { in: [seller.id, userId] } } : { sellerId: { in: [seller.id, userId] } },
       select: { 
         id: true, 
-        name: true, 
+        name: true,
+        nameEn: true,
+        description: true,
+        descriptionEn: true,
         price: true, 
         comparePrice: true, 
         stock: true, 
@@ -117,6 +120,10 @@ export async function GET(req: NextRequest) {
         soldCount: true, 
         rating: true, 
         images: true,
+        specifications: true,
+        categoryId: true,
+        brandId: true,
+        sku: true,
         category: {
           select: {
             id: true,

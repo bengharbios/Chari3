@@ -603,6 +603,19 @@ export default function ProductDetailPage() {
     }
   }
 
+  // Locale-aware bullets: use bulletsEn for non-Arabic, fallback to Arabic bullets
+  const displayBullets: string[] = (() => {
+    if (isAr) return (specs.bullets && Array.isArray(specs.bullets)) ? specs.bullets.filter(Boolean) : [];
+    const en = specs.bulletsEn && Array.isArray(specs.bulletsEn) ? specs.bulletsEn.filter(Boolean) : [];
+    const ar = specs.bullets && Array.isArray(specs.bullets) ? specs.bullets.filter(Boolean) : [];
+    return en.length > 0 ? en : ar;
+  })();
+
+  // Locale-aware description: English/French use descriptionEn, fallback to Arabic
+  const displayDescription = isAr
+    ? (product.description || '')
+    : ((product as any).descriptionEn || product.description || '');
+
   // Generate JSON-LD Rich Snippet for SEO
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -771,11 +784,11 @@ export default function ProductDetailPage() {
             )}
 
             {/* Amazon-Style Bullet Points / High-Converting Features */}
-            {specs.bullets && Array.isArray(specs.bullets) && specs.bullets.filter(Boolean).length > 0 && (
+            {displayBullets.length > 0 && (
               <div className="p-4 bg-slate-50 dark:bg-slate-900/40 rounded-2xl border border-border space-y-2 font-cairo">
                 <p className="text-xs font-bold text-amber-500 uppercase tracking-wider">{t('مميزات وفوائد المنتج:', 'Product Benefits & Features:')}</p>
                 <ul className="space-y-1.5 text-sm text-muted-foreground">
-                  {specs.bullets.filter(Boolean).map((bullet: string, idx: number) => (
+                  {displayBullets.map((bullet: string, idx: number) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="text-amber-500 font-bold shrink-0">✓</span>
                       <span>{bullet}</span>
@@ -1168,11 +1181,11 @@ export default function ProductDetailPage() {
 
         {/* ── DESCRIPTION & SPECIFICATIONS GRID ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-10">
-          {product.description && (
+          {displayDescription && (
             <div className="space-y-4">
               <h2 className="text-xl font-bold text-foreground">{t('وصف المنتج التفصيلي', 'Detailed Product Description')}</h2>
               <div className="prose dark:prose-invert max-w-none p-5 bg-muted/30 rounded-2xl border border-border min-h-[220px]">
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-line text-sm">{product.description}</p>
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-line text-sm">{displayDescription}</p>
               </div>
             </div>
           )}

@@ -192,6 +192,7 @@ export async function POST(request: Request) {
         nameEn: body.nameEn,
         slug,
         description: body.description,
+        descriptionEn: body.descriptionEn || null,
         price: body.price,
         comparePrice: body.comparePrice,
         costPrice: body.costPrice,

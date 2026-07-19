@@ -93,6 +93,7 @@ import { useEffect } from 'react';export default function StoreProductsPage() {
   if (showAddForm) {
     return (
       <ProductFormTab
+        key={editingProduct?.id || 'new'}
         product={editingProduct}
         onClose={() => {
           setShowAddForm(false);

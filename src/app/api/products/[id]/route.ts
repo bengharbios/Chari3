@@ -148,6 +148,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         nameEn: body.nameEn,
         slug,
         description: body.description,
+        descriptionEn: body.descriptionEn || null,
         price: body.price,
         comparePrice: body.comparePrice,
         costPrice: body.costPrice,
