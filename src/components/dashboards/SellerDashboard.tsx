@@ -1863,6 +1863,18 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
   const [suggestDesc, setSuggestDesc] = useState('');
   const [isSuggesting, setIsSuggesting] = useState(false);
 
+  // Specifications
+  let initialSpecs: any = {};
+  if (product?.specifications) {
+    try {
+      if (typeof product.specifications === 'string') {
+        initialSpecs = JSON.parse(product.specifications);
+      } else {
+        initialSpecs = product.specifications;
+      }
+    } catch {}
+  }
+
   // Core Form States
   const [name, setName] = useState(product?.name || '');
   const [nameEn, setNameEn] = useState(product?.nameEn || '');
@@ -1877,18 +1889,6 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
   const [brandId, setBrandId] = useState(product?.brandId || '');
   const [brands, setBrands] = useState<any[]>([]);
   const [enableBrandSystem, setEnableBrandSystem] = useState(true);
-
-  // Specifications
-  let initialSpecs: any = {};
-  if (product?.specifications) {
-    try {
-      if (typeof product.specifications === 'string') {
-        initialSpecs = JSON.parse(product.specifications);
-      } else {
-        initialSpecs = product.specifications;
-      }
-    } catch {}
-  }
 
   // Bullet Points — dynamic list (Arabic)
   const rawBullets = (initialSpecs.bullets && Array.isArray(initialSpecs.bullets) && initialSpecs.bullets.filter(Boolean).length > 0)
