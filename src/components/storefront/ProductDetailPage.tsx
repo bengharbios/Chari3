@@ -462,6 +462,14 @@ export default function ProductDetailPage() {
       : product?.specifications || {};
   } catch {}
 
+  const displayName = !product
+    ? ''
+    : isAr
+    ? product.name
+    : locale === 'fr'
+    ? (specs.nameFr || (product as any).nameFr || product.nameEn || product.name)
+    : (product.nameEn || product.name);
+
   // Find current matching variant
   const getSelectedVariant = () => {
     if (!product || !product.variants || product.variants.length === 0) return null;
@@ -524,11 +532,6 @@ export default function ProductDetailPage() {
     }
     
     const variantName = [selectedColor, selectedSize].filter(Boolean).join(' / ');
-    const displayName = isAr
-      ? product.name
-      : locale === 'fr'
-      ? (specs.nameFr || (product as any).nameFr || product.nameEn || product.name)
-      : (product.nameEn || product.name);
     const cartProduct = {
       ...product,
       price: finalUnitPrice,
