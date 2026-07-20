@@ -1866,6 +1866,7 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
   // Core Form States
   const [name, setName] = useState(product?.name || '');
   const [nameEn, setNameEn] = useState(product?.nameEn || '');
+  const [nameFr, setNameFr] = useState(initialSpecs.nameFr || (product as any)?.nameFr || '');
   const [categoryId, setCategoryId] = useState(product?.categoryId || '');
   const [price, setPrice] = useState(product?.price || 0);
   const [comparePrice, setComparePrice] = useState(product?.comparePrice || 0);
@@ -2201,6 +2202,7 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
       bulletsEn: bulletsEnFiltered,
       bulletsFr: bulletsFrFiltered,
       descriptionFr,
+      nameFr,
       dynamicSpecs: dynamicSpecValues,
       seoTitle: metaTitle,
       seoDescription: metaDesc
@@ -2407,6 +2409,19 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
                     value={nameEn}
                     onChange={(e) => setNameEn(e.target.value)}
                     placeholder="Brand + Product Name + Main Feature"
+                    className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
+                  />
+                </div>
+              )}
+
+              {isFrActive && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-foreground">🇫🇷 الاسم بالفرنسية (اختياري)</label>
+                  <input
+                    type="text"
+                    value={nameFr}
+                    onChange={(e) => setNameFr(e.target.value)}
+                    placeholder="Marque + Nom du produit + Caractéristique"
                     className="w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm"
                   />
                 </div>

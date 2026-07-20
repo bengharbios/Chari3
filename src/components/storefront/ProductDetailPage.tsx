@@ -516,7 +516,11 @@ export default function ProductDetailPage() {
     }
     
     const variantName = [selectedColor, selectedSize].filter(Boolean).join(' / ');
-    const displayName = isAr ? product.name : (product.nameEn || product.name);
+    const displayName = isAr
+      ? product.name
+      : locale === 'fr'
+      ? (specs.nameFr || (product as any).nameFr || product.nameEn || product.name)
+      : (product.nameEn || product.name);
     const cartProduct = {
       ...product,
       price: finalUnitPrice,
@@ -759,7 +763,7 @@ export default function ProductDetailPage() {
                   </>
                 )}
               </div>
-              <h1 className="text-2xl md:text-3xl font-black leading-tight text-foreground">{isAr ? product.name : (product.nameEn || product.name)}</h1>
+              <h1 className="text-2xl md:text-3xl font-black leading-tight text-foreground">{displayName}</h1>
             </div>
 
             {/* Rating */}
