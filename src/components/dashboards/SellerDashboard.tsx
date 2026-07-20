@@ -2366,9 +2366,11 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
         <div className="lg:col-span-7 bg-card border border-border rounded-2xl p-5 space-y-6 shadow-sm">
           {/* Admin Rejection / Modification Request Banner */}
           {(() => {
-            if (!editingProduct?.specifications) return null;
+            if (!product?.specifications) return null;
             try {
-              const parsedSpecs = JSON.parse(editingProduct.specifications);
+              const parsedSpecs = typeof product.specifications === 'string'
+                ? JSON.parse(product.specifications)
+                : product.specifications;
               if (parsedSpecs.adminRejectionReason) {
                 return (
                   <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl space-y-1">
