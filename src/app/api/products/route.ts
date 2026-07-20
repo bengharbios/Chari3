@@ -186,6 +186,16 @@ export async function POST(request: Request) {
       }
     }
 
+    // Check if system requires admin approval for products before making active
+    let initialStatus = body.status || 'draft';
+    const approvalSetting = await db.systemSetting.findUnique({
+      where: { key: 'require_admin_approval_for_products' },
+    });
+
+    if (approvalSetting?.value === 'true' && initialStatus === 'active') {
+      initialStatus = 'pending_approval';
+    }
+
     const product = await db.product.create({
       data: {
         name: body.name,
@@ -198,7 +208,7 @@ export async function POST(request: Request) {
         costPrice: body.costPrice,
         sku: body.sku,
         stock: body.stock || 0,
-        status: body.status || 'draft',
+        status: initialStatus,
         categoryId: body.categoryId,
         brandId: body.brandId || null,
         storeId,
@@ -209,6 +219,28 @@ export async function POST(request: Request) {
         urgencySettings: body.urgencySettings ? (typeof body.urgencySettings === 'string' ? body.urgencySettings : JSON.stringify(body.urgencySettings)) : null,
       },
     });
+
+    // Create Notification for Super Admins if pending approval
+    if (initialStatus === 'pending_approval') {
+      const adminUsers = await db.user.findMany({
+        where: { role: 'admin' },
+        select: { id: true },
+      });
+
+      for (const admin of adminUsers) {
+        await db.notification.create({
+          data: {
+            userId: admin.id,
+            title: `⏳ منتج جديد بانتظار المراجعة والموافقة (${product.name})`,
+            titleEn: `⏳ New product pending approval (${product.nameEn || product.name})`,
+            body: `قام التاجر بإضافة منتج جديد وهو بانتظار مراجعك وموافقتك في لوحة التحكم.`,
+            bodyEn: `A merchant added a new product that is waiting for your review and approval.`,
+            type: 'alert',
+            data: JSON.stringify({ productId: product.id, action: 'pending_approval' }),
+          },
+        });
+      }
+    }
 
     // Create associated variants if present
     if (body.variants && Array.isArray(body.variants) && body.variants.length > 0) {

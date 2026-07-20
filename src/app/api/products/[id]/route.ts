@@ -141,6 +141,16 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
       }
     }
 
+    // Check if system requires admin approval for products before making active
+    let updatedStatus = body.status || 'draft';
+    const approvalSetting = await db.systemSetting.findUnique({
+      where: { key: 'require_admin_approval_for_products' },
+    });
+
+    if (approvalSetting?.value === 'true' && updatedStatus === 'active') {
+      updatedStatus = 'pending_approval';
+    }
+
     const product = await db.product.update({
       where: { id },
       data: {
@@ -154,7 +164,7 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         costPrice: body.costPrice,
         sku: body.sku,
         stock: body.stock || 0,
-        status: body.status || 'draft',
+        status: updatedStatus,
         categoryId: body.categoryId,
         brandId: body.brandId || null,
         storeId,
@@ -165,6 +175,28 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
         urgencySettings: body.urgencySettings ? (typeof body.urgencySettings === 'string' ? body.urgencySettings : JSON.stringify(body.urgencySettings)) : null,
       },
     });
+
+    // Notify Super Admin if pending approval
+    if (updatedStatus === 'pending_approval') {
+      const adminUsers = await db.user.findMany({
+        where: { role: 'admin' },
+        select: { id: true },
+      });
+
+      for (const admin of adminUsers) {
+        await db.notification.create({
+          data: {
+            userId: admin.id,
+            title: `⏳ تعديل منتج بانتظار المراجعة والموافقة (${product.name})`,
+            titleEn: `⏳ Updated product pending approval (${product.nameEn || product.name})`,
+            body: `قام التاجر بتحديث منتج وهو بانتظار مراجعك وموافقتك في لوحة التحكم.`,
+            bodyEn: `A merchant updated a product that is waiting for your review and approval.`,
+            type: 'alert',
+            data: JSON.stringify({ productId: product.id, action: 'pending_approval' }),
+          },
+        });
+      }
+    }
 
     // Delete existing variants
     await db.productVariant.deleteMany({

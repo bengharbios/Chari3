@@ -902,6 +902,11 @@
     "specTypeText": "نص حر",
     "specTypeSelect": "قائمة اختيار",
     "specTypeNumber": "رقم",
-    "specTypeBoolean": "نعم/لا"
+    "specTypeBoolean": "نعم/لا",
+    "productApprovalsTitle": "مراجعة وقبول المنتجات",
+    "pendingApproval": "بانتظار موافقة الأدمن",
+    "approvedAndPublished": "مقبول ونشط",
+    "rejectionReasonNotice": "ملاحظة من إدارة المنصة (طلب تعديل)",
+    "productSettingsTitle": "إعدادات وخصائص المنتجات العامة"
   }
 }

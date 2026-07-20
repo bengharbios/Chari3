@@ -2364,6 +2364,28 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Side: Form Editor (8 cols on lg) */}
         <div className="lg:col-span-7 bg-card border border-border rounded-2xl p-5 space-y-6 shadow-sm">
+          {/* Admin Rejection / Modification Request Banner */}
+          {(() => {
+            if (!editingProduct?.specifications) return null;
+            try {
+              const parsedSpecs = JSON.parse(editingProduct.specifications);
+              if (parsedSpecs.adminRejectionReason) {
+                return (
+                  <div className="bg-red-500/10 border border-red-500/30 p-4 rounded-xl space-y-1">
+                    <div className="flex items-center gap-2 text-red-500 font-bold text-xs">
+                      <AlertTriangle className="size-4" />
+                      ملاحظة من إدارة المنصة (طلب تعديل):
+                    </div>
+                    <p className="text-xs text-foreground font-medium">{parsedSpecs.adminRejectionReason}</p>
+                  </div>
+                );
+              }
+            } catch (e) {
+              return null;
+            }
+            return null;
+          })()}
+
           {/* Sub Tab System */}
           <div className="flex gap-1.5 p-1 bg-muted rounded-xl border border-border">
             {[

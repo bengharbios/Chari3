@@ -699,7 +699,142 @@ L'historique des actions est maintenant sur une page autonome :
       });
     }
 
-    return NextResponse.json({ success: false, error: 'Invalid step. Use step=1 through step=8' });
+    // Step 9: Seed Product Management, Approvals & Specs Articles
+    if (step === 9 || step === 'all') {
+      const articles = [
+        {
+          slug: 'merchant-products-and-specs-guide',
+          category: 'sellers',
+          sortOrder: 15,
+          title: 'دليل التاجر: إضافة المنتجات والمميزات والمواصفات ومتابعة القبول',
+          titleEn: 'Merchant Guide: Products, Features, Specs & Approval Queue',
+          content: `
+# دليل التاجر لمدخلات المنتجات والمواصفات ومتابعة القبول والإشعارات
+
+أهلاً بك في دليل التاجر الموحد لمنصة ChariDay! يوضح هذا الدليل كيفية إدخال بيانات منتجك بأعلى جودة واحترافية:
+
+## 1. إدخال عناوين المنتج ومميزاته باللغات المتاحة
+- **العناوين:** يتيح لك النظام إدخال اسم المنتج باللغة العربية والإنجليزية والفرنسية (حسب اللغات المفعّلة بالنظام).
+- **المميزات (Bullet Points):** يتيح لك النظام إضافة النقاط البارزة للمنتج مع مراعاة الحد الأقصى المحدد من الأدمن.
+- **الوصف التفصيلي:** كتابة قصة المنتج وميزاته التنافسية بكل لغة مفعّلة.
+
+## 2. تعبئة المواصفات الفنية الديناميكية للفئة
+- عند اختيار الفئة الرئيسية للمنتج (مثل: إلكترونيات، ملابس، إلخ)، ستظهر لك حقول المواصفات الخاصة بها تلقائياً (مثل السعة، نوع الذاكرة، الخامة، إلخ).
+- بعض الحقول قد تكون إلزامية بناءً على تحديد إدارة المنصة.
+
+## 3. متابعة الموافقة والإشعارات
+- في حال كان شرط **موافقة الأدمن المسبقة** مفعّلاً، سيتحول منتجك فور إنشائه إلى حالة (بانتظار موافقة الأدمن).
+- يصلك إشعار فوري بالجرس عند قبول نشر المنتج أو رفضه مع ملاحظات الأدمن التوضيحية لتعديله وإعادة إرساله.
+          `,
+          contentEn: `
+# Merchant Guide: Product Creation, Specs & Approval Notifications
+
+Welcome to the official ChariDay Merchant Guide! This article guides you through creating high-converting products:
+
+## 1. Multilingual Titles & Bullet Features
+- Enter titles, bullet point features, and detailed descriptions in Arabic, English, and French based on active platform settings.
+- Enforce max bullet limits as set by platform administrators.
+
+## 2. Dynamic Category Specifications
+- Selecting a product category loads Noon/Amazon-style specification inputs automatically.
+
+## 3. Approval Workflow & In-App Notifications
+- When approval mode is active, submitted products enter pending status.
+- Instant notifications wake you up on approval or rejection feedback.
+          `,
+          translations: {
+            ar: { title: 'دليل التاجر: إضافة المنتجات والمميزات والمواصفات ومتابعة القبول' },
+            en: { title: 'Merchant Guide: Products, Features, Specs & Approval Queue' },
+            fr: {
+              title: 'Guide Marchand: Produits, Caractéristiques et Approbation',
+              content: 'Guide complet pour la création et la gestion des produits marchands et le suivi des notifications d\'approbation.'
+            }
+          }
+        },
+        {
+          slug: 'admin-product-control-and-approvals-guide',
+          category: 'admin',
+          sortOrder: 16,
+          title: 'دليل الأدمن: التحكم بخصائص المنتجات وقواعدها ومراجعة القبول المعلق',
+          titleEn: 'Super Admin Guide: Global Product Settings & Approvals Queue',
+          content: `
+# دليل الأدمن الشامل لإدارة المنتجات وقواعدها وقوائم الموافقة
+
+يوفر هذا الدليل لمديري منصة ChariDay التحكم الكامل 100% في موديول المنتجات:
+
+## 1. التحكم بخصائص المنتجات وحدودها (/admin-secure-internal/products/settings)
+- تفعيل/إيقاف شرط الموافقة المسبقة قبل النشر.
+- تحديد أقصى حد للصور المرفوعة والمميزات الوصفية لكل منتج.
+- تفعيل أو تعطيل موديولات العلامات التجارية، خصومات الكمية بالجملة، ومحفزات الاستعجال.
+
+## 2. صفحة مراجعة المنتجات وقبولها (/admin-secure-internal/products/approvals)
+- قائمة مخصصة لفحص كافة المنتجات المعلقة.
+- إمكانية القبول والنشر الفوري بنقرة واحدة، أو الرفض المسبب مع كتابة ملاحظات للبائع تصل له كإشعار فوري.
+          `,
+          contentEn: `
+# Super Admin Guide: Global Product Rules & Approvals Queue
+
+Complete guide for platform administrators managing product rules:
+
+## 1. Global Controls (/admin-secure-internal/products/settings)
+- Toggle pre-approval rules, max images, max bullets, brand system, and volume discounts.
+
+## 2. Moderation Queue (/admin-secure-internal/products/approvals)
+- Inspect pending products, approve live publishing, or reject with detailed merchant feedback.
+          `,
+          translations: {
+            ar: { title: 'دليل الأدمن: التحكم بخصائص المنتجات وقواعدها ومراجعة القبول المعلق' },
+            en: { title: 'Super Admin Guide: Global Product Settings & Approvals Queue' },
+            fr: {
+              title: 'Guide Admin: Contrôle Global des Produits et Approbations',
+              content: 'Guide administrateur complet pour la gestion des règles de produits et la modération.'
+            }
+          }
+        }
+      ];
+
+      for (const art of articles) {
+        const existing = await db.docArticle.findUnique({ where: { slug: art.slug } });
+        if (!existing) {
+          await db.docArticle.create({
+            data: {
+              title: art.title,
+              titleEn: art.titleEn,
+              slug: art.slug,
+              content: art.content,
+              contentEn: art.contentEn,
+              translations: art.translations as any,
+              category: art.category,
+              sortOrder: art.sortOrder,
+              isPublished: true
+            }
+          });
+          results.push(`✅ Created Doc article: ${art.slug}`);
+        } else {
+          await db.docArticle.update({
+            where: { slug: art.slug },
+            data: {
+              title: art.title,
+              titleEn: art.titleEn,
+              content: art.content,
+              contentEn: art.contentEn,
+              translations: art.translations as any,
+              isPublished: true
+            }
+          });
+          results.push(`✅ Updated Doc article: ${art.slug}`);
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        step: 9,
+        message: '🎉 Product management & approvals doc articles seeded!',
+        details: results,
+      });
+    }
+
+    return NextResponse.json({ success: false, error: 'Invalid step. Use step=1 through step=9' });
 
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);

@@ -844,6 +844,11 @@
     "specTypeText": "Texte libre",
     "specTypeSelect": "Liste déroulante",
     "specTypeNumber": "Nombre",
-    "specTypeBoolean": "Oui / Non"
+    "specTypeBoolean": "Oui / Non",
+    "productApprovalsTitle": "File d'attente d'approbation des produits",
+    "pendingApproval": "En attente d'approbation",
+    "approvedAndPublished": "Approuvé et en ligne",
+    "rejectionReasonNotice": "Remarques de l'administration (Action requise)",
+    "productSettingsTitle": "Paramètres et règles des produits"
   }
 }

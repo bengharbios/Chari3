@@ -902,6 +902,11 @@
     "specTypeText": "Free Text",
     "specTypeSelect": "Dropdown",
     "specTypeNumber": "Number",
-    "specTypeBoolean": "Yes / No"
+    "specTypeBoolean": "Yes / No",
+    "productApprovalsTitle": "Product Approvals Queue",
+    "pendingApproval": "Pending Admin Approval",
+    "approvedAndPublished": "Approved & Live",
+    "rejectionReasonNotice": "Admin Feedback (Action Required)",
+    "productSettingsTitle": "Global Product Settings & Rules"
   }
 }
