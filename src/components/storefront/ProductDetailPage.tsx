@@ -454,6 +454,14 @@ export default function ProductDetailPage() {
     return { minStr, maxStr };
   };
 
+  // Extract custom specifications structure
+  let specs: any = {};
+  try {
+    specs = typeof product?.specifications === 'string'
+      ? JSON.parse(product.specifications)
+      : product?.specifications || {};
+  } catch {}
+
   // Find current matching variant
   const getSelectedVariant = () => {
     if (!product || !product.variants || product.variants.length === 0) return null;
@@ -596,14 +604,6 @@ export default function ProductDetailPage() {
   }
 
   if (!product) return null;
-
-  // Extract custom specifications structure
-  let specs: any = {};
-  try {
-    specs = typeof product.specifications === 'string'
-      ? JSON.parse(product.specifications)
-      : product.specifications || {};
-  } catch {}
 
   // Safe variants parsing from specifications to prevent crashes
   const color1Str = specs.color1 !== undefined && specs.color1 !== null ? String(specs.color1).trim() : '';
