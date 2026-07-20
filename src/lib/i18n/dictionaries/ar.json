@@ -866,12 +866,17 @@
     "summaryLifetime": "عمر الجلسة"
   },
   "productForm": {
+    "titleArLabel": "🇸🇦 اسم المنتج (عربي)",
+    "titleEnLabel": "🇬🇧 اسم المنتج (إنجليزي)",
+    "titleFrLabel": "🇫🇷 اسم المنتج (فرنسي)",
     "featuresArLabel": "🇸🇦 مميزات المنتج (عربي)",
     "featuresEnLabel": "🇬🇧 مميزات المنتج (إنجليزي)",
+    "featuresFrLabel": "🇫🇷 مميزات المنتج (فرنسي)",
     "addFeature": "+ إضافة ميزة",
     "maxFeaturesReached": "وصلت للحد الأقصى (%max% مميزات)",
     "descriptionArLabel": "🇸🇦 الوصف التفصيلي (عربي)",
     "descriptionEnLabel": "🇬🇧 الوصف التفصيلي (إنجليزي)",
+    "descriptionFrLabel": "🇫🇷 الوصف التفصيلي (فرنسي)",
     "noFeaturesPlaceholder": "أضف مميزات المنتج...",
     "featurePlaceholderAr": "الميزة %n% (مثال: جلد طبيعي مضاد للماء)",
     "featurePlaceholderEn": "Feature %n% (e.g. Water-resistant)",

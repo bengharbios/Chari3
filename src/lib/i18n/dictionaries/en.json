@@ -866,12 +866,17 @@
     "summaryLifetime": "Session Lifetime"
   },
   "productForm": {
+    "titleArLabel": "🇸🇦 Product Title (Arabic)",
+    "titleEnLabel": "🇬🇧 Product Title (English)",
+    "titleFrLabel": "🇫🇷 Product Title (French)",
     "featuresArLabel": "🇸🇦 Product Features (Arabic)",
     "featuresEnLabel": "🇬🇧 Product Features (English)",
+    "featuresFrLabel": "🇫🇷 Product Features (French)",
     "addFeature": "+ Add feature",
     "maxFeaturesReached": "Maximum reached (%max% features)",
     "descriptionArLabel": "🇸🇦 Detailed Description (Arabic)",
     "descriptionEnLabel": "🇬🇧 Detailed Description (English)",
+    "descriptionFrLabel": "🇫🇷 Detailed Description (French)",
     "noFeaturesPlaceholder": "Add product features...",
     "featurePlaceholderAr": "Feature %n% in Arabic (e.g. Water-resistant leather)",
     "featurePlaceholderEn": "Feature %n% (e.g. Water-resistant)",
