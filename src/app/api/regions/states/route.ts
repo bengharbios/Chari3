@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getCountryByCode } from '@/lib/data/countries';
 
 export const dynamic = 'force-dynamic';
 
@@ -204,17 +205,36 @@ export async function GET(req: NextRequest) {
     });
 
     if (!country) {
-      // Return static country & states fallback
-      const countryFallback = STATIC_COUNTRIES[countryCode] || STATIC_COUNTRIES.DZ;
-      const fallbackStates = countryFallback.states.map(w => ({
-        id: w.code, code: w.code, nameAr: w.nameAr, nameEn: w.nameEn,
-        defaultPrice: w.defaultPrice, price: w.defaultPrice, isCustomPrice: false, isHidden: false,
-      }));
+      // 1. Check if we have explicit static states for this country (e.g. DZ, SA, MA, AE, EG, TN)
+      const explicitFallback = STATIC_COUNTRIES[countryCode];
+      if (explicitFallback) {
+        const fallbackStates = explicitFallback.states.map(w => ({
+          id: w.code, code: w.code, nameAr: w.nameAr, nameEn: w.nameEn,
+          defaultPrice: w.defaultPrice, price: w.defaultPrice, isCustomPrice: false, isHidden: false,
+        }));
+        return NextResponse.json({
+          success: true,
+          country: explicitFallback.country,
+          shipping: { enabled: true, standardPrice: 500, expressPrice: 800, freeThreshold: 15000 },
+          states: fallbackStates,
+        });
+      }
+
+      // 2. Dynamic fallback for any world country!
+      const countryInfo = getCountryByCode(countryCode);
       return NextResponse.json({
         success: true,
-        country: countryFallback.country,
-        shipping: { enabled: true, standardPrice: 500, expressPrice: 800, freeThreshold: 15000 },
-        states: fallbackStates,
+        country: {
+          code: countryInfo.code,
+          nameAr: countryInfo.nameAr,
+          nameEn: countryInfo.nameEn,
+          currency: countryInfo.currency,
+          phonePrefix: '+1'
+        },
+        shipping: { enabled: true, standardPrice: 30, expressPrice: 50, freeThreshold: 500 },
+        states: [
+          { id: '1', code: '1', nameAr: countryInfo.nameAr, nameEn: countryInfo.nameEn, defaultPrice: 30, price: 30, isCustomPrice: false, isHidden: false }
+        ],
       });
     }
 
