@@ -770,7 +770,17 @@ export default function StoreSettingsPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-primary" />{t('الدولة', 'Country')}</Label>
-                        <Select value={generalSettings.country} onValueChange={(val) => setGeneralSettings({ ...generalSettings, country: val })}>
+                        <Select 
+                          value={generalSettings.country} 
+                          onValueChange={(val) => {
+                            const currencyMap: Record<string, string> = {
+                              DZ: 'DZD', SA: 'SAR', MA: 'MAD', TN: 'TND', EG: 'EGP', AE: 'AED', LY: 'LYD', JO: 'JOD', IQ: 'IQD', SD: 'SDG', MR: 'MRU', NG: 'NGN', SN: 'XOF', TR: 'TRY'
+                            };
+                            const newCurrency = currencyMap[val] || 'USD';
+                            setGeneralSettings({ ...generalSettings, country: val, currency: newCurrency });
+                            setStoreCurrency(newCurrency);
+                          }}
+                        >
                           <SelectTrigger className="bg-muted/30 border-white/10 rounded-xl w-full">
                             <SelectValue />
                           </SelectTrigger>

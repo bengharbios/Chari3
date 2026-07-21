@@ -71,20 +71,137 @@ export async function GET(req: NextRequest) {
       { code: '58', nameAr: 'المنيعة', nameEn: 'El Meniaa', defaultPrice: 900 },
     ];
 
-    // 1. Find the Country
+    // Static fallbacks for multiple countries when DB is not seeded
+    const STATIC_COUNTRIES: Record<string, { country: any; states: Array<{ code: string; nameAr: string; nameEn: string; defaultPrice: number }> }> = {
+      DZ: {
+        country: { code: 'DZ', nameAr: 'الجزائر', nameEn: 'Algeria', currency: 'DZD', phonePrefix: '+213' },
+        states: ALGERIAN_WILAYAS_STATIC,
+      },
+      SA: {
+        country: { code: 'SA', nameAr: 'السعودية', nameEn: 'Saudi Arabia', currency: 'SAR', phonePrefix: '+966' },
+        states: [
+          { code: '1', nameAr: 'منطقة الرياض', nameEn: 'Riyadh Region', defaultPrice: 30 },
+          { code: '2', nameAr: 'منطقة مكة المكرمة', nameEn: 'Makkah Region', defaultPrice: 30 },
+          { code: '3', nameAr: 'منطقة المدينة المنورة', nameEn: 'Madinah Region', defaultPrice: 35 },
+          { code: '4', nameAr: 'المنطقة الشرقية', nameEn: 'Eastern Province', defaultPrice: 35 },
+          { code: '5', nameAr: 'منطقة القصيم', nameEn: 'Al-Qassim Region', defaultPrice: 35 },
+          { code: '6', nameAr: 'منطقة عسير', nameEn: 'Aseer Region', defaultPrice: 40 },
+          { code: '7', nameAr: 'منطقة تبوك', nameEn: 'Tabuk Region', defaultPrice: 40 },
+          { code: '8', nameAr: 'منطقة حائل', nameEn: 'Hail Region', defaultPrice: 40 },
+          { code: '9', nameAr: 'منطقة الحدود الشمالية', nameEn: 'Northern Borders Region', defaultPrice: 45 },
+          { code: '10', nameAr: 'منطقة جازان', nameEn: 'Jazan Region', defaultPrice: 45 },
+          { code: '11', nameAr: 'منطقة نجران', nameEn: 'Najran Region', defaultPrice: 45 },
+          { code: '12', nameAr: 'منطقة الباحة', nameEn: 'Al-Baha Region', defaultPrice: 40 },
+          { code: '13', nameAr: 'منطقة الجوف', nameEn: 'Al-Jouf Region', defaultPrice: 45 },
+        ],
+      },
+      MA: {
+        country: { code: 'MA', nameAr: 'المغرب', nameEn: 'Morocco', currency: 'MAD', phonePrefix: '+212' },
+        states: [
+          { code: '1', nameAr: 'جهة طنجة تطوان الحسيمة', nameEn: 'Tanger-Tetouan-Al Hoceima', defaultPrice: 40 },
+          { code: '2', nameAr: 'جهة الشرق', nameEn: 'L\'Oriental', defaultPrice: 45 },
+          { code: '3', nameAr: 'جهة فاس مكناس', nameEn: 'Fes-Meknes', defaultPrice: 40 },
+          { code: '4', nameAr: 'جهة الرباط سلا القنيطرة', nameEn: 'Rabat-Salé-Kénitra', defaultPrice: 35 },
+          { code: '5', nameAr: 'جهة بني ملال خنيفرة', nameEn: 'Béni Mellal-Khénifra', defaultPrice: 45 },
+          { code: '6', nameAr: 'جهة الدار البيضاء الكبرى سطات', nameEn: 'Casablanca-Settat', defaultPrice: 30 },
+          { code: '7', nameAr: 'جهة مراكش أسفي', nameEn: 'Marrakesh-Safi', defaultPrice: 40 },
+          { code: '8', nameAr: 'جهة درعة تافيلالت', nameEn: 'Drâa-Tafilalet', defaultPrice: 50 },
+          { code: '9', nameAr: 'جهة سوس ماسة', nameEn: 'Souss-Massa', defaultPrice: 45 },
+          { code: '10', nameAr: 'جهة كلميم واد نون', nameEn: 'Guelmim-Oued Noun', defaultPrice: 55 },
+          { code: '11', nameAr: 'جهة العيون الساقية الحمراء', nameEn: 'Laâyoune-Sakia El Hamra', defaultPrice: 60 },
+          { code: '12', nameAr: 'جهة الداخلة وادي الذهب', nameEn: 'Dakhla-Oued Ed-Dahab', defaultPrice: 70 },
+        ],
+      },
+      AE: {
+        country: { code: 'AE', nameAr: 'الإمارات', nameEn: 'UAE', currency: 'AED', phonePrefix: '+971' },
+        states: [
+          { code: '1', nameAr: 'إمارة أبوظبي', nameEn: 'Abu Dhabi', defaultPrice: 25 },
+          { code: '2', nameAr: 'إمارة دبي', nameEn: 'Dubai', defaultPrice: 20 },
+          { code: '3', nameAr: 'إمارة الشارقة', nameEn: 'Sharjah', defaultPrice: 25 },
+          { code: '4', nameAr: 'إمارة عجمان', nameEn: 'Ajman', defaultPrice: 25 },
+          { code: '5', nameAr: 'إمارة أم القيوين', nameEn: 'Umm Al Quwain', defaultPrice: 30 },
+          { code: '6', nameAr: 'إمارة رأس الخيمة', nameEn: 'Ras Al Khaimah', defaultPrice: 30 },
+          { code: '7', nameAr: 'إمارة الفجيرة', nameEn: 'Fujairah', defaultPrice: 35 },
+        ],
+      },
+      EG: {
+        country: { code: 'EG', nameAr: 'مصر', nameEn: 'Egypt', currency: 'EGP', phonePrefix: '+20' },
+        states: [
+          { code: '1', nameAr: 'القاهرة', nameEn: 'Cairo', defaultPrice: 50 },
+          { code: '2', nameAr: 'الجيزة', nameEn: 'Giza', defaultPrice: 50 },
+          { code: '3', nameAr: 'الإسكندرية', nameEn: 'Alexandria', defaultPrice: 60 },
+          { code: '4', nameAr: 'الدقهلية', nameEn: 'Dakahlia', defaultPrice: 65 },
+          { code: '5', nameAr: 'البحر الأحمر', nameEn: 'Red Sea', defaultPrice: 90 },
+          { code: '6', nameAr: 'البحيرة', nameEn: 'Beheira', defaultPrice: 65 },
+          { code: '7', nameAr: 'الفيوم', nameEn: 'Faiyum', defaultPrice: 70 },
+          { code: '8', nameAr: 'الغربية', nameEn: 'Gharbia', defaultPrice: 65 },
+          { code: '9', nameAr: 'الإسماعيلية', nameEn: 'Ismailia', defaultPrice: 65 },
+          { code: '10', nameAr: 'المنوفية', nameEn: 'Monufia', defaultPrice: 65 },
+          { code: '11', nameAr: 'المنيا', nameEn: 'Minya', defaultPrice: 75 },
+          { code: '12', nameAr: 'القليوبية', nameEn: 'Qalyubia', defaultPrice: 55 },
+          { code: '13', nameAr: 'الوادي الجديد', nameEn: 'New Valley', defaultPrice: 100 },
+          { code: '14', nameAr: 'السويس', nameEn: 'Suez', defaultPrice: 65 },
+          { code: '15', nameAr: 'أسوان', nameEn: 'Aswan', defaultPrice: 90 },
+          { code: '16', nameAr: 'أسيوط', nameEn: 'Asyut', defaultPrice: 75 },
+          { code: '17', nameAr: 'بني سويف', nameEn: 'Beni Suef', defaultPrice: 70 },
+          { code: '18', nameAr: 'بورسعيد', nameEn: 'Port Said', defaultPrice: 65 },
+          { code: '19', nameAr: 'دمياط', nameEn: 'Damietta', defaultPrice: 65 },
+          { code: '20', nameAr: 'الشرقية', nameEn: 'Sharqia', defaultPrice: 65 },
+          { code: '21', nameAr: 'جنوب سيناء', nameEn: 'South Sinai', defaultPrice: 100 },
+          { code: '22', nameAr: 'كفر الشيخ', nameEn: 'Kafr El Sheikh', defaultPrice: 65 },
+          { code: '23', nameAr: 'مطروح', nameEn: 'Matrouh', defaultPrice: 90 },
+          { code: '24', nameAr: 'قنا', nameEn: 'Qena', defaultPrice: 85 },
+          { code: '25', nameAr: 'الأقصر', nameEn: 'Luxor', defaultPrice: 85 },
+          { code: '26', nameAr: 'سوهاج', nameEn: 'Sohag', defaultPrice: 80 },
+          { code: '27', nameAr: 'شمال سيناء', nameEn: 'North Sinai', defaultPrice: 100 },
+        ],
+      },
+      TN: {
+        country: { code: 'TN', nameAr: 'تونس', nameEn: 'Tunisia', currency: 'TND', phonePrefix: '+216' },
+        states: [
+          { code: '1', nameAr: 'تونس', nameEn: 'Tunis', defaultPrice: 8 },
+          { code: '2', nameAr: 'أريانة', nameEn: 'Ariana', defaultPrice: 8 },
+          { code: '3', nameAr: 'بن عروس', nameEn: 'Ben Arous', defaultPrice: 8 },
+          { code: '4', nameAr: 'منوبة', nameEn: 'Manouba', defaultPrice: 8 },
+          { code: '5', nameAr: 'نابل', nameEn: 'Nabeul', defaultPrice: 10 },
+          { code: '6', nameAr: 'زغوان', nameEn: 'Zaghouan', defaultPrice: 10 },
+          { code: '7', nameAr: 'بنزرت', nameEn: 'Bizerte', defaultPrice: 10 },
+          { code: '8', nameAr: 'باجة', nameEn: 'Béja', defaultPrice: 11 },
+          { code: '9', nameAr: 'جندوبة', nameEn: 'Jendouba', defaultPrice: 12 },
+          { code: '10', nameAr: 'الكاف', nameEn: 'Le Kef', defaultPrice: 12 },
+          { code: '11', nameAr: 'سليانة', nameEn: 'Siliana', defaultPrice: 11 },
+          { code: '12', nameAr: 'سوسة', nameEn: 'Sousse', defaultPrice: 10 },
+          { code: '13', nameAr: 'المنستير', nameEn: 'Monastir', defaultPrice: 10 },
+          { code: '14', nameAr: 'المهدية', nameEn: 'Mahdia', defaultPrice: 11 },
+          { code: '15', nameAr: 'صفاقس', nameEn: 'Sfax', defaultPrice: 11 },
+          { code: '16', nameAr: 'القيروان', nameEn: 'Kairouan', defaultPrice: 11 },
+          { code: '17', nameAr: 'القصرين', nameEn: 'Kasserine', defaultPrice: 13 },
+          { code: '18', nameAr: 'سيدي بوزيد', nameEn: 'Sidi Bouzid', defaultPrice: 12 },
+          { code: '19', nameAr: 'قابس', nameEn: 'Gabès', defaultPrice: 13 },
+          { code: '20', nameAr: 'مدنين', nameEn: 'Médenine', defaultPrice: 14 },
+          { code: '21', nameAr: 'تطاوين', nameEn: 'Tataouine', defaultPrice: 15 },
+          { code: '22', nameAr: 'قفصة', nameEn: 'Gafsa', defaultPrice: 13 },
+          { code: '23', nameAr: 'توزر', nameEn: 'Tozeur', defaultPrice: 14 },
+          { code: '24', nameAr: 'قبلي', nameEn: 'Kebili', defaultPrice: 14 },
+        ],
+      },
+    };
+
+    // 1. Find the Country in DB
     const country = await db.country.findUnique({
       where: { code: countryCode },
     });
 
     if (!country) {
-      // Fallback: Return static Algerian wilayas when DB country not found
-      const fallbackStates = ALGERIAN_WILAYAS_STATIC.map(w => ({
+      // Return static country & states fallback
+      const countryFallback = STATIC_COUNTRIES[countryCode] || STATIC_COUNTRIES.DZ;
+      const fallbackStates = countryFallback.states.map(w => ({
         id: w.code, code: w.code, nameAr: w.nameAr, nameEn: w.nameEn,
         defaultPrice: w.defaultPrice, price: w.defaultPrice, isCustomPrice: false, isHidden: false,
       }));
       return NextResponse.json({
         success: true,
-        country: { code: 'DZ', nameAr: 'الجزائر', nameEn: 'Algeria', currency: 'DZD', phonePrefix: '+213' },
+        country: countryFallback.country,
         shipping: { enabled: true, standardPrice: 500, expressPrice: 800, freeThreshold: 15000 },
         states: fallbackStates,
       });
@@ -185,6 +302,69 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error('[states GET]', error);
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
+  }
+}
+
+// POST /api/regions/states (Admin Only - Add or Update a State / Region globally)
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { code, nameAr, nameEn, defaultPrice, countryCode = 'DZ' } = body;
+
+    if (!code || !nameAr) {
+      return NextResponse.json({ success: false, error: 'code and nameAr are required' }, { status: 400 });
+    }
+
+    let country = await db.country.findUnique({
+      where: { code: countryCode }
+    });
+
+    if (!country) {
+      country = await db.country.create({
+        data: {
+          code: countryCode,
+          nameAr: countryCode === 'DZ' ? 'الجزائر' : countryCode,
+          nameEn: countryCode === 'DZ' ? 'Algeria' : countryCode,
+          currency: countryCode === 'DZ' ? 'DZD' : 'USD',
+          phonePrefix: countryCode === 'DZ' ? '+213' : '+1',
+          isActive: true
+        }
+      });
+    }
+
+    // Upsert state by countryId + code
+    const existing = await db.state.findFirst({
+      where: { code, countryId: country.id }
+    });
+
+    let state;
+    if (existing) {
+      state = await db.state.update({
+        where: { id: existing.id },
+        data: {
+          nameAr,
+          nameEn: nameEn || nameAr,
+          defaultPrice: defaultPrice !== undefined ? Number(defaultPrice) : 500,
+          isActive: true
+        }
+      });
+    } else {
+      state = await db.state.create({
+        data: {
+          code,
+          nameAr,
+          nameEn: nameEn || nameAr,
+          defaultPrice: defaultPrice !== undefined ? Number(defaultPrice) : 500,
+          isActive: true,
+          countryId: country.id
+        }
+      });
+    }
+
+    return NextResponse.json({ success: true, state });
+  } catch (error) {
+    console.error('[states POST]', error);
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }
 }
