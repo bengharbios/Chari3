@@ -144,14 +144,13 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Map states with custom prices
+    // Map states with custom prices and sort numerically by code (1 to 58)
     const statesWithPrices = states.map((state) => {
-      // If the store has a custom rate for this state.code, use it. Otherwise use the defaultPrice.
       const hasCustom = customRates[state.code] !== undefined;
       const price = hasCustom ? customRates[state.code] : state.defaultPrice;
       const isHidden = hiddenWilayas.includes(state.code);
       return {
-        id: state.code, // Keep "id" matching the old static schema (which uses string codes like '16', '1' etc.)
+        id: state.code,
         code: state.code,
         nameAr: state.nameAr,
         nameEn: state.nameEn,
@@ -160,6 +159,11 @@ export async function GET(req: NextRequest) {
         isCustomPrice: hasCustom,
         isHidden,
       };
+    }).sort((a, b) => {
+      const numA = parseInt(a.code, 10);
+      const numB = parseInt(b.code, 10);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return a.code.localeCompare(b.code);
     });
 
     return NextResponse.json({
