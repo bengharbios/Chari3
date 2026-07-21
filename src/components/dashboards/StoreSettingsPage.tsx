@@ -225,16 +225,20 @@ export default function StoreSettingsPage() {
   const [newStoreState, setNewStoreState] = useState({ nameAr: '', nameEn: '', defaultPrice: 400 });
   const [isAddingStoreState, setIsAddingStoreState] = useState(false);
 
-  const fetchSettingsCities = async (stateCode: string) => {
+  const fetchSettingsCities = async (stateCode: string, countryCode?: string) => {
     setIsLoadingSettingsCities(true);
     try {
-      const res = await fetch(`/api/regions/cities?stateCode=${stateCode}`);
+      const country = countryCode || generalSettings.country || 'DZ';
+      const res = await fetch(`/api/regions/cities?stateCode=${stateCode}&countryCode=${country}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.cities)) {
         setSettingsCities(data.cities);
+      } else {
+        setSettingsCities([]);
       }
     } catch (e) {
       console.error('Failed to load cities for settings', e);
+      setSettingsCities([]);
     } finally {
       setIsLoadingSettingsCities(false);
     }
@@ -242,9 +246,9 @@ export default function StoreSettingsPage() {
 
   useEffect(() => {
     if (selectedSettingsWilayaCode) {
-      fetchSettingsCities(selectedSettingsWilayaCode);
+      fetchSettingsCities(selectedSettingsWilayaCode, generalSettings.country);
     }
-  }, [selectedSettingsWilayaCode]);
+  }, [selectedSettingsWilayaCode, generalSettings.country]);
 
   const [statesList, setStatesList] = useState<any[]>(ALGERIAN_WILAYAS);
   const [storeCurrency, setStoreCurrency] = useState<string>('DZD');

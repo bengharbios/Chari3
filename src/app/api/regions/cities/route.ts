@@ -7,6 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   try {
     const stateCode = req.nextUrl.searchParams.get('stateCode');
+    const countryCode = req.nextUrl.searchParams.get('countryCode') || 'DZ';
     const storeId = req.nextUrl.searchParams.get('storeId');
     const sellerId = req.nextUrl.searchParams.get('sellerId');
     const includeInactive = req.nextUrl.searchParams.get('includeInactive') === 'true';
@@ -15,9 +16,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'stateCode parameter is required' }, { status: 400 });
     }
 
-    // 1. Find the State
+    // 1. Find the State scoped to countryCode
     const state = await db.state.findFirst({
-      where: { code: stateCode },
+      where: { 
+        code: stateCode,
+        country: { code: countryCode },
+      },
     });
 
     if (!state) {
