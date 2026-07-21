@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import TwoFactorSettings from '@/components/seller/settings/TwoFactorSettings';
 import DeviceManagement from '@/components/seller/settings/DeviceManagement';
+import { SearchableCountrySelect } from '@/components/ui/SearchableCountrySelect';
 
 function LockedSection({ title, description }: { title: string; description: string }) {
   return (
@@ -794,76 +795,19 @@ export default function StoreSettingsPage() {
                       </div>
                       <div className="space-y-2">
                         <Label className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-primary" />{t('الدولة', 'Country')}</Label>
-                        <Select 
-                          value={generalSettings.country} 
-                          onValueChange={(val) => {
-                            const countryDataMap: Record<string, { currency: string; timezone: string }> = {
-                              DZ: { currency: 'DZD', timezone: 'UTC+1' },
-                              SA: { currency: 'SAR', timezone: 'UTC+3' },
-                              AE: { currency: 'AED', timezone: 'UTC+4' },
-                              QA: { currency: 'QAR', timezone: 'UTC+3' },
-                              KW: { currency: 'KWD', timezone: 'UTC+3' },
-                              BH: { currency: 'BHD', timezone: 'UTC+3' },
-                              OM: { currency: 'OMR', timezone: 'UTC+4' },
-                              MA: { currency: 'MAD', timezone: 'UTC+1' },
-                              TN: { currency: 'TND', timezone: 'UTC+1' },
-                              EG: { currency: 'EGP', timezone: 'UTC+2' },
-                              LY: { currency: 'LYD', timezone: 'UTC+2' },
-                              JO: { currency: 'JOD', timezone: 'UTC+3' },
-                              IQ: { currency: 'IQD', timezone: 'UTC+3' },
-                              SD: { currency: 'SDG', timezone: 'UTC+2' },
-                              MR: { currency: 'MRU', timezone: 'UTC+0' },
-                              YE: { currency: 'YER', timezone: 'UTC+3' },
-                              PS: { currency: 'ILS', timezone: 'UTC+2' },
-                              LB: { currency: 'LBP', timezone: 'UTC+2' },
-                              SY: { currency: 'SYP', timezone: 'UTC+3' },
-                              TR: { currency: 'TRY', timezone: 'UTC+3' },
-                              US: { currency: 'USD', timezone: 'UTC-5' },
-                              GB: { currency: 'GBP', timezone: 'UTC+0' },
-                              DE: { currency: 'EUR', timezone: 'UTC+1' },
-                              FR: { currency: 'EUR', timezone: 'UTC+1' },
-                              CA: { currency: 'CAD', timezone: 'UTC-5' },
-                              SN: { currency: 'XOF', timezone: 'UTC+0' },
-                              NG: { currency: 'NGN', timezone: 'UTC+1' },
-                            };
-                            const info = countryDataMap[val] || { currency: 'USD', timezone: 'UTC+0' };
-                            setGeneralSettings({ ...generalSettings, country: val, currency: info.currency, timezone: info.timezone });
-                            setStoreCurrency(info.currency);
+                        <SearchableCountrySelect
+                          value={generalSettings.country}
+                          isAr={isAr}
+                          onChange={(c) => {
+                            setGeneralSettings({
+                              ...generalSettings,
+                              country: c.code,
+                              currency: c.currency,
+                              timezone: c.timezone,
+                            });
+                            setStoreCurrency(c.currency);
                           }}
-                        >
-                          <SelectTrigger className="bg-muted/30 border-white/10 rounded-xl w-full">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="max-h-[300px]">
-                            <SelectItem value="DZ">{t('🇩🇿 الجزائر', '🇩🇿 Algeria')}</SelectItem>
-                            <SelectItem value="SA">{t('🇸🇦 السعودية', '🇸🇦 Saudi Arabia')}</SelectItem>
-                            <SelectItem value="AE">{t('🇦🇪 الإمارات', '🇦🇪 UAE')}</SelectItem>
-                            <SelectItem value="QA">{t('🇶🇦 قطر', '🇶🇦 Qatar')}</SelectItem>
-                            <SelectItem value="KW">{t('🇰🇼 الكويت', '🇰🇼 Kuwait')}</SelectItem>
-                            <SelectItem value="BH">{t('🇧🇭 البحرين', '🇧🇭 Bahrain')}</SelectItem>
-                            <SelectItem value="OM">{t('🇴🇲 عُمان', '🇴🇲 Oman')}</SelectItem>
-                            <SelectItem value="MA">{t('🇲🇦 المغرب', '🇲🇦 Morocco')}</SelectItem>
-                            <SelectItem value="TN">{t('🇹🇳 تونس', '🇹🇳 Tunisia')}</SelectItem>
-                            <SelectItem value="EG">{t('🇪🇬 مصر', '🇪🇬 Egypt')}</SelectItem>
-                            <SelectItem value="LY">{t('🇱🇾 ليبيا', '🇱🇾 Libya')}</SelectItem>
-                            <SelectItem value="JO">{t('🇯🇴 الأردن', '🇯🇴 Jordan')}</SelectItem>
-                            <SelectItem value="IQ">{t('🇮🇶 العراق', '🇮🇶 Iraq')}</SelectItem>
-                            <SelectItem value="SD">{t('🇸🇩 السودان', '🇸🇩 Sudan')}</SelectItem>
-                            <SelectItem value="MR">{t('🇲🇷 موريتانيا', '🇲🇷 Mauritania')}</SelectItem>
-                            <SelectItem value="YE">{t('🇾🇪 اليمن', '🇾🇪 Yemen')}</SelectItem>
-                            <SelectItem value="PS">{t('🇵🇸 فلسطين', '🇵🇸 Palestine')}</SelectItem>
-                            <SelectItem value="LB">{t('🇱🇧 لبنان', '🇱🇧 Lebanon')}</SelectItem>
-                            <SelectItem value="SY">{t('🇸🇾 سوريا', '🇸🇾 Syria')}</SelectItem>
-                            <SelectItem value="TR">{t('🇹🇷 تركيا', '🇹🇷 Turkey')}</SelectItem>
-                            <SelectItem value="US">{t('🇺🇸 الولايات المتحدة', '🇺🇸 United States')}</SelectItem>
-                            <SelectItem value="GB">{t('🇬🇧 المملكة المتحدة', '🇬🇧 United Kingdom')}</SelectItem>
-                            <SelectItem value="DE">{t('🇩🇪 ألمانيا', '🇩🇪 Germany')}</SelectItem>
-                            <SelectItem value="FR">{t('🇫🇷 فرنسا', '🇫🇷 France')}</SelectItem>
-                            <SelectItem value="CA">{t('🇨🇦 كندا', '🇨🇦 Canada')}</SelectItem>
-                            <SelectItem value="SN">{t('🇸🇳 السنغال', '🇸🇳 Senegal')}</SelectItem>
-                            <SelectItem value="NG">{t('🇳🇬 نيجيريا', '🇳🇬 Nigeria')}</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-primary" />{t('المنطقة الزمنية', 'Timezone')}</Label>
