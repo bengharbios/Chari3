@@ -768,14 +768,27 @@ export default function StoreSettingsPage() {
                           <SelectTrigger className="bg-muted/30 border-white/10 rounded-xl w-full">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="max-h-[300px]">
                             <SelectItem value="DZD">DZD - {t('دينار جزائري', 'Algerian Dinar')}</SelectItem>
                             <SelectItem value="SAR">SAR - {t('ريال سعودي', 'Saudi Riyal')}</SelectItem>
-                            <SelectItem value="USD">USD - {t('دولار أمريكي', 'US Dollar')}</SelectItem>
-                            <SelectItem value="EUR">EUR - {t('يورو', 'Euro')}</SelectItem>
+                            <SelectItem value="AED">AED - {t('درهم إماراتي', 'UAE Dirham')}</SelectItem>
+                            <SelectItem value="QAR">QAR - {t('ريال قطري', 'Qatari Riyal')}</SelectItem>
+                            <SelectItem value="KWD">KWD - {t('دينار كويتي', 'Kuwaiti Dinar')}</SelectItem>
+                            <SelectItem value="BHD">BHD - {t('دينار بحريني', 'Bahraini Dinar')}</SelectItem>
+                            <SelectItem value="OMR">OMR - {t('ريال عماني', 'Omani Rial')}</SelectItem>
                             <SelectItem value="MAD">MAD - {t('درهم مغربي', 'Moroccan Dirham')}</SelectItem>
                             <SelectItem value="TND">TND - {t('دينار تونسي', 'Tunisian Dinar')}</SelectItem>
                             <SelectItem value="EGP">EGP - {t('جنيه مصري', 'Egyptian Pound')}</SelectItem>
+                            <SelectItem value="JOD">JOD - {t('دينار أردني', 'Jordanian Dinar')}</SelectItem>
+                            <SelectItem value="IQD">IQD - {t('دينار عراقي', 'Iraqi Dinar')}</SelectItem>
+                            <SelectItem value="LYD">LYD - {t('دينار ليبي', 'Libyan Dinar')}</SelectItem>
+                            <SelectItem value="SDG">SDG - {t('جنيه سوداني', 'Sudanese Pound')}</SelectItem>
+                            <SelectItem value="MRU">MRU - {t('أوقية موريتانية', 'Mauritanian Ouguiya')}</SelectItem>
+                            <SelectItem value="TRY">TRY - {t('ليرة تركية', 'Turkish Lira')}</SelectItem>
+                            <SelectItem value="USD">USD - {t('دولار أمريكي', 'US Dollar')}</SelectItem>
+                            <SelectItem value="EUR">EUR - {t('يورو', 'Euro')}</SelectItem>
+                            <SelectItem value="GBP">GBP - {t('جنيه استرليني', 'British Pound')}</SelectItem>
+                            <SelectItem value="CAD">CAD - {t('دولار كندي', 'Canadian Dollar')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -784,32 +797,71 @@ export default function StoreSettingsPage() {
                         <Select 
                           value={generalSettings.country} 
                           onValueChange={(val) => {
-                            const currencyMap: Record<string, string> = {
-                              DZ: 'DZD', SA: 'SAR', MA: 'MAD', TN: 'TND', EG: 'EGP', AE: 'AED', LY: 'LYD', JO: 'JOD', IQ: 'IQD', SD: 'SDG', MR: 'MRU', NG: 'NGN', SN: 'XOF', TR: 'TRY'
+                            const countryDataMap: Record<string, { currency: string; timezone: string }> = {
+                              DZ: { currency: 'DZD', timezone: 'UTC+1' },
+                              SA: { currency: 'SAR', timezone: 'UTC+3' },
+                              AE: { currency: 'AED', timezone: 'UTC+4' },
+                              QA: { currency: 'QAR', timezone: 'UTC+3' },
+                              KW: { currency: 'KWD', timezone: 'UTC+3' },
+                              BH: { currency: 'BHD', timezone: 'UTC+3' },
+                              OM: { currency: 'OMR', timezone: 'UTC+4' },
+                              MA: { currency: 'MAD', timezone: 'UTC+1' },
+                              TN: { currency: 'TND', timezone: 'UTC+1' },
+                              EG: { currency: 'EGP', timezone: 'UTC+2' },
+                              LY: { currency: 'LYD', timezone: 'UTC+2' },
+                              JO: { currency: 'JOD', timezone: 'UTC+3' },
+                              IQ: { currency: 'IQD', timezone: 'UTC+3' },
+                              SD: { currency: 'SDG', timezone: 'UTC+2' },
+                              MR: { currency: 'MRU', timezone: 'UTC+0' },
+                              YE: { currency: 'YER', timezone: 'UTC+3' },
+                              PS: { currency: 'ILS', timezone: 'UTC+2' },
+                              LB: { currency: 'LBP', timezone: 'UTC+2' },
+                              SY: { currency: 'SYP', timezone: 'UTC+3' },
+                              TR: { currency: 'TRY', timezone: 'UTC+3' },
+                              US: { currency: 'USD', timezone: 'UTC-5' },
+                              GB: { currency: 'GBP', timezone: 'UTC+0' },
+                              DE: { currency: 'EUR', timezone: 'UTC+1' },
+                              FR: { currency: 'EUR', timezone: 'UTC+1' },
+                              CA: { currency: 'CAD', timezone: 'UTC-5' },
+                              SN: { currency: 'XOF', timezone: 'UTC+0' },
+                              NG: { currency: 'NGN', timezone: 'UTC+1' },
                             };
-                            const newCurrency = currencyMap[val] || 'USD';
-                            setGeneralSettings({ ...generalSettings, country: val, currency: newCurrency });
-                            setStoreCurrency(newCurrency);
+                            const info = countryDataMap[val] || { currency: 'USD', timezone: 'UTC+0' };
+                            setGeneralSettings({ ...generalSettings, country: val, currency: info.currency, timezone: info.timezone });
+                            setStoreCurrency(info.currency);
                           }}
                         >
                           <SelectTrigger className="bg-muted/30 border-white/10 rounded-xl w-full">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="max-h-[300px]">
                             <SelectItem value="DZ">{t('🇩🇿 الجزائر', '🇩🇿 Algeria')}</SelectItem>
                             <SelectItem value="SA">{t('🇸🇦 السعودية', '🇸🇦 Saudi Arabia')}</SelectItem>
+                            <SelectItem value="AE">{t('🇦🇪 الإمارات', '🇦🇪 UAE')}</SelectItem>
+                            <SelectItem value="QA">{t('🇶🇦 قطر', '🇶🇦 Qatar')}</SelectItem>
+                            <SelectItem value="KW">{t('🇰🇼 الكويت', '🇰🇼 Kuwait')}</SelectItem>
+                            <SelectItem value="BH">{t('🇧🇭 البحرين', '🇧🇭 Bahrain')}</SelectItem>
+                            <SelectItem value="OM">{t('🇴🇲 عُمان', '🇴🇲 Oman')}</SelectItem>
                             <SelectItem value="MA">{t('🇲🇦 المغرب', '🇲🇦 Morocco')}</SelectItem>
                             <SelectItem value="TN">{t('🇹🇳 تونس', '🇹🇳 Tunisia')}</SelectItem>
                             <SelectItem value="EG">{t('🇪🇬 مصر', '🇪🇬 Egypt')}</SelectItem>
                             <SelectItem value="LY">{t('🇱🇾 ليبيا', '🇱🇾 Libya')}</SelectItem>
-                            <SelectItem value="AE">{t('🇦🇪 الإمارات', '🇦🇪 UAE')}</SelectItem>
                             <SelectItem value="JO">{t('🇯🇴 الأردن', '🇯🇴 Jordan')}</SelectItem>
                             <SelectItem value="IQ">{t('🇮🇶 العراق', '🇮🇶 Iraq')}</SelectItem>
                             <SelectItem value="SD">{t('🇸🇩 السودان', '🇸🇩 Sudan')}</SelectItem>
                             <SelectItem value="MR">{t('🇲🇷 موريتانيا', '🇲🇷 Mauritania')}</SelectItem>
-                            <SelectItem value="NG">{t('🇳🇬 نيجيريا', '🇳🇬 Nigeria')}</SelectItem>
-                            <SelectItem value="SN">{t('🇸🇳 السنغال', '🇸🇳 Senegal')}</SelectItem>
+                            <SelectItem value="YE">{t('🇾🇪 اليمن', '🇾🇪 Yemen')}</SelectItem>
+                            <SelectItem value="PS">{t('🇵🇸 فلسطين', '🇵🇸 Palestine')}</SelectItem>
+                            <SelectItem value="LB">{t('🇱🇧 لبنان', '🇱🇧 Lebanon')}</SelectItem>
+                            <SelectItem value="SY">{t('🇸🇾 سوريا', '🇸🇾 Syria')}</SelectItem>
                             <SelectItem value="TR">{t('🇹🇷 تركيا', '🇹🇷 Turkey')}</SelectItem>
+                            <SelectItem value="US">{t('🇺🇸 الولايات المتحدة', '🇺🇸 United States')}</SelectItem>
+                            <SelectItem value="GB">{t('🇬🇧 المملكة المتحدة', '🇬🇧 United Kingdom')}</SelectItem>
+                            <SelectItem value="DE">{t('🇩🇪 ألمانيا', '🇩🇪 Germany')}</SelectItem>
+                            <SelectItem value="FR">{t('🇫🇷 فرنسا', '🇫🇷 France')}</SelectItem>
+                            <SelectItem value="CA">{t('🇨🇦 كندا', '🇨🇦 Canada')}</SelectItem>
+                            <SelectItem value="SN">{t('🇸🇳 السنغال', '🇸🇳 Senegal')}</SelectItem>
+                            <SelectItem value="NG">{t('🇳🇬 نيجيريا', '🇳🇬 Nigeria')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -819,12 +871,15 @@ export default function StoreSettingsPage() {
                           <SelectTrigger className="bg-muted/30 border-white/10 rounded-xl w-full">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="UTC+0">UTC+0 (GMT)</SelectItem>
-                            <SelectItem value="UTC+1">UTC+1 ({t('الجزائر، تونس', 'Algeria, Tunisia')})</SelectItem>
-                            <SelectItem value="UTC+2">UTC+2 ({t('مصر، ليبيا', 'Egypt, Libya')})</SelectItem>
-                            <SelectItem value="UTC+3">UTC+3 ({t('السعودية، العراق', 'Saudi Arabia, Iraq')})</SelectItem>
-                            <SelectItem value="UTC+4">UTC+4 ({t('الإمارات، عُمان', 'UAE, Oman')})</SelectItem>
+                          <SelectContent className="max-h-[300px]">
+                            <SelectItem value="UTC-5">UTC-5 ({t('شرق أمريكا، كندا', 'US East, Canada')})</SelectItem>
+                            <SelectItem value="UTC-4">UTC-4 ({t('الأطلسي، كندا', 'Atlantic, Canada')})</SelectItem>
+                            <SelectItem value="UTC+0">UTC+0 ({t('لندن، المغرب، موريتانيا - GMT', 'London, Morocco, Mauritania')})</SelectItem>
+                            <SelectItem value="UTC+1">UTC+1 ({t('الجزائر، تونس، باريس، برلين - CET', 'Algeria, Tunisia, Paris, Berlin')})</SelectItem>
+                            <SelectItem value="UTC+2">UTC+2 ({t('مصر، ليبيا، السودان، القدس، طرابلس - EET', 'Egypt, Libya, Sudan, Jerusalem')})</SelectItem>
+                            <SelectItem value="UTC+3">UTC+3 ({t('السعودية، قطر، الكويت، العراق، اليمن - AST', 'Saudi Arabia, Qatar, Kuwait, Iraq, Yemen')})</SelectItem>
+                            <SelectItem value="UTC+4">UTC+4 ({t('الإمارات، عُمان - GST', 'UAE, Oman')})</SelectItem>
+                            <SelectItem value="UTC+5">UTC+5 ({t('باكستان، كراتشي', 'Pakistan, Karachi')})</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
