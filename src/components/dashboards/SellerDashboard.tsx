@@ -7,7 +7,7 @@ import {
   TrendingUp, Package, Star, ShieldCheck, ArrowLeft, ArrowRight,
   Wallet, AlertTriangle, ChevronUp, BarChart3, Clock, CheckCircle,
   XCircle, Eye, Plus, Edit, Trash2, Trophy, Target, Zap, Wrench, Loader2, Upload, X, Layers,
-  LayoutGrid, List, ClipboardCheck, Truck, CheckSquare, Check,
+  LayoutGrid, List, ClipboardCheck, Truck, CheckSquare, Check, Image as ImageIcon, ChevronLeft, ChevronRight,
   ShieldAlert, Ban, Lock, Info, Activity, Store as StoreIcon
 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
@@ -1857,6 +1857,9 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
   const [specDefs, setSpecDefs] = useState<any[]>([]); // dynamic spec definitions from admin
   const [dynamicSpecValues, setDynamicSpecValues] = useState<Record<string, string>>({}); // values filled by seller
   const [maxBullets, setMaxBullets] = useState(10); // admin-controlled bullet limit
+  const [maxImages, setMaxImages] = useState(8); // admin-controlled max product images limit
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [showSuggestModal, setShowSuggestModal] = useState(false);
   const [suggestNameAr, setSuggestNameAr] = useState('');
   const [suggestNameEn, setSuggestNameEn] = useState('');
@@ -1989,6 +1992,9 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
           if (p.specifications) {
             try {
               const specs = typeof p.specifications === 'string' ? JSON.parse(p.specifications) : p.specifications;
+              if (specs.nameFr) setNameFr(specs.nameFr);
+              else if ((p as any).nameFr) setNameFr((p as any).nameFr);
+              
               if (specs.bullets && Array.isArray(specs.bullets) && specs.bullets.filter(Boolean).length > 0) {
                 setBullets(specs.bullets.filter(Boolean));
               }
@@ -2000,6 +2006,8 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
               }
               if (specs.descriptionFr) {
                 setDescriptionFr(specs.descriptionFr);
+              } else if ((p as any).descriptionFr) {
+                setDescriptionFr((p as any).descriptionFr);
               }
               if (specs.dynamicSpecs && typeof specs.dynamicSpecs === 'object') {
                 setDynamicSpecValues(specs.dynamicSpecs);
@@ -2112,6 +2120,10 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
           if (data.settings.max_bullet_points) {
             const limit = parseInt(data.settings.max_bullet_points, 10);
             if (!isNaN(limit) && limit > 0) setMaxBullets(limit);
+          }
+          if (data.settings.max_product_images) {
+            const imgLimit = parseInt(data.settings.max_product_images, 10);
+            if (!isNaN(imgLimit) && imgLimit > 0) setMaxImages(imgLimit);
           }
         }
       })
@@ -2414,6 +2426,164 @@ export function ProductFormTab({ product, onClose, onSave, storeId, sellerId, t,
           {/* TAB CONTENT: Core Info */}
           {activeTab === 'core' && (
             <div className="space-y-4">
+              {/* ── SECTION 0: PRODUCT MEDIA GALLERY (IMAGE UPLOADER) ── */}
+              <div className="space-y-3 p-4 bg-muted/20 border border-border rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                      <ImageIcon className="size-4 text-amber-500" />
+                      {isAr ? `معرض صور المنتج (الحد الأقصى ${maxImages} صور)` : `Product Media Gallery (Max ${maxImages} images)`}
+                    </label>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {isAr ? 'الصورة الأولى تعتبر غلاف المنتج الرئيسي الذي يظهر في نتائج البحث والصفحة الرئيسية.' : 'The first image will be used as the main product cover.'}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] font-bold">
+                    {uploadedImages.length} / {maxImages}
+                  </Badge>
+                </div>
+
+                {/* Hidden File Input */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  multiple
+                  accept="image/*"
+                  className="hidden"
+                />
+
+                {/* Upload Button Dropzone & Direct URL Input */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (uploadedImages.length >= maxImages) {
+                        toast.error(isAr ? `وصلت للحد الأقصى لعدد الصور (${maxImages})` : `Max images limit reached (${maxImages})`);
+                        return;
+                      }
+                      fileInputRef.current?.click();
+                    }}
+                    disabled={isUploading}
+                    className="flex-1 border-2 border-dashed border-primary/30 hover:border-primary/60 bg-background hover:bg-muted/30 p-4 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all text-center group cursor-pointer"
+                  >
+                    <Upload className="size-5 text-amber-500 group-hover:scale-110 transition-transform" />
+                    <span className="text-xs font-bold text-foreground">
+                      {isUploading
+                        ? (isAr ? 'جاري رفع الصور...' : 'Uploading...')
+                        : (isAr ? 'انقر لرفع صور المنتج من جهازك' : 'Click to upload product images')}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">PNG, JPG, WEBP (إمكانية تحديد عدة صور معا)</span>
+                  </button>
+
+                  {/* Add Image via Direct URL */}
+                  <div className="sm:w-64 space-y-1.5 flex flex-col justify-between p-3 bg-background border border-border rounded-xl">
+                    <label className="text-[11px] font-bold text-foreground">{isAr ? 'إضافة رابط صورة مباشر' : 'Add Image URL'}</label>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="url"
+                        value={newImageUrl}
+                        onChange={(e) => setNewImageUrl(e.target.value)}
+                        placeholder="https://..."
+                        className="w-full bg-muted/40 border border-border text-foreground px-2.5 py-1 rounded-lg text-xs"
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => {
+                          if (!newImageUrl.trim()) return;
+                          if (uploadedImages.length >= maxImages) {
+                            toast.error(isAr ? `وصلت للحد الأقصى لعدد الصور (${maxImages})` : `Max images limit reached (${maxImages})`);
+                            return;
+                          }
+                          setUploadedImages([...uploadedImages, newImageUrl.trim()]);
+                          setNewImageUrl('');
+                          toast.success(isAr ? 'تمت إضافة الصورة' : 'Image added');
+                        }}
+                        className="h-8 text-xs bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold shrink-0 px-2.5"
+                      >
+                        {isAr ? 'إضافة' : 'Add'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Thumbnails Grid with Reordering & Main Cover Badge */}
+                {uploadedImages.length > 0 && (
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5 pt-2">
+                    {uploadedImages.map((img, idx) => (
+                      <div
+                        key={idx}
+                        className={`relative group aspect-square rounded-xl border-2 overflow-hidden bg-background ${
+                          idx === 0 ? 'border-amber-500 shadow-md ring-2 ring-amber-500/20' : 'border-border'
+                        }`}
+                      >
+                        <img src={img} alt="" className="w-full h-full object-cover" />
+                        
+                        {idx === 0 && (
+                          <span className="absolute top-1 start-1 bg-amber-500 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow">
+                            {isAr ? 'الغلاف' : 'Cover'}
+                          </span>
+                        )}
+
+                        {/* Controls Overlay */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 p-1">
+                          <div className="flex gap-1">
+                            {idx > 0 && (
+                              <button
+                                type="button"
+                                title={isAr ? 'تحريك يساراً' : 'Move left'}
+                                onClick={() => {
+                                  const next = [...uploadedImages];
+                                  const tmp = next[idx - 1];
+                                  next[idx - 1] = next[idx];
+                                  next[idx] = tmp;
+                                  setUploadedImages(next);
+                                }}
+                                className="bg-white/20 hover:bg-white/40 text-white p-1 rounded"
+                              >
+                                <ChevronRight className="size-3 rtl:rotate-180" />
+                              </button>
+                            )}
+                            {idx < uploadedImages.length - 1 && (
+                              <button
+                                type="button"
+                                title={isAr ? 'تحريك يميناً' : 'Move right'}
+                                onClick={() => {
+                                  const next = [...uploadedImages];
+                                  const tmp = next[idx + 1];
+                                  next[idx + 1] = next[idx];
+                                  next[idx] = tmp;
+                                  setUploadedImages(next);
+                                }}
+                                className="bg-white/20 hover:bg-white/40 text-white p-1 rounded"
+                              >
+                                <ChevronLeft className="size-3 rtl:rotate-180" />
+                              </button>
+                            )}
+                          </div>
+                          
+                          <button
+                            type="button"
+                            title={isAr ? 'حذف الصورة' : 'Delete image'}
+                            onClick={() => {
+                              if (uploadedImages.length <= 1) {
+                                toast.error(isAr ? 'يجب الإبقاء على صورة واحدة على الأقل للمنتج' : 'Must keep at least 1 image');
+                                return;
+                              }
+                              setUploadedImages(uploadedImages.filter((_, i) => i !== idx));
+                            }}
+                            className="bg-red-500/80 hover:bg-red-600 text-white p-1 rounded text-[10px] font-bold flex items-center gap-0.5"
+                          >
+                            <Trash2 className="size-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* ── SECTION 1: PRODUCT TITLES ── */}
               <div className="space-y-3 p-3 bg-muted/20 border border-border rounded-xl">
                 <div className="space-y-1.5">
