@@ -114,7 +114,18 @@ const ALGERIAN_WILAYAS = [
   { id: '55', nameAr: 'تقرت', nameEn: 'Touggourt', defaultPrice: 900 },
   { id: '56', nameAr: 'جانت', nameEn: 'Djanet', defaultPrice: 1500 },
   { id: '57', nameAr: 'المغير', nameEn: 'El M\'Ghair', defaultPrice: 800 },
-  { id: '58', nameAr: 'المنيعة', nameEn: 'El Meniaa', defaultPrice: 900 }
+  { id: '58', nameAr: 'المنيعة', nameEn: 'El Meniaa', defaultPrice: 900 },
+  { id: '59', nameAr: 'أفلو', nameEn: 'Aflou', defaultPrice: 800 },
+  { id: '60', nameAr: 'الأبيض سيدي الشيخ', nameEn: 'El Abiodh Sidi Cheikh', defaultPrice: 800 },
+  { id: '61', nameAr: 'العريشة', nameEn: 'El Aricha', defaultPrice: 800 },
+  { id: '62', nameAr: 'القنطرة', nameEn: 'El Kantara', defaultPrice: 800 },
+  { id: '63', nameAr: 'بريكة', nameEn: 'Barika', defaultPrice: 800 },
+  { id: '64', nameAr: 'بوسعادة', nameEn: 'Bou Saada', defaultPrice: 800 },
+  { id: '65', nameAr: 'بير العاتر', nameEn: 'Bir El Ater', defaultPrice: 800 },
+  { id: '66', nameAr: 'قصر البخاري', nameEn: 'Ksar El Boukhari', defaultPrice: 800 },
+  { id: '67', nameAr: 'قصر الشلالة', nameEn: 'Ksar Chellala', defaultPrice: 800 },
+  { id: '68', nameAr: 'عين وسارة', nameEn: 'Ain Oussera', defaultPrice: 800 },
+  { id: '69', nameAr: 'مسعد', nameEn: 'Messaad', defaultPrice: 800 }
 ];
 
 export default function StoreSettingsPage() {

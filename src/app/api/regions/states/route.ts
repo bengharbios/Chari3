@@ -69,6 +69,17 @@ export async function GET(req: NextRequest) {
       { code: '56', nameAr: 'جانت', nameEn: 'Djanet', defaultPrice: 1500 },
       { code: '57', nameAr: 'المغير', nameEn: "El M'Ghair", defaultPrice: 800 },
       { code: '58', nameAr: 'المنيعة', nameEn: 'El Meniaa', defaultPrice: 900 },
+      { code: '59', nameAr: 'أفلو', nameEn: 'Aflou', defaultPrice: 800 },
+      { code: '60', nameAr: 'الأبيض سيدي الشيخ', nameEn: 'El Abiodh Sidi Cheikh', defaultPrice: 800 },
+      { code: '61', nameAr: 'العريشة', nameEn: 'El Aricha', defaultPrice: 800 },
+      { code: '62', nameAr: 'القنطرة', nameEn: 'El Kantara', defaultPrice: 800 },
+      { code: '63', nameAr: 'بريكة', nameEn: 'Barika', defaultPrice: 800 },
+      { code: '64', nameAr: 'بوسعادة', nameEn: 'Bou Saada', defaultPrice: 800 },
+      { code: '65', nameAr: 'بير العاتر', nameEn: 'Bir El Ater', defaultPrice: 800 },
+      { code: '66', nameAr: 'قصر البخاري', nameEn: 'Ksar El Boukhari', defaultPrice: 800 },
+      { code: '67', nameAr: 'قصر الشلالة', nameEn: 'Ksar Chellala', defaultPrice: 800 },
+      { code: '68', nameAr: 'عين وسارة', nameEn: 'Ain Oussera', defaultPrice: 800 },
+      { code: '69', nameAr: 'مسعد', nameEn: 'Messaad', defaultPrice: 800 },
     ];
 
     // Static fallbacks for multiple countries when DB is not seeded
