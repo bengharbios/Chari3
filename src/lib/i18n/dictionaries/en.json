@@ -906,7 +906,19 @@
     "productApprovalsTitle": "Product Approvals Queue",
     "pendingApproval": "Pending Admin Approval",
     "approvedAndPublished": "Approved & Live",
-    "rejectionReasonNotice": "Admin Feedback (Action Required)",
-    "productSettingsTitle": "Global Product Settings & Rules"
+    "rejectionReasonNotice": "Platform Admin Notice (Modification Requested)",
+    "productSettingsTitle": "General Product Settings & Properties"
+  },
+  "tafqeet": {
+    "title": "Arabic Currency Verbalization (Tafqeet)",
+    "description": "Verbalize amounts into official Arabic words for invoices and receipts",
+    "amountInWords": "Amount in words"
+  },
+  "regions": {
+    "country": "Country",
+    "currency": "Currency",
+    "timezone": "Timezone",
+    "wilayasAndStates": "Wilayas and Geographical Regions",
+    "autoDetected": "Auto-configured dynamically"
   }
 }

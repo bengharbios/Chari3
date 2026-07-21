@@ -908,5 +908,17 @@
     "approvedAndPublished": "مقبول ونشط",
     "rejectionReasonNotice": "ملاحظة من إدارة المنصة (طلب تعديل)",
     "productSettingsTitle": "إعدادات وخصائص المنتجات العامة"
+  },
+  "tafqeet": {
+    "title": "تفقيط المبالغ بالألفاظ العربية",
+    "description": "صياغة المبالغ والعملات بالنص العربي الفصيح لمنع اللبس في الفواتير والإيصالات",
+    "amountInWords": "المبلغ كتابة بالكلمات"
+  },
+  "regions": {
+    "country": "الدولة",
+    "currency": "العملة",
+    "timezone": "المنطقة الزمنية",
+    "wilayasAndStates": "الولايات والمناطق الجغرافية",
+    "autoDetected": "تم الضبط والتحديث الآلي"
   }
 }

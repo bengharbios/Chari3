@@ -850,5 +850,17 @@
     "approvedAndPublished": "Approuvé et en ligne",
     "rejectionReasonNotice": "Remarques de l'administration (Action requise)",
     "productSettingsTitle": "Paramètres et règles des produits"
+  },
+  "tafqeet": {
+    "title": "Verbalisation des montants en arabe (Tafqeet)",
+    "description": "Exprimer les montants en toutes lettres pour factures et reçus",
+    "amountInWords": "Montant en toutes lettres"
+  },
+  "regions": {
+    "country": "Pays",
+    "currency": "Devise",
+    "timezone": "Fuseau horaire",
+    "wilayasAndStates": "Wilayas et Régions Géographiques",
+    "autoDetected": "Configuration automatique"
   }
 }
