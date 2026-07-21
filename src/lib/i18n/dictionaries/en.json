@@ -920,5 +920,15 @@
     "timezone": "Timezone",
     "wilayasAndStates": "Wilayas and Geographical Regions",
     "autoDetected": "Auto-configured dynamically"
+  },
+  "logistics": {
+    "title": "Logistics Hub & Unified Carrier Engine",
+    "description": "Manage shipping governance modes, thermal waybill labels, and live tracking",
+    "modes": {
+      "hybrid": "Hybrid Flex Mode",
+      "direct_keys_only": "Direct Keys Only",
+      "platform_account_only": "Platform Account Only",
+      "private_fleet_only": "ChariDay Express Private Fleet"
+    }
   }
 }

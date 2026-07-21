@@ -6,7 +6,7 @@ import { useAppStore } from '@/lib/store';
 import { 
   ShieldAlert, LayoutDashboard, Settings, Sliders, ToggleRight, ChevronRight, ChevronLeft,
   FolderTree, Tag, TrendingUp, ShoppingCart, Users, Store as StoreIcon, Wallet,
-  Boxes, Banknote, Palette, ChevronDown, Monitor, KeyRound, LogOut, Globe, Plug
+  Boxes, Banknote, Palette, ChevronDown, Monitor, KeyRound, LogOut, Globe, Plug, Truck
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
@@ -103,6 +103,15 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { label: t('admin.payoutRequests'), path: 'billing/withdrawals' },
         { label: t('admin.reviewReceipts'), path: 'billing/receipts' },
         { label: t('admin.revenueReports'), path: 'billing/revenue' },
+      ]
+    },
+    {
+      id: 'logistics',
+      title: locale === 'ar' ? 'اللوجستيات والشحن' : 'Logistics & Shipping',
+      icon: Truck,
+      items: [
+        { label: locale === 'ar' ? 'مركز اللوجستيات والمناطق' : 'Logistics Hub', path: 'logistics' },
+        { label: locale === 'ar' ? 'إدارة المناطق والولايات' : 'States & Regions', path: 'shipping' },
       ]
     },
     {

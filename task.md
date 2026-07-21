@@ -20,6 +20,9 @@
 - `[x]` **6. Add i18n Translation Keys**
   - `[x]` Add compliance terminology keys in `ar.json`, `en.json`, `fr.json`
 
+- `[x]` Run build to verify no compilation/Type safety errors
+- `[/]` Verify local authentication flows
+
 - `[x]` **7. Separate Independent Merchant vs Business Store Onboarding**
   - `[x]` Modify `OnboardingWizard.tsx` to conditionalize step lists
   - `[x]` Adapt steps to use the localized keys from i18n

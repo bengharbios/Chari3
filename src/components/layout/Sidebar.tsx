@@ -43,6 +43,7 @@ const STORE_NAV_GROUPS: NavGroup[] = [
       { id: 'store', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard', path: '/seller/dashboard' },
       { id: 'store-products', labelAr: 'المنتجات', labelEn: 'Products', icon: 'Boxes', badge: 5, path: '/seller/products' },
       { id: 'store-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 12, path: '/seller/orders' },
+      { id: 'store-shipping', labelAr: 'الشحن واللوجستيات', labelEn: 'Logistics', icon: 'Truck', path: '/seller/shipping' },
       { id: 'store-coupons', labelAr: 'الكوبونات والخصومات', labelEn: 'Coupons', icon: 'CreditCard', path: '/seller/coupons' },
       { id: 'store-staff', labelAr: 'الفريق', labelEn: 'Team', icon: 'Users', path: '/seller/staff' },
       { id: 'store-analytics', labelAr: 'التحليلات', labelEn: 'Analytics', icon: 'BarChart3', path: '/seller/analytics' },

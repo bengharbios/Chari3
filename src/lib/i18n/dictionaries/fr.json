@@ -862,5 +862,15 @@
     "timezone": "Fuseau horaire",
     "wilayasAndStates": "Wilayas et Régions Géographiques",
     "autoDetected": "Configuration automatique"
+  },
+  "logistics": {
+    "title": "Hub logistique et moteur de transporteur unifié",
+    "description": "Gérer les modes de transport, imprimer les étiquettes thermiques et suivre en direct",
+    "modes": {
+      "hybrid": "Mode hybride flexible",
+      "direct_keys_only": "Clés directes uniquement",
+      "platform_account_only": "Compte plateforme uniquement",
+      "private_fleet_only": "Flotte privée ChariDay Express"
+    }
   }
 }

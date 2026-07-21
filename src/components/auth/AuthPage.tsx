@@ -148,12 +148,52 @@ function SuccessStep() {
 export default function AuthPage() {
   const locale = useAppStore((s) => s.locale);
   const { step } = useAuthFlowStore();
+  const [logoutReason, setLogoutReason] = React.useState<{ url: string; timestamp: number } | null>(null);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const reason = localStorage.getItem('__last_logout_reason');
+      if (reason) {
+        const parsed = JSON.parse(reason);
+        // Only show if it happened in the last 2 minutes
+        if (Date.now() - parsed.timestamp < 120000) {
+          setLogoutReason(parsed);
+        }
+        localStorage.removeItem('__last_logout_reason');
+      }
+    } catch {}
+  }, []);
 
   const activeStep = step === 'success' ? 'success' : step;
+
+  const isAr = locale === 'ar';
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--surface)]">
       <div className="w-full max-w-md py-8">
+        {/* Logout Diagnostic Banner */}
+        {logoutReason && (
+          <div className="mb-4 p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 text-sm space-y-2 font-cairo text-start" style={{ fontFamily: 'Cairo, sans-serif' }}>
+            <p className="font-bold flex items-center gap-2">
+              ⚠️ {isAr ? 'تم تسجيل الخروج التلقائي لحماية حسابك' : 'Auto-Logout Triggered for Security'}
+            </p>
+            <p className="text-xs text-slate-400">
+              {isAr 
+                ? 'انتهت صلاحية الجلسة أو حدث خطأ صلاحيات (401) عند استدعاء الرابط التالي:' 
+                : 'Your session expired or a permission error (401) occurred when calling this endpoint:'}
+            </p>
+            <code className="block p-2 bg-slate-950 text-slate-300 rounded font-mono text-[11px] break-all">
+              {logoutReason.url}
+            </code>
+            <p className="text-[10px] text-slate-500">
+              {isAr 
+                ? 'يرجى إرسال اسم هذا الرابط للدعم الفني لمساعدتك في حله فوراً.' 
+                : 'Please send this URL to support for troubleshooting.'}
+            </p>
+          </div>
+        )}
+
         {/* Hero Banner */}
         <HeroBanner />
 

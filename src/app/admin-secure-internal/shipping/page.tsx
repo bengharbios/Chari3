@@ -33,6 +33,10 @@ export default function AdminShippingPage() {
   const [isLoadingStates, setIsLoadingStates] = useState(true);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
 
+  // State creation modal
+  const [isAddingState, setIsAddingState] = useState(false);
+  const [newState, setNewState] = useState({ code: '', nameAr: '', nameEn: '', defaultPrice: 500, countryCode: 'DZ' });
+
   // Dialog / Edit states
   const [isAdding, setIsAdding] = useState(false);
   const [newCity, setNewCity] = useState({ nameAr: '', nameEn: '' });
@@ -89,6 +93,34 @@ export default function AdminShippingPage() {
       toast.error(locale === 'ar' ? 'فشل تحميل البلديات' : 'Failed to load municipalities');
     } finally {
       setIsLoadingCities(false);
+    }
+  };
+
+  const handleAddState = async () => {
+    if (!newState.code || !newState.nameAr) {
+      toast.error(isAr ? 'الرجاء إدخال رمز الولاية والاسم بالعربية' : 'Please enter state code and Arabic name');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/regions/states', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newState),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(isAr ? 'تمت إضافة/تحديث الولاية بنجاح' : 'State added/updated successfully');
+        setIsAddingState(false);
+        setNewState({ code: '', nameAr: '', nameEn: '', defaultPrice: 500, countryCode: 'DZ' });
+        fetchStates();
+      } else {
+        toast.error(data.error || 'Failed to save state');
+      }
+    } catch {
+      toast.error('Failed to save state');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -216,13 +248,85 @@ export default function AdminShippingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: States List */}
           <Card className="card-surface lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="text-lg font-bold">{t('الولايات (58 ولاية)', 'Algerian States (Wilayas)')}</CardTitle>
-              <CardDescription>
-                {t('اختر الولاية لإدارة بلدياتها الفرعية وتكاليف توصيلها.', 'Select a state to manage its municipalities.')}
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between gap-2">
+              <div>
+                <CardTitle className="text-lg font-bold">{t(`الولايات (${states.length} ولاية)`, `States (${states.length})`)}</CardTitle>
+                <CardDescription>
+                  {t('اختر الولاية لإدارة بلدياتها الفرعية وتكاليف توصيلها.', 'Select a state to manage its municipalities.')}
+                </CardDescription>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => setIsAddingState(!isAddingState)}
+                className="bg-brand text-navy hover:bg-brand/90 font-bold gap-1 text-xs shrink-0"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {t('إضافة ولاية', 'Add State')}
+              </Button>
             </CardHeader>
             <CardContent>
+              {isAddingState && (
+                <div className="mb-4 p-3 bg-muted/40 border border-brand/30 rounded-xl space-y-3">
+                  <h4 className="text-xs font-bold text-foreground">{isAr ? 'إضافة / تعديل ولاية جديدة' : 'Add / Update State'}</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-[10px]">{isAr ? 'رمز الولاية/المنطقة' : 'State Code'}</Label>
+                      <Input
+                        value={newState.code}
+                        onChange={(e) => setNewState({ ...newState, code: e.target.value })}
+                        placeholder="e.g. 59, SA-01"
+                        className="h-8 text-xs bg-background"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[10px]">{isAr ? 'كود الدولة' : 'Country Code'}</Label>
+                      <Input
+                        value={newState.countryCode}
+                        onChange={(e) => setNewState({ ...newState, countryCode: e.target.value.toUpperCase() })}
+                        placeholder="DZ, SA, MA..."
+                        className="h-8 text-xs bg-background"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <Label className="text-[10px]">{isAr ? 'الاسم بالعربية' : 'Arabic Name'}</Label>
+                      <Input
+                        value={newState.nameAr}
+                        onChange={(e) => setNewState({ ...newState, nameAr: e.target.value })}
+                        placeholder="اسم المنطقة/الولاية"
+                        className="h-8 text-xs bg-background"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-[10px]">{isAr ? 'الاسم بالإنجليزية' : 'English Name'}</Label>
+                      <Input
+                        value={newState.nameEn}
+                        onChange={(e) => setNewState({ ...newState, nameEn: e.target.value })}
+                        placeholder="English Name"
+                        className="h-8 text-xs bg-background"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-[10px]">{isAr ? 'سعر الشحن الافتراضي (د.ج)' : 'Default Shipping Fee'}</Label>
+                    <Input
+                      type="number"
+                      value={newState.defaultPrice}
+                      onChange={(e) => setNewState({ ...newState, defaultPrice: Number(e.target.value) })}
+                      className="h-8 text-xs bg-background"
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-1">
+                    <Button size="sm" variant="ghost" onClick={() => setIsAddingState(false)} className="h-7 text-xs">
+                      {isAr ? 'إلغاء' : 'Cancel'}
+                    </Button>
+                    <Button size="sm" onClick={handleAddState} disabled={isSubmitting} className="h-7 text-xs bg-brand text-navy font-bold">
+                      {isSubmitting ? <Loader2 className="h-3 w-3 animate-spin" /> : (isAr ? 'حفظ الولاية' : 'Save State')}
+                    </Button>
+                  </div>
+                </div>
+              )}
               <div className="overflow-y-auto max-h-[500px] border border-white/5 rounded-2xl p-2 space-y-1 bg-slate-950/20">
                 {states.map((st) => {
                   const isSelected = selectedStateCode === st.code;

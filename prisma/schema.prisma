@@ -1659,3 +1659,58 @@ model ProductSpecDefinition {
 
   category    Category? @relation("CategorySpecDefs", fields: [categoryId], references: [id], onDelete: SetNull)
 }
+
+// ============================================
+// CHARIDAY SMART LOGISTICS ENGINE MODELS
+// ============================================
+
+model ShippingModeSettings {
+  id                    String   @id @default(cuid())
+  activeMode            String   @default("hybrid") // hybrid | direct_keys_only | platform_account_only | private_fleet_only
+  allowMerchantDirect   Boolean  @default(true)
+  allowPlatformAccount  Boolean  @default(true)
+  allowPrivateFleet     Boolean  @default(true)
+  holdBufferHours       Int      @default(24)
+  updatedAt             DateTime @updatedAt
+}
+
+model CarrierIntegration {
+  id            String   @id @default(cuid())
+  carrierKey    String   // "yalidine", "zr_express", "maystro", "ecotrack", "chariday_express"
+  carrierName   String   // "Yalidine Delivery"
+  scope         String   @default("merchant") // merchant | platform
+  sellerId      String?  // null for platform-wide keys
+  encryptedKeys String   @db.LongText // AES-256-GCM encrypted API key JSON
+  isActive      Boolean  @default(true)
+  isSandbox     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([carrierKey])
+  @@index([sellerId])
+}
+
+model ShipmentManifest {
+  id                String   @id @default(cuid())
+  orderId           String   @unique
+  trackingNumber    String   @unique
+  carrierKey        String   // "yalidine", "zr_express", etc.
+  carrierName       String   // "Yalidine Delivery"
+  deliveryType      String   @default("home") // home | stopdesk
+  waybillUrl        String?  @db.LongText // URL or Base64 of thermal label (10x15cm)
+  status            String   @default("PREPARATION") // PREPARATION, EXPEDIE, EN_LIVRAISON, LIVRE, ECHEC, RETOUR
+  
+  expectedAmount    Float    @default(0) // COD amount expected
+  actualPayout      Float?   // Amount reported by carrier API
+  isDiscrepancy     Boolean  @default(false)
+  discrepancyReason String?
+
+  sellerId          String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([trackingNumber])
+  @@index([sellerId])
+  @@index([carrierKey])
+}
+
