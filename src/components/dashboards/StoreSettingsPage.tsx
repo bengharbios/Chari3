@@ -614,9 +614,18 @@ export default function StoreSettingsPage() {
     }, 1500);
   };
 
-  const filteredWilayas = statesList.filter(w => 
-    w.nameAr.includes(searchWilaya) || w.nameEn.toLowerCase().includes(searchWilaya.toLowerCase())
-  );
+  const filteredWilayas = statesList
+    .filter(w => 
+      w.nameAr.includes(searchWilaya) || w.nameEn.toLowerCase().includes(searchWilaya.toLowerCase())
+    )
+    .sort((a, b) => {
+      const codeA = String(a.code || a.id);
+      const codeB = String(b.code || b.id);
+      const numA = parseInt(codeA, 10);
+      const numB = parseInt(codeB, 10);
+      if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+      return codeA.localeCompare(codeB);
+    });
 
   if (isLoading) {
     return (
