@@ -12,6 +12,7 @@ const files = [
   'src/lib/i18n/dictionaries/en.json',
   'src/lib/i18n/dictionaries/fr.json',
   'src/components/layout/gentelella/GentelellaSidebar.tsx',
+  'src/components/dashboards/SellerDashboard.tsx',
   'src/app/api/regions/states/route.ts',
   'src/app/admin-secure-internal/shipping/page.tsx',
   'src/app/admin-secure-internal/logistics/page.tsx',
