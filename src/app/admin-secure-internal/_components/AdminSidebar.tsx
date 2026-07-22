@@ -72,6 +72,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
       title: t('admin.ordersControl'),
       icon: ShoppingCart,
       items: [
+        { label: locale === 'ar' ? '⏳ مراجعة وقبول المنتجات' : '⏳ Product Approvals', path: 'products/approvals' },
         { label: t('admin.fulfilledOrders'), path: '?tab=orders' },
         { label: t('admin.orderStatuses'), path: '?tab=order-statuses' },
       ]

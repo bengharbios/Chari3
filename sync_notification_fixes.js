@@ -7,17 +7,10 @@ const plinkExe = fs.existsSync(path.join(process.cwd(), 'plink.exe'))
   : `"C:\\Users\\ALsalam - Marketing\\Downloads\\plink.exe"`;
 
 const files = [
-  'src/lib/utils/encryption.ts',
-  'src/app/api/admin/shipping/settings/route.ts',
-  'src/app/api/seller/shipping/integrations/route.ts',
-  'src/app/api/seller/shipping/manifests/route.ts',
+  'src/components/notifications/NotificationPanel.tsx',
   'src/app/admin-secure-internal/_components/AdminSidebar.tsx',
-  'src/app/admin-secure-internal/logistics/page.tsx',
-  'src/app/seller/shipping/page.tsx',
-  'src/components/layout/Sidebar.tsx',
-  'src/lib/i18n/dictionaries/ar.json',
-  'src/lib/i18n/dictionaries/en.json',
-  'src/lib/i18n/dictionaries/fr.json'
+  'src/app/api/products/route.ts',
+  'src/app/api/products/[id]/route.ts'
 ];
 
 for (const relPath of files) {
@@ -25,10 +18,9 @@ for (const relPath of files) {
   const content = fs.readFileSync(localPath);
   const b64 = content.toString('base64');
   const remotePath = `/home/u584311043/domains/chariday.com/nodejs/${relPath.replace(/\\/g, '/')}`;
-  const tmpPath = `/home/u584311043/tmp_le.b64`;
+  const tmpPath = `/home/u584311043/tmp_notif.b64`;
 
   console.log(`Uploading ${relPath} (${content.length} bytes)...`);
-  // Ensure directory exists
   const remoteDir = path.dirname(remotePath);
   execSync(`${plinkExe} -ssh -P 65002 u584311043@82.198.227.200 -pw "Nabila@@141729" -batch "mkdir -p '${remoteDir}' && echo -n '' > ${tmpPath}"`);
 

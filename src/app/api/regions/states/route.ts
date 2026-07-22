@@ -249,11 +249,14 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    // Use fallback if DB has no states seeded
-    const states = statesFromDb.length > 0 ? statesFromDb : ALGERIAN_WILAYAS_STATIC.map(w => ({
-      id: w.code, code: w.code, nameAr: w.nameAr, nameEn: w.nameEn,
-      countryId: country.id, defaultPrice: w.defaultPrice, isActive: true,
-    }));
+    // Use country-specific fallback if DB has no states seeded yet for this country
+    const explicitFallback = STATIC_COUNTRIES[countryCode];
+    const countryInfo = getCountryByCode(countryCode);
+    const defaultFallbackStates = explicitFallback 
+      ? explicitFallback.states.map(w => ({ id: w.code, code: w.code, nameAr: w.nameAr, nameEn: w.nameEn, countryId: country.id, defaultPrice: w.defaultPrice, isActive: true }))
+      : [{ id: '1', code: '1', nameAr: countryInfo.nameAr, nameEn: countryInfo.nameEn, countryId: country.id, defaultPrice: 30, isActive: true }];
+
+    const states = statesFromDb.length > 0 ? statesFromDb : defaultFallbackStates;
 
     // 3. If storeId or sellerId is provided, load the custom overridden rates
     let customRates: Record<string, number> = {};

@@ -236,7 +236,8 @@ export async function POST(request: Request) {
             body: `قام التاجر بإضافة منتج جديد وهو بانتظار مراجعك وموافقتك في لوحة التحكم.`,
             bodyEn: `A merchant added a new product that is waiting for your review and approval.`,
             type: 'alert',
-            data: JSON.stringify({ productId: product.id, action: 'pending_approval' }),
+            link: '/admin-secure-internal/products/approvals',
+            data: JSON.stringify({ productId: product.id, action: 'pending_approval', actionUrl: '/admin-secure-internal/products/approvals', actionLabelAr: 'مراجعة وقبول المنتجات' }),
           },
         });
       }

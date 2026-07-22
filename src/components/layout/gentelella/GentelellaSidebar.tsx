@@ -89,6 +89,13 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
         ]
       },
       {
+        id: 'shipping-tree',
+        labelKey: 'sidebar.logistics',
+        icon: Truck,
+        directPageId: 'store-shipping',
+        path: '/seller/shipping'
+      },
+      {
         id: 'marketing-tree',
         labelKey: 'sidebar.marketing',
         icon: CreditCard,
@@ -171,6 +178,13 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         children: [
           { id: 'seller-orders', labelKey: 'sidebar.allOrders', badge: 4, path: '/seller/orders' },
         ]
+      },
+      {
+        id: 'shipping-tree',
+        labelKey: 'sidebar.logistics',
+        icon: Truck,
+        directPageId: 'seller-shipping',
+        path: '/seller/shipping'
       }
     ]
   },

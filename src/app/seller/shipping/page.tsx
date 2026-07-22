@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Truck, Key, Printer, Search, RefreshCw, Loader2, CheckCircle2, ShieldCheck, FileText, Globe } from 'lucide-react';
+import { Truck, Key, Printer, Search, RefreshCw, Loader2, CheckCircle2, ShieldCheck, FileText, Globe, AlertTriangle, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -17,6 +17,7 @@ export default function SellerShippingPage() {
   const isAr = locale === 'ar';
 
   const [isLoading, setIsLoading] = useState(true);
+  const [modeSettings, setModeSettings] = useState<any>(null);
   const [integrations, setIntegrations] = useState<any[]>([]);
   const [manifests, setManifests] = useState<any[]>([]);
   const [selectedCarrier, setSelectedCarrier] = useState<string>('yalidine');
@@ -36,7 +37,10 @@ export default function SellerShippingPage() {
       const intData = await intRes.json();
       const manData = await manRes.json();
 
-      if (intData.success) setIntegrations(intData.integrations || []);
+      if (intData.success) {
+        setIntegrations(intData.integrations || []);
+        if (intData.modeSettings) setModeSettings(intData.modeSettings);
+      }
       if (manData.success) setManifests(manData.manifests || []);
     } catch (e) {
       console.error(e);
@@ -94,8 +98,10 @@ export default function SellerShippingPage() {
     );
   }
 
+  const activeMode = modeSettings?.activeMode || 'hybrid';
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6">
+    <div className="space-y-6 max-w-7xl mx-auto p-4 md:p-6 text-start">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card p-6 rounded-3xl border border-border shadow-sm">
         <div>
@@ -109,11 +115,60 @@ export default function SellerShippingPage() {
               : 'Connect custom carrier API keys, print thermal waybill labels (10x15cm), and track packages live.'}
           </p>
         </div>
-        <Button onClick={fetchData} variant="outline" size="sm" className="rounded-xl text-xs gap-1.5">
+        <Button onClick={fetchData} variant="outline" size="sm" className="rounded-xl text-xs gap-1.5 font-bold">
           <RefreshCw className="h-3.5 w-3.5" />
           {isAr ? 'تحديث البيانات' : 'Refresh Data'}
         </Button>
       </div>
+
+      {/* Dynamic Governance Banner from Super Admin */}
+      {activeMode === 'direct_keys_only' && (
+        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center gap-3 text-start">
+          <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
+          <div>
+            <h4 className="text-xs font-bold text-amber-500">{isAr ? 'تنبيه تشغيلي من إدارة المنصة: وضع المفاتيح المباشرة فقط' : 'Platform Notice: Direct Keys Only Mode Enforced'}</h4>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              {isAr ? 'تفرض إدارة المنصة استخدام عقود ومفاتيح API المباشرة الخاصة بكل تاجر مع شركات الشحن لإصدار البوالص.' : 'Super Admin requires merchants to connect their own direct carrier API credentials to process shipping.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {activeMode === 'platform_account_only' && (
+        <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center gap-3 text-start">
+          <Info className="h-5 w-5 text-blue-500 shrink-0" />
+          <div>
+            <h4 className="text-xs font-bold text-blue-500">{isAr ? 'إشعار تشغيلي من إدارة المنصة: حساب المنصة الموحد مفعل' : 'Platform Notice: Platform Shared Account Enforced'}</h4>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              {isAr ? 'تتيح المنصة إصدار البوالص وتتبع الشحنات تلقائياً عبر حساب المنصة الموحد وتسوية مبالغ COD فوراً في محفظتك.' : 'Parcels are issued automatically using the unified platform account with automated escrow payouts.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {activeMode === 'private_fleet_only' && (
+        <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-2xl flex items-center gap-3 text-start">
+          <Truck className="h-5 w-5 text-purple-500 shrink-0" />
+          <div>
+            <h4 className="text-xs font-bold text-purple-500">{isAr ? 'إشعار تشغيلي من إدارة المنصة: أسطول ChariDay Express الخاص' : 'Platform Notice: Private Fleet Only Mode'}</h4>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              {isAr ? 'الشحن متاح حصرياً عبر شبكة التوصيل والأسطول الخاص التابع للمنصة.' : 'Shipments are routed exclusively via ChariDay Express internal delivery network.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {activeMode === 'hybrid' && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-3 text-start">
+          <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+          <div>
+            <h4 className="text-xs font-bold text-emerald-500">{isAr ? 'وضع التشغيل النشط: النموذج المزدوج المرن (Hybrid Flex Mode)' : 'Active Governance: Hybrid Flex Mode'}</h4>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              {isAr ? 'يمكنك ربط مفاتيحك الخاصة مع شركات الشحن أدناه أو الاستفادة من حساب المنصة الموحد حسب رغبتك.' : 'You can optionally connect your direct carrier keys below or use the unified platform carrier account.'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Grid: Carrier Setup & Thermal Labels */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -176,6 +231,23 @@ export default function SellerShippingPage() {
               {isSavingKeys ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
               {isAr ? 'حفظ وتشفير المفاتيح 🔒' : 'Save & Encrypt Keys 🔒'}
             </Button>
+
+            {/* List of Merchant's Connected Carriers */}
+            <div className="pt-3 space-y-2">
+              <Label className="text-xs font-bold">{isAr ? 'حالة المفاتيح المربوطة بحسابك:' : 'Your Connected Keys:'}</Label>
+              {integrations.length === 0 ? (
+                <p className="text-[11px] text-muted-foreground">{isAr ? 'لم تقم بربط أي مفاتيح خاصة بعد.' : 'No custom keys connected yet.'}</p>
+              ) : (
+                integrations.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between p-2.5 bg-muted/30 border border-border rounded-xl text-xs">
+                    <span className="font-bold">{item.carrierName}</span>
+                    <Badge variant="default" className="text-[10px] font-bold">
+                      {isAr ? 'مشفّر ومفعل 🔒' : 'Encrypted 🔒'}
+                    </Badge>
+                  </div>
+                ))
+              )}
+            </div>
           </CardContent>
         </Card>
 
@@ -206,12 +278,12 @@ export default function SellerShippingPage() {
             <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl space-y-1">
               <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                 <CheckCircle2 className="h-4 w-4" />
-                <span className="font-bold text-xs">{isAr ? 'التحديث الآلي للحالة:' : 'Automated Status Sync:'}</span>
+                <span className="font-bold text-xs">{isAr ? 'التحديث الآلي للحالة والتحرير:' : 'Automated Sync & Escrow Payout:'}</span>
               </div>
               <p className="text-[11px] text-muted-foreground">
                 {isAr 
-                  ? 'بمجرد طباعة البوليصة وتسليمها للناقل، يتحدث التتبع آلياً وتُحرر الأموال في محفظتك.'
-                  : 'Automated status sync releases escrow funds once delivery is verified.'}
+                  ? 'بمجرد تأكيد التسليم من شركة الشحن وتجاوز فترة مهلة الأمان، تُحول المبالغ آلياً لملاحظات محفظتك.'
+                  : 'Automated status sync releases escrow funds to wallet once holding period passes.'}
               </p>
             </div>
           </CardContent>

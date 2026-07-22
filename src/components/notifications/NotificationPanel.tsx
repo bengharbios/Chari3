@@ -344,17 +344,24 @@ export default function NotificationPanel() {
           let actionUrl: string | null = null;
           let urgency = dbNotif.type === 'new_order' ? 'high' : 'normal';
 
-          const isAdmin = user.role === 'admin' || (user.role as string) === 'SUPER_ADMIN';
+          const isProductApproval = dbNotif.title.includes('مراجعة والموافقة') || dbNotif.title.includes('pending approval') || dbNotif.title.includes('منتج');
 
-          if (cat === 'verification') {
+          if (isProductApproval && isAdmin) {
+            actionLabelAr = 'مراجعة وقبول المنتجات';
+            actionLabelEn = 'Review & Approve Products';
+            actionUrl = '/admin-secure-internal/products/approvals';
+            actionPage = null;
+          } else if (cat === 'verification') {
             if (isAdmin) {
               actionLabelAr = 'عرض طلبات التوثيق';
               actionLabelEn = 'View Verification Requests';
               actionUrl = '/admin-secure-internal/verifications';
+              actionPage = null;
             } else {
               actionLabelAr = dbNotif.type === 'VERIFICATION_EDIT_REQUIRED' ? 'تعديل طلب التوثيق' : 'عرض حالة التوثيق';
               actionLabelEn = dbNotif.type === 'VERIFICATION_EDIT_REQUIRED' ? 'Edit Verification' : 'View Verification Status';
               actionUrl = '/seller/verification';
+              actionPage = null;
             }
           } else if (cat === 'order') {
             actionLabelAr = 'عرض الطلبات';
@@ -364,6 +371,11 @@ export default function NotificationPanel() {
             actionLabelAr = 'عرض المحفظة';
             actionLabelEn = 'View Wallet';
             actionPage = 'seller-wallet';
+          } else if (isAdmin) {
+            actionLabelAr = 'عرض التنبيه الإداري';
+            actionLabelEn = 'View Admin Alert';
+            actionUrl = '/admin-secure-internal/products/approvals';
+            actionPage = null;
           } else {
             actionLabelAr = 'عرض التفاصيل';
             actionLabelEn = 'View Details';
@@ -373,8 +385,9 @@ export default function NotificationPanel() {
           if (dbNotif.data) {
             try {
               const parsed = JSON.parse(dbNotif.data);
-              if ('actionPage' in parsed) actionPage = parsed.actionPage;
-              if ('actionUrl' in parsed) actionUrl = parsed.actionUrl;
+              if ('actionPage' in parsed && parsed.actionPage) actionPage = parsed.actionPage;
+              if ('actionUrl' in parsed && parsed.actionUrl) actionUrl = parsed.actionUrl;
+              if ('link' in parsed && parsed.link) actionUrl = parsed.link;
               if ('actionLabelAr' in parsed) actionLabelAr = parsed.actionLabelAr;
               if ('actionLabelEn' in parsed) actionLabelEn = parsed.actionLabelEn;
               if ('urgency' in parsed) urgency = parsed.urgency;

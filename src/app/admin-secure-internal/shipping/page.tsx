@@ -3,13 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { useTranslation } from '@/lib/i18n/useTranslation';
-import { Loader2, Plus, Edit2, Check, X, ArrowRight, MapPin, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Edit2, Check, X, ArrowRight, MapPin, ToggleLeft, ToggleRight, Trash2, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { SearchableCountrySelect } from '@/components/ui/SearchableCountrySelect';
 
 export default function AdminShippingPage() {
   const { isAdminAuthenticated } = useAdminAuthStore();
@@ -25,6 +26,7 @@ export default function AdminShippingPage() {
   };
 
   const [isMounted, setIsMounted] = useState(false);
+  const [selectedCountryCode, setSelectedCountryCode] = useState('DZ');
   const [states, setStates] = useState<any[]>([]);
   const [selectedStateCode, setSelectedStateCode] = useState('16'); // Default Algiers
   const [selectedState, setSelectedState] = useState<any>(null);
@@ -57,32 +59,41 @@ export default function AdminShippingPage() {
   }, [isMounted, isAdminAuthenticated]);
 
   // 1. Fetch States List
-  const fetchStates = async () => {
+  const fetchStates = async (cCode: string = selectedCountryCode) => {
     setIsLoadingStates(true);
     try {
-      const res = await fetch('/api/regions/states?countryCode=DZ');
+      const res = await fetch(`/api/regions/states?countryCode=${cCode}`);
       const data = await res.json();
       if (data.success && Array.isArray(data.states)) {
         setStates(data.states);
-        // Default to Algiers '16' or first state code
         const defaultState = data.states.find((s: any) => s.code === '16') || data.states[0];
         if (defaultState) {
           setSelectedStateCode(defaultState.code);
+          fetchCities(defaultState.code, cCode);
+        } else {
+          setCities([]);
+          setSelectedState(null);
         }
       }
     } catch (err) {
       console.error('Failed to load states', err);
-      toast.error(locale === 'ar' ? 'فشل تحميل الولايات' : 'Failed to load states');
+      toast.error(locale === 'ar' ? 'فشل تحميل الولايات والمناطق' : 'Failed to load states');
     } finally {
       setIsLoadingStates(false);
     }
   };
 
+  useEffect(() => {
+    if (isMounted) {
+      fetchStates(selectedCountryCode);
+    }
+  }, [isMounted, selectedCountryCode]);
+
   // 2. Fetch Cities for selected State
-  const fetchCities = async (code: string) => {
+  const fetchCities = async (code: string, cCode: string = selectedCountryCode) => {
     setIsLoadingCities(true);
     try {
-      const res = await fetch(`/api/regions/cities?stateCode=${code}&includeInactive=true`);
+      const res = await fetch(`/api/regions/cities?stateCode=${code}&countryCode=${cCode}&includeInactive=true`);
       const data = await res.json();
       if (data.success) {
         setCities(data.cities || []);
@@ -235,8 +246,29 @@ export default function AdminShippingPage() {
             {t('إدارة الولايات والبلديات (المناطق الجغرافية)', 'Geographical Regions & Municipalities')}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {t('تحكم بالولايات والبلديات الفعالة بالجزائر وتكاليف الشحن الافتراضية للبلاتفورم.', 'Manage Algerian states, municipalities, and global default shipping fees.')}
+            {t('تحكم بالدول، والولايات والبلديات الفعالة وتكاليف الشحن الافتراضية للبلاتفورم.', 'Manage countries, states, municipalities, and global default shipping fees.')}
           </p>
+        </div>
+      </div>
+
+      {/* Country Selector Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card p-4 rounded-2xl border border-border shadow-sm">
+        <div className="flex items-center gap-3">
+          <Globe className="h-6 w-6 text-brand shrink-0" />
+          <div>
+            <h3 className="text-sm font-bold text-foreground">{t('الدولة النشطة لإدارة الولايات والأسعار:', 'Active Country to Manage States & Fees:')}</h3>
+            <p className="text-xs text-muted-foreground">{t('اختر أي دولة من القائمة لعرض وتحديث مناطقها الجغرافية وتكاليف توصيلها.', 'Select any country to view and manage its states and delivery fees.')}</p>
+          </div>
+        </div>
+        <div className="w-full md:w-72">
+          <SearchableCountrySelect
+            value={selectedCountryCode}
+            isAr={isAr}
+            onChange={(c) => {
+              setSelectedCountryCode(c.code);
+              setNewState(prev => ({ ...prev, countryCode: c.code }));
+            }}
+          />
         </div>
       </div>
 
