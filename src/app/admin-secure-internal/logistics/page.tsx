@@ -22,11 +22,26 @@ export default function AdminLogisticsHubPage() {
 
   // Selected carrier for entering platform keys
   const [selectedCarrier, setSelectedCarrier] = useState<string>('yalidine');
+  const [carrierCustomName, setCarrierCustomName] = useState<string>('');
   const [carrierApiKey, setCarrierApiKey] = useState<string>('');
   const [carrierApiToken, setCarrierApiToken] = useState<string>('');
   const [isSavingCarrierKey, setIsSavingCarrierKey] = useState(false);
 
   const webhookUrl = 'https://chariday.com/api/webhooks/shipping';
+
+  const defaultCarriers = [
+    { key: 'yalidine', name: 'Yalidine Delivery (ياليدين)' },
+    { key: 'zr_express', name: 'ZR Express (زد آر إكسبريس)' },
+    { key: 'maystro', name: 'Maystro Delivery (مايسترو)' },
+    { key: 'ecotrack', name: 'EcoTrack (إيكوتراك)' },
+    { key: 'chariday_express', name: 'ChariDay Express (الأسطول الخاص)' },
+  ];
+
+  const customFromDb = platformCarriers
+    .filter(item => !defaultCarriers.some(d => d.key === item.carrierKey))
+    .map(item => ({ key: item.carrierKey, name: item.carrierName || item.carrierKey }));
+
+  const allCarriersList = [...defaultCarriers, ...customFromDb];
 
   const fetchSettings = async () => {
     setIsLoading(true);
@@ -82,14 +97,28 @@ export default function AdminLogisticsHubPage() {
       toast.error(isAr ? 'يرجى كتابة مفتاح API Key الموحد للمنصة' : 'Please enter platform carrier API key');
       return;
     }
+
+    const cKey = selectedCarrier === 'custom'
+      ? carrierCustomName.toLowerCase().replace(/[^a-z0-9]/g, '_')
+      : selectedCarrier;
+
+    const cName = selectedCarrier === 'custom'
+      ? carrierCustomName || 'Custom Carrier'
+      : selectedCarrier.toUpperCase();
+
+    if (!cKey) {
+      toast.error(isAr ? 'يرجى كتابة اسم شركة الشحن الجديدة' : 'Please enter new carrier name');
+      return;
+    }
+
     setIsSavingCarrierKey(true);
     try {
       const res = await fetch('/api/admin/shipping/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          carrierKey: selectedCarrier,
-          carrierName: selectedCarrier.toUpperCase(),
+          carrierKey: cKey,
+          carrierName: cName,
           keys: { apiKey: carrierApiKey, apiToken: carrierApiToken },
           isActive: true,
         }),
@@ -97,9 +126,11 @@ export default function AdminLogisticsHubPage() {
 
       const data = await res.json();
       if (data.success) {
-        toast.success(isAr ? 'تم تشفير وحفظ مفاتيح المنصة العالمية بنجاح 🔒' : 'Platform global carrier credentials encrypted and saved 🔒');
+        toast.success(isAr ? `تم تشفير وحفظ مفاتيح شركة (${cName}) بنجاح 🔒` : `Carrier (${cName}) credentials encrypted and saved 🔒`);
         setCarrierApiKey('');
         setCarrierApiToken('');
+        setCarrierCustomName('');
+        setSelectedCarrier(cKey);
         fetchSettings();
       } else {
         toast.error(data.error || 'فشل حفظ المفاتيح');
@@ -353,12 +384,17 @@ export default function AdminLogisticsHubPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs">{isAr ? 'الشركة المحددة للتعديل' : 'Selected Carrier'}</Label>
+              <Label className="text-xs">{isAr ? 'الشركة المحددة أو اختر شركة جديدة' : 'Carrier'}</Label>
               <select
                 value={selectedCarrier}
-                onChange={(e) => setSelectedCarrier(e.target.value)}
+                onChange={(e) => {
+                  setSelectedCarrier(e.target.value);
+                  if (e.target.value !== 'custom') {
+                    setCarrierCustomName('');
+                  }
+                }}
                 className="w-full bg-background border border-border rounded-xl p-2.5 text-xs font-bold focus:ring-1 focus:ring-primary focus:outline-none"
               >
                 <option value="yalidine">Yalidine Delivery (ياليدين)</option>
@@ -366,8 +402,22 @@ export default function AdminLogisticsHubPage() {
                 <option value="maystro">Maystro Delivery (مايسترو)</option>
                 <option value="ecotrack">EcoTrack (إيكوتراك)</option>
                 <option value="chariday_express">ChariDay Express (الأسطول الخاص)</option>
+                <option value="custom">➕ إضافة شركة شحن جديدة مخصصة...</option>
               </select>
             </div>
+
+            {selectedCarrier === 'custom' && (
+              <div className="space-y-2">
+                <Label className="text-xs">{isAr ? 'اسم شركة الشحن الجديدة' : 'New Carrier Name'}</Label>
+                <Input
+                  type="text"
+                  value={carrierCustomName}
+                  onChange={(e) => setCarrierCustomName(e.target.value)}
+                  placeholder="e.g. DHL Express, Aramex, KaziTour..."
+                  className="bg-background rounded-xl h-10 text-xs font-bold"
+                />
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label className="text-xs">{isAr ? 'مفتاح API Key للمنصة' : 'Platform API Key'}</Label>
@@ -381,7 +431,7 @@ export default function AdminLogisticsHubPage() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-xs">{isAr ? 'رمز API Token للمنصة (اختياري)' : 'Platform API Token'}</Label>
+              <Label className="text-xs">{isAr ? 'رمز API Token (اختياري)' : 'API Token'}</Label>
               <Input
                 type="password"
                 value={carrierApiToken}
@@ -404,13 +454,7 @@ export default function AdminLogisticsHubPage() {
           {/* List of Platform Carrier Connections with Edit Buttons */}
           <div className="pt-4 border-t border-border space-y-3">
             <h4 className="text-xs font-bold text-foreground">{isAr ? 'انقر على أي شركة أدناه للتعديل الفوري لمفاتيحها:' : 'Click any carrier below to edit its keys:'}</h4>
-            {[
-              { key: 'yalidine', name: 'Yalidine Delivery (ياليدين)' },
-              { key: 'zr_express', name: 'ZR Express (زد آر إكسبريس)' },
-              { key: 'maystro', name: 'Maystro Delivery (مايسترو)' },
-              { key: 'ecotrack', name: 'EcoTrack (إيكوتراك)' },
-              { key: 'chariday_express', name: 'ChariDay Express (الأسطول الخاص)' },
-            ].map((c) => {
+            {allCarriersList.map((c) => {
               const existing = platformCarriers.find(item => item.carrierKey === c.key);
               const isSelected = selectedCarrier === c.key;
               return (
