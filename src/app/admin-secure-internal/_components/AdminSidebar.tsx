@@ -167,7 +167,12 @@ export default function AdminSidebar({ className }: { className?: string }) {
     const activeGroupIndex = navGroups.findIndex(g => g.items.some(i => getIsActive(i.path)));
     const initialCollapsed: Record<string, boolean> = {};
     navGroups.forEach(g => {
-      initialCollapsed[g.title] = true;
+      // Keep primary operational groups (Overview, Orders & Approvals, Logistics) expanded by default for quick access
+      if (g.id === 'overview' || g.id === 'orders' || g.id === 'logistics') {
+        initialCollapsed[g.title] = false;
+      } else {
+        initialCollapsed[g.title] = true;
+      }
     });
     if (activeGroupIndex !== -1) {
       const activeGroupTitle = navGroups[activeGroupIndex].title;

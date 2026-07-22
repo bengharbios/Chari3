@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Truck, ShieldCheck, DollarSign, Layers, CheckCircle2, AlertTriangle, Key, Lock, Loader2, Save, Info, Sliders, RefreshCw, Eye } from 'lucide-react';
+import { Truck, ShieldCheck, DollarSign, Layers, CheckCircle2, AlertTriangle, Key, Lock, Loader2, Save, Info, Sliders, RefreshCw, Eye, Edit2, Link2, Copy, ArrowRightLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 
@@ -25,6 +25,8 @@ export default function AdminLogisticsHubPage() {
   const [carrierApiKey, setCarrierApiKey] = useState<string>('');
   const [carrierApiToken, setCarrierApiToken] = useState<string>('');
   const [isSavingCarrierKey, setIsSavingCarrierKey] = useState(false);
+
+  const webhookUrl = 'https://chariday.com/api/webhooks/shipping';
 
   const fetchSettings = async () => {
     setIsLoading(true);
@@ -338,22 +340,22 @@ export default function AdminLogisticsHubPage() {
       </Card>
 
       {/* Global Carriers Credentials Entry Form */}
-      <Card className="border-border bg-card shadow-lg rounded-3xl">
+      <Card className="border-border bg-card shadow-lg rounded-3xl" id="carrier-keys-form">
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Key className="h-5 w-5 text-primary" />
-            {isAr ? 'إدخال مفاتيح المنصة العالمية (Platform Shared Carrier Accounts)' : 'Platform Shared Carrier Credentials'}
+            {isAr ? 'تعديل وإدخال مفاتيح المنصة العالمية' : 'Platform Shared Carrier Credentials'}
           </CardTitle>
           <CardDescription>
             {isAr 
-              ? 'أدخل مفاتيح API الخاصة بالمنصة لتسهيل الشحن الآلي لجميع التجار عبر حساب المنصة الموحد.'
-              : 'Enter shared platform carrier credentials used when merchants ship via platform shared accounts.'}
+              ? 'اختر شركة الشحن أدناه لتعديل وإدخال مفاتيح API الخاصة بها والمشفرة بعالية أمان AES-256-GCM.'
+              : 'Select carrier below to edit its encrypted API Key & Token.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label className="text-xs">{isAr ? 'اختر شركة الشحن' : 'Select Carrier'}</Label>
+              <Label className="text-xs">{isAr ? 'الشركة المحددة للتعديل' : 'Selected Carrier'}</Label>
               <select
                 value={selectedCarrier}
                 onChange={(e) => setSelectedCarrier(e.target.value)}
@@ -396,12 +398,12 @@ export default function AdminLogisticsHubPage() {
             className="rounded-xl text-xs font-bold gap-2 px-6"
           >
             {isSavingCarrierKey ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
-            {isAr ? 'حفظ وتشفير مفتاح المنصة 🔒' : 'Save & Encrypt Platform Key 🔒'}
+            {isAr ? `تحديث ومزامنة مفاتيح (${selectedCarrier.toUpperCase()}) 🔒` : `Save Keys for (${selectedCarrier.toUpperCase()}) 🔒`}
           </Button>
 
-          {/* List of Platform Carrier Connections */}
+          {/* List of Platform Carrier Connections with Edit Buttons */}
           <div className="pt-4 border-t border-border space-y-3">
-            <h4 className="text-xs font-bold text-foreground">{isAr ? 'حالة الربط المباشر لشركات الشحن بالمنصة:' : 'Platform Carrier Connection Status:'}</h4>
+            <h4 className="text-xs font-bold text-foreground">{isAr ? 'انقر على أي شركة أدناه للتعديل الفوري لمفاتيحها:' : 'Click any carrier below to edit its keys:'}</h4>
             {[
               { key: 'yalidine', name: 'Yalidine Delivery (ياليدين)' },
               { key: 'zr_express', name: 'ZR Express (زد آر إكسبريس)' },
@@ -410,23 +412,107 @@ export default function AdminLogisticsHubPage() {
               { key: 'chariday_express', name: 'ChariDay Express (الأسطول الخاص)' },
             ].map((c) => {
               const existing = platformCarriers.find(item => item.carrierKey === c.key);
+              const isSelected = selectedCarrier === c.key;
               return (
-                <div key={c.key} className="flex items-center justify-between p-3.5 bg-muted/30 border border-border rounded-2xl">
+                <div 
+                  key={c.key} 
+                  className={`flex items-center justify-between p-3.5 border rounded-2xl transition-all ${
+                    isSelected ? 'bg-primary/10 border-primary shadow-sm' : 'bg-muted/30 border-border hover:border-primary/40'
+                  }`}
+                >
                   <div className="space-y-0.5">
-                    <h4 className="text-xs font-bold text-foreground">{c.name}</h4>
+                    <h4 className="text-xs font-bold text-foreground flex items-center gap-2">
+                      {c.name}
+                      {isSelected && <Badge className="text-[9px] bg-primary text-primary-foreground font-bold">{isAr ? 'محدد للتعديل' : 'Editing'}</Badge>}
+                    </h4>
                     <span className="text-[10px] font-mono text-muted-foreground">
                       {existing?.hasKeys ? (isAr ? 'مفاتيح مشفرة ومفعلة 🔒' : 'Keys Encrypted & Active 🔒') : (isAr ? 'غير مربوط بعد ❌' : 'Not Connected ❌')}
                     </span>
                   </div>
-                  <Badge variant={existing?.hasKeys ? 'default' : 'secondary'} className="text-xs font-bold">
-                    {existing?.hasKeys ? (isAr ? 'نشط ومفعل' : 'Active') : (isAr ? 'جاهز للربط' : 'Ready')}
-                  </Badge>
+                  
+                  <div className="flex items-center gap-2">
+                    <Badge variant={existing?.hasKeys ? 'default' : 'secondary'} className="text-xs font-bold">
+                      {existing?.hasKeys ? (isAr ? 'نشط ومفعل' : 'Active') : (isAr ? 'جاهز للربط' : 'Ready')}
+                    </Badge>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedCarrier(c.key);
+                        toast.info(isAr ? `تم اختيار شركة ${c.name} للتعديل` : `Selected ${c.name} for key editing`);
+                      }}
+                      className="h-8 text-xs font-bold gap-1 rounded-xl"
+                    >
+                      <Edit2 className="h-3.5 w-3.5" />
+                      {isAr ? 'تعديل المفتاح' : 'Edit Keys'}
+                    </Button>
+                  </div>
                 </div>
               );
             })}
           </div>
         </CardContent>
       </Card>
+
+      {/* Webhook Endpoint & COD Reconciliation Hub (New Features) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Webhook Endpoint Info */}
+        <Card className="border-border bg-card shadow-lg rounded-3xl">
+          <CardHeader>
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <Link2 className="h-5 w-5 text-primary" />
+              {isAr ? 'رابط الويب هوك الموحد (Carrier Webhook Endpoint)' : 'Unified Webhook Endpoint'}
+            </CardTitle>
+            <CardDescription>
+              {isAr 
+                ? 'الرابط الذي تزوده لشركات الشحن لإرسال إشعارات التتبع اللحظية وحالات الطرود آلياً.'
+                : 'URL provided to carrier APIs for receiving real-time tracking webhook callbacks.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2 p-3 bg-muted/40 border border-border rounded-xl font-mono text-xs text-primary font-bold">
+              <span className="truncate flex-1">{webhookUrl}</span>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  navigator.clipboard.writeText(webhookUrl);
+                  toast.success(isAr ? 'تم نسخ رابط الويب هوك!' : 'Webhook URL copied!');
+                }}
+                className="h-7 px-2 text-xs"
+              >
+                <Copy className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {isAr ? 'يدعم التوقيع المفهوم لـ HMAC SHA-256 لتأكيد الأمان والتحقق من صحة المرسل.' : 'Supports HMAC SHA-256 signatures for sender payload verification.'}
+            </p>
+          </CardContent>
+        </Card>
+
+        {/* COD Reconciliation Engine Info */}
+        <Card className="border-border bg-card shadow-lg rounded-3xl">
+          <CardHeader>
+            <CardTitle className="text-base font-bold flex items-center gap-2">
+              <ArrowRightLeft className="h-5 w-5 text-primary" />
+              {isAr ? 'محرك تسوية الفوارق المالية (COD Reconciliation Engine)' : 'COD Reconciliation Engine'}
+            </CardTitle>
+            <CardDescription>
+              {isAr 
+                ? 'مطابقة آليّة بين المبلغ المتوقع تحصيله ومبلغ الناقل الفعلي لكشف الفوارق.'
+                : 'Automated matching between expected COD amount and actual carrier report.'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl space-y-1 text-xs">
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{isAr ? 'كشف الفوارق المالية التلقائي:' : 'Automated Discrepancy Flagging:'}</span>
+              <p className="text-[11px] text-muted-foreground">
+                {isAr ? 'أي طرد يقل مبلغ تحصيله عن قيمة الطلب يتم حجزه فوراً وإشعار الإدارة بالمطابقة.' : 'Parcels with payout shortfall are auto-flagged for audit review before payout release.'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

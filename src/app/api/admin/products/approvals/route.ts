@@ -69,12 +69,25 @@ export async function POST(req: Request) {
 
     const newStatus = action === 'approve' ? 'active' : 'draft';
 
+    let existingSpecs: Record<string, any> = {};
+    if (product.specifications) {
+      if (typeof product.specifications === 'string') {
+        try {
+          existingSpecs = JSON.parse(product.specifications);
+        } catch (e) {
+          existingSpecs = { rawText: product.specifications };
+        }
+      } else if (typeof product.specifications === 'object') {
+        existingSpecs = product.specifications as Record<string, any>;
+      }
+    }
+
     const updatedProduct = await db.product.update({
       where: { id: productId },
       data: {
         status: newStatus,
         specifications: JSON.stringify({
-          ...(product.specifications ? JSON.parse(product.specifications) : {}),
+          ...existingSpecs,
           adminRejectionReason: action === 'reject' ? (notes || 'يتطلب تعديلات ليتوافق مع معايير المنصة') : null,
           reviewedAt: new Date().toISOString(),
         }),
