@@ -790,6 +790,81 @@ Complete guide for platform administrators managing product rules:
               content: 'Guide administrateur complet pour la gestion des règles de produits et la modération.'
             }
           }
+        },
+        {
+          slug: 'logistics-hub-guide',
+          category: 'sellers',
+          sortOrder: 17,
+          title: 'دليل ربط وتفعيل شركات التوصيل والشحن الموحد، رمز PIN المجاني، وطباعة البوالص الحرارية',
+          titleEn: 'Unified Shipping & Logistics Carrier Integration, Delivery PIN & Thermal Label Guide',
+          content: `
+# دليل استخدام محرك الشحن واللوجستيات الموحد ونظام الأمان المالي في ChariDay
+
+يوفر نظام ChariDay تجربة لوجستية سيادية فائقة للتاجر والسوبر أدمن والمندوب.
+
+---
+
+## 1. نماذج تشغيل نظام الشحن الأربعة (Logistics Operational Modes)
+يتيح النظام للسوبر أدمن اختيار نموذج السيطرة المالية المناسب:
+1. **النموذج المزدوج المرن (Hybrid Mode):** حرية التاجر في إدخال مفتاحه الخاص أو الشحن عبر حساب المنصة الموحد.
+2. **إلزام المفاتيح المباشرة فقط (Direct Keys Only):** كل تاجر يشحن بعقده ومفتاحه الخاص المباشر دون مخاطر مالية على المنصة.
+3. **إلزام حساب المنصة الموحد (Platform Account Only):** جميع الشحنات تمر عبر حساب المنصة الموحد وتسوى في المحفظة.
+4. **شركة المنصة الخاصة (ChariDay Express):** الاعتماد الحصري على أسطول التوصيل الخاص بالمنصة.
+
+---
+
+## 2. طباعة البوالص الحرارية الموحدة (10x15cm Thermal Labels)
+- إمكانية طباعة البوالص الحرارية الموحدة بنقرة زر واحدة بمقاس A6 (100x150mm).
+- تضمن البوليصة رمز الباركود Code128 وقيمة الدفع عند الاستلام (COD) والتفقيط العربي الرسمي للمبالغ.
+
+---
+
+## 3. نظام الأمان الصفري والتأكيد المجاني بدون SMS (Zero-Cost Delivery PIN)
+- عند شحن الطلب، يولد السيرفر أوتوماتيكياً رمز تأكيد تسليم مجاني (PIN من 4 أرقام) + QR Code في حساب الزبون وتتبع الشحنة.
+- يعرض الزبون الكود للمندوب عند استلام الطرد ودفع المبلغ، فيدخله المندوب في لوحته (/logistics) لمطابقته وإغلاق الطلب تلقائياً.
+
+---
+
+## 4. التتبع اللحظي والتحرير الآلي للمحفظة (Automated Escrow Clearance)
+- تحديث آلي لحالة الطرد عند تسليمه برمز الـ PIN.
+- يطبق النظام فترة مهلة أمان (مثلاً 24 ساعة) قبل تحرير الأموال نهائياً في محفظة التاجر.
+          `,
+          contentEn: `
+# ChariDay Unified Shipping & Logistics Carrier Integration & Delivery PIN Guide
+
+ChariDay provides a sovereign e-commerce shipping engine connecting merchants, carriers, and drivers.
+
+---
+
+## 1. Four Governance Operational Modes
+1. **Hybrid Flex Mode:** Merchant can use direct API keys or platform shared carrier accounts.
+2. **Direct Keys Only:** Merchants must use their own direct carrier contracts.
+3. **Platform Account Only:** Parcels routed through shared platform account with automated escrow payouts.
+4. **ChariDay Express Private Fleet:** Exclusive usage of internal delivery network.
+
+---
+
+## 2. Standardized Thermal Shipping Labels (10x15cm A6)
+Print individual or bulk waybill barcode labels with Arabic currency verbalization (Tafqeet).
+
+---
+
+## 3. Zero-Cost Delivery PIN Security Architecture
+Automated 4-digit PIN & QR code generated on buyer's tracking page. Customer hands over the PIN to driver upon parcel receipt for instant verification without SMS fees.
+
+---
+
+## 4. Automated Escrow Clearance & Wallet Release
+Once verified with PIN, escrow funds are automatically released into merchant wallet post safety holding buffer.
+          `,
+          translations: {
+            ar: { title: 'دليل ربط وتفعيل شركات التوصيل والشحن الموحد، رمز PIN المجاني، وطباعة البوالص الحرارية' },
+            en: { title: 'Unified Shipping & Logistics Carrier Integration, Delivery PIN & Thermal Label Guide' },
+            fr: {
+              title: 'Guide Logistique Unifié, Code PIN de Livraison Gratuite et Étiquettes Thermiques',
+              content: 'Guide complet pour l\'intégration des transporteurs, la sécurité par code PIN de livraison et le suivi en direct.'
+            }
+          }
         }
       ];
 

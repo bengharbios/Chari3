@@ -923,13 +923,19 @@
     "autoDetected": "Auto-configured dynamically"
   },
   "logistics": {
-    "title": "Logistics Hub & Unified Carrier Engine",
+    "title": "Unified Logistics & Shipping Engine",
     "description": "Manage shipping governance modes, thermal waybill labels, and live tracking",
     "modes": {
       "hybrid": "Hybrid Flex Mode",
       "direct_keys_only": "Direct Keys Only",
       "platform_account_only": "Platform Account Only",
-      "private_fleet_only": "ChariDay Express Private Fleet"
-    }
+      "private_fleet_only": "ChariDay Express Fleet Only"
+    },
+    "deliveryPin": "Your Delivery Confirmation PIN",
+    "deliveryPinNotice": "Show this PIN or QR code to the driver upon parcel handover and payment",
+    "proofOfPickup": "Proof of Merchant Pickup",
+    "proofOfDelivery": "Proof of Customer Delivery",
+    "escrowBuffer": "Escrow Wallet Release Holding Buffer",
+    "zeroCostSecurity": "Zero-Cost Delivery PIN Security Architecture"
   }
 }

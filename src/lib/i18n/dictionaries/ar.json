@@ -930,6 +930,12 @@
       "direct_keys_only": "إلزام المفاتيح المباشرة فقط",
       "platform_account_only": "إلزام حساب المنصة الموحد",
       "private_fleet_only": "شركة المنصة الخاصة (ChariDay Express)"
-    }
+    },
+    "deliveryPin": "رمز تأكيد التسليم الخاص بك",
+    "deliveryPinNotice": "اعرض هذا الرمز أو رمز QR للمندوب عند استلام الطرد وتأدية المبلغ",
+    "proofOfPickup": "إثبات الاستلام من التاجر",
+    "proofOfDelivery": "إثبات التسليم للزبون",
+    "escrowBuffer": "فترة أمان التحرير المالي للمحفظة",
+    "zeroCostSecurity": "نظام الأمان الموحد والتأكيد المجاني بدون رسائل SMS"
   }
 }

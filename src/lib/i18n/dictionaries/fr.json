@@ -865,13 +865,19 @@
     "autoDetected": "Configuration automatique"
   },
   "logistics": {
-    "title": "Hub logistique et moteur de transporteur unifié",
-    "description": "Gérer les modes de transport, imprimer les étiquettes thermiques et suivre en direct",
+    "title": "Moteur Logistique & Expédition Unifié",
+    "description": "Gérer les modes d'expédition, les étiquettes thermiques et le suivi en direct",
     "modes": {
-      "hybrid": "Mode hybride flexible",
-      "direct_keys_only": "Clés directes uniquement",
-      "platform_account_only": "Compte plateforme uniquement",
-      "private_fleet_only": "Flotte privée ChariDay Express"
-    }
+      "hybrid": "Mode Hybride Flexible",
+      "direct_keys_only": "Clés Directes Seules",
+      "platform_account_only": "Compte Plateforme Unifié",
+      "private_fleet_only": "Flotte ChariDay Express"
+    },
+    "deliveryPin": "Votre Code PIN de Confirmation de Livraison",
+    "deliveryPinNotice": "Présentez ce code PIN ou QR au livreur lors de la remise du colis",
+    "proofOfPickup": "Preuve de Ramassage Commerçant",
+    "proofOfDelivery": "Preuve de Remise Client",
+    "escrowBuffer": "Délai de Sécurité de Libération de Portefeuille",
+    "zeroCostSecurity": "Architecture de Sécurité PIN Gratuite Sans SMS"
   }
 }
