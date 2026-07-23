@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db, ensureDbConnection } from '@/lib/db';
 import { tafqeetCurrency } from '@/lib/utils/tafqeet';
+import { getSession } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,7 +99,7 @@ function generateCode128SVG(text: string): string {
 
   let x = 10;
   const quietZone = 10;
-  const height = 45;
+  const height = 42;
   const moduleWidth = 1.6;
 
   let rects = '';
@@ -120,6 +122,39 @@ function generateCode128SVG(text: string): string {
   </svg>`;
 }
 
+async function getResolvedUserId(req?: NextRequest): Promise<string | null> {
+  try {
+    const session = await getSession(await headers());
+    if (session?.user?.id) return session.user.id;
+
+    const headerObj = await headers();
+    const cookieHeader = headerObj.get('cookie') || req?.headers?.get('cookie') || '';
+    const match = cookieHeader.match(/better-auth\.session_token=([^;]+)/) ||
+                  cookieHeader.match(/session_token=([^;]+)/) ||
+                  cookieHeader.match(/auth_token=([^;]+)/);
+    
+    if (match && match[1]) {
+      const rawToken = decodeURIComponent(match[1]);
+      const token = rawToken.split('.')[0];
+      const dbSession = await db.session.findFirst({
+        where: {
+          OR: [
+            { token: rawToken },
+            { token: token },
+            { id: token },
+          ],
+          expiresAt: { gt: new Date() },
+        },
+        select: { userId: true },
+      });
+      if (dbSession?.userId) return dbSession.userId;
+    }
+  } catch (err) {
+    console.error('[getResolvedUserId-waybill-error]', err);
+  }
+  return null;
+}
+
 export async function GET(req: NextRequest) {
   try {
     await ensureDbConnection();
@@ -127,6 +162,7 @@ export async function GET(req: NextRequest) {
     const orderId = searchParams.get('orderId');
     const tracking = searchParams.get('tracking');
     const lang = searchParams.get('lang') || 'ar';
+    const secretKey = searchParams.get('key');
 
     let order: any = null;
 
@@ -145,7 +181,6 @@ export async function GET(req: NextRequest) {
         },
       });
     } else if (tracking) {
-      // Find order by tracking or orderNumber
       const orderNumMatch = tracking.replace(/^DZ-[A-Z]+-/, '');
       order = await db.order.findFirst({
         where: {
@@ -176,9 +211,67 @@ export async function GET(req: NextRequest) {
       `, { headers: { 'Content-Type': 'text/html; charset=utf-8' }, status: 404 });
     }
 
-    // Extract Store Info from items[0].product.store or fallback
+    // 🔒 Security Authorization Check
+    const userId = await getResolvedUserId(req);
+    let isAuthorized = false;
+
+    if (userId) {
+      const user = await db.user.findUnique({
+        where: { id: userId },
+        select: { role: true },
+      });
+      // Super admin or logistics agent
+      if (user?.role === 'super_admin' || user?.role === 'logistics' || user?.role === 'store') {
+        isAuthorized = true;
+      }
+      // Buyer of the order
+      if (order.buyerId === userId) {
+        isAuthorized = true;
+      }
+      // Store owner/manager/staff
+      const storeId = order.items?.[0]?.product?.storeId;
+      if (storeId) {
+        const store = await db.store.findFirst({
+          where: {
+            id: storeId,
+            OR: [
+              { managerId: userId },
+              { ownerId: userId },
+            ],
+          },
+        });
+        if (store) isAuthorized = true;
+      }
+    }
+
+    // Pass via secret print key fallback if shared intentionally by seller
+    if (secretKey && secretKey === order.id.slice(-8)) {
+      isAuthorized = true;
+    }
+
+    if (!isAuthorized) {
+      return new NextResponse(`
+        <html dir="rtl"><body style="font-family:sans-serif; text-align:center; padding:50px; background:#f9fafb;">
+          <div style="max-width:500px; margin:0 auto; background:#fff; padding:30px; border-radius:16px; border:1px solid #e5e7eb; box-shadow:0 4px 12px rgba(0,0,0,0.05);">
+            <div style="font-size:40px; margin-bottom:12px;">🔒</div>
+            <h2 style="color:#111827; font-size:20px; font-weight:900;">وصول غير مصرح به للبوليصة</h2>
+            <p style="color:#6b7280; font-size:14px; line-height:1.5;">لحماية بيانات المشتري والتاجر، هذه البوليصة محمية بأعلى معايير الأمان. يرجى تسجيل الدخول إلى لوحة التاجر للوصول إليها وطباعتها.</p>
+            <a href="/login" style="display:inline-block; margin-top:16px; padding:10px 24px; background:#000; color:#fff; text-decoration:none; border-radius:8px; font-weight:bold; font-size:13px;">تسجيل الدخول إلى اللوحة</a>
+          </div>
+        </body></html>
+      `, { headers: { 'Content-Type': 'text/html; charset=utf-8' }, status: 403 });
+    }
+
+    // Extract Multilingual Store Info
     const firstProductStore = order.items?.[0]?.product?.store;
-    const storeName = firstProductStore?.name || order.storeName || 'متجر رانيا (ChariDay Merchant)';
+    let storeName = 'متجر رانيا (ChariDay Merchant)';
+    if (firstProductStore) {
+      if ((lang === 'en' || lang === 'fr') && firstProductStore.nameEn) {
+        storeName = firstProductStore.nameEn;
+      } else {
+        storeName = firstProductStore.name || 'متجر رانيا';
+      }
+    }
     const storePhone = firstProductStore?.phone || firstProductStore?.contactPhone || '0555-00-00-00';
     const storeAddress = firstProductStore?.address || 'الجزائر العاصمة';
 
@@ -194,7 +287,6 @@ export async function GET(req: NextRequest) {
     let rawAddr = order.shippingAddress || order.address || {};
     let shippingAddr: any = {};
 
-    // Recursive JSON parse for nested stringified addresses
     for (let i = 0; i < 3; i++) {
       if (typeof rawAddr === 'string') {
         try {
@@ -285,17 +377,27 @@ export async function GET(req: NextRequest) {
     const wInfo = wilayaMap[wilayaCode] || { ar: '16 - الجزائر', en: '16 - Algiers', fr: '16 - Alger' };
     const wilaya = lang === 'en' ? wInfo.en : (lang === 'fr' ? wInfo.fr : wInfo.ar);
     
-    // Commune / City resolution
     let commune = shippingAddr.commune || shippingAddr.city || (lang === 'en' ? 'City Center' : (lang === 'fr' ? 'Centre-Ville' : 'وسط المدينة'));
     if (/^c[a-z0-9]{15,}$/i.test(commune)) {
       commune = lang === 'en' ? 'City Center' : (lang === 'fr' ? 'Centre-Ville' : 'وسط المدينة');
     }
 
-    // Street address clean extraction
     let fullStreetAddress = shippingAddr.street || shippingAddr.address || shippingAddr.fullAddress || '';
     if (!fullStreetAddress || typeof fullStreetAddress !== 'string' || fullStreetAddress.trim().startsWith('{')) {
       fullStreetAddress = lang === 'en' ? 'Detailed address on order' : (lang === 'fr' ? 'Adresse détaillée sur commande' : 'العنوان التفصيلي مسجل بالطلب');
     }
+
+    // Global Warehouse Specifications (Weight, Payment Mode, SKU)
+    const items = Array.isArray(order.items) ? order.items : [];
+    let calculatedWeight = 0;
+    items.forEach((it: any) => {
+      const w = it.product?.weight || 0.4;
+      calculatedWeight += w * (it.quantity || 1);
+    });
+    const totalWeightStr = `${calculatedWeight.toFixed(2)} kg`;
+
+    const isCod = (order.paymentMethod || 'cod').toLowerCase() === 'cod';
+    const totalAmount = order.total || order.totalAmount || 0;
 
     // Multi-language Dictionaries
     const tDict: Record<string, any> = {
@@ -312,16 +414,19 @@ export async function GET(req: NextRequest) {
         fragile: '🍷 قابل للكسر (Fragile)',
         inspection: '⚡ مسموح الفحص قبل الدفع',
         exchange: '🔄 قابل للتبديل',
-        productCol: 'المنتج',
+        productCol: 'المنتج والرمز (SKU)',
         qtyCol: 'الكمية',
         totalCol: 'السعر الإجمالي',
         freeItem: 'طرد منتجات متجر رانيا',
-        codHeader: 'المبلغ الصافي المطلوب تحصيله (COD AMOUNT):',
+        codHeader: isCod ? 'المبلغ الصافي المطلوب تحصيله (COD AMOUNT):' : 'حالة الدفع (PAYMENT STATUS):',
+        codText: isCod ? `${totalAmount.toLocaleString()} د.ج` : 'تم الدفع أونلاين بالكامل ✅ (لا يُحصّل مبلغ)',
         onlyPrefix: 'فقط:',
         footerNotice: 'طبع عبر منصة ChariDay الرقمية | بوليصة رسمية معتمدة',
         issueDate: 'تاريخ الإصدار:',
         signature: 'توقيع وختم المستلم',
         phoneNotProvided: 'غير مدخل',
+        weightLabel: 'الوزن الكلي:',
+        paymentBadge: isCod ? 'الدفع عند الاستلام 💵' : 'مدفوع أونلاين 💳',
       },
       en: {
         pageTitle: `Thermal Waybill Label - ${trackingNo}`,
@@ -336,16 +441,19 @@ export async function GET(req: NextRequest) {
         fragile: '🍷 Fragile',
         inspection: '⚡ Inspection Allowed',
         exchange: '🔄 Exchangeable',
-        productCol: 'Item / Product',
+        productCol: 'Item & SKU',
         qtyCol: 'Qty',
         totalCol: 'Total Price',
         freeItem: 'Merchant Product Parcel',
-        codHeader: 'Net Amount to Collect (COD AMOUNT):',
+        codHeader: isCod ? 'Net Amount to Collect (COD AMOUNT):' : 'PAYMENT STATUS:',
+        codText: isCod ? `${totalAmount.toLocaleString()} DZD` : 'PAID ONLINE IN FULL ✅ (DO NOT COLLECT CASH)',
         onlyPrefix: 'Only:',
         footerNotice: 'Printed via ChariDay Digital Platform | Certified Waybill',
         issueDate: 'Issue Date:',
         signature: 'Recipient Signature & Stamp',
         phoneNotProvided: 'Not Provided',
+        weightLabel: 'Total Weight:',
+        paymentBadge: isCod ? 'Pay on Delivery 💵' : 'Paid Online 💳',
       },
       fr: {
         pageTitle: `Bordereau d'Expédition - ${trackingNo}`,
@@ -360,32 +468,33 @@ export async function GET(req: NextRequest) {
         fragile: '🍷 Fragile',
         inspection: '⚡ Inspection Autorisée',
         exchange: '🔄 Échangeable',
-        productCol: 'Article / Produit',
+        productCol: 'Article & SKU',
         qtyCol: 'Qté',
         totalCol: 'Prix Total',
         freeItem: 'Colis Produits Marchand',
-        codHeader: 'Montant Net à Encaisser (COD AMOUNT):',
+        codHeader: isCod ? 'Montant Net à Encaisser (COD AMOUNT):' : 'STATUT DE PAIEMENT:',
+        codText: isCod ? `${totalAmount.toLocaleString()} DZD` : 'PAYÉ EN LIGNE ✅ (NE PAS ENCAISSER DE CASH)',
         onlyPrefix: 'Seulement:',
         footerNotice: 'Imprimé via la Plateforme ChariDay | Bordereau Officiel',
         issueDate: "Date d'Émission:",
         signature: 'Signature & Cachet Destinataire',
         phoneNotProvided: 'Non Fourni',
+        weightLabel: 'Poids Total:',
+        paymentBadge: isCod ? 'Paiement à la Livraison 💵' : 'Payé en Ligne 💳',
       },
     };
 
     const dict = tDict[lang] || tDict.ar;
 
-    // Items calculation
-    const items = Array.isArray(order.items) ? order.items : [];
-    const totalAmount = order.total || order.totalAmount || 0;
-    
     let tafqeetText = '';
-    if (lang === 'en') {
-      tafqeetText = numberToWordsEn(totalAmount, 'DZD');
-    } else if (lang === 'fr') {
-      tafqeetText = numberToWordsFr(totalAmount, 'Dinars Algériens');
-    } else {
-      tafqeetText = tafqeetCurrency(totalAmount, 'DZD');
+    if (isCod) {
+      if (lang === 'en') {
+        tafqeetText = numberToWordsEn(totalAmount, 'DZD');
+      } else if (lang === 'fr') {
+        tafqeetText = numberToWordsFr(totalAmount, 'Dinars Algériens');
+      } else {
+        tafqeetText = tafqeetCurrency(totalAmount, 'DZD');
+      }
     }
 
     const createdDate = new Date(order.createdAt || Date.now()).toLocaleDateString(lang === 'en' ? 'en-US' : (lang === 'fr' ? 'fr-FR' : 'ar-DZ'), {
@@ -598,9 +707,12 @@ export async function GET(req: NextRequest) {
     <div class="header">
       <div>
         <div class="brand-title">ChariDay Express</div>
-        <div class="brand-sub">${dict.brandSub}</div>
+        <div class="brand-sub">${dict.brandSub} | ${dict.weightLabel} ${totalWeightStr}</div>
       </div>
-      <div class="badge">${isHomeDelivery ? dict.deliveryHome : dict.deliveryOffice}</div>
+      <div style="display:flex; gap:4px; align-items:center;">
+        <span className="badge" style="background:#4b5563;">${dict.paymentBadge}</span>
+        <span className="badge">${isHomeDelivery ? dict.deliveryHome : dict.deliveryOffice}</span>
+      </div>
     </div>
 
     <!-- Barcode & QR Code Section -->
@@ -645,13 +757,20 @@ export async function GET(req: NextRequest) {
           </tr>
         </thead>
         <tbody>
-          ${items.length > 0 ? items.map((it: any) => `
+          ${items.length > 0 ? items.map((it: any) => {
+            const pName = (lang === 'en' || lang === 'fr') 
+              ? (it.product?.nameEn || it.product?.name || it.productName || dict.freeItem)
+              : (it.product?.name || it.productName || dict.freeItem);
+            const skuStr = it.product?.sku ? ` (SKU: ${it.product.sku})` : '';
+
+            return `
             <tr>
-              <td>${it.product?.name || it.productName || it.name || dict.freeItem}</td>
+              <td>${pName}${skuStr}</td>
               <td style="text-align:center;">${it.quantity || 1}</td>
               <td style="text-align:${dict.dir === 'rtl' ? 'left' : 'right'};">${((it.price || 0) * (it.quantity || 1)).toLocaleString()} DZD</td>
             </tr>
-          `).join('') : `
+          `;
+          }).join('') : `
             <tr>
               <td>${dict.freeItem}</td>
               <td style="text-align:center;">1</td>
@@ -672,8 +791,8 @@ export async function GET(req: NextRequest) {
     <!-- COD Financial Box -->
     <div class="cod-box">
       <div style="font-size:8px; font-weight:900; color:#555;">${dict.codHeader}</div>
-      <div class="cod-amount">${totalAmount.toLocaleString()} DZD</div>
-      <div class="tafqeet-line">${dict.onlyPrefix} ${tafqeetText}</div>
+      <div class="cod-amount">${dict.codText}</div>
+      ${isCod ? `<div class="tafqeet-line">${dict.onlyPrefix} ${tafqeetText}</div>` : ''}
     </div>
 
     <!-- Footer Stamp & Signature -->
