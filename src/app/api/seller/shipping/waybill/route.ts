@@ -17,8 +17,13 @@ export async function GET(req: NextRequest) {
       order = await db.order.findUnique({
         where: { id: orderId },
         include: {
-          items: { include: { product: true } },
-          store: true,
+          items: {
+            include: {
+              product: {
+                include: { store: true },
+              },
+            },
+          },
           buyer: true,
         },
       });
@@ -33,15 +38,19 @@ export async function GET(req: NextRequest) {
           ],
         },
         include: {
-          items: { include: { product: true } },
-          store: true,
+          items: {
+            include: {
+              product: {
+                include: { store: true },
+              },
+            },
+          },
           buyer: true,
         },
       });
     }
 
     if (!order) {
-      // Return friendly HTML error page
       return new NextResponse(`
         <html dir="rtl"><body style="font-family:sans-serif; text-align:center; padding:50px;">
           <h2>⚠️ لم يتم العثور على بيانات الطلب أو بوليصة الشحن</h2>
@@ -50,12 +59,15 @@ export async function GET(req: NextRequest) {
       `, { headers: { 'Content-Type': 'text/html; charset=utf-8' }, status: 404 });
     }
 
+    // Extract Store Info from items[0].product.store or fallback
+    const firstProductStore = order.items?.[0]?.product?.store;
+    const storeName = firstProductStore?.name || order.storeName || 'متجر رانيا (ChariDay Merchant)';
+    const storePhone = firstProductStore?.phone || firstProductStore?.contactPhone || '0555-00-00-00';
+    const storeAddress = firstProductStore?.address || 'الجزائر العاصمة';
+
     // Extract Order Data
     const orderNum = order.orderNumber || `CHARI-${(order.id || '').substring(0, 8)}`;
     const trackingNo = tracking || `DZ-CDX-${orderNum.replace(/[^A-Z0-9]/gi, '').slice(-10)}`;
-    const storeName = order.store?.name || 'متجر رانيا (ChariDay Merchant)';
-    const storePhone = order.store?.phone || order.store?.contactPhone || '0555-00-00-00';
-    const storeAddress = order.store?.address || 'الجزائر العاصمة';
 
     // Buyer info
     let buyerName = order.buyer?.name || 'زبون المنصة';
@@ -294,8 +306,7 @@ export async function GET(req: NextRequest) {
 
     <!-- Barcode & QR Code Section -->
     <div class="barcode-container">
-      <!-- Simulated High-Precision Code128 Barcode via CSS Lines -->
-      <div style="display:flex; justify-center:center; align-items:center; gap:1.5px; height:32px; background:#fff; padding:2px; margin:0 auto; width:80%;">
+      <div style="display:flex; justify-content:center; align-items:center; gap:1.5px; height:32px; background:#fff; padding:2px; margin:0 auto; width:80%;">
         ${Array.from({ length: 45 }).map((_, i) => `
           <div style="height:100%; width:${(i % 3 === 0 ? 3 : (i % 2 === 0 ? 1 : 2))}px; background:#000;"></div>
         `).join('')}
@@ -339,7 +350,7 @@ export async function GET(req: NextRequest) {
         <tbody>
           ${items.length > 0 ? items.map((it: any) => `
             <tr>
-              <td>${it.product?.name || it.name || 'عنصر مجاني'}</td>
+              <td>${it.product?.name || it.productName || it.name || 'عنصر مجاني'}</td>
               <td style="text-align:center;">${it.quantity || 1}</td>
               <td style="text-align:left;">${((it.price || 0) * (it.quantity || 1)).toLocaleString()} د.ج</td>
             </tr>
@@ -380,7 +391,6 @@ export async function GET(req: NextRequest) {
 
   <script>
     window.onload = function() {
-      // Auto print when page opens
       setTimeout(function() {
         window.print();
       }, 400);

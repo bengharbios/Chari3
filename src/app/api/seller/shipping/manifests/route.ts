@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       explicitManifests = [];
     }
 
-    // 2. Fetch shipped, confirmed, and delivered orders for this seller/user to ensure 100% visibility
+    // 2. Fetch seller stores (via managerId or ownerId)
     let sellerStoreIds: string[] = [];
     try {
       const stores = await db.store.findMany({
@@ -58,20 +58,31 @@ export async function GET(req: NextRequest) {
       console.error('[manifests-store-fetch-error]', err);
     }
 
-    // Query shipped/confirmed orders: use store filter if found, otherwise query all shipped orders
+    // Build Prisma query checking items.product.storeId / sellerId
     const whereCondition: any = {
       status: { in: ['shipped', 'delivered', 'confirmed'] },
     };
 
     if (sellerStoreIds.length > 0) {
       whereCondition.OR = [
-        { storeId: { in: sellerStoreIds } },
+        { items: { some: { product: { storeId: { in: sellerStoreIds } } } } },
+        { items: { some: { product: { sellerId: sellerId } } } },
         { buyerId: sellerId },
       ];
     }
 
     const shippedOrders = await db.order.findMany({
       where: whereCondition,
+      include: {
+        items: {
+          include: {
+            product: {
+              include: { store: true },
+            },
+          },
+        },
+        buyer: true,
+      },
       orderBy: { updatedAt: 'desc' },
       take: 100,
     });

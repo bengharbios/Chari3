@@ -210,17 +210,17 @@ export default function SellerShippingPage() {
 
       {/* 🧭 Organised Navigation Tabs */}
       <Tabs defaultValue="shipments" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-3 w-full md:w-[600px] h-12 p-1 bg-muted rounded-2xl mb-6">
-          <TabsTrigger value="shipments" className="rounded-xl text-xs font-bold gap-1.5">
-            <Package className="h-4 w-4" />
+        <TabsList className="flex flex-col sm:flex-row w-full md:w-auto h-auto sm:h-12 p-1.5 bg-muted rounded-2xl mb-6 gap-1.5 border border-border">
+          <TabsTrigger value="shipments" className="w-full sm:w-auto rounded-xl text-xs font-bold gap-2 py-2.5 px-4 justify-center">
+            <Package className="h-4 w-4 shrink-0 text-primary" />
             {isAr ? 'الطرود المشحونة والتتبع' : 'Live Shipments'}
           </TabsTrigger>
-          <TabsTrigger value="integrations" className="rounded-xl text-xs font-bold gap-1.5">
-            <Key className="h-4 w-4" />
+          <TabsTrigger value="integrations" className="w-full sm:w-auto rounded-xl text-xs font-bold gap-2 py-2.5 px-4 justify-center">
+            <Key className="h-4 w-4 shrink-0 text-amber-500" />
             {isAr ? 'مفاتيح شركات الشحن' : 'Carrier API Keys'}
           </TabsTrigger>
-          <TabsTrigger value="guide" className="rounded-xl text-xs font-bold gap-1.5">
-            <Printer className="h-4 w-4" />
+          <TabsTrigger value="guide" className="w-full sm:w-auto rounded-xl text-xs font-bold gap-2 py-2.5 px-4 justify-center">
+            <Printer className="h-4 w-4 shrink-0 text-blue-500" />
             {isAr ? 'البوالص والطابعات' : 'Thermal Waybills'}
           </TabsTrigger>
         </TabsList>
