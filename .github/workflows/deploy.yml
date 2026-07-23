@@ -1,0 +1,71 @@
+name: 🚀 Build & Deploy to Hostinger
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build Next.js & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # 1. Checkout code
+      - name: ⬇️ Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js v20 (matches Hostinger server)
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Create .env file from GitHub Secrets
+      - name: 🔐 Create .env file
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+
+      # 4. Install dependencies
+      - name: 📦 Install dependencies
+        run: npm ci --prefer-offline
+
+      # 5. Build Next.js (prisma generate + next build)
+      - name: 🔨 Build project
+        run: npm run build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NODE_ENV: production
+
+      # 6. Create tar archive of .next + public folders
+      - name: 📦 Create archive
+        run: tar -czf next_build.tar.gz .next public
+
+      # 7. Upload archive to Hostinger via SCP
+      - name: 📤 Upload build to Hostinger
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 82.198.227.200
+          port: 65002
+          username: u584311043
+          password: ${{ secrets.HOSTINGER_SSH_PASS }}
+          source: "next_build.tar.gz"
+          target: "/home/u584311043/domains/chariday.com/nodejs/"
+
+      # 8. Extract archive and restart Passenger
+      - name: 🔄 Extract & Restart Passenger
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 82.198.227.200
+          port: 65002
+          username: u584311043
+          password: ${{ secrets.HOSTINGER_SSH_PASS }}
+          script: |
+            cd /home/u584311043/domains/chariday.com/nodejs
+            tar -xzf next_build.tar.gz
+            rm -f next_build.tar.gz
+            mkdir -p tmp
+            touch tmp/restart.txt
+            echo "✅ Deployment complete at $(date)"
