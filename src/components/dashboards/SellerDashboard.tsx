@@ -1625,72 +1625,8 @@ function SellerOrdersTab({ data, isLoading, t, isAr, onRefresh }: { data: Dashbo
   };
 
   const handlePrintWaybill = (order: any) => {
-    const printWindow = window.open('', '_blank', 'width=600,height=750');
-    if (!printWindow) return;
-
-    const buyerName = order.buyer?.name || order.shippingAddress?.fullName || 'زبون ChariDay';
-    const phone = order.buyer?.phone || order.shippingAddress?.phone || 'غير مدخل';
-    const address = order.shippingAddress?.address || order.shippingAddress?.city || 'الجزائر العاصمة';
-    const orderNum = order.orderNumber || `CHARI-${(order.id || '').substring(0, 8)}`;
-    const itemsList = Array.isArray(order.items) 
-      ? order.items.map((i: any) => `${i.product?.name || i.name || 'منتج'} (x${i.quantity || 1})`).join(', ') 
-      : 'طرد متجر رانيا';
-    const total = order.total || order.totalAmount || 0;
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html dir="rtl" lang="ar">
-      <head>
-        <title>بوليصة شحن - ${orderNum}</title>
-        <style>
-          body { font-family: system-ui, -apple-system, sans-serif; padding: 15px; width: 100mm; max-width: 100mm; margin: 0 auto; border: 2px dashed #000; box-sizing: border-box; }
-          .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px; }
-          .title { font-size: 18px; font-weight: 900; margin: 0; }
-          .subtitle { font-size: 11px; color: #444; margin-top: 2px; }
-          .box { border: 1px solid #000; padding: 8px; border-radius: 6px; margin-bottom: 8px; font-size: 12px; }
-          .label { font-size: 9px; text-transform: uppercase; color: #666; font-weight: bold; }
-          .value { font-size: 13px; font-weight: bold; margin-top: 2px; }
-          .cod-badge { background: #000; color: #fff; text-align: center; padding: 8px; font-size: 16px; font-weight: 900; border-radius: 6px; margin-top: 10px; }
-          .barcode { text-align: center; margin: 10px 0; font-family: monospace; font-size: 15px; letter-spacing: 2px; font-weight: bold; background: #f0f0f0; padding: 6px; border: 1px solid #ccc; }
-          @media print { body { border: none; width: 100%; max-width: 100%; padding: 0; } }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1 class="title">ChariDay Express</h1>
-          <div class="subtitle">بوليصة الشحن والتوصيل المباشر</div>
-        </div>
-
-        <div class="barcode">${orderNum}</div>
-
-        <div class="box">
-          <div class="label">المرسل / المتجر:</div>
-          <div class="value">${order.store?.name || 'متجر رانيا'}</div>
-        </div>
-
-        <div class="box">
-          <div class="label">المستلم / الزبون:</div>
-          <div class="value">${buyerName}</div>
-          <div style="font-size:11px; margin-top:3px;">📱 ${phone}</div>
-          <div style="font-size:11px; margin-top:3px;">📍 ${address}</div>
-        </div>
-
-        <div class="box">
-          <div class="label">محتويات الطرد:</div>
-          <div class="value" style="font-size:11px;">${itemsList}</div>
-        </div>
-
-        <div class="cod-badge">
-          المبلغ المطلوب تحصيله (COD): ${total} د.ج
-        </div>
-
-        <script>
-          window.onload = function() { window.print(); }
-        </script>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
+    const waybillUrl = `/api/seller/shipping/waybill?orderId=${order.id}`;
+    window.open(waybillUrl, '_blank', 'width=650,height=800');
   };
 
   const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {

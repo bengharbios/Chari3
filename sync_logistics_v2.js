@@ -16,7 +16,9 @@ const files = [
   'src/app/api/regions/states/route.ts',
   'src/app/admin-secure-internal/shipping/page.tsx',
   'src/app/admin-secure-internal/logistics/page.tsx',
-  'src/app/seller/shipping/page.tsx'
+  'src/app/seller/shipping/page.tsx',
+  'src/app/api/seller/shipping/manifests/route.ts',
+  'src/app/api/seller/shipping/waybill/route.ts'
 ];
 
 for (const relPath of files) {
