@@ -202,7 +202,7 @@ export default function SellerShippingPage() {
             </div>
             <div>
               <p className="text-[11px] text-muted-foreground font-semibold">{isAr ? 'مبالغ COD المتوقعة' : 'Expected COD'}</p>
-              <h3 className="text-lg font-black text-amber-500 mt-0.5">{totalCodExpected.toLocaleString()} <span className="text-xs">د.ج</span></h3>
+              <h3 className="text-lg font-black text-amber-500 mt-0.5">{totalCodExpected.toLocaleString()} <span className="text-xs">{isAr ? 'د.ج' : 'DZD'}</span></h3>
             </div>
           </div>
         </Card>
@@ -290,7 +290,7 @@ export default function SellerShippingPage() {
                           </Badge>
                         </td>
                         <td className="p-3 font-bold text-foreground">
-                          {Number(man.expectedAmount || 0).toLocaleString()} {isAr ? 'د.ج' : 'DZD'}
+                          {Number(man.expectedAmount || 0).toLocaleString(locale)} {isAr ? 'د.ج' : 'DZD'}
                         </td>
                         <td className="p-3">
                           <span
@@ -308,7 +308,7 @@ export default function SellerShippingPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              const waybillUrl = `/api/seller/shipping/waybill?orderId=${man.orderId}`;
+                              const waybillUrl = `/api/seller/shipping/waybill?orderId=${man.orderId}&lang=${locale}`;
                               window.open(waybillUrl, '_blank', 'width=650,height=800');
                             }}
                             className="rounded-xl text-[11px] h-8 gap-1.5 font-bold"
