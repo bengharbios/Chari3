@@ -1,19 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/lib/better-auth';
+import { getSession } from '@/lib/better-auth';
 import { prisma } from '@/lib/prisma';
 import { headers } from 'next/headers';
 import bcrypt from 'bcryptjs';
 
-// ── GET /api/user/profile ─────────────────────────────────────────────────────
-export async function GET() {
+// Helper function to resolve user session with DB fallback
+async function getResolvedUserId(req?: NextRequest): Promise<string | null> {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user?.id) {
+    const session = await getSession(await headers());
+    if (session?.user?.id) return session.user.id;
+
+    // Fallback: Check cookie header manually
+    const headerObj = await headers();
+    const cookieHeader = headerObj.get('cookie') || req?.headers?.get('cookie') || '';
+    const match = cookieHeader.match(/better-auth\.session_token=([^;]+)/) ||
+                  cookieHeader.match(/session_token=([^;]+)/) ||
+                  cookieHeader.match(/auth_token=([^;]+)/);
+    
+    if (match && match[1]) {
+      const rawToken = decodeURIComponent(match[1]);
+      const token = rawToken.split('.')[0];
+      const dbSession = await prisma.session.findFirst({
+        where: {
+          OR: [
+            { token: rawToken },
+            { token: token },
+            { id: token },
+          ],
+          expiresAt: { gt: new Date() },
+        },
+        select: { userId: true },
+      });
+      if (dbSession?.userId) return dbSession.userId;
+    }
+  } catch (err) {
+    console.error('[getResolvedUserId-error]', err);
+  }
+  return null;
+}
+
+// ── GET /api/user/profile ─────────────────────────────────────────────────────
+export async function GET(req: NextRequest) {
+  try {
+    const userId = await getResolvedUserId(req);
+    if (!userId) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: {
         id: true,
         name: true,
@@ -31,7 +66,7 @@ export async function GET() {
 
     const account = await prisma.account.findFirst({
       where: {
-        userId: session.user.id,
+        userId,
         providerId: 'credential',
       },
       select: { password: true },
@@ -48,41 +83,33 @@ export async function GET() {
 }
 
 // ── PATCH /api/user/profile ───────────────────────────────────────────────────
-// Updates name, phone. Email changes require re-verification (future scope).
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session?.user?.id) {
+    const userId = await getResolvedUserId(req);
+    if (!userId) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await req.json();
     const { name, phone } = body;
 
-    if (!name || String(name).trim().length < 2) {
-      return NextResponse.json({ success: false, error: 'Name must be at least 2 characters' }, { status: 400 });
-    }
-
-    const updated = await prisma.user.update({
-      where: { id: session.user.id },
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
       data: {
-        name: String(name).trim(),
-        ...(phone !== undefined ? { phone: String(phone).trim() || null } : {}),
+        ...(name && { name }),
+        ...(phone && { phone }),
       },
-      select: { id: true, name: true, email: true, phone: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        avatar: true,
+      },
     });
 
-    // AuditLog
-    await prisma.auditLog.create({
-      data: {
-        userId: session.user.id,
-        action: 'profile_updated',
-        details: { changedFields: Object.keys(body) },
-      },
-    }).catch(() => {}); // non-critical
-
-    return NextResponse.json({ success: true, user: updated });
-  } catch (error) {
-    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
+    return NextResponse.json({ success: true, user: updatedUser });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message || 'Failed to update profile' }, { status: 500 });
   }
 }

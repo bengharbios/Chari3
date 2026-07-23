@@ -20,7 +20,9 @@ const files = [
   'src/app/api/seller/shipping/manifests/route.ts',
   'src/app/api/seller/shipping/waybill/route.ts',
   'src/app/api/admin/seed/route.ts',
-  'src/app/api/orders/route.ts'
+  'src/app/api/orders/route.ts',
+  'src/app/api/user/profile/route.ts',
+  'src/components/auth/AuthSync.tsx'
 ];
 
 for (const relPath of files) {

@@ -56,7 +56,7 @@ export default function AuthSync() {
         const isSelfOrigin = url.startsWith('/') || url.startsWith(window.location.origin);
         const isApiRoute = url.includes('/api/');
 
-        if (isSelfOrigin && isApiRoute && !url.includes('/api/auth/') && !url.includes('/login')) {
+        if (isSelfOrigin && isApiRoute && !url.includes('/api/auth/') && !url.includes('/login') && !url.includes('/api/user/profile') && !url.includes('/api/notifications')) {
           const authStore = useAuthStore.getState();
           if (authStore.isAuthenticated) {
             // Grace period: ignore 401s for 60 seconds after a fresh login.
