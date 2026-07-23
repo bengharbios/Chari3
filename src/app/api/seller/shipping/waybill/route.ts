@@ -60,6 +60,66 @@ function numberToWordsFr(amount: number, currency = 'Dinars Algériens'): string
   return result.trim() + ' ' + currency;
 }
 
+// Standard Code128-B Patterns (0 to 106)
+const CODE128_PATTERNS = [
+  "212222", "222122", "222221", "121223", "121322", "131222", "122213", "122312", "132212", "221213",
+  "221312", "231212", "112232", "122132", "122231", "113222", "123122", "123221", "223211", "221132",
+  "221231", "213212", "223112", "312131", "311222", "321122", "321221", "312212", "322112", "322211",
+  "212123", "212321", "202121", "111323", "131123", "131321", "112313", "132113", "132311", "211313",
+  "231113", "231311", "112133", "112331", "132131", "113123", "113321", "133121", "313121", "211331",
+  "231131", "213113", "213311", "213131", "311123", "311321", "331121", "312113", "312311", "332111",
+  "314111", "221411", "431111", "111224", "111422", "121124", "121421", "141122", "141221", "112214",
+  "112412", "122114", "122411", "142112", "142211", "241211", "221114", "413111", "241112", "134111",
+  "111242", "121142", "121241", "114212", "124112", "124211", "411212", "421112", "421211", "212141",
+  "214121", "412121", "111143", "111341", "131141", "114113", "114311", "411113", "411311", "113141",
+  "114131", "311141", "411131", "211412", "211214", "211232", "2331112"
+];
+
+function generateCode128SVG(text: string): string {
+  if (!text) return '';
+  const cleanText = text.trim();
+  let checksum = 104; // Start Code B
+  const patternIndices = [104];
+
+  for (let i = 0; i < cleanText.length; i++) {
+    const code = cleanText.charCodeAt(i) - 32;
+    if (code >= 0 && code <= 95) {
+      patternIndices.push(code);
+      checksum += code * (i + 1);
+    }
+  }
+
+  const checksumIndex = checksum % 103;
+  patternIndices.push(checksumIndex);
+  patternIndices.push(106); // Stop symbol
+
+  const symbolString = patternIndices.map(idx => CODE128_PATTERNS[idx] || '111111').join('');
+
+  let x = 10;
+  const quietZone = 10;
+  const height = 45;
+  const moduleWidth = 1.6;
+
+  let rects = '';
+  let isBar = true;
+
+  for (let i = 0; i < symbolString.length; i++) {
+    const w = parseInt(symbolString[i], 10) * moduleWidth;
+    if (isBar) {
+      rects += `<rect x="${x.toFixed(1)}" y="0" width="${w.toFixed(1)}" height="${height}" fill="#000"/>`;
+    }
+    x += w;
+    isBar = !isBar;
+  }
+
+  const totalWidth = x + quietZone;
+
+  return `<svg viewBox="0 0 ${totalWidth.toFixed(1)} ${height}" width="90%" height="${height}px" xmlns="http://www.w3.org/2000/svg" style="display:block; margin:0 auto;">
+    <rect width="100%" height="100%" fill="#ffffff"/>
+    ${rects}
+  </svg>`;
+}
+
 export async function GET(req: NextRequest) {
   try {
     await ensureDbConnection();
@@ -337,6 +397,7 @@ export async function GET(req: NextRequest) {
     });
 
     const isHomeDelivery = true;
+    const barcodeSvg = generateCode128SVG(trackingNo);
 
     // Standard Industry A6 Thermal Bill of Lading HTML/CSS
     const htmlContent = `
@@ -544,10 +605,8 @@ export async function GET(req: NextRequest) {
 
     <!-- Barcode & QR Code Section -->
     <div class="barcode-container">
-      <div style="display:flex; justify-content:center; align-items:center; gap:1.5px; height:32px; background:#fff; padding:2px; margin:0 auto; width:80%;">
-        ${Array.from({ length: 45 }).map((_, i) => `
-          <div style="height:100%; width:${(i % 3 === 0 ? 3 : (i % 2 === 0 ? 1 : 2))}px; background:#000;"></div>
-        `).join('')}
+      <div style="padding:4px 0; background:#fff; margin:0 auto; text-align:center;">
+        ${barcodeSvg}
       </div>
       <div class="tracking-code">${trackingNo}</div>
       <div style="font-size:8px; color:#555;">${dict.orderNumLabel} #${orderNum} | ${dict.dateLabel} ${createdDate}</div>
