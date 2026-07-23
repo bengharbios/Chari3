@@ -20,7 +20,6 @@ export async function GET(req: NextRequest) {
           items: { include: { product: true } },
           store: true,
           buyer: true,
-          address: true,
         },
       });
     } else if (tracking) {
@@ -37,7 +36,6 @@ export async function GET(req: NextRequest) {
           items: { include: { product: true } },
           store: true,
           buyer: true,
-          address: true,
         },
       });
     }

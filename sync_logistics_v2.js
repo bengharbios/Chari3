@@ -19,7 +19,8 @@ const files = [
   'src/app/seller/shipping/page.tsx',
   'src/app/api/seller/shipping/manifests/route.ts',
   'src/app/api/seller/shipping/waybill/route.ts',
-  'src/app/api/admin/seed/route.ts'
+  'src/app/api/admin/seed/route.ts',
+  'src/app/api/orders/route.ts'
 ];
 
 for (const relPath of files) {
@@ -40,7 +41,7 @@ for (const relPath of files) {
     execSync(`${plinkExe} -ssh -P 65002 u584311043@82.198.227.200 -pw "Nabila@@141729" -batch -m batch_cmd.sh`);
   }
 
-  const decodeCmd = `/usr/bin/php -r '$b64 = file_get_contents("${tmpPath}"); file_put_contents("${remotePath}", base64_decode($b64)); echo "Successfully wrote " . filesize("${remotePath}") . " bytes to Hostinger!\\n";' && rm ${tmpPath}`;
+  const decodeCmd = `/usr/bin/php -r '$b64 = file_get_contents("${tmpPath}"); file_put_contents("${remotePath}", base64_decode($b64)); echo "Successfully wrote " . filesize("${remotePath}") . " bytes to Hostinger!\\n";' && rm -f ${tmpPath}`;
   fs.writeFileSync('batch_cmd.sh', decodeCmd, 'utf-8');
   const out = execSync(`${plinkExe} -ssh -P 65002 u584311043@82.198.227.200 -pw "Nabila@@141729" -batch -m batch_cmd.sh`, { encoding: 'utf-8' });
   console.log(out);

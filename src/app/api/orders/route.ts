@@ -137,15 +137,26 @@ export async function POST(request: Request) {
       if (product?.storeId) {
         const store = await db.store.findUnique({
           where: { id: product.storeId },
-          select: { managerId: true }
+          select: { userId: true, managerId: true }
         });
-        notifyUserId = store?.managerId || null;
-      } else if (product?.sellerId) {
+        notifyUserId = store?.userId || store?.managerId || null;
+      }
+      
+      if (!notifyUserId && product?.sellerId) {
         const sellerProfile = await db.sellerProfile.findUnique({
           where: { id: product.sellerId },
           select: { userId: true }
         });
         notifyUserId = sellerProfile?.userId || null;
+      }
+
+      // Also fallback to storeId on the order itself
+      if (!notifyUserId && order.storeId) {
+        const store = await db.store.findUnique({
+          where: { id: order.storeId },
+          select: { userId: true, managerId: true }
+        });
+        notifyUserId = store?.userId || store?.managerId || null;
       }
 
       if (notifyUserId) {

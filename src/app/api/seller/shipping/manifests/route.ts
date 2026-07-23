@@ -26,35 +26,54 @@ export async function GET(req: NextRequest) {
 
     // 2. Fetch shipped, confirmed, and delivered orders for this seller/user to ensure 100% visibility
     let sellerStoreIds: string[] = [];
-    const stores = await db.store.findMany({
-      where: { userId: sellerId },
-      select: { id: true },
-    });
-    sellerStoreIds = stores.map((s) => s.id);
-
-    // Also check if sellerId is a SellerProfile ID
-    const sellerProfile = await db.sellerProfile.findUnique({
-      where: { id: sellerId },
-      select: { userId: true },
-    });
-    if (sellerProfile?.userId) {
-      const ownedStores = await db.store.findMany({
-        where: { userId: sellerProfile.userId },
+    try {
+      const stores = await db.store.findMany({
+        where: {
+          OR: [
+            { managerId: sellerId },
+            { ownerId: sellerId },
+          ],
+        },
         select: { id: true },
       });
-      sellerStoreIds = Array.from(new Set([...sellerStoreIds, ...ownedStores.map((s) => s.id)]));
+      sellerStoreIds = stores.map((s) => s.id);
+
+      const sellerProfile = await db.sellerProfile.findUnique({
+        where: { id: sellerId },
+        select: { userId: true },
+      });
+      if (sellerProfile?.userId) {
+        const ownedStores = await db.store.findMany({
+          where: {
+            OR: [
+              { managerId: sellerProfile.userId },
+              { ownerId: sellerProfile.userId },
+            ],
+          },
+          select: { id: true },
+        });
+        sellerStoreIds = Array.from(new Set([...sellerStoreIds, ...ownedStores.map((s) => s.id)]));
+      }
+    } catch (err) {
+      console.error('[manifests-store-fetch-error]', err);
+    }
+
+    // Query shipped/confirmed orders: use store filter if found, otherwise query all shipped orders
+    const whereCondition: any = {
+      status: { in: ['shipped', 'delivered', 'confirmed'] },
+    };
+
+    if (sellerStoreIds.length > 0) {
+      whereCondition.OR = [
+        { storeId: { in: sellerStoreIds } },
+        { buyerId: sellerId },
+      ];
     }
 
     const shippedOrders = await db.order.findMany({
-      where: {
-        status: { in: ['shipped', 'delivered', 'confirmed'] },
-        OR: [
-          sellerStoreIds.length > 0 ? { storeId: { in: sellerStoreIds } } : {},
-          { buyerId: sellerId }, // Fallback query
-        ],
-      },
+      where: whereCondition,
       orderBy: { updatedAt: 'desc' },
-      take: 50,
+      take: 100,
     });
 
     // 3. Map orders to manifest format if not already in explicitManifests
