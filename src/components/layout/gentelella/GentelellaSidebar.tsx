@@ -262,6 +262,59 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
   }
 ];
 
+const LOGISTICS_GROUPS: GentelellaNavGroup[] = [
+  {
+    id: 'logistics-main',
+    labelKey: 'sidebar.logistics',
+    trees: [
+      {
+        id: 'logistics-overview',
+        labelKey: 'sidebar.overview',
+        icon: LayoutDashboard,
+        directPageId: 'logistics' as PageType,
+        path: '/logistics'
+      },
+      {
+        id: 'logistics-active-tree',
+        labelKey: 'sidebar.activeShipments',
+        icon: Navigation,
+        directPageId: 'logistics-active' as PageType,
+        badge: 4,
+        badgeColor: 'bg-emerald-500',
+        path: '/logistics/active'
+      },
+      {
+        id: 'logistics-manifests-tree',
+        labelKey: 'sidebar.manifests',
+        icon: FileText,
+        directPageId: 'logistics-manifests' as PageType,
+        path: '/logistics/manifests'
+      },
+      {
+        id: 'logistics-history-tree',
+        labelKey: 'sidebar.history',
+        icon: Receipt,
+        directPageId: 'logistics-history' as PageType,
+        path: '/logistics/history'
+      },
+      {
+        id: 'logistics-documents-tree',
+        labelKey: 'sidebar.verification',
+        icon: ShieldCheck,
+        directPageId: 'logistics-documents' as PageType,
+        path: '/logistics/documents'
+      },
+      {
+        id: 'logistics-earnings-tree',
+        labelKey: 'sidebar.wallet',
+        icon: Wallet,
+        directPageId: 'logistics-earnings' as PageType,
+        path: '/logistics/earnings'
+      }
+    ]
+  }
+];
+
 export default function GentelellaSidebar({ className }: { className?: string }) {
   const { locale, currentPage, setCurrentPage, isSidebarOpen, setSidebarOpen, isDesktopSidebarCollapsed } = useAppStore();
   const { user, isBuyerMode, logout } = useAuthStore();
@@ -276,7 +329,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
     if (typeof window !== 'undefined') {
       const path = window.location.pathname;
       const initialOpen: Record<string, boolean> = {};
-      const allGroups = [...STORE_GROUPS, ...SELLER_GROUPS];
+      const allGroups = [...STORE_GROUPS, ...SELLER_GROUPS, ...LOGISTICS_GROUPS];
       allGroups.forEach((group) => {
         group.trees.forEach((tree) => {
           const hasActiveChild = tree.children?.some(
@@ -348,7 +401,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
 
   // Open the tree that contains the current page automatically on load
   useEffect(() => {
-    const groups = user?.role === 'store_manager' ? STORE_GROUPS : (user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer') ? SELLER_GROUPS : [];
+    const groups = user?.role === 'store_manager' ? STORE_GROUPS : (user?.role === 'logistics' || user?.role === 'driver' || user?.role === 'carrier') ? LOGISTICS_GROUPS : (user?.role === 'seller' || user?.role === 'store' || user?.role === 'freelancer') ? SELLER_GROUPS : [];
     const newOpenTrees = { ...openTrees };
     let changed = false;
     
@@ -370,7 +423,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
   if (!user) return null;
 
   // Filter wallet/debts based on payment model
-  let activeGroups = user.role === 'store_manager' ? STORE_GROUPS : (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer') ? SELLER_GROUPS : [];
+  let activeGroups = user.role === 'store_manager' ? STORE_GROUPS : (user.role === 'logistics' || user.role === 'driver' || user.role === 'carrier') ? LOGISTICS_GROUPS : (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer') ? SELLER_GROUPS : [];
 
   const isBusiness = merchantType === 'business' || ['store_manager', 'store'].includes(user.role) || (user.role === 'store_manager' && isOwner);
 
