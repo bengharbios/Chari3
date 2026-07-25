@@ -1,6 +1,7 @@
 // ============================================
-// DRIVER LICENSE CATEGORIES SYSTEM (International & Algeria Official)
-// Article 180 of Executive Decree 04-381 (Algeria) + International Standards
+// DRIVER LICENSE CATEGORIES SYSTEM
+// Multi-Country Licensing Engine (Algeria Official, GCC, EU, Egypt & Custom Admin Overrides)
+// Article 180 of Executive Decree 04-381 (Algeria) + Global Standards
 // ============================================
 
 export interface LicenseCategory {
@@ -105,6 +106,121 @@ export const ALGERIA_LICENSES: LicenseCategory[] = [
   },
 ];
 
+// 🇸🇦 SAUDI ARABIA OFFICIAL LICENSE CATEGORIES
+export const SAUDI_LICENSES: LicenseCategory[] = [
+  {
+    code: 'SA_MOTO',
+    nameAr: 'رخصة قيادة دراجة نارية',
+    nameEn: 'Motorcycle License',
+    descriptionAr: 'قيادة الدراجات النارية العادية والسكوتر لتوصيل الطلبات السريعة.',
+    descriptionEn: 'Motorcycles and delivery scooters.',
+    allowedVehicles: ['motorcycle', 'scooter', 'trike'],
+  },
+  {
+    code: 'SA_PRIVATE',
+    nameAr: 'رخصة قيادة خاصة (سيارات ووانيتات)',
+    nameEn: 'Private Driving License',
+    descriptionAr: 'قيادة السيارات الخاصة ومركبات النقل الخفيف والوانيت حتى 3.5 طن.',
+    descriptionEn: 'Private passenger cars and light commercial pickups under 3.5 tons.',
+    allowedVehicles: ['car', 'van', 'pickup'],
+    maxWeightTons: 3.5,
+  },
+  {
+    code: 'SA_HEAVY_FREIGHT',
+    nameAr: 'رخصة قيادة نقل ثقيل (شاحنات ومعدات)',
+    nameEn: 'Heavy Freight Transport License',
+    descriptionAr: 'قيادة شاحنات النقل المتوسط والثقيل والتريلات لنقل البضائع.',
+    descriptionEn: 'Heavy trucks, trailers, and commercial cargo haulers.',
+    allowedVehicles: ['truck_light', 'truck_medium', 'truck_heavy', 'articulated_truck'],
+  },
+  {
+    code: 'SA_PUBLIC_BUS',
+    nameAr: 'رخصة قيادة حافلات ونقل عام',
+    nameEn: 'Public Bus Driving License',
+    descriptionAr: 'قيادة الحافلات ووسائط النقل الجماعي.',
+    descriptionEn: 'Buses and mass passenger transit.',
+    allowedVehicles: ['bus', 'minibus'],
+  },
+];
+
+// 🇦🇪 UAE OFFICIAL LICENSE CATEGORIES
+export const UAE_LICENSES: LicenseCategory[] = [
+  {
+    code: 'CAT_1',
+    nameAr: 'الفئة 1 - دراجة نارية (Category 1 - Motorcycle)',
+    nameEn: 'Category 1 - Motorcycle',
+    descriptionAr: 'قيادة الدراجات النارية ومترددات التوصيل.',
+    descriptionEn: 'Motorcycles and delivery bikes.',
+    allowedVehicles: ['motorcycle', 'scooter'],
+  },
+  {
+    code: 'CAT_3',
+    nameAr: 'الفئة 3 - مركبة خفيفة (Category 3 - Light Vehicle)',
+    nameEn: 'Category 3 - Light Vehicle',
+    descriptionAr: 'السيارات الخاصة والفانات الخفيفة للتوصيل المحلي.',
+    descriptionEn: 'Light passenger cars and commercial vans under 2.5 tons.',
+    allowedVehicles: ['car', 'van', 'pickup'],
+    maxWeightTons: 3.5,
+  },
+  {
+    code: 'CAT_4',
+    nameAr: 'الفئة 4 - شاحنة ثقيلة (Category 4 - Heavy Truck)',
+    nameEn: 'Category 4 - Heavy Truck',
+    descriptionAr: 'الشاحنات والمركبات الثقيلة لنقل البضائع.',
+    descriptionEn: 'Heavy trucks and commercial transport vehicles.',
+    allowedVehicles: ['truck_medium', 'truck_heavy'],
+  },
+  {
+    code: 'CAT_5',
+    nameAr: 'الفئة 5 - حافلة خفيفة (Category 5 - Light Bus)',
+    nameEn: 'Category 5 - Light Bus',
+    descriptionAr: 'الحافلات الخفيفة المخصصة لنقل الأشخاص حتى 26 ركاب.',
+    descriptionEn: 'Light buses up to 26 passengers.',
+    allowedVehicles: ['minibus', 'van_passenger'],
+  },
+];
+
+// 🇫🇷 FRANCE & EU OFFICIAL LICENSE CATEGORIES
+export const FRANCE_LICENSES: LicenseCategory[] = [
+  {
+    code: 'AM',
+    nameAr: 'AM - cyclomoteur (< 50 cm³)',
+    nameEn: 'AM - Moped & Light Quadricycle',
+    nameFr: 'AM - Cyclomoteur et quadricycle léger',
+    descriptionAr: 'الدراجات الخفيفة جداً أقل من 50 سم³.',
+    descriptionEn: 'Mopeds and light quadricycles under 50cc.',
+    allowedVehicles: ['scooter', 'moped'],
+  },
+  {
+    code: 'A1_EU',
+    nameAr: 'A1 - Motocyclette légère (≤ 125 cm³)',
+    nameEn: 'A1 - Light Motorcycle (≤ 125cc)',
+    nameFr: 'A1 - Motocyclette légère (≤ 125 cm³)',
+    descriptionAr: 'الدراجات النارية الخفيفة حتى 125 سم³.',
+    descriptionEn: 'Light motorcycles up to 125cc.',
+    allowedVehicles: ['motorcycle', 'scooter'],
+  },
+  {
+    code: 'B_EU',
+    nameAr: 'B - Véhicule léger (< 3.5t)',
+    nameEn: 'B - Passenger Cars & Vans (< 3.5t)',
+    nameFr: 'B - Véhicules légers et utilitaires (< 3.5t)',
+    descriptionAr: 'السيارات والفانات الخفيفة أقل من 3.5 طن.',
+    descriptionEn: 'Passenger cars and light utility vans under 3.5t.',
+    allowedVehicles: ['car', 'van', 'pickup'],
+    maxWeightTons: 3.5,
+  },
+  {
+    code: 'C_EU',
+    nameAr: 'C - Poids lourd (> 3.5t)',
+    nameEn: 'C - Heavy Freight (> 3.5t)',
+    nameFr: 'C - Poids lourd (> 3.5t)',
+    descriptionAr: 'الشاحنات لنقل البضائع أكبر من 3.5 طن.',
+    descriptionEn: 'Heavy goods transport vehicles exceeding 3.5t.',
+    allowedVehicles: ['truck_medium', 'truck_heavy'],
+  },
+];
+
 // 🌐 INTERNATIONAL / GLOBAL DEFAULT CATEGORIES (Fallback for any country)
 export const GLOBAL_LICENSES: LicenseCategory[] = [
   {
@@ -151,18 +267,34 @@ export const GLOBAL_LICENSES: LicenseCategory[] = [
 ];
 
 // ============================================
+// COUNTRY MAP
+// ============================================
+
+export const COUNTRY_LICENSE_PRESETS: Record<string, LicenseCategory[]> = {
+  DZ: ALGERIA_LICENSES,
+  DZA: ALGERIA_LICENSES,
+  SA: SAUDI_LICENSES,
+  SAU: SAUDI_LICENSES,
+  AE: UAE_LICENSES,
+  ARE: UAE_LICENSES,
+  FR: FRANCE_LICENSES,
+  FRA: FRANCE_LICENSES,
+};
+
+// ============================================
 // HELPER FUNCTIONS
 // ============================================
 
 /**
  * Get available license categories for a given country code (DZ, SA, AE, FR, or fallback GLOBAL)
+ * Also supports runtime Admin overrides provided via parameter.
  */
-export function getLicenseCategories(countryCode?: string): LicenseCategory[] {
-  const code = (countryCode || 'DZ').toUpperCase();
-  if (code === 'DZ' || code === 'DZA' || code === 'ALGERIA') {
-    return ALGERIA_LICENSES;
+export function getLicenseCategories(countryCode?: string, customAdminCategories?: LicenseCategory[]): LicenseCategory[] {
+  if (customAdminCategories && Array.isArray(customAdminCategories) && customAdminCategories.length > 0) {
+    return customAdminCategories;
   }
-  return GLOBAL_LICENSES;
+  const code = (countryCode || 'DZ').toUpperCase();
+  return COUNTRY_LICENSE_PRESETS[code] || GLOBAL_LICENSES;
 }
 
 /**
@@ -171,15 +303,15 @@ export function getLicenseCategories(countryCode?: string): LicenseCategory[] {
 export function canLicenseDriveVehicle(
   licenseCode: string,
   vehicleType: string,
-  countryCode: string = 'DZ'
+  countryCode: string = 'DZ',
+  customAdminCategories?: LicenseCategory[]
 ): boolean {
-  const categories = getLicenseCategories(countryCode);
+  const categories = getLicenseCategories(countryCode, customAdminCategories);
   const matched = categories.find((c) => c.code.toUpperCase() === licenseCode.toUpperCase());
   if (!matched) return true; // Flexible fallback if unlisted
 
   const normalizedVehicle = vehicleType.toLowerCase();
   
-  // Direct match or category group matching
   return matched.allowedVehicles.some(
     (v) => v.toLowerCase() === normalizedVehicle || normalizedVehicle.includes(v)
   );
