@@ -172,15 +172,16 @@ const SUPPLIER_NAV_GROUPS: NavGroup[] = [
 const LOGISTICS_NAV_GROUPS: NavGroup[] = [
   {
     id: 'logistics-group',
-    labelAr: 'مندوب الشحن',
-    labelEn: 'Logistics',
+    labelAr: 'إدارة الشحن والتوصيل',
+    labelEn: 'Logistics Operations',
     icon: 'Truck',
     items: [
-      { id: 'logistics', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard', path: '/logistics' },
-      { id: 'logistics-active', labelAr: 'الشحنات النشطة', labelEn: 'Active Shipments', icon: 'Navigation', badge: 7, path: '/logistics/active' },
-      { id: 'logistics-deliveries', labelAr: 'التوصيلات', labelEn: 'Deliveries', icon: 'MapPin', path: '/logistics/deliveries' },
-      { id: 'logistics-history', labelAr: 'السجل', labelEn: 'History', icon: 'FileText', path: '/logistics/history' },
-      { id: 'logistics-earnings', labelAr: 'الأرباح', labelEn: 'Earnings', icon: 'Wallet', path: '/logistics/earnings' },
+      { id: 'logistics', labelAr: 'نظرة عامة والخرائط', labelEn: 'Overview & Maps', icon: 'LayoutDashboard', path: '/logistics' },
+      { id: 'logistics-active', labelAr: 'الشحنات النشطة والـ PIN', labelEn: 'Active Shipments', icon: 'Navigation', badge: 4, path: '/logistics/active' },
+      { id: 'logistics-manifests', labelAr: 'منافيست الشحن والبوالص', labelEn: 'Manifests & Labels', icon: 'FileText', path: '/logistics/manifests' },
+      { id: 'logistics-history', labelAr: 'سجل التوصيل والتحصيل', labelEn: 'Delivery & COD History', icon: 'Receipt', path: '/logistics/history' },
+      { id: 'logistics-documents', labelAr: 'وثائق ورخصة المندوب', labelEn: 'Driver License & Docs', icon: 'ShieldCheck', path: '/logistics/documents' },
+      { id: 'logistics-earnings', labelAr: 'المحفظة والأرباح', labelEn: 'Wallet & Payouts', icon: 'Wallet', path: '/logistics/earnings' },
     ]
   }
 ];
