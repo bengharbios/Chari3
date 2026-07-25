@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAppStore as appStore } from '@/lib/store';
+import StoreOrdersPage from './StoreOrdersPage';
 import { toast } from 'sonner';
 import SellerChatTab from '@/components/seller/chat/SellerChatTab';
 import StoreDashboard from '@/components/dashboards/StoreDashboard';
@@ -380,7 +381,7 @@ export default function SellerDashboard() {
       {isSuspended && data?.storeStatus && (
         <SuspensionBanner storeStatus={data.storeStatus} t={t} isAr={isAr} />
       )}
-      <SellerOrdersTab data={data} isLoading={isLoading} t={t} isAr={isAr} onRefresh={refreshData} />
+      <StoreOrdersPage />
     </div>
   );
 

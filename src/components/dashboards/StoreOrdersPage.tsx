@@ -1,20 +1,37 @@
 'use client';
-import React from 'react';
-import { useState, useEffect } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { PageHeader } from '@/components/shared/StatsCard';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow
+} from '@/components/ui/table';
+import {
   Package, Search, Calendar, MapPin, Truck, CheckCircle2, XCircle, Clock, 
-  MoreVertical, Download, Printer, Loader2, User, Table as TableIcon, LayoutGrid, List
+  MoreHorizontal, Download, Printer, Loader2, User, Table as TableIcon, LayoutGrid, List,
+  ArrowUpDown, Filter, Eye, FileText, Check, DollarSign, RefreshCw, Plus, SlidersHorizontal
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+const STAGGER_CONTAINER = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
+};
+
+const FADE_UP = {
+  hidden: { opacity: 0, y: 15 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+};
 
 export default function StoreOrdersPage() {
   const { locale } = useAppStore();
@@ -22,12 +39,11 @@ export default function StoreOrdersPage() {
   const t = (ar: string, en: string) => locale === 'ar' ? ar : en;
   const isAr = locale === 'ar';
 
-
   const [orders, setOrders] = useState<any[]>([]);
   const [statuses, setStatuses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'list' | 'kanban' | 'table'>('list');
+  const [viewMode, setViewMode] = useState<'table' | 'list' | 'kanban'>('table');
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   
@@ -39,13 +55,13 @@ export default function StoreOrdersPage() {
 
   // Load saved view mode on mount
   useEffect(() => {
-    const savedMode = localStorage.getItem('chari3_order_view_mode') as 'list' | 'kanban' | 'table';
-    if (savedMode && ['list', 'kanban', 'table'].includes(savedMode)) {
+    const savedMode = localStorage.getItem('chari3_order_view_mode') as 'table' | 'list' | 'kanban';
+    if (savedMode && ['table', 'list', 'kanban'].includes(savedMode)) {
       setViewMode(savedMode);
     }
   }, []);
 
-  const handleViewModeChange = (mode: 'list' | 'kanban' | 'table') => {
+  const handleViewModeChange = (mode: 'table' | 'list' | 'kanban') => {
     setViewMode(mode);
     localStorage.setItem('chari3_order_view_mode', mode);
   };
@@ -58,17 +74,17 @@ export default function StoreOrdersPage() {
         setStatuses(data.statuses);
       } else {
         setStatuses([
-          { key: 'pending', nameAr: 'معلق', nameEn: 'Pending', color: '#6B7280' },
-          { key: 'confirmed', nameAr: 'قيد التجهيز', nameEn: 'Processing', color: '#3B82F6' },
-          { key: 'shipped', nameAr: 'تم الشحن', nameEn: 'Shipped', color: '#F59E0B' },
-          { key: 'delivered', nameAr: 'تم التوصيل', nameEn: 'Delivered', color: '#10B981' },
-          { key: 'cancelled', nameAr: 'ملغي', nameEn: 'Cancelled', color: '#EF4444' },
-          { key: 'refunded', nameAr: 'مسترد', nameEn: 'Refunded', color: '#8B5CF6' }
+          { key: 'pending', nameAr: 'معلق', nameEn: 'Pending', color: '#f59e0b' },
+          { key: 'confirmed', nameAr: 'مؤكد', nameEn: 'Confirmed', color: '#3b82f6' },
+          { key: 'shipped', nameAr: 'تم الشحن', nameEn: 'Shipped', color: '#6366f1' },
+          { key: 'delivered', nameAr: 'تم التوصيل', nameEn: 'Delivered', color: '#10b981' },
+          { key: 'cancelled', nameAr: 'ملغي', nameEn: 'Cancelled', color: '#ef4444' },
+          { key: 'refunded', nameAr: 'مسترد', nameEn: 'Refunded', color: '#8b5cf6' }
         ]);
       }
     } catch (e) {
       setStatuses([
-        { key: 'pending', nameAr: 'معلق', nameEn: 'Pending', color: '#6B7280' }
+        { key: 'pending', nameAr: 'معلق', nameEn: 'Pending', color: '#f59e0b' }
       ]);
     }
   };
@@ -105,11 +121,11 @@ export default function StoreOrdersPage() {
 
           return {
             id: o.id,
-            orderNumber: o.orderNumber || 'N/A',
+            orderNumber: o.orderNumber || `CHARI-${o.id.substring(0, 8)}`,
             buyerName: parsedAddress.fullName || o.buyer?.name || t('زبون ضيف', 'Guest Buyer'),
             buyerPhone: parsedAddress.phone || o.buyer?.phone || '',
-            date: new Date(o.createdAt).toLocaleDateString('en-GB'),
-            status: o.status,
+            date: new Date(o.createdAt).toLocaleDateString(isAr ? 'ar-DZ' : 'en-US'),
+            status: o.status || 'pending',
             paymentMethod: o.paymentMethod || 'cod',
             paymentStatus: o.paymentStatus || 'pending',
             address: parsedAddress,
@@ -122,12 +138,12 @@ export default function StoreOrdersPage() {
               productName: item.product?.name || item.productName || t('منتج غير معرف', 'Unknown Product'),
               price: item.price,
               quantity: item.quantity,
-              total: item.total,
+              total: item.total || (item.price * item.quantity),
             }))
           };
         });
         setOrders(finalOrders);
-        setTotalPages(data.pagination.totalPages || 1);
+        setTotalPages(data.pagination?.totalPages || 1);
       }
     } catch (err) {
       toast.error(t('حدث خطأ أثناء جلب الطلبات', 'Error fetching orders'));
@@ -148,7 +164,6 @@ export default function StoreOrdersPage() {
         const found = orders.find((o) => o.id === targetOrderId);
         if (found && !selectedOrder) {
           setSelectedOrder(found);
-          // Optionally clean up the URL without a page reload
           const url = new URL(window.location.href);
           url.searchParams.delete('orderId');
           window.history.replaceState({}, '', url.toString());
@@ -179,7 +194,7 @@ export default function StoreOrdersPage() {
   const handleExport = () => {
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
       + "رقم الطلب,العميل,الهاتف,التاريخ,الحالة,المجموع\n"
-      + orders.map(o => `${o.orderNumber},${o.buyerName},${o.buyerPhone},${o.date},${getStatusConfig(o.status).label},${o.total}`).join("\n");
+      + orders.map(o => `${o.orderNumber},${o.buyerName},${o.buyerPhone},${o.date},${o.status},${o.total}`).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
@@ -191,110 +206,11 @@ export default function StoreOrdersPage() {
 
   const handlePrintInvoice = () => {
     if (!selectedOrder) return;
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const itemsRows = selectedOrder.items.map((item: any) => `
-      <tr style="border-bottom: 1px solid #e2e8f0;">
-        <td style="padding: 12px; text-align: start;">${item.productName}</td>
-        <td style="padding: 12px; text-align: center;">${item.price.toLocaleString()} DZD</td>
-        <td style="padding: 12px; text-align: center;">${item.quantity}</td>
-        <td style="padding: 12px; text-align: end; font-weight: bold;">${item.total.toLocaleString()} DZD</td>
-      </tr>
-    `).join('');
-
-    const isArOrder = locale === 'ar';
-
-    printWindow.document.write(`
-      <html dir="${isArOrder ? 'rtl' : 'ltr'}">
-        <head>
-          <title>Invoice #${selectedOrder.orderNumber}</title>
-          <style>
-            body { font-family: 'Cairo', Arial, sans-serif; margin: 40px; color: #1e293b; background-color: #fff; }
-            .header-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-            .brand-name { font-size: 28px; font-weight: 900; color: #fbbf24; }
-            .title { font-size: 20px; font-weight: bold; text-align: end; }
-            .details-table { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
-            .details-td { width: 50%; vertical-align: top; font-size: 14px; line-height: 1.6; }
-            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-            .items-th { background-color: #f8fafc; padding: 12px; font-weight: bold; border-bottom: 2px solid #e2e8f0; font-size: 14px; }
-            .totals-table { width: 40%; margin-${isArOrder ? 'right' : 'left'}: auto; border-collapse: collapse; font-size: 14px; }
-            .footer { text-align: center; margin-top: 60px; font-size: 12px; color: #64748b; border-top: 1px dashed #e2e8f0; padding-top: 20px; }
-          </style>
-        </head>
-        <body>
-          <table class="header-table">
-            <tr>
-              <td class="brand-name">ChariDay</td>
-              <td class="title">${isArOrder ? 'فاتورة مبيعات' : 'Sales Invoice'}</td>
-            </tr>
-          </table>
-
-          <table class="details-table">
-            <tr>
-              <td class="details-td">
-                <strong>${isArOrder ? 'تفاصيل العميل:' : 'Bill To:'}</strong><br />
-                ${selectedOrder.buyerName}<br />
-                <span dir="ltr">${selectedOrder.buyerPhone}</span><br />
-                ${selectedOrder.address?.street || ''}, ${selectedOrder.address?.city || ''}
-              </td>
-              <td class="details-td" style="text-align: ${isArOrder ? 'left' : 'right'};">
-                <strong>${isArOrder ? 'معلومات الفاتورة:' : 'Invoice Details:'}</strong><br />
-                ${isArOrder ? 'رقم الطلب:' : 'Order ID:'} #${selectedOrder.orderNumber}<br />
-                ${isArOrder ? 'تاريخ الفاتورة:' : 'Date:'} ${selectedOrder.date}<br />
-                ${isArOrder ? 'طريقة الدفع:' : 'Payment:'} ${selectedOrder.paymentMethod.toUpperCase()} (${selectedOrder.paymentStatus.toUpperCase()})
-              </td>
-            </tr>
-          </table>
-
-          <table class="items-table">
-            <thead>
-              <tr>
-                <th class="items-th" style="text-align: start;">${isArOrder ? 'المنتج' : 'Product'}</th>
-                <th class="items-th" style="text-align: center;">${isArOrder ? 'سعر الوحدة' : 'Price'}</th>
-                <th class="items-th" style="text-align: center;">${isArOrder ? 'الكمية' : 'Quantity'}</th>
-                <th class="items-th" style="text-align: end;">${isArOrder ? 'الإجمالي' : 'Total'}</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsRows}
-            </tbody>
-          </table>
-
-          <table class="totals-table">
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-              <td style="padding: 8px 0; text-align: start;">${isArOrder ? 'المجموع الفرعي:' : 'Subtotal:'}</td>
-              <td style="padding: 8px 0; text-align: end;">${selectedOrder.subtotal.toLocaleString()} DZD</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #e2e8f0;">
-              <td style="padding: 8px 0; text-align: start;">${isArOrder ? 'تكلفة الشحن:' : 'Shipping:'}</td>
-              <td style="padding: 8px 0; text-align: end;">${(selectedOrder.shippingCost || 0).toLocaleString()} DZD</td>
-            </tr>
-            ${selectedOrder.discount > 0 ? `
-            <tr style="border-bottom: 1px solid #e2e8f0; color: #ef4444;">
-              <td style="padding: 8px 0; text-align: start;">${isArOrder ? 'الخصم:' : 'Discount:'}</td>
-              <td style="padding: 8px 0; text-align: end;">-${selectedOrder.discount.toLocaleString()} DZD</td>
-            </tr>` : ''}
-            <tr style="font-weight: bold; font-size: 16px;">
-              <td style="padding: 8px 0; text-align: start; color: #fbbf24;">${isArOrder ? 'المجموع الإجمالي:' : 'Total:'}</td>
-              <td style="padding: 8px 0; text-align: end; color: #fbbf24;">${selectedOrder.total.toLocaleString()} DZD</td>
-            </tr>
-          </table>
-
-          <div class="footer">
-            ${isArOrder ? 'نشكركم على تسوقكم من متجرنا عبر منصة ChariDay!' : 'Thank you for shopping with us via ChariDay platform!'}
-          </div>
-          
-          <script>
-            window.onload = function() { window.print(); }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    const waybillUrl = `/api/seller/shipping/waybill?orderId=${selectedOrder.id}&lang=${locale}`;
+    window.open(waybillUrl, '_blank', 'width=650,height=800');
   };
 
-  // HTML5 Drag and Drop handlers
+  // Drag and Drop handlers for Kanban
   const handleDragStart = (e: React.DragEvent, orderId: string) => {
     e.dataTransfer.setData('orderId', orderId);
   };
@@ -309,532 +225,458 @@ export default function StoreOrdersPage() {
     }
   };
 
-  const getStatusConfig = (statusKey: string) => {
-    const found = statuses.find(s => s.key === statusKey);
-    return found ? { label: isAr ? found.nameAr : (found.nameEn || found.nameAr), color: found.color } : { label: statusKey, color: '#6B7280' };
-  };
-
-  const getStatusColor = (statusKey: string) => {
+  const getStatusBadge = (statusKey: string) => {
     switch (statusKey) {
-      case 'delivered': return 'bg-emerald-500';
-      case 'shipped': return 'bg-blue-500';
-      case 'processing': return 'bg-blue-400';
-      case 'confirmed': return 'bg-indigo-500';
-      case 'pending': return 'bg-amber-500';
-      case 'cancelled': return 'bg-red-500';
-      case 'refunded': return 'bg-purple-500';
-      default: return 'bg-gray-400';
+      case 'delivered':
+        return <Badge className="bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 border-emerald-500/20">{t('تم التوصيل', 'Delivered')}</Badge>;
+      case 'shipped':
+        return <Badge className="bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 border-indigo-500/20">{t('تم الشحن', 'Shipped')}</Badge>;
+      case 'confirmed':
+      case 'processing':
+        return <Badge className="bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 border-blue-500/20">{t('مؤكد', 'Confirmed')}</Badge>;
+      case 'pending':
+        return <Badge className="bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border-amber-500/20">{t('قيد الانتظار', 'Pending')}</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border-red-500/20">{t('ملغي', 'Cancelled')}</Badge>;
+      default:
+        return <Badge className="bg-slate-500/10 text-slate-500 hover:bg-slate-500/20 border-slate-500/20">{statusKey}</Badge>;
     }
   };
 
-  const totalOrdersCount = orders.length; // Ideally from API
-  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+  const filteredOrders = orders.filter(o => {
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = 
+      (o.orderNumber && o.orderNumber.toLowerCase().includes(term)) ||
+      (o.buyerName && o.buyerName.toLowerCase().includes(term)) ||
+      (o.buyerPhone && o.buyerPhone.includes(term));
+    const matchesTab = statusFilter === 'all' || o.status === statusFilter;
+    return matchesSearch && matchesTab;
+  });
+
+  const totalOrdersCount = orders.length;
+  const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0);
   const pendingCount = orders.filter(o => o.status === 'pending').length;
+  const deliveredCount = orders.filter(o => o.status === 'delivered').length;
 
   return (
-    <div className="space-y-6 p-4 md:p-6 text-start">
+    <motion.div 
+      className="space-y-6 p-4 md:p-6 text-start"
+      variants={STAGGER_CONTAINER}
+      initial="hidden"
+      animate="visible"
+    >
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <p className="text-xs font-bold text-muted-foreground tracking-wider uppercase mb-1">{t('المتجر', 'SHOP')} &bull; {t('الطلبات', 'ORDERS')}</p>
-          <h1 className="text-2xl font-black">{t('الطلبات', 'Orders')}</h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleExport} className="font-bold">
+      <motion.div variants={FADE_UP} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <PageHeader
+          title={t('إدارة الطلبات المتقدمة', 'Advanced Orders Management')}
+          description={t('متابعة طلبات المتجر، تتبع الحالات، إدخال الشحنات، والتصدير.', 'Store order tracking, status management, shipment dispatch, and exports.')}
+        />
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleExport} className="rounded-xl font-bold bg-background/50 backdrop-blur-md">
+            <Download className="h-4 w-4 me-2" />
             {t('تصدير CSV', 'Export CSV')}
           </Button>
-          <Button size="sm" className="font-bold bg-[#1ABB9C] hover:bg-[#159a80] text-white">
-            + {t('طلب يدوي', 'Manual order')}
+          <Button 
+            className="rounded-xl font-bold bg-gradient-to-r from-primary to-primary/80 shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+            onClick={fetchOrders}
+          >
+            <RefreshCw className="h-4 w-4 me-2" />
+            {t('تحديث البيانات', 'Refresh Orders')}
           </Button>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="shadow-sm">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="h-12 w-12 bg-emerald-50 rounded-lg border border-emerald-100 flex items-center justify-center shrink-0">
-              <Package className="h-5 w-5 text-emerald-500" />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-muted-foreground uppercase">{t('إجمالي الطلبات', 'TOTAL ORDERS')}</p>
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-xl font-black">{totalOrdersCount}</h3>
-                <span className="text-xs font-bold text-emerald-500" dir="ltr">+12%</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground">{t('اليوم', 'today')}</p>
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="shadow-sm">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="h-12 w-12 bg-emerald-50 rounded-lg border border-emerald-100 flex items-center justify-center shrink-0">
-              <span className="text-emerald-500 font-black text-lg">$</span>
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-muted-foreground uppercase">{t('الإيرادات', 'REVENUE')}</p>
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-xl font-black">{totalRevenue.toLocaleString()} <span className="text-sm">DZD</span></h3>
-                <span className="text-xs font-bold text-emerald-500" dir="ltr">+18%</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground">{t('اليوم', 'today')}</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* KPI mini-cards */}
+      <motion.div variants={FADE_UP} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: t('إجمالي الطلبات', 'Total Orders'), value: totalOrdersCount, color: 'text-emerald-500' },
+          { label: t('إجمالي الإيرادات', 'Total Revenue'), value: `${totalRevenue.toLocaleString()} DZD`, color: 'text-blue-500' },
+          { label: t('قيد الانتظار', 'Pending Orders'), value: pendingCount, color: 'text-amber-500' },
+          { label: t('تم التوصيل', 'Delivered Orders'), value: deliveredCount, color: 'text-purple-500' },
+        ].map((kpi, idx) => (
+          <Card key={idx} className="border-white/10 bg-background/60 backdrop-blur-xl shadow-sm rounded-2xl">
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-muted-foreground">{kpi.label}</p>
+              <p className={`text-2xl font-black mt-1 ${kpi.color}`}>{kpi.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </motion.div>
 
-        <Card className="shadow-sm">
-          <CardContent className="p-4 flex items-center gap-4">
-            <div className="h-12 w-12 bg-amber-50 rounded-lg border border-amber-100 flex items-center justify-center shrink-0">
-              <Clock className="h-5 w-5 text-amber-500" />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-muted-foreground uppercase">{t('قيد الانتظار', 'PENDING')}</p>
-              <div className="flex items-baseline gap-2">
-                <h3 className="text-xl font-black">{pendingCount}</h3>
-                <span className="text-xs font-bold text-red-500" dir="ltr">3%</span>
-              </div>
-              <p className="text-[10px] text-muted-foreground">{t('في انتظار الدفع', 'awaiting payment')}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Table Card */}
-      <Card className="shadow-sm">
-        <CardHeader className="border-b pb-4 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full lg:w-auto">
-            <div>
-              <CardTitle className="text-lg">{t('جميع الطلبات', 'All orders')}</CardTitle>
-              <CardDescription className="text-xs">{totalOrdersCount} {t('نتيجة', 'results')}</CardDescription>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 sm:border-s sm:ps-4 sm:ms-2 w-full sm:w-auto mt-2 sm:mt-0">
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground shrink-0">{t('الحالة', 'Status')}</span>
-                <select 
-                  value={statusFilter} 
-                  onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                  className="bg-transparent border rounded px-2 h-8 text-xs font-bold outline-none cursor-pointer w-full sm:w-auto"
+      {/* Main Container Card */}
+      <motion.div variants={FADE_UP}>
+        <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl overflow-hidden">
+          
+          {/* Toolbar */}
+          <div className="p-4 border-b border-border/50 flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Status Tabs */}
+            <div className="flex bg-muted/50 p-1 rounded-xl w-full md:w-auto overflow-x-auto hide-scrollbar">
+              {[
+                { id: 'all', label: t('الكل', 'All') },
+                { id: 'pending', label: t('معلق', 'Pending') },
+                { id: 'confirmed', label: t('مؤكد', 'Confirmed') },
+                { id: 'shipped', label: t('تم الشحن', 'Shipped') },
+                { id: 'delivered', label: t('تم التوصيل', 'Delivered') },
+                { id: 'cancelled', label: t('ملغي', 'Cancelled') },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => { setStatusFilter(tab.id); setPage(1); }}
+                  className={`px-4 py-1.5 text-sm font-bold rounded-lg whitespace-nowrap transition-all ${
+                    statusFilter === tab.id 
+                      ? 'bg-background shadow-sm text-foreground' 
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
                 >
-                  <option value="all">{t('جميع الحالات', 'All statuses')}</option>
-                  {statuses.map((s) => (
-                    <option key={s.key} value={s.key}>{isAr ? s.nameAr : (s.nameEn || s.nameAr)}</option>
-                  ))}
-                </select>
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Search & View Switcher */}
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <div className="relative w-full md:w-64">
+                <Search className={`absolute ${isAr ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground`} />
+                <Input 
+                  placeholder={t('ابحث برقم الطلب أو الزبون...', 'Search by order # or buyer...')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`rounded-xl bg-background/50 border-white/10 focus-visible:ring-primary ${isAr ? 'pr-9' : 'pl-9'}`}
+                />
               </div>
-              <div className="flex items-center gap-2 sm:border-s sm:ps-4">
-                <span className="text-xs text-muted-foreground shrink-0">{t('العدد', 'Show')}</span>
-                <select 
-                  value={limit} 
-                  onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
-                  className="bg-transparent border rounded px-2 h-8 text-xs font-bold outline-none cursor-pointer w-full sm:w-auto"
+
+              <div className="flex bg-muted/50 p-1 rounded-xl shrink-0">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-8 w-8 rounded-lg ${viewMode === 'table' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
+                  onClick={() => handleViewModeChange('table')}
+                  title={t('جدول', 'Table View')}
                 >
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </select>
+                  <TableIcon className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-8 w-8 rounded-lg ${viewMode === 'list' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
+                  onClick={() => handleViewModeChange('list')}
+                  title={t('قائمة', 'List View')}
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className={`h-8 w-8 rounded-lg ${viewMode === 'kanban' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'}`}
+                  onClick={() => handleViewModeChange('kanban')}
+                  title={t('كانبان', 'Kanban View')}
+                >
+                  <LayoutGrid className="h-4 w-4" />
+                </Button>
               </div>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder={t('ابحث...', 'Search...')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && fetchOrders()} className="ps-9 h-9 text-xs w-full" />
-            </div>
-            <Button variant="outline" size="sm" onClick={handleExport} className="h-9 px-3 shrink-0">
-              {t('تصدير', 'Export CSV')}
-            </Button>
-          </div>
-        </CardHeader>
 
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="h-40 flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
-          ) : orders.length === 0 ? (
-            <div className="h-40 flex items-center justify-center text-muted-foreground">{t('لا توجد طلبات مطابقة.', 'No orders found.')}</div>
-          ) : (
-            <div className="overflow-x-auto w-full">
-              <table className="table w-full text-sm text-start mb-0">
-                <thead className="bg-muted/30 border-b text-xs uppercase text-muted-foreground whitespace-nowrap">
-                  <tr>
-                    <th className="px-4 py-3 font-bold text-start">{t('الطلب', 'ORDER')}</th>
-                    <th className="px-4 py-3 font-bold text-start">{t('العميل', 'CUSTOMER')}</th>
-                    <th className="px-4 py-3 font-bold text-start">{t('العناصر', 'ITEMS')}</th>
-                    <th className="px-4 py-3 font-bold text-start">{t('المجموع', 'TOTAL')}</th>
-                    <th className="px-4 py-3 font-bold text-start">{t('الحالة', 'STATUS')}</th>
-                    <th className="px-4 py-3 font-bold text-start">{t('الدفع', 'PAYMENT')}</th>
-                    <th className="px-4 py-3 font-bold text-start">{t('التاريخ', 'DATE')}</th>
-                    <th className="px-4 py-3 font-bold text-start">{t('إجراء', 'ACTION')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orders.map(o => {
-                    const initials = o.buyerName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
-                    const statusConfig = getStatusConfig(o.status);
-                    
-                    return (
-                      <tr key={o.id} onClick={() => setSelectedOrder(o)} className="border-b hover:bg-muted/10 transition-colors whitespace-nowrap cursor-pointer">
-                        <td className="px-4 py-3 align-middle font-mono text-emerald-500 font-bold text-start hover:underline"><span dir="ltr">#{o.orderNumber}</span></td>
-                        <td className="px-4 py-3 align-middle text-start">
-                          <div className="flex items-center gap-3">
-                            <div className={`h-8 w-8 rounded-full flex items-center justify-center text-white text-[10px] font-black shrink-0 ${getStatusColor(o.status)}`}>
-                              {initials}
+          {/* Body Content */}
+          <div className="p-0">
+            {isLoading ? (
+              <div className="flex items-center justify-center h-48">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : filteredOrders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-48 text-muted-foreground space-y-2">
+                <Package className="h-10 w-10 opacity-30" />
+                <p className="text-sm font-bold">{t('لم يتم العثور على طلبات.', 'No orders found.')}</p>
+              </div>
+            ) : viewMode === 'table' ? (
+              /* Table View */
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader className="bg-muted/30">
+                    <TableRow className="border-border/50 hover:bg-transparent">
+                      <TableHead className="w-[140px] text-start">{t('الطلب', 'Order')}</TableHead>
+                      <TableHead className="text-start">{t('الزبون', 'Customer')}</TableHead>
+                      <TableHead className="text-center">{t('العناصر', 'Items')}</TableHead>
+                      <TableHead className="text-center">{t('المبلغ', 'Total')}</TableHead>
+                      <TableHead className="text-center">{t('الدفع', 'Payment')}</TableHead>
+                      <TableHead className="text-center">{t('تاريخ الطلب', 'Date')}</TableHead>
+                      <TableHead className="text-center">{t('الحالة', 'Status')}</TableHead>
+                      <TableHead className="text-end">{t('الإجراءات', 'Actions')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <AnimatePresence>
+                      {filteredOrders.map((o) => (
+                        <motion.tr 
+                          key={o.id}
+                          layout
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          onClick={() => setSelectedOrder(o)}
+                          className="group border-border/50 hover:bg-muted/20 transition-colors cursor-pointer"
+                        >
+                          <TableCell className="font-mono font-bold text-primary">
+                            #{o.orderNumber}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="h-8 w-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs shrink-0">
+                                {o.buyerName ? o.buyerName.substring(0, 2).toUpperCase() : 'CU'}
+                              </div>
+                              <div>
+                                <p className="font-bold text-sm text-foreground">{o.buyerName}</p>
+                                <p className="text-[10px] text-muted-foreground font-mono">{o.buyerPhone}</p>
+                              </div>
                             </div>
-                            <span className="font-bold text-foreground">{o.buyerName}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 align-middle text-center text-muted-foreground">{o.items?.length || 1}</td>
-                        <td className="px-4 py-3 align-middle font-bold text-start"><span dir="ltr">{o.total.toLocaleString()} DZD</span></td>
-                        <td className="px-4 py-3 align-middle text-start">
-                          <div onClick={(e) => e.stopPropagation()}>
-                            <Select value={o.status} onValueChange={(val) => handleUpdateStatus(val, o.id)} dir={isAr ? 'rtl' : 'ltr'}>
-                              <SelectTrigger className="h-8 text-xs font-bold w-fit min-w-[130px] border shadow-sm bg-background hover:bg-muted/50 transition-colors focus:ring-0 focus:ring-offset-0" style={{ color: getStatusConfig(o.status).color }}>
-                                <div className="flex items-center gap-2">
-                                  <span className={`h-2 w-2 rounded-full ${getStatusColor(o.status)} shrink-0`}></span>
-                                  <SelectValue />
-                                </div>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {statuses.map(s => (
-                                  <SelectItem key={s.key} value={s.key} className="text-xs font-bold cursor-pointer">
-                                    {isAr ? s.nameAr : (s.nameEn || s.nameAr)}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 align-middle text-xs text-muted-foreground text-start">
-                          <span dir="ltr">{o.paymentMethod.toUpperCase()} {o.paymentStatus === 'paid' ? '•••• 4242' : ''}</span>
-                        </td>
-                        <td className="px-4 py-3 align-middle text-xs text-muted-foreground text-start"><span dir="ltr">{o.date}</span></td>
-                        <td className="px-4 py-3 align-middle text-end" onClick={(e) => e.stopPropagation()}>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-muted shrink-0 focus-visible:ring-0">
-                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48 text-start">
-                              <DropdownMenuLabel>{t('إجراءات الطلب', 'Order Actions')}</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => setSelectedOrder(o)} className="cursor-pointer">
-                                {t('التفاصيل', 'Details')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleUpdateStatus('delivered', o.id)} className="cursor-pointer text-emerald-600 focus:text-emerald-600 focus:bg-emerald-50">
-                                {t('تعليم كمكتمل', 'Mark fulfilled')}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleUpdateStatus('cancelled', o.id)} className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50">
-                                {t('إلغاء الطلب', 'Cancel order')}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Pagination Footer */}
-          {!isLoading && orders.length > 0 && (
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 border-t text-sm text-muted-foreground">
-              <div className="text-center sm:text-start">
-                {t('عرض', 'Showing')} {Math.max(1, (page - 1) * limit + 1)}-{Math.min(page * limit, totalOrdersCount)} {t('من', 'of')} {totalOrdersCount}
+                          </TableCell>
+                          <TableCell className="text-center font-bold">
+                            {o.items?.length || 1}
+                          </TableCell>
+                          <TableCell className="text-center font-bold text-foreground">
+                            {o.total?.toLocaleString()} {t('د.ج', 'DZD')}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="outline" className="bg-background/50 border-white/10 uppercase text-[10px]">
+                              {o.paymentMethod}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center text-xs text-muted-foreground">
+                            {o.date}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {getStatusBadge(o.status)}
+                          </TableCell>
+                          <TableCell className="text-end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align={isAr ? "start" : "end"} className="w-52 rounded-xl border-white/10 bg-background/95 backdrop-blur-xl">
+                                <DropdownMenuLabel>{t('إدارة الطلب', 'Manage Order')}</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="cursor-pointer" onClick={() => setSelectedOrder(o)}>
+                                  <Eye className="h-4 w-4 me-2" />
+                                  {t('عرض التفاصيل', 'View Details')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="cursor-pointer" onClick={() => {
+                                  const waybillUrl = `/api/seller/shipping/waybill?orderId=${o.id}&lang=${locale}`;
+                                  window.open(waybillUrl, '_blank', 'width=650,height=800');
+                                }}>
+                                  <Printer className="h-4 w-4 me-2 text-primary" />
+                                  {t('طباعة البوليصة الحرارية', 'Print Thermal Waybill')}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="cursor-pointer text-emerald-500" onClick={() => handleUpdateStatus('delivered', o.id)}>
+                                  <CheckCircle2 className="h-4 w-4 me-2" />
+                                  {t('تعليم كمكتمل (Delivered)', 'Mark Delivered')}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="cursor-pointer text-red-500" onClick={() => handleUpdateStatus('cancelled', o.id)}>
+                                  <XCircle className="h-4 w-4 me-2" />
+                                  {t('إلغاء الطلب', 'Cancel Order')}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </TableBody>
+                </Table>
               </div>
-              <div className="flex items-center gap-1 flex-wrap justify-center" dir="ltr">
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(1)} disabled={page === 1}>&laquo;</Button>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>&lsaquo;</Button>
-                <Button variant="default" size="sm" className="h-8 w-8 p-0 bg-[#1ABB9C] hover:bg-[#159a80]">{page}</Button>
-                {page < totalPages && <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(page + 1)}>{page + 1}</Button>}
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>&rsaquo;</Button>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0" onClick={() => setPage(totalPages)} disabled={page >= totalPages}>&raquo;</Button>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Order Detail Dialog - Redesigned to match image 2 */}
-      <Dialog open={!!selectedOrder} onOpenChange={(open) => { if (!open) setSelectedOrder(null); }}>
-        <DialogContent className="max-w-5xl p-0 gap-0 overflow-hidden bg-background w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[95vh] sm:w-full flex flex-col rounded-xl mt-10 md:mt-0">
-          <DialogTitle className="sr-only">{t('تفاصيل الطلب', 'Order Details')} #{selectedOrder?.orderNumber}</DialogTitle>
-          <DialogDescription className="sr-only">{t('عرض وتعديل تفاصيل الطلب الخاص بالعميل.', 'View and manage customer order details.')}</DialogDescription>
-          {selectedOrder && (
-            <div className="flex flex-col h-full overflow-hidden text-start">
-              {/* Detail Header */}
-              <div className="p-4 md:p-6 border-b flex justify-between items-start lg:items-center flex-col lg:flex-row gap-4 bg-muted/10 shrink-0">
-                <div className="min-w-0 w-full lg:w-auto">
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">{t('المتجر', 'SHOP')} &bull; {t('الطلبات', 'ORDERS')}</p>
-                  <div className="flex flex-wrap items-center gap-2 md:gap-3">
-                    <h2 className="text-lg sm:text-xl md:text-2xl font-black truncate">{t('طلب', 'Order')} <span dir="ltr">#{selectedOrder.orderNumber}</span></h2>
-                    <Select value={selectedOrder.status} onValueChange={(val) => handleUpdateStatus(val, selectedOrder.id)} dir={isAr ? 'rtl' : 'ltr'}>
-                      <SelectTrigger className="h-8 text-xs font-bold w-fit min-w-[130px] border shadow-sm bg-background hover:bg-muted/50 transition-colors focus:ring-0 focus:ring-offset-0" style={{ color: getStatusConfig(selectedOrder.status).color }}>
-                        <div className="flex items-center gap-2">
-                          <span className={`h-2 w-2 rounded-full ${getStatusColor(selectedOrder.status)} shrink-0`}></span>
-                          <SelectValue />
+            ) : viewMode === 'list' ? (
+              /* List View */
+              <div className="p-4 space-y-3">
+                {filteredOrders.map((o) => (
+                  <Card key={o.id} onClick={() => setSelectedOrder(o)} className="border-white/10 bg-background/40 hover:bg-background/80 transition-all cursor-pointer rounded-2xl p-4 shadow-sm">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary font-black flex items-center justify-center text-sm shrink-0">
+                          {o.buyerName ? o.buyerName.substring(0, 2).toUpperCase() : 'CU'}
                         </div>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statuses.map(s => (
-                          <SelectItem key={s.key} value={s.key} className="text-xs font-bold cursor-pointer">
-                            {isAr ? s.nameAr : (s.nameEn || s.nameAr)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-2 w-full lg:w-auto">
-                  <Button variant="outline" size="sm" className="font-bold flex-1 sm:flex-none" onClick={handlePrintInvoice}>{t('طباعة', 'Print')}</Button>
-                  <Button variant="outline" size="sm" className="font-bold flex-1 sm:flex-none" onClick={() => toast.success(t('تم إرسال الفاتورة إلى بريد العميل بنجاح', 'Invoice sent to customer email successfully'))}>
-                    {t('إرسال الفاتورة', 'Send invoice')}
-                  </Button>
-                  <Button size="sm" className="font-bold bg-[#1ABB9C] hover:bg-[#159a80] text-white flex-1 sm:flex-none whitespace-nowrap" onClick={() => handleUpdateStatus('delivered')}>
-                    {t('تعليم كمكتمل', 'Mark fulfilled')}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Detail Content (Scrollable) */}
-              <div className="p-4 md:p-6 overflow-y-auto flex-1 bg-muted/5 min-h-0">
-                
-                {/* Progress Bar */}
-                <Card className="mb-4 md:mb-6 shadow-sm border-0 bg-white dark:bg-card">
-                  <CardContent className="p-4 md:p-6 overflow-x-auto hide-scrollbar w-full">
-                    <div className="max-w-3xl mx-auto w-full">
-                      <div className="flex justify-between items-center relative min-w-[500px]">
-                        <div className="absolute top-4 start-8 end-8 h-[2px] bg-muted -z-0"></div>
-                        
-                        {/* Step 1 */}
-                        <div className="flex flex-col items-center z-10 gap-2 w-24">
-                          <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-card"><CheckCircle2 className="h-4 w-4" /></div>
-                          <div className="text-center">
-                            <p className="text-xs font-bold">{t('تم الطلب', 'Placed')}</p>
-                            <p className="text-[10px] text-muted-foreground" dir="ltr">{selectedOrder.date}</p>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-primary text-sm">#{o.orderNumber}</span>
+                            {getStatusBadge(o.status)}
                           </div>
+                          <p className="font-bold text-sm text-foreground mt-0.5">{o.buyerName} ({o.buyerPhone})</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{o.items?.length || 1} {t('منتجات', 'items')} &bull; {o.date}</p>
                         </div>
-                        
-                        {/* Step 2 */}
-                        <div className="flex flex-col items-center z-10 gap-2 w-24">
-                          <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center border-4 border-white dark:border-card"><CheckCircle2 className="h-4 w-4" /></div>
-                          <div className="text-center">
-                            <p className="text-xs font-bold">{t('تم الدفع', 'Paid')}</p>
-                            <p className="text-[10px] text-muted-foreground" dir="ltr">{selectedOrder.date}</p>
-                          </div>
-                        </div>
+                      </div>
 
-                        {/* Step 3 */}
-                        <div className="flex flex-col items-center z-10 gap-2 w-24">
-                          <div className={`h-8 w-8 rounded-full flex items-center justify-center border-4 border-white dark:border-card ${selectedOrder.status === 'confirmed' || selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? 'bg-emerald-500 text-white' : 'bg-white border-2 border-emerald-500 text-emerald-500'}`}>
-                             {selectedOrder.status === 'confirmed' || selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : <div className="h-3 w-3 rounded-full bg-emerald-500"></div>}
-                          </div>
-                          <div className="text-center">
-                            <p className="text-xs font-bold">{t('قيد التجهيز', 'Preparing')}</p>
-                            <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'confirmed' ? t('قيد العمل', 'In progress') : t('مكتمل', 'Done')}</p>
-                          </div>
+                      <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 pt-2 sm:pt-0 border-border/50">
+                        <div className="text-start sm:text-end">
+                          <p className="text-xs text-muted-foreground font-semibold">{t('الإجمالي', 'Total')}</p>
+                          <p className="text-base font-black text-foreground">{o.total?.toLocaleString()} DZD</p>
                         </div>
-
-                        {/* Step 4 */}
-                        <div className="flex flex-col items-center z-10 gap-2 w-24">
-                           <div className={`h-8 w-8 rounded-full flex items-center justify-center border-4 border-white dark:border-card ${selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? 'bg-emerald-500 text-white' : 'bg-muted border-muted-foreground text-transparent'}`}>
-                            {selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : ''}
-                          </div>
-                          <div className="text-center">
-                            <p className="text-xs font-bold">{t('تم الشحن', 'Shipped')}</p>
-                            <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'shipped' || selectedOrder.status === 'delivered' ? t('مكتمل', 'Done') : t('في الانتظار', 'Pending')}</p>
-                          </div>
-                        </div>
-
-                        {/* Step 5 */}
-                        <div className="flex flex-col items-center z-10 gap-2 w-24">
-                          <div className={`h-8 w-8 rounded-full flex items-center justify-center border-4 border-white dark:border-card ${selectedOrder.status === 'delivered' ? 'bg-emerald-500 text-white' : 'bg-muted border-muted-foreground text-transparent'}`}>
-                            {selectedOrder.status === 'delivered' ? <CheckCircle2 className="h-4 w-4" /> : ''}
-                          </div>
-                          <div className="text-center">
-                            <p className="text-xs font-bold">{t('تم التوصيل', 'Delivered')}</p>
-                            <p className="text-[10px] text-muted-foreground">{selectedOrder.status === 'delivered' ? t('مكتمل', 'Done') : t('في الانتظار', 'Pending')}</p>
-                          </div>
-                        </div>
-
+                        <Button size="sm" variant="outline" className="rounded-xl font-bold" onClick={(e) => {
+                          e.stopPropagation();
+                          const waybillUrl = `/api/seller/shipping/waybill?orderId=${o.id}&lang=${locale}`;
+                          window.open(waybillUrl, '_blank', 'width=650,height=800');
+                        }}>
+                          <Printer className="h-4 w-4 me-1.5 text-primary" />
+                          {t('بوليصة', 'Waybill')}
+                        </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-                  {/* Left Column - Items & Notes */}
-                  <div className="lg:col-span-2 space-y-4 md:space-y-6 order-2 lg:order-1">
-                    <Card className="shadow-sm overflow-hidden">
-                      <CardHeader className="pb-2 border-b">
-                        <CardTitle className="text-sm font-black">{t('المنتجات', 'Items')} &bull; {selectedOrder.items.length}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-0">
-                        <div className="overflow-y-auto overflow-x-auto max-h-[300px] w-full">
-                          <table className="w-full text-sm">
-                            <thead className="bg-muted/10 text-[10px] text-muted-foreground uppercase sticky top-0 z-10">
-                              <tr>
-                                <th className="p-2 md:p-4 font-bold text-start min-w-[180px] w-1/2">{t('المنتج', 'PRODUCT')}</th>
-                                <th className="p-2 md:p-4 font-bold text-center w-16 whitespace-nowrap">{t('الكمية', 'QTY')}</th>
-                                <th className="p-2 md:p-4 font-bold text-end w-24 whitespace-nowrap">{t('السعر', 'PRICE')}</th>
-                                <th className="p-2 md:p-4 font-bold text-end w-28 whitespace-nowrap">{t('المجموع', 'TOTAL')}</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {selectedOrder.items.map((item: any, idx: number) => (
-                                <tr key={idx} className="border-b">
-                                  <td className="p-2 md:p-4 align-middle">
-                                    <div className="flex gap-3 items-center">
-                                      <div className="h-8 w-8 md:h-10 md:w-10 bg-emerald-50 text-emerald-600 rounded flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-100">
-                                        {item.productName.substring(0, 2).toUpperCase()}
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <p className="font-bold text-sm text-foreground break-words whitespace-normal line-clamp-2" title={item.productName}>{item.productName}</p>
-                                        <p className="text-xs text-muted-foreground" dir="ltr">SKU - PRD-{item.id.substring(0,4)}</p>
-                                      </div>
-                                    </div>
-                                  </td>
-                                  <td className="p-2 md:p-4 text-center font-bold align-middle">{item.quantity}</td>
-                                  <td className="p-2 md:p-4 text-end text-muted-foreground align-middle whitespace-nowrap" dir="ltr">{item.price.toLocaleString()} DZD</td>
-                                  <td className="p-2 md:p-4 text-end font-bold text-foreground align-middle whitespace-nowrap" dir="ltr">{item.total.toLocaleString()} DZD</td>
-                                </tr>
-                              ))}
-                              {/* Totals rows inside table footer */}
-                              <tr>
-                                <td colSpan={2}></td>
-                                <td className="p-2 md:p-3 text-end text-xs text-muted-foreground font-bold">{t('المجموع الفرعي', 'Subtotal')}</td>
-                              <td className="p-2 md:p-3 text-end font-bold text-sm whitespace-nowrap" dir="ltr">{selectedOrder.subtotal.toLocaleString()} DZD</td>
-                            </tr>
-                            <tr>
-                              <td colSpan={2}></td>
-                              <td className="p-2 md:p-3 text-end text-xs text-muted-foreground font-bold">{t('تكلفة الشحن', 'Shipping')}</td>
-                              <td className="p-2 md:p-3 text-end font-bold text-sm whitespace-nowrap" dir="ltr">{(selectedOrder.shippingCost || 0).toLocaleString()} DZD</td>
-                            </tr>
-                            {selectedOrder.discount > 0 && (
-                              <tr>
-                                <td colSpan={2}></td>
-                                <td className="p-2 md:p-3 text-end text-xs text-red-500 font-bold">{t('الخصم', 'Discount')}</td>
-                                <td className="p-2 md:p-3 text-end font-bold text-sm text-red-500 whitespace-nowrap" dir="ltr">-{selectedOrder.discount.toLocaleString()} DZD</td>
-                              </tr>
-                            )}
-                            <tr>
-                              <td colSpan={2}></td>
-                              <td className="p-2 md:p-3 text-end text-xs text-muted-foreground font-bold">{t('الضريبة', 'Tax')}</td>
-                              <td className="p-2 md:p-3 text-end font-bold text-sm whitespace-nowrap" dir="ltr">{(selectedOrder.tax || 0).toLocaleString()} DZD</td>
-                            </tr>
-                            <tr className="border-t">
-                              <td colSpan={2}></td>
-                              <td className="p-3 md:p-4 text-end font-black text-base">{t('المجموع', 'Total')}</td>
-                              <td className="p-3 md:p-4 text-end font-black text-base whitespace-nowrap" dir="ltr">{selectedOrder.total.toLocaleString()} DZD</td>
-                            </tr>
-                          </tbody>
-                        </table>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="shadow-sm">
-                      <CardHeader className="pb-2 border-b">
-                        <CardTitle className="text-sm font-black">{t('ملاحظات الطلب', 'Order notes')}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        <div className="space-y-4 mb-4">
-                          <div className="flex gap-3">
-                            <div className="h-8 w-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold shrink-0">JD</div>
-                            <div>
-                              <p className="text-sm text-foreground">{t('طلب العميل شحن سريع إن أمكن.', 'Customer requested expedited shipping if available.')}</p>
-                              <p className="text-xs text-muted-foreground" dir="ltr">{selectedOrder.date} - 10:15</p>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              /* Kanban View */
+              <div className="p-4 grid grid-cols-1 md:grid-cols-4 gap-4 overflow-x-auto">
+                {['pending', 'confirmed', 'shipped', 'delivered'].map((colStatus) => {
+                  const colOrders = filteredOrders.filter(o => o.status === colStatus || (colStatus === 'confirmed' && o.status === 'processing'));
+                  return (
+                    <div 
+                      key={colStatus}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, colStatus)}
+                      className="bg-muted/30 p-3 rounded-2xl border border-border/50 min-h-[400px] flex flex-col gap-3"
+                    >
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-xs font-bold uppercase text-foreground">{colStatus}</span>
+                        <Badge variant="outline" className="rounded-full text-[10px] font-mono">{colOrders.length}</Badge>
+                      </div>
+                      <div className="space-y-3 flex-1">
+                        {colOrders.map((o) => (
+                          <div
+                            key={o.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, o.id)}
+                            onClick={() => setSelectedOrder(o)}
+                            className="p-3 bg-background/80 hover:bg-background border border-white/10 rounded-xl shadow-sm cursor-grab active:cursor-grabbing transition-all space-y-2"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-mono text-xs font-bold text-primary">#{o.orderNumber}</span>
+                              <span className="text-[10px] text-muted-foreground">{o.date}</span>
+                            </div>
+                            <p className="text-xs font-bold text-foreground truncate">{o.buyerName}</p>
+                            <div className="flex items-center justify-between text-xs pt-1 border-t border-border/40">
+                              <span className="text-muted-foreground">{o.items?.length || 1} items</span>
+                              <span className="font-black text-foreground">{o.total?.toLocaleString()} DZD</span>
                             </div>
                           </div>
-                          <div className="flex gap-3">
-                            <div className="h-8 w-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-xs font-bold shrink-0">AS</div>
-                            <div>
-                              <p className="text-sm text-foreground"><span className="font-bold">{t('المدير ص.', 'Admin S.')}</span> {t('أشار إلى أن العميل لديه أكثر من 5 طلبات.', 'noted the customer is a returning user with 5+ orders.')}</p>
-                              <p className="text-xs text-muted-foreground" dir="ltr">{selectedOrder.date} - 10:32</p>
-                            </div>
-                          </div>
-                        </div>
-                        <textarea className="w-full border rounded-md p-3 text-sm min-h-[80px] outline-none focus:border-primary" placeholder={t('أضف ملاحظة لفريقك...', 'Add a note for your team...')}></textarea>
-                      </CardContent>
-                    </Card>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Pagination Footer */}
+          {!isLoading && filteredOrders.length > 0 && (
+            <div className="p-4 border-t border-border/50 flex items-center justify-between text-sm text-muted-foreground">
+              <p>{t('عرض', 'Showing')} <strong className="text-foreground">{filteredOrders.length}</strong> {t('من أصل', 'out of')} <strong className="text-foreground">{totalOrdersCount}</strong> {t('طلب', 'orders')}</p>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" className="h-8 rounded-lg" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>{t('السابق', 'Prev')}</Button>
+                <Button variant="outline" size="sm" className="h-8 rounded-lg" disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>{t('التالي', 'Next')}</Button>
+              </div>
+            </div>
+          )}
+
+        </Card>
+      </motion.div>
+
+      {/* Order Details Modal */}
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => { if (!open) setSelectedOrder(null); }}>
+        <DialogContent className="max-w-4xl p-0 gap-0 overflow-hidden bg-background border-white/10 backdrop-blur-2xl rounded-3xl">
+          <DialogTitle className="sr-only">{t('تفاصيل الطلب', 'Order Details')}</DialogTitle>
+          <DialogDescription className="sr-only">{t('تفاصيل وشحن الطلب', 'Order details and shipment')}</DialogDescription>
+          {selectedOrder && (
+            <div className="flex flex-col text-start">
+              {/* Modal Header */}
+              <div className="p-6 border-b border-border/50 bg-muted/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xl font-black text-primary">#{selectedOrder.orderNumber}</span>
+                    {getStatusBadge(selectedOrder.status)}
                   </div>
+                  <p className="text-xs text-muted-foreground mt-1">{t('تاريخ الطلب:', 'Order Date:')} {selectedOrder.date}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="rounded-xl font-bold gap-1.5" onClick={() => {
+                    const waybillUrl = `/api/seller/shipping/waybill?orderId=${selectedOrder.id}&lang=${locale}`;
+                    window.open(waybillUrl, '_blank', 'width=650,height=800');
+                  }}>
+                    <Printer className="h-4 w-4 text-primary" />
+                    {t('طباعة البوليصة الحرارية', 'Print Waybill')}
+                  </Button>
+                  <Button size="sm" className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5" onClick={() => handleUpdateStatus('delivered')}>
+                    <CheckCircle2 className="h-4 w-4" />
+                    {t('تعليم كمكتمل', 'Mark Delivered')}
+                  </Button>
+                </div>
+              </div>
 
-                  {/* Right Column - Customer Info */}
-                  <div className="space-y-4 md:space-y-6">
-                    <Card className="shadow-sm">
-                      <CardHeader className="pb-2 border-b">
-                        <CardTitle className="text-sm font-black">{t('العميل', 'Customer')}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        <div className="flex items-center gap-3 mb-4 md:mb-6">
-                          <div className="h-10 w-10 md:h-12 md:w-12 rounded-full bg-emerald-500 text-white flex items-center justify-center font-black text-lg shrink-0">
-                            {selectedOrder.buyerName.split(' ').map((n: string) => n[0]).join('').substring(0,2).toUpperCase()}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-bold text-foreground text-sm md:text-base truncate">{selectedOrder.buyerName}</p>
-                            <p className="text-xs text-muted-foreground">{t('5 طلبات سابقة', '5 previous orders')}</p>
-                          </div>
-                        </div>
-                        <div className="space-y-2 md:space-y-3 text-xs md:text-sm flex flex-col">
-                          <div className="flex justify-between items-center gap-2">
-                            <span className="text-muted-foreground shrink-0">{t('البريد', 'Email')}</span>
-                            <span className="text-emerald-500 font-bold hover:underline cursor-pointer truncate" dir="ltr">customer@example.com</span>
-                          </div>
-                          <div className="flex justify-between items-center gap-2">
-                            <span className="text-muted-foreground shrink-0">{t('الهاتف', 'Phone')}</span>
-                            <span className="font-bold" dir="ltr">{selectedOrder.buyerPhone || '+213 555 010 202'}</span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="shadow-sm">
-                      <CardHeader className="pb-2 border-b">
-                        <CardTitle className="text-sm font-black">{t('عنوان الشحن', 'Shipping address')}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 text-xs md:text-sm text-foreground">
-                        <p className="font-bold mb-1">{selectedOrder.buyerName}</p>
-                        <p>{selectedOrder.address?.street || t('1234 شارع السوق، جناح 500', '1234 Market Street, Suite 500')}</p>
-                        <p>{selectedOrder.address?.city || t('الجزائر العاصمة', 'Algiers, Algeria')}</p>
-                      </CardContent>
-                    </Card>
-
-                    <Card className="shadow-sm">
-                      <CardHeader className="pb-2 border-b">
-                        <CardTitle className="text-sm font-black">{t('الدفع', 'Payment')}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4 space-y-2 md:space-y-3 text-xs md:text-sm">
-                        <div className="flex justify-between items-center gap-2">
-                          <span className="text-muted-foreground">{t('الطريقة', 'Method')}</span>
-                          <span className="font-bold truncate" dir="ltr">{selectedOrder.paymentMethod.toUpperCase()} {selectedOrder.paymentStatus === 'paid' ? '•••• 4242' : ''}</span>
-                        </div>
-                        <div className="flex justify-between items-center gap-2">
-                          <span className="text-muted-foreground">{t('المعاملة', 'Transaction')}</span>
-                          <span className="font-mono text-xs truncate" dir="ltr">ch_30qXyZ...</span>
-                        </div>
-                        <div className="flex justify-between items-center mt-2 pt-2 border-t border-muted/50">
-                          <span className="text-muted-foreground">{t('الحالة', 'Status')}</span>
-                          <div className="flex items-center gap-2">
-                            <span className={`h-2 w-2 rounded-full ${selectedOrder.paymentStatus === 'paid' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
-                            <span className="font-bold text-xs" style={{ color: selectedOrder.paymentStatus === 'paid' ? '#10B981' : '#F59E0B' }}>
-                              {selectedOrder.paymentStatus === 'paid' ? t('تم السحب', 'Captured') : t('في الانتظار', 'Pending')}
-                            </span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
+              {/* Modal Content */}
+              <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                {/* Buyer & Address info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card className="p-4 rounded-2xl border-white/10 bg-background/50">
+                    <p className="text-xs font-bold text-muted-foreground uppercase mb-2">{t('بيانات الزبون', 'Customer Details')}</p>
+                    <p className="font-bold text-sm text-foreground">{selectedOrder.buyerName}</p>
+                    <p className="text-xs text-muted-foreground font-mono mt-1">{selectedOrder.buyerPhone}</p>
+                  </Card>
+                  <Card className="p-4 rounded-2xl border-white/10 bg-background/50">
+                    <p className="text-xs font-bold text-muted-foreground uppercase mb-2">{t('عنوان التوصيل', 'Shipping Address')}</p>
+                    <p className="text-xs font-medium text-foreground">{selectedOrder.address?.street || t('غير محدد', 'Not specified')}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{selectedOrder.address?.city || ''}</p>
+                  </Card>
                 </div>
 
+                {/* Items Table */}
+                <div className="border border-border/50 rounded-2xl overflow-hidden">
+                  <Table>
+                    <TableHeader className="bg-muted/30">
+                      <TableRow>
+                        <TableHead className="text-start">{t('المنتج', 'Product')}</TableHead>
+                        <TableHead className="text-center">{t('الكمية', 'Qty')}</TableHead>
+                        <TableHead className="text-end">{t('السعر', 'Price')}</TableHead>
+                        <TableHead className="text-end">{t('المجموع', 'Total')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {selectedOrder.items?.map((item: any, idx: number) => (
+                        <TableRow key={idx}>
+                          <TableCell className="font-bold text-sm">{item.productName}</TableCell>
+                          <TableCell className="text-center font-mono">{item.quantity}</TableCell>
+                          <TableCell className="text-end font-mono">{item.price?.toLocaleString()} DZD</TableCell>
+                          <TableCell className="text-end font-bold font-mono">{item.total?.toLocaleString()} DZD</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  <div className="p-4 bg-muted/10 border-t border-border/50 space-y-1.5 text-xs text-end">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t('المجموع الفرعي', 'Subtotal')}:</span>
+                      <span className="font-mono font-bold">{selectedOrder.subtotal?.toLocaleString()} DZD</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">{t('الشحن', 'Shipping')}:</span>
+                      <span className="font-mono font-bold">{selectedOrder.shippingCost?.toLocaleString()} DZD</span>
+                    </div>
+                    {selectedOrder.discount > 0 && (
+                      <div className="flex justify-between text-red-500">
+                        <span>{t('الخصم', 'Discount')}:</span>
+                        <span className="font-mono font-bold">-{selectedOrder.discount?.toLocaleString()} DZD</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-sm font-black pt-2 border-t border-border/50 text-foreground">
+                      <span>{t('الإجمالي النهائي', 'Final Total')}:</span>
+                      <span className="font-mono text-primary">{selectedOrder.total?.toLocaleString()} DZD</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 }
