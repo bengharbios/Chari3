@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useAppStore, useAuthStore } from '@/lib/store';
-import { PageHeader } from '@/components/shared/StatsCard';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,10 +13,21 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/compone
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Truck, Navigation, MapPin, Phone, CheckCircle,
-  Clock, Package, Wallet, Star, RefreshCw, Loader2,
-  Printer, ShieldCheck, KeyRound, ArrowUpRight, Filter, Search, Eye
+  Clock, Package, Wallet, RefreshCw, Loader2,
+  Printer, ShieldCheck, KeyRound
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// Dynamically import Leaflet Map to avoid SSR issues
+const LiveTrackingMap = dynamic(() => import('@/components/maps/LiveTrackingMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[360px] w-full bg-slate-900 flex items-center justify-center text-white text-xs gap-2 rounded-3xl">
+      <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
+      <span>جاري تحميل خريطة الـ GPS التفاعلية...</span>
+    </div>
+  )
+});
 
 const STAGGER_CONTAINER = {
   hidden: { opacity: 0 },
@@ -38,8 +49,11 @@ export default function LogisticsDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<any>(null);
 
-  // Selected shipment for PIN verification or Status update
+  // Selected shipment for persistent sidebar card view
   const [selectedShipment, setSelectedShipment] = useState<any | null>(null);
+
+  // Separate modal state for Delivery PIN entry (preventing closing of sidebar card)
+  const [pinModalShipment, setPinModalShipment] = useState<any | null>(null);
   const [pinInput, setPinInput] = useState('');
   const [isSubmittingPin, setIsSubmittingPin] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'picked_up' | 'in_transit' | 'delivered'>('all');
@@ -51,6 +65,9 @@ export default function LogisticsDashboard() {
       const json = await res.json();
       if (json.success) {
         setData(json.data);
+        if (json.data.shipments?.length > 0 && !selectedShipment) {
+          setSelectedShipment(json.data.shipments[0]);
+        }
       }
     } catch (err) {
       toast.error(t('خطأ في تحميل بيانات اللوجستيات', 'Failed to load logistics data'));
@@ -79,16 +96,16 @@ export default function LogisticsDashboard() {
   };
 
   const handleVerifyDeliveryPin = async () => {
-    if (!selectedShipment) return;
+    if (!pinModalShipment) return;
     if (!pinInput || pinInput.length < 4) {
       toast.error(t('يرجى إدخال رمز التوصيل PIN المكون من 4 أرقام', 'Please enter 4-digit Delivery PIN'));
       return;
     }
     setIsSubmittingPin(true);
     try {
-      await handleUpdateStatus(selectedShipment.id, 'delivered');
+      await handleUpdateStatus(pinModalShipment.id, 'delivered');
       toast.success(t('تم تأكيد رمز الـ PIN وتسليم الشحنة وتحرير المبلغ للمحفظة!', 'PIN verified! Delivery completed & COD credited to wallet.'));
-      setSelectedShipment(null);
+      setPinModalShipment(null);
       setPinInput('');
     } catch {
       toast.error(t('رمز الـ PIN غير صحيح، حاول مجدداً', 'Invalid Delivery PIN, try again'));
@@ -137,7 +154,7 @@ export default function LogisticsDashboard() {
       initial="hidden"
       animate="visible"
     >
-      {/* Top Header */}
+      {/* Top Header Controls */}
       <motion.div variants={FADE_UP} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
@@ -191,95 +208,50 @@ export default function LogisticsDashboard() {
         })}
       </motion.div>
 
-      {/* Interactive Live GPS Radar & Map Section */}
+      {/* Real Interactive Leaflet Map & Selected Shipment Card */}
       <motion.div variants={FADE_UP} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Live GPS Map Card */}
-        <Card className="lg:col-span-2 border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl overflow-hidden relative">
+        {/* Real Leaflet Map */}
+        <Card className="lg:col-span-2 border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl overflow-hidden">
           <CardHeader className="p-4 border-b border-border/50 flex flex-row items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="h-3 w-3 rounded-full bg-emerald-500 animate-ping" />
-              <CardTitle className="text-sm font-bold">{t('خريطة التتبع اللحظي المباشرة (Live GPS Tracking)', 'Live GPS Tracking Map')}</CardTitle>
+              <CardTitle className="text-sm font-bold">{t('خريطة التتبع اللحظي التفاعلية (Live GPS Tracking)', 'Interactive Live GPS Tracking Map')}</CardTitle>
             </div>
             <Badge variant="outline" className="font-mono text-[10px] bg-emerald-500/10 text-emerald-500 border-emerald-500/20">
-              GPS Active
+              OpenStreetMap Active
             </Badge>
           </CardHeader>
 
-          {/* Map Simulation Container */}
-          <div className="relative h-[320px] bg-slate-950/90 overflow-hidden flex items-center justify-center text-white">
-            {/* Animated Radar grid background */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(16,185,129,0.15)_0,transparent_70%)] animate-pulse" />
-            <div className="absolute h-64 w-64 rounded-full border border-emerald-500/20 animate-ping opacity-20" />
-            <div className="absolute h-96 w-96 rounded-full border border-emerald-500/10" />
-
-            {/* Simulated Active Shipment Pins on Map */}
-            {shipments.slice(0, 5).map((s: any, i: number) => {
-              const positions = [
-                { top: '30%', left: '25%' },
-                { top: '45%', left: '60%' },
-                { top: '65%', left: '40%' },
-                { top: '20%', left: '75%' },
-                { top: '75%', left: '75%' },
-              ];
-              const pos = positions[i % positions.length];
-
-              return (
-                <motion.div
-                  key={s.id}
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  style={{ top: pos.top, left: pos.left }}
-                  onClick={() => setSelectedShipment(s)}
-                  className="absolute cursor-pointer group z-10"
-                >
-                  <div className="relative flex items-center justify-center">
-                    <div className="h-8 w-8 rounded-full bg-primary text-primary-foreground font-bold flex items-center justify-center shadow-lg hover:scale-125 transition-all border-2 border-white">
-                      <Truck className="h-4 w-4" />
-                    </div>
-                    {/* Hover tooltip */}
-                    <div className="absolute bottom-10 whitespace-nowrap bg-background/95 backdrop-blur-md text-foreground text-xs p-2 rounded-xl border border-white/10 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity">
-                      <p className="font-bold">{s.trackingNumber}</p>
-                      <p className="text-[10px] text-muted-foreground">{s.recipientName} &bull; {s.city}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-
-            {/* Center Driver Location Pin */}
-            <div className="z-20 text-center space-y-2">
-              <div className="h-14 w-14 mx-auto rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center shadow-2xl shadow-emerald-500/50">
-                <Navigation className="h-7 w-7 text-emerald-400 animate-bounce" />
-              </div>
-              <p className="text-xs font-bold text-emerald-400 bg-slate-900/80 px-3 py-1 rounded-full border border-emerald-500/30">
-                {t('موقعك اللحظي: الجزائر العاصمة', 'Your GPS Location: Algiers')}
-              </p>
-            </div>
-          </div>
+          <CardContent className="p-2">
+            <LiveTrackingMap 
+              shipments={shipments} 
+              onSelectShipment={(s) => setSelectedShipment(s)} 
+            />
+          </CardContent>
         </Card>
 
-        {/* Selected Shipment Live Details Card */}
-        <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl p-4 flex flex-col justify-between">
+        {/* Selected Shipment Details Card (Persisted regardless of PIN Modal state) */}
+        <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-border/50 pb-3">
-              <h3 className="font-bold text-sm">{t('الشحنة المحددة حالياً', 'Current Active Shipment')}</h3>
+              <h3 className="font-bold text-sm">{t('الشحنة المحددة حالياً', 'Selected Shipment')}</h3>
               {selectedShipment && getStatusBadge(selectedShipment.status)}
             </div>
 
             {selectedShipment ? (
-              <div className="space-y-3 mt-3 text-xs">
+              <div className="space-y-3 mt-4 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">{t('رقم الشحنة:', 'Tracking #:')}</span>
                   <span className="font-mono font-bold text-primary">{selectedShipment.trackingNumber}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">{t('المستلم:', 'Recipient:')}</span>
-                  <span className="font-bold">{selectedShipment.recipientName}</span>
+                  <span className="font-bold text-foreground">{selectedShipment.recipientName}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-muted-foreground">{t('العنوان:', 'Address:')}</span>
-                  <span className="font-medium text-end max-w-[160px] truncate">{selectedShipment.address}</span>
+                  <span className="font-medium text-end max-w-[170px] truncate">{selectedShipment.address}</span>
                 </div>
                 <div className="flex items-center justify-between border-t border-border/40 pt-2">
                   <span className="text-muted-foreground">{t('المبلغ عند التسليم (COD):', 'COD Amount:')}</span>
@@ -313,7 +285,7 @@ export default function LogisticsDashboard() {
             ) : (
               <div className="text-center py-12 text-muted-foreground space-y-2">
                 <Truck className="h-10 w-10 mx-auto opacity-30" />
-                <p className="text-xs font-bold">{t('انقر على أي شحنة من الخريطة أو الجدول لمتابعتها', 'Click any shipment on map or table')}</p>
+                <p className="text-xs font-bold">{t('انقر على أي شحنة من الخريطة أو الجدول لمعاينتها', 'Click any shipment on map or table')}</p>
               </div>
             )}
           </div>
@@ -322,7 +294,7 @@ export default function LogisticsDashboard() {
             <Button 
               size="sm" 
               className="w-full mt-4 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
-              onClick={() => setSelectedShipment(selectedShipment)}
+              onClick={() => setPinModalShipment(selectedShipment)}
             >
               <KeyRound className="h-4 w-4" />
               {t('تأكيد التسليم بالـ Delivery PIN', 'Enter Delivery PIN')}
@@ -334,7 +306,6 @@ export default function LogisticsDashboard() {
       {/* Main Active Shipments Table */}
       <motion.div variants={FADE_UP}>
         <Card className="border-white/10 bg-background/60 backdrop-blur-xl shadow-xl rounded-3xl overflow-hidden">
-          {/* Toolbar */}
           <div className="p-4 border-b border-border/50 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex bg-muted/50 p-1 rounded-xl w-full md:w-auto overflow-x-auto hide-scrollbar">
               {[
@@ -367,13 +338,13 @@ export default function LogisticsDashboard() {
             <Table>
               <TableHeader className="bg-muted/30">
                 <TableRow className="border-border/50">
-                  <TableHead className="w-[140px]">{t('رقم الشحنة', 'Tracking #')}</TableHead>
-                  <TableHead>{t('المستلم والعنوان', 'Recipient & Address')}</TableHead>
-                  <TableHead className="text-center">{t('الولاية', 'Wilaya')}</TableHead>
-                  <TableHead className="text-center">{t('المبلغ (COD)', 'COD Total')}</TableHead>
-                  <TableHead className="text-center">{t('عمولة التوصيل', 'Fee')}</TableHead>
-                  <TableHead className="text-center">{t('الحالة', 'Status')}</TableHead>
-                  <TableHead className="text-end">{t('الإجراءات السريعة', 'Actions')}</TableHead>
+                  <TableHead className="w-[150px]">{t('رقم الشحنة', 'Tracking #')}</TableHead>
+                  <TableHead className="min-w-[200px]">{t('المستلم والعنوان', 'Recipient & Address')}</TableHead>
+                  <TableHead className="text-center w-[120px]">{t('الولاية', 'Wilaya')}</TableHead>
+                  <TableHead className="text-center w-[130px]">{t('المبلغ (COD)', 'COD Total')}</TableHead>
+                  <TableHead className="text-center w-[120px]">{t('عمولة التوصيل', 'Fee')}</TableHead>
+                  <TableHead className="text-center w-[120px]">{t('الحالة', 'Status')}</TableHead>
+                  <TableHead className="text-end min-w-[160px]">{t('الإجراءات السريعة', 'Actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -402,7 +373,7 @@ export default function LogisticsDashboard() {
                       <TableCell>
                         <div>
                           <p className="font-bold text-sm text-foreground">{s.recipientName}</p>
-                          <p className="text-xs text-muted-foreground truncate max-w-[200px]">{s.address}</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[220px]">{s.address}</p>
                         </div>
                       </TableCell>
                       <TableCell className="text-center font-bold">
@@ -433,7 +404,10 @@ export default function LogisticsDashboard() {
                           <Button 
                             size="sm" 
                             className="h-8 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
-                            onClick={() => setSelectedShipment(s)}
+                            onClick={() => {
+                              setSelectedShipment(s);
+                              setPinModalShipment(s);
+                            }}
                           >
                             <KeyRound className="h-3.5 w-3.5 me-1" />
                             {t('PIN', 'PIN')}
@@ -449,20 +423,20 @@ export default function LogisticsDashboard() {
         </Card>
       </motion.div>
 
-      {/* Delivery PIN Modal */}
-      <Dialog open={!!selectedShipment} onOpenChange={(open) => { if (!open) setSelectedShipment(null); }}>
+      {/* Delivery PIN Modal (Independent from selectedShipment sidebar view) */}
+      <Dialog open={!!pinModalShipment} onOpenChange={(open) => { if (!open) setPinModalShipment(null); }}>
         <DialogContent className="max-w-md p-6 bg-background border-white/10 backdrop-blur-2xl rounded-3xl text-start">
           <DialogTitle className="text-lg font-black">{t('تأكيد التسليم بواسطة رمز الـ PIN', 'Confirm Delivery via PIN')}</DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground mt-1">
             {t('اطلب رمز التأكيد المكون من 4 أرقام من الزبون بعد تسليمه الطرد وتحصيل المبلغ.', 'Enter the 4-digit confirmation PIN provided by the customer.')}
           </DialogDescription>
 
-          {selectedShipment && (
+          {pinModalShipment && (
             <div className="space-y-4 mt-4">
               <div className="p-3 bg-muted/20 border border-border/50 rounded-2xl space-y-1 text-xs">
-                <p className="text-muted-foreground">{t('رقم الشحنة:', 'Tracking #:')} <strong className="font-mono text-primary">{selectedShipment.trackingNumber}</strong></p>
-                <p className="text-muted-foreground">{t('المستلم:', 'Recipient:')} <strong className="text-foreground">{selectedShipment.recipientName}</strong> ({selectedShipment.recipientPhone})</p>
-                <p className="text-muted-foreground">{t('المبلغ المطلوب تحصيله:', 'COD Amount:')} <strong className="text-emerald-500 font-bold">{selectedShipment.codAmount?.toLocaleString()} DZD</strong></p>
+                <p className="text-muted-foreground">{t('رقم الشحنة:', 'Tracking #:')} <strong className="font-mono text-primary">{pinModalShipment.trackingNumber}</strong></p>
+                <p className="text-muted-foreground">{t('المستلم:', 'Recipient:')} <strong className="text-foreground">{pinModalShipment.recipientName}</strong> ({pinModalShipment.recipientPhone})</p>
+                <p className="text-muted-foreground">{t('المبلغ المطلوب تحصيله:', 'COD Amount:')} <strong className="text-emerald-500 font-bold">{pinModalShipment.codAmount?.toLocaleString()} DZD</strong></p>
               </div>
 
               <div>
@@ -478,7 +452,7 @@ export default function LogisticsDashboard() {
               </div>
 
               <div className="flex gap-2 pt-2">
-                <Button variant="outline" className="flex-1 rounded-xl font-bold" onClick={() => setSelectedShipment(null)}>
+                <Button variant="outline" className="flex-1 rounded-xl font-bold" onClick={() => setPinModalShipment(null)}>
                   {t('إلغاء', 'Cancel')}
                 </Button>
                 <Button 

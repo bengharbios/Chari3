@@ -89,17 +89,18 @@ export async function GET(req: NextRequest) {
 
     // 3. Process & format shipments
     const shipments = rawOrders.map((o) => {
-      let parsedAddr: any = { fullName: '', phone: '', street: '', city: 'الجزائر', state: 'الجزائر', country: 'DZ' };
-      try {
-        if (o.address) {
-          parsedAddr = typeof o.address === 'string' ? JSON.parse(o.address) : o.address;
-        }
-      } catch {
-        parsedAddr = { fullName: o.buyer?.name || '', phone: o.buyer?.phone || '', street: o.address || '', city: 'الجزائر', country: 'DZ' };
+      let rawAddr: any = o.address;
+      if (typeof rawAddr === 'string' && rawAddr.startsWith('{')) {
+        try { rawAddr = JSON.parse(rawAddr); } catch (e) {}
       }
 
-      const cityKey = parsedAddr.city || parsedAddr.state || 'الجزائر';
-      const baseCoords = CITY_COORDS_MAP[cityKey] || CITY_COORDS_MAP[cityKey.toLowerCase()] || { lat: 36.7538, lng: 3.0588 };
+      const cleanName = (typeof rawAddr === 'object' && rawAddr?.fullName) ? rawAddr.fullName : (o.buyer?.name || 'زبون شاري داي');
+      const cleanPhone = (typeof rawAddr === 'object' && rawAddr?.phone) ? rawAddr.phone : (o.buyer?.phone || '0550000000');
+      const cleanCity = (typeof rawAddr === 'object' && (rawAddr?.city || rawAddr?.state)) ? (rawAddr.city || rawAddr.state) : 'الجزائر';
+      const cleanStreet = (typeof rawAddr === 'object' && rawAddr?.street) ? rawAddr.street : (typeof o.address === 'string' && !o.address.startsWith('{') ? o.address : 'الجزائر');
+      const formattedAddress = `${cleanStreet}, ${cleanCity}`.replace(/^,\s*/, '');
+
+      const baseCoords = CITY_COORDS_MAP[cleanCity] || CITY_COORDS_MAP[cleanCity.toLowerCase()] || { lat: 36.7538, lng: 3.0588 };
       
       // Slight random offset for live tracking map visualization
       const latOffset = (Math.random() - 0.5) * 0.04;
@@ -110,11 +111,11 @@ export async function GET(req: NextRequest) {
         trackingNumber: o.orderNumber || `TN-${o.id.substring(0, 8).toUpperCase()}`,
         orderId: o.id,
         status: o.status === 'confirmed' ? 'picked_up' : (o.status === 'shipped' ? 'in_transit' : o.status),
-        recipientName: parsedAddr.fullName || o.buyer?.name || 'زبون شاري داي',
-        recipientPhone: parsedAddr.phone || o.buyer?.phone || '0550000000',
-        address: `${parsedAddr.street || ''}, ${parsedAddr.city || ''}`,
-        city: parsedAddr.city || 'الجزائر',
-        country: parsedAddr.country || 'DZ',
+        recipientName: cleanName,
+        recipientPhone: cleanPhone,
+        address: formattedAddress,
+        city: cleanCity,
+        country: (typeof rawAddr === 'object' && rawAddr?.country) ? rawAddr.country : 'DZ',
         codAmount: o.total || 0,
         shippingFee: o.shippingCost || 400,
         createdAt: o.createdAt,
