@@ -3,8 +3,9 @@ import { db } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// Algerian Wilaya GPS Coordinates Map for Live GPS Tracking Simulation
-const WILAYA_COORDS: Record<string, { lat: number; lng: number }> = {
+// Dynamic Multi-Country GPS Coordinates Map for Live Tracking Engine
+const CITY_COORDS_MAP: Record<string, { lat: number; lng: number }> = {
+  // 🇩🇿 ALGERIA WILAYAS
   'الجزائر': { lat: 36.7538, lng: 3.0588 },
   'وهران': { lat: 35.6971, lng: -0.6308 },
   'قسنطينة': { lat: 36.3650, lng: 6.6147 },
@@ -19,6 +20,30 @@ const WILAYA_COORDS: Record<string, { lat: number; lng: number }> = {
   'ورقلة': { lat: 31.9500, lng: 5.3167 },
   'الشلف': { lat: 36.1650, lng: 1.3344 },
   'مستغانم': { lat: 35.9333, lng: 0.0900 },
+
+  // 🇸🇦 SAUDI ARABIA CITIES
+  'الرياض': { lat: 24.7136, lng: 46.6753 },
+  'جدة': { lat: 21.5433, lng: 39.1728 },
+  'الدمام': { lat: 26.4207, lng: 50.0888 },
+  'مكة': { lat: 21.3891, lng: 39.8579 },
+  'المدينة': { lat: 24.5247, lng: 39.5692 },
+  'الخبر': { lat: 26.2172, lng: 50.1971 },
+
+  // 🇦🇪 UAE CITIES
+  'دبي': { lat: 25.2048, lng: 55.2708 },
+  'أبوظبي': { lat: 24.4539, lng: 54.3773 },
+  'الشارقة': { lat: 25.3463, lng: 55.4209 },
+  'عجمان': { lat: 25.4052, lng: 55.5136 },
+
+  // 🇪🇬 EGYPT CITIES
+  'القاهرة': { lat: 30.0444, lng: 31.2357 },
+  'الإسكندرية': { lat: 31.2001, lng: 29.9187 },
+  'الجيزة': { lat: 30.0131, lng: 31.2089 },
+
+  // 🇫🇷 FRANCE CITIES
+  'paris': { lat: 48.8566, lng: 2.3522 },
+  'lyon': { lat: 45.7640, lng: 4.8357 },
+  'marseille': { lat: 43.2965, lng: 5.3698 },
 };
 
 export async function GET(req: NextRequest) {
@@ -64,17 +89,17 @@ export async function GET(req: NextRequest) {
 
     // 3. Process & format shipments
     const shipments = rawOrders.map((o) => {
-      let parsedAddr: any = { fullName: '', phone: '', street: '', city: 'الجزائر', state: 'الجزائر' };
+      let parsedAddr: any = { fullName: '', phone: '', street: '', city: 'الجزائر', state: 'الجزائر', country: 'DZ' };
       try {
         if (o.address) {
           parsedAddr = typeof o.address === 'string' ? JSON.parse(o.address) : o.address;
         }
       } catch {
-        parsedAddr = { fullName: o.buyer?.name || '', phone: o.buyer?.phone || '', street: o.address || '', city: 'الجزائر' };
+        parsedAddr = { fullName: o.buyer?.name || '', phone: o.buyer?.phone || '', street: o.address || '', city: 'الجزائر', country: 'DZ' };
       }
 
       const cityKey = parsedAddr.city || parsedAddr.state || 'الجزائر';
-      const baseCoords = WILAYA_COORDS[cityKey] || { lat: 36.7538, lng: 3.0588 };
+      const baseCoords = CITY_COORDS_MAP[cityKey] || CITY_COORDS_MAP[cityKey.toLowerCase()] || { lat: 36.7538, lng: 3.0588 };
       
       // Slight random offset for live tracking map visualization
       const latOffset = (Math.random() - 0.5) * 0.04;
@@ -89,6 +114,7 @@ export async function GET(req: NextRequest) {
         recipientPhone: parsedAddr.phone || o.buyer?.phone || '0550000000',
         address: `${parsedAddr.street || ''}, ${parsedAddr.city || ''}`,
         city: parsedAddr.city || 'الجزائر',
+        country: parsedAddr.country || 'DZ',
         codAmount: o.total || 0,
         shippingFee: o.shippingCost || 400,
         createdAt: o.createdAt,
