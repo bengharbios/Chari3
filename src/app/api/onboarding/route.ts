@@ -179,6 +179,8 @@ function buildSupplierItems(data: {
 function buildLogisticsItems(data: {
   transportLicenseFile?: string | null;
   insuranceCertificateFile?: string | null;
+  driverLicenseFront?: string | null;
+  vehicleRegistrationFile?: string | null;
   numberOfVehicles?: string | null;
   numberOfDrivers?: string | null;
   iban?: string | null;
@@ -193,8 +195,20 @@ function buildLogisticsItems(data: {
 
   const items: VerificationItemResponse[] = [
     {
+      key: 'driver_license',
+      labelAr: 'رخصة السياقة (Permis)',
+      labelEn: 'Driver License',
+      status: 'required',
+    },
+    {
+      key: 'vehicle_registration',
+      labelAr: 'البطاقة الرمادية (Carte Grise)',
+      labelEn: 'Vehicle Registration',
+      status: 'required',
+    },
+    {
       key: 'transport_license',
-      labelAr: 'رخصة النقل',
+      labelAr: 'رخصة النقل / اعتمادات التوصيل',
       labelEn: 'Transport License',
       status: 'required',
     },
@@ -206,29 +220,35 @@ function buildLogisticsItems(data: {
     },
     {
       key: 'fleet_info',
-      labelAr: 'معلومات الأسطول',
-      labelEn: 'Fleet Information',
+      labelAr: 'معلومات الأسطول والسائقين',
+      labelEn: 'Fleet & Driver Info',
       status: 'required',
     },
     {
       key: 'bank_account',
-      labelAr: 'الحساب البنكي',
-      labelEn: 'Bank Account (IBAN)',
+      labelAr: 'الحساب البنكي / البريدي (RIP/IBAN)',
+      labelEn: 'Bank / Postal Account',
       status: 'required',
     },
   ];
 
+  if (data.driverLicenseFront) {
+    items[0].status = isRejected && rejectedFields.includes('driver_license') ? 'rejected' : 'pending';
+  }
+  if (data.vehicleRegistrationFile) {
+    items[1].status = isRejected && rejectedFields.includes('vehicle_registration') ? 'rejected' : 'pending';
+  }
   if (data.transportLicenseFile) {
-    items[0].status = isRejected && rejectedFields.includes('transport_license') ? 'rejected' : 'pending';
+    items[2].status = isRejected && rejectedFields.includes('transport_license') ? 'rejected' : 'pending';
   }
   if (data.insuranceCertificateFile) {
-    items[1].status = isRejected && rejectedFields.includes('insurance') ? 'rejected' : 'pending';
+    items[3].status = isRejected && rejectedFields.includes('insurance') ? 'rejected' : 'pending';
   }
-  if (data.numberOfVehicles && data.numberOfDrivers) {
-    items[2].status = isRejected && rejectedFields.includes('fleet_info') ? 'rejected' : 'pending';
+  if (data.numberOfVehicles || data.numberOfDrivers) {
+    items[4].status = isRejected && rejectedFields.includes('fleet_info') ? 'rejected' : 'pending';
   }
   if (data.iban) {
-    items[3].status = isRejected && rejectedFields.includes('bank_account') ? 'rejected' : 'pending';
+    items[5].status = isRejected && rejectedFields.includes('bank_account') ? 'rejected' : 'pending';
   }
 
   if (data.verificationStatus === 'approved') {
