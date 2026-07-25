@@ -879,5 +879,24 @@
     "proofOfDelivery": "Preuve de Remise Client",
     "escrowBuffer": "Délai de Sécurité de Libération de Portefeuille",
     "zeroCostSecurity": "Architecture de Sécurité PIN Gratuite Sans SMS"
+  },
+  "driverLicenses": {
+    "title": "Catégories de Permis de Conduire et Normes Internationales",
+    "description": "Gérer et personnaliser les catégories de permis par pays et types de véhicules autorisés",
+    "codeLabel": "Code de catégorie",
+    "nameArLabel": "🇸🇦 Nom en arabe",
+    "nameEnLabel": "🇬🇧 Nom en anglais",
+    "nameFrLabel": "🇫🇷 Nom en français",
+    "descArLabel": "🇸🇦 Description en arabe",
+    "descEnLabel": "🇬🇧 Description en anglais",
+    "descFrLabel": "🇫🇷 Description en français",
+    "allowedVehiclesLabel": "Types de véhicules autorisés",
+    "maxWeightLabel": "Poids maximal autorisé (tonnes)",
+    "maxPassengersLabel": "Passagers maximaux",
+    "selectCountry": "Sélectionner le pays pour personnaliser les catégories",
+    "addCategory": "Ajouter une nouvelle catégorie de permis",
+    "saveCategories": "Enregistrer les paramètres du permis",
+    "resetToDefault": "Réinitialiser aux valeurs par défaut",
+    "algeriaDecreeNotice": "Conforme à l'article 180 du décret exécutif 04-381 (Algérie)"
   }
 }

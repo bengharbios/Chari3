@@ -937,5 +937,24 @@
     "proofOfDelivery": "Proof of Customer Delivery",
     "escrowBuffer": "Escrow Wallet Release Holding Buffer",
     "zeroCostSecurity": "Zero-Cost Delivery PIN Security Architecture"
+  },
+  "driverLicenses": {
+    "title": "Driver License Categories & Country Standards",
+    "description": "Manage and customize driver license categories per country and allowed vehicle types",
+    "codeLabel": "Category Code",
+    "nameArLabel": "🇸🇦 Name in Arabic",
+    "nameEnLabel": "🇬🇧 Name in English",
+    "nameFrLabel": "🇫🇷 Name in French",
+    "descArLabel": "🇸🇦 Description in Arabic",
+    "descEnLabel": "🇬🇧 Description in English",
+    "descFrLabel": "🇫🇷 Description in French",
+    "allowedVehiclesLabel": "Allowed Vehicle Types",
+    "maxWeightLabel": "Max Gross Weight (Tons)",
+    "maxPassengersLabel": "Max Passengers",
+    "selectCountry": "Select Country to Customize Categories",
+    "addCategory": "Add New License Category",
+    "saveCategories": "Save Country License Settings",
+    "resetToDefault": "Reset to Country Defaults",
+    "algeriaDecreeNotice": "Compliant with Article 180 of Executive Decree 04-381 (Algeria)"
   }
 }
