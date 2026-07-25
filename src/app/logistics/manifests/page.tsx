@@ -40,9 +40,9 @@ export default function ManifestsPage() {
     <div className="space-y-6 text-start">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black">{t('منافيست الشحن والبوالص الحرارية', 'Shipment Manifests & Thermal Waybills')}</h1>
+          <h1 className="text-2xl font-black">{t('بيان الحمولة والبوالص الحرارية', 'Cargo Manifest & Thermal Waybills')}</h1>
           <p className="text-xs text-muted-foreground mt-1">
-            {t('طباعة بوالص الشحن الحرارية وتصدير المنافيست اليومي لجميع الشحنات المسلمة', 'Print thermal waybills & export daily shipment manifests')}
+            {t('طباعة بوالص الشحن الحرارية وتصدير بيان شحن البضائع اليومي', 'Print thermal waybills & export daily cargo shipping manifest')}
           </p>
         </div>
 
@@ -53,7 +53,7 @@ export default function ManifestsPage() {
           </Button>
           <Button size="sm" className="rounded-xl font-bold bg-primary text-primary-foreground gap-1.5" onClick={() => window.print()}>
             <Printer className="h-4 w-4" />
-            {t('طباعة الكل', 'Print All Manifests')}
+            {t('طباعة بيان الحمولة', 'Print Cargo Manifest')}
           </Button>
         </div>
       </div>
@@ -62,7 +62,7 @@ export default function ManifestsPage() {
         <CardHeader className="p-4 border-b border-border/50 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-bold flex items-center gap-2">
             <FileText className="h-4 w-4 text-primary" />
-            {t('قائمة شحنات المنافيست المجهزة', 'Prepared Shipment Manifests')}
+            {t('قائمة بيان الشحنات المجهزة', 'Prepared Goods Manifest List')}
           </CardTitle>
           <Badge variant="outline" className="font-mono bg-primary/10 text-primary border-primary/20">
             {manifests.length} {t('شحنة', 'Items')}
