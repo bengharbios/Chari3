@@ -459,31 +459,57 @@ export default function VerificationStatusPage() {
       </div>
 
       {/* Role Breakdown Header Banner */}
-      <Card className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-100 dark:border-blue-900/30">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
-              {['store_manager', 'store'].includes(user.role) ? <Building2 className="size-6" /> : <UserCircle className="size-6" />}
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                  {t(isAr, 'نوع التوثيق الحالي', 'Current Verification Type')}
-                </span>
-                <Badge variant="outline" className="border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-300">
-                  {['store_manager', 'store'].includes(user.role) ? t(isAr, 'متجر رسمي معتمد', 'Verified Store Manager') : t(isAr, 'تاجر مستقل', 'Independent Seller')}
-                </Badge>
+      {(() => {
+        const info = (() => {
+          if (user?.role === 'logistics' || user?.role === 'driver') {
+            return {
+              badge: t(isAr, 'مندوب توصيل مستقل', 'Individual Delivery Courier'),
+              desc: t(isAr, 'توثيق ميداني يشمل رخصة السياقة البيومترية (المادة 180)، البطاقة الرمادية للمركبة/الدراجة، عقد تأمين التوصيل، وحساب بريدي موب / RIP.', 'Field verification including biometric driver license (Article 180), vehicle carte grise, delivery insurance, & RIP account.'),
+            };
+          }
+          if (user?.role === 'carrier') {
+            return {
+              badge: t(isAr, 'شركة شحن لوجستية', 'Logistics Carrier Enterprise'),
+              desc: t(isAr, 'توثيق مؤسساتي يشمل السجل التجاري R.C، الرقم الجبائي الإحصائي NIF/NIS، واعتماد وزارة النقل لنشاط نقل البضائع.', 'Enterprise verification including Commercial Register, NIF/NIS, and Ministry of Transport accreditation.'),
+            };
+          }
+          if (['store_manager', 'store'].includes(user?.role || '')) {
+            return {
+              badge: t(isAr, 'متجر رسمي معتمد', 'Verified Store Manager'),
+              desc: t(isAr, 'توثيق متكامل يشمل السجل التجاري، الحساب البنكي للشركة، وهوية المدير المفوض.', 'Comprehensive verification including Commercial Register, Corporate Bank Account, and Authorized Manager ID.'),
+            };
+          }
+          return {
+            badge: t(isAr, 'تاجر مستقل', 'Independent Seller'),
+            desc: t(isAr, 'توثيق شخصي يشمل الهوية الوطنية، وثيقة العمل الحر، والحساب البنكي.', 'Personal verification including National ID, Freelance Certificate, and Bank Account.'),
+          };
+        })();
+
+        return (
+          <Card className="bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-100 dark:border-blue-900/30">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                  {['store_manager', 'store'].includes(user?.role || '') ? <Building2 className="size-6" /> : <UserCircle className="size-6" />}
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                      {t(isAr, 'نوع التوثيق الحالي', 'Current Verification Type')}
+                    </span>
+                    <Badge variant="outline" className="border-blue-200 text-blue-700 dark:border-blue-800 dark:text-blue-300">
+                      {info.badge}
+                    </Badge>
+                  </div>
+                  <p className="text-sm font-medium mt-1">
+                    {info.desc}
+                  </p>
+                </div>
               </div>
-              <p className="text-sm font-medium mt-1">
-                {['store_manager', 'store'].includes(user.role)
-                  ? t(isAr, 'توثيق متكامل يشمل السجل التجاري، الحساب البنكي للشركة، وهوية المدير المفوض.', 'Comprehensive verification including Commercial Register, Corporate Bank Account, and Authorized Manager ID.')
-                  : t(isAr, 'توثيق شخصي يشمل الهوية الوطنية، وثيقة العمل الحر، والحساب البنكي.', 'Personal verification including National ID, Freelance Certificate, and Bank Account.')
-                }
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Overall Status Card */}
       <Card className={currentStatus.bg}>

@@ -180,7 +180,7 @@ const LOGISTICS_NAV_GROUPS: NavGroup[] = [
       { id: 'logistics-active', labelAr: 'الشحنات النشطة والـ PIN', labelEn: 'Active Shipments', icon: 'Navigation', badge: 4, path: '/logistics/active' },
       { id: 'logistics-manifests', labelAr: 'منافيست الشحن والبوالص', labelEn: 'Manifests & Labels', icon: 'FileText', path: '/logistics/manifests' },
       { id: 'logistics-history', labelAr: 'سجل التوصيل والتحصيل', labelEn: 'Delivery & COD History', icon: 'Receipt', path: '/logistics/history' },
-      { id: 'logistics-documents', labelAr: 'وثائق ورخصة المندوب', labelEn: 'Driver License & Docs', icon: 'ShieldCheck', path: '/logistics/documents' },
+      { id: 'logistics-documents', labelAr: 'حالة التوثيق والمستندات', labelEn: 'Verification & Docs', icon: 'ShieldCheck', path: '/verification' },
       { id: 'logistics-earnings', labelAr: 'المحفظة والأرباح', labelEn: 'Wallet & Payouts', icon: 'Wallet', path: '/logistics/earnings' },
     ]
   }

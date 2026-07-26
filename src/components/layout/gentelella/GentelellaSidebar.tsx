@@ -301,8 +301,8 @@ const LOGISTICS_GROUPS: GentelellaNavGroup[] = [
         id: 'logistics-documents-tree',
         labelKey: 'sidebar.verification',
         icon: ShieldCheck,
-        directPageId: 'logistics-documents' as PageType,
-        path: '/logistics/documents'
+        directPageId: 'verification' as PageType,
+        path: '/verification'
       },
       {
         id: 'logistics-earnings-tree',
