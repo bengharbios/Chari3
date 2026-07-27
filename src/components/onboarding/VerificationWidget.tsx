@@ -88,6 +88,8 @@ export function StickyStatusBanner() {
   if (isBannerDismissed) return null;
   if (!accountStatus || accountStatus === 'active' || accountStatus === 'suspended') return null;
 
+  const isLogisticsRole = ['logistics', 'driver', 'carrier'].includes(user?.role || '');
+
   // Config per status
   const bannerConfig: Record<string, {
     icon: React.ElementType;
@@ -106,7 +108,9 @@ export function StickyStatusBanner() {
       bg: 'bg-orange-50 dark:bg-orange-900/20',
       border: 'border-orange-200 dark:border-orange-800/30',
       text: isAr ? 'يجب إكمال التوثيق' : 'Verification Required',
-      subtext: isAr ? 'لن يظهر متجرك للعملاء حتى تقوم بإكمال متطلبات التوثيق' : 'Your store will not be visible to customers until verification is complete',
+      subtext: isLogisticsRole
+        ? (isAr ? 'لن تتمكن من استلام وتوصيل الشحنات حتى تقوم بإكمال توثيق رخصة السياقة والبطاقة الرمادية' : 'You cannot receive or deliver shipments until driver verification is complete')
+        : (isAr ? 'لن يظهر متجرك للعملاء حتى تقوم بإكمال متطلبات التوثيق' : 'Your store will not be visible to customers until verification is complete'),
       iconColor: 'text-orange-600',
       pulse: false,
       actionLabelAr: 'استكمال التوثيق',
@@ -118,7 +122,9 @@ export function StickyStatusBanner() {
       bg: 'bg-yellow-50 dark:bg-yellow-900/20',
       border: 'border-yellow-200 dark:border-yellow-800/30',
       text: isAr ? 'جاري مراجعة بيانات حسابك...' : 'Your account is under review...',
-      subtext: isAr ? 'سيتم التفعيل خلال 2-24 ساعة عمل' : 'Activation within 2-24 hours',
+      subtext: isLogisticsRole
+        ? (isAr ? 'بيانات ورخصة المندوب قيد المراجعة والاعتماد خلال 2-24 ساعة عمل' : 'Driver documents are under review (2-24 hours)')
+        : (isAr ? 'سيتم التفعيل خلال 2-24 ساعة عمل' : 'Activation within 2-24 hours'),
       iconColor: 'text-yellow-600',
       pulse: true,
       actionLabelAr: 'حالة التوثيق',
