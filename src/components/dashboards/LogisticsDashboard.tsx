@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import {
   Truck, Navigation, MapPin, Phone, CheckCircle,
   Clock, Package, Wallet, RefreshCw, Loader2,
-  Printer, ShieldCheck, KeyRound
+  Printer, ShieldCheck, KeyRound, Camera, Upload
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -103,12 +103,30 @@ export default function LogisticsDashboard() {
     }
     setIsSubmittingPin(true);
     try {
-      await handleUpdateStatus(pinModalShipment.id, 'delivered');
-      toast.success(t('تم تأكيد رمز الـ PIN وتسليم الشحنة وتحرير المبلغ للمحفظة!', 'PIN verified! Delivery completed & COD credited to wallet.'));
-      setPinModalShipment(null);
-      setPinInput('');
+      const res = await fetch('/api/logistics/dashboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: pinModalShipment.orderId || pinModalShipment.id,
+          pin: pinInput,
+          photoUrl: podPhoto,
+          lat: podGps?.lat,
+          lng: podGps?.lng,
+        }),
+      });
+
+      const resData = await res.json();
+      if (res.ok && resData.success) {
+        toast.success(t('تم تأكيد رمز الـ PIN وإثبات التسليم بالصورة والموقع بنجاح!', 'PIN & Proof of Delivery verified! Wallet credited.'));
+        setPinModalShipment(null);
+        setPinInput('');
+        setPodPhoto(null);
+        fetchLogisticsData();
+      } else {
+        toast.error(resData.error || t('رمز الـ PIN غير صحيح، حاول مجدداً', 'Invalid Delivery PIN, try again'));
+      }
     } catch {
-      toast.error(t('رمز الـ PIN غير صحيح، حاول مجدداً', 'Invalid Delivery PIN, try again'));
+      toast.error(t('خطأ في الاتصال بالخادم', 'Connection error'));
     } finally {
       setIsSubmittingPin(false);
     }
@@ -437,6 +455,50 @@ export default function LogisticsDashboard() {
                 <p className="text-muted-foreground">{t('رقم الشحنة:', 'Tracking #:')} <strong className="font-mono text-primary">{pinModalShipment.trackingNumber}</strong></p>
                 <p className="text-muted-foreground">{t('المستلم:', 'Recipient:')} <strong className="text-foreground">{pinModalShipment.recipientName}</strong> ({pinModalShipment.recipientPhone})</p>
                 <p className="text-muted-foreground">{t('المبلغ المطلوب تحصيله:', 'COD Amount:')} <strong className="text-emerald-500 font-bold">{pinModalShipment.codAmount?.toLocaleString()} DZD</strong></p>
+              </div>
+
+              {/* GPS Stamp Status */}
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs">
+                <span className="flex items-center gap-1.5 font-semibold text-blue-600 dark:text-blue-400">
+                  <MapPin className="h-4 w-4" />
+                  {t('البصمة الجغرافية (GPS):', 'GPS Stamp:')}
+                </span>
+                {isCapturingGps ? (
+                  <span className="text-muted-foreground animate-pulse">{t('جاري التحديد...', 'Detecting...')}</span>
+                ) : podGps ? (
+                  <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 bg-emerald-500/10 text-[10px]">
+                    {t('محدد تلقائياً ✓', 'Auto-Captured ✓')}
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-amber-500/30 text-amber-600 bg-amber-500/10 text-[10px]">
+                    {t('الوضع التلقائي المستقل', 'Fallback Mode')}
+                  </Badge>
+                )}
+              </div>
+
+              {/* POD Photo Upload */}
+              <div>
+                <label className="text-xs font-bold text-foreground block mb-1.5 flex items-center justify-between">
+                  <span>{t('📸 صورة إثبات التسليم (Photo POD)', '📸 Parcel Photo Proof')}</span>
+                  <span className="text-[10px] text-muted-foreground font-normal">{t('موصى به لرفع الأمان', 'Recommended')}</span>
+                </label>
+
+                {podPhoto ? (
+                  <div className="relative rounded-2xl overflow-hidden border border-emerald-500/30 h-28 bg-slate-900 flex items-center justify-center group">
+                    <img src={podPhoto} alt="POD Proof" className="h-full w-full object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                      <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => setPodPhoto(null)}>
+                        {t('حذف الصورة', 'Remove Photo')}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-border hover:border-emerald-500/50 rounded-2xl cursor-pointer bg-muted/10 hover:bg-muted/20 transition-all text-xs text-muted-foreground">
+                    <Camera className="h-6 w-6 mb-1 text-emerald-500" />
+                    <span>{t('التقط صورة بالطرد أو انقر للرفع', 'Take photo or upload proof')}</span>
+                    <input type="file" accept="image/*" capture="environment" onChange={handlePhotoUpload} className="hidden" />
+                  </label>
+                )}
               </div>
 
               <div>

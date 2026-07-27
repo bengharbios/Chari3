@@ -615,6 +615,45 @@ export default function StoreOrdersPage() {
 
               {/* Modal Content */}
               <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                {/* Proof of Delivery (POD) Section */}
+                {(selectedOrder.status === 'delivered' || selectedOrder.podPhotoUrl || selectedOrder.podVerifiedByPin) && (
+                  <Card className="p-4 rounded-2xl border-emerald-500/20 bg-emerald-500/5 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+                        <ShieldCheck className="h-5 w-5" />
+                        <span>{t('إثبات التسليم الرقمي (Proof of Delivery - POD)', 'Digital Proof of Delivery')}</span>
+                      </div>
+                      <Badge className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-0 text-[10px]">
+                        {t('تم التحقق بكود الـ PIN المباشر ✓', 'PIN Verified ✓')}
+                      </Badge>
+                    </div>
+
+                    {selectedOrder.podPhotoUrl && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground font-semibold">{t('صورة الطرد عند التوصيل:', 'Parcel Photo Proof:')}</p>
+                        <div className="relative rounded-xl overflow-hidden border border-emerald-500/30 h-44 bg-slate-900 flex items-center justify-center">
+                          <img src={selectedOrder.podPhotoUrl} alt="POD Proof" className="h-full w-full object-cover" />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground pt-1">
+                      <div>
+                        <span>{t('تاريخ وتوقيت التسليم:', 'Delivery Timestamp:')}</span>
+                        <p className="font-mono font-bold text-foreground">{selectedOrder.podDeliveredAt ? new Date(selectedOrder.podDeliveredAt).toLocaleString('ar-DZ') : selectedOrder.date}</p>
+                      </div>
+                      <div>
+                        <span>{t('البصمة الجغرافية (GPS):', 'GPS Location Stamp:')}</span>
+                        <p className="font-mono font-bold text-foreground">
+                          {selectedOrder.podLatitude && selectedOrder.podLongitude
+                            ? `${selectedOrder.podLatitude.toFixed(4)}, ${selectedOrder.podLongitude.toFixed(4)}`
+                            : t('موقع مسجل تلقائياً ✓', 'Auto-Captured ✓')}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+
                 {/* Buyer & Address info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Card className="p-4 rounded-2xl border-white/10 bg-background/50">

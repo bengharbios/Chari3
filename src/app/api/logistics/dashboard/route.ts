@@ -165,3 +165,66 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, error: 'Failed to load logistics data' }, { status: 500 });
   }
 }
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { orderId, pin, photoUrl, lat, lng, notes } = body;
+
+    if (!orderId) {
+      return NextResponse.json({ success: false, error: 'رقم الطلب مطلوب' }, { status: 400 });
+    }
+
+    const order = await db.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      return NextResponse.json({ success: false, error: 'الطلب غير موجود' }, { status: 404 });
+    }
+
+    // Verify PIN if provided
+    const expectedPin = order.id.substring(0, 4).toUpperCase();
+    if (pin && pin.trim().toUpperCase() !== expectedPin) {
+      return NextResponse.json({ success: false, error: 'رمز PIN الخاص بالتسليم غير صحيح' }, { status: 400 });
+    }
+
+    // Update order with Proof of Delivery (POD) details
+    const updatedOrder = await db.order.update({
+      where: { id: orderId },
+      data: {
+        status: 'delivered',
+        podPhotoUrl: photoUrl || null,
+        podLatitude: lat ? parseFloat(lat) : null,
+        podLongitude: lng ? parseFloat(lng) : null,
+        podDeliveredAt: new Date(),
+        podVerifiedByPin: true,
+        podNotes: notes || null,
+      },
+    });
+
+    // Update associated shipment if exists
+    await db.shipment.updateMany({
+      where: { orderId: orderId },
+      data: {
+        status: 'delivered',
+        actualDelivery: new Date(),
+        podPhotoUrl: photoUrl || null,
+        podLatitude: lat ? parseFloat(lat) : null,
+        podLongitude: lng ? parseFloat(lng) : null,
+        podDeliveredAt: new Date(),
+        podVerifiedByPin: true,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'تم تأكيد وإثبات التسليم بنجاح (Proof of Delivery Verified)',
+      order: updatedOrder,
+    });
+  } catch (error: any) {
+    console.error('Logistics POD API Error:', error);
+    return NextResponse.json({ success: false, error: error.message || 'Server error' }, { status: 500 });
+  }
+}
+

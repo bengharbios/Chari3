@@ -616,6 +616,14 @@ model Order {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  // Proof of Delivery (POD) fields
+  podPhotoUrl       String?   @db.LongText
+  podLatitude       Float?
+  podLongitude      Float?
+  podDeliveredAt    DateTime?
+  podVerifiedByPin  Boolean   @default(false)
+  podNotes          String?
+
   items           OrderItem[]
   shipments       Shipment[]
   reviews         Review[]
@@ -656,6 +664,13 @@ model Shipment {
   pickedUpAt        DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+
+  // Proof of Delivery (POD) fields
+  podPhotoUrl       String?   @db.LongText
+  podLatitude       Float?
+  podLongitude      Float?
+  podDeliveredAt    DateTime?
+  podVerifiedByPin  Boolean   @default(false)
 
   statusHistory     ShipmentStatusHistory[]
 }
