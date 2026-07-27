@@ -150,7 +150,7 @@ export default function LogisticsDashboard() {
   const driver = data?.driver || {
     name: user?.name || 'حمزة بن زاهي',
     phone: user?.phone || '0550000002',
-    isVerified: true,
+    isVerified: user?.isVerified || false,
     rating: 4.9,
     todayDeliveriesCount: 12,
     totalDeliveriesCount: 345,

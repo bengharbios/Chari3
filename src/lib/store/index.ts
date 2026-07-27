@@ -382,7 +382,7 @@ export const useAuthStore = create<AuthState>()(
         if (typeof window !== 'undefined') {
           if (role === 'admin') window.location.href = '/admin-secure-internal';
           else if (role === 'buyer') window.location.href = '/';
-          else if (role === 'logistics') window.location.href = '/logistics';
+          else if (['logistics', 'driver', 'carrier'].includes(role)) window.location.href = '/logistics';
           else window.location.href = '/seller/dashboard';
         }
       },
@@ -407,7 +407,6 @@ export const useAuthStore = create<AuthState>()(
         });
         const { setCurrentPage, setLocale } = useAppStore.getState();
         setLocale(user.locale || 'ar');
-        setCurrentPage(user.role === 'buyer' ? 'home' : ROLE_TO_PAGE[user.role]);
         
         if (typeof window !== 'undefined') {
           // IMPORTANT: Delay redirect by one event loop tick so the browser 
@@ -420,7 +419,7 @@ export const useAuthStore = create<AuthState>()(
             } else {
               if (user.role === 'admin') window.location.href = '/admin-secure-internal';
               else if (user.role === 'buyer') window.location.href = '/buyer';
-              else if (user.role === 'logistics') window.location.href = '/logistics';
+              else if (['logistics', 'driver', 'carrier'].includes(user.role)) window.location.href = '/logistics';
               else window.location.href = '/seller/dashboard';
             }
           };

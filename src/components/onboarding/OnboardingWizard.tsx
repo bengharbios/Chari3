@@ -204,9 +204,11 @@ function getSteps(role: UserRole): StepDef[] {
         { titleAr: 'التوثيق المالي والحساب البنكي', titleEn: 'Financial Verification', icon: <Shield className="h-4 w-4" /> },
       ];
     case 'logistics':
+    case 'driver':
       return [
-        { titleAr: 'رخصة السياقة والوثائق', titleEn: 'Licenses', icon: <FileText className="h-4 w-4" /> },
-        { titleAr: 'معلومات الأسطول والمركبات', titleEn: 'Fleet Information', icon: <Truck className="h-4 w-4" /> },
+        { titleAr: 'رخصة السياقة والوثائق الشخصية', titleEn: 'Driver License & ID', icon: <FileText className="h-4 w-4" /> },
+        { titleAr: 'البطاقة الرمادية للمركبة (Carte Grise)', titleEn: 'Vehicle Carte Grise', icon: <Truck className="h-4 w-4" /> },
+        { titleAr: 'عقد التأمين والحساب البنكي (RIP)', titleEn: 'Insurance & RIP Account', icon: <Shield className="h-4 w-4" /> },
       ];
     case 'admin':
       return [];
@@ -1349,10 +1351,10 @@ export default function OnboardingWizard() {
               </div>
               <div>
                 <h3 className="font-semibold text-base">
-                  {t(locale, 'تأمين المركبة والاعتماد الرسمي', 'Vehicle Insurance & Transport Accreditation')}
+                  {t(locale, 'تأمين المركبة والحساب البريدي (RIP / BaridiMob)', 'Vehicle Insurance & RIP Account')}
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  {t(locale, 'عقد التأمين الساري لحماية الطرود المسلمة والمسؤولية المدنية', 'Active vehicle insurance coverage & courier accreditation')}
+                  {t(locale, 'عقد التأمين الساري ورقم الـ RIP لتحويل العمولات والمستحقات', 'Active vehicle insurance certificate & RIP account for COD payouts')}
                 </p>
               </div>
             </div>
@@ -1364,25 +1366,6 @@ export default function OnboardingWizard() {
               onRemove={() => setField('insuranceCertificateFile', null)}
               locale={locale}
             />
-          </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-5 animate-fade-in">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="h-10 w-10 rounded-xl bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                <User className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-base">
-                  {t(locale, 'الحساب البنكي / البريدي (BaridiMob / RIP)', 'Bank / Postal Account (BaridiMob)')}
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  {t(locale, 'رقم حساب بريدي موب أو RIP لتحويل عمولات التوصيل وتصفية الـ COD', 'CCP/BaridiMob RIP number for delivery commissions & COD payouts')}
-                </p>
-              </div>
-            </div>
             {renderIbanField(freelancerIban, (val) => setField('freelancerIban', val))}
             {renderFinancialNotes()}
           </div>
@@ -1422,11 +1405,12 @@ export default function OnboardingWizard() {
             { label: 'IBAN', labelEn: 'IBAN', done: validateIban(supplierIban, ibanConfig) },
           ];
         case 'logistics':
+        case 'driver':
           return [
-            { label: 'اعتماد / رخصة النقل والتوصيل', labelEn: 'Transport License', done: !!transportLicenseFile },
+            { label: 'رخصة السياقة البيومترية (Permis)', labelEn: 'Biometric Driver License', done: !!freelanceDocumentFile },
+            { label: 'البطاقة الرمادية للمركبة (Carte Grise)', labelEn: 'Vehicle Carte Grise', done: !!transportLicenseFile },
             { label: 'عقد تأمين المركبة والمسؤولية المدنية', labelEn: 'Insurance Certificate', done: !!insuranceCertificateFile },
-            { label: 'عدد المركبات', labelEn: 'Number of Vehicles', done: Number(numberOfVehicles) > 0 },
-            { label: 'عدد السائقين', labelEn: 'Number of Drivers', done: Number(numberOfDrivers) > 0 },
+            { label: 'الحساب البريدي / البنكي (RIP / BaridiMob)', labelEn: 'RIP / BaridiMob Account', done: true },
           ];
         default:
           return [];
