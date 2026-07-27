@@ -62,7 +62,7 @@ const statusConfig: Record<
 // STICKY STATUS BANNER
 // ============================================
 
-function StickyStatusBanner() {
+export function StickyStatusBanner() {
   const { locale, setCurrentPage } = useAppStore();
   const { user } = useAuthStore();
   const { accountStatus, isBannerDismissed, dismissBanner, rejectionReason, isDraftSaved, clearDraftFlag, setWizardOpen } = useOnboardingStore();

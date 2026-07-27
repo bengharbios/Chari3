@@ -11,6 +11,7 @@ import GentelellaSidebar from './gentelella/GentelellaSidebar';
 import GentelellaHeader from './gentelella/GentelellaHeader';
 import { useGentelellaTheme } from './gentelella/theme';
 import Footer from './Footer';
+import { StickyStatusBanner } from '@/components/onboarding/VerificationWidget';
 import { ThemeSettings, defaultSellerTheme, defaultPlatformTheme } from '@/lib/theme-defaults';
 import { useTheme } from 'next-themes';
 import { usePathname } from 'next/navigation';
@@ -264,6 +265,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         >
           {isGentelella && <GentelellaHeader />}
           <div className={`p-4 md:p-6 lg:p-8 pb-24 md:pb-8 w-full flex-1 ${isGentelella ? '' : 'max-w-[1750px] mx-auto'}`}>
+            <StickyStatusBanner />
             {children}
           </div>
           {theme.footer.enabled && <Footer theme={theme} />}
