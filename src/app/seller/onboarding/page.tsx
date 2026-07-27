@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import OnboardingWizard from '@/components/seller/onboarding/OnboardingWizard';
+import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import { useAuthStore, useAppStore } from '@/lib/store';
 import { useOnboardingStore } from '@/lib/store/onboarding';
 import { useRouter } from 'next/navigation';
