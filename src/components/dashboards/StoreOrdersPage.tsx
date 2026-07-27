@@ -19,7 +19,7 @@ import {
 import {
   Package, Search, Calendar, MapPin, Truck, CheckCircle2, XCircle, Clock, 
   MoreHorizontal, Download, Printer, Loader2, User, Table as TableIcon, LayoutGrid, List,
-  ArrowUpDown, Filter, Eye, FileText, Check, DollarSign, RefreshCw, Plus, SlidersHorizontal
+  ArrowUpDown, Filter, Eye, FileText, Check, DollarSign, RefreshCw, Plus, SlidersHorizontal, ChevronDown
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -265,6 +265,37 @@ export default function StoreOrdersPage() {
     }
   };
 
+  const renderInteractiveStatusBadge = (o: any) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild onClick={(ev) => ev.stopPropagation()}>
+        <div className="cursor-pointer inline-flex items-center gap-1 hover:opacity-85 transition-opacity" title={t('اضغط لتغيير الحالة السريع', 'Click to quickly change status')}>
+          {getStatusBadge(o.status)}
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground opacity-70 shrink-0" />
+        </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="center" className="w-56 rounded-2xl border-white/10 bg-background/95 backdrop-blur-xl p-2 space-y-1 shadow-xl">
+        <DropdownMenuLabel className="text-xs font-extrabold text-muted-foreground px-2 py-1">{t('تغيير حالة الطلب:', 'Change Order Status:')}</DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-border/50" />
+        <DropdownMenuItem onClick={(ev) => { ev.stopPropagation(); handleUpdateStatus('pending', o.id); }} className="cursor-pointer rounded-xl font-bold text-amber-500 gap-2 py-2">
+          ⏳ {t('معلق (Pending)', 'Pending')}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={(ev) => { ev.stopPropagation(); handleUpdateStatus('confirmed', o.id); }} className="cursor-pointer rounded-xl font-bold text-blue-500 gap-2 py-2">
+          ⚡ {t('مؤكد - جاهز للتجهيز (Confirmed)', 'Confirmed')}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={(ev) => { ev.stopPropagation(); handleUpdateStatus('shipped', o.id); }} className="cursor-pointer rounded-xl font-bold text-indigo-500 gap-2 py-2">
+          🚚 {t('تم الشحن / تسلم للمندوب (Shipped)', 'Shipped')}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={(ev) => { ev.stopPropagation(); handleUpdateStatus('delivered', o.id); }} className="cursor-pointer rounded-xl font-bold text-emerald-500 gap-2 py-2">
+          ✔️ {t('تم التوصيل - مكتمل (Delivered)', 'Delivered')}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator className="bg-border/50" />
+        <DropdownMenuItem onClick={(ev) => { ev.stopPropagation(); handleUpdateStatus('cancelled', o.id); }} className="cursor-pointer rounded-xl font-bold text-red-500 gap-2 py-2">
+          ❌ {t('إلغاء الطلب (Cancelled)', 'Cancelled')}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   const filteredOrders = orders.filter(o => {
     const term = searchTerm.toLowerCase();
     const matchesSearch = 
@@ -467,13 +498,14 @@ export default function StoreOrdersPage() {
                             {o.date}
                           </TableCell>
                           <TableCell className="text-center">
-                            {getStatusBadge(o.status)}
+                            {renderInteractiveStatusBadge(o)}
                           </TableCell>
                           <TableCell className="text-end" onClick={(e) => e.stopPropagation()}>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <MoreHorizontal className="h-4 w-4" />
+                                <Button variant="outline" size="sm" className="h-8 rounded-lg font-extrabold px-2.5 text-xs bg-background/60 hover:bg-primary hover:text-white border-white/10 shadow-sm transition-all gap-1">
+                                  <span>{t('إجراء', 'Action')}</span>
+                                  <MoreHorizontal className="h-3.5 w-3.5" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align={isAr ? "start" : "end"} className="w-52 rounded-xl border-white/10 bg-background/95 backdrop-blur-xl">
@@ -518,7 +550,7 @@ export default function StoreOrdersPage() {
                         <div>
                           <div className="flex items-center gap-2">
                             <span className="font-mono font-bold text-primary text-sm">#{o.orderNumber}</span>
-                            {getStatusBadge(o.status)}
+                            {renderInteractiveStatusBadge(o)}
                           </div>
                           <p className="font-bold text-sm text-foreground mt-0.5">{o.buyerName} ({o.buyerPhone})</p>
                           <p className="text-xs text-muted-foreground mt-0.5">{o.items?.length || 1} {t('منتجات', 'items')} &bull; {o.date}</p>
@@ -608,22 +640,60 @@ export default function StoreOrdersPage() {
           {selectedOrder && (
             <div className="flex flex-col text-start">
               {/* Modal Header */}
-              <div className="p-6 border-b border-border/50 bg-muted/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div className="p-6 pe-12 border-b border-border/50 bg-muted/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xl font-black text-primary">#{selectedOrder.orderNumber}</span>
-                    {getStatusBadge(selectedOrder.status)}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-mono text-2xl font-black text-primary">#{selectedOrder.orderNumber}</span>
+                    {renderInteractiveStatusBadge(selectedOrder)}
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">{t('تاريخ الطلب:', 'Order Date:')} {selectedOrder.date}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{t('تاريخ الطلب:', 'Order Date:')} <strong className="text-foreground font-mono">{selectedOrder.date}</strong> &bull; {t('طريقة الدفع:', 'Payment Method:')} <strong className="text-primary font-mono uppercase">{selectedOrder.paymentMethod}</strong></p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="rounded-xl font-bold gap-1.5" onClick={() => setWaybillPrintOrder(selectedOrder)}>
-                    <Printer className="h-4 w-4 text-primary" />
-                    {t('طباعة البوليصة الحرارية', 'Print Waybill')}
+                <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto justify-start md:justify-end">
+                  <Button variant="outline" size="sm" className="rounded-xl font-bold gap-1.5 h-9 bg-background shadow-sm hover:bg-primary hover:text-white transition-all shrink-0" onClick={() => setWaybillPrintOrder(selectedOrder)}>
+                    <Printer className="h-4 w-4 text-primary group-hover:text-white" />
+                    <span>{t('طباعة البوليصة الحرارية', 'Print Waybill')}</span>
                   </Button>
-                  <Button size="sm" className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5" onClick={() => handleUpdateStatus('delivered')}>
-                    <CheckCircle2 className="h-4 w-4" />
-                    {t('تعليم كمكتمل', 'Mark Delivered')}
+                  <Button size="sm" className="rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 h-9 shadow-sm shrink-0" onClick={() => handleUpdateStatus('delivered')}>
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    <span>{t('تعليم كمكتمل', 'Mark Delivered')}</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Order Status & Workflow Action Bar */}
+              <div className="px-6 py-3.5 bg-muted/30 border-b border-border/50 flex flex-wrap items-center justify-between gap-3">
+                <span className="text-xs font-black text-muted-foreground flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5 text-primary" />
+                  {t('توجيه سير أو تحديث حالة الطلب السريع:', 'Quick Order Workflow & Status Action:')}
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button 
+                    size="sm" variant={selectedOrder.status === 'confirmed' ? 'default' : 'outline'} 
+                    className="rounded-xl h-8 text-xs font-extrabold gap-1.5 bg-blue-500/10 hover:bg-blue-600 text-blue-500 hover:text-white border-blue-500/20"
+                    onClick={() => handleUpdateStatus('confirmed')}
+                  >
+                    ⚡ {t('تأكيد الطلب', 'Confirm Order')}
+                  </Button>
+                  <Button 
+                    size="sm" variant={selectedOrder.status === 'shipped' ? 'default' : 'outline'} 
+                    className="rounded-xl h-8 text-xs font-extrabold gap-1.5 bg-indigo-500/10 hover:bg-indigo-600 text-indigo-500 hover:text-white border-indigo-500/20"
+                    onClick={() => handleUpdateStatus('shipped')}
+                  >
+                    🚚 {t('تسليم للمندوب / تم الشحن', 'Mark Shipped')}
+                  </Button>
+                  <Button 
+                    size="sm" variant={selectedOrder.status === 'delivered' ? 'default' : 'outline'} 
+                    className="rounded-xl h-8 text-xs font-extrabold gap-1.5 bg-emerald-500/10 hover:bg-emerald-600 text-emerald-500 hover:text-white border-emerald-500/20"
+                    onClick={() => handleUpdateStatus('delivered')}
+                  >
+                    ✔️ {t('تم التوصيل', 'Mark Delivered')}
+                  </Button>
+                  <Button 
+                    size="sm" variant="outline" 
+                    className="rounded-xl h-8 text-xs font-bold text-red-500 hover:bg-red-600 hover:text-white border-red-500/20 ms-1"
+                    onClick={() => handleUpdateStatus('cancelled')}
+                  >
+                    ❌ {t('إلغاء الطلب', 'Cancel')}
                   </Button>
                 </div>
               </div>
@@ -705,24 +775,24 @@ export default function StoreOrdersPage() {
                       ))}
                     </TableBody>
                   </Table>
-                  <div className="p-4 bg-muted/10 border-t border-border/50 space-y-1.5 text-xs text-end">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t('المجموع الفرعي', 'Subtotal')}:</span>
-                      <span className="font-mono font-bold">{selectedOrder.subtotal?.toLocaleString()} DZD</span>
+                  <div className="p-5 bg-muted/20 border-t border-border/50 space-y-2 text-xs font-medium">
+                    <div className="flex items-center justify-between text-muted-foreground">
+                      <span>{t('المجموع الفرعي (للمنتجات)', 'Products Subtotal')}:</span>
+                      <span className="font-mono font-bold text-foreground text-sm">{(selectedOrder.subtotal ?? (selectedOrder.total ? selectedOrder.total - (selectedOrder.shippingCost || 0) : 0)).toLocaleString()} DZD</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">{t('الشحن', 'Shipping')}:</span>
-                      <span className="font-mono font-bold">{selectedOrder.shippingCost?.toLocaleString()} DZD</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">{t('مصاريف الشحن والتوصيل', 'Shipping & Delivery Fee')}:</span>
+                      <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400 text-sm">+{(selectedOrder.shippingCost ?? 400).toLocaleString()} DZD</span>
                     </div>
                     {selectedOrder.discount > 0 && (
-                      <div className="flex justify-between text-red-500">
-                        <span>{t('الخصم', 'Discount')}:</span>
-                        <span className="font-mono font-bold">-{selectedOrder.discount?.toLocaleString()} DZD</span>
+                      <div className="flex items-center justify-between text-red-500 font-bold">
+                        <span>{t('الخصم المطبق', 'Applied Discount')}:</span>
+                        <span className="font-mono font-bold">-{selectedOrder.discount.toLocaleString()} DZD</span>
                       </div>
                     )}
-                    <div className="flex justify-between text-sm font-black pt-2 border-t border-border/50 text-foreground">
-                      <span>{t('الإجمالي النهائي', 'Final Total')}:</span>
-                      <span className="font-mono text-primary">{selectedOrder.total?.toLocaleString()} DZD</span>
+                    <div className="flex items-center justify-between text-sm font-black pt-3 mt-1 border-t border-border/60 text-foreground">
+                      <span className="text-base">{t('الإجمالي النهائي (المبلغ المستحق)', 'Final Total Due')}:</span>
+                      <span className="font-mono text-lg text-primary font-black">{selectedOrder.total?.toLocaleString() || 0} DZD</span>
                     </div>
                   </div>
                 </div>
