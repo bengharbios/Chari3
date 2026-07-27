@@ -40,9 +40,24 @@ export default function StoreOrdersPage() {
   const isAr = locale === 'ar';
 
   const [waybillPrintOrder, setWaybillPrintOrder] = useState<any | null>(null);
+  const [boxWeightInput, setBoxWeightInput] = useState<string>('');
+
+  useEffect(() => {
+    if (waybillPrintOrder) {
+      const items = Array.isArray(waybillPrintOrder.items) ? waybillPrintOrder.items : [];
+      let totalItemsW = 0;
+      items.forEach((it: any) => {
+        const w = it.product?.weight || 0.4;
+        totalItemsW += w * (it.quantity || 1);
+      });
+      const initialGross = (totalItemsW + 0.25).toFixed(2);
+      setBoxWeightInput(initialGross);
+    }
+  }, [waybillPrintOrder]);
 
   const handlePrintWaybill = (orderId: string, printLang: string) => {
-    const waybillUrl = `/api/seller/shipping/waybill?orderId=${orderId}&lang=${printLang}`;
+    const weightVal = boxWeightInput ? parseFloat(boxWeightInput) : 0.5;
+    const waybillUrl = `/api/seller/shipping/waybill?orderId=${orderId}&lang=${printLang}&weight=${weightVal}`;
     window.open(waybillUrl, '_blank', 'width=650,height=800');
     setWaybillPrintOrder(null);
   };
@@ -719,41 +734,72 @@ export default function StoreOrdersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Waybill Print Language Selection Dialog */}
+      {/* Waybill Print Language & Packaging Weight Selection Dialog */}
       <Dialog open={!!waybillPrintOrder} onOpenChange={(open) => { if (!open) setWaybillPrintOrder(null); }}>
-        <DialogContent className="max-w-sm p-6 bg-background border-white/10 backdrop-blur-2xl rounded-3xl text-start">
-          <DialogTitle className="text-base font-black flex items-center gap-2">
-            <Printer className="h-5 w-5 text-primary" />
-            {t('اختر لغة طباعة البوليصة الحرارية', 'Select Waybill Print Language')}
-          </DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground mt-1">
-            {t('اختر اللغة المطلوبة لإصدار البوليصة الحرارية القياسية للمستلم.', 'Select your preferred language for the thermal shipping label.')}
-          </DialogDescription>
+        <DialogContent className="max-w-md p-6 bg-background border-white/10 backdrop-blur-2xl rounded-3xl text-start space-y-4">
+          <div>
+            <DialogTitle className="text-base font-black flex items-center gap-2">
+              <Printer className="h-5 w-5 text-primary" />
+              {t('طباعة البوليصة الحرارية وتحديد وزن الصندوق', 'Print Thermal Waybill & Set Weight')}
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground mt-1">
+              {t('أدخل الوزن الفعلي للصندوق بعد تجهيزه وتغليفه ثم اختر لغة الطباعة.', 'Enter final gross box weight after packaging and select your preferred language.')}
+            </DialogDescription>
+          </div>
 
           {waybillPrintOrder && (
-            <div className="space-y-2.5 mt-4">
-              <Button
-                variant="outline"
-                className="w-full justify-between rounded-2xl h-12 font-bold hover:bg-primary/10 hover:border-primary/30"
-                onClick={() => handlePrintWaybill(waybillPrintOrder.id, 'ar')}
-              >
-                <span className="flex items-center gap-2 text-sm">🇸🇦 العربية (Arabic)</span>
-                <Badge variant="secondary" className="text-[10px]">الافتراضي</Badge>
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-between rounded-2xl h-12 font-bold hover:bg-primary/10 hover:border-primary/30"
-                onClick={() => handlePrintWaybill(waybillPrintOrder.id, 'en')}
-              >
-                <span className="flex items-center gap-2 text-sm">🇬🇧 English</span>
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full justify-between rounded-2xl h-12 font-bold hover:bg-primary/10 hover:border-primary/30"
-                onClick={() => handlePrintWaybill(waybillPrintOrder.id, 'fr')}
-              >
-                <span className="flex items-center gap-2 text-sm">🇫🇷 Français</span>
-              </Button>
+            <div className="space-y-4">
+              {/* Box Gross Weight Input */}
+              <div className="p-3.5 bg-muted/20 border border-border/50 rounded-2xl space-y-1.5">
+                <label className="text-xs font-bold text-foreground flex items-center justify-between">
+                  <span>📦 {t('الوزن الفعلي للصندوق المعبأ (Gross Weight)', 'Actual Packaged Box Weight')}</span>
+                  <span className="text-[10px] text-primary font-mono font-bold">kg</span>
+                </label>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0.1"
+                    placeholder="e.g. 2.50"
+                    value={boxWeightInput}
+                    onChange={(e) => setBoxWeightInput(e.target.value)}
+                    className="rounded-xl font-mono text-base font-bold bg-background border-border/60 pe-12"
+                  />
+                  <span className="absolute end-3 top-1/2 -translate-y-1/2 text-xs font-mono font-bold text-muted-foreground">kg</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  {t('يتم ترحيل هذا الوزن للبوليصة الرسمية لتقديمه لشركة التوصيل ومطابقة الوزن الفعلي.', 'This weight will be printed on the official waybill for shipping carrier verification.')}
+                </p>
+              </div>
+
+              {/* Language Selection Buttons */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-foreground block">{t('اختر لغة البوليصة الحرارية للطباعة:', 'Select Waybill Print Language:')}</label>
+                <div className="space-y-2">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between rounded-2xl h-11 font-bold hover:bg-primary/10 hover:border-primary/30"
+                    onClick={() => handlePrintWaybill(waybillPrintOrder.id, 'ar')}
+                  >
+                    <span className="flex items-center gap-2 text-sm">🇸🇦 العربية (Arabic)</span>
+                    <Badge variant="secondary" className="text-[10px]">الافتراضي</Badge>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between rounded-2xl h-11 font-bold hover:bg-primary/10 hover:border-primary/30"
+                    onClick={() => handlePrintWaybill(waybillPrintOrder.id, 'en')}
+                  >
+                    <span className="flex items-center gap-2 text-sm">🇬🇧 English</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-between rounded-2xl h-11 font-bold hover:bg-primary/10 hover:border-primary/30"
+                    onClick={() => handlePrintWaybill(waybillPrintOrder.id, 'fr')}
+                  >
+                    <span className="flex items-center gap-2 text-sm">🇫🇷 Français</span>
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </DialogContent>

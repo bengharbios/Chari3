@@ -392,6 +392,8 @@ export async function GET(req: NextRequest) {
       fullStreetAddress = lang === 'en' ? 'Detailed address on order' : (lang === 'fr' ? 'Adresse détaillée sur commande' : 'العنوان التفصيلي مسجل بالطلب');
     }
 
+    const customWeightParam = searchParams.get('weight');
+
     // Global Warehouse Specifications (Total Box Weight & Shipping Fee Breakdown)
     const items = Array.isArray(order.items) ? order.items : [];
     let itemsTotalWeight = 0;
@@ -399,9 +401,13 @@ export async function GET(req: NextRequest) {
       const w = it.product?.weight || 0.4;
       itemsTotalWeight += w * (it.quantity || 1);
     });
-    // Add box packaging weight (+0.25 kg for outer carton & envelope tare)
-    const grossBoxWeight = (itemsTotalWeight + 0.25).toFixed(2);
-    const totalWeightStr = `${grossBoxWeight} kg (${lang === 'en' ? 'Gross Box Weight' : (lang === 'fr' ? 'Poids Brut Colis' : 'وزن الصندوق الإجمالي')})`;
+    // Add box packaging weight (+0.25 kg for outer carton & envelope tare) unless custom weight provided
+    const calculatedGrossWeight = (itemsTotalWeight + 0.25).toFixed(2);
+    const finalGrossWeight = customWeightParam && !isNaN(parseFloat(customWeightParam)) 
+      ? parseFloat(customWeightParam).toFixed(2) 
+      : calculatedGrossWeight;
+
+    const totalWeightStr = `${finalGrossWeight} kg (${lang === 'en' ? 'Actual Gross Box Weight' : (lang === 'fr' ? 'Poids Brut Colis Emballé' : 'الوزن الفعلي للصندوق المعبأ')})`;
 
     const shippingFee = order.shippingCost || order.shippingFee || 400;
     const subtotalAmount = order.subtotal || (order.total ? order.total - shippingFee : 0);
