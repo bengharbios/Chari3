@@ -273,7 +273,9 @@ export async function GET(req: NextRequest) {
       }
     }
     const storePhone = firstProductStore?.phone || firstProductStore?.contactPhone || '0555-00-00-00';
-    const storeAddress = firstProductStore?.address || 'الجزائر العاصمة';
+    const storeAddress = (lang === 'en' || lang === 'fr') 
+      ? (firstProductStore?.addressEn || 'Algiers, Algeria') 
+      : (firstProductStore?.address || 'الجزائر العاصمة');
 
     // Extract Order Data
     const orderNum = order.orderNumber || `CHARI-${(order.id || '').substring(0, 8)}`;
@@ -303,6 +305,9 @@ export async function GET(req: NextRequest) {
     }
 
     if (shippingAddr.fullName) buyerName = shippingAddr.fullName;
+    if ((lang === 'en' || lang === 'fr') && (shippingAddr.fullNameEn || order.buyer?.nameEn)) {
+      buyerName = shippingAddr.fullNameEn || order.buyer?.nameEn;
+    }
     if (shippingAddr.phone) buyerPhone = shippingAddr.phone;
     if (shippingAddr.phoneNumber) buyerPhone = shippingAddr.phoneNumber;
     if (shippingAddr.secondaryPhone) buyerPhone2 = shippingAddr.secondaryPhone;
@@ -387,15 +392,19 @@ export async function GET(req: NextRequest) {
       fullStreetAddress = lang === 'en' ? 'Detailed address on order' : (lang === 'fr' ? 'Adresse détaillée sur commande' : 'العنوان التفصيلي مسجل بالطلب');
     }
 
-    // Global Warehouse Specifications (Weight, Payment Mode, SKU)
+    // Global Warehouse Specifications (Total Box Weight & Shipping Fee Breakdown)
     const items = Array.isArray(order.items) ? order.items : [];
-    let calculatedWeight = 0;
+    let itemsTotalWeight = 0;
     items.forEach((it: any) => {
       const w = it.product?.weight || 0.4;
-      calculatedWeight += w * (it.quantity || 1);
+      itemsTotalWeight += w * (it.quantity || 1);
     });
-    const totalWeightStr = `${calculatedWeight.toFixed(2)} kg`;
+    // Add box packaging weight (+0.25 kg for outer carton & envelope tare)
+    const grossBoxWeight = (itemsTotalWeight + 0.25).toFixed(2);
+    const totalWeightStr = `${grossBoxWeight} kg (${lang === 'en' ? 'Gross Box Weight' : (lang === 'fr' ? 'Poids Brut Colis' : 'وزن الصندوق الإجمالي')})`;
 
+    const shippingFee = order.shippingCost || order.shippingFee || 400;
+    const subtotalAmount = order.subtotal || (order.total ? order.total - shippingFee : 0);
     const isCod = (order.paymentMethod || 'cod').toLowerCase() === 'cod';
     const totalAmount = order.total || order.totalAmount || 0;
 
@@ -418,14 +427,16 @@ export async function GET(req: NextRequest) {
         qtyCol: 'الكمية',
         totalCol: 'السعر الإجمالي',
         freeItem: 'طرد منتجات متجر رانيا',
-        codHeader: isCod ? 'المبلغ الصافي المطلوب تحصيله (COD AMOUNT):' : 'حالة الدفع (PAYMENT STATUS):',
+        codHeader: isCod ? `المبلغ الصافي المطلوب تحصيله (COD AMOUNT) شامل الشحن (${shippingFee} د.ج):` : 'حالة الدفع (PAYMENT STATUS):',
         codText: isCod ? `${totalAmount.toLocaleString()} د.ج` : 'تم الدفع أونلاين بالكامل ✅ (لا يُحصّل مبلغ)',
         onlyPrefix: 'فقط:',
         footerNotice: 'طبع عبر منصة ChariDay الرقمية | بوليصة رسمية معتمدة',
         issueDate: 'تاريخ الإصدار:',
         signature: 'توقيع وختم المستلم',
         phoneNotProvided: 'غير مدخل',
-        weightLabel: 'الوزن الكلي:',
+        weightLabel: 'وزن الصندوق الإجمالي (Gross Box Weight):',
+        shippingFeeLabel: 'مصاريف الشحن والتوصيل:',
+        subtotalLabel: 'مجموع المنتجات:',
         paymentBadge: isCod ? 'الدفع عند الاستلام 💵' : 'مدفوع أونلاين 💳',
       },
       en: {
@@ -761,20 +772,26 @@ export async function GET(req: NextRequest) {
             const pName = (lang === 'en' || lang === 'fr') 
               ? (it.product?.nameEn || it.product?.name || it.productName || dict.freeItem)
               : (it.product?.name || it.productName || dict.freeItem);
-            const skuStr = it.product?.sku ? ` (SKU: ${it.product.sku})` : '';
+            const skuCode = it.product?.sku || `SKU-${(it.productId || it.product?.id || orderNum).substring(0, 8).toUpperCase()}`;
 
             return `
             <tr>
-              <td>${pName}${skuStr}</td>
-              <td style="text-align:center;">${it.quantity || 1}</td>
-              <td style="text-align:${dict.dir === 'rtl' ? 'left' : 'right'};">${((it.price || 0) * (it.quantity || 1)).toLocaleString()} DZD</td>
+              <td>
+                <div style="font-weight:bold;">${pName}</div>
+                <div style="font-size:8px; color:#444;">📦 SKU: ${skuCode}</div>
+              </td>
+              <td style="text-align:center; font-weight:bold;">${it.quantity || 1}</td>
+              <td style="text-align:${dict.dir === 'rtl' ? 'left' : 'right'}; font-weight:bold;">${((it.price || 0) * (it.quantity || 1)).toLocaleString()} DZD</td>
             </tr>
           `;
           }).join('') : `
             <tr>
-              <td>${dict.freeItem}</td>
-              <td style="text-align:center;">1</td>
-              <td style="text-align:${dict.dir === 'rtl' ? 'left' : 'right'};">${totalAmount.toLocaleString()} DZD</td>
+              <td>
+                <div style="font-weight:bold;">${dict.freeItem}</div>
+                <div style="font-size:8px; color:#444;">📦 SKU: SKU-GENERIC-PARCEL</div>
+              </td>
+              <td style="text-align:center; font-weight:bold;">1</td>
+              <td style="text-align:${dict.dir === 'rtl' ? 'left' : 'right'}; font-weight:bold;">${totalAmount.toLocaleString()} DZD</td>
             </tr>
           `}
         </tbody>

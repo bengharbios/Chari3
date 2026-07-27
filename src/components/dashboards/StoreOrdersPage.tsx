@@ -39,6 +39,14 @@ export default function StoreOrdersPage() {
   const t = (ar: string, en: string) => locale === 'ar' ? ar : en;
   const isAr = locale === 'ar';
 
+  const [waybillPrintOrder, setWaybillPrintOrder] = useState<any | null>(null);
+
+  const handlePrintWaybill = (orderId: string, printLang: string) => {
+    const waybillUrl = `/api/seller/shipping/waybill?orderId=${orderId}&lang=${printLang}`;
+    window.open(waybillUrl, '_blank', 'width=650,height=800');
+    setWaybillPrintOrder(null);
+  };
+
   const [orders, setOrders] = useState<any[]>([]);
   const [statuses, setStatuses] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -461,10 +469,7 @@ export default function StoreOrdersPage() {
                                   <Eye className="h-4 w-4 me-2" />
                                   {t('عرض التفاصيل', 'View Details')}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem className="cursor-pointer" onClick={() => {
-                                  const waybillUrl = `/api/seller/shipping/waybill?orderId=${o.id}&lang=${locale}`;
-                                  window.open(waybillUrl, '_blank', 'width=650,height=800');
-                                }}>
+                                <DropdownMenuItem className="cursor-pointer" onClick={() => setWaybillPrintOrder(o)}>
                                   <Printer className="h-4 w-4 me-2 text-primary" />
                                   {t('طباعة البوليصة الحرارية', 'Print Thermal Waybill')}
                                 </DropdownMenuItem>
@@ -599,10 +604,7 @@ export default function StoreOrdersPage() {
                   <p className="text-xs text-muted-foreground mt-1">{t('تاريخ الطلب:', 'Order Date:')} {selectedOrder.date}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="rounded-xl font-bold gap-1.5" onClick={() => {
-                    const waybillUrl = `/api/seller/shipping/waybill?orderId=${selectedOrder.id}&lang=${locale}`;
-                    window.open(waybillUrl, '_blank', 'width=650,height=800');
-                  }}>
+                  <Button variant="outline" size="sm" className="rounded-xl font-bold gap-1.5" onClick={() => setWaybillPrintOrder(selectedOrder)}>
                     <Printer className="h-4 w-4 text-primary" />
                     {t('طباعة البوليصة الحرارية', 'Print Waybill')}
                   </Button>
@@ -711,7 +713,41 @@ export default function StoreOrdersPage() {
                     </div>
                   </div>
                 </div>
-              </div>
+      {/* Waybill Print Language Selection Dialog */}
+      <Dialog open={!!waybillPrintOrder} onOpenChange={(open) => { if (!open) setWaybillPrintOrder(null); }}>
+        <DialogContent className="max-w-sm p-6 bg-background border-white/10 backdrop-blur-2xl rounded-3xl text-start">
+          <DialogTitle className="text-base font-black flex items-center gap-2">
+            <Printer className="h-5 w-5 text-primary" />
+            {t('اختر لغة طباعة البوليصة الحرارية', 'Select Waybill Print Language')}
+          </DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground mt-1">
+            {t('اختر اللغة المطلوبة لإصدار البوليصة الحرارية القياسية للمستلم.', 'Select your preferred language for the thermal shipping label.')}
+          </DialogDescription>
+
+          {waybillPrintOrder && (
+            <div className="space-y-2.5 mt-4">
+              <Button
+                variant="outline"
+                className="w-full justify-between rounded-2xl h-12 font-bold hover:bg-primary/10 hover:border-primary/30"
+                onClick={() => handlePrintWaybill(waybillPrintOrder.id, 'ar')}
+              >
+                <span className="flex items-center gap-2 text-sm">🇸🇦 العربية (Arabic)</span>
+                <Badge variant="secondary" className="text-[10px]">الافتراضي</Badge>
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-between rounded-2xl h-12 font-bold hover:bg-primary/10 hover:border-primary/30"
+                onClick={() => handlePrintWaybill(waybillPrintOrder.id, 'en')}
+              >
+                <span className="flex items-center gap-2 text-sm">🇬🇧 English</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-between rounded-2xl h-12 font-bold hover:bg-primary/10 hover:border-primary/30"
+                onClick={() => handlePrintWaybill(waybillPrintOrder.id, 'fr')}
+              >
+                <span className="flex items-center gap-2 text-sm">🇫🇷 Français</span>
+              </Button>
             </div>
           )}
         </DialogContent>

@@ -117,6 +117,33 @@ export default function OrderDetailsPage() {
         </Card>
       )}
 
+      {/* Customer Delivery QR Code & PIN */}
+      {order.status !== 'cancelled' && (
+        <Card className="p-6 rounded-2xl border-emerald-500/30 bg-emerald-500/5 text-center space-y-3 shadow-sm">
+          <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm">
+            <span>{t('📱 كود QR لتأكيد استلام الطرد', '📱 Delivery Confirmation QR Code')}</span>
+          </div>
+
+          <div className="mx-auto w-40 h-40 bg-white p-3 rounded-2xl shadow-sm border border-emerald-500/20 flex items-center justify-center">
+            <img 
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=PIN:${order.id.substring(0, 4).toUpperCase()}`}
+              alt="Delivery QR Code"
+              className="w-full h-full object-contain"
+            />
+          </div>
+
+          <div>
+            <div className="text-xs text-muted-foreground">{t('رمز الـ PIN الخاص بك:', 'Your Delivery PIN:')}</div>
+            <div className="text-3xl font-black font-mono tracking-widest text-emerald-600 dark:text-emerald-400 mt-1">
+              {order.id.substring(0, 4).toUpperCase()}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+              {t('أبرز هذا الكود للمندوب عند وصول الشحنة لمسح الـ QR أو الكود يدوياً وإتمام التسليم.', 'Show this QR code to the driver upon delivery to confirm receipt.')}
+            </p>
+          </div>
+        </Card>
+      )}
+
       {/* Delivery Address */}
       <Card className="p-4 rounded-2xl">
         <div className="flex items-start gap-3">
