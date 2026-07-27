@@ -710,9 +710,14 @@ export default function StoreOrdersPage() {
                     <div className="flex justify-between text-sm font-black pt-2 border-t border-border/50 text-foreground">
                       <span>{t('الإجمالي النهائي', 'Final Total')}:</span>
                       <span className="font-mono text-primary">{selectedOrder.total?.toLocaleString()} DZD</span>
-                    </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Waybill Print Language Selection Dialog */}
       <Dialog open={!!waybillPrintOrder} onOpenChange={(open) => { if (!open) setWaybillPrintOrder(null); }}>
         <DialogContent className="max-w-sm p-6 bg-background border-white/10 backdrop-blur-2xl rounded-3xl text-start">
