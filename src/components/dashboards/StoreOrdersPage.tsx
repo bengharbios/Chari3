@@ -710,6 +710,7 @@ export default function StoreOrdersPage() {
                     <div className="flex justify-between text-sm font-black pt-2 border-t border-border/50 text-foreground">
                       <span>{t('الإجمالي النهائي', 'Final Total')}:</span>
                       <span className="font-mono text-primary">{selectedOrder.total?.toLocaleString()} DZD</span>
+                    </div>
                   </div>
                 </div>
               </div>
