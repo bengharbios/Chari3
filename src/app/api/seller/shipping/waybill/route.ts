@@ -791,6 +791,7 @@ export async function GET(req: NextRequest) {
               <td style="text-align:center; font-weight:bold;">1</td>
               <td style="text-align:${dict.dir === 'rtl' ? 'left' : 'right'}; font-weight:bold;">${totalAmount.toLocaleString()} DZD</td>
             </tr>
+          `}
         </tbody>
         <tfoot>
           <tr style="border-top:2px solid #000; background:#f9fafb;">
