@@ -1087,7 +1087,7 @@ export default function OnboardingWizard() {
                   {t(locale, 'إثبات وثيقة النشاط', 'Eligibility Proof')}
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  {t(locale, '┘ê╪½┘è┘é╪⌐ ╪º┘ä╪╣┘à┘ä ╪º┘ä╪¡╪▒ (╪º╪«╪¬┘è╪º╪▒┘è)', 'Freelance document (optional)')}
+                  {t(locale, 'وثيقة العمل الحر (اختياري)', 'Freelance document (optional)')}
                 </p>
               </div>
             </div>
@@ -1409,22 +1409,22 @@ export default function OnboardingWizard() {
             { label: 'وثيقة السجل التجاري', labelEn: 'Commercial Register Document', done: !!commercialRegisterFile },
             { label: 'IBAN', labelEn: 'IBAN', done: validateIban(iban, ibanConfig) },
             { label: 'اسم المستفيد', labelEn: 'Beneficiary Name', done: beneficiaryName.length > 0 },
-            { label: financeConfig.docs[0]?.labelAr || '╪º┘ä╪┤┘ç╪º╪»╪⌐ ╪º┘ä┘à╪╡╪▒┘ü┘è╪⌐', labelEn: financeConfig.docs[0]?.labelEn || 'Bank Certificate', done: !!bankLetterFile },
-            { label: '╪º┘ä┘ç┘ê┘è╪⌐ (╪ú┘à╪º┘à)', labelEn: 'ID Front', done: !!idFrontFile },
-            { label: '╪º┘ä┘ç┘ê┘è╪⌐ (╪«┘ä┘ü)', labelEn: 'ID Back', done: !!idBackFile },
+            { label: financeConfig.docs[0]?.labelAr || 'الشهادة المصرفية / الكشف البنكي', labelEn: financeConfig.docs[0]?.labelEn || 'Bank Certificate', done: !!bankLetterFile },
+            { label: 'بطاقة الهوية (الوجه الأمامي)', labelEn: 'ID Front', done: !!idFrontFile },
+            { label: 'بطاقة الهوية (الوجه الخلفي)', labelEn: 'ID Back', done: !!idBackFile },
           ];
         case 'seller':
           return [
-            { label: '┘ê╪½┘è┘é╪⌐ ╪º┘ä╪╣┘à┘ä ╪º┘ä╪¡╪▒ (╪º╪«╪¬┘è╪º╪▒┘è)', labelEn: 'Freelance Document (optional)', done: true },
-            { label: '╪º┘ä┘ç┘ê┘è╪⌐ (╪ú┘à╪º┘à)', labelEn: 'National ID Front', done: !!freelancerIdFrontFile },
-            { label: '╪º┘ä┘ç┘ê┘è╪⌐ (╪«┘ä┘ü)', labelEn: 'National ID Back', done: !!freelancerIdBackFile },
-            { label: '╪º┘ä╪¬╪¡┘é┘é ╪º┘ä╪¡┘è (┘è┘à┘â┘å ╪º╪│╪¬┘â┘à╪º┘ä┘ç ┘ä╪º╪¡┘é╪º┘ï)', labelEn: 'Liveness Detection (postponable)', done: true },
+            { label: 'وثيقة العمل الحر (اختياري)', labelEn: 'Freelance Document (optional)', done: true },
+            { label: 'بطاقة الهوية (الوجه الأمامي)', labelEn: 'National ID Front', done: !!freelancerIdFrontFile },
+            { label: 'بطاقة الهوية (الوجه الخلفي)', labelEn: 'National ID Back', done: !!freelancerIdBackFile },
+            { label: 'التحقق البيومتري الفوري', labelEn: 'Liveness Detection (postponable)', done: true },
             { label: 'IBAN', labelEn: 'IBAN', done: validateIban(freelancerIban, ibanConfig) },
           ];
         case 'supplier':
           return [
             { label: 'رخصة تجارية', labelEn: 'Commercial License', done: !!commercialLicenseFile },
-            { label: '╪▒╪«╪╡╪⌐ ╪º┘ä╪º╪│╪¬┘è╪▒╪º╪»', labelEn: 'Import License', done: !!importLicenseFile },
+            { label: 'رخصة الاستيراد والتصدير', labelEn: 'Import License', done: !!importLicenseFile },
             { label: 'IBAN', labelEn: 'IBAN', done: validateIban(supplierIban, ibanConfig) },
           ];
         case 'logistics':
@@ -1450,10 +1450,10 @@ export default function OnboardingWizard() {
           </div>
           <div>
             <h3 className="font-semibold text-base">
-              {t(locale, '┘à╪▒╪º╪¼╪╣╪⌐ ┘ê╪Ñ╪▒╪│╪º┘ä', 'Review & Submit')}
+              {t(locale, 'مراجعة وإرسال المستندات', 'Review & Submit')}
             </h3>
             <p className="text-xs text-muted-foreground">
-              {t(locale, '╪¬╪ú┘â╪» ┘à┘å ╪º┘â╪¬┘à╪º┘ä ╪¼┘à┘è╪╣ ╪º┘ä╪¿┘è╪º┘å╪º╪¬', 'Ensure all information is complete')}
+              {t(locale, 'تأكد من إكتمال جميع البيانات والمرفقات المطلوب رفعها', 'Ensure all information is complete')}
             </p>
           </div>
         </div>
@@ -1586,7 +1586,7 @@ export default function OnboardingWizard() {
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>
                 {isReviewStep
-                  ? t(locale, '╪º┘ä┘à╪▒╪º╪¼╪╣╪⌐ ╪º┘ä┘å┘ç╪º╪ª┘è╪⌐', 'Final Review')
+                  ? t(locale, '╪º┘äمراجعة ╪º┘ä┘å┘ç╪º╪ª┘è╪⌐', 'Final Review')
                   : currentStepData
                     ? t(locale, currentStepData.titleAr, currentStepData.titleEn)
                     : ''}
@@ -1649,7 +1649,7 @@ export default function OnboardingWizard() {
                 )}
               >
                 {currentStep === totalSteps - 1
-                  ? t(locale, '┘à╪▒╪º╪¼╪╣╪⌐', 'Review')
+                  ? t(locale, 'مراجعة', 'Review')
                   : t(locale, 'التالي', 'Next')}
                 {locale === 'ar' ? (
                   <ChevronLeft className="h-4 w-4 ms-1" />
