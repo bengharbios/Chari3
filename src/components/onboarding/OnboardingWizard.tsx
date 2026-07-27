@@ -760,9 +760,7 @@ export default function OnboardingWizard() {
       if (data.success) {
         saveDraft();
         toast.success(
-          locale === 'ar'
-            ? '╪¬┘à ╪¡┘ü╪╕ ╪º┘ä┘à╪│┘ê╪»╪⌐ ╪¿┘å╪¼╪º╪¡'
-            : 'Draft saved successfully'
+          t(locale, 'تم حفظ المسودة بنجاح', 'Draft saved successfully')
         );
         // Navigate back to dashboard
         useAppStore.getState().setCurrentPage(
@@ -773,9 +771,7 @@ export default function OnboardingWizard() {
         );
       } else {
         toast.error(
-          locale === 'ar'
-            ? (data.error || '┘ü╪┤┘ä ╪¡┘ü╪╕ ╪º┘ä┘à╪│┘ê╪»╪⌐')
-            : (data.error || 'Failed to save draft')
+          data.error || t(locale, 'فشل حفظ المسودة', 'Failed to save draft')
         );
       }
     } catch {
@@ -783,9 +779,7 @@ export default function OnboardingWizard() {
       setIsSavingDraft(false);
       saveDraft();
       toast.success(
-        locale === 'ar'
-          ? '╪¬┘à ╪¡┘ü╪╕ ╪º┘ä┘à╪│┘ê╪»╪⌐ ┘à╪¡┘ä┘è╪º┘ï'
-          : 'Draft saved locally'
+        t(locale, 'تم حفظ المسودة محلياً', 'Draft saved locally')
       );
       useAppStore.getState().setCurrentPage(
         role === 'store_manager' ? 'store' :
