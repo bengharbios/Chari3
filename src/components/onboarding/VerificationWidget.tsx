@@ -88,7 +88,8 @@ export function StickyStatusBanner() {
   if (isBannerDismissed) return null;
   if (!accountStatus || accountStatus === 'active' || accountStatus === 'suspended') return null;
 
-  const isLogisticsRole = ['logistics', 'driver', 'carrier'].includes(user?.role || '');
+  const userRoleClean = String(user?.role || '').toLowerCase();
+  const isLogisticsRole = ['logistics', 'driver', 'carrier'].includes(userRoleClean) || (typeof window !== 'undefined' && window.location.pathname.startsWith('/logistics'));
 
   // Config per status
   const bannerConfig: Record<string, {

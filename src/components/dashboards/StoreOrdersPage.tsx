@@ -229,8 +229,7 @@ export default function StoreOrdersPage() {
 
   const handlePrintInvoice = () => {
     if (!selectedOrder) return;
-    const waybillUrl = `/api/seller/shipping/waybill?orderId=${selectedOrder.id}&lang=${locale}`;
-    window.open(waybillUrl, '_blank', 'width=650,height=800');
+    setWaybillPrintOrder(selectedOrder);
   };
 
   // Drag and Drop handlers for Kanban
@@ -533,8 +532,7 @@ export default function StoreOrdersPage() {
                         </div>
                         <Button size="sm" variant="outline" className="rounded-xl font-bold" onClick={(e) => {
                           e.stopPropagation();
-                          const waybillUrl = `/api/seller/shipping/waybill?orderId=${o.id}&lang=${locale}`;
-                          window.open(waybillUrl, '_blank', 'width=650,height=800');
+                          setWaybillPrintOrder(o);
                         }}>
                           <Printer className="h-4 w-4 me-1.5 text-primary" />
                           {t('بوليصة', 'Waybill')}

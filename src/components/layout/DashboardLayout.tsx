@@ -36,15 +36,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Instantly override persisted state based on current route to prevent UI flashes
   const effectiveBuyerMode = isSellerRoute ? false : (isBuyerRoute ? true : isBuyerMode);
 
-  // Sync zustand store if URL does not match state
+  // Sync zustand store if URL does not match state & protect seller routes from logistics drivers/carriers
   useEffect(() => {
+    if (user && pathname?.startsWith('/seller')) {
+      const userRole = String(user.role || '').toLowerCase();
+      if (['logistics', 'driver', 'carrier'].includes(userRole)) {
+        window.location.replace('/logistics/active');
+        return;
+      }
+    }
+
     if (isBuyerRoute && !isBuyerMode) {
       setBuyerMode(true);
     } else if (isSellerRoute && isBuyerMode) {
       setBuyerMode(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname, isBuyerRoute, isSellerRoute, setBuyerMode]);
+  }, [pathname, isBuyerRoute, isSellerRoute, setBuyerMode, user]);
 
   // Use correct default theme based on role
   const getInitialTheme = () => {

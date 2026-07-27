@@ -711,14 +711,6 @@ export async function GET(req: NextRequest) {
 </head>
 <body>
 
-  <!-- Multi-Language Quick Selector Bar (Hidden on Thermal Printing) -->
-  <div class="no-print" style="display:flex; justify-content:center; align-items:center; gap:10px; margin-bottom:12px; background:#f3f4f6; padding:8px 12px; border-radius:8px; border:1px solid #e5e7eb; font-family:sans-serif; font-size:12px;">
-    <span style="font-weight:bold; color:#374151;">🌐 اختر لغة طباعة البوليصة (Select Language):</span>
-    <a href="?orderId=${order?.id || ''}&tracking=${tracking || ''}&lang=ar" style="padding:4px 10px; background:${lang === 'ar' ? '#000' : '#fff'}; color:${lang === 'ar' ? '#fff' : '#000'}; border:1px solid #000; border-radius:4px; text-decoration:none; font-weight:bold;">🇩🇿 العربية</a>
-    <a href="?orderId=${order?.id || ''}&tracking=${tracking || ''}&lang=en" style="padding:4px 10px; background:${lang === 'en' ? '#000' : '#fff'}; color:${lang === 'en' ? '#fff' : '#000'}; border:1px solid #000; border-radius:4px; text-decoration:none; font-weight:bold;">🇬🇧 English</a>
-    <a href="?orderId=${order?.id || ''}&tracking=${tracking || ''}&lang=fr" style="padding:4px 10px; background:${lang === 'fr' ? '#000' : '#fff'}; color:${lang === 'fr' ? '#fff' : '#000'}; border:1px solid #000; border-radius:4px; text-decoration:none; font-weight:bold;">🇫🇷 Français</a>
-  </div>
-
   <div class="wrapper">
     <!-- Header -->
     <div class="header">
@@ -799,8 +791,33 @@ export async function GET(req: NextRequest) {
               <td style="text-align:center; font-weight:bold;">1</td>
               <td style="text-align:${dict.dir === 'rtl' ? 'left' : 'right'}; font-weight:bold;">${totalAmount.toLocaleString()} DZD</td>
             </tr>
-          `}
         </tbody>
+        <tfoot>
+          <tr style="border-top:2px solid #000; background:#f9fafb;">
+            <td colspan="2" style="font-weight:bold; padding:4px 6px; text-align:${dict.dir === 'rtl' ? 'right' : 'left'}; font-size:10px;">
+              🛍️ ${dict.subtotalLabel || (lang === 'en' ? 'Products Subtotal:' : (lang === 'fr' ? 'Sous-total Produits:' : 'مجموع المنتجات:'))}
+            </td>
+            <td style="font-weight:900; padding:4px 6px; text-align:${dict.dir === 'rtl' ? 'left' : 'right'}; font-size:10px; font-family:monospace;">
+              ${subtotalAmount.toLocaleString()} DZD
+            </td>
+          </tr>
+          <tr style="background:#f3f4f6;">
+            <td colspan="2" style="font-weight:bold; padding:4px 6px; text-align:${dict.dir === 'rtl' ? 'right' : 'left'}; font-size:10px; color:#1f2937;">
+              🚚 ${dict.shippingFeeLabel || (lang === 'en' ? 'Shipping & Delivery Fee:' : (lang === 'fr' ? 'Frais de Livraison:' : 'مصاريف الشحن والتوصيل:'))}
+            </td>
+            <td style="font-weight:900; padding:4px 6px; text-align:${dict.dir === 'rtl' ? 'left' : 'right'}; font-size:10px; font-family:monospace; color:#059669;">
+              +${shippingFee.toLocaleString()} DZD
+            </td>
+          </tr>
+          <tr style="border-bottom:2px solid #000; background:#fff;">
+            <td colspan="2" style="font-weight:900; padding:4px 6px; text-align:${dict.dir === 'rtl' ? 'right' : 'left'}; font-size:10px; color:#111;">
+              📦 ${dict.weightLabel || (lang === 'en' ? 'Total Gross Box Weight:' : (lang === 'fr' ? 'Poids Brut du Colis:' : 'وزن الصندوق الإجمالي كاملاً:'))}
+            </td>
+            <td style="font-weight:900; padding:4px 6px; text-align:${dict.dir === 'rtl' ? 'left' : 'right'}; font-size:10px; font-family:monospace; color:#2563eb;">
+              ${finalGrossWeight} kg
+            </td>
+          </tr>
+        </tfoot>
       </table>
     </div>
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useAppStore, useAuthStore } from '@/lib/store';
+import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -62,6 +63,15 @@ export default function LogisticsDashboard() {
   const [podPhoto, setPodPhoto] = useState<string | null>(null);
   const [podGps, setPodGps] = useState<{ lat: number; lng: number } | null>(null);
   const [isCapturingGps, setIsCapturingGps] = useState(false);
+  const [verifyMode, setVerifyMode] = useState<'pin' | 'qr'>('pin');
+
+  const handleScanQrCode = (scannedPin: string) => {
+    setPinInput(scannedPin);
+    toast.success(t('تم مسح الكود بنجاح، جاري التحقق...', 'QR Code scanned successfully, verifying...'));
+    setTimeout(() => {
+      handleVerifyDeliveryPin(scannedPin);
+    }, 400);
+  };
 
   useEffect(() => {
     if (pinModalShipment) {
@@ -135,9 +145,10 @@ export default function LogisticsDashboard() {
     }
   };
 
-  const handleVerifyDeliveryPin = async () => {
+  const handleVerifyDeliveryPin = async (overridePin?: string | any) => {
+    const finalPin = typeof overridePin === 'string' ? overridePin : pinInput;
     if (!pinModalShipment) return;
-    if (!pinInput || pinInput.length < 4) {
+    if (!finalPin || finalPin.length < 4) {
       toast.error(t('يرجى إدخال رمز التوصيل PIN المكون من 4 أرقام', 'Please enter 4-digit Delivery PIN'));
       return;
     }
@@ -148,7 +159,7 @@ export default function LogisticsDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderId: pinModalShipment.orderId || pinModalShipment.id,
-          pin: pinInput,
+          pin: finalPin,
           photoUrl: podPhoto,
           lat: podGps?.lat,
           lng: podGps?.lng,
