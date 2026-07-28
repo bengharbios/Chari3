@@ -624,6 +624,22 @@ model Order {
   podVerifiedByPin  Boolean   @default(false)
   podNotes          String?
 
+  // ─── Smart Logistics Engine Fields (FleetOps-inspired) ────────────────────
+  // Who is responsible for packing this order?
+  //   merchant  = the seller packs it themselves before dispatch
+  //   carrier   = a 3PL carrier is responsible for packing & weighing
+  fulfillmentType   String    @default("merchant")
+
+  // Current logistics pipeline stage (granular, beyond order.status)
+  //   merchant_preparing → ready_for_carrier → carrier_packing
+  //   → ready_for_pickup → picked_up → in_transit → delivered
+  logisticsStage    String    @default("merchant_preparing")
+
+  // Which carrier company / driver has been assigned or claimed this order
+  assignedCarrierId String?   // CarrierIntegration.carrierKey or internal ID
+  assignedDriverId  String?   // LogisticsProfile.userId
+  claimedAt         DateTime? // Timestamp of atomic claim lock
+
   items           OrderItem[]
   shipments       Shipment[]
   reviews         Review[]
@@ -671,6 +687,13 @@ model Shipment {
   podLongitude      Float?
   podDeliveredAt    DateTime?
   podVerifiedByPin  Boolean   @default(false)
+
+  // ─── Claim Lock (Atomic Assignment) ───────────────────────────────────────
+  // Prevents two drivers/carriers from grabbing the same parcel.
+  // isClaimed is set atomically via Prisma $transaction.
+  isClaimed         Boolean   @default(false)
+  claimedByDriverId String?   // LogisticsProfile.userId of the claiming driver
+  claimedAt         DateTime? // Timestamp of the atomic lock
 
   statusHistory     ShipmentStatusHistory[]
 }
@@ -1713,12 +1736,19 @@ model ShipmentManifest {
   id                String   @id @default(cuid())
   orderId           String   @unique
   trackingNumber    String   @unique
-  carrierKey        String   // "yalidine", "zr_express", etc.
+  carrierKey        String   // "yalidine", "zr_express", "aramex", "dhl", etc.
   carrierName       String   // "Yalidine Delivery"
   deliveryType      String   @default("home") // home | stopdesk
   waybillUrl        String?  @db.LongText // URL or Base64 of thermal label (10x15cm)
-  status            String   @default("PREPARATION") // PREPARATION, EXPEDIE, EN_LIVRAISON, LIVRE, ECHEC, RETOUR
-  
+
+  // ─── Universal Status System ─────────────────────────────────────────────
+  // Raw status from the carrier API (carrier-specific language)
+  carrierRawStatus  String   @default("pending")
+  // Normalized status in ChariDay universal language (see carrier-status-map.ts)
+  // Values: pending | ready | picked_up | in_transit | out_for_delivery
+  //         | delivered | failed | returned | cancelled
+  universalStatus   String   @default("pending")
+
   expectedAmount    Float    @default(0) // COD amount expected
   actualPayout      Float?   // Amount reported by carrier API
   isDiscrepancy     Boolean  @default(false)
@@ -1731,5 +1761,6 @@ model ShipmentManifest {
   @@index([trackingNumber])
   @@index([sellerId])
   @@index([carrierKey])
+  @@index([universalStatus])
 }
 

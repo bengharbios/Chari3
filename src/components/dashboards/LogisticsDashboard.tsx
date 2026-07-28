@@ -193,6 +193,18 @@ export default function LogisticsDashboard() {
       case 'picked_up':
       case 'confirmed':
         return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">{t('تم الاستلام', 'Picked Up')}</Badge>;
+      case 'out_for_delivery':
+        return <Badge className="bg-sky-500/10 text-sky-500 border-sky-500/20">{t('خرج للتوصيل', 'Out for Delivery')}</Badge>;
+      case 'ready':
+        return <Badge className="bg-violet-500/10 text-violet-500 border-violet-500/20">{t('جاهز للاستلام', 'Ready for Pickup')}</Badge>;
+      case 'pending':
+        return <Badge className="bg-amber-500/10 text-amber-500 border-amber-500/20">{t('في الانتظار', 'Pending')}</Badge>;
+      case 'failed':
+        return <Badge className="bg-orange-500/10 text-orange-500 border-orange-500/20">{t('محاولة فاشلة', 'Failed')}</Badge>;
+      case 'returned':
+        return <Badge className="bg-slate-500/10 text-slate-500 border-slate-500/20">{t('مُعاد للتاجر', 'Returned')}</Badge>;
+      case 'cancelled':
+        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20">{t('ملغي', 'Cancelled')}</Badge>;
       default:
         return <Badge className="bg-slate-500/10 text-slate-500 border-slate-500/20">{status}</Badge>;
     }
@@ -210,9 +222,15 @@ export default function LogisticsDashboard() {
     currency: 'DZD',
   };
 
+  // Use activeShipments for the live map (no delivered/cancelled/returned)
   const shipments = data?.shipments || [];
-  const filteredShipments = shipments.filter((s: any) => {
-    if (activeTab === 'all') return true;
+  const activeShipments = data?.activeShipments || shipments.filter((s: any) =>
+    !['delivered', 'cancelled', 'returned'].includes(s.status)
+  );
+  const archivedToday = data?.archivedToday || [];
+
+  const filteredShipments = (activeTab === 'all' ? shipments : activeShipments).filter((s: any) => {
+    if (activeTab === 'all' || activeTab === 'active') return true;
     return s.status === activeTab;
   });
 
@@ -294,7 +312,7 @@ export default function LogisticsDashboard() {
 
           <CardContent className="p-2">
             <LiveTrackingMap 
-              shipments={shipments} 
+              shipments={activeShipments} 
               onSelectShipment={(s) => setSelectedShipment(s)} 
             />
           </CardContent>
