@@ -67,6 +67,19 @@ const ORDER_STATUS_TO_UNIVERSAL: Record<string, string> = {
   'cancelled':  'cancelled',
 };
 
+function cleanTextField(val: any, defaultText: string): string {
+  if (!val || typeof val !== 'string') return defaultText;
+  const str = val.trim();
+  if (!str || str === 'null' || str === 'undefined') return defaultText;
+  if (/^[a-zA-Z0-9_-]{18,}$/.test(str)) return defaultText;
+  if (str.includes('{') || str.includes('}') || str.includes('"')) {
+    const match = str.match(/"(?:city|street|state|fullName|name)"\s*:\s*"([^"]+)"/i);
+    if (match && match[1] && !/^[a-zA-Z0-9_-]{18,}$/.test(match[1])) return match[1];
+    return defaultText;
+  }
+  return str;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -125,18 +138,31 @@ export async function GET(req: NextRequest) {
       }
     });
 
+    // Exclude unassigned pool loads from active driver assignments to avoid data duplication
+    const assignedOrActiveOrders = rawOrders.filter((o: any) => {
+      if (['delivered', 'returned', 'cancelled'].includes(o.status)) return true;
+      if (o.assignedDriverId) return true;
+      if (['shipped', 'out_for_delivery', 'picked_up'].includes(o.status)) return true;
+      return false;
+    });
+
     // 3. Process & format shipments with Universal Status
-    const shipments = rawOrders.map((o) => {
+    const shipments = assignedOrActiveOrders.map((o) => {
       let rawAddr: any = o.address;
       if (typeof rawAddr === 'string' && rawAddr.startsWith('{')) {
         try { rawAddr = JSON.parse(rawAddr); } catch (e) {}
       }
 
-      const cleanName = (typeof rawAddr === 'object' && rawAddr?.fullName) ? rawAddr.fullName : (o.buyer?.name || 'زبون شاري داي');
+      const cleanNameRaw = (typeof rawAddr === 'object' && rawAddr?.fullName) ? rawAddr.fullName : (o.buyer?.name || 'زبون شاري داي');
+      const cleanName = cleanTextField(cleanNameRaw, 'زبون شاري داي');
       const cleanPhone = (typeof rawAddr === 'object' && rawAddr?.phone) ? rawAddr.phone : (o.buyer?.phone || '0550000000');
-      const cleanCity = (typeof rawAddr === 'object' && (rawAddr?.city || rawAddr?.state)) ? (rawAddr.city || rawAddr.state) : 'الجزائر';
-      const cleanStreet = (typeof rawAddr === 'object' && rawAddr?.street) ? rawAddr.street : (typeof o.address === 'string' && !o.address.startsWith('{') ? o.address : 'الجزائر');
-      const formattedAddress = `${cleanStreet}, ${cleanCity}`.replace(/^,\s*/, '');
+      
+      const cleanCityRaw = (typeof rawAddr === 'object' && (rawAddr?.city || rawAddr?.state)) ? (rawAddr.city || rawAddr.state) : (typeof o.address === 'string' && !o.address.startsWith('{') ? o.address : 'الجزائر العاصمة');
+      const cleanCity = cleanTextField(cleanCityRaw, 'الجزائر العاصمة');
+
+      const cleanStreetRaw = (typeof rawAddr === 'object' && rawAddr?.street) ? rawAddr.street : 'حي التوصيل والمقنص';
+      const cleanStreet = cleanTextField(cleanStreetRaw, 'حي التوصيل والمقنص');
+      const formattedAddress = `${cleanStreet}، ${cleanCity}`;
 
       const baseCoords = CITY_COORDS_MAP[cleanCity] || CITY_COORDS_MAP[cleanCity.toLowerCase()] || { lat: 36.7538, lng: 3.0588 };
 

@@ -24,6 +24,19 @@ const CITY_COORDS_MAP: Record<string, { lat: number; lng: number }> = {
   'paris': { lat: 48.8566, lng: 2.3522 },
 };
 
+function cleanTextField(val: any, defaultText: string): string {
+  if (!val || typeof val !== 'string') return defaultText;
+  const str = val.trim();
+  if (!str || str === 'null' || str === 'undefined') return defaultText;
+  if (/^[a-zA-Z0-9_-]{18,}$/.test(str)) return defaultText;
+  if (str.includes('{') || str.includes('}') || str.includes('"')) {
+    const match = str.match(/"(?:city|street|state|fullName|name)"\s*:\s*"([^"]+)"/i);
+    if (match && match[1] && !/^[a-zA-Z0-9_-]{18,}$/.test(match[1])) return match[1];
+    return defaultText;
+  }
+  return str;
+}
+
 /**
  * GET /api/logistics/pool
  * =========================================================
@@ -77,13 +90,15 @@ export async function GET(req: NextRequest) {
         try { rawAddr = JSON.parse(rawAddr); } catch (e) {}
       }
 
-      const city = (typeof rawAddr === 'object' && (rawAddr?.city || rawAddr?.state)) 
+      const cityRaw = (typeof rawAddr === 'object' && (rawAddr?.city || rawAddr?.state)) 
         ? (rawAddr.city || rawAddr.state) 
-        : 'الجزائر العاصمة';
+        : (typeof o.address === 'string' && !o.address.startsWith('{') ? o.address : 'الجزائر العاصمة');
+      const city = cleanTextField(cityRaw, 'الجزائر العاصمة');
       
-      const district = (typeof rawAddr === 'object' && rawAddr?.street)
+      const districtRaw = (typeof rawAddr === 'object' && rawAddr?.street)
         ? rawAddr.street
-        : (typeof o.address === 'string' ? o.address.substring(0, 25) : 'حي التوصيل');
+        : 'حي التوصيل السريع';
+      const district = cleanTextField(districtRaw, 'حي التوصيل السريع');
 
       const coords = CITY_COORDS_MAP[city] || CITY_COORDS_MAP[city.toLowerCase()] || { lat: 36.7538, lng: 3.0588 };
       

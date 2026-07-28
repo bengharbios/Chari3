@@ -40,7 +40,11 @@ const FADE_UP = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
 };
 
-export default function LogisticsDashboard() {
+interface LogisticsDashboardProps {
+  viewMode?: 'overview' | 'active';
+}
+
+export default function LogisticsDashboard({ viewMode = 'overview' }: LogisticsDashboardProps = {}) {
   const { locale } = useAppStore();
   const { user } = useAuthStore();
   const isAr = locale === 'ar';
@@ -285,7 +289,11 @@ export default function LogisticsDashboard() {
       <motion.div variants={FADE_UP} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black">{t('لوحة تحكم عمليات الشحن والتوصيل', 'Logistics & Driver Dashboard')}</h1>
+            <h1 className="text-2xl font-black">
+              {viewMode === 'active' 
+                ? t('الشحنات النشطة والمتابعة الميدانية (Live Tracking)', 'Active Shipments & Live GPS Tracking', 'Colis Actifs & Suivi GPS en Direct')
+                : t('لوحة تحكم عمليات الشحن والتوصيل (الرئيسية)', 'Logistics & Driver Dashboard (Overview)', 'Tableau de Bord Logistique (Aperçu)')}
+            </h1>
             <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold">
               <ShieldCheck className="h-3.5 w-3.5 me-1" />
               {driver.isVerified ? t('حساب موثق (KYC)', 'Verified Driver') : t('قيد التوثيق', 'Pending KYC')}
@@ -335,9 +343,10 @@ export default function LogisticsDashboard() {
         })}
       </motion.div>
 
-      {/* Open Load Pool (سوق الشحنات المفتوح لاقتناص المناديب) */}
-      <motion.div variants={FADE_UP} className="space-y-3">
-        <div className="flex items-center justify-between">
+      {/* Open Load Pool (سوق الشحنات المفتوح لاقتناص المناديب - Overview ONLY) */}
+      {viewMode === 'overview' && (
+        <motion.div variants={FADE_UP} className="space-y-3">
+          <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-xl">🌐</span>
             <h2 className="text-base font-black">
@@ -404,8 +413,42 @@ export default function LogisticsDashboard() {
           </Card>
         )}
       </motion.div>
+      )}
 
-      {/* Real Interactive Leaflet Map & Selected Shipment Card */}
+      {viewMode === 'overview' && (
+        <motion.div variants={FADE_UP}>
+          <Card className="border-white/10 bg-gradient-to-r from-emerald-950/40 via-background/60 to-blue-950/40 backdrop-blur-xl shadow-xl rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 border-l-4 border-l-emerald-500">
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 rounded-2xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center text-2xl shrink-0 border border-emerald-500/30 shadow-inner">
+                🚚
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-foreground">
+                  {t('إدارة التوصيل اللحظي والشحنات المكلف بها', 'Manage Live GPS Tracking & Active Deliveries', 'Gérer les Livraisons et Suivi GPS en Direct')}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t(
+                    `لديك شحنات مخصصة لك في قائمة المهام الميدانية. انتقل إلى شاشة الشحنات النشطة لتتبع الـ GPS وإثبات تسليم الزبون بكود الـ PIN.`,
+                    `You have active shipments assigned to you. Switch to the active deliveries screen for live GPS navigation and customer PIN confirmation.`,
+                    `Vous avez des colis assignés. Passez à la page des livraisons actives pour le suivi GPS et la confirmation par code PIN.`
+                  )}
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={() => window.location.href = '/logistics/active'}
+              className="rounded-2xl font-black text-xs md:text-sm px-6 h-12 bg-emerald-600 hover:bg-emerald-500 text-white shadow-xl shadow-emerald-600/30 transition-all shrink-0 gap-2"
+            >
+              <span>🗺️</span>
+              {t('الانتقال לשاشة التوصيل والخريطة', 'Go to Live Delivery Map', 'Aller à la Carte des Livraisons')}
+            </Button>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Real Interactive Leaflet Map & Selected Shipment Card (Active view Mode ONLY) */}
+      {viewMode === 'active' && (
+      <>
       <motion.div variants={FADE_UP} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Real Leaflet Map */}
@@ -619,6 +662,8 @@ export default function LogisticsDashboard() {
           </div>
         </Card>
       </motion.div>
+      </>
+      )}
 
       {/* Delivery PIN Modal (Independent from selectedShipment sidebar view) */}
       <Dialog open={!!pinModalShipment} onOpenChange={(open) => { if (!open) setPinModalShipment(null); }}>

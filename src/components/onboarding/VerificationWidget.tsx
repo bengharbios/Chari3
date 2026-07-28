@@ -87,6 +87,7 @@ export function StickyStatusBanner() {
   // Banner shows for: incomplete, pending, rejected
   if (isBannerDismissed) return null;
   if (!accountStatus || accountStatus === 'active' || accountStatus === 'suspended') return null;
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/logistics')) return null;
 
   const userRoleClean = String(user?.role || '').toLowerCase();
   const isLogisticsRole = ['logistics', 'driver', 'carrier'].includes(userRoleClean) || (typeof window !== 'undefined' && window.location.pathname.startsWith('/logistics'));
