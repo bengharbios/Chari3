@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Truck, Navigation, Phone, KeyRound } from 'lucide-react';
+import { Truck, Navigation, Phone, ShieldCheck, MapPin } from 'lucide-react';
+import { getStatusConfig } from '@/lib/logistics/carrier-status-map';
+import { useAppStore } from '@/lib/store';
 
 // Fix Leaflet marker icons in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -16,20 +18,44 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-// Custom Leaflet Icons
-const driverIcon = new L.Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/3063/3063822.png',
-  iconSize: [38, 38],
-  iconAnchor: [19, 19],
-  popupAnchor: [0, -19],
+// Custom Driver GPS Icon with pulsing aura effect
+const driverIcon = L.divIcon({
+  className: 'custom-driver-marker',
+  html: `
+    <div style="position: relative; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;">
+      <div style="position: absolute; width: 100%; height: 100%; background-color: rgba(16, 185, 129, 0.25); border-radius: 50%; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+      <div style="width: 34px; height: 34px; background-color: #10b981; border: 3px solid #ffffff; border-radius: 50%; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px;">
+        🚚
+      </div>
+    </div>
+  `,
+  iconSize: [42, 42],
+  iconAnchor: [21, 21],
+  popupAnchor: [0, -21],
 });
 
-const shipmentIcon = new L.Icon({
-  iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32],
-});
+// Dynamic Colored Shipment Icon based on Universal Status
+function getShipmentMarkerIcon(status: string) {
+  const config = getStatusConfig(status);
+  const bgColor = config.color || '#3b82f6';
+  const iconEmoji = config.icon || '📦';
+  const isTransit = status === 'in_transit' || status === 'out_for_delivery';
+
+  return L.divIcon({
+    className: 'custom-shipment-marker',
+    html: `
+      <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+        ${isTransit ? `<div style="position: absolute; width: 100%; height: 100%; background-color: ${bgColor}40; border-radius: 50%; animation: pulse 1.5s infinite;"></div>` : ''}
+        <div style="width: 32px; height: 32px; background-color: ${bgColor}; border: 2.5px solid #ffffff; border-radius: 50%; box-shadow: 0 3px 6px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; font-size: 15px;">
+          ${iconEmoji}
+        </div>
+      </div>
+    `,
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+    popupAnchor: [0, -18],
+  });
+}
 
 function MapRecenter({ center }: { center: [number, number] }) {
   const map = useMap();
@@ -46,13 +72,24 @@ interface LiveTrackingMapProps {
 }
 
 export default function LiveTrackingMap({ shipments, onSelectShipment, driverLocation }: LiveTrackingMapProps) {
+  const { locale } = useAppStore();
+  const isAr = locale === 'ar';
+  const isFr = locale === 'fr';
+
+  // Trilingual translation function
+  const t = (ar: string, en: string, fr: string) => {
+    if (isAr) return ar;
+    if (isFr) return fr;
+    return en;
+  };
+
   const defaultCenter: [number, number] = [
     driverLocation?.lat || 36.7538,
     driverLocation?.lng || 3.0588
   ];
 
   return (
-    <div className="relative w-full h-[360px] rounded-3xl overflow-hidden shadow-inner border border-white/10 z-0">
+    <div className="relative w-full h-[380px] rounded-3xl overflow-hidden shadow-inner border border-white/10 z-0 bg-slate-950">
       <MapContainer
         center={defaultCenter}
         zoom={11}
@@ -66,47 +103,65 @@ export default function LiveTrackingMap({ shipments, onSelectShipment, driverLoc
 
         <MapRecenter center={defaultCenter} />
 
-        {/* Driver Marker */}
+        {/* Driver Live Marker */}
         <Marker position={defaultCenter} icon={driverIcon}>
           <Popup>
-            <div className="p-1 text-center font-cairo dir-rtl">
-              <p className="font-black text-sm text-emerald-600">موقع المندوب اللحظي (GPS Active)</p>
-              <p className="text-xs text-slate-500 mt-1">الجزائر العاصمة &bull; جاهز لتوصيل الطلبات</p>
+            <div className={`p-1 font-cairo ${isAr ? 'dir-rtl text-right' : 'text-left'}`}>
+              <p className="font-black text-sm text-emerald-600 flex items-center gap-1">
+                <ShieldCheck className="w-4 h-4" />
+                {t('موقع المندوب اللحظي (GPS Active)', 'Driver Live Location (GPS Active)', 'Position Live du Livreur (GPS Actif)')}
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                {t('الجزائر العاصمة • جاهز لتوصيل الطلبات', 'Algiers • Ready for dispatch', 'Alger • Prêt pour livraison')}
+              </p>
             </div>
           </Popup>
         </Marker>
 
-        {/* Active Shipments Markers */}
+        {/* Dynamic Shipments Markers */}
         {shipments.map((s) => {
           const lat = s.lat || 36.7538 + (Math.random() - 0.5) * 0.05;
           const lng = s.lng || 3.0588 + (Math.random() - 0.5) * 0.05;
+          const statusConfig = getStatusConfig(s.status || 'ready');
+          const statusLabel = isAr ? statusConfig.labelAr : isFr ? statusConfig.labelFr : statusConfig.labelEn;
 
           return (
             <Marker
-              key={s.id}
+              key={s.id || s.orderId || s.trackingNumber}
               position={[lat, lng]}
-              icon={shipmentIcon}
+              icon={getShipmentMarkerIcon(s.status || 'ready')}
               eventHandlers={{
                 click: () => onSelectShipment(s),
               }}
             >
               <Popup>
-                <div className="p-2 text-start font-cairo space-y-1 text-xs">
-                  <div className="flex items-center justify-between gap-2 border-b pb-1">
-                    <span className="font-mono font-bold text-primary">{s.trackingNumber}</span>
-                    <Badge variant="outline" className="text-[10px]">{s.city}</Badge>
+                <div className={`p-2 font-cairo space-y-2 text-xs ${isAr ? 'text-right dir-rtl' : 'text-left'}`}>
+                  <div className="flex items-center justify-between gap-3 border-b pb-1.5">
+                    <span className="font-mono font-bold text-primary text-sm">{s.trackingNumber}</span>
+                    <Badge style={{ backgroundColor: statusConfig.color + '20', color: statusConfig.color, borderColor: statusConfig.color + '50' }} className="text-[10px] font-bold px-2 py-0.5 border">
+                      {statusConfig.icon} {statusLabel}
+                    </Badge>
                   </div>
-                  <p className="font-bold text-slate-800 mt-1">{s.recipientName}</p>
-                  <p className="text-slate-500 truncate max-w-[180px]">{s.address}</p>
-                  <p className="font-black text-emerald-600 pt-1">
-                    المبلغ: {s.codAmount?.toLocaleString()} DZD
-                  </p>
+                  
+                  <div>
+                    <p className="font-extrabold text-slate-900 text-sm flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                      {s.recipientName || s.recipientAlias}
+                    </p>
+                    <p className="text-slate-500 truncate max-w-[200px] mt-0.5">{s.address || s.district} &bull; {s.city}</p>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 p-1.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                    <span className="text-slate-500 font-semibold">{t('المبلغ (COD):', 'Amount (COD):', 'Montant (COD):')}</span>
+                    <span className="font-black text-emerald-600 text-sm">{s.codAmount?.toLocaleString()} DZD</span>
+                  </div>
+
                   <Button 
                     size="sm" 
-                    className="w-full mt-2 h-7 text-xs font-bold rounded-lg bg-primary text-white"
+                    className="w-full mt-1 h-8 text-xs font-bold rounded-xl bg-primary hover:bg-primary/90 text-white shadow-sm"
                     onClick={() => onSelectShipment(s)}
                   >
-                    تحديد الشحنة
+                    {t('تحديد وعرض تفاصيل الشحنة', 'Select & View Parcel', 'Sélectionner le Colis')}
                   </Button>
                 </div>
               </Popup>

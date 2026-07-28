@@ -67,3 +67,6 @@ worklog.md.mcp.json
 
 # compiled outputs
 /dist/
+*.tar.gz
+*.gz
+next_build.tar.gz

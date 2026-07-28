@@ -214,6 +214,36 @@ export default function StoreOrdersPage() {
     }
   };
 
+  const handleFulfillmentUpdate = async (fulfillmentType: string, logisticsStage: string, assignedCarrierId?: string, orderId?: string) => {
+    const targetId = orderId || selectedOrder?.id;
+    if (!targetId) return;
+    try {
+      const res = await fetch(`/api/orders`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: targetId,
+          fulfillmentType,
+          logisticsStage,
+          assignedCarrierId: assignedCarrierId || null,
+          status: 'confirmed', // confirm order simultaneously
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to update fulfillment');
+
+      setOrders(prev => prev.map(o => o.id === targetId ? { ...o, status: 'confirmed', fulfillmentType, logisticsStage, assignedCarrierId } : o));
+      if (selectedOrder?.id === targetId) {
+        setSelectedOrder({ ...selectedOrder, status: 'confirmed', fulfillmentType, logisticsStage, assignedCarrierId });
+      }
+      const msg = logisticsStage === 'ready_for_pickup'
+        ? t('تم طرح الطرد في سوق الشحنات للمناديب (Open Load Pool) بنجاح!', 'Parcel published to Open Load Pool for delivery drivers!')
+        : t('تم تحويل الطرد لشركة الشحن للتغليف والوزن بنجاح!', 'Parcel directed to carrier packaging inbox successfully!');
+      toast.success(msg);
+    } catch (error) {
+      toast.error(t('فشل في توجيه خيارات اللوجستيات', 'Failed to route logistics fulfillment'));
+    }
+  };
+
   const handleExport = () => {
     const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
       + "رقم الطلب,العميل,الهاتف,التاريخ,الحالة,المجموع\n"
@@ -697,6 +727,65 @@ export default function StoreOrdersPage() {
                   </Button>
                 </div>
               </div>
+
+              {/* Smart Logistics Engine & Fulfillment Routing Section */}
+              {selectedOrder.status !== 'cancelled' && (
+                <div className="mx-6 mt-4 p-4 rounded-3xl bg-slate-900/90 text-white border border-indigo-500/30 shadow-lg space-y-3">
+                  <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                    <div className="flex items-center gap-2 font-bold text-sm text-indigo-300">
+                      <Truck className="h-4 w-4 text-indigo-400 animate-pulse" />
+                      <span>{t('توجيه التوصيل وسوق الشحن الذكي (Smart Logistics Engine)', 'Smart Logistics Routing & Pool')}</span>
+                    </div>
+                    <Badge className="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono text-[10px]">
+                      {selectedOrder.logisticsStage === 'ready_for_pickup' ? t('🟢 في سوق الشحن المفتوح', '🟢 Active in Pool') : t('⚙️ إعداد التوجيه', '⚙️ Routing Setup')}
+                    </Badge>
+                  </div>
+
+                  <p className="text-xs text-slate-300">
+                    {t('حدد المسؤول عن تغليف وتجهيز الصندوق لطرح الطرد فوراً للمناديب أو لشركة الشحن المتعاقد معها:', 'Choose whether you pack this parcel or outsource to a 3PL carrier before dispatching to delivery drivers:')}
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleFulfillmentUpdate('merchant', 'ready_for_pickup')}
+                      className={`p-3 rounded-2xl text-start border transition-all flex flex-col justify-between group hover:border-indigo-400 ${selectedOrder.logisticsStage === 'ready_for_pickup' ? 'bg-indigo-600/30 border-indigo-400 text-white' : 'bg-white/5 border-white/10 text-slate-200'}`}
+                    >
+                      <div>
+                        <div className="font-extrabold text-xs flex items-center gap-1.5 text-indigo-300">
+                          <span>📦 {t('تجهيز التاجر (Merchant Fulfillment)', 'Merchant Pack & Dispatch')}</span>
+                          {selectedOrder.logisticsStage === 'ready_for_pickup' && <span className="ms-auto text-emerald-400">✓ {t('فعال الآن', 'Active')}</span>}
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                          {t('أنت تقوم بتغليف المنتج بنفسك. سيطرح الطرد فوراً في سوق الشحن (Open Load Pool) لاقتناص المناديب اللحظي.', 'You pack the parcel yourself. Instantly lists on Open Load Pool for express drivers.')}
+                        </p>
+                      </div>
+                      <div className="mt-3 text-[11px] font-bold text-emerald-400 group-hover:underline">
+                        ⚡ {t('طرح مباشر للمناديب الآن →', 'Publish to Pool Now →')}
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleFulfillmentUpdate('carrier', 'ready_for_carrier', 'yalidine')}
+                      className={`p-3 rounded-2xl text-start border transition-all flex flex-col justify-between group hover:border-violet-400 ${selectedOrder.logisticsStage === 'ready_for_carrier' || selectedOrder.logisticsStage === 'carrier_packing' ? 'bg-violet-600/30 border-violet-400 text-white' : 'bg-white/5 border-white/10 text-slate-200'}`}
+                    >
+                      <div>
+                        <div className="font-extrabold text-xs flex items-center gap-1.5 text-violet-300">
+                          <span>🏭 {t('تغليف عبر شركة الشحن (3PL Carrier)', '3PL Carrier Packaging')}</span>
+                          {selectedOrder.logisticsStage === 'ready_for_carrier' && <span className="ms-auto text-violet-400">✓ {t('محول للشركة', 'Routed')}</span>}
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                          {t('تحويل لصندوق شركة التوصيل (Yalidine/Maystro) ليتولوا التغليف، حساب الوزن الرسمي، وتوليد الباركود.', 'Direct to shipping company inbox for packing, official weighing, and labeling.')}
+                        </p>
+                      </div>
+                      <div className="mt-3 text-[11px] font-bold text-violet-400 group-hover:underline">
+                        🔄 {t('تحويل لصندوق شركة الشحن →', 'Route to Carrier Inbox →')}
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Modal Content */}
               <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">

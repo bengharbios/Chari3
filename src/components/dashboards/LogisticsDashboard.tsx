@@ -44,13 +44,17 @@ export default function LogisticsDashboard() {
   const { locale } = useAppStore();
   const { user } = useAuthStore();
   const isAr = locale === 'ar';
-  const t = (ar: string, en: string) => isAr ? ar : en;
+  const isFr = locale === 'fr';
+  const t = (ar: string, en: string, fr?: string) => isAr ? ar : isFr && fr ? fr : en;
 
   const [isOnline, setIsOnline] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<any>(null);
+  const [poolShipments, setPoolShipments] = useState<any[]>([]);
+  const [isClaimingId, setIsClaimingId] = useState<string | null>(null);
 
   // Selected shipment for persistent sidebar card view
+
   const [selectedShipment, setSelectedShipment] = useState<any | null>(null);
 
   // Separate modal state for Delivery PIN entry (preventing closing of sidebar card)
@@ -119,10 +123,46 @@ export default function LogisticsDashboard() {
           setSelectedShipment(json.data.shipments[0]);
         }
       }
+      try {
+        const poolRes = await fetch(`/api/logistics/pool?limit=20`);
+        const poolJson = await poolRes.json();
+        if (poolJson.success && Array.isArray(poolJson.data)) {
+          setPoolShipments(poolJson.data);
+        }
+      } catch (poolErr) {
+        console.warn('Could not load Open Load Pool:', poolErr);
+      }
     } catch (err) {
-      toast.error(t('خطأ في تحميل بيانات اللوجستيات', 'Failed to load logistics data'));
+      toast.error(t('خطأ في تحميل بيانات اللوجستيات', 'Failed to load logistics data', 'Erreur de chargement des données logistiques'));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleClaimShipment = async (orderId: string) => {
+    setIsClaimingId(orderId);
+    try {
+      const res = await fetch('/api/logistics/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId,
+          driverId: user?.id || 'DRV-777',
+          driverName: user?.name || 'مندوب شاري داي'
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(t('🚀 تم حجز الشحنة ونقلها لجدول مهامك بنجاح!', '🚀 Claim Lock acquired! Added to your schedule.', '🚀 Colis réservé et ajouté à vos tâches!'));
+        setPoolShipments(prev => prev.filter(p => p.orderId !== orderId && p.id !== orderId));
+        fetchLogisticsData();
+      } else {
+        toast.error(data.error || t('عذراً، لم نتمكن من حجز الشحنة', 'Could not acquire Claim Lock', 'Impossible de réserver ce colis'));
+      }
+    } catch (err) {
+      toast.error(t('خطأ في الاتصال بالخادم', 'Connection error', 'Erreur de connexion'));
+    } finally {
+      setIsClaimingId(null);
     }
   };
 
@@ -293,6 +333,76 @@ export default function LogisticsDashboard() {
             </Card>
           );
         })}
+      </motion.div>
+
+      {/* Open Load Pool (سوق الشحنات المفتوح لاقتناص المناديب) */}
+      <motion.div variants={FADE_UP} className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">🌐</span>
+            <h2 className="text-base font-black">
+              {t('سوق الشحنات المفتوح (Open Load Pool - حجز ذري)', 'Open Load Pool (Atomic Driver Claim)', 'Marché des Colis Disponible (Réservation Instantanée)')}
+            </h2>
+          </div>
+          <Badge className="bg-blue-500/10 text-blue-500 border border-blue-500/20 font-mono text-xs px-2.5 py-0.5">
+            {poolShipments.length} {t('شحنة متاحة الآن', 'available parcels', 'colis disponibles')}
+          </Badge>
+        </div>
+
+        {poolShipments.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {poolShipments.map((p) => (
+              <Card key={p.id || p.trackingNumber} className="border-white/10 bg-gradient-to-br from-background/80 via-background/50 to-blue-950/20 hover:border-blue-500/40 backdrop-blur-xl shadow-md rounded-2xl p-4 transition-all flex flex-col justify-between space-y-3">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-extrabold text-xs text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded-lg border border-blue-500/20">
+                      {p.trackingNumber}
+                    </span>
+                    <Badge variant="outline" className="text-[10px] text-muted-foreground">
+                      📦 {t('جاهزة في', 'Ready in', 'Prêt à')} {p.city}
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <p className="font-black text-sm text-foreground flex items-center gap-1">
+                      📍 {p.city} &bull; <span className="text-xs text-muted-foreground font-medium">{p.district}</span>
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-2">
+                      <span>🛍️ {p.itemsCount} {t('عنصر/منتج', 'items', 'articles')}</span>
+                      <span>•</span>
+                      <span>💵 {t('أجرة التوصيل:', 'Delivery fee:', 'Frais:')} <strong className="text-emerald-500 font-mono">{p.shippingFee} DZD</strong></span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-border/50 pt-2.5 mt-2">
+                  <div>
+                    <span className="text-[10px] text-muted-foreground block">{t('المبلغ عند التسليم (COD):', 'COD Amount:', 'Montant COD:')}</span>
+                    <span className="font-black text-emerald-500 text-sm font-mono">{p.codAmount?.toLocaleString()} DZD</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => handleClaimShipment(p.id || p.orderId)}
+                    disabled={isClaimingId === (p.id || p.orderId)}
+                    className="rounded-xl font-bold text-xs h-9 bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/25 transition-all gap-1.5 px-4"
+                  >
+                    {isClaimingId === (p.id || p.orderId) ? (
+                      <span>⏳ {t('جاري القفل...', 'Locking...', 'Verrouillage...')}</span>
+                    ) : (
+                      <>
+                        <span>⚡ {t('قبـول واقتناص (Claim)', 'Claim Load Lock', 'Accepter & Réserver')}</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Card className="p-6 text-center border-white/10 bg-background/30 rounded-2xl text-muted-foreground text-xs font-bold">
+            ⚡ {t('لا توجد شحنات متاحة في سوق الشحن حالياً. تضاف الطلبات فور تأكيد التجار وتغليفها.', 'No open loads currently available. New shipments appear instantly upon merchant packaging.', 'Aucun colis disponible en ce moment.')}
+          </Card>
+        )}
       </motion.div>
 
       {/* Real Interactive Leaflet Map & Selected Shipment Card */}

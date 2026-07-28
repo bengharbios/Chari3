@@ -201,21 +201,21 @@ export const STATUS_PROGRESSION: UniversalStatus[] = [
   'delivered',
 ];
 
-// ─── Status Display Config (Arabic + English labels + colors) ─────────────────
+// ─── Status Display Config (Arabic + English + French labels + colors) ────────
 
 export const STATUS_CONFIG: Record<
   UniversalStatus,
-  { labelAr: string; labelEn: string; color: string; bgColor: string; icon: string }
+  { labelAr: string; labelEn: string; labelFr: string; color: string; bgColor: string; icon: string }
 > = {
-  pending:           { labelAr: 'في الانتظار',       labelEn: 'Pending',           color: '#f59e0b', bgColor: 'bg-amber-500/10',   icon: '⏳' },
-  ready:             { labelAr: 'جاهز للاستلام',     labelEn: 'Ready for Pickup',  color: '#3b82f6', bgColor: 'bg-blue-500/10',    icon: '📦' },
-  picked_up:         { labelAr: 'تم الاستلام',       labelEn: 'Picked Up',         color: '#8b5cf6', bgColor: 'bg-violet-500/10',  icon: '🚚' },
-  in_transit:        { labelAr: 'في الطريق',         labelEn: 'In Transit',        color: '#6366f1', bgColor: 'bg-indigo-500/10',  icon: '🛣️' },
-  out_for_delivery:  { labelAr: 'خرج للتوصيل',      labelEn: 'Out for Delivery',  color: '#0ea5e9', bgColor: 'bg-sky-500/10',     icon: '🏃' },
-  delivered:         { labelAr: 'تم التوصيل',       labelEn: 'Delivered',         color: '#10b981', bgColor: 'bg-emerald-500/10', icon: '✅' },
-  failed:            { labelAr: 'محاولة فاشلة',     labelEn: 'Delivery Failed',   color: '#f97316', bgColor: 'bg-orange-500/10',  icon: '⚠️' },
-  returned:          { labelAr: 'مُعاد للتاجر',     labelEn: 'Returned',          color: '#64748b', bgColor: 'bg-slate-500/10',   icon: '↩️' },
-  cancelled:         { labelAr: 'ملغي',              labelEn: 'Cancelled',         color: '#ef4444', bgColor: 'bg-red-500/10',     icon: '❌' },
+  pending:           { labelAr: 'في الانتظار',       labelEn: 'Pending',           labelFr: 'En attente',           color: '#f59e0b', bgColor: 'bg-amber-500/10',   icon: '⏳' },
+  ready:             { labelAr: 'جاهز للاستلام',     labelEn: 'Ready for Pickup',  labelFr: 'Prêt pour ramassage',  color: '#3b82f6', bgColor: 'bg-blue-500/10',    icon: '📦' },
+  picked_up:         { labelAr: 'تم الاستلام',       labelEn: 'Picked Up',         labelFr: 'Ramassé',              color: '#8b5cf6', bgColor: 'bg-violet-500/10',  icon: '🚚' },
+  in_transit:        { labelAr: 'في الطريق',         labelEn: 'In Transit',        labelFr: 'En transit',           color: '#6366f1', bgColor: 'bg-indigo-500/10',  icon: '🛣️' },
+  out_for_delivery:  { labelAr: 'خرج للتوصيل',      labelEn: 'Out for Delivery',  labelFr: 'En cours de livraison',color: '#0ea5e9', bgColor: 'bg-sky-500/10',     icon: '🏃' },
+  delivered:         { labelAr: 'تم التوصيل',       labelEn: 'Delivered',         labelFr: 'Livré',                color: '#10b981', bgColor: 'bg-emerald-500/10', icon: '✅' },
+  failed:            { labelAr: 'محاولة فاشلة',     labelEn: 'Delivery Failed',   labelFr: 'Échec de livraison',   color: '#f97316', bgColor: 'bg-orange-500/10',  icon: '⚠️' },
+  returned:          { labelAr: 'مُعاد للتاجر',     labelEn: 'Returned',          labelFr: 'Retourné au vendeur',  color: '#64748b', bgColor: 'bg-slate-500/10',   icon: '↩️' },
+  cancelled:         { labelAr: 'ملغي',              labelEn: 'Cancelled',         labelFr: 'Annulé',               color: '#ef4444', bgColor: 'bg-red-500/10',     icon: '❌' },
 };
 
 /**
