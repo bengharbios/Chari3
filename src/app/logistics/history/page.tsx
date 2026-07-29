@@ -18,8 +18,8 @@ export default function DeliveryHistoryPage() {
     fetch('/api/logistics/dashboard')
       .then(res => res.json())
       .then(json => {
-        if (json.success && json.data.shipments) {
-          setHistory(json.data.shipments);
+        if (json.success && json.data.archivedToday) {
+          setHistory(json.data.archivedToday);
         }
       })
       .catch(() => {});

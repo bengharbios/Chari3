@@ -259,10 +259,10 @@ export default function LogisticsDashboard({ viewMode = 'overview' }: LogisticsD
     phone: user?.phone || '0550000002',
     isVerified: user?.isVerified || false,
     rating: 4.9,
-    todayDeliveriesCount: 12,
-    totalDeliveriesCount: 345,
-    activeCount: 4,
-    earnings: 28500,
+    todayDeliveriesCount: 0,
+    totalDeliveriesCount: 0,
+    activeCount: 0,
+    earnings: 0,
     currency: 'DZD',
   };
 

@@ -213,7 +213,7 @@ export async function GET(req: NextRequest) {
     const archivedToday = shipments.filter(s => ['delivered', 'returned'].includes(s.status));
 
     // 5. Calculate Driver KPIs
-    const totalEarnings = archivedToday.reduce((sum, s) => sum + (s.shippingFee || 400), 0) + 4560;
+    const totalEarnings = archivedToday.reduce((sum, s) => sum + (s.shippingFee || 400), 0);
 
     // 6. Driver Verification Status & Documents
     const driverDocs = {
@@ -230,9 +230,9 @@ export async function GET(req: NextRequest) {
           phone: driverPhone,
           isVerified,
           rating: 4.9,
-          todayDeliveriesCount: archivedToday.length || 12,
-          totalDeliveriesCount: shipments.length + 345,
-          activeCount: activeShipments.length || 4,
+          todayDeliveriesCount: archivedToday.length,
+          totalDeliveriesCount: shipments.length,
+          activeCount: activeShipments.length,
           earnings: totalEarnings,
           currency: 'DZD',
         },
