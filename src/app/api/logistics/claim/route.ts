@@ -82,6 +82,7 @@ export async function POST(req: NextRequest) {
             claimedByDriverId: driverId,
             claimedAt: now,
             pickedUpAt: now,
+            deliveryAddress: typeof order.address === 'string' ? order.address : JSON.stringify(order.address || {}),
           } as any
         });
       }
