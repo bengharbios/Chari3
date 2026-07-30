@@ -1,12 +1,12 @@
 generator client {
-  provider      = "prisma-client-js"
-  engineType    = "binary"
+  provider   = "prisma-client-js"
+  engineType = "binary"
 }
 
 datasource db {
-  provider        = "mysql"
-  url             = env("DATABASE_URL")
-  relationMode    = "prisma"
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
 }
 
 // ============================================
@@ -14,101 +14,101 @@ datasource db {
 // ============================================
 
 model User {
-  id              String    @id @default(cuid())
-  email           String    @unique
-  phone           String?   @unique
-  password        String?
-  name            String
-  nameEn          String?
-  avatar          String?
-  role            String    @default("buyer") // store, freelancer, supplier, logistics, buyer
-  accountStatus   String    @default("incomplete") // incomplete, pending, active, rejected, suspended
-  isActive        Boolean   @default(true)
-  isVerified      Boolean   @default(false)
-  phoneVerified   Boolean   @default(false)
-  emailVerified   Boolean   @default(false)
-  twoFactorEnabled Boolean   @default(false)
-  locale          String    @default("ar")
-  forcePasswordChange Boolean @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                  String   @id @default(cuid())
+  email               String   @unique
+  phone               String?  @unique
+  password            String?
+  name                String
+  nameEn              String?
+  avatar              String?
+  role                String   @default("buyer") // store, freelancer, supplier, logistics, buyer
+  accountStatus       String   @default("incomplete") // incomplete, pending, active, rejected, suspended
+  isActive            Boolean  @default(true)
+  isVerified          Boolean  @default(false)
+  phoneVerified       Boolean  @default(false)
+  emailVerified       Boolean  @default(false)
+  twoFactorEnabled    Boolean  @default(false)
+  locale              String   @default("ar")
+  forcePasswordChange Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
-  store              Store?           @relation("StoreManager")
-  ownedStores        Store[]          @relation("StoreOwner")
-  sellerProfile      SellerProfile?
-  logisticsProfile   LogisticsProfile?
-  buyerProfile       BuyerProfile?
-  addresses          Address[]
-  notifications      Notification[]
-  orders             Order[]          @relation("OrderBuyer")
-  reviews            Review[]
-  wallet             Wallet?
-  staffOf            StoreStaff[]
-  storeVerification  StoreVerification?
+  store                  Store?                  @relation("StoreManager")
+  ownedStores            Store[]                 @relation("StoreOwner")
+  sellerProfile          SellerProfile?
+  logisticsProfile       LogisticsProfile?
+  buyerProfile           BuyerProfile?
+  addresses              Address[]
+  notifications          Notification[]
+  orders                 Order[]                 @relation("OrderBuyer")
+  reviews                Review[]
+  wallet                 Wallet?
+  staffOf                StoreStaff[]
+  storeVerification      StoreVerification?
   freelancerVerification FreelancerVerification?
-  supplierVerification  SupplierVerification?
-  logisticsVerification LogisticsVerification?
-  auditLogs          AuditLog[]
-  categoryRequests   CategoryRequest[]
-  debtReceipts       DebtPaymentReceipt[]
-  subscriptions      Subscription[]
-  invoices           Invoice[]
-  chatRoomsAsBuyer   ChatRoom[]       @relation("ChatRoomBuyer")
-  chatRoomsAsSeller  ChatRoom[]       @relation("ChatRoomSeller")
-  sentMessages       ChatMessage[]    @relation("MessageSender")
-  suspensionAppeals  SuspensionAppeal[]
-  businessVerification BusinessVerification?
-  upgradeRequests    UpgradeRequest[]
+  supplierVerification   SupplierVerification?
+  logisticsVerification  LogisticsVerification?
+  auditLogs              AuditLog[]
+  categoryRequests       CategoryRequest[]
+  debtReceipts           DebtPaymentReceipt[]
+  subscriptions          Subscription[]
+  invoices               Invoice[]
+  chatRoomsAsBuyer       ChatRoom[]              @relation("ChatRoomBuyer")
+  chatRoomsAsSeller      ChatRoom[]              @relation("ChatRoomSeller")
+  sentMessages           ChatMessage[]           @relation("MessageSender")
+  suspensionAppeals      SuspensionAppeal[]
+  businessVerification   BusinessVerification?
+  upgradeRequests        UpgradeRequest[]
 
   // Better Auth Relations
-  sessions           Session[]
-  accounts           Account[]
-  twoFactors         TwoFactor[]
+  sessions   Session[]
+  accounts   Account[]
+  twoFactors TwoFactor[]
 }
 
 model Store {
-  id            String    @id @default(cuid())
-  name          String
-  nameEn        String?
-  slug          String    @unique
-  description   String?
-  logo          String?
-  coverImage    String?
-  isActive      Boolean   @default(true)
-  rating        Float     @default(0)
-  totalSales    Int       @default(0)
-  commission    Float     @default(10)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id          String   @id @default(cuid())
+  name        String
+  nameEn      String?
+  slug        String   @unique
+  description String?
+  logo        String?
+  coverImage  String?
+  isActive    Boolean  @default(true)
+  rating      Float    @default(0)
+  totalSales  Int      @default(0)
+  commission  Float    @default(10)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  managerId     String    @unique
-  manager       User      @relation("StoreManager", fields: [managerId], references: [id])
+  managerId String @unique
+  manager   User   @relation("StoreManager", fields: [managerId], references: [id])
 
   // The real human owner of this store (never a dummy user)
-  ownerId       String?
-  owner         User?     @relation("StoreOwner", fields: [ownerId], references: [id])
+  ownerId String?
+  owner   User?   @relation("StoreOwner", fields: [ownerId], references: [id])
 
-  packageId     String?
-  package       SellerPackage? @relation(fields: [packageId], references: [id])
+  packageId String?
+  package   SellerPackage? @relation(fields: [packageId], references: [id])
 
-  categoryId    String?
-  category      Category? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
 
-  level         Int      @default(1)
-  totalCustomers Int     @default(0)
-  totalEarnings  Float   @default(0)
-  completionRate Float   @default(100)
+  level          Int   @default(1)
+  totalCustomers Int   @default(0)
+  totalEarnings  Float @default(0)
+  completionRate Float @default(100)
 
-  products      Product[]
-  staff         StoreStaff[]
+  products Product[]
+  staff    StoreStaff[]
 
-  shippingRates         String?   @db.LongText
-  shippingIntegrations  String?   @db.LongText
-  paymentDetails        String?   @db.LongText
-  themeSettings         String?   @db.LongText
+  shippingRates        String? @db.LongText
+  shippingIntegrations String? @db.LongText
+  paymentDetails       String? @db.LongText
+  themeSettings        String? @db.LongText
 
-  slugUpdatedAt         DateTime?
-  customDomain          String?   @unique
+  slugUpdatedAt DateTime?
+  customDomain  String?   @unique
 
   overrideIdentity      Boolean?
   overrideShipping      Boolean?
@@ -122,96 +122,91 @@ model Store {
   overrideDomain        Boolean?
   overrideNotifications Boolean?
 
-  addonMobileApp        Boolean  @default(false)
-  addonWhatsAppSupport  Boolean  @default(false)
-  addonAdvancedCRM      Boolean  @default(false)
-  addonEchangoPOS       Boolean  @default(false)
-  addonBusinessUpgrade  Boolean  @default(false)
-  addonExtraPOSDevices  Int      @default(0)
+  addonMobileApp       Boolean @default(false)
+  addonWhatsAppSupport Boolean @default(false)
+  addonAdvancedCRM     Boolean @default(false)
+  addonEchangoPOS      Boolean @default(false)
+  addonBusinessUpgrade Boolean @default(false)
+  addonExtraPOSDevices Int     @default(0)
 
-  globalCoupons         Coupon[]  @relation("GlobalCouponOptInStores")
+  globalCoupons Coupon[] @relation("GlobalCouponOptInStores")
 }
 
 model StoreStaff {
-  id        String   @id @default(cuid())
-  role      String   @default("staff")
-  status    String   @default("active") // active, pending, rejected
-  joinedAt  DateTime @default(now())
+  id       String   @id @default(cuid())
+  role     String   @default("staff")
+  status   String   @default("active") // active, pending, rejected
+  joinedAt DateTime @default(now())
 
-  storeId   String
-  store     Store    @relation(fields: [storeId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id])
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
 
   @@unique([storeId, userId])
 }
 
 model SellerProfile {
-  id                  String    @id @default(cuid())
-  merchantType        String    @default("individual") // individual, business
-  merchantSubType     String    @default("freelancer") // freelancer, business, wholesaler
-  storeName           String?
-  storeNameEn         String?
-  bio                 String?
-  coverImage          String?
-  logo                String?
-  socialLinks         String    @default("{}")   // JSON: instagram, facebook, tiktok
-  returnPolicy        String?
-  shippingPolicy      String?
+  id              String  @id @default(cuid())
+  merchantType    String  @default("individual") // individual, business
+  merchantSubType String  @default("freelancer") // freelancer, business, wholesaler
+  storeName       String?
+  storeNameEn     String?
+  bio             String?
+  coverImage      String?
+  logo            String?
+  socialLinks     String  @default("{}") // JSON: instagram, facebook, tiktok
+  returnPolicy    String?
+  shippingPolicy  String?
 
   // Performance metrics
-  rating              Float     @default(0)
-  totalSales          Int       @default(0)
-  totalCustomers      Int       @default(0)
-  totalEarnings       Float     @default(0)
-  commissionPaid      Float     @default(0)
-  completionRate      Float     @default(100) // %
-  cancellationRate    Float     @default(0)   // % (To track COD leakage)
-  returnRate          Float     @default(0)   // % (To track COD leakage)
-  responseRate        Float     @default(100) // %
-  avgResponseHours    Float     @default(24)
-  challengePoints     Int       @default(0)
+  rating           Float @default(0)
+  totalSales       Int   @default(0)
+  totalCustomers   Int   @default(0)
+  totalEarnings    Float @default(0)
+  commissionPaid   Float @default(0)
+  completionRate   Float @default(100) // %
+  cancellationRate Float @default(0) // % (To track COD leakage)
+  returnRate       Float @default(0) // % (To track COD leakage)
+  responseRate     Float @default(100) // %
+  avgResponseHours Float @default(24)
+  challengePoints  Int   @default(0)
 
   // Level system
-  level               Int       @default(1)
-  levelUpdatedAt      DateTime?
-  levelGraceUntil     DateTime? // Grace period before demotion
+  level           Int       @default(1)
+  levelUpdatedAt  DateTime?
+  levelGraceUntil DateTime? // Grace period before demotion
 
-  packageId           String?
-  package             SellerPackage? @relation(fields: [packageId], references: [id])
+  packageId String?
+  package   SellerPackage? @relation(fields: [packageId], references: [id])
 
-  categoryId          String?
-  category            Category? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
 
-  paymentModel        String    @default("default") // default, centralized, decentralized, mixed
+  paymentModel String @default("default") // default, centralized, decentralized, mixed
 
-  isVerified          Boolean   @default(false)
-  wantsUpgrade        Boolean   @default(false)
-  upgradeRequestedAt  DateTime?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  isVerified         Boolean   @default(false)
+  wantsUpgrade       Boolean   @default(false)
+  upgradeRequestedAt DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  userId              String    @unique
-  user                User      @relation(fields: [userId], references: [id])
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
-  products            Product[]
-  sellerReviews       SellerReview[]
-  withdrawals         WithdrawalRequest[]
+  products      Product[]
+  sellerReviews SellerReview[]
+  withdrawals   WithdrawalRequest[]
 
+  addonMobileApp       Boolean @default(false)
+  addonWhatsAppSupport Boolean @default(false)
+  addonAdvancedCRM     Boolean @default(false)
+  addonEchangoPOS      Boolean @default(false)
+  addonBusinessUpgrade Boolean @default(false)
+  addonExtraPOSDevices Int     @default(0)
 
-
-
-
-
-  addonMobileApp        Boolean  @default(false)
-  addonWhatsAppSupport  Boolean  @default(false)
-  addonAdvancedCRM      Boolean  @default(false)
-  addonEchangoPOS       Boolean  @default(false)
-  addonBusinessUpgrade  Boolean  @default(false)
-  addonExtraPOSDevices  Int      @default(0)
-
-  globalCoupons         Coupon[]  @relation("GlobalCouponOptInSellers")
-  verification          SellerVerification?
+  globalCoupons Coupon[]            @relation("GlobalCouponOptInSellers")
+  verification  SellerVerification?
 }
 
 // ============================================
@@ -219,57 +214,57 @@ model SellerProfile {
 // ============================================
 
 model SellerPackage {
-  id                    String   @id @default(cuid())
-  name                  String   // "مجاني", "أساسي", "محترف", "بريميوم"
-  nameEn                String?
-  description           String?
-  price                 Float    @default(0)     // Monthly price
-  commissionRate        Float    @default(10)    // % per sale
-  maxProducts           Int      @default(5)
-  maxMonthlyOrders      Int      @default(50)
-  maxImagesPerProduct   Int      @default(3)
-  hasVideoUpload        Boolean  @default(false)
-  hasAnalytics          Boolean  @default(false)
-  hasPromotedListing    Boolean  @default(false)
-  hasCoupons            Boolean  @default(false)
-  hasApiAccess          Boolean  @default(false)
-  hasPrioritySupport    Boolean  @default(false)
-  
+  id                  String  @id @default(cuid())
+  name                String // "مجاني", "أساسي", "محترف", "بريميوم"
+  nameEn              String?
+  description         String?
+  price               Float   @default(0) // Monthly price
+  commissionRate      Float   @default(10) // % per sale
+  maxProducts         Int     @default(5)
+  maxMonthlyOrders    Int     @default(50)
+  maxImagesPerProduct Int     @default(3)
+  hasVideoUpload      Boolean @default(false)
+  hasAnalytics        Boolean @default(false)
+  hasPromotedListing  Boolean @default(false)
+  hasCoupons          Boolean @default(false)
+  hasApiAccess        Boolean @default(false)
+  hasPrioritySupport  Boolean @default(false)
+
   // Advanced features
-  maxTeamMembers        Int      @default(1)
-  hasCustomDomain       Boolean  @default(false)
-  hasPixels             Boolean  @default(false)
-  hasMultiCurrency      Boolean  @default(false)
-  hasDataExport         Boolean  @default(false)
-  maxLandingPages       Int      @default(0)
+  maxTeamMembers   Int     @default(1)
+  hasCustomDomain  Boolean @default(false)
+  hasPixels        Boolean @default(false)
+  hasMultiCurrency Boolean @default(false)
+  hasDataExport    Boolean @default(false)
+  maxLandingPages  Int     @default(0)
 
-  hasEmailSupport       Boolean  @default(false)
+  hasEmailSupport         Boolean @default(false)
   hasBusinessIntelligence Boolean @default(false)
-  hasGA4                Boolean  @default(false)
+  hasGA4                  Boolean @default(false)
 
-  allowIdentity         Boolean  @default(true)
-  allowShipping         Boolean  @default(true)
-  allowPayment          Boolean  @default(true)
-  allowVisuals          Boolean  @default(true)
-  allowInventory        Boolean  @default(true)
-  allowPolicies         Boolean  @default(true)
-  allowSocials          Boolean  @default(true)
-  allowSecurity         Boolean  @default(true)
-  allowSEO              Boolean  @default(false)
-  allowDomain           Boolean  @default(false)
-  allowNotifications    Boolean  @default(true)
+  allowIdentity      Boolean @default(true)
+  allowShipping      Boolean @default(true)
+  allowPayment       Boolean @default(true)
+  allowVisuals       Boolean @default(true)
+  allowInventory     Boolean @default(true)
+  allowPolicies      Boolean @default(true)
+  allowSocials       Boolean @default(true)
+  allowSecurity      Boolean @default(true)
+  allowSEO           Boolean @default(false)
+  allowDomain        Boolean @default(false)
+  allowNotifications Boolean @default(true)
 
-  color                 String   @default("#6B7280")
-  icon                  String   @default("Package")
-  isActive              Boolean  @default(true)
-  sortOrder             Int      @default(0)
-  targetRole            String   @default("ALL") // ALL, INDIVIDUAL, BUSINESS
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  color      String   @default("#6B7280")
+  icon       String   @default("Package")
+  isActive   Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  targetRole String   @default("ALL") // ALL, INDIVIDUAL, BUSINESS
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  sellers               SellerProfile[]
-  stores                Store[]
-  subscriptions         Subscription[]
+  sellers       SellerProfile[]
+  stores        Store[]
+  subscriptions Subscription[]
 }
 
 // ============================================
@@ -277,25 +272,25 @@ model SellerPackage {
 // ============================================
 
 model SellerLevel {
-  id                  String   @id @default(cuid())
-  level               Int      @unique          // 1-10
-  nameAr              String
-  nameEn              String
-  badge               String                    // emoji or label
-  badgeColor          String   @default("#6B7280")
-  minCustomers        Int      @default(0)
-  minRating           Float    @default(0)
-  minCompletionRate   Float    @default(0)      // %
-  minResponseRate     Float    @default(0)      // %
-  maxResponseHours    Int      @default(48)
-  maxProducts         Int      @default(5)      // Product listing cap
-  commissionDiscount  Float    @default(0)      // % discount on package commission
-  bonusFeatures       String   @default("[]")   // JSON array of feature keys
-  gracePeriodDays     Int      @default(180)    // Days before demotion
-  searchBoost         Float    @default(1.0)    // Multiplier for search ranking
-  isActive            Boolean  @default(true)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                 String   @id @default(cuid())
+  level              Int      @unique // 1-10
+  nameAr             String
+  nameEn             String
+  badge              String // emoji or label
+  badgeColor         String   @default("#6B7280")
+  minCustomers       Int      @default(0)
+  minRating          Float    @default(0)
+  minCompletionRate  Float    @default(0) // %
+  minResponseRate    Float    @default(0) // %
+  maxResponseHours   Int      @default(48)
+  maxProducts        Int      @default(5) // Product listing cap
+  commissionDiscount Float    @default(0) // % discount on package commission
+  bonusFeatures      String   @default("[]") // JSON array of feature keys
+  gracePeriodDays    Int      @default(180) // Days before demotion
+  searchBoost        Float    @default(1.0) // Multiplier for search ranking
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 
 // ============================================
@@ -303,23 +298,23 @@ model SellerLevel {
 // ============================================
 
 model SellerReview {
-  id              String   @id @default(cuid())
-  rating          Int                           // 1-5 overall
-  speedRating     Int?                          // 1-5 speed
-  qualityRating   Int?                          // 1-5 quality
-  commRating      Int?                          // 1-5 communication
-  comment         String?
-  sellerReply     String?
-  replyAt         DateTime?
-  isApproved      Boolean  @default(true)
+  id            String    @id @default(cuid())
+  rating        Int // 1-5 overall
+  speedRating   Int? // 1-5 speed
+  qualityRating Int? // 1-5 quality
+  commRating    Int? // 1-5 communication
+  comment       String?
+  sellerReply   String?
+  replyAt       DateTime?
+  isApproved    Boolean   @default(true)
 
-  sellerId        String
-  seller          SellerProfile @relation(fields: [sellerId], references: [id])
-  buyerId         String
-  orderId         String?
+  sellerId String
+  seller   SellerProfile @relation(fields: [sellerId], references: [id])
+  buyerId  String
+  orderId  String?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ============================================
@@ -327,22 +322,22 @@ model SellerReview {
 // ============================================
 
 model ProductVariant {
-  id          String   @id @default(cuid())
-  name        String                            // "اللون", "المقاس"
-  value       String                            // "أحمر", "XL"
-  sku         String?
-  price       Float?                            // Override product price if set
-  comparePrice Float?                           // Slashed price for variant
-  stock       Int      @default(0)
-  image       String?
-  swatchType  String?                           // "color", "image"
-  swatchValue String?                           // Hex color code or custom image URL
-  sortOrder   Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id           String   @id @default(cuid())
+  name         String // "اللون", "المقاس"
+  value        String // "أحمر", "XL"
+  sku          String?
+  price        Float? // Override product price if set
+  comparePrice Float? // Slashed price for variant
+  stock        Int      @default(0)
+  image        String?
+  swatchType   String? // "color", "image"
+  swatchValue  String? // Hex color code or custom image URL
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
 
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
 }
 
 // ============================================
@@ -350,21 +345,21 @@ model ProductVariant {
 // ============================================
 
 model Advertisement {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   title       String
   titleEn     String?
   imageUrl    String
   linkUrl     String?
-  zone        String                            // hero, banner_top, banner_mid, sidebar, inline_products, category_header
-  targetRole  String   @default("all")         // all, buyer, guest
-  isActive    Boolean  @default(true)
+  zone        String // hero, banner_top, banner_mid, sidebar, inline_products, category_header
+  targetRole  String    @default("all") // all, buyer, guest
+  isActive    Boolean   @default(true)
   startsAt    DateTime?
   endsAt      DateTime?
-  clicks      Int      @default(0)
-  impressions Int      @default(0)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  clicks      Int       @default(0)
+  impressions Int       @default(0)
+  sortOrder   Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 // ============================================
@@ -373,13 +368,13 @@ model Advertisement {
 
 model ShippingMethod {
   id            String   @id @default(cuid())
-  name          String                          // "شحن المنصة", "توصيل بالسائق", "استلام من المحل"
+  name          String // "شحن المنصة", "توصيل بالسائق", "استلام من المحل"
   nameEn        String?
   description   String?
-  type          String                          // platform, self, pickup, partner
+  type          String // platform, self, pickup, partner
   basePrice     Float    @default(0)
   perKgPrice    Float    @default(0)
-  freeAbove     Float?                          // Free shipping if order > X DZD
+  freeAbove     Float? // Free shipping if order > X DZD
   estimatedDays String   @default("1-3")
   isActive      Boolean  @default(true)
   icon          String   @default("Truck")
@@ -393,18 +388,18 @@ model ShippingMethod {
 // ============================================
 
 model GlobalPaymentMethod {
-  id            String   @id @default(cuid())
-  name          String                          // "الدفع عند الاستلام", "Tabby"
-  nameEn        String?
-  description   String?
-  type          String                          // cod, credit_card, tabby, baridimob, bank_transfer, wallet
-  icon          String   @default("CreditCard")
-  isActive      Boolean  @default(true)
-  sortOrder     Int      @default(0)
-  fee           Float    @default(0)            // E.g., COD fee
-  configSchema  String?  @db.LongText           // JSON config
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String // "الدفع عند الاستلام", "Tabby"
+  nameEn       String?
+  description  String?
+  type         String // cod, credit_card, tabby, baridimob, bank_transfer, wallet
+  icon         String   @default("CreditCard")
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  fee          Float    @default(0) // E.g., COD fee
+  configSchema String?  @db.LongText // JSON config
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 // ============================================
@@ -412,21 +407,21 @@ model GlobalPaymentMethod {
 // ============================================
 
 model WithdrawalRequest {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   amount        Float
-  method        String                          // ccp, cib, bank_transfer, cash
-  status        String   @default("pending")    // pending, approved, paid, rejected
-  accountNumber String?                         // CCP/CIB/Bank account
+  method        String // ccp, cib, bank_transfer, cash
+  status        String    @default("pending") // pending, approved, paid, rejected
+  accountNumber String? // CCP/CIB/Bank account
   accountName   String?
   bankName      String?
   note          String?
   adminNote     String?
   processedAt   DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  sellerId      String
-  seller        SellerProfile @relation(fields: [sellerId], references: [id])
+  sellerId String
+  seller   SellerProfile @relation(fields: [sellerId], references: [id])
 }
 
 // ============================================
@@ -434,52 +429,52 @@ model WithdrawalRequest {
 // ============================================
 
 model Challenge {
-  id            String   @id @default(cuid())
-  title         String
-  titleEn       String?
-  description   String?
-  type          String                          // orders_count, revenue, rating
-  targetValue   Float
-  rewardType    String   @default("badge")     // badge, commission_discount, cash
-  rewardValue   String                          // "خصم 5%", "شارة ذهبية"
-  startsAt      DateTime
-  endsAt        DateTime
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String   @id @default(cuid())
+  title       String
+  titleEn     String?
+  description String?
+  type        String // orders_count, revenue, rating
+  targetValue Float
+  rewardType  String   @default("badge") // badge, commission_discount, cash
+  rewardValue String // "خصم 5%", "شارة ذهبية"
+  startsAt    DateTime
+  endsAt      DateTime
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model LogisticsProfile {
-  id              String    @id @default(cuid())
-  vehicleType     String    @default("motorcycle")
+  id              String   @id @default(cuid())
+  vehicleType     String   @default("motorcycle")
   plateNumber     String?
   licenseNumber   String?
-  isOnline        Boolean   @default(false)
-  currentLat      Float?
-  currentLng      Float?
-  rating          Float     @default(0)
-  totalDeliveries Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  isOnline        Boolean  @default(false)
+  currentLat      Decimal?
+  currentLng      Decimal?
+  rating          Decimal  @default(0)
+  totalDeliveries Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  userId          String    @unique
-  user            User      @relation(fields: [userId], references: [id])
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
-  shipments       Shipment[]
+  shipments Shipment[]
 }
 
 model BuyerProfile {
-  id            String    @id @default(cuid())
-  totalOrders   Int       @default(0)
-  totalSpent    Float     @default(0)
-  loyaltyPoints Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id            String   @id @default(cuid())
+  totalOrders   Int      @default(0)
+  totalSpent    Float    @default(0)
+  loyaltyPoints Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  userId        String    @unique
-  user          User      @relation(fields: [userId], references: [id])
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
-  wishlist      WishlistItem[]
+  wishlist WishlistItem[]
 }
 
 // ============================================
@@ -487,26 +482,26 @@ model BuyerProfile {
 // ============================================
 
 model Category {
-  id          String      @id @default(cuid())
-  name        String
-  nameEn      String?
-  slug        String      @unique
-  type        String      @default("product") // product, store, supplier, logistics
-  icon        String?
-  image       String?
-  parentId    String?
-  parent      Category?   @relation("CategoryTree", fields: [parentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  children    Category[]  @relation("CategoryTree")
-  sortOrder   Int         @default(0)
-  isActive    Boolean     @default(true)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id        String     @id @default(cuid())
+  name      String
+  nameEn    String?
+  slug      String     @unique
+  type      String     @default("product") // product, store, supplier, logistics
+  icon      String?
+  image     String?
+  parentId  String?
+  parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  children  Category[] @relation("CategoryTree")
+  sortOrder Int        @default(0)
+  isActive  Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
-  products        Product[]
-  stores          Store[]
-  sellerProfiles  SellerProfile[]
+  products       Product[]
+  stores         Store[]
+  sellerProfiles SellerProfile[]
 
-  coupons         Coupon[]  @relation("CouponCategories")
+  coupons         Coupon[]                @relation("CouponCategories")
   specDefinitions ProductSpecDefinition[] @relation("CategorySpecDefs")
 }
 
@@ -525,15 +520,15 @@ model CategoryRequest {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id])
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
 }
 
 model Product {
-  id              String    @id @default(cuid())
+  id              String   @id @default(cuid())
   name            String
   nameEn          String?
-  slug            String    @unique
+  slug            String   @unique
   description     String?
   descriptionEn   String?
   price           Float
@@ -541,40 +536,40 @@ model Product {
   costPrice       Float?
   sku             String?
   barcode         String?
-  images          String    @default("[]")
+  images          String   @default("[]")
   videoUrl        String?
-  specifications  String    @default("{}")
-  status          String    @default("draft")
-  stock           Int       @default(0)
-  lowStock        Int       @default(5)
+  specifications  String   @default("{}")
+  status          String   @default("draft")
+  stock           Int      @default(0)
+  lowStock        Int      @default(5)
   weight          Float?
   dimensions      String?
-  rating          Float     @default(0)
-  reviewCount     Int       @default(0)
-  soldCount       Int       @default(0)
-  viewCount       Int       @default(0)
-  isFeatured      Boolean   @default(false)
+  rating          Float    @default(0)
+  reviewCount     Int      @default(0)
+  soldCount       Int      @default(0)
+  viewCount       Int      @default(0)
+  isFeatured      Boolean  @default(false)
   brandId         String?
-  volumeDiscounts String?   // JSON configuration for tier/bulk pricing
-  urgencySettings String?   // JSON configuration for urgency trigger simulation
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  volumeDiscounts String? // JSON configuration for tier/bulk pricing
+  urgencySettings String? // JSON configuration for urgency trigger simulation
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  categoryId      String
-  category        Category  @relation(fields: [categoryId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onUpdate: NoAction, onDelete: NoAction)
 
-  storeId         String?
-  store           Store?    @relation(fields: [storeId], references: [id])
-  sellerId        String?
-  seller          SellerProfile? @relation(fields: [sellerId], references: [id])
-  brand           Brand?    @relation(fields: [brandId], references: [id])
+  storeId  String?
+  store    Store?         @relation(fields: [storeId], references: [id])
+  sellerId String?
+  seller   SellerProfile? @relation(fields: [sellerId], references: [id])
+  brand    Brand?         @relation(fields: [brandId], references: [id])
 
-  orderItems      OrderItem[]
-  reviews         Review[]
-  wishlistItems   WishlistItem[]
-  variants        ProductVariant[]
+  orderItems    OrderItem[]
+  reviews       Review[]
+  wishlistItems WishlistItem[]
+  variants      ProductVariant[]
 
-  coupons         Coupon[]  @relation("CouponProducts")
+  coupons Coupon[] @relation("CouponProducts")
 }
 
 model Brand {
@@ -586,7 +581,7 @@ model Brand {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  products  Product[]
+  products Product[]
 }
 
 // ============================================
@@ -594,86 +589,88 @@ model Brand {
 // ============================================
 
 model Order {
-  id              String    @id @default(cuid())
-  orderNumber     String    @unique
-  status          String    @default("pending")
-  paymentStatus   String    @default("pending")
-  paymentMethod   String    @default("cod")
-  subtotal        Float
-  shippingCost    Float     @default(0)
-  tax             Float     @default(0)
-  discount        Float     @default(0)
-  total           Float
-  currency        String    @default("SAR")
-  note            String?
+  id            String  @id @default(cuid())
+  orderNumber   String  @unique
+  status        String  @default("pending")
+  paymentStatus String  @default("pending")
+  paymentMethod String  @default("cod")
+  subtotal      Decimal
+  shippingCost  Decimal @default(0)
+  tax           Decimal @default(0)
+  discount      Decimal @default(0)
+  total         Decimal
+  currency      String  @default("SAR")
+  note          String?
 
-  buyerId         String
-  buyer           User      @relation("OrderBuyer", fields: [buyerId], references: [id])
-  address         String
-  couponId        String?
-  shippingMethod  String    @default("standard")
+  buyerId        String
+  buyer          User    @relation("OrderBuyer", fields: [buyerId], references: [id])
+  address        String
+  couponId       String?
+  shippingMethod String  @default("standard")
 
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Proof of Delivery (POD) fields
-  podPhotoUrl       String?   @db.LongText
-  podLatitude       Float?
-  podLongitude      Float?
-  podDeliveredAt    DateTime?
-  podVerifiedByPin  Boolean   @default(false)
-  podNotes          String?
+  podPhotoUrl      String?   @db.LongText
+  podLatitude      Decimal?
+  podLongitude     Decimal?
+  podDeliveredAt   DateTime?
+  podVerifiedByPin Boolean   @default(false)
+  podNotes         String?
 
   // ─── Smart Logistics Engine Fields (FleetOps-inspired) ────────────────────
   // Who is responsible for packing this order?
   //   merchant  = the seller packs it themselves before dispatch
   //   carrier   = a 3PL carrier is responsible for packing & weighing
-  fulfillmentType   String    @default("merchant")
+  fulfillmentType String @default("merchant")
 
   // Current logistics pipeline stage (granular, beyond order.status)
   //   merchant_preparing → ready_for_carrier → carrier_packing
   //   → ready_for_pickup → picked_up → in_transit → delivered
-  logisticsStage    String    @default("merchant_preparing")
+  logisticsStage String @default("merchant_preparing")
 
   // Which carrier company / driver has been assigned or claimed this order
-  assignedCarrierId String?   // CarrierIntegration.carrierKey or internal ID
-  assignedDriverId  String?   // LogisticsProfile.userId
+  assignedCarrierId String? // CarrierIntegration.carrierKey or internal ID
+  assignedDriverId  String? // LogisticsProfile.userId
   claimedAt         DateTime? // Timestamp of atomic claim lock
 
-  items           OrderItem[]
-  shipments       Shipment[]
-  reviews         Review[]
-  statusHistory   OrderStatusHistory[]
+  items         OrderItem[]
+  shipments     Shipment[]
+  reviews       Review[]
+  statusHistory OrderStatusHistory[]
+
+  ledgerEntries LedgerEntry[]
 }
 
 model OrderItem {
-  id          String  @id @default(cuid())
-  orderId     String
-  order       Order   @relation(fields: [orderId], references: [id])
-  productId   String
-  product     Product @relation(fields: [productId], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  productName String
+  id           String    @id @default(cuid())
+  orderId      String
+  order        Order     @relation(fields: [orderId], references: [id])
+  productId    String
+  product      Product   @relation(fields: [productId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  productName  String
   productImage String?
-  price       Float
-  quantity    Int
-  total       Float
-  status          String    @default("pending") // pending, shipped, delivered, cancelled, returned
-  cancelReason    String?
-  cancelledAt     DateTime?
+  price        Decimal
+  quantity     Int
+  total        Decimal
+  status       String    @default("pending") // pending, shipped, delivered, cancelled, returned
+  cancelReason String?
+  cancelledAt  DateTime?
 }
 
 model Shipment {
-  id                String    @id @default(cuid())
-  trackingNumber    String    @unique
-  status            String    @default("pending")
-  pickupAddress     String?
-  deliveryAddress   String
-  notes             String?
+  id              String  @id @default(cuid())
+  trackingNumber  String  @unique
+  status          String  @default("pending")
+  pickupAddress   String?
+  deliveryAddress String
+  notes           String?
 
-  orderId           String
-  order             Order     @relation(fields: [orderId], references: [id])
-  logisticsId       String
-  logistics         LogisticsProfile @relation(fields: [logisticsId], references: [id])
+  orderId     String
+  order       Order            @relation(fields: [orderId], references: [id])
+  logisticsId String
+  logistics   LogisticsProfile @relation(fields: [logisticsId], references: [id])
 
   estimatedDelivery DateTime?
   actualDelivery    DateTime?
@@ -682,20 +679,20 @@ model Shipment {
   updatedAt         DateTime  @updatedAt
 
   // Proof of Delivery (POD) fields
-  podPhotoUrl       String?   @db.LongText
-  podLatitude       Float?
-  podLongitude      Float?
-  podDeliveredAt    DateTime?
-  podVerifiedByPin  Boolean   @default(false)
+  podPhotoUrl      String?   @db.LongText
+  podLatitude      Float?
+  podLongitude     Float?
+  podDeliveredAt   DateTime?
+  podVerifiedByPin Boolean   @default(false)
 
   // ─── Claim Lock (Atomic Assignment) ───────────────────────────────────────
   // Prevents two drivers/carriers from grabbing the same parcel.
   // isClaimed is set atomically via Prisma $transaction.
   isClaimed         Boolean   @default(false)
-  claimedByDriverId String?   // LogisticsProfile.userId of the claiming driver
+  claimedByDriverId String? // LogisticsProfile.userId of the claiming driver
   claimedAt         DateTime? // Timestamp of the atomic lock
 
-  statusHistory     ShipmentStatusHistory[]
+  statusHistory ShipmentStatusHistory[]
 }
 
 model OrderStatusHistory {
@@ -708,13 +705,13 @@ model OrderStatusHistory {
 }
 
 model ShipmentStatusHistory {
-  id          String   @id @default(cuid())
-  shipmentId  String
-  shipment    Shipment @relation(fields: [shipmentId], references: [id])
-  status      String
-  location    String?
-  note        String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id])
+  status     String
+  location   String?
+  note       String?
+  createdAt  DateTime @default(now())
 }
 
 // ============================================
@@ -723,7 +720,7 @@ model ShipmentStatusHistory {
 
 model PlatformPlugin {
   id           String   @id // e.g. "chargily", "fedex", "twilio"
-  type         String   // e.g. "PAYMENT", "SHIPPING", "SMS", "MARKETING"
+  type         String // e.g. "PAYMENT", "SHIPPING", "SMS", "MARKETING"
   name         String
   description  String?
   author       String?
@@ -738,7 +735,7 @@ model PlatformPlugin {
 model SellerPaymentConfig {
   id             String   @id @default(cuid())
   sellerId       String   @unique
-  gatewayId      String   // e.g., "chargily"
+  gatewayId      String // e.g., "chargily"
   mode           String   @default("platform") // split, direct, platform
   encryptedKeys  String   @db.LongText // AES-256 Encrypted JSON
   canEditGateway Boolean  @default(false)
@@ -751,14 +748,14 @@ model SellerPaymentConfig {
 }
 
 model CommissionRule {
-  id          String   @id @default(cuid())
-  type        String   // GLOBAL, SELLER, CATEGORY
-  targetId    String?  // sellerId or categoryId
-  percentage  Float    @default(0)
-  fixedFee    Float    @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  type       String // GLOBAL, SELLER, CATEGORY
+  targetId   String? // sellerId or categoryId
+  percentage Float    @default(0)
+  fixedFee   Float    @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 // ============================================
@@ -766,56 +763,58 @@ model CommissionRule {
 // ============================================
 
 model Address {
-  id          String   @id @default(cuid())
-  label       String?
-  fullName    String
-  phone       String
-  street      String
-  city        String
-  state       String?
-  zipCode     String?
-  country     String   @default("SA")
-  isDefault   Boolean  @default(false)
-  lat         Float?
-  lng         Float?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  label     String?
+  fullName  String
+  phone     String
+  street    String
+  city      String
+  state     String?
+  zipCode   String?
+  country   String   @default("SA")
+  isDefault Boolean  @default(false)
+  lat       Float?
+  lng       Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model Wallet {
   id               String   @id @default(cuid())
-  balance          Float    @default(0) // legacy balance
-  pendingBalance   Float    @default(0) // New: Pending funds (e.g. from Chargily split)
-  availableBalance Float    @default(0) // New: Cleared funds ready for payout
-  paidBalance      Float    @default(0) // New: Funds already paid out to seller
-  refundBalance    Float    @default(0) // New: Funds locked/used for refunds
-  debt             Float    @default(0)
-  totalEarned      Float    @default(0)
-  totalSpent       Float    @default(0)
+  balance          Decimal  @default(0) // legacy balance
+  pendingBalance   Decimal  @default(0) // New: Pending funds (e.g. from Chargily split)
+  availableBalance Decimal  @default(0) // New: Cleared funds ready for payout
+  paidBalance      Decimal  @default(0) // New: Funds already paid out to seller
+  refundBalance    Decimal  @default(0) // New: Funds locked/used for refunds
+  debt             Decimal  @default(0)
+  totalEarned      Decimal  @default(0)
+  totalSpent       Decimal  @default(0)
   currency         String   @default("DZD")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  userId           String   @unique
-  user             User     @relation(fields: [userId], references: [id])
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 
-  transactions     WalletTransaction[]
+  transactions WalletTransaction[]
+
+  ledgerEntries LedgerEntry[]
 }
 
 model WalletTransaction {
   id          String   @id @default(cuid())
   type        String
-  amount      Float
-  balance     Float
+  amount      Decimal
+  balance     Decimal
   description String?
   referenceId String?
   createdAt   DateTime @default(now())
 
-  walletId    String
-  wallet      Wallet   @relation(fields: [walletId], references: [id])
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id])
 }
 
 // ============================================
@@ -823,26 +822,26 @@ model WalletTransaction {
 // ============================================
 
 model Review {
-  id        String   @id @default(cuid())
-  rating    Int
-  title     String?
-  comment   String?
-  images    String   @default("[]")
-  isApproved Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  rating     Int
+  title      String?
+  comment    String?
+  images     String   @default("[]")
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  product   Product @relation(fields: [productId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   orderId   String?
-  order     Order?   @relation(fields: [orderId], references: [id])
+  order     Order?  @relation(fields: [orderId], references: [id])
 }
 
 model WishlistItem {
-  id             String   @id @default(cuid())
-  createdAt      DateTime @default(now())
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
 
   buyerProfileId String
   buyerProfile   BuyerProfile @relation(fields: [buyerProfileId], references: [id])
@@ -867,8 +866,8 @@ model Notification {
   data      String?
   createdAt DateTime @default(now())
 
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 // ============================================
@@ -890,21 +889,21 @@ model Coupon {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  storeId     String?
-  sellerId    String?
+  storeId  String?
+  sellerId String?
 
   // Extended features
-  isGlobal       Boolean   @default(false)
-  applicableTo   String    @default("all") // "all", "categories", "products"
-  maxStoresLimit Int?      // Limit number of opted-in stores/merchants
+  isGlobal       Boolean @default(false)
+  applicableTo   String  @default("all") // "all", "categories", "products"
+  maxStoresLimit Int? // Limit number of opted-in stores/merchants
 
   // Explicit Targets
-  products       Product[] @relation("CouponProducts")
-  categories     Category[] @relation("CouponCategories")
+  products   Product[]  @relation("CouponProducts")
+  categories Category[] @relation("CouponCategories")
 
   // Global Opt-ins
-  optInStores    Store[]   @relation("GlobalCouponOptInStores")
-  optInSellers   SellerProfile[] @relation("GlobalCouponOptInSellers")
+  optInStores  Store[]         @relation("GlobalCouponOptInStores")
+  optInSellers SellerProfile[] @relation("GlobalCouponOptInSellers")
 }
 
 // ============================================
@@ -924,136 +923,136 @@ model Setting {
 // ============================================
 
 model StoreVerification {
-  id                          String    @id @default(cuid())
-  userId                      String    @unique
-  user                        User      @relation(fields: [userId], references: [id])
-  
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
   // Step 1: Legal / Business Registration
-  entityType                  String    @default("natural") // natural, legal
-  companyName                 String?
-  countryOfRegistration       String?   @default("DZ")
-  country                     String?   @default("DZ")
-  state                       String?
-  companyAddress              String?
-  issueAuthority              String?
-  commercialRegisterNumber    String?
-  issueDate                   DateTime?
-  expiryDate                  DateTime?
-  commercialRegisterFile      String?   @db.LongText
+  entityType               String    @default("natural") // natural, legal
+  companyName              String?
+  countryOfRegistration    String?   @default("DZ")
+  country                  String?   @default("DZ")
+  state                    String?
+  companyAddress           String?
+  issueAuthority           String?
+  commercialRegisterNumber String?
+  issueDate                DateTime?
+  expiryDate               DateTime?
+  commercialRegisterFile   String?   @db.LongText
 
   // Step 3: Payment / Bank extra fields
-  ccpNumber                   String?
-  ccpCle                      String?
+  ccpNumber String?
+  ccpCle    String?
 
   // Step 2: Tax Details
-  hasVat                      Boolean   @default(false)
-  vatNumber                   String?
-  vatCertificateFile          String?   @db.LongText
+  hasVat             Boolean @default(false)
+  vatNumber          String?
+  vatCertificateFile String? @db.LongText
 
   // Step 3: Payment / Bank
-  bankName                    String?
-  iban                        String?
-  swiftCode                   String?
-  beneficiaryName             String?
-  isBeneficiaryMatching       Boolean   @default(true)
-  bankLetterFile              String?   @db.LongText
+  bankName              String?
+  iban                  String?
+  swiftCode             String?
+  beneficiaryName       String?
+  isBeneficiaryMatching Boolean @default(true)
+  bankLetterFile        String? @db.LongText
 
   // Step 4: Signatory & Identity
-  signatoryName               String?
-  signatoryEmail              String?
-  isLegalOwner                Boolean   @default(true)
-  powerOfAttorneyFile         String?   @db.LongText
-  managerIdFront              String?   @db.LongText
-  managerIdBack               String?   @db.LongText
-  extractedIdData             String?   @db.LongText // JSON of OCR extracted data (MRZ, NIN, etc.)
+  signatoryName       String?
+  signatoryEmail      String?
+  isLegalOwner        Boolean @default(true)
+  powerOfAttorneyFile String? @db.LongText
+  managerIdFront      String? @db.LongText
+  managerIdBack       String? @db.LongText
+  extractedIdData     String? @db.LongText // JSON of OCR extracted data (MRZ, NIN, etc.)
 
   // Step 5: T&C
-  agreedToTerms               Boolean   @default(false)
-  agreedAt                    DateTime?
+  agreedToTerms Boolean   @default(false)
+  agreedAt      DateTime?
 
   // Status and Admin
-  verificationStatus          String    @default("pending") // incomplete, pending, approved, rejected
-  rejectionReasons            String?   // JSON array of reasons
-  adminNotes                  String?
-  reviewedBy                  String?
-  reviewedAt                  DateTime?
-  submittedAt                 DateTime?
-  
-  isArchived                  Boolean   @default(false)
-  archivedAt                  DateTime?
-  
-  createdAt                   DateTime  @default(now())
-  updatedAt                   DateTime  @updatedAt
+  verificationStatus String    @default("pending") // incomplete, pending, approved, rejected
+  rejectionReasons   String? // JSON array of reasons
+  adminNotes         String?
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  submittedAt        DateTime?
+
+  isArchived Boolean   @default(false)
+  archivedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model FreelancerVerification {
-  id                    String    @id @default(cuid())
-  userId                String    @unique
-  user                  User      @relation(fields: [userId], references: [id])
-  freelanceDocFile      String?   @db.LongText // optional
-  nationalIdFront       String?   @db.LongText
-  nationalIdBack        String?   @db.LongText
-  selfieUrls            String?   @db.LongText @default("[]") // JSON array
-  livenessScore         Float?    // 0-1
-  iban                  String?
-  verificationStatus    String    @default("pending")
-  rejectionReasons      String?   // JSON
-  adminNotes            String?
-  reviewedBy            String?
-  reviewedAt            DateTime?
-  submittedAt           DateTime  @default(now())
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id])
+  freelanceDocFile   String?   @db.LongText // optional
+  nationalIdFront    String?   @db.LongText
+  nationalIdBack     String?   @db.LongText
+  selfieUrls         String?   @default("[]") @db.LongText // JSON array
+  livenessScore      Float? // 0-1
+  iban               String?
+  verificationStatus String    @default("pending")
+  rejectionReasons   String? // JSON
+  adminNotes         String?
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  submittedAt        DateTime  @default(now())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
 model SupplierVerification {
-  id                    String    @id @default(cuid())
-  userId                String    @unique
-  user                  User      @relation(fields: [userId], references: [id])
-  commercialLicense     String?   @db.LongText
-  importLicense         String?   @db.LongText
-  iban                  String?
-  productSamples        String?   @default("[]") // JSON
-  verificationStatus    String    @default("pending")
-  rejectionReasons      String?
-  adminNotes            String?
-  reviewedBy            String?
-  reviewedAt            DateTime?
-  submittedAt           DateTime  @default(now())
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  id                 String    @id @default(cuid())
+  userId             String    @unique
+  user               User      @relation(fields: [userId], references: [id])
+  commercialLicense  String?   @db.LongText
+  importLicense      String?   @db.LongText
+  iban               String?
+  productSamples     String?   @default("[]") // JSON
+  verificationStatus String    @default("pending")
+  rejectionReasons   String?
+  adminNotes         String?
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  submittedAt        DateTime  @default(now())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 }
 
 model LogisticsVerification {
-  id                      String    @id @default(cuid())
-  userId                  String    @unique
-  user                    User      @relation(fields: [userId], references: [id])
-  transportLicenseFile    String?   @db.LongText
+  id                       String    @id @default(cuid())
+  userId                   String    @unique
+  user                     User      @relation(fields: [userId], references: [id])
+  transportLicenseFile     String?   @db.LongText
   insuranceCertificateFile String?   @db.LongText
-  numberOfVehicles        String?
-  numberOfDrivers         String?
-  iban                    String?
-  verificationStatus      String    @default("pending")
-  rejectionReasons        String?
-  adminNotes              String?
-  reviewedBy              String?
-  reviewedAt              DateTime?
-  submittedAt             DateTime  @default(now())
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
+  numberOfVehicles         String?
+  numberOfDrivers          String?
+  iban                     String?
+  verificationStatus       String    @default("pending")
+  rejectionReasons         String?
+  adminNotes               String?
+  reviewedBy               String?
+  reviewedAt               DateTime?
+  submittedAt              DateTime  @default(now())
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
 }
 
 model AuditLog {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  roleId      String?
-  role        Role?    @relation(fields: [roleId], references: [id])
-  adminId     String?
-  action      String   // submitted, approved, rejected, edited, login, logout
-  details     String?  // JSON
-  ipAddress   String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  roleId    String?
+  role      Role?    @relation(fields: [roleId], references: [id])
+  adminId   String?
+  action    String // submitted, approved, rejected, edited, login, logout
+  details   String? // JSON
+  ipAddress String?
+  createdAt DateTime @default(now())
 }
 
 // ============================================
@@ -1061,23 +1060,23 @@ model AuditLog {
 // ============================================
 
 model Role {
-  id          String   @id @default(cuid())
-  key         String   @unique  // e.g. admin, store_manager, seller
-  nameAr      String   // Arabic display name
-  nameEn      String   // English display name
-  descriptionAr  String?  // Arabic description
-  descriptionEn  String?  // English description
-  color       String   @default("#6B7280") // Hex color for badges
-  icon        String   @default("UserCircle") // Lucide icon name
-  permissions String   @default("[]") // JSON array of permission keys
-  isSystem    Boolean  @default(false) // System roles cannot be deleted
-  targetEntity String  @default("SELLER") // SELLER, SUPPLIER, LOGISTICS, ADMIN
-  sortOrder   Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  key           String   @unique // e.g. admin, store_manager, seller
+  nameAr        String // Arabic display name
+  nameEn        String // English display name
+  descriptionAr String? // Arabic description
+  descriptionEn String? // English description
+  color         String   @default("#6B7280") // Hex color for badges
+  icon          String   @default("UserCircle") // Lucide icon name
+  permissions   String   @default("[]") // JSON array of permission keys
+  isSystem      Boolean  @default(false) // System roles cannot be deleted
+  targetEntity  String   @default("SELLER") // SELLER, SUPPLIER, LOGISTICS, ADMIN
+  sortOrder     Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  auditLogs   AuditLog[]
+  auditLogs AuditLog[]
 }
 
 // ============================================
@@ -1085,20 +1084,20 @@ model Role {
 // ============================================
 
 model SystemSetting {
-  key         String   @id // e.g., "site_colors", "commission_rate", "home_layout"
-  value       Json     // Stores any type of data
-  updatedBy   String   // ID of the admin who made the change
-  updatedAt   DateTime @updatedAt
+  key       String   @id // e.g., "site_colors", "commission_rate", "home_layout"
+  value     Json // Stores any type of data
+  updatedBy String // ID of the admin who made the change
+  updatedAt DateTime @updatedAt
 }
 
 model AdminAuditLog {
-  id          String   @id @default(cuid())
-  adminId     String
-  action      String   // e.g., "UPDATE_SETTING", "IMPERSONATE_USER"
-  targetId    String?  // ID of the target object
-  details     Json?    // Before/After details
-  ipAddress   String?
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String // e.g., "UPDATE_SETTING", "IMPERSONATE_USER"
+  targetId  String? // ID of the target object
+  details   Json? // Before/After details
+  ipAddress String?
+  createdAt DateTime @default(now())
 }
 
 // ============================================
@@ -1116,12 +1115,12 @@ model Country {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  states      State[]
+  states State[]
 }
 
 model State {
   id           String   @id @default(cuid())
-  code         String   // e.g., "16", "01" (Wilaya code)
+  code         String // e.g., "16", "01" (Wilaya code)
   nameAr       String
   nameEn       String
   defaultPrice Float    @default(500)
@@ -1129,10 +1128,10 @@ model State {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  countryId    String
-  country      Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  countryId String
+  country   Country @relation(fields: [countryId], references: [id], onDelete: Cascade)
 
-  cities       City[]
+  cities City[]
 
   @@index([countryId])
 }
@@ -1145,21 +1144,21 @@ model City {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  stateId   String
-  state     State    @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  stateId String
+  state   State  @relation(fields: [stateId], references: [id], onDelete: Cascade)
 
   @@index([stateId])
 }
 
 model ProductQA {
-  id          String   @id @default(cuid())
-  productId   String
-  question    String
-  answer      String?
-  status      String   @default("pending") // pending, approved, rejected
-  userId      String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  productId String
+  question  String
+  answer    String?
+  status    String   @default("pending") // pending, approved, rejected
+  userId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ============================================
@@ -1167,15 +1166,15 @@ model ProductQA {
 // ============================================
 
 model OrderStatusType {
-  id          String   @id @default(cuid())
-  key         String   @unique
-  nameAr      String
-  nameEn      String?
-  color       String   @default("#6B7280")
-  sortOrder   Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  key       String   @unique
+  nameAr    String
+  nameEn    String?
+  color     String   @default("#6B7280")
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ============================================
@@ -1183,21 +1182,21 @@ model OrderStatusType {
 // ============================================
 
 model DebtPaymentReceipt {
-  id            String   @id @default(cuid())
-  amount        Float
-  status        String   @default("pending")    // pending, approved, rejected
-  receiptImage  String   @db.LongText           // Base64 or image URL
-  adminNote     String?
-  merchantNote  String?
-  reviewedAt    DateTime?
-  reviewedBy    String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String    @id @default(cuid())
+  amount       Decimal
+  status       String    @default("pending") // pending, approved, rejected
+  receiptImage String    @db.LongText // Base64 or image URL
+  adminNote    String?
+  merchantNote String?
+  reviewedAt   DateTime?
+  reviewedBy   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  invoiceId     String?  // Optional link to the invoice this receipt pays
+  invoiceId String? // Optional link to the invoice this receipt pays
 
   @@index([userId])
 }
@@ -1207,40 +1206,40 @@ model DebtPaymentReceipt {
 // ============================================
 
 model Subscription {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  packageId       String?
-  package         SellerPackage? @relation(fields: [packageId], references: [id])
+  packageId String?
+  package   SellerPackage? @relation(fields: [packageId], references: [id])
 
   // Status lifecycle: TRIAL → PENDING_PAYMENT → ACTIVE → EXPIRED → SUSPENDED → CANCELLED
-  status          String   @default("TRIAL")  // TRIAL | PENDING_PAYMENT | ACTIVE | EXPIRED | SUSPENDED | CANCELLED
-  billingCycle    String   @default("MONTHLY") // MONTHLY | ANNUAL
+  status       String @default("TRIAL") // TRIAL | PENDING_PAYMENT | ACTIVE | EXPIRED | SUSPENDED | CANCELLED
+  billingCycle String @default("MONTHLY") // MONTHLY | ANNUAL
 
-  startDate       DateTime @default(now())
-  endDate         DateTime?   // Subscription expiry date
-  trialEndsAt     DateTime?   // Trial period end
-  renewedAt       DateTime?   // Last renewal date
+  startDate   DateTime  @default(now())
+  endDate     DateTime? // Subscription expiry date
+  trialEndsAt DateTime? // Trial period end
+  renewedAt   DateTime? // Last renewal date
 
   // Add-on flags (mirrors Store/SellerProfile for fast read)
-  addons          String   @default("{}")  // JSON: { mobileApp, whatsapp, crm, pos, extraPos }
-  addonsTotal     Float    @default(0)     // Monthly cost of add-ons
-  totalMonthly    Float    @default(0)     // packagePrice + addonsTotal
+  addons       String @default("{}") // JSON: { mobileApp, whatsapp, crm, pos, extraPos }
+  addonsTotal  Float  @default(0) // Monthly cost of add-ons
+  totalMonthly Float  @default(0) // packagePrice + addonsTotal
 
   // Admin override fields
-  freeCommission  Boolean  @default(false) // Exempt from commissions
-  overrideNote    String?                  // Admin note for manual overrides
-  overriddenBy    String?                  // Admin userId who made override
+  freeCommission Boolean @default(false) // Exempt from commissions
+  overrideNote   String? // Admin note for manual overrides
+  overriddenBy   String? // Admin userId who made override
 
-  autoRenew       Boolean  @default(true)
-  cancelledAt     DateTime?
-  cancelReason    String?
+  autoRenew    Boolean   @default(true)
+  cancelledAt  DateTime?
+  cancelReason String?
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  invoices        Invoice[]
+  invoices Invoice[]
 
   @@index([userId])
   @@index([status])
@@ -1252,33 +1251,33 @@ model Subscription {
 // ============================================
 
 model Invoice {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  subscriptionId  String?
-  subscription    Subscription? @relation(fields: [subscriptionId], references: [id])
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id])
 
   // SUBSCRIPTION | COMMISSION_BATCH | ADDON | MANUAL
-  type            String   @default("SUBSCRIPTION")
-  status          String   @default("PENDING") // PENDING | PAID | OVERDUE | WAIVED | PARTIALLY_PAID
+  type   String @default("SUBSCRIPTION")
+  status String @default("PENDING") // PENDING | PAID | OVERDUE | WAIVED | PARTIALLY_PAID
 
-  amount          Float
-  amountPaid      Float    @default(0)
-  currency        String   @default("DZD")
+  amount     Float
+  amountPaid Float  @default(0)
+  currency   String @default("DZD")
 
   // Billing period this invoice covers
-  periodStart     DateTime?
-  periodEnd       DateTime?
-  dueDate         DateTime?
-  paidAt          DateTime?
+  periodStart DateTime?
+  periodEnd   DateTime?
+  dueDate     DateTime?
+  paidAt      DateTime?
 
   // Line items: JSON array of { label, amount }
-  items           String   @default("[]")  // JSON
+  items String @default("[]") // JSON
 
-  adminNote       String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  adminNote String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([subscriptionId])
@@ -1307,18 +1306,18 @@ model BillingAddon {
 // DOCUMENTATION MODEL (Dynamic Docs)
 // ============================================
 model DocArticle {
-  id          String   @id @default(cuid())
-  title       String
-  titleEn     String?
-  slug        String   @unique
-  content     String   @db.LongText
-  contentEn   String?  @db.LongText
-  translations Json?   @default("{}")
-  category    String   @default("general") // general, sellers, buyers, developers
-  sortOrder   Int      @default(0)
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  title        String
+  titleEn      String?
+  slug         String   @unique
+  content      String   @db.LongText
+  contentEn    String?  @db.LongText
+  translations Json?    @default("{}")
+  category     String   @default("general") // general, sellers, buyers, developers
+  sortOrder    Int      @default(0)
+  isPublished  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 // ============================================
@@ -1326,9 +1325,10 @@ model DocArticle {
 // ============================================
 
 model VerificationToken {
-  identifier String   // email or phone
-  token      String   // the 6-digit OTP
+  identifier String // email or phone
+  token      String // the 6-digit OTP
   expires    DateTime
+
   @@unique([identifier, token])
 }
 
@@ -1338,15 +1338,15 @@ model VerificationToken {
 
 model AuthLog {
   id                String   @id @default(cuid())
-  identifier        String   // phone or email
-  method            String   // sms, email, whatsapp, telegram
+  identifier        String // phone or email
+  method            String // sms, email, whatsapp, telegram
   ipAddress         String?
   userAgent         String?  @db.LongText
-  countryCode       String?  // AE, SA, etc.
-  city              String?  // Dubai, Riyadh, etc.
-  deviceType        String?  // mobile, desktop, etc.
-  deviceFingerprint String?  // hash of device info
-  status            String   // pending, verified, registered, failed, banned
+  countryCode       String? // AE, SA, etc.
+  city              String? // Dubai, Riyadh, etc.
+  deviceType        String? // mobile, desktop, etc.
+  deviceFingerprint String? // hash of device info
+  status            String // pending, verified, registered, failed, banned
   isBanned          Boolean  @default(false)
   banReason         String?
   createdAt         DateTime @default(now())
@@ -1354,15 +1354,15 @@ model AuthLog {
 }
 
 model BannedEntity {
-  id          String    @id @default(cuid())
-  type        String    // ip, phone, email, device, country
-  value       String    // the actual value blocked
-  reason      String?   @db.LongText
-  bannedBy    String?   // Admin ID
-  expiresAt   DateTime? // null means permanent
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String    @id @default(cuid())
+  type      String // ip, phone, email, device, country
+  value     String // the actual value blocked
+  reason    String?   @db.LongText
+  bannedBy  String? // Admin ID
+  expiresAt DateTime? // null means permanent
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 // ============================================
@@ -1399,53 +1399,53 @@ enum DocumentStatus {
 }
 
 model SellerVerification {
-  id              String                   @id @default(cuid())
-  sellerId        String                   @unique
-  seller          SellerProfile            @relation(fields: [sellerId], references: [id], onDelete: Cascade)
-  
-  status          VerificationGlobalStatus @default(NOT_SUBMITTED)
-  riskLevel       String                   @default("LOW")
-  
-  submittedAt     DateTime?
-  lastReviewedAt  DateTime?
-  missingDocs     String?                  @db.Text
+  id       String        @id @default(cuid())
+  sellerId String        @unique
+  seller   SellerProfile @relation(fields: [sellerId], references: [id], onDelete: Cascade)
 
-  documents       VerificationDocument[]
-  reviewLogs      VerificationReviewLog[]
+  status    VerificationGlobalStatus @default(NOT_SUBMITTED)
+  riskLevel String                   @default("LOW")
 
-  createdAt       DateTime                 @default(now())
-  updatedAt       DateTime                 @updatedAt
+  submittedAt    DateTime?
+  lastReviewedAt DateTime?
+  missingDocs    String?   @db.Text
+
+  documents  VerificationDocument[]
+  reviewLogs VerificationReviewLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model VerificationDocument {
-  id              String                   @id @default(cuid())
-  verificationId  String
-  verification    SellerVerification       @relation(fields: [verificationId], references: [id], onDelete: Cascade)
-  
+  id             String             @id @default(cuid())
+  verificationId String
+  verification   SellerVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
   type            VerificationDocumentType
   url             String
   status          DocumentStatus           @default(PENDING)
   rejectionReason String?                  @db.Text
-  
-  uploadedAt      DateTime                 @default(now())
-  updatedAt       DateTime                 @updatedAt
+
+  uploadedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model VerificationReviewLog {
-  id              String                   @id @default(cuid())
-  verificationId  String
-  verification    SellerVerification       @relation(fields: [verificationId], references: [id], onDelete: Cascade)
-  
-  reviewerId      String
-  reviewerName    String
-  action          String
-  
-  oldStatus       VerificationGlobalStatus
-  newStatus       VerificationGlobalStatus
-  
-  notes           String?                  @db.Text
-  
-  createdAt       DateTime                 @default(now())
+  id             String             @id @default(cuid())
+  verificationId String
+  verification   SellerVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+
+  reviewerId   String
+  reviewerName String
+  action       String
+
+  oldStatus VerificationGlobalStatus
+  newStatus VerificationGlobalStatus
+
+  notes String? @db.Text
+
+  createdAt DateTime @default(now())
 }
 
 // ============================================
@@ -1453,11 +1453,11 @@ model VerificationReviewLog {
 // ============================================
 
 model Session {
-  id        String   @id
-  expiresAt DateTime
-  token     String   @unique
-  createdAt DateTime
-  updatedAt DateTime
+  id          String   @id
+  expiresAt   DateTime
+  token       String   @unique
+  createdAt   DateTime
+  updatedAt   DateTime
   ipAddress   String?
   userAgent   String?
   deviceType  String?
@@ -1466,7 +1466,7 @@ model Session {
   countryCode String?
   city        String?
   userId      String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Account {
@@ -1496,11 +1496,11 @@ model Verification {
 }
 
 model TwoFactor {
-  id          String   @id
+  id          String @id
   secret      String
   backupCodes String
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // ============================================
@@ -1508,18 +1508,18 @@ model TwoFactor {
 // ============================================
 
 model Announcement {
-  id          String    @id @default(cuid())
-  contentAr   String    @db.Text
-  contentEn   String?   @db.Text
-  targetRole  String    @default("all") // all, seller, store_manager, buyer
-  isActive    Boolean   @default(true)
-  bgColor     String    @default("bg-primary") // bg-primary, bg-warning, bg-destructive, etc.
-  textColor   String    @default("text-white")
-  linkUrl     String?
-  startsAt    DateTime?
-  endsAt      DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String    @id @default(cuid())
+  contentAr  String    @db.Text
+  contentEn  String?   @db.Text
+  targetRole String    @default("all") // all, seller, store_manager, buyer
+  isActive   Boolean   @default(true)
+  bgColor    String    @default("bg-primary") // bg-primary, bg-warning, bg-destructive, etc.
+  textColor  String    @default("text-white")
+  linkUrl    String?
+  startsAt   DateTime?
+  endsAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
 
 // ============================================
@@ -1527,21 +1527,21 @@ model Announcement {
 // ============================================
 
 model ChatRoom {
-  id            String        @id @default(cuid())
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  
-  buyerId       String
-  buyer         User          @relation("ChatRoomBuyer", fields: [buyerId], references: [id])
-  
-  sellerId      String
-  seller        User          @relation("ChatRoomSeller", fields: [sellerId], references: [id])
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  isActive      Boolean       @default(true)
-  lastMessage   String?       @db.Text
+  buyerId String
+  buyer   User   @relation("ChatRoomBuyer", fields: [buyerId], references: [id])
+
+  sellerId String
+  seller   User   @relation("ChatRoomSeller", fields: [sellerId], references: [id])
+
+  isActive      Boolean   @default(true)
+  lastMessage   String?   @db.Text
   lastMessageAt DateTime?
 
-  messages      ChatMessage[]
+  messages ChatMessage[]
 
   @@unique([buyerId, sellerId])
   @@index([buyerId])
@@ -1549,18 +1549,18 @@ model ChatRoom {
 }
 
 model ChatMessage {
-  id            String    @id @default(cuid())
-  roomId        String
-  room          ChatRoom  @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  
-  senderId      String
-  sender        User      @relation("MessageSender", fields: [senderId], references: [id])
-  
-  content       String    @db.Text
-  isRead        Boolean   @default(false)
-  createdAt     DateTime  @default(now())
+  id     String   @id @default(cuid())
+  roomId String
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
-  isFlagged     Boolean   @default(false)
+  senderId String
+  sender   User   @relation("MessageSender", fields: [senderId], references: [id])
+
+  content   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  isFlagged     Boolean @default(false)
   flaggedReason String?
 
   @@index([roomId])
@@ -1568,28 +1568,28 @@ model ChatMessage {
 }
 
 model SuspensionAppeal {
-  id            String   @id @default(cuid())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
-  reason        String   @db.Text
-  documentUrl   String?
-  status        String   @default("pending") // pending, approved, rejected
-  adminNote     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  reason      String   @db.Text
+  documentUrl String?
+  status      String   @default("pending") // pending, approved, rejected
+  adminNote   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   @@index([userId])
 }
 
 model PendingCriticalAction {
-  id            String   @id @default(cuid())
-  actionType    String   // e.g. "CHANGE_DEBT_LIMIT", "CREATE_ADMIN"
-  payload       String   @db.LongText // JSON string
-  createdBy     String
-  approvedBy    String?
-  status        String   @default("pending") // pending, approved, rejected
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id         String   @id @default(cuid())
+  actionType String // e.g. "CHANGE_DEBT_LIMIT", "CREATE_ADMIN"
+  payload    String   @db.LongText // JSON string
+  createdBy  String
+  approvedBy String?
+  status     String   @default("pending") // pending, approved, rejected
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 // ============================================
@@ -1605,38 +1605,38 @@ model PlatformSettings {
 }
 
 model UpgradeRequest {
-  id                      String    @id @default(cuid())
-  userId                  String
-  status                  String    @default("PENDING") // PENDING | REJECTED | AWAITING_PAYMENT | PAYMENT_SUBMITTED | APPROVED
-  feeSnapshot             Decimal?
-  invoiceId               String?
-  isActive                Boolean   @default(true)
+  id          String   @id @default(cuid())
+  userId      String
+  status      String   @default("PENDING") // PENDING | REJECTED | AWAITING_PAYMENT | PAYMENT_SUBMITTED | APPROVED
+  feeSnapshot Decimal?
+  invoiceId   String?
+  isActive    Boolean  @default(true)
 
   // Document Fields
-  businessRegisterNumber  String?
-  businessRegisterFile    String?   @db.LongText
-  businessNisNumber       String?
-  businessIban            String?
-  businessBankName        String?
-  businessBankLetterFile  String?   @db.LongText
-  businessManagerIdFront  String?   @db.LongText
-  businessManagerIdBack   String?   @db.LongText
+  businessRegisterNumber String?
+  businessRegisterFile   String? @db.LongText
+  businessNisNumber      String?
+  businessIban           String?
+  businessBankName       String?
+  businessBankLetterFile String? @db.LongText
+  businessManagerIdFront String? @db.LongText
+  businessManagerIdBack  String? @db.LongText
 
   // Payment Fields
-  paymentReceiptFile      String?   @db.LongText
-  paymentReceiptNote      String?
-  paymentConfirmedAt      DateTime?
+  paymentReceiptFile String?   @db.LongText
+  paymentReceiptNote String?
+  paymentConfirmedAt DateTime?
 
   // Audit Fields
-  rejectionReason         String?
-  paymentRejectionReason  String?
-  reviewedBy              String?
-  reviewedAt              DateTime?
+  rejectionReason        String?
+  paymentRejectionReason String?
+  reviewedBy             String?
+  reviewedAt             DateTime?
 
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @default(now()) @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
-  user                    User      @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([isActive])
@@ -1644,28 +1644,28 @@ model UpgradeRequest {
 }
 
 model BusinessVerification {
-  id                     String    @id @default(cuid())
-  userId                 String    @unique
-  upgradeRequestId       String?
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  upgradeRequestId String?
 
   companyName            String?
   businessRegisterNumber String?
-  businessRegisterFile   String?   @db.LongText
+  businessRegisterFile   String? @db.LongText
   businessNisNumber      String?
-  
-  managerName            String?
-  managerIdFront         String?   @db.LongText
-  managerIdBack          String?   @db.LongText
-  
-  iban                   String?
-  bankName               String?
-  bankLetterFile         String?   @db.LongText
-  
-  verificationStatus     String    @default("approved")
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
 
-  user                   User      @relation(fields: [userId], references: [id])
+  managerName    String?
+  managerIdFront String? @db.LongText
+  managerIdBack  String? @db.LongText
+
+  iban           String?
+  bankName       String?
+  bankLetterFile String? @db.LongText
+
+  verificationStatus String   @default("approved")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 model SettingsAuditLog {
@@ -1685,21 +1685,21 @@ model SettingsAuditLog {
 // Sellers fill in values; stored as JSON in Product.specifications.
 
 model ProductSpecDefinition {
-  id          String    @id @default(cuid())
-  key         String    // slug used as JSON key, e.g. "ram", "material"
-  labelAr     String    // "ذاكرة الوصول العشوائي"
-  labelEn     String    // "RAM"
-  labelFr     String?   // "Mémoire vive"
-  type        String    @default("text") // text | select | number | boolean
-  options     String?   @db.LongText    // JSON array: ["64GB","128GB"] for select type
-  isRequired  Boolean   @default(false)
-  sortOrder   Int       @default(0)
-  isActive    Boolean   @default(true)
-  categoryId  String?   // null = applies to all categories
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id         String   @id @default(cuid())
+  key        String // slug used as JSON key, e.g. "ram", "material"
+  labelAr    String // "ذاكرة الوصول العشوائي"
+  labelEn    String // "RAM"
+  labelFr    String? // "Mémoire vive"
+  type       String   @default("text") // text | select | number | boolean
+  options    String?  @db.LongText // JSON array: ["64GB","128GB"] for select type
+  isRequired Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  isActive   Boolean  @default(true)
+  categoryId String? // null = applies to all categories
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  category    Category? @relation("CategorySpecDefs", fields: [categoryId], references: [id], onDelete: SetNull)
+  category Category? @relation("CategorySpecDefs", fields: [categoryId], references: [id], onDelete: SetNull)
 }
 
 // ============================================
@@ -1707,21 +1707,21 @@ model ProductSpecDefinition {
 // ============================================
 
 model ShippingModeSettings {
-  id                    String   @id @default(cuid())
-  activeMode            String   @default("hybrid") // hybrid | direct_keys_only | platform_account_only | private_fleet_only
-  allowMerchantDirect   Boolean  @default(true)
-  allowPlatformAccount  Boolean  @default(true)
-  allowPrivateFleet     Boolean  @default(true)
-  holdBufferHours       Int      @default(24)
-  updatedAt             DateTime @updatedAt
+  id                   String   @id @default(cuid())
+  activeMode           String   @default("hybrid") // hybrid | direct_keys_only | platform_account_only | private_fleet_only
+  allowMerchantDirect  Boolean  @default(true)
+  allowPlatformAccount Boolean  @default(true)
+  allowPrivateFleet    Boolean  @default(true)
+  holdBufferHours      Int      @default(24)
+  updatedAt            DateTime @updatedAt
 }
 
 model CarrierIntegration {
   id            String   @id @default(cuid())
-  carrierKey    String   // "yalidine", "zr_express", "maystro", "ecotrack", "chariday_express"
-  carrierName   String   // "Yalidine Delivery"
+  carrierKey    String // "yalidine", "zr_express", "maystro", "ecotrack", "chariday_express"
+  carrierName   String // "Yalidine Delivery"
   scope         String   @default("merchant") // merchant | platform
-  sellerId      String?  // null for platform-wide keys
+  sellerId      String? // null for platform-wide keys
   encryptedKeys String   @db.LongText // AES-256-GCM encrypted API key JSON
   isActive      Boolean  @default(true)
   isSandbox     Boolean  @default(false)
@@ -1733,30 +1733,30 @@ model CarrierIntegration {
 }
 
 model ShipmentManifest {
-  id                String   @id @default(cuid())
-  orderId           String   @unique
-  trackingNumber    String   @unique
-  carrierKey        String   // "yalidine", "zr_express", "aramex", "dhl", etc.
-  carrierName       String   // "Yalidine Delivery"
-  deliveryType      String   @default("home") // home | stopdesk
-  waybillUrl        String?  @db.LongText // URL or Base64 of thermal label (10x15cm)
+  id             String  @id @default(cuid())
+  orderId        String  @unique
+  trackingNumber String  @unique
+  carrierKey     String // "yalidine", "zr_express", "aramex", "dhl", etc.
+  carrierName    String // "Yalidine Delivery"
+  deliveryType   String  @default("home") // home | stopdesk
+  waybillUrl     String? @db.LongText // URL or Base64 of thermal label (10x15cm)
 
   // ─── Universal Status System ─────────────────────────────────────────────
   // Raw status from the carrier API (carrier-specific language)
-  carrierRawStatus  String   @default("pending")
+  carrierRawStatus String @default("pending")
   // Normalized status in ChariDay universal language (see carrier-status-map.ts)
   // Values: pending | ready | picked_up | in_transit | out_for_delivery
   //         | delivered | failed | returned | cancelled
-  universalStatus   String   @default("pending")
+  universalStatus  String @default("pending")
 
-  expectedAmount    Float    @default(0) // COD amount expected
-  actualPayout      Float?   // Amount reported by carrier API
-  isDiscrepancy     Boolean  @default(false)
+  expectedAmount    Float   @default(0) // COD amount expected
+  actualPayout      Float? // Amount reported by carrier API
+  isDiscrepancy     Boolean @default(false)
   discrepancyReason String?
 
-  sellerId          String
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  sellerId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([trackingNumber])
   @@index([sellerId])
@@ -1764,3 +1764,37 @@ model ShipmentManifest {
   @@index([universalStatus])
 }
 
+// ============================================
+// FINANCIAL LEDGER SYSTEM
+// ============================================
+
+model LedgerEntry {
+  id              String  @id @default(cuid())
+  amount          Decimal
+  type            String // credit (in), debit (out)
+  status          String  @default("cleared") // pending_clearance, cleared
+  description     String?
+  referenceNumber String? // For bank transfers, receipts, idempotent keys
+
+  orderId String?
+  order   Order?  @relation(fields: [orderId], references: [id])
+
+  walletId String
+  wallet   Wallet @relation(fields: [walletId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LegacyWalletSnapshot {
+  id               String   @id @default(cuid())
+  walletId         String
+  userId           String
+  balance          Decimal
+  pendingBalance   Decimal
+  availableBalance Decimal
+  debt             Decimal
+  totalEarned      Decimal
+  snapshotDate     DateTime @default(now())
+  notes            String?
+}

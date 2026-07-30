@@ -22,6 +22,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Fetch the global debt limit (default to 50000 if not set)
+    const limitSetting = await db.setting.findUnique({ where: { key: 'billing_global_debt_limit' } });
+    const maxDebtLimit = limitSetting && limitSetting.value ? Math.abs(parseInt(limitSetting.value, 10)) : 50000;
+
+    // Fetch the driver's wallet to check debt limit
+    const driverWallet = await db.wallet.findUnique({ where: { userId: driverId } });
+    if (driverWallet && Number(driverWallet.debt) >= maxDebtLimit) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `تم إيقاف حسابك لتجاوز الحد الائتماني للديون (${maxDebtLimit} DZD). يرجى تسديد المستحقات لتتمكن من استلام شحنات جديدة.`
+        },
+        { status: 403 }
+      );
+    }
+
     // Execute atomic transaction with serializable isolation protection
     const result = await db.$transaction(async (tx) => {
       // 1. Lock and fetch the order within the transaction

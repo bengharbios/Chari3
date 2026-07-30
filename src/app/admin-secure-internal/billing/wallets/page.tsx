@@ -11,6 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 
 const t = (locale: string, ar: string, en: string) => (locale === 'ar' ? ar : en);
@@ -86,6 +89,47 @@ export default function WalletsPage() {
 
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+
+  // Clear Debt Modal State
+  const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+  const [selectedWalletId, setSelectedWalletId] = useState<string | null>(null);
+  const [referenceNumber, setReferenceNumber] = useState('');
+  const [isClearing, setIsClearing] = useState(false);
+
+  const openClearModal = (walletId: string) => {
+    setSelectedWalletId(walletId);
+    setReferenceNumber('');
+    setIsClearModalOpen(true);
+  };
+
+  const handleClearDebt = async () => {
+    if (!referenceNumber.trim()) {
+      toast.error(t(locale, 'الرجاء إدخال الرقم المرجعي', 'Please enter a reference number'));
+      return;
+    }
+    if (!selectedWalletId) return;
+
+    setIsClearing(true);
+    try {
+      const res = await fetch(`/api/admin/wallets/${selectedWalletId}/clear-debt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ referenceNumber })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(t(locale, 'تم تصفية المديونية بنجاح', 'Debt cleared successfully'));
+        setIsClearModalOpen(false);
+        fetchWallets();
+      } else {
+        toast.error(data.error || t(locale, 'فشل في تصفية المديونية', 'Failed to clear debt'));
+      }
+    } catch (error) {
+      toast.error(t(locale, 'حدث خطأ غير متوقع', 'An unexpected error occurred'));
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   if (!isMounted || !isAdminAuthenticated) return null;
 
@@ -192,7 +236,13 @@ export default function WalletsPage() {
                           {fmt(wallet.totalEarned || 0)}
                         </TableCell>
                         <TableCell className="pe-4">
-                          <Button size="sm" variant="outline" className="h-7 px-3 text-xs rounded-lg text-muted-foreground hover:text-foreground">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="h-7 px-3 text-xs rounded-lg text-muted-foreground hover:text-foreground"
+                            disabled={Number(wallet.debt) <= 0}
+                            onClick={() => openClearModal(wallet.id)}
+                          >
                             {t(locale, 'تصفية المديونية', 'Clear Debt')}
                           </Button>
                         </TableCell>
@@ -246,6 +296,37 @@ export default function WalletsPage() {
           </Button>
         </div>
       </div>
+
+      <Dialog open={isClearModalOpen} onOpenChange={setIsClearModalOpen}>
+        <DialogContent dir={dir} className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t(locale, 'تصفية العهدة / المديونية', 'Clear Debt')}</DialogTitle>
+            <DialogDescription>
+              {t(locale, 'أدخل الرقم المرجعي لإيصال الإيداع البنكي أو الحوالة البريدية لتصفير المديونية بشكل نظامي.', 'Enter the reference number of the bank deposit or postal transfer to properly clear the debt.')}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="refNum">{t(locale, 'الرقم المرجعي (Reference Number)', 'Reference Number')}</Label>
+              <Input 
+                id="refNum" 
+                value={referenceNumber} 
+                onChange={(e) => setReferenceNumber(e.target.value)} 
+                placeholder={t(locale, 'مثال: CCP-12345678', 'e.g. CCP-12345678')}
+              />
+            </div>
+          </div>
+          <DialogFooter className="sm:justify-start">
+            <Button type="button" variant="secondary" onClick={() => setIsClearModalOpen(false)}>
+              {t(locale, 'إلغاء', 'Cancel')}
+            </Button>
+            <Button type="button" disabled={isClearing} onClick={handleClearDebt}>
+              {isClearing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {t(locale, 'تأكيد التصفية', 'Confirm Clearance')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
