@@ -190,6 +190,10 @@ export async function GET(req: NextRequest) {
 
     // Wallet balance
     const wallet = await db.wallet.findUnique({ where: { userId } });
+    const pendingLedger = await db.ledgerEntry.aggregate({
+      where: { userId, status: 'pending_clearance' },
+      _sum: { amount: true }
+    });
 
     // Pending withdrawals
     const pendingWithdrawals = isStoreManager
@@ -296,6 +300,7 @@ export async function GET(req: NextRequest) {
         completionRate: seller.completionRate,
         responseRate: seller.responseRate,
         walletBalance: wallet?.balance ?? 0,
+        pendingBalance: Number(pendingLedger._sum.amount || 0),
         walletCurrency: wallet?.currency ?? 'DZD',
       },
       products,

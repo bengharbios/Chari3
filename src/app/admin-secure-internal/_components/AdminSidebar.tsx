@@ -112,6 +112,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
       icon: Truck,
       items: [
         { label: locale === 'ar' ? 'مركز اللوجستيات والمناطق' : 'Logistics Hub', path: 'logistics' },
+        { label: locale === 'ar' ? 'تسويات 3PL' : '3PL Settlements', path: 'logistics/settlements' },
         { label: locale === 'ar' ? 'إدارة المناطق والولايات' : 'States & Regions', path: 'shipping' },
       ]
     },

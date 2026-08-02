@@ -92,6 +92,7 @@ interface DashboardData {
     completionRate: number;
     responseRate: number;
     walletBalance: number;
+    pendingBalance?: number;
     walletCurrency?: string;
   };
   stores?: { id: string; name: string; nameEn?: string | null; slug: string }[];
@@ -523,12 +524,22 @@ export default function SellerDashboard() {
           </Flex>
         </TremorCard>
 
-        <TremorCard decoration="top" decorationColor="purple" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg">
-          <Text>{t('رصيد المحفظة', 'Wallet Balance')}</Text>
+        <TremorCard decoration="top" decorationColor="purple" className="ring-0 border-border bg-background/60 backdrop-blur-xl shadow-lg relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+            <Wallet className="size-16" />
+          </div>
+          <Text>{t('الرصيد المتاح للسحب', 'Available Balance')}</Text>
           <Flex className="mt-2 gap-2" justifyContent="start" alignItems="baseline">
             <Metric className="font-black text-foreground">{DZD(kpis?.walletBalance ?? 0)}</Metric>
-            <BadgeDelta deltaType="moderateIncrease">+8%</BadgeDelta>
           </Flex>
+          {kpis?.pendingBalance !== undefined && kpis.pendingBalance > 0 && (
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <Text className="text-xs">{t('رصيد معلق (قيد الاحتجاز 3 أيام)', 'Pending Balance (3-Day Hold)')}</Text>
+              <div className="text-sm font-semibold text-amber-500 mt-1">
+                + {DZD(kpis.pendingBalance)}
+              </div>
+            </div>
+          )}
         </TremorCard>
       </TremorGrid>
 
