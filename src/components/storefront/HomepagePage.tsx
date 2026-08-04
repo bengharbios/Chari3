@@ -25,10 +25,19 @@ import { toast } from 'sonner';
 
 const CURRENCY = { symbol: 'د.ج', code: 'DZD' };
 
-const TRENDING_SEARCHES = [
-  "واقيات الشمس", "العطور", "آيفون", "التلفزيونات", "بلايستيشن 5", 
-  "بطاقات هدايا", "قلايات هوائية", "أواني السفرة والتقديم", 
+// Fallback only — actual values are stored in DB setting `homepage_trending_searches` and managed from admin panel
+const DEFAULT_TRENDING_SEARCHES_AR = [
+  "واقيات الشمس", "العطور", "آيفون", "التلفزيونات", "بلايستيشن 5",
+  "بطاقات هدايا", "قلايات هوائية", "أواني السفرة والتقديم",
   "أطقم القهوة والشاي", "ديكور البيت", "الأحذية"
+];
+const DEFAULT_TRENDING_SEARCHES_EN = [
+  "Sunscreens", "Perfumes", "iPhone", "TVs", "PlayStation 5",
+  "Gift Cards", "Air Fryers", "Tableware", "Coffee Sets", "Home Decor", "Shoes"
+];
+const DEFAULT_TRENDING_SEARCHES_FR = [
+  "Écrans solaires", "Parfums", "iPhone", "Télévisions", "PlayStation 5",
+  "Cartes cadeaux", "Friteuses", "Vaisselle", "Sets café", "Déco maison", "Chaussures"
 ];
 
 function fmt(amount: number) {
@@ -566,11 +575,14 @@ function CategoryCirclesRow({ categoryId, section, locale }: any) {
             <Link
               key={cat.id}
               href={`/search?categoryId=${cat.id}`}
-              className="flex flex-col items-center justify-center gap-2 p-3.5 rounded-[22px] bg-white/70 dark:bg-slate-950/70 border border-border/80 hover:border-amber-500/30 hover:scale-105 hover:bg-white dark:hover:bg-slate-900 transition-all duration-300 shrink-0 snap-start select-none"
-              style={{ minWidth: '92px' }}
+              className="flex flex-col items-center justify-start gap-3 p-4 rounded-[28px] bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border border-white/40 dark:border-white/10 hover:border-amber-400/50 hover:shadow-[0_15px_35px_-10px_rgba(245,158,11,0.2)] hover:-translate-y-2 hover:bg-white dark:hover:bg-slate-900 transition-all duration-500 shrink-0 snap-start select-none group relative overflow-hidden"
+              style={{ minWidth: '100px', maxWidth: '110px' }}
             >
-              <span className="text-2xl drop-shadow-sm select-none">{cat.icon || '📦'}</span>
-              <span className="text-[10px] font-bold text-center leading-tight line-clamp-1 max-w-[80px]">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-400/0 to-orange-500/0 group-hover:from-amber-400/10 group-hover:to-orange-500/5 transition-colors duration-500" />
+              <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-inner group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors duration-500 relative z-10">
+                <span className="text-3xl drop-shadow-sm select-none group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">{cat.icon || '📦'}</span>
+              </div>
+              <span className="text-[11px] font-black text-center leading-tight line-clamp-2 text-slate-700 dark:text-slate-300 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-500 relative z-10">
                 {isAr ? cat.name : (cat.nameEn || cat.name)}
               </span>
             </Link>
@@ -790,65 +802,68 @@ export default function StorefrontHomepage() {
 
         return (
           <section key="hero" className="container-platform py-4">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5">
               {/* Main Banner Slider (9 Columns on Desktop) */}
-              <div className="lg:col-span-9 relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-[28px] shadow-xl border border-white/5 h-[340px] md:h-[400px] group">
-                <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none z-20" />
+              <div className="lg:col-span-9 relative overflow-hidden bg-slate-950 text-white rounded-[28px] shadow-[0_15px_50px_-12px_rgba(0,0,0,0.5)] border border-white/10 h-[340px] md:h-[420px] lg:h-[480px] group isolate">
+                {/* Modern grid lines overlay */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff1a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff1a_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_60%,transparent_100%)] pointer-events-none z-10" />
                 
                 {currentHeroSlides.map((s: any, idx: number) => {
                   const isSlideActive = idx === heroIndex;
                   const sTitle = getLocalizedField(s, 'title', locale) || (locale === 'ar' ? s.titleAr : s.titleEn);
                   const sSubtitle = getLocalizedField(s, 'subtitle', locale) || (locale === 'ar' ? s.subtitleAr : s.subtitleEn);
                   const sBadge = getLocalizedField(s, 'badge', locale);
-                  const sCta = getLocalizedField(s, 'ctaText', locale) || (locale === 'ar' ? s.ctaTextAr : s.ctaTextEn) || t('تسوق الآن', 'Shop Now');
-                  const sBg = s.bgGradient || 'from-indigo-600 to-purple-800';
+                  const sCta = getLocalizedField(s, 'cta', locale) || getLocalizedField(s, 'ctaText', locale) || (locale === 'ar' ? (s.ctaTextAr || s.cta) : (s.ctaTextEn || s.ctaEn)) || t('تسوق الآن', 'Shop Now');
+                  const sBg = s.bg || s.bgGradient || 'from-blue-950 via-indigo-900 to-slate-900';
 
                   return (
                     <div
                       key={s.id || idx}
-                      className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                        isSlideActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                      className={`absolute inset-0 transition-all duration-[1200ms] ease-[cubic-bezier(0.25,1,0.5,1)] ${
+                        isSlideActive ? 'opacity-100 z-10 scale-100' : 'opacity-0 z-0 pointer-events-none scale-105'
                       }`}
                     >
                       {s.imageUrl ? (
                         <>
-                          <img src={s.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-[8000ms] ease-out scale-100 group-hover:scale-105" />
-                          <div className="absolute inset-0 bg-slate-950/45 mix-blend-multiply" />
+                          <img src={s.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-[15000ms] ease-out scale-100 group-hover:scale-110" />
+                          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/40 to-transparent mix-blend-multiply" />
+                          <div className="absolute inset-0 bg-black/20" />
                         </>
                       ) : (
-                        <div className={`absolute inset-0 bg-gradient-to-br ${sBg} opacity-90`} />
+                        <div className={`absolute inset-0 bg-gradient-to-br ${sBg} opacity-95`} />
                       )}
                       
-                      <div className="h-full flex flex-col justify-center relative z-10 p-8 md:p-12 text-start">
-                        <div className="max-w-xl">
+                      <div className="h-full flex flex-col justify-center relative z-20 p-8 md:p-12 lg:p-16 text-start">
+                        <div className="max-w-2xl bg-white/5 backdrop-blur-md border border-white/10 rounded-[24px] p-6 md:p-8 shadow-2xl relative overflow-hidden">
+                          <div className="absolute -top-20 -right-20 w-40 h-40 bg-white/20 blur-3xl rounded-full" />
                           {sBadge && (
-                            <Badge className="mb-3.5 bg-white/10 text-white border-white/10 text-[10px] font-bold px-3 py-1 rounded-full select-none">
+                            <Badge className="mb-4 bg-white/10 hover:bg-white/20 text-white border-white/10 text-[10px] md:text-xs font-bold px-4 py-1.5 rounded-full select-none backdrop-blur-md shadow-sm transition-colors uppercase tracking-widest">
                               {sBadge}
                             </Badge>
                           )}
-                          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black mb-3 leading-tight tracking-tight">
+                          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black mb-4 leading-tight tracking-tight drop-shadow-lg text-transparent bg-clip-text bg-gradient-to-br from-white to-white/70">
                             {sTitle}
                           </h1>
-                          <p className="text-xs sm:text-sm md:text-base text-white/80 mb-6 font-medium">
+                          <p className="text-sm sm:text-base md:text-lg text-white/80 mb-8 font-medium max-w-lg leading-relaxed drop-shadow-md">
                             {sSubtitle}
                           </p>
-                          <div className="flex flex-col sm:flex-row gap-3">
+                          <div className="flex flex-col sm:flex-row gap-4 relative z-20">
                             {s.linkUrl ? (
                               <Link href={s.linkUrl} className="inline-block" onClick={(e) => e.stopPropagation()}>
-                                <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-6 py-2 rounded-xl text-xs md:text-sm shadow-lg shadow-amber-500/20 w-full sm:w-auto">
+                                <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-8 py-6 rounded-2xl text-sm shadow-[0_10px_25px_-5px_rgba(245,158,11,0.4)] hover:shadow-[0_15px_30px_-5px_rgba(245,158,11,0.5)] w-full sm:w-auto transition-all duration-300 hover:-translate-y-1">
                                   {sCta}
-                                  {isAr ? <ArrowLeft className="ms-2 size-4" /> : <ArrowRight className="ms-2 size-4" />}
+                                  {isAr ? <ArrowLeft className="ms-2 size-5" /> : <ArrowRight className="ms-2 size-5" />}
                                 </Button>
                               </Link>
                             ) : (
-                              <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-6 py-2 rounded-xl text-xs md:text-sm shadow-lg shadow-amber-500/20 w-full sm:w-auto">
+                              <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-8 py-6 rounded-2xl text-sm shadow-[0_10px_25px_-5px_rgba(245,158,11,0.4)] hover:shadow-[0_15px_30px_-5px_rgba(245,158,11,0.5)] w-full sm:w-auto transition-all duration-300 hover:-translate-y-1">
                                 {sCta}
-                                {isAr ? <ArrowLeft className="ms-2 size-4" /> : <ArrowRight className="ms-2 size-4" />}
+                                {isAr ? <ArrowLeft className="ms-2 size-5" /> : <ArrowRight className="ms-2 size-5" />}
                               </Button>
                             )}
                             {!isAuthenticated && (
                               <Link href="/?view=login&role=seller" className="inline-block" onClick={(e) => e.stopPropagation()}>
-                                <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 rounded-xl text-xs md:text-sm w-full sm:w-auto">
+                                <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/10 hover:border-white/40 rounded-2xl text-sm w-full sm:w-auto py-6 px-8 backdrop-blur-md transition-all duration-300 hover:-translate-y-1">
                                   {t('سجل متجرك', 'Start Selling')}
                                 </Button>
                               </Link>
@@ -883,27 +898,30 @@ export default function StorefrontHomepage() {
               </div>
 
               {/* Side stack banners (3 Columns on Desktop, hidden on Mobile) */}
-              <div className="hidden lg:flex lg:col-span-3 flex-col gap-4 h-[340px] md:h-[400px]">
+              <div className="hidden lg:flex lg:col-span-3 flex-col gap-5 h-[340px] md:h-[420px] lg:h-[480px]">
                 {/* Banner Side 1: Yellow/Orange accent */}
                 <div 
-                  className="flex-1 rounded-[24px] bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950 flex flex-col justify-between border border-amber-400/20 shadow-lg relative overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer" 
+                  className="flex-1 rounded-[28px] bg-gradient-to-br from-amber-400 to-orange-500 text-slate-950 flex flex-col justify-between border border-amber-400/30 shadow-lg relative overflow-hidden group hover:shadow-[0_15px_35px_-10px_rgba(245,158,11,0.4)] hover:-translate-y-1 transition-all duration-300 cursor-pointer isolate" 
                   onClick={() => router.push(card1Type === 'ad' ? card1AdLink : card1Link)}
                 >
+                  <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-orange-300/40 rounded-full blur-2xl group-hover:bg-orange-200/50 transition-colors duration-500 -z-10" />
                   {card1Type === 'ad' && card1AdImage ? (
                     <>
-                      <img src={card1AdImage} className="absolute inset-0 w-full h-full object-cover" alt="" />
-                      <div className="absolute inset-0 bg-black/10 hover:bg-black/25 transition-colors" />
+                      <img src={card1AdImage} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
+                      <div className="absolute inset-0 bg-black/10 hover:bg-black/20 transition-colors duration-300" />
                     </>
                   ) : (
                     <>
-                      <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
-                      <div className="z-10 p-5 text-start">
-                        <Badge className="bg-slate-950 text-white text-[8px] font-bold py-0.5 px-2 mb-1.5 select-none">{card1Badge}</Badge>
-                        <h4 className="text-sm font-black leading-snug">{card1Title}</h4>
+                      <div className="absolute inset-0 bg-white/5 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none mix-blend-overlay" />
+                      <div className="z-10 p-5 md:p-6 text-start">
+                        <Badge className="bg-slate-950 text-white text-[9px] font-bold py-1 px-2.5 mb-2 select-none shadow-sm border-0">{card1Badge}</Badge>
+                        <h4 className="text-base md:text-lg font-black leading-tight tracking-tight drop-shadow-sm">{card1Title}</h4>
                       </div>
-                      <div className="z-10 flex justify-between items-center p-5 mt-3">
-                        <span className="text-[10px] font-black underline">{card1Cta}</span>
-                        <ShoppingCart className="w-4 h-4" />
+                      <div className="z-10 flex justify-between items-center p-5 md:p-6 mt-2 relative">
+                        <span className="text-[11px] font-black underline group-hover:text-slate-700 transition-colors">{card1Cta}</span>
+                        <div className="bg-white/20 p-2 rounded-full group-hover:scale-110 transition-transform">
+                          <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
+                        </div>
                       </div>
                     </>
                   )}
@@ -911,24 +929,27 @@ export default function StorefrontHomepage() {
 
                 {/* Banner Side 2: Dark indigo glassmorphism */}
                 <div 
-                  className="flex-1 rounded-[24px] bg-gradient-to-br from-slate-900 to-indigo-950 text-white flex flex-col justify-between border border-white/5 shadow-lg relative overflow-hidden group hover:scale-[1.01] transition-all cursor-pointer" 
+                  className="flex-1 rounded-[28px] bg-gradient-to-br from-slate-900 to-indigo-950 text-white flex flex-col justify-between border border-white/10 shadow-[0_10px_30px_-10px_rgba(49,46,129,0.5)] relative overflow-hidden group hover:shadow-[0_15px_40px_-10px_rgba(49,46,129,0.7)] hover:-translate-y-1 transition-all duration-300 cursor-pointer isolate" 
                   onClick={() => router.push(card2Type === 'ad' ? card2AdLink : card2Link)}
                 >
+                  <div className="absolute -top-10 -left-10 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl group-hover:bg-indigo-400/30 transition-colors duration-500 -z-10" />
                   {card2Type === 'ad' && card2AdImage ? (
                     <>
-                      <img src={card2AdImage} className="absolute inset-0 w-full h-full object-cover" alt="" />
-                      <div className="absolute inset-0 bg-black/10 hover:bg-black/25 transition-colors" />
+                      <img src={card2AdImage} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
+                      <div className="absolute inset-0 bg-black/10 hover:bg-black/20 transition-colors duration-300" />
                     </>
                   ) : (
                     <>
-                      <div className="absolute inset-0 bg-white/5 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
-                      <div className="z-10 p-5 text-start">
-                        <Badge className="bg-white/10 text-white border-white/10 text-[8px] font-bold py-0.5 px-2 mb-1.5 select-none">{card2Badge}</Badge>
-                        <h4 className="text-sm font-black leading-snug">{card2Title}</h4>
+                      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none -z-10" />
+                      <div className="z-10 p-5 md:p-6 text-start">
+                        <Badge className="bg-indigo-500/30 text-indigo-100 border-indigo-400/20 text-[9px] font-bold py-1 px-2.5 mb-2 select-none shadow-sm">{card2Badge}</Badge>
+                        <h4 className="text-base md:text-lg font-black leading-tight tracking-tight drop-shadow-sm">{card2Title}</h4>
                       </div>
-                      <div className="z-10 flex justify-between items-center p-5 mt-3">
-                        <span className="text-[10px] font-black underline text-amber-400">{card2Cta}</span>
-                        <Sparkles className="w-4 h-4 text-amber-400" />
+                      <div className="z-10 flex justify-between items-center p-5 md:p-6 mt-2 relative">
+                        <span className="text-[11px] font-black underline text-amber-400 group-hover:text-amber-300 transition-colors">{card2Cta}</span>
+                        <div className="bg-amber-400/10 p-2 rounded-full group-hover:scale-110 transition-transform">
+                          <Sparkles className="w-4 h-4 md:w-5 md:h-5 text-amber-400" />
+                        </div>
                       </div>
                     </>
                   )}
@@ -938,26 +959,43 @@ export default function StorefrontHomepage() {
           </section>
         );
 
-      case 'features':
+      case 'features': {
+        // Icons map: admin stores icon name as a string
+        const ICON_MAP: Record<string, React.ComponentType<any>> = {
+          Shield, Truck, Award, TrendingUp, Star, CheckCircle2, Sparkles, ShoppingBag,
+        };
+        // Use DB-driven features if available, else fall back to hardcoded defaults
+        const featuresData: any[] = (data?.features && Array.isArray(data.features) && data.features.length > 0)
+          ? data.features
+          : FEATURES;
+
         return (
           <section key="features" className="container-platform py-2">
             <div className="bg-white/50 dark:bg-slate-900/50 border border-border/80 rounded-[24px] backdrop-blur-md p-5 shadow-sm">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {FEATURES.map((f) => (
-                  <div key={f.title} className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-500 shrink-0">
-                      <f.icon className="size-5" />
+                {featuresData.map((f: any, idx: number) => {
+                  // Support both component refs (hardcoded) and string icon names (DB-driven)
+                  const IconComp = typeof f.icon === 'string' ? (ICON_MAP[f.icon] || Shield) : f.icon;
+                  const title = locale === 'ar' ? (f.titleAr || f.title) : locale === 'fr' ? (f.titleFr || f.titleEn || f.title) : (f.titleEn || f.title);
+                  const desc = locale === 'ar' ? (f.descAr || f.desc) : locale === 'fr' ? (f.descFr || f.descEn || f.desc) : (f.descEn || f.desc);
+                  return (
+                    <div key={idx} className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-2xl bg-amber-500/10 text-amber-500 shrink-0">
+                        <IconComp className="size-5" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{title}</p>
+                        <p className="hidden md:block text-[10px] text-muted-foreground mt-0.5">{desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{locale === 'ar' ? f.title : locale === 'fr' ? (f.titleFr || f.titleEn || f.title) : (f.titleEn || f.title)}</p>
-                      <p className="hidden md:block text-[10px] text-muted-foreground mt-0.5">{locale === 'ar' ? f.desc : locale === 'fr' ? (f.descFr || f.descEn || f.desc) : (f.descEn || f.desc)}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </section>
         );
+      }
+
 
       case 'categories':
         const displayCats = (data?.categories ?? []).filter((c) => c && c.id).slice(0, 12);
@@ -1049,9 +1087,11 @@ export default function StorefrontHomepage() {
               </div>
             )}
             {/* Responsive grid: stack on mobile, 3-column on desktop */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-6">
-              {/* Right Column: "نوّنها أكثر ووفر أكثر" 4x4 Promos */}
-              <div className="md:col-span-1 lg:col-span-3 min-h-[300px] md:min-h-[380px] lg:min-h-[480px] rounded-[24px] bg-gradient-to-br from-amber-500 to-amber-600 border border-amber-500/20 shadow-xl p-5 text-slate-950 flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all group relative overflow-hidden">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 md:gap-5">
+              {/* Right Column: 4x4 Promos */}
+              <div className="md:col-span-1 lg:col-span-3 min-h-[300px] md:min-h-[380px] lg:min-h-[480px] rounded-[28px] bg-gradient-to-br from-amber-500 via-amber-500 to-amber-600 border border-amber-400/30 shadow-[0_10px_40px_-10px_rgba(245,158,11,0.3)] p-5 md:p-6 text-slate-950 flex flex-col justify-between hover:shadow-[0_20px_50px_-15px_rgba(245,158,11,0.5)] hover:-translate-y-1 transition-all duration-500 group relative overflow-hidden isolate">
+                {/* Modern grid lines overlay */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff1a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff1a_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-10" />
                 {rightCardType === 'ad' && rightCardAdImage ? (
                   <Link href={rightCardAdLink} className="absolute inset-0 w-full h-full block">
                     <img src={rightCardAdImage} className="w-full h-full object-cover" alt="" />
@@ -1060,25 +1100,26 @@ export default function StorefrontHomepage() {
                   </Link>
                 ) : (
                   <>
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-                    <div className="z-10 text-start">
-                      <Badge className="bg-slate-950 text-white text-[9px] font-bold py-0.5 px-2 mb-2 select-none">عروض حصرية</Badge>
-                      <h3 className="text-base md:text-lg font-black leading-snug">{customText1}</h3>
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-white/20 rounded-full blur-[40px] pointer-events-none transition-transform duration-700 group-hover:scale-110 -z-10" />
+                    <div className="z-10 text-start relative">
+                      <Badge className="bg-slate-950 text-white text-[10px] font-bold py-1 px-2.5 mb-3 select-none rounded-lg shadow-sm border-0 tracking-wide uppercase">{globalT('homepage.exclusiveOffers') || 'عروض حصرية'}</Badge>
+                      <h3 className="text-base md:text-xl font-black leading-tight tracking-tight text-slate-950 drop-shadow-sm">{customText1}</h3>
                     </div>
-                    <div className={`grid gap-2 md:gap-3 z-10 grow mt-4 items-start ${
+                    <div className={`grid gap-2.5 md:gap-3 z-10 grow mt-5 items-start ${
                       rightCardProducts.length === 1 
-                        ? "grid-cols-1 justify-items-center max-w-[140px] mx-auto" 
+                        ? "grid-cols-1 justify-items-center max-w-[150px] mx-auto" 
                         : "grid-cols-2"
                     }`}>
                       {rightCardProducts.slice(0, 4).map((p: any, i: number) => {
                         let imgs: string[] = [];
                         try { imgs = Array.isArray(p.images) ? p.images : JSON.parse(p.images || '[]'); } catch {}
                         return (
-                          <div key={i} className="bg-white/80 backdrop-blur rounded-[12px] md:rounded-[16px] p-1.5 md:p-2 flex flex-col justify-between border border-white/25 shadow-sm hover:scale-[1.04] transition-transform cursor-pointer w-full" onClick={() => router.push(`/products/${p.id}`)}>
-                            <div className="aspect-square bg-muted/20 rounded-lg overflow-hidden mb-1">
-                              {imgs[0] ? <img src={imgs[0]} className="w-full h-full object-cover" alt="" /> : <div className="flex items-center justify-center h-full text-lg">📦</div>}
+                          <div key={i} className="bg-white/90 backdrop-blur-md rounded-[16px] p-2 flex flex-col justify-between border border-white/40 shadow-sm hover:shadow-md hover:scale-[1.03] transition-all duration-300 cursor-pointer w-full group/card relative overflow-hidden" onClick={() => router.push(`/products/${p.id}`)}>
+                            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/40 to-transparent opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
+                            <div className="aspect-square bg-slate-100 rounded-[10px] overflow-hidden mb-2 relative">
+                              {imgs[0] ? <img src={imgs[0]} className="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-500" alt="" /> : <div className="flex items-center justify-center h-full text-lg opacity-50">📦</div>}
                             </div>
-                            <p className="text-[9px] md:text-[10px] font-black text-slate-800 line-clamp-1 text-center">{locale === 'ar' ? p.name : (p.nameEn || p.name)}</p>
+                            <p className="text-[10px] font-bold text-slate-800 line-clamp-1 text-center group-hover/card:text-amber-600 transition-colors">{locale === 'ar' ? p.name : (p.nameEn || p.name)}</p>
                           </div>
                         );
                       })}
@@ -1088,7 +1129,9 @@ export default function StorefrontHomepage() {
               </div>
 
               {/* Center Column: Mega Offers countdown timer — spans full width on mobile */}
-              <div className="md:col-span-2 lg:col-span-6 min-h-[340px] md:min-h-[420px] lg:min-h-[480px] rounded-[24px] bg-slate-950 text-white border-2 border-rose-600/30 shadow-2xl p-5 flex flex-col justify-between hover:shadow-[0_20px_45px_rgba(244,63,94,0.15)] transition-all relative overflow-hidden order-first md:order-none">
+              <div className="md:col-span-2 lg:col-span-6 min-h-[340px] md:min-h-[420px] lg:min-h-[480px] rounded-[28px] bg-slate-950 text-white border border-rose-500/20 shadow-[0_10px_40px_-15px_rgba(225,29,72,0.3)] p-5 md:p-6 flex flex-col justify-between hover:shadow-[0_20px_50px_-15px_rgba(225,29,72,0.5)] hover:border-rose-500/40 hover:-translate-y-1 transition-all duration-500 relative overflow-hidden order-first md:order-none group isolate">
+                {/* Modern grid lines overlay */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#e11d481a_1px,transparent_1px),linear-gradient(to_bottom,#e11d481a_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_60%,transparent_100%)] pointer-events-none -z-10" />
                 {centerCardType === 'ad' && centerCardAdImage ? (
                   <Link href={centerCardAdLink} className="absolute inset-0 w-full h-full block">
                     <img src={centerCardAdImage} className="w-full h-full object-cover" alt="" />
@@ -1097,33 +1140,40 @@ export default function StorefrontHomepage() {
                   </Link>
                 ) : (
                   <>
-                    <div className="absolute top-0 left-0 w-36 h-36 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-white/10 pb-4 mb-3 z-10">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 rounded-xl bg-rose-600/20 text-rose-500 animate-pulse">
-                          <Flame className="w-5 h-5 fill-current" />
+                    <div className="absolute -top-20 -left-20 w-64 h-64 bg-rose-600/20 rounded-full blur-[60px] pointer-events-none group-hover:bg-rose-500/30 transition-colors duration-700 -z-10" />
+                    <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-indigo-600/20 rounded-full blur-[60px] pointer-events-none group-hover:bg-indigo-500/30 transition-colors duration-700 -z-10" />
+                    
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/10 pb-4 mb-4 z-10 relative">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 rounded-[14px] bg-gradient-to-br from-rose-500/20 to-rose-600/10 border border-rose-500/30 text-rose-500 shadow-[0_0_15px_rgba(225,29,72,0.3)]">
+                          <Flame className="w-5 h-5 md:w-6 md:h-6 fill-current animate-[pulse_2s_ease-in-out_infinite]" />
                         </div>
-                        <h3 className="text-base font-black text-white">
-                          {getLocalizedField(section, 'customTextCenter', locale) || (locale === 'ar' ? (data?.countdownConfig?.titleAr || 'عروض ميجا') : (data?.countdownConfig?.titleEn || 'Mega Offers'))}
-                        </h3>
+                        <div>
+                          <h3 className="text-lg md:text-xl font-black text-white tracking-tight drop-shadow-md">
+                            {getLocalizedField(section, 'customTextCenter', locale) || (locale === 'ar' ? (data?.countdownConfig?.titleAr || 'عروض ميجا') : (data?.countdownConfig?.titleEn || 'Mega Offers'))}
+                          </h3>
+                          <p className="text-[10px] md:text-xs text-rose-200/60 font-medium">{globalT('homepage.limitedTimeDiscounts') || 'خصومات لفترة محدودة'}</p>
+                        </div>
                       </div>
                       {hasCountdown && (section.metadata?.timerEndDate || data?.countdownConfig?.endDate) && (
-                        <CountdownTimer targetDate={section.metadata?.timerEndDate || data?.countdownConfig?.endDate} />
+                        <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-[14px] p-2 shadow-inner">
+                          <CountdownTimer targetDate={section.metadata?.timerEndDate || data?.countdownConfig?.endDate} />
+                        </div>
                       )}
                     </div>
                     {isLoading ? (
-                      <div className="h-48 md:h-64 bg-muted animate-pulse rounded-xl w-full" />
+                      <div className="h-48 md:h-64 bg-white/5 animate-pulse rounded-[20px] w-full border border-white/5" />
                     ) : timerProducts.length === 0 ? (
                       <div className="text-center py-12 text-muted-foreground text-sm grow flex flex-col items-center justify-center">
-                        <Flame className="w-10 h-10 mb-2 opacity-20" />
-                        {locale === 'ar' ? 'لا توجد عروض تنازلية نشطة حالياً.' : 'No active discount deals at the moment.'}
+                        <Flame className="w-12 h-12 mb-3 opacity-10" />
+                        {globalT('homepage.noActiveDeals') || (locale === 'ar' ? 'لا توجد عروض تنازلية نشطة حالياً.' : 'No active discount deals at the moment.')}
                       </div>
                     ) : (
-                      <div className={`grid gap-3 md:gap-4 grow h-full max-h-[350px] lg:max-h-none overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent pr-1 items-start ${
+                      <div className={`grid gap-3 md:gap-4 grow h-full max-h-[350px] lg:max-h-none overflow-y-auto scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-white/20 scrollbar-track-transparent pr-1 items-start relative z-10 ${
                         timerProducts.length === 1 
-                          ? "grid-cols-1 justify-items-center max-w-[220px] mx-auto w-full" 
+                          ? "grid-cols-1 justify-items-center max-w-[240px] mx-auto w-full" 
                           : timerProducts.length === 2 
-                            ? "grid-cols-2 justify-items-center max-w-[440px] mx-auto w-full" 
+                            ? "grid-cols-2 justify-items-center max-w-[480px] mx-auto w-full" 
                             : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3"
                       }`}>
                         {timerProducts.map((p: any) => <ProductCard key={p.id} product={p} isOfferCard={true} />)}
@@ -1133,8 +1183,10 @@ export default function StorefrontHomepage() {
                 )}
               </div>
 
-              {/* Left Column: "عليها العين" vertical 2x2 promo */}
-              <div className="md:col-span-1 lg:col-span-3 min-h-[300px] md:min-h-[380px] lg:min-h-[480px] rounded-[24px] bg-gradient-to-br from-slate-900 to-indigo-950 border border-white/5 shadow-xl p-5 text-white flex flex-col justify-between hover:shadow-[0_20px_40px_rgba(0,0,0,0.15)] transition-all group relative overflow-hidden">
+              {/* Left Column: Vertical 2x2 promo */}
+              <div className="md:col-span-1 lg:col-span-3 min-h-[300px] md:min-h-[380px] lg:min-h-[480px] rounded-[28px] bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 border border-indigo-500/20 shadow-[0_10px_40px_-15px_rgba(99,102,241,0.2)] p-5 md:p-6 text-white flex flex-col justify-between hover:shadow-[0_20px_50px_-15px_rgba(99,102,241,0.4)] hover:border-indigo-400/30 hover:-translate-y-1 transition-all duration-500 relative overflow-hidden group isolate">
+                {/* Modern grid lines overlay */}
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#6366f11a_1px,transparent_1px),linear-gradient(to_bottom,#6366f11a_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none -z-10" />
                 {leftCardType === 'ad' && leftCardAdImage ? (
                   <Link href={leftCardAdLink} className="absolute inset-0 w-full h-full block">
                     <img src={leftCardAdImage} className="w-full h-full object-cover" alt="" />
@@ -1143,29 +1195,32 @@ export default function StorefrontHomepage() {
                   </Link>
                 ) : (
                   <>
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none" />
-                    <div className="z-10 flex justify-between items-center text-start">
-                      <h3 className="text-base font-black flex items-center gap-1.5">
-                        <Sparkles className="w-4 h-4 text-amber-400" />
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-500/20 rounded-full blur-[40px] pointer-events-none transition-transform duration-700 group-hover:scale-125 -z-10" />
+                    <div className="z-10 flex justify-between items-center text-start relative">
+                      <h3 className="text-base md:text-xl font-black flex items-center gap-2 tracking-tight">
+                        <div className="p-1.5 rounded-lg bg-amber-400/20 text-amber-400">
+                          <Sparkles className="w-4 h-4" />
+                        </div>
                         {customText2}
                       </h3>
-                      <Badge variant="secondary" className="bg-white/10 text-white hover:bg-white/15 cursor-pointer text-[9px] py-0.5 px-2" onClick={() => router.push('/search')}>{globalT('homepage.viewAll') || 'عرض الكل'}</Badge>
+                      <Badge variant="secondary" className="bg-white/10 text-white hover:bg-white/20 cursor-pointer text-[10px] py-1 px-3 rounded-lg border-0 transition-colors" onClick={() => router.push('/search')}>{globalT('homepage.viewAll') || 'عرض الكل'}</Badge>
                     </div>
-                    <div className="flex flex-col gap-3 z-10 grow mt-4 overflow-y-auto h-full max-h-[350px] lg:max-h-[390px] scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent pr-1">
+                    <div className="flex flex-col gap-3 md:gap-4 z-10 grow mt-5 overflow-y-auto h-full max-h-[350px] lg:max-h-[390px] scrollbar-thin scrollbar-thumb-white/10 hover:scrollbar-thumb-white/20 scrollbar-track-transparent pr-1 relative">
                       {leftCardProducts.map((p: any, i: number) => {
                         let imgs: string[] = [];
                         try { imgs = Array.isArray(p.images) ? p.images : JSON.parse(p.images || '[]'); } catch {}
                         const discount = p.comparePrice ? Math.round(((p.comparePrice - p.price) / p.comparePrice) * 100) : 0;
                         return (
-                          <div key={i} className="bg-white/5 border border-white/10 hover:border-white/20 rounded-[18px] p-3 flex items-center gap-3 cursor-pointer hover:scale-[1.03] transition-all shrink-0" onClick={() => router.push(`/products/${p.id}`)}>
-                            <div className="w-12 h-12 md:w-14 md:h-14 bg-white/10 rounded-lg overflow-hidden shrink-0">
-                              {imgs[0] ? <img src={imgs[0]} className="w-full h-full object-cover" alt="" /> : <div className="flex items-center justify-center h-full text-lg">📦</div>}
+                          <div key={i} className="bg-white/5 border border-white/10 hover:border-indigo-400/30 rounded-[20px] p-2.5 flex items-center gap-3.5 cursor-pointer hover:bg-white/10 hover:shadow-lg transition-all duration-300 shrink-0 group/row relative overflow-hidden" onClick={() => router.push(`/products/${p.id}`)}>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover/row:opacity-100 transition-opacity duration-500" />
+                            <div className="w-14 h-14 md:w-16 md:h-16 bg-black/20 rounded-[14px] overflow-hidden shrink-0 relative">
+                              {imgs[0] ? <img src={imgs[0]} className="w-full h-full object-cover group-hover/row:scale-110 transition-transform duration-500" alt="" /> : <div className="flex items-center justify-center h-full text-lg opacity-50">📦</div>}
                             </div>
                             <div className="min-w-0 grow text-start">
-                              <h4 className="text-xs font-bold truncate">{locale === 'ar' ? p.name : (p.nameEn || p.name)}</h4>
-                              <div className="flex items-center gap-2 mt-1">
-                                <span className="text-xs font-black text-amber-400">{fmt(p.price)}</span>
-                                {discount > 0 && <span className="text-[9px] bg-red-600 px-1 py-0.5 rounded font-black">-{discount}%</span>}
+                              <h4 className="text-xs md:text-sm font-bold truncate text-slate-200 group-hover/row:text-white transition-colors">{locale === 'ar' ? p.name : (p.nameEn || p.name)}</h4>
+                              <div className="flex items-center gap-2 mt-1.5">
+                                <span className="text-sm md:text-base font-black text-amber-400 tracking-tight">{fmt(p.price)}</span>
+                                {discount > 0 && <span className="text-[10px] bg-red-600/90 text-white px-1.5 py-0.5 rounded-md font-black shadow-sm">-{discount}%</span>}
                               </div>
                             </div>
                           </div>
@@ -1482,28 +1537,40 @@ export default function StorefrontHomepage() {
           </section>
         );
 
-      case 'cta':
+      case 'cta': {
+        const ctaData = data?.cta || {};
+        const title = locale === 'ar' ? (ctaData.titleAr || ctaData.title || 'ابدأ البيع اليوم!') : locale === 'fr' ? (ctaData.titleFr || ctaData.titleEn || 'Start Selling Today!') : (ctaData.titleEn || 'Start Selling Today!');
+        const desc = locale === 'ar' ? (ctaData.descAr || ctaData.desc || 'انضم لآلاف التجار الناجحين على منصة شاري داي وابدأ رحلتك نحو النجاح التجاري') : locale === 'fr' ? (ctaData.descFr || ctaData.descEn || 'Join thousands of successful sellers on ChariDay and start your journey to commercial success') : (ctaData.descEn || 'Join thousands of successful sellers on ChariDay and start your journey to commercial success');
+        const btn = locale === 'ar' ? (ctaData.btnAr || ctaData.btn || 'أنشئ حساب تاجر') : locale === 'fr' ? (ctaData.btnFr || ctaData.btnEn || 'Create Seller Account') : (ctaData.btnEn || 'Create Seller Account');
+        const btnUrl = ctaData.url || '/admin/register';
+
         return (
           <section key="cta" className="container-platform py-6">
             <div className="bg-gradient-to-r from-stone-900 via-stone-850 to-indigo-950 text-white rounded-[28px] border border-white/5 py-12 px-6 md:px-12 text-center relative overflow-hidden shadow-2xl">
               <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
               <div className="relative z-10 max-w-xl mx-auto">
-                <h3 className="text-2xl md:text-3xl font-black mb-3 text-amber-400">{t('ابدأ البيع اليوم!', 'Start Selling Today!')}</h3>
+                <h3 className="text-2xl md:text-3xl font-black mb-3 text-amber-400">{title}</h3>
                 <p className="text-xs md:text-sm text-white/80 mb-8 leading-relaxed font-medium">
-                  {t('انضم لآلاف التجار الناجحين على منصة شاري داي وابدأ رحلتك نحو النجاح التجاري', 'Join thousands of successful sellers on ChariDay and start your journey to commercial success')}
+                  {desc}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3.5 justify-center">
-                  <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-8 rounded-xl shadow-lg shadow-amber-500/20">
-                    {t('أنشئ حساب تاجر', 'Create Seller Account')}
-                  </Button>
-                  <Button size="lg" variant="outline" className="border-white/25 text-white hover:bg-white/10 rounded-xl">
-                    {t('تعرف على الباقات', 'View Packages')}
-                  </Button>
+                  <Link href={btnUrl}>
+                    <Button size="lg" className="bg-amber-500 text-slate-950 hover:bg-amber-400 font-black px-8 rounded-xl shadow-lg shadow-amber-500/20">
+                      {btn}
+                    </Button>
+                  </Link>
+                  <Link href="/pricing">
+                    <Button size="lg" variant="outline" className="border-white/25 text-white hover:bg-white/10 rounded-xl">
+                      {t('تعرف على الباقات', 'View Packages')}
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>
           </section>
         );
+
+      }
 
       case 'category_products':
         return (
@@ -1641,18 +1708,29 @@ return (
           <Search className="w-3.5 h-3.5" />
           {globalT('homepage.searchSuggestions') || 'البحث الشائع:'}
         </span>
-        {TRENDING_SEARCHES.map((term, idx) => (
-          <button 
-            key={idx} 
-            onClick={() => {
-              setFilterSearch(term);
-              setShowFilterPanel(true);
-            }} 
-            className="text-[10px] md:text-xs bg-white/80 dark:bg-slate-900/60 hover:bg-amber-500 hover:text-slate-950 dark:hover:bg-amber-500 border border-border/80 hover:border-amber-500/50 text-slate-700 dark:text-slate-200 px-3 py-1 rounded-full whitespace-nowrap transition-all duration-300 font-bold shadow-sm snap-start"
-          >
-            {term}
-          </button>
-        ))}
+        {(() => {
+          // Use DB-stored searches if available (admin-controlled), else use locale-specific defaults
+          const dbSearches = data?.trendingSearches;
+          let terms: string[] = [];
+          if (dbSearches) {
+            if (locale === 'ar' && Array.isArray(dbSearches.ar)) terms = dbSearches.ar;
+            else if (locale === 'fr' && Array.isArray(dbSearches.fr)) terms = dbSearches.fr;
+            else if (Array.isArray(dbSearches.en)) terms = dbSearches.en;
+            else if (Array.isArray(dbSearches)) terms = dbSearches; // legacy flat array
+          }
+          if (terms.length === 0) {
+            terms = locale === 'fr' ? DEFAULT_TRENDING_SEARCHES_FR : locale === 'ar' ? DEFAULT_TRENDING_SEARCHES_AR : DEFAULT_TRENDING_SEARCHES_EN;
+          }
+          return terms.map((term: string, idx: number) => (
+            <button
+              key={idx}
+              onClick={() => { setFilterSearch(term); setShowFilterPanel(true); }}
+              className="text-[10px] md:text-xs bg-white/80 dark:bg-slate-900/60 hover:bg-amber-500 hover:text-slate-950 dark:hover:bg-amber-500 border border-border/80 hover:border-amber-500/50 text-slate-700 dark:text-slate-200 px-3 py-1 rounded-full whitespace-nowrap transition-all duration-300 font-bold shadow-sm snap-start"
+            >
+              {term}
+            </button>
+          ));
+        })()}
       </div>
  
       {/* Render Dynamic Order of Sections */}

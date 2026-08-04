@@ -41,7 +41,10 @@ export async function GET() {
       maintenanceSetting,
       allowGuestCheckoutSetting,
       globalCoupons,
-      saadaLayoutSetting
+      saadaLayoutSetting,
+      featuresSetting,
+      trendingSearchesSetting,
+      ctaSetting
     ] = await Promise.all([
       // Active categories with product counts
       db.category.findMany({
@@ -150,6 +153,9 @@ export async function GET() {
       db.setting.findUnique({ where: { key: 'homepage_hero_slides' } }),
       db.setting.findUnique({ where: { key: 'flag_maintenance_mode' } }),
       db.setting.findUnique({ where: { key: 'allow_guest_checkout' } }),
+      db.setting.findUnique({ where: { key: 'homepage_features' } }),
+      db.setting.findUnique({ where: { key: 'homepage_trending_searches' } }),
+      db.setting.findUnique({ where: { key: 'homepage_cta' } }),
 
       db.coupon.findMany({
         where: { 
@@ -399,6 +405,30 @@ export async function GET() {
       }
     } catch {}
 
+    // Parse features strip
+    let parsedFeatures: unknown[] | null = null;
+    try {
+      if (featuresSetting?.value) {
+        parsedFeatures = JSON.parse(featuresSetting.value);
+      }
+    } catch {}
+
+    // Parse trending searches
+    let parsedTrendingSearches: any = null;
+    try {
+      if (trendingSearchesSetting?.value) {
+        parsedTrendingSearches = JSON.parse(trendingSearchesSetting.value);
+      }
+    } catch {}
+
+    // Parse CTA settings
+    let parsedCta: any = null;
+    try {
+      if (ctaSetting?.value) {
+        parsedCta = JSON.parse(ctaSetting.value);
+      }
+    } catch {}
+
     // Parse countdown configuration
     let parsedCountdown: any = { enabled: false };
     try {
@@ -441,6 +471,9 @@ export async function GET() {
       heroSlides: parsedHeroSlides,
       countdownConfig: parsedCountdown,
       globalCouponCampaigns,
+      features: parsedFeatures,
+      trendingSearches: parsedTrendingSearches,
+      cta: parsedCta,
       isMaintenance: maintenanceSetting?.value === 'true',
       allowGuestCheckout: allowGuestCheckoutSetting?.value === 'true',
     });

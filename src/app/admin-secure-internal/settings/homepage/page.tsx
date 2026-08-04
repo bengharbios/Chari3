@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -261,7 +262,7 @@ export default function AdminHomepageManager() {
   };
 
   const [isMounted, setIsMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<'layout' | 'pinning' | 'timer' | 'slides'>('layout');
+  const [activeTab, setActiveTab] = useState<'layout' | 'pinning' | 'timer' | 'slides' | 'features' | 'trending' | 'testimonials' | 'cta'>('layout');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -314,6 +315,13 @@ export default function AdminHomepageManager() {
 
   // Layout state
   const [layout, setLayout] = useState<SectionItem[]>([]);
+  
+  // Custom sections state
+  const [features, setFeatures] = useState<any[]>([]);
+  const [trendingSearches, setTrendingSearches] = useState<any>({ ar: [], en: [], fr: [] });
+  const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [ctaSettings, setCtaSettings] = useState<any>({});
+
 
   // Pinned items state
   const [pinned, setPinned] = useState<{
@@ -476,6 +484,10 @@ export default function AdminHomepageManager() {
         });
 
         setHeroSlides(d.heroSlides || []);
+        setFeatures(d.features || []);
+        setTrendingSearches(d.trendingSearches || { ar: [], en: [], fr: [] });
+        setCtaSettings(d.cta || {});
+        setTestimonials(d.testimonials || []);
       }
     } catch (err) {
       console.error('Failed to load configs', err);
@@ -494,7 +506,11 @@ export default function AdminHomepageManager() {
     updatedLayout = layout,
     updatedPinned = pinned,
     updatedCountdown = countdown,
-    updatedHeroSlides = heroSlides
+    updatedHeroSlides = heroSlides,
+    updatedFeatures = features,
+    updatedTrendingSearches = trendingSearches,
+    updatedTestimonials = testimonials,
+    updatedCtaSettings = ctaSettings
   ) => {
     setIsSaving(true);
     try {
@@ -514,6 +530,10 @@ export default function AdminHomepageManager() {
           endDate: updatedCountdown.endDate ? new Date(updatedCountdown.endDate).toISOString() : '',
         },
         heroSlides: updatedHeroSlides,
+        features: updatedFeatures,
+        trendingSearches: updatedTrendingSearches,
+        testimonials: updatedTestimonials,
+        cta: updatedCtaSettings,
       };
 
       const res = await fetch('/api/admin/homepage', {
@@ -921,6 +941,22 @@ export default function AdminHomepageManager() {
         <button onClick={() => setActiveTab('slides')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'slides' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
           <Sparkles className="w-4 h-4" />
           {t('homepage.heroSlides')}
+        </button>
+        <button onClick={() => setActiveTab('features')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'features' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
+          <Shield className="w-4 h-4" />
+          الميزات والضمانات
+        </button>
+        <button onClick={() => setActiveTab('trending')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'trending' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
+          <Search className="w-4 h-4" />
+          البحث الشائع
+        </button>
+        <button onClick={() => setActiveTab('testimonials')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'testimonials' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
+          <MessageCircle className="w-4 h-4" />
+          آراء العملاء
+        </button>
+        <button onClick={() => setActiveTab('cta')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'cta' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
+          <Megaphone className="w-4 h-4" />
+          لوحة الـ CTA
         </button>
       </div>
 
@@ -2385,9 +2421,9 @@ export default function AdminHomepageManager() {
                                     <img src={s.imageUrl} className="w-full h-full object-cover" alt="" />
                                   </div>
                                 ) : (
-                                  <div className={`w-3.5 h-3.5 rounded bg-gradient-to-br ${s.bg || 'from-blue-950 to-slate-900'} border border-white/10`} />
+                                  <div className={`w-3.5 h-3.5 rounded bg-gradient-to-br ${s.bg || s.bgGradient || 'from-blue-950 to-slate-900'} border border-white/10`} />
                                 )}
-                                <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">{s.imageUrl ? t('homepage.backgroundImage') : s.bg}</span>
+                                <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">{s.imageUrl ? t('homepage.backgroundImage') : (s.bg || s.bgGradient)}</span>
                               </div>
                             </div>
                           </div>
@@ -2460,7 +2496,7 @@ export default function AdminHomepageManager() {
                                 <div className="absolute inset-0 bg-slate-950/40 mix-blend-multiply" />
                               </>
                             ) : (
-                              <div className={`absolute inset-0 bg-gradient-to-br ${editSlideData.bg || 'from-blue-950 to-slate-900'} opacity-90`} />
+                              <div className={`absolute inset-0 bg-gradient-to-br ${editSlideData.bg || editSlideData.bgGradient || 'from-blue-950 to-slate-900'} opacity-90`} />
                             )}
                             <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
                             <div className="relative z-10 space-y-2 text-start">
@@ -2619,7 +2655,7 @@ export default function AdminHomepageManager() {
                       <div className="space-y-2 text-start pt-2">
                         <Label className="text-xs font-bold">{t('homepage.orChooseCssGradientBackgroundIfNoImageUp')}</Label>
                         <Input
-                          value={editSlideData.bg}
+                          value={editSlideData.bg || editSlideData.bgGradient}
                           onChange={e => setEditSlideData(prev => ({ ...prev, bg: e.target.value }))}
                           className="rounded-xl text-sm font-mono mb-2 text-start"
                           placeholder="from-blue-950 via-indigo-900 to-slate-900"
@@ -2663,6 +2699,212 @@ export default function AdminHomepageManager() {
               </Card>
             </div>
           )}
+
+          {/* Features Tab */}
+          {activeTab === 'features' && (
+            <div className="grid grid-cols-1 gap-6">
+              <Card className="card-surface rounded-[24px] shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg font-bold">شريط الميزات والضمانات</CardTitle>
+                    <CardDescription>إدارة الميزات المعروضة أسفل البانر الرئيسي.</CardDescription>
+                  </div>
+                  <Button onClick={() => persistConfig()} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
+                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    حفظ التغييرات
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-900">
+                    ملاحظة: يمكنك إضافة وتعديل الميزات التي تظهر في الصفحة الرئيسية. أدخل النص باللغة العربية والإنجليزية والفرنسية. اختر اسم الأيقونة (مثال: Shield, Truck, Award).
+                  </div>
+                  <div className="space-y-4">
+                    {features.map((feat, idx) => (
+                      <div key={idx} className="border border-border/80 rounded-[20px] p-4 bg-slate-50/50 dark:bg-slate-900/10 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-bold">ميزة #{idx + 1}</h4>
+                          <Button variant="ghost" size="sm" onClick={() => setFeatures(prev => prev.filter((_, i) => i !== idx))} className="text-destructive hover:bg-destructive/10">
+                            <Trash className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-xs">الأيقونة (Lucide Icon Name)</Label>
+                            <Input value={feat.icon || ''} onChange={(e) => setFeatures(prev => { const n = [...prev]; n[idx].icon = e.target.value; return n; })} placeholder="Shield, Truck..." />
+                          </div>
+                          <div>
+                            <Label className="text-xs">العنوان (العربية)</Label>
+                            <Input value={feat.titleAr || feat.title || ''} onChange={(e) => setFeatures(prev => { const n = [...prev]; n[idx].title = e.target.value; n[idx].titleAr = e.target.value; return n; })} />
+                          </div>
+                          <div>
+                            <Label className="text-xs">العنوان (الإنجليزية)</Label>
+                            <Input value={feat.titleEn || ''} onChange={(e) => setFeatures(prev => { const n = [...prev]; n[idx].titleEn = e.target.value; return n; })} />
+                          </div>
+                          <div>
+                            <Label className="text-xs">العنوان (الفرنسية)</Label>
+                            <Input value={feat.titleFr || ''} onChange={(e) => setFeatures(prev => { const n = [...prev]; n[idx].titleFr = e.target.value; return n; })} />
+                          </div>
+                          <div>
+                            <Label className="text-xs">الوصف (العربية)</Label>
+                            <Input value={feat.descAr || feat.desc || ''} onChange={(e) => setFeatures(prev => { const n = [...prev]; n[idx].desc = e.target.value; n[idx].descAr = e.target.value; return n; })} />
+                          </div>
+                          <div>
+                            <Label className="text-xs">الوصف (الإنجليزية)</Label>
+                            <Input value={feat.descEn || ''} onChange={(e) => setFeatures(prev => { const n = [...prev]; n[idx].descEn = e.target.value; return n; })} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Button variant="outline" onClick={() => setFeatures(prev => [...prev, { icon: 'Shield', title: 'ميزة جديدة', desc: 'وصف الميزة الجديدة' }])} className="w-full border-dashed">
+                    <Plus className="w-4 h-4 ml-2" />
+                    إضافة ميزة
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Trending Searches Tab */}
+          {activeTab === 'trending' && (
+            <div className="grid grid-cols-1 gap-6">
+              <Card className="card-surface rounded-[24px] shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg font-bold">كلمات البحث الشائعة</CardTitle>
+                    <CardDescription>إدارة الكلمات المقترحة في شريط البحث.</CardDescription>
+                  </div>
+                  <Button onClick={() => persistConfig()} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
+                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    حفظ التغييرات
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {['ar', 'en', 'fr'].map((lang) => (
+                    <div key={lang} className="space-y-2">
+                      <Label className="font-bold">الكلمات المفتاحية ({lang.toUpperCase()}) - افصل بينها بفاصلة ( , )</Label>
+                      <Textarea 
+                        rows={3} 
+                        value={(trendingSearches[lang] || []).join(', ')}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const arr = val.split(',').map(s => s.trim()).filter(Boolean);
+                          setTrendingSearches((prev: any) => ({ ...prev, [lang]: arr }));
+                        }}
+                        placeholder="عطور, آيفون, ملابس..."
+                        className="font-mono text-left direction-ltr"
+                      />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Testimonials Tab */}
+          {activeTab === 'testimonials' && (
+            <div className="grid grid-cols-1 gap-6">
+              <Card className="card-surface rounded-[24px] shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg font-bold">آراء وتقييمات العملاء</CardTitle>
+                    <CardDescription>إدارة التقييمات المعروضة في الصفحة الرئيسية.</CardDescription>
+                  </div>
+                  <Button onClick={() => persistConfig()} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
+                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    حفظ التغييرات
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-4">
+                    {testimonials.map((testi, idx) => (
+                      <div key={idx} className="border border-border/80 rounded-[20px] p-4 bg-slate-50/50 dark:bg-slate-900/10 space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-bold">تقييم #{idx + 1}</h4>
+                          <Button variant="ghost" size="sm" onClick={() => setTestimonials(prev => prev.filter((_, i) => i !== idx))} className="text-destructive hover:bg-destructive/10">
+                            <Trash className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-xs">اسم العميل</Label>
+                            <Input value={testi.name || ''} onChange={(e) => setTestimonials(prev => { const n = [...prev]; n[idx].name = e.target.value; return n; })} />
+                          </div>
+                          <div>
+                            <Label className="text-xs">التقييم (من 5)</Label>
+                            <Input type="number" min={1} max={5} value={testi.rating || 5} onChange={(e) => setTestimonials(prev => { const n = [...prev]; n[idx].rating = Number(e.target.value); return n; })} />
+                          </div>
+                          <div className="md:col-span-2">
+                            <Label className="text-xs">نص التقييم</Label>
+                            <Textarea value={testi.text || ''} onChange={(e) => setTestimonials(prev => { const n = [...prev]; n[idx].text = e.target.value; return n; })} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Button variant="outline" onClick={() => setTestimonials(prev => [...prev, { name: 'عميل جديد', text: 'تجربة رائعة!', rating: 5 }])} className="w-full border-dashed">
+                    <Plus className="w-4 h-4 ml-2" />
+                    إضافة تقييم
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* CTA Tab */}
+          {activeTab === 'cta' && (
+            <div className="grid grid-cols-1 gap-6">
+              <Card className="card-surface rounded-[24px] shadow-sm">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg font-bold">لوحة دعوة التجار (CTA)</CardTitle>
+                    <CardDescription>إدارة النصوص المعروضة في اللوحة السفلية.</CardDescription>
+                  </div>
+                  <Button onClick={() => persistConfig()} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
+                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    حفظ التغييرات
+                  </Button>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs">العنوان (العربية)</Label>
+                      <Input value={ctaSettings.titleAr || ctaSettings.title || ''} onChange={(e) => setCtaSettings((prev: any) => ({ ...prev, title: e.target.value, titleAr: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">العنوان (الإنجليزية)</Label>
+                      <Input value={ctaSettings.titleEn || ''} onChange={(e) => setCtaSettings((prev: any) => ({ ...prev, titleEn: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">الوصف (العربية)</Label>
+                      <Textarea value={ctaSettings.descAr || ctaSettings.desc || ''} onChange={(e) => setCtaSettings((prev: any) => ({ ...prev, desc: e.target.value, descAr: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">الوصف (الإنجليزية)</Label>
+                      <Textarea value={ctaSettings.descEn || ''} onChange={(e) => setCtaSettings((prev: any) => ({ ...prev, descEn: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">نص الزر (العربية)</Label>
+                      <Input value={ctaSettings.btnAr || ctaSettings.btn || ''} onChange={(e) => setCtaSettings((prev: any) => ({ ...prev, btn: e.target.value, btnAr: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">نص الزر (الإنجليزية)</Label>
+                      <Input value={ctaSettings.btnEn || ''} onChange={(e) => setCtaSettings((prev: any) => ({ ...prev, btnEn: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">نص الزر (الفرنسية)</Label>
+                      <Input value={ctaSettings.btnFr || ''} onChange={(e) => setCtaSettings((prev: any) => ({ ...prev, btnFr: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label className="text-xs">رابط الزر (URL)</Label>
+                      <Input value={ctaSettings.url || '/admin/register'} onChange={(e) => setCtaSettings((prev: any) => ({ ...prev, url: e.target.value }))} />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
         </div>
       )}
     </div>
