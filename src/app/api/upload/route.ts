@@ -30,8 +30,15 @@ function getUploadDir(): string {
   // Ignore placeholder UPLOAD_DIR set by Hostinger
   const envDir = process.env.UPLOAD_DIR;
   if (envDir && !envDir.includes('/USER/')) return envDir;
+  
+  const cwd = process.cwd();
+  if (cwd.includes('/domains/') && cwd.includes('/hbuilds/')) {
+    const domainRoot = cwd.substring(0, cwd.indexOf('/hbuilds/'));
+    return path.join(domainRoot, 'ChariDay_uploads');
+  }
+  
   // Use persistent upload directory outside of the project root
-  return path.join(process.cwd(), '..', 'ChariDay_uploads');
+  return path.join(cwd, '..', 'ChariDay_uploads');
 }
 
 export async function POST(request: NextRequest) {

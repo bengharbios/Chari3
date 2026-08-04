@@ -14,7 +14,14 @@ const MIME_MAP: Record<string, string> = {
 function getUploadDir(): string {
   const envDir = process.env.UPLOAD_DIR;
   if (envDir && !envDir.includes('/USER/')) return envDir;
-  return path.join(process.cwd(), '..', 'ChariDay_uploads');
+  
+  const cwd = process.cwd();
+  if (cwd.includes('/domains/') && cwd.includes('/hbuilds/')) {
+    const domainRoot = cwd.substring(0, cwd.indexOf('/hbuilds/'));
+    return path.join(domainRoot, 'ChariDay_uploads');
+  }
+  
+  return path.join(cwd, '..', 'ChariDay_uploads');
 }
 
 export async function GET(
