@@ -7,7 +7,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { 
   Loader2, Save, ArrowRight, Home, LayoutGrid, Pin, Clock, 
   ChevronUp, ChevronDown, Trash, Search, Plus, Eye, EyeOff, Sparkles, CheckCircle2,
-  Edit, Settings, Sparkle, Monitor, Shield
+  Edit, Settings, Sparkle, Monitor, Shield, MessageCircle, Megaphone
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
