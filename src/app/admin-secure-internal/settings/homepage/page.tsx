@@ -231,7 +231,7 @@ export default function AdminHomepageManager() {
   const { isAdminAuthenticated } = useAdminAuthStore();
   const rawLanguages = useTranslationStore(state => state.languages);
   const languages = rawLanguages.filter((l: any) => l.isActive !== false);
-  const { locale } = useTranslation();
+  const { t, locale } = useTranslation();
   const dir = locale === 'ar' ? 'rtl' : 'ltr';
   const isAr = locale === 'ar';
 
@@ -242,8 +242,7 @@ export default function AdminHomepageManager() {
     return subPath === '' ? `/${baseSlug}` : `/${baseSlug}/${subPath}`;
   };
 
-  const t = (ar: string, en: string) => (isAr ? ar : en);
-
+  
   
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -525,14 +524,14 @@ export default function AdminHomepageManager() {
 
       const d = await res.json();
       if (d.success) {
-        toast.success(t('تم حفظ التغييرات بنجاح في قاعدة البيانات', 'Changes saved successfully to database'), {
+        toast.success(t('homepage.changesSavedSuccessfullyToDatabase'), {
           icon: <CheckCircle2 className="text-emerald-500 w-5 h-5" />
         });
       } else {
         throw new Error(d.error);
       }
     } catch (err: any) {
-      toast.error(t('فشل حفظ التعديلات', 'Failed to save changes'));
+      toast.error(t('homepage.failedToSaveChanges'));
     } finally {
       setIsSaving(false);
     }
@@ -645,14 +644,14 @@ export default function AdminHomepageManager() {
     }
 
     if (!itemToPin) {
-      toast.error(t('يرجى تحديد عنصر أولاً!', 'Please select an item first!'));
+      toast.error(t('homepage.pleaseSelectAnItemFirst'));
       return;
     }
 
     const currentList = pinned[listKey] || [];
 
     if (currentList.some((i: any) => i.id === itemToPin.id)) {
-      toast.error(t('هذا العنصر مثبت بالفعل!', 'This item is already pinned!'));
+      toast.error(t('homepage.thisItemIsAlreadyPinned'));
       return;
     }
 
@@ -727,7 +726,7 @@ export default function AdminHomepageManager() {
     if (!sect) return;
     // Block deletion of core sections
     if (CORE_SECTION_TYPES.has(sect.type)) {
-      toast.error(t('لا يمكن حذف الأقسام الأساسية. يمكنك إخفاءها فقط.', 'Core sections cannot be deleted. You can hide them instead.'));
+      toast.error(t('homepage.coreSectionsCannotBeDeletedYouCanHideThe'));
       return;
     }
     const updated = layout.filter((_, i) => i !== index);
@@ -872,7 +871,7 @@ export default function AdminHomepageManager() {
   const categoryOptions: SelectorOption[] = categoriesList.map(c => ({
     id: c.id,
     name: isAr ? c.name : (c.nameEn || c.name),
-    subText: c.parentId ? t('تصنيف فرعي', 'Subcategory') : t('تصنيف رئيسي', 'Main Category'),
+    subText: c.parentId ? t('homepage.subcategory') : t('homepage.mainCategory'),
   }));
 
   if (!isMounted || !isAdminAuthenticated) return null;
@@ -889,10 +888,10 @@ export default function AdminHomepageManager() {
           <div>
             <h1 className="text-2xl font-black text-foreground flex items-center gap-2">
               <Home className="h-6 w-6 text-brand" />
-              {t('إدارة وتصميم الصفحة الرئيسية', 'Homepage Manager & Designer')}
+              {t('homepage.homepageManagerDesigner')}
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              {t('تحكم في هيكل الصفحة الرئيسية، تثبيت المنتجات، وتفعيل عروض ميجا التنازلية', 'Control homepage layout, pin entities, and adjust Mega countdown deals')}
+              {t('homepage.controlHomepageLayoutPinEntitiesAndAdjus')}
             </p>
           </div>
         </div>
@@ -900,7 +899,7 @@ export default function AdminHomepageManager() {
           <Link href={getAdminPath('advertisements')}>
             <Button variant="outline" className="font-bold rounded-xl gap-2 border-brand/35 hover:border-brand hover:bg-brand/5 text-brand">
               <Monitor className="h-4 w-4" />
-              {t('إدارة الإعلانات والبنرات العامة', 'Global Ads & Banners')}
+              {t('homepage.globalAdsBanners')}
             </Button>
           </Link>
         </div>
@@ -909,19 +908,19 @@ export default function AdminHomepageManager() {
       <div className="flex flex-wrap p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border max-w-2xl gap-1 select-none w-fit">
         <button onClick={() => setActiveTab('layout')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'layout' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
           <LayoutGrid className="w-4 h-4" />
-          {t('ترتيب الأقسام', 'Sections Layout')}
+          {t('homepage.sectionsLayout')}
         </button>
         <button onClick={() => setActiveTab('pinning')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'pinning' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
           <Pin className="w-4 h-4" />
-          {t('التثبيت والترتيب اليدوي', 'Manual Pinning')}
+          {t('homepage.manualPinning')}
         </button>
         <button onClick={() => setActiveTab('timer')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'timer' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
           <Clock className="w-4 h-4" />
-          {t('عداد العروض التنازلية', 'Countdown Timer')}
+          {t('homepage.countdownTimer')}
         </button>
         <button onClick={() => setActiveTab('slides')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'slides' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
           <Sparkles className="w-4 h-4" />
-          {t('سلايدر البانر الرئيسي', 'Hero Slides')}
+          {t('homepage.heroSlides')}
         </button>
       </div>
 
@@ -937,9 +936,9 @@ export default function AdminHomepageManager() {
               {/* Left Column: Sections List & Ordering */}
               <Card className="lg:col-span-6 card-surface rounded-[24px] shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-lg font-bold">{t('ترتيب وهيكل أقسام الصفحة الرئيسية', 'Homepage Section Order')}</CardTitle>
+                  <CardTitle className="text-lg font-bold">{t('homepage.homepageSectionOrder')}</CardTitle>
                   <CardDescription>
-                    {t('رتب أقسام الصفحة، تحكم بظهورها، أو احذفها وأضف أقساماً جديدة.', 'Reorder, toggle, or delete sections and append new ones.')}
+                    {t('homepage.reorderToggleOrDeleteSectionsAndAppendNe')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -966,17 +965,17 @@ export default function AdminHomepageManager() {
 
                       const getSectionBadge = (type: string) => {
                         switch (type) {
-                          case 'hero': return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-[10px] font-bold">{t('سلايدر رئيسي', 'Hero Slider')}</Badge>;
-                          case 'features': return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] font-bold">{t('شريط الميزات', 'Features Bar')}</Badge>;
-                          case 'categories': return <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20 text-[10px] font-bold">{t('تصنيفات دائرية', 'Categories Circle')}</Badge>;
-                          case 'bento_offers': return <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px] font-bold">{t('عروض ميجا بانتو', 'Bento Offers')}</Badge>;
-                          case 'featured_products': return <Badge variant="outline" className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 text-[10px] font-bold">{t('منتجات مميزة', 'Featured Products')}</Badge>;
-                          case 'top_sellers': return <Badge variant="outline" className="bg-cyan-500/10 text-cyan-500 border-cyan-500/20 text-[10px] font-bold">{t('تجار ومتاجر', 'Sellers Slider')}</Badge>;
-                          case 'testimonials': return <Badge variant="outline" className="bg-teal-500/10 text-teal-500 border-teal-500/20 text-[10px] font-bold">{t('تقييمات', 'Testimonials')}</Badge>;
-                          case 'cta': return <Badge variant="outline" className="bg-rose-500/10 text-rose-500 border-rose-500/20 text-[10px] font-bold">{t('دعوة التسجيل', 'CTA Panel')}</Badge>;
-                          case 'category_products': return <Badge variant="outline" className="bg-pink-500/10 text-pink-500 border-pink-500/20 text-[10px] font-bold">{t('منتجات تصنيف', 'Category Showcase')}</Badge>;
-                          case 'category_circles': return <Badge variant="outline" className="bg-violet-500/10 text-violet-500 border-violet-500/20 text-[10px] font-bold">{t('أيقونات تصنيف', 'Subcategory Circles')}</Badge>;
-                          case 'banner': return <Badge variant="outline" className="bg-orange-500/10 text-orange-500 border-orange-500/20 text-[10px] font-bold">{t('إعلان مخصص', 'Custom Banner')}</Badge>;
+                          case 'hero': return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 text-[10px] font-bold">{t('homepage.heroSlider')}</Badge>;
+                          case 'features': return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[10px] font-bold">{t('homepage.featuresBar')}</Badge>;
+                          case 'categories': return <Badge variant="outline" className="bg-purple-500/10 text-purple-500 border-purple-500/20 text-[10px] font-bold">{t('homepage.categoriesCircle')}</Badge>;
+                          case 'bento_offers': return <Badge variant="outline" className="bg-amber-500/10 text-amber-500 border-amber-500/20 text-[10px] font-bold">{t('homepage.bentoOffers')}</Badge>;
+                          case 'featured_products': return <Badge variant="outline" className="bg-indigo-500/10 text-indigo-500 border-indigo-500/20 text-[10px] font-bold">{t('homepage.featuredProducts')}</Badge>;
+                          case 'top_sellers': return <Badge variant="outline" className="bg-cyan-500/10 text-cyan-500 border-cyan-500/20 text-[10px] font-bold">{t('homepage.sellersSlider')}</Badge>;
+                          case 'testimonials': return <Badge variant="outline" className="bg-teal-500/10 text-teal-500 border-teal-500/20 text-[10px] font-bold">{t('homepage.testimonials')}</Badge>;
+                          case 'cta': return <Badge variant="outline" className="bg-rose-500/10 text-rose-500 border-rose-500/20 text-[10px] font-bold">{t('homepage.ctaPanel')}</Badge>;
+                          case 'category_products': return <Badge variant="outline" className="bg-pink-500/10 text-pink-500 border-pink-500/20 text-[10px] font-bold">{t('homepage.categoryShowcase')}</Badge>;
+                          case 'category_circles': return <Badge variant="outline" className="bg-violet-500/10 text-violet-500 border-violet-500/20 text-[10px] font-bold">{t('homepage.subcategoryCircles')}</Badge>;
+                          case 'banner': return <Badge variant="outline" className="bg-orange-500/10 text-orange-500 border-orange-500/20 text-[10px] font-bold">{t('homepage.customBanner')}</Badge>;
                           default: return <Badge variant="outline" className="text-[10px] font-bold">{type}</Badge>;
                         }
                       };
@@ -1007,7 +1006,7 @@ export default function AdminHomepageManager() {
                               {sect.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-destructive" />}
                             </Button>
                             {CORE_SECTION_TYPES.has(sect.type) ? (
-                              <Button variant="ghost" size="icon" disabled className="rounded-full h-8 w-8 opacity-30 cursor-not-allowed" title={t('قسم أساسي لا يمكن حذفه', 'Core section, cannot delete')}>
+                              <Button variant="ghost" size="icon" disabled className="rounded-full h-8 w-8 opacity-30 cursor-not-allowed" title={t('homepage.coreSectionCannotDelete')}>
                                 <Trash className="w-4 h-4" />
                               </Button>
                             ) : (
@@ -1026,29 +1025,29 @@ export default function AdminHomepageManager() {
 
                   {/* Add New Section Block */}
                   <div className="p-4 border border-dashed border-slate-300 dark:border-slate-700 rounded-[20px] bg-slate-50/50 dark:bg-slate-900/10 space-y-3">
-                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('إضافة قسم مخصص جديد', 'Add Custom Section')}</Label>
+                    <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider">{t('homepage.addCustomSection')}</Label>
                     <div className="flex gap-2">
                       <select
                         value={newSectType}
                         onChange={(e) => setNewSectType(e.target.value)}
                         className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold grow"
                       >
-                        <option value="category_products">📦 {t('منتجات تصنيف (Category Showcase Grid)', 'Category Showcase Products')}</option>
-                        <option value="category_circles">⭕ {t('أيقونات تصنيفات فرعية دائرية (Subcategory Circles)', 'Subcategory Circles Row')}</option>
-                        <option value="banner">🖼️ {t('إعلان ترويجي مخصص (Custom Ad Banner)', 'Inline Ad Banner')}</option>
-                        <option value="ad_zone">📢 {t('منطقة إعلانية عامة (Ad Zone Banner)', 'General Ad Zone Banner')}</option>
-                        <option value="hero">🔥 {t('سلايدر البانر الرئيسي', 'Hero Slider')}</option>
-                        <option value="features">🛡️ {t('شريط الميزات والضمانات', 'Guarantee Badges')}</option>
-                        <option value="categories">🏷️ {t('أيقونات التصنيفات الدائرية العامة', 'Main Categories Circles')}</option>
-                        <option value="bento_offers">⚡ {t('عروض ميجا التنازلية (Noon Bento)', 'Mega Countdown Bento')}</option>
-                        <option value="featured_products">⭐ {t('شبكة المنتجات المميزة الذكية', 'Featured Products Grid')}</option>
-                        <option value="top_sellers">🏪 {t('سلايدر المتاجر والتجار', 'Sellers Carousel')}</option>
-                        <option value="testimonials">💬 {t('آراء وتقييمات العملاء', 'Customer Testimonials')}</option>
-                        <option value="cta">💼 {t('دعوة التجار للتسجيل (CTA)', 'Seller CTA Panel')}</option>
+                        <option value="category_products">📦 {t('homepage.categoryShowcaseProducts')}</option>
+                        <option value="category_circles">⭕ {t('homepage.subcategoryCirclesRow')}</option>
+                        <option value="banner">🖼️ {t('homepage.inlineAdBanner')}</option>
+                        <option value="ad_zone">📢 {t('homepage.generalAdZoneBanner')}</option>
+                        <option value="hero">🔥 {t('homepage.heroSlides')}</option>
+                        <option value="features">🛡️ {t('homepage.guaranteeBadges')}</option>
+                        <option value="categories">🏷️ {t('homepage.mainCategoriesCircles')}</option>
+                        <option value="bento_offers">⚡ {t('homepage.megaCountdownBento')}</option>
+                        <option value="featured_products">⭐ {t('homepage.featuredProductsGrid')}</option>
+                        <option value="top_sellers">🏪 {t('homepage.sellersCarousel')}</option>
+                        <option value="testimonials">💬 {t('homepage.customerTestimonials')}</option>
+                        <option value="cta">💼 {t('homepage.sellerCtaPanel')}</option>
                       </select>
                       <Button onClick={addSection} className="rounded-xl font-bold gap-1 px-5">
                         <Plus className="w-4 h-4" />
-                        {t('إضافة', 'Add')}
+                        {t('homepage.add')}
                       </Button>
                     </div>
                   </div>
@@ -1056,7 +1055,7 @@ export default function AdminHomepageManager() {
                   <div className="flex justify-end pt-2 border-t">
                     <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
                       {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                      {t('حفظ ترتيب وهيكل الصفحة', 'Save Layout changes')}
+                      {t('homepage.saveLayoutChanges')}
                     </Button>
                   </div>
                 </CardContent>
@@ -1068,20 +1067,20 @@ export default function AdminHomepageManager() {
                   <CardTitle className="text-lg font-bold flex items-center gap-1.5">
                     <Edit className="w-5 h-5 text-brand" />
                     {editingSectId 
-                      ? `${t('إعدادات وتهيئة القسم', 'Configure Section Settings')}`
-                      : t('اختر قسماً لتعديل إعداداته', 'Select a section to configure')}
+                      ? `${t('homepage.configureSectionSettings')}`
+                      : t('homepage.selectASectionToConfigure')}
                   </CardTitle>
                   <CardDescription>
                     {editingSectId 
-                      ? t('املأ الحقول التالية لتخصيص محتوى وهيكل هذا القسم.', 'Provide parameters for the selected homepage block.')
-                      : t('اضغط على أيقونة الإعدادات (الترس) بجانب أي قسم للبدء.', 'Click the settings gear icon next to any section to start editing.')}
+                      ? t('homepage.provideParametersForTheSelectedHomepageB')
+                      : t('homepage.clickTheSettingsGearIconNextToAnySection')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {editingSectId === null ? (
                     <div className="flex flex-col items-center justify-center py-28 text-muted-foreground border border-dashed rounded-[20px] bg-background">
                       <Settings className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-3" />
-                      <p className="text-sm font-medium">{t('لم يتم تحديد أي قسم بعد لتخصيصه', 'No section selected for configuration')}</p>
+                      <p className="text-sm font-medium">{t('homepage.noSectionSelectedForConfiguration')}</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -1090,7 +1089,7 @@ export default function AdminHomepageManager() {
                         {languages.map((lang: any) => {
                           const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                           const keyName = `title${codeSuffix}`;
-                          const inputLabel = `${t('العنوان باللغة', 'Title in')} ${lang.name}`;
+                          const inputLabel = `${t('homepage.titleIn')} ${lang.name}`;
                           return (
                             <div key={lang.code} className="space-y-2 text-start">
                               <Label className="text-xs font-bold">{inputLabel}</Label>
@@ -1108,14 +1107,14 @@ export default function AdminHomepageManager() {
                       {/* Layout style for category products */}
                       {layout.find(s => s.id === editingSectId)?.type === 'category_products' && (
                         <div className="space-y-4 pt-2 border-t text-start">
-                          <Label className="text-xs font-bold">{t('نمط التخطيط والهيكل', 'Layout Style')}</Label>
+                          <Label className="text-xs font-bold">{t('homepage.layoutStyle')}</Label>
                           <select
                             value={editSectData.layoutStyle}
                             onChange={(e) => setEditSectData(prev => ({ ...prev, layoutStyle: e.target.value }))}
                             className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
                           >
-                            <option value="carousel">🎠 {t('سلايدر متحرك أفقي (Slider Carousel)', 'Horizontal Sliding Carousel')}</option>
-                            <option value="grid">🔲 {t('شبكة منتجات ثابتة (Fixed Grid)', 'Responsive Products Grid')}</option>
+                            <option value="carousel">🎠 {t('homepage.horizontalSlidingCarousel')}</option>
+                            <option value="grid">🔲 {t('homepage.responsiveProductsGrid')}</option>
                           </select>
                         </div>
                       )}
@@ -1127,8 +1126,8 @@ export default function AdminHomepageManager() {
                             {languages.map((lang: any) => {
                               const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                               const keyName = `image${codeSuffix}Url`;
-                              const inputLabel = `${t('صورة الإعلان باللغة', 'Banner Image in')} ${lang.name}`;
-                              const hintText = `${t('الصورة الإعلانية التي ستظهر للمتصفح بـ', 'Uploaded banner displayed in')} ${lang.name}.`;
+                              const inputLabel = `${t('homepage.bannerImageIn')} ${lang.name}`;
+                              const hintText = `${t('homepage.uploadedBannerDisplayedIn')} ${lang.name}.`;
                               return (
                                 <div key={lang.code} className="space-y-2 text-start">
                                   <Label className="text-xs font-bold">{inputLabel}</Label>
@@ -1143,7 +1142,7 @@ export default function AdminHomepageManager() {
                           </div>
 
                           <div className="space-y-2 text-start">
-                            <Label className="text-xs font-bold">{t('رابط التوجيه عند النقر (Target Link URL)', 'Redirect URL Link')}</Label>
+                            <Label className="text-xs font-bold">{t('homepage.redirectUrlLink')}</Label>
                             <Input
                               value={editSectData.linkUrl}
                               onChange={e => setEditSectData(prev => ({ ...prev, linkUrl: e.target.value }))}
@@ -1157,7 +1156,7 @@ export default function AdminHomepageManager() {
                       {/* General Ad Zone Banner Settings */}
                       {layout.find(s => s.id === editingSectId)?.type === 'ad_zone' && (
                         <div className="space-y-4 pt-2 border-t text-start">
-                          <Label className="text-sm font-bold">{t('منطقة الإعلان المستهدفة', 'Target Advertisement Zone')}</Label>
+                          <Label className="text-sm font-bold">{t('homepage.targetAdvertisementZone')}</Label>
                           <select
                             value={editSectData.metadata?.adZone || 'banner_mid'}
                             onChange={(e) => setEditSectData(prev => ({
@@ -1166,12 +1165,12 @@ export default function AdminHomepageManager() {
                             }))}
                             className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
                           >
-                            <option value="banner_mid">🖼️ {t('إعلان أوسط الصفحة (banner_mid)', 'Middle Banner')}</option>
-                            <option value="inline_products">📦 {t('إعلان مدمج مع المنتجات (inline_products)', 'Inline Products')}</option>
-                            <option value="category_header">🏷️ {t('إعلان أعلى تصنيف المنتجات (category_header)', 'Category Header')}</option>
-                            <option value="sidebar">🔲 {t('إعلان جانبي (sidebar)', 'Sidebar Ad')}</option>
-                            <option value="banner_top">🔝 {t('إعلان شريط علوي (banner_top)', 'Top Header Banner')}</option>
-                            <option value="banner_bottom">🔙 {t('إعلان أسفل الصفحة (banner_bottom)', 'Bottom Banner')}</option>
+                            <option value="banner_mid">🖼️ {t('homepage.middleBanner')}</option>
+                            <option value="inline_products">📦 {t('homepage.inlineProducts')}</option>
+                            <option value="category_header">🏷️ {t('homepage.categoryHeader')}</option>
+                            <option value="sidebar">🔲 {t('homepage.sidebarAd')}</option>
+                            <option value="banner_top">🔝 {t('homepage.topHeaderBanner')}</option>
+                            <option value="banner_bottom">🔙 {t('homepage.bottomBanner')}</option>
                           </select>
                         </div>
                       )}
@@ -1184,11 +1183,11 @@ export default function AdminHomepageManager() {
                         <div className="space-y-4 pt-4 border-t">
                           <h4 className="text-xs font-bold text-amber-500 uppercase flex items-center gap-1.5">
                             <Sparkles className="w-3.5 h-3.5" />
-                            {t('معايير الفرز الذكي', 'Smart Sorting Criteria')}
+                            {t('homepage.smartSortingCriteria')}
                           </h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2 text-start">
-                              <Label className="text-xs font-bold">{t('معيار فرز المحتوى', 'Content Sort By')}</Label>
+                              <Label className="text-xs font-bold">{t('homepage.contentSortBy')}</Label>
                               <select
                                 value={editSectData.filterType || 'smart'}
                                 onChange={(e) => setEditSectData(prev => ({ ...prev, filterType: e.target.value }))}
@@ -1196,24 +1195,24 @@ export default function AdminHomepageManager() {
                               >
                                 {layout.find(s => s.id === editingSectId)?.type === 'top_sellers' ? (
                                   <>
-                                    <option value="smart">🤖 {t('خوارزمية ذكية (تلقائي)', 'Smart Algorithm (Auto)')}</option>
-                                    <option value="most_sales">📈 {t('الأكثر مبيعاً وطلباً', 'Most Sales & Orders')}</option>
-                                    <option value="highest_rated">⭐ {t('الأعلى تقييماً', 'Highest Rated')}</option>
-                                    <option value="most_products">📦 {t('الأكثر منتجات', 'Most Products')}</option>
+                                    <option value="smart">🤖 {t('homepage.smartAlgorithmAuto')}</option>
+                                    <option value="most_sales">📈 {t('homepage.mostSalesOrders')}</option>
+                                    <option value="highest_rated">⭐ {t('homepage.highestRated')}</option>
+                                    <option value="most_products">📦 {t('homepage.mostProducts')}</option>
                                   </>
                                 ) : (
                                   <>
-                                    <option value="smart">🤖 {t('خوارزمية ذكية (تلقائي)', 'Smart Algorithm (Auto)')}</option>
-                                    <option value="most_sold">🔥 {t('الأكثر مبيعاً (المبيعات)', 'Most Sold (Sales)')}</option>
-                                    <option value="most_viewed">👁️ {t('الأكثر مشاهدة وطلباً', 'Most Viewed & Requested')}</option>
-                                    <option value="highest_rated">⭐ {t('الأعلى تقييماً', 'Highest Rated')}</option>
-                                    <option value="newest">🆕 {t('الأحدث إضافة', 'Newest Added')}</option>
+                                    <option value="smart">🤖 {t('homepage.smartAlgorithmAuto')}</option>
+                                    <option value="most_sold">🔥 {t('homepage.mostSoldSales')}</option>
+                                    <option value="most_viewed">👁️ {t('homepage.mostViewedRequested')}</option>
+                                    <option value="highest_rated">⭐ {t('homepage.highestRated')}</option>
+                                    <option value="newest">🆕 {t('homepage.newestAdded')}</option>
                                   </>
                                 )}
                               </select>
                             </div>
                             <div className="space-y-2 text-start">
-                              <Label className="text-xs font-bold">{t('الحد الأقصى للعرض', 'Maximum Items to Show')}</Label>
+                              <Label className="text-xs font-bold">{t('homepage.maximumItemsToShow')}</Label>
                               <Input
                                 type="number"
                                 min={1}
@@ -1231,7 +1230,7 @@ export default function AdminHomepageManager() {
                       <div className="space-y-4 pt-4 border-t">
                         <h4 className="text-xs font-bold text-indigo-500 uppercase flex items-center gap-1.5">
                           <Sparkles className="w-3.5 h-3.5" />
-                          {t('تخصيصات متقدمة (نصوص وشارات ومؤقتات)', 'Advanced Customization (Texts, Badges & Timers)')}
+                          {t('homepage.advancedCustomizationTextsBadgesTimers')}
                         </h4>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1239,7 +1238,7 @@ export default function AdminHomepageManager() {
                           {languages.map((lang: any) => {
                             const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                             const keyName = `badge${codeSuffix}`;
-                            const inputLabel = `${t('الشارة / الهاشتاغ باللغة', 'Badge / Hashtag in')} ${lang.name}`;
+                            const inputLabel = `${t('homepage.badgeHashtagIn')} ${lang.name}`;
                             return (
                               <div key={lang.code} className="space-y-2 text-start">
                                 <Label className="text-xs font-bold">{inputLabel}</Label>
@@ -1258,19 +1257,19 @@ export default function AdminHomepageManager() {
 
                           {/* Universal Timer */}
                           <div className="space-y-2 text-start">
-                            <Label className="text-xs font-bold">{t('تفعيل مؤقت تنازلي؟', 'Enable Countdown Timer?')}</Label>
+                            <Label className="text-xs font-bold">{t('homepage.enableCountdownTimer')}</Label>
                             <select
                               value={editSectData.metadata?.enableTimer ? 'true' : 'false'}
                               onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, enableTimer: e.target.value === 'true' } }))}
                               className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
                             >
-                              <option value="false">{t('لا، معطل', 'No, Disabled')}</option>
-                              <option value="true">{t('نعم، مفعل', 'Yes, Enabled')}</option>
+                              <option value="false">{t('homepage.noDisabled')}</option>
+                              <option value="true">{t('homepage.yesEnabled')}</option>
                             </select>
                           </div>
                           {editSectData.metadata?.enableTimer && (
                             <div className="space-y-2 text-start">
-                              <Label className="text-xs font-bold">{t('تاريخ ووقت الانتهاء', 'Timer End Date & Time')}</Label>
+                              <Label className="text-xs font-bold">{t('homepage.timerEndDateTime')}</Label>
                               <Input
                                 type="datetime-local"
                                 value={editSectData.metadata?.timerEndDate || ''}
@@ -1286,13 +1285,13 @@ export default function AdminHomepageManager() {
                         <div className="space-y-4 pt-4 border-t border-border/60">
                           <h4 className="text-xs font-bold text-amber-500 uppercase flex items-center gap-1.5">
                             <Sparkle className="w-3.5 h-3.5" />
-                            {t('تحديد مصدر البيانات والفلترة', 'Data Source & Filtering')}
+                            {t('homepage.dataSourceFiltering')}
                           </h4>
                           
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             {/* Source Type Selector */}
                             <div className="space-y-1.5 text-start">
-                              <Label className="text-xs font-bold text-slate-500">{t('مصدر المنتجات الأساسي', 'Primary Product Source')}</Label>
+                              <Label className="text-xs font-bold text-slate-500">{t('homepage.primaryProductSource')}</Label>
                               <select
                                 value={sourceSelectType}
                                 onChange={(e) => {
@@ -1308,22 +1307,22 @@ export default function AdminHomepageManager() {
                                 }}
                                 className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
                               >
-                                <option value="all">🌐 {t('كل المنصة (العامة)', 'All Platform')}</option>
-                                <option value="store">🏪 {t('متجر كبير محدد', 'Specific Store')}</option>
-                                <option value="seller">👤 {t('تاجر مستقل محدد', 'Specific Seller')}</option>
+                                <option value="all">🌐 {t('homepage.allPlatform')}</option>
+                                <option value="store">🏪 {t('homepage.specificStore')}</option>
+                                <option value="seller">👤 {t('homepage.specificSeller')}</option>
                               </select>
                             </div>
 
                             {/* Store Selector */}
                             {sourceSelectType === 'store' && (
                               <div className="space-y-1.5 text-start">
-                                <Label className="text-xs font-bold text-slate-500">{t('اختر المتجر الكبير', 'Select Store')}</Label>
+                                <Label className="text-xs font-bold text-slate-500">{t('homepage.selectStore')}</Label>
                                 <SearchableSelector
                                   items={storeOptions}
                                   selectedValue={editSectData.storeId || ''}
                                   onSelect={val => setEditSectData(prev => ({ ...prev, storeId: val }))}
-                                  placeholder={t('اختر متجراً للربط...', 'Select Store to link...')}
-                                  emptyText={t('لا توجد متاجر مطابقة', 'No matching stores')}
+                                  placeholder={t('homepage.selectStoreToLink')}
+                                  emptyText={t('homepage.noMatchingStores')}
                                   isAr={isAr}
                                 />
                               </div>
@@ -1332,13 +1331,13 @@ export default function AdminHomepageManager() {
                             {/* Seller Selector */}
                             {sourceSelectType === 'seller' && (
                               <div className="space-y-1.5 text-start">
-                                <Label className="text-xs font-bold text-slate-500">{t('اختر التاجر المستقل', 'Select Seller')}</Label>
+                                <Label className="text-xs font-bold text-slate-500">{t('homepage.selectSeller')}</Label>
                                 <SearchableSelector
                                   items={sellerOptions}
                                   selectedValue={editSectData.sellerId || ''}
                                   onSelect={val => setEditSectData(prev => ({ ...prev, sellerId: val }))}
-                                  placeholder={t('اختر تاجراً للربط...', 'Select Seller to link...')}
-                                  emptyText={t('لا توجد تجار مطابقة', 'No matching sellers')}
+                                  placeholder={t('homepage.selectSellerToLink')}
+                                  emptyText={t('homepage.noMatchingSellers')}
                                   isAr={isAr}
                                 />
                               </div>
@@ -1346,13 +1345,13 @@ export default function AdminHomepageManager() {
 
                             {/* Category Filter */}
                             <div className="space-y-1.5 text-start">
-                              <Label className="text-xs font-bold text-slate-500">{t('فلترة إضافية حسب التصنيف (اختياري)', 'Additional Category Filter (Optional)')}</Label>
+                              <Label className="text-xs font-bold text-slate-500">{t('homepage.additionalCategoryFilterOptional')}</Label>
                               <SearchableSelector
                                 items={categoryOptions}
                                 selectedValue={editSectData.categoryId || ''}
                                 onSelect={val => setEditSectData(prev => ({ ...prev, categoryId: val }))}
-                                placeholder={t('اختر تصنيفاً للربط...', 'Select Category to link...')}
-                                emptyText={t('لا توجد تصنيفات مطابقة', 'No matching categories')}
+                                placeholder={t('homepage.selectCategoryToLink')}
+                                emptyText={t('homepage.noMatchingCategories')}
                                 isAr={isAr}
                               />
                             </div>
@@ -1369,7 +1368,7 @@ export default function AdminHomepageManager() {
                             return (
                               <div className="flex flex-col gap-2">
                                 <p className="text-[10px] text-muted-foreground font-bold flex items-center gap-1.5">
-                                  <span>{t('المنتجات المطابقة المتوفرة حالياً:', 'Currently matching available products:')}</span>
+                                  <span>{t('homepage.currentlyMatchingAvailableProducts')}</span>
                                   {isValidatingCount ? (
                                     <span className="text-[10px] text-slate-400 animate-pulse">...</span>
                                   ) : (
@@ -1381,7 +1380,7 @@ export default function AdminHomepageManager() {
                                 {!isValidatingCount && liveMatchingCount === 0 && (
                                   <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-500 text-xs font-bold flex items-center gap-2">
                                     <span>⚠️</span>
-                                    <span>{t('تنبيه: لا توجد منتجات نشطة حالياً تطابق هذا التحديد. قد يظهر القسم فارغاً للمشترين.', 'Warning: No active products currently match this filter. The section might appear empty to buyers.')}</span>
+                                    <span>{t('homepage.warningNoActiveProductsCurrentlyMatchThi')}</span>
                                   </div>
                                 )}
                               </div>
@@ -1395,24 +1394,24 @@ export default function AdminHomepageManager() {
                           <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-border space-y-6">
                             <h5 className="text-xs font-bold text-indigo-500 border-b pb-2 flex items-center gap-1.5">
                               <span>⚡</span>
-                              {t('إعدادات البطاقات الجانبية الترويجية (Side Promo Cards)', 'Side Promo Cards Settings')}
+                              {t('homepage.sidePromoCardsSettings')}
                             </h5>
                             
                             {/* Side Card 1 */}
                             <div className="space-y-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-border/80 text-start">
                               <Label className="text-xs font-black text-amber-600 block mb-1">
-                                {t('👉 إعدادات البطاقة الجانبية الأولى', '👉 First Side Card Settings')}
+                                {t('homepage.firstSideCardSettings')}
                               </Label>
                               
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-bold text-slate-400">{t('نوع البطاقة الجانبية', 'Side Card Type')}</Label>
+                                <Label className="text-[10px] font-bold text-slate-400">{t('homepage.sideCardType')}</Label>
                                 <select
                                   value={editSectData.metadata?.card1Type || 'text'}
                                   onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1Type: e.target.value } }))}
                                   className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                 >
-                                  <option value="text">✍️ {t('نصوص ومؤثر متدرج', 'Text & Gradient')}</option>
-                                  <option value="ad">🖼️ {t('إعلان ترويجي مصمم (صورة كاملة)', 'Full Promotion Image')}</option>
+                                  <option value="text">✍️ {t('homepage.textGradient')}</option>
+                                  <option value="ad">🖼️ {t('homepage.fullPromotionImage')}</option>
                                 </select>
                               </div>
 
@@ -1422,7 +1421,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `card1AdImage${codeSuffix}`;
-                                      const inputLabel = `${t('صورة الإعلان باللغة', 'Banner Image in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.bannerImageIn')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1435,7 +1434,7 @@ export default function AdminHomepageManager() {
                                     })}
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
+                                    <Label className="text-[10px] font-bold text-slate-400">{t('homepage.linkUrl')}</Label>
                                     <Input
                                       value={editSectData.metadata?.card1AdLink || ''}
                                       onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1AdLink: e.target.value } }))}
@@ -1450,7 +1449,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `card1Badge${codeSuffix}`;
-                                      const inputLabel = `${t('الشارة بـ', 'Badge in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.badgeIn')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1468,7 +1467,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `card1Title${codeSuffix}`;
-                                      const inputLabel = `${t('العنوان بـ', 'Title in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.titleIn1')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1486,7 +1485,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `card1Cta${codeSuffix}`;
-                                      const inputLabel = `${t('نص الزر بـ', 'CTA Text in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.ctaTextIn')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1 col-span-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1500,7 +1499,7 @@ export default function AdminHomepageManager() {
                                       );
                                     })}
                                     <div className="space-y-1 col-span-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.linkUrl')}</Label>
                                       <Input
                                         value={editSectData.metadata?.card1Link || ''}
                                         onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1Link: e.target.value } }))}
@@ -1516,18 +1515,18 @@ export default function AdminHomepageManager() {
                             {/* Side Card 2 */}
                             <div className="space-y-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-border/80 text-start">
                               <Label className="text-xs font-black text-rose-600 block mb-1">
-                                {t('👉 إعدادات البطاقة الجانبية الثانية', '👉 Second Side Card Settings')}
+                                {t('homepage.secondSideCardSettings')}
                               </Label>
                               
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-bold text-slate-400">{t('نوع البطاقة الجانبية', 'Side Card Type')}</Label>
+                                <Label className="text-[10px] font-bold text-slate-400">{t('homepage.sideCardType')}</Label>
                                 <select
                                   value={editSectData.metadata?.card2Type || 'text'}
                                   onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2Type: e.target.value } }))}
                                   className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                 >
-                                  <option value="text">✍️ {t('نصوص ومؤثر متدرج', 'Text & Gradient')}</option>
-                                  <option value="ad">🖼️ {t('إعلان ترويجي مصمم (صورة كاملة)', 'Full Promotion Image')}</option>
+                                  <option value="text">✍️ {t('homepage.textGradient')}</option>
+                                  <option value="ad">🖼️ {t('homepage.fullPromotionImage')}</option>
                                 </select>
                               </div>
 
@@ -1537,7 +1536,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `card2AdImage${codeSuffix}`;
-                                      const inputLabel = `${t('صورة الإعلان باللغة', 'Banner Image in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.bannerImageIn')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1550,7 +1549,7 @@ export default function AdminHomepageManager() {
                                     })}
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
+                                    <Label className="text-[10px] font-bold text-slate-400">{t('homepage.linkUrl')}</Label>
                                     <Input
                                       value={editSectData.metadata?.card2AdLink || ''}
                                       onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2AdLink: e.target.value } }))}
@@ -1565,7 +1564,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `card2Badge${codeSuffix}`;
-                                      const inputLabel = `${t('الشارة بـ', 'Badge in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.badgeIn')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1583,7 +1582,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `card2Title${codeSuffix}`;
-                                      const inputLabel = `${t('العنوان بـ', 'Title in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.titleIn1')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1601,7 +1600,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `card2Cta${codeSuffix}`;
-                                      const inputLabel = `${t('نص الزر بـ', 'CTA Text in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.ctaTextIn')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1 col-span-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1615,7 +1614,7 @@ export default function AdminHomepageManager() {
                                       );
                                     })}
                                     <div className="space-y-1 col-span-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.linkUrl')}</Label>
                                       <Input
                                         value={editSectData.metadata?.card2Link || ''}
                                         onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2Link: e.target.value } }))}
@@ -1635,24 +1634,24 @@ export default function AdminHomepageManager() {
                           <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-border space-y-6">
                             <h5 className="text-xs font-bold text-indigo-500 border-b pb-2 flex items-center gap-1.5">
                               <span>⚡</span>
-                              {t('نصوص ومصادر بطاقات شبكة عروض ميجا (Bento Cards)', 'Bento Cards Texts & Sources')}
+                              {t('homepage.bentoCardsTextsSources')}
                             </h5>
                             
                             {/* Right Card */}
                             <div className="space-y-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-border/80 text-start">
                               <Label className="text-xs font-black text-amber-600 block mb-1">
-                                {t('👉 إعدادات البطاقة اليمنى', '👉 Right Card Settings')}
+                                {t('homepage.rightCardSettings')}
                               </Label>
                               
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-bold text-slate-400">{t('نوع البطاقة اليمنى', 'Right Card Type')}</Label>
+                                <Label className="text-[10px] font-bold text-slate-400">{t('homepage.rightCardType')}</Label>
                                 <select
                                   value={editSectData.metadata?.rightCardType || 'products'}
                                   onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, rightCardType: e.target.value } }))}
                                   className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                 >
-                                  <option value="products">🛍️ {t('عرض المنتجات ديناميكياً', 'Dynamic Products Showcase')}</option>
-                                  <option value="ad">🖼️ {t('إعلان ترويجي (صورة كاملة)', 'Full Promotion Image')}</option>
+                                  <option value="products">🛍️ {t('homepage.dynamicProductsShowcase')}</option>
+                                  <option value="ad">🖼️ {t('homepage.fullPromotionImage1')}</option>
                                 </select>
                               </div>
 
@@ -1662,7 +1661,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `rightCardAdImage${codeSuffix}`;
-                                      const inputLabel = `${t('صورة الإعلان باللغة', 'Banner Image in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.bannerImageIn')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1675,7 +1674,7 @@ export default function AdminHomepageManager() {
                                     })}
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
+                                    <Label className="text-[10px] font-bold text-slate-400">{t('homepage.linkUrl')}</Label>
                                     <Input
                                       value={editSectData.metadata?.rightCardAdLink || ''}
                                       onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, rightCardAdLink: e.target.value } }))}
@@ -1690,7 +1689,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `customText1${codeSuffix}`;
-                                      const inputLabel = `${t('العنوان الترويجي باللغة', 'Promo Title in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.promoTitleIn')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1706,27 +1705,27 @@ export default function AdminHomepageManager() {
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('معيار الفرز', 'Sort Filter')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.sortFilter')}</Label>
                                       <select
                                         value={editSectData.metadata?.subFilter1 || 'smart'}
                                         onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, subFilter1: e.target.value } }))}
                                         className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                       >
-                                        <option value="smart">🤖 {t('تلقائي', 'Auto')}</option>
-                                        <option value="most_sold">🔥 {t('الأكثر مبيعاً', 'Most Sold')}</option>
-                                        <option value="newest">🆕 {t('الأحدث', 'Newest')}</option>
-                                        <option value="has_coupons">🎟️ {t('عروض الكوبونات', 'Coupon Offers')}</option>
-                                        <option value="lowest_price">💰 {t('الأقل سعراً', 'Lowest Price')}</option>
+                                        <option value="smart">🤖 {t('homepage.auto')}</option>
+                                        <option value="most_sold">🔥 {t('homepage.mostSold')}</option>
+                                        <option value="newest">🆕 {t('homepage.newest')}</option>
+                                        <option value="has_coupons">🎟️ {t('homepage.couponOffers')}</option>
+                                        <option value="lowest_price">💰 {t('homepage.lowestPrice')}</option>
                                       </select>
                                     </div>
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('الفئة/التصنيف المستهدف', 'Target Category')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.targetCategory')}</Label>
                                       <select
                                         value={editSectData.metadata?.rightCategory || ''}
                                         onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, rightCategory: e.target.value } }))}
                                         className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                       >
-                                        <option value="">-- {t('الكل', 'All')} --</option>
+                                        <option value="">-- {t('homepage.all')} --</option>
                                         {categoriesList.map(c => (
                                           <option key={c.id} value={c.id}>{isAr ? c.name : (c.nameEn || c.name)}</option>
                                         ))}
@@ -1735,26 +1734,26 @@ export default function AdminHomepageManager() {
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('المتجر الكبير المستهدف', 'Target Store')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.targetStore')}</Label>
                                       <select
                                         value={editSectData.metadata?.rightStore || ''}
                                         onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, rightStore: e.target.value } }))}
                                         className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                       >
-                                        <option value="">-- {t('الكل', 'All')} --</option>
+                                        <option value="">-- {t('homepage.all')} --</option>
                                         {allStores.map(s => (
                                           <option key={s.id} value={s.id}>{isAr ? s.name : (s.nameEn || s.name)}</option>
                                         ))}
                                       </select>
                                     </div>
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('التاجر المستهدف', 'Target Seller')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.targetSeller')}</Label>
                                       <select
                                         value={editSectData.metadata?.rightSeller || ''}
                                         onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, rightSeller: e.target.value } }))}
                                         className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                       >
-                                        <option value="">-- {t('الكل', 'All')} --</option>
+                                        <option value="">-- {t('homepage.all')} --</option>
                                         {allSellers.map(s => (
                                           <option key={s.id} value={s.id}>{s.storeName || s.user?.name || s.id}</option>
                                         ))}
@@ -1768,18 +1767,18 @@ export default function AdminHomepageManager() {
                             {/* Center Card */}
                             <div className="space-y-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-border/80 text-start">
                               <Label className="text-xs font-black text-rose-600 block mb-1">
-                                {t('🎯 إعدادات البطاقة الوسطى (العروض التنازلية)', '🎯 Center Card Settings (Countdown Deals)')}
+                                {t('homepage.centerCardSettingsCountdownDeals')}
                               </Label>
 
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-bold text-slate-400">{t('نوع البطاقة الوسطى', 'Center Card Type')}</Label>
+                                <Label className="text-[10px] font-bold text-slate-400">{t('homepage.centerCardType')}</Label>
                                 <select
                                   value={editSectData.metadata?.centerCardType || 'products'}
                                   onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, centerCardType: e.target.value } }))}
                                   className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                 >
-                                  <option value="products">🛍️ {t('عرض المنتجات التنازلية', 'Countdown Products')}</option>
-                                  <option value="ad">🖼️ {t('إعلان ترويجي (صورة كاملة)', 'Full Promotion Image')}</option>
+                                  <option value="products">🛍️ {t('homepage.countdownProducts')}</option>
+                                  <option value="ad">🖼️ {t('homepage.fullPromotionImage1')}</option>
                                 </select>
                               </div>
 
@@ -1789,7 +1788,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `centerCardAdImage${codeSuffix}`;
-                                      const inputLabel = `${t('صورة الإعلان باللغة', 'Banner Image in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.bannerImageIn')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1802,7 +1801,7 @@ export default function AdminHomepageManager() {
                                     })}
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
+                                    <Label className="text-[10px] font-bold text-slate-400">{t('homepage.linkUrl')}</Label>
                                     <Input
                                       value={editSectData.metadata?.centerCardAdLink || ''}
                                       onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, centerCardAdLink: e.target.value } }))}
@@ -1817,7 +1816,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `customTextCenter${codeSuffix}`;
-                                      const inputLabel = `${t('عنوان البطاقة الوسطى باللغة', 'Center Card Title in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.centerCardTitleIn')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1833,27 +1832,27 @@ export default function AdminHomepageManager() {
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('معيار الفرز للوسطى', 'Center Sort Filter')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.centerSortFilter')}</Label>
                                       <select
                                         value={editSectData.metadata?.subFilterCenter || 'smart'}
                                         onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, subFilterCenter: e.target.value } }))}
                                         className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                       >
-                                        <option value="smart">🤖 {t('تلقائي', 'Auto')}</option>
-                                        <option value="most_sold">🔥 {t('الأكثر مبيعاً', 'Most Sold')}</option>
-                                        <option value="newest">🆕 {t('الأحدث', 'Newest')}</option>
-                                        <option value="has_coupons">🎟️ {t('عروض الكوبونات', 'Coupon Offers')}</option>
-                                        <option value="lowest_price">💰 {t('الأقل سعراً', 'Lowest Price')}</option>
+                                        <option value="smart">🤖 {t('homepage.auto')}</option>
+                                        <option value="most_sold">🔥 {t('homepage.mostSold')}</option>
+                                        <option value="newest">🆕 {t('homepage.newest')}</option>
+                                        <option value="has_coupons">🎟️ {t('homepage.couponOffers')}</option>
+                                        <option value="lowest_price">💰 {t('homepage.lowestPrice')}</option>
                                       </select>
                                     </div>
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('الفئة/التصنيف المستهدف', 'Target Category')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.targetCategory')}</Label>
                                       <select
                                         value={editSectData.metadata?.centerCategory || ''}
                                         onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, centerCategory: e.target.value } }))}
                                         className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                       >
-                                        <option value="">-- {t('الكل', 'All')} --</option>
+                                        <option value="">-- {t('homepage.all')} --</option>
                                         {categoriesList.map(c => (
                                           <option key={c.id} value={c.id}>{isAr ? c.name : (c.nameEn || c.name)}</option>
                                         ))}
@@ -1862,26 +1861,26 @@ export default function AdminHomepageManager() {
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('المتجر الكبير المستهدف', 'Target Store')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.targetStore')}</Label>
                                       <select
                                         value={editSectData.metadata?.centerStore || ''}
                                         onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, centerStore: e.target.value } }))}
                                         className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                       >
-                                        <option value="">-- {t('الكل', 'All')} --</option>
+                                        <option value="">-- {t('homepage.all')} --</option>
                                         {allStores.map(s => (
                                           <option key={s.id} value={s.id}>{isAr ? s.name : (s.nameEn || s.name)}</option>
                                         ))}
                                       </select>
                                     </div>
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('التاجر المستهدف', 'Target Seller')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.targetSeller')}</Label>
                                       <select
                                         value={editSectData.metadata?.centerSeller || ''}
                                         onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, centerSeller: e.target.value } }))}
                                         className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                       >
-                                        <option value="">-- {t('الكل', 'All')} --</option>
+                                        <option value="">-- {t('homepage.all')} --</option>
                                         {allSellers.map(s => (
                                           <option key={s.id} value={s.id}>{s.storeName || s.user?.name || s.id}</option>
                                         ))}
@@ -1895,18 +1894,18 @@ export default function AdminHomepageManager() {
                             {/* Left Card */}
                             <div className="space-y-3 p-3 bg-white dark:bg-slate-950 rounded-xl border border-border/80 text-start">
                               <Label className="text-xs font-black text-indigo-600 block mb-1">
-                                {t('👈 إعدادات البطاقة اليسرى', '👈 Left Card Settings')}
+                                {t('homepage.leftCardSettings')}
                               </Label>
                               
                               <div className="space-y-2">
-                                <Label className="text-[10px] font-bold text-slate-400">{t('نوع البطاقة اليسرى', 'Left Card Type')}</Label>
+                                <Label className="text-[10px] font-bold text-slate-400">{t('homepage.leftCardType')}</Label>
                                 <select
                                   value={editSectData.metadata?.leftCardType || 'products'}
                                   onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, leftCardType: e.target.value } }))}
                                   className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                 >
-                                  <option value="products">🛍️ {t('عرض المنتجات ديناميكياً', 'Dynamic Products Showcase')}</option>
-                                  <option value="ad">🖼️ {t('إعلان ترويجي (صورة كاملة)', 'Full Promotion Image')}</option>
+                                  <option value="products">🛍️ {t('homepage.dynamicProductsShowcase')}</option>
+                                  <option value="ad">🖼️ {t('homepage.fullPromotionImage1')}</option>
                                 </select>
                               </div>
 
@@ -1916,7 +1915,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `leftCardAdImage${codeSuffix}`;
-                                      const inputLabel = `${t('صورة الإعلان باللغة', 'Banner Image in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.bannerImageIn')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1929,7 +1928,7 @@ export default function AdminHomepageManager() {
                                     })}
                                   </div>
                                   <div className="space-y-1">
-                                    <Label className="text-[10px] font-bold text-slate-400">{t('رابط التوجيه (URL)', 'Link URL')}</Label>
+                                    <Label className="text-[10px] font-bold text-slate-400">{t('homepage.linkUrl')}</Label>
                                     <Input
                                       value={editSectData.metadata?.leftCardAdLink || ''}
                                       onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, leftCardAdLink: e.target.value } }))}
@@ -1944,7 +1943,7 @@ export default function AdminHomepageManager() {
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                                       const keyName = `customText2${codeSuffix}`;
-                                      const inputLabel = `${t('العنوان الترويجي للبطاقة اليسرى بـ', 'Promo Title in')} ${lang.name}`;
+                                      const inputLabel = `${t('homepage.promoTitleIn1')} ${lang.name}`;
                                       return (
                                         <div key={lang.code} className="space-y-1">
                                           <Label className="text-[10px] font-bold text-slate-400">{inputLabel}</Label>
@@ -1960,27 +1959,27 @@ export default function AdminHomepageManager() {
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('معيار الفرز', 'Sort Filter')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.sortFilter')}</Label>
                                       <select
                                         value={editSectData.metadata?.subFilter2 || 'smart'}
                                         onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, subFilter2: e.target.value } }))}
                                         className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                       >
-                                        <option value="smart">🤖 {t('تلقائي', 'Auto')}</option>
-                                        <option value="most_sold">🔥 {t('الأكثر مبيعاً', 'Most Sold')}</option>
-                                        <option value="most_viewed">👁️ {t('الأكثر مشاهدة', 'Most Viewed')}</option>
-                                        <option value="has_coupons">🎟️ {t('عروض الكوبونات', 'Coupon Offers')}</option>
-                                        <option value="lowest_price">💰 {t('الأقل سعراً', 'Lowest Price')}</option>
+                                        <option value="smart">🤖 {t('homepage.auto')}</option>
+                                        <option value="most_sold">🔥 {t('homepage.mostSold')}</option>
+                                        <option value="most_viewed">👁️ {t('homepage.mostViewed')}</option>
+                                        <option value="has_coupons">🎟️ {t('homepage.couponOffers')}</option>
+                                        <option value="lowest_price">💰 {t('homepage.lowestPrice')}</option>
                                       </select>
                                     </div>
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('الفئة/التصنيف المستهدف', 'Target Category')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.targetCategory')}</Label>
                                       <select
                                         value={editSectData.metadata?.leftCategory || ''}
                                         onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, leftCategory: e.target.value } }))}
                                         className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                       >
-                                        <option value="">-- {t('الكل', 'All')} --</option>
+                                        <option value="">-- {t('homepage.all')} --</option>
                                         {categoriesList.map(c => (
                                           <option key={c.id} value={c.id}>{isAr ? c.name : (c.nameEn || c.name)}</option>
                                         ))}
@@ -1989,26 +1988,26 @@ export default function AdminHomepageManager() {
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('المتجر الكبير المستهدف', 'Target Store')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.targetStore')}</Label>
                                       <select
                                         value={editSectData.metadata?.leftStore || ''}
                                         onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, leftStore: e.target.value } }))}
                                         className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                       >
-                                        <option value="">-- {t('الكل', 'All')} --</option>
+                                        <option value="">-- {t('homepage.all')} --</option>
                                         {allStores.map(s => (
                                           <option key={s.id} value={s.id}>{isAr ? s.name : (s.nameEn || s.name)}</option>
                                         ))}
                                       </select>
                                     </div>
                                     <div className="space-y-1">
-                                      <Label className="text-[10px] font-bold text-slate-400">{t('التاجر المستهدف', 'Target Seller')}</Label>
+                                      <Label className="text-[10px] font-bold text-slate-400">{t('homepage.targetSeller')}</Label>
                                       <select
                                         value={editSectData.metadata?.leftSeller || ''}
                                         onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, leftSeller: e.target.value } }))}
                                         className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                       >
-                                        <option value="">-- {t('الكل', 'All')} --</option>
+                                        <option value="">-- {t('homepage.all')} --</option>
                                         {allSellers.map(s => (
                                           <option key={s.id} value={s.id}>{s.storeName || s.user?.name || s.id}</option>
                                         ))}
@@ -2025,12 +2024,12 @@ export default function AdminHomepageManager() {
                       {/* Advanced Styling & Visibility Control */}
                       <div className="space-y-4 pt-4 border-t border-border/60">
                         <h4 className="text-xs font-bold text-teal-500 uppercase flex items-center gap-1.5">
-                          {t('إعدادات مظهر القسم والظهور (Styling & Visibility)', 'Section Styling & Visibility')}
+                          {t('homepage.sectionStylingVisibility')}
                         </h4>
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2 text-start">
-                            <Label className="text-[10px] font-bold text-slate-400">{t('المسافة العلوية (Padding Top)', 'Padding Top')}</Label>
+                            <Label className="text-[10px] font-bold text-slate-400">{t('homepage.paddingTop')}</Label>
                             <select
                               value={editSectData.metadata?.paddingTop || 'pt-8'}
                               onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, paddingTop: e.target.value } }))}
@@ -2044,7 +2043,7 @@ export default function AdminHomepageManager() {
                             </select>
                           </div>
                           <div className="space-y-2 text-start">
-                            <Label className="text-[10px] font-bold text-slate-400">{t('المسافة السفلية (Padding Bottom)', 'Padding Bottom')}</Label>
+                            <Label className="text-[10px] font-bold text-slate-400">{t('homepage.paddingBottom')}</Label>
                             <select
                               value={editSectData.metadata?.paddingBottom || 'pb-8'}
                               onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, paddingBottom: e.target.value } }))}
@@ -2061,7 +2060,7 @@ export default function AdminHomepageManager() {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="space-y-2 text-start">
-                            <Label className="text-[10px] font-bold text-slate-400">{t('لون الخلفية', 'Background Color')}</Label>
+                            <Label className="text-[10px] font-bold text-slate-400">{t('homepage.backgroundColor')}</Label>
                             <select
                               value={editSectData.metadata?.backgroundColor || 'transparent'}
                               onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, backgroundColor: e.target.value } }))}
@@ -2074,7 +2073,7 @@ export default function AdminHomepageManager() {
                           </div>
                           
                           <div className="space-y-2 text-start">
-                            <Label className="text-[10px] font-bold text-slate-400">{t('الظهور في الجوال', 'Mobile Visibility')}</Label>
+                            <Label className="text-[10px] font-bold text-slate-400">{t('homepage.mobileVisibility')}</Label>
                             <select
                               value={editSectData.metadata?.isMobileHidden ? 'hidden' : 'visible'}
                               onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, isMobileHidden: e.target.value === 'hidden' } }))}
@@ -2086,7 +2085,7 @@ export default function AdminHomepageManager() {
                           </div>
 
                           <div className="space-y-2 text-start">
-                            <Label className="text-[10px] font-bold text-slate-400">{t('الظهور في الكمبيوتر', 'Desktop Visibility')}</Label>
+                            <Label className="text-[10px] font-bold text-slate-400">{t('homepage.desktopVisibility')}</Label>
                             <select
                               value={editSectData.metadata?.isDesktopHidden ? 'hidden' : 'visible'}
                               onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, isDesktopHidden: e.target.value === 'hidden' } }))}
@@ -2101,11 +2100,11 @@ export default function AdminHomepageManager() {
 
                       <div className="flex justify-end gap-2 pt-4 border-t border-border/60">
                         <Button variant="ghost" onClick={() => setEditingSectId(null)} className="rounded-xl text-xs font-bold">
-                          {t('إلغاء', 'Cancel')}
+                          {t('homepage.cancel')}
                         </Button>
                         <Button onClick={saveSectionSettings} className="rounded-xl text-xs font-bold gap-1 px-4">
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          {t('تأكيد الإعدادات وحفظ محلي', 'Confirm Section Settings')}
+                          {t('homepage.confirmSectionSettings')}
                         </Button>
                       </div>
                     </div>
@@ -2121,16 +2120,16 @@ export default function AdminHomepageManager() {
               {/* Left Column: Preloaded Select selectors */}
               <Card className="lg:col-span-5 card-surface rounded-[24px] shadow-sm">
                 <CardHeader>
-                  <CardTitle className="text-lg font-bold">{t('اختيار وتثبيت العناصر', 'Select & Pin Items')}</CardTitle>
+                  <CardTitle className="text-lg font-bold">{t('homepage.selectPinItems')}</CardTitle>
                   <CardDescription>
-                    {t('اختر من القوائم الجاهزة مباشرة لتثبيتها على الصفحة الرئيسية دون عناء.', 'Pin items directly using dropdown selectors.')}
+                    {t('homepage.pinItemsDirectlyUsingDropdownSelectors')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Pin Products Section */}
                   <div className="space-y-2 text-start border-b pb-4 border-border/40">
                     <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                      <span>🛒</span> {t('تثبيت المنتجات', 'Pin Products')}
+                      <span>🛒</span> {t('homepage.pinProducts')}
                     </Label>
                     <div className="flex gap-2 items-center">
                       <div className="grow">
@@ -2138,8 +2137,8 @@ export default function AdminHomepageManager() {
                           items={productOptions}
                           selectedValue={selectedProdId}
                           onSelect={setSelectedProdId}
-                          placeholder={t('اختر منتجاً لتثبيته...', 'Choose a product to pin...')}
-                          emptyText={t('لا توجد منتجات مطابقة', 'No matching products')}
+                          placeholder={t('homepage.chooseAProductToPin')}
+                          emptyText={t('homepage.noMatchingProducts')}
                           isAr={isAr}
                         />
                       </div>
@@ -2149,7 +2148,7 @@ export default function AdminHomepageManager() {
                         className="rounded-xl font-bold px-4 shrink-0"
                       >
                         <Plus className="w-4 h-4 me-1" />
-                        {t('تثبيت', 'Pin')}
+                        {t('homepage.pin')}
                       </Button>
                     </div>
                   </div>
@@ -2157,7 +2156,7 @@ export default function AdminHomepageManager() {
                   {/* Pin Premium Stores Section */}
                   <div className="space-y-2 text-start border-b pb-4 border-border/40">
                     <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                      <span>🏪</span> {t('تثبيت المتاجر الكبرى', 'Pin Premium Stores')}
+                      <span>🏪</span> {t('homepage.pinPremiumStores')}
                     </Label>
                     <div className="flex gap-2 items-center">
                       <div className="grow">
@@ -2165,8 +2164,8 @@ export default function AdminHomepageManager() {
                           items={storeOptions}
                           selectedValue={selectedStoreId}
                           onSelect={setSelectedStoreId}
-                          placeholder={t('اختر متجراً لتثبيته...', 'Choose a store to pin...')}
-                          emptyText={t('لا توجد متاجر مطابقة', 'No matching stores')}
+                          placeholder={t('homepage.chooseAStoreToPin')}
+                          emptyText={t('homepage.noMatchingStores')}
                           isAr={isAr}
                         />
                       </div>
@@ -2176,7 +2175,7 @@ export default function AdminHomepageManager() {
                         className="rounded-xl font-bold px-4 shrink-0"
                       >
                         <Plus className="w-4 h-4 me-1" />
-                        {t('تثبيت', 'Pin')}
+                        {t('homepage.pin')}
                       </Button>
                     </div>
                   </div>
@@ -2184,7 +2183,7 @@ export default function AdminHomepageManager() {
                   {/* Pin Freelance Sellers Section */}
                   <div className="space-y-2 text-start">
                     <Label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                      <span>👤</span> {t('تثبيت التجار الأحرار', 'Pin Freelance Sellers')}
+                      <span>👤</span> {t('homepage.pinFreelanceSellers')}
                     </Label>
                     <div className="flex gap-2 items-center">
                       <div className="grow">
@@ -2192,8 +2191,8 @@ export default function AdminHomepageManager() {
                           items={sellerOptions}
                           selectedValue={selectedSellerId}
                           onSelect={setSelectedSellerId}
-                          placeholder={t('اختر تاجراً لتثبيته...', 'Choose a seller to pin...')}
-                          emptyText={t('لا توجد تجار مطابقة', 'No matching sellers')}
+                          placeholder={t('homepage.chooseASellerToPin')}
+                          emptyText={t('homepage.noMatchingSellers')}
                           isAr={isAr}
                         />
                       </div>
@@ -2203,7 +2202,7 @@ export default function AdminHomepageManager() {
                         className="rounded-xl font-bold px-4 shrink-0"
                       >
                         <Plus className="w-4 h-4 me-1" />
-                        {t('تثبيت', 'Pin')}
+                        {t('homepage.pin')}
                       </Button>
                     </div>
                   </div>
@@ -2215,17 +2214,17 @@ export default function AdminHomepageManager() {
                 <CardHeader>
                   <CardTitle className="text-lg font-bold flex items-center gap-1.5">
                     <Pin className="w-5 h-5 text-brand" />
-                    {t('العناصر المثبتة حالياً', 'Pinned Items')}
+                    {t('homepage.pinnedItems')}
                   </CardTitle>
                   <CardDescription>
-                    {t('رتب أو احذف العناصر المثبتة لتخصيص عرض الواجهة الأمامية.', 'Manage the pinned displays priority.')}
+                    {t('homepage.manageThePinnedDisplaysPriority')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-4">
                     {['products', 'stores', 'sellers'].map((type) => {
                       const list = pinned[type as 'products' | 'stores' | 'sellers'] || [];
-                      const typeLabel = type === 'products' ? t('المنتجات المثبتة', 'Pinned Products') : type === 'stores' ? t('المتاجر المثبتة', 'Pinned Stores') : t('التجار المستقلين المثبتين', 'Pinned Sellers');
+                      const typeLabel = type === 'products' ? t('homepage.pinnedProducts') : type === 'stores' ? t('homepage.pinnedStores') : t('homepage.pinnedSellers');
                       return (
                         <div key={type} className="space-y-2">
                           <Label className="text-xs font-black text-slate-500 uppercase tracking-wider flex justify-between items-center">
@@ -2233,7 +2232,7 @@ export default function AdminHomepageManager() {
                             <Badge variant="outline" className="font-mono">{list.length}</Badge>
                           </Label>
                           {list.length === 0 ? (
-                            <div className="p-5 border border-dashed rounded-[18px] text-center text-xs text-muted-foreground">{t('لا توجد عناصر مثبتة حالياً', 'No items pinned yet')}</div>
+                            <div className="p-5 border border-dashed rounded-[18px] text-center text-xs text-muted-foreground">{t('homepage.noItemsPinnedYet')}</div>
                           ) : (
                             <div className="border border-border/80 rounded-[18px] divide-y bg-background max-h-[220px] overflow-y-auto shadow-inner">
                               {list.map((item: any, idx: number) => (
@@ -2264,7 +2263,7 @@ export default function AdminHomepageManager() {
                   <div className="flex justify-end pt-4 border-t border-border/60">
                     <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
                       {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                      {t('حفظ التثبيت اليدوي', 'Save Pinned Items')}
+                      {t('homepage.savePinnedItems')}
                     </Button>
                   </div>
                 </CardContent>
@@ -2278,17 +2277,17 @@ export default function AdminHomepageManager() {
               <CardHeader>
                 <CardTitle className="text-lg font-bold flex items-center gap-2">
                   <Clock className="w-5 h-5 text-brand" />
-                  {t('إعدادات عروض ميجا التنازلية', 'Mega Countdown Deals settings')}
+                  {t('homepage.megaCountdownDealsSettings')}
                 </CardTitle>
                 <CardDescription>
-                  {t('قم بتفعيل عداد تنازلي نشط على الصفحة الرئيسية لعرض حملات الخصم الكبرى.', 'Toggle countdown deal settings showing target date.')}
+                  {t('homepage.toggleCountdownDealSettingsShowingTarget')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-4 rounded-2xl border border-border bg-background mb-4 shadow-sm">
                   <div className="space-y-0.5 text-start">
-                    <Label htmlFor="timer_enabled" className="text-sm font-bold">{t('حالة العداد التنازلي الترويجي', 'Countdown timer status')}</Label>
-                    <p className="text-xs text-muted-foreground">{t('تفعيل عداد تنازلي يعرض عروض الخصومات الكبرى', 'Enable countdown banner detailing hours/minutes/seconds')}</p>
+                    <Label htmlFor="timer_enabled" className="text-sm font-bold">{t('homepage.countdownTimerStatus')}</Label>
+                    <p className="text-xs text-muted-foreground">{t('homepage.enableCountdownBannerDetailingHoursminut')}</p>
                   </div>
                   <select
                     id="timer_enabled"
@@ -2301,8 +2300,8 @@ export default function AdminHomepageManager() {
                     }}
                     className="bg-background border border-border text-foreground px-3.5 py-2 rounded-xl text-xs font-bold outline-none"
                   >
-                    <option value="true">{t('نشط (يظهر العداد في الصفحة)', 'Active')}</option>
-                    <option value="false">{t('معطل (إخفاء العداد بالكامل)', 'Disabled')}</option>
+                    <option value="true">{t('homepage.active')}</option>
+                    <option value="false">{t('homepage.disabled')}</option>
                   </select>
                 </div>
 
@@ -2311,7 +2310,7 @@ export default function AdminHomepageManager() {
                     {languages.map((lang: any) => {
                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                       const keyName = `title${codeSuffix}`;
-                      const inputLabel = `${t('عنوان الحملة باللغة', 'Campaign Title in')} ${lang.name}`;
+                      const inputLabel = `${t('homepage.campaignTitleIn')} ${lang.name}`;
                       return (
                         <div key={lang.code} className="space-y-2 text-start">
                           <Label htmlFor={`countdown_${lang.code}`} className="text-xs font-bold">{inputLabel}</Label>
@@ -2328,7 +2327,7 @@ export default function AdminHomepageManager() {
                   </div>
 
                   <div className="space-y-2 text-start">
-                    <Label htmlFor="endDate" className="text-xs font-bold">{t('تاريخ ووقت انتهاء الحملة', 'Campaign End Date & Time')}</Label>
+                    <Label htmlFor="endDate" className="text-xs font-bold">{t('homepage.campaignEndDateTime')}</Label>
                     <Input
                       id="endDate"
                       type="datetime-local"
@@ -2342,7 +2341,7 @@ export default function AdminHomepageManager() {
                 <div className="flex justify-end pt-4 border-t border-border/60">
                   <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
                     {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    {t('حفظ إعدادات العداد', 'Save Timer Settings')}
+                    {t('homepage.saveTimerSettings')}
                   </Button>
                 </div>
               </CardContent>
@@ -2356,21 +2355,21 @@ export default function AdminHomepageManager() {
               <Card className="lg:col-span-5 card-surface rounded-[24px] shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <div>
-                    <CardTitle className="text-lg font-bold">{t('سلايدر البانر الترويجي', 'Hero Slider Manager')}</CardTitle>
+                    <CardTitle className="text-lg font-bold">{t('homepage.heroSliderManager')}</CardTitle>
                     <CardDescription>
-                      {t('أضف ورتب السلايدات المعروضة في البانر الرئيسي.', 'Manage and reorder slides on the main home banner.')}
+                      {t('homepage.manageAndReorderSlidesOnTheMainHomeBanne')}
                     </CardDescription>
                   </div>
                   <Button size="sm" onClick={handleStartAddSlide} className="rounded-xl font-bold gap-1 px-3">
                     <Plus className="w-4 h-4" />
-                    {t('إضافة سلايد', 'Add Slide')}
+                    {t('homepage.addSlide')}
                   </Button>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {heroSlides.length === 0 ? (
                     <div className="p-8 border border-dashed border-slate-350 rounded-2xl text-center text-sm text-muted-foreground bg-slate-50/20">
                       <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-35 text-amber-500 animate-pulse" />
-                      {t('لا توجد سلايدات مخصصة حالياً. سيتم استخدام السلايدات الافتراضية.', 'No slides added yet. Storefront will display fallback defaults.')}
+                      {t('homepage.noSlidesAddedYetStorefrontWillDisplayFal')}
                     </div>
                   ) : (
                     <div className="border border-border/80 rounded-[20px] divide-y overflow-hidden bg-background shadow-inner">
@@ -2379,7 +2378,7 @@ export default function AdminHomepageManager() {
                           <div className="min-w-0 flex items-center gap-3">
                             <span className="font-mono text-xs text-muted-foreground w-6 shrink-0">#{idx + 1}</span>
                             <div className="min-w-0">
-                              <p className="font-bold text-sm truncate text-slate-800 dark:text-slate-100">{isAr ? s.title : (s.titleEn || s.title || t('بلا عنوان', 'Untitled'))}</p>
+                              <p className="font-bold text-sm truncate text-slate-800 dark:text-slate-100">{isAr ? s.title : (s.titleEn || s.title || t('homepage.untitled'))}</p>
                               <div className="flex items-center gap-1.5 mt-1">
                                 {s.imageUrl ? (
                                   <div className="w-5 h-5 rounded overflow-hidden border border-border">
@@ -2388,7 +2387,7 @@ export default function AdminHomepageManager() {
                                 ) : (
                                   <div className={`w-3.5 h-3.5 rounded bg-gradient-to-br ${s.bg || 'from-blue-950 to-slate-900'} border border-white/10`} />
                                 )}
-                                <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">{s.imageUrl ? t('صورة خلفية', 'Background Image') : s.bg}</span>
+                                <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">{s.imageUrl ? t('homepage.backgroundImage') : s.bg}</span>
                               </div>
                             </div>
                           </div>
@@ -2400,7 +2399,7 @@ export default function AdminHomepageManager() {
                               <ChevronDown className="w-4 h-4" />
                             </Button>
                             <Button variant="outline" size="sm" onClick={() => handleStartEditSlide(idx)} className="rounded-xl text-xs px-2.5 h-8">
-                              {t('تعديل', 'Edit')}
+                              {t('homepage.edit')}
                             </Button>
                             <Button variant="ghost" size="icon" onClick={() => handleDeleteSlide(idx)} className="rounded-full text-destructive h-8 w-8 hover:bg-destructive/10">
                               <Trash className="w-4 h-4" />
@@ -2414,7 +2413,7 @@ export default function AdminHomepageManager() {
                   <div className="flex justify-end pt-4 border-t border-border/60">
                     <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
                       {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                      {t('حفظ السلايدات بالداتابيز', 'Save Banner Configuration')}
+                      {t('homepage.saveBannerConfiguration')}
                     </Button>
                   </div>
                 </CardContent>
@@ -2427,31 +2426,31 @@ export default function AdminHomepageManager() {
                     <Sparkles className="w-5 h-5 text-brand" />
                     {editingSlideIndex !== null
                       ? editingSlideIndex === heroSlides.length
-                        ? t('إضافة سلايد ترويجي جديد', 'Add New Promotion Slide')
-                        : `${t('تعديل السلايد', 'Edit Slide')} #${editingSlideIndex + 1}`
-                      : t('اختر سلايد لتعديله أو أضف جديداً', 'Select a slide or add one')}
+                        ? t('homepage.addNewPromotionSlide')
+                        : `${t('homepage.editSlide')} #${editingSlideIndex + 1}`
+                      : t('homepage.selectASlideOrAddOne')}
                   </CardTitle>
                   <CardDescription>
                     {editingSlideIndex !== null
-                      ? t('املأ الحقول التالية لتخصيص محتوى السلايد. يدعم العربية والإنجليزية والفرنسية.', 'Provide content parameters for the selected hero slide.')
-                      : t('اضغط على "تعديل" بجانب أي سلايد أو "إضافة سلايد" للبدء.', 'Click edit or add to initialize form fields.')}
+                      ? t('homepage.provideContentParametersForTheSelectedHe')
+                      : t('homepage.clickEditOrAddToInitializeFormFields')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {editingSlideIndex === null ? (
                     <div className="flex flex-col items-center justify-center py-24 text-muted-foreground border border-dashed rounded-[20px] bg-background">
                       <Sparkles className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-3" />
-                      <p className="text-sm font-medium">{t('لم يتم اختيار أي سلايد لتعديله', 'No slide selected for editing')}</p>
+                      <p className="text-sm font-medium">{t('homepage.noSlideSelectedForEditing')}</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
                       {/* Live preview */}
                       {(() => {
                         const codeSuffix = locale.charAt(0).toUpperCase() + locale.slice(1);
-                        const previewTitle = editSlideData[`title${codeSuffix}`] || editSlideData.title || t('عنوان السلايد الرئيسي', 'Slide Title');
-                        const previewSubtitle = editSlideData[`subtitle${codeSuffix}`] || editSlideData.subtitle || t('العنوان الفرعي للسلايد أو وصف العرض الترويجي المتاح للمشترين', 'Slide Subtitle or promotion description');
+                        const previewTitle = editSlideData[`title${codeSuffix}`] || editSlideData.title || t('homepage.slideTitle');
+                        const previewSubtitle = editSlideData[`subtitle${codeSuffix}`] || editSlideData.subtitle || t('homepage.slideSubtitleOrPromotionDescription');
                         const previewBadge = editSlideData[`badge${codeSuffix}`] || editSlideData.badge || '';
-                        const previewCta = editSlideData[`cta${codeSuffix}`] || editSlideData.cta || t('تسوق الآن', 'Shop Now');
+                        const previewCta = editSlideData[`cta${codeSuffix}`] || editSlideData.cta || t('homepage.shopNow');
 
                         return (
                           <div className="border border-border/80 rounded-[20px] overflow-hidden p-6 text-white relative h-40 flex items-center bg-slate-950">
@@ -2476,7 +2475,7 @@ export default function AdminHomepageManager() {
                                 {previewCta}
                               </Button>
                             </div>
-                            <span className="absolute bottom-2 end-3 text-[9px] font-mono text-white/40 tracking-wider uppercase select-none">{t('معاينة حية', 'Live Preview')}</span>
+                            <span className="absolute bottom-2 end-3 text-[9px] font-mono text-white/40 tracking-wider uppercase select-none">{t('homepage.livePreview')}</span>
                           </div>
                         );
                       })()}
@@ -2486,7 +2485,7 @@ export default function AdminHomepageManager() {
                         {languages.map((lang: any) => {
                           const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                           const keyName = `title${codeSuffix}`;
-                          const inputLabel = `${t('العنوان الرئيسي باللغة', 'Main Title in')} ${lang.name}`;
+                          const inputLabel = `${t('homepage.mainTitleIn')} ${lang.name}`;
                           return (
                             <div key={lang.code} className="space-y-2 text-start">
                               <Label className="text-xs font-bold">{inputLabel}</Label>
@@ -2515,7 +2514,7 @@ export default function AdminHomepageManager() {
                         {languages.map((lang: any) => {
                           const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                           const keyName = `subtitle${codeSuffix}`;
-                          const inputLabel = `${t('الوصف/العنوان الفرعي باللغة', 'Description/Subtitle in')} ${lang.name}`;
+                          const inputLabel = `${t('homepage.descriptionsubtitleIn')} ${lang.name}`;
                           return (
                             <div key={lang.code} className="space-y-2 text-start">
                               <Label className="text-xs font-bold">{inputLabel}</Label>
@@ -2544,7 +2543,7 @@ export default function AdminHomepageManager() {
                         {languages.map((lang: any) => {
                           const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                           const keyName = `badge${codeSuffix}`;
-                          const inputLabel = `${t('شارة مميزة باللغة', 'Badge text in')} ${lang.name}`;
+                          const inputLabel = `${t('homepage.badgeTextIn')} ${lang.name}`;
                           return (
                             <div key={lang.code} className="space-y-2 text-start">
                               <Label className="text-xs font-bold">{inputLabel}</Label>
@@ -2572,7 +2571,7 @@ export default function AdminHomepageManager() {
                         {languages.map((lang: any) => {
                           const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
                           const keyName = `cta${codeSuffix}`;
-                          const inputLabel = `${t('نص زر الشراء/الدعوة باللغة', 'CTA Text in')} ${lang.name}`;
+                          const inputLabel = `${t('homepage.ctaTextIn1')} ${lang.name}`;
                           return (
                             <div key={lang.code} className="space-y-2 text-start">
                               <Label className="text-xs font-bold">{inputLabel}</Label>
@@ -2598,7 +2597,7 @@ export default function AdminHomepageManager() {
 
                       {/* Link & background setup */}
                       <div className="space-y-2 text-start">
-                        <Label className="text-xs font-bold">{t('رابط التوجيه المباشر (Link URL)', 'CTA Target Link URL')}</Label>
+                        <Label className="text-xs font-bold">{t('homepage.ctaTargetLinkUrl')}</Label>
                         <Input
                           value={editSlideData.linkUrl}
                           onChange={e => setEditSlideData(prev => ({ ...prev, linkUrl: e.target.value }))}
@@ -2609,16 +2608,16 @@ export default function AdminHomepageManager() {
 
                       {/* Image Upload for Slide Background */}
                       <div className="space-y-2 text-start pt-2 border-t border-border/40">
-                        <Label className="text-xs font-bold">{t('تحميل صورة خلفية البانر (اختياري)', 'Upload Slide Background Image (Optional)')}</Label>
+                        <Label className="text-xs font-bold">{t('homepage.uploadSlideBackgroundImageOptional')}</Label>
                         <ImageUploader
                           value={editSlideData.imageUrl}
                           onChange={url => setEditSlideData(prev => ({ ...prev, imageUrl: url }))}
-                          hint={t('ارفع صورة خلفية للسلايد. في حال رفعها، سيتم إخفاء الخلفية المتدرجة.', 'Upload background image. It takes precedence over CSS gradient.')}
+                          hint={t('homepage.uploadBackgroundImageItTakesPrecedenceOv')}
                         />
                       </div>
 
                       <div className="space-y-2 text-start pt-2">
-                        <Label className="text-xs font-bold">{t('أو اختر خلفية متدرجة (في حال عدم استخدام صورة)', 'Or Choose CSS Gradient Background (If no image uploaded)')}</Label>
+                        <Label className="text-xs font-bold">{t('homepage.orChooseCssGradientBackgroundIfNoImageUp')}</Label>
                         <Input
                           value={editSlideData.bg}
                           onChange={e => setEditSlideData(prev => ({ ...prev, bg: e.target.value }))}
@@ -2628,12 +2627,12 @@ export default function AdminHomepageManager() {
                         />
                         <div className="flex flex-wrap gap-2 select-none">
                           {[
-                            { name: t('كحلي داكن', 'Navy Dark'), val: 'from-blue-950 via-indigo-900 to-slate-900' },
-                            { name: t('زمردي زيتي', 'Emerald Teal'), val: 'from-emerald-950 via-teal-900 to-slate-900' },
-                            { name: t('بنفسجي ملكي', 'Royal Purple'), val: 'from-purple-950 via-violet-900 to-slate-900' },
-                            { name: t('غروب الشمس', 'Sunset Amber'), val: 'from-orange-950 via-amber-900 to-slate-900' },
-                            { name: t('أحمر ياقوتي', 'Ruby Rose'), val: 'from-rose-950 via-red-900 to-slate-900' },
-                            { name: t('وردي مستقبلي', 'Cyberpunk Pink'), val: 'from-pink-950 via-purple-900 to-slate-900' }
+                            { name: t('homepage.navyDark'), val: 'from-blue-950 via-indigo-900 to-slate-900' },
+                            { name: t('homepage.emeraldTeal'), val: 'from-emerald-950 via-teal-900 to-slate-900' },
+                            { name: t('homepage.royalPurple'), val: 'from-purple-950 via-violet-900 to-slate-900' },
+                            { name: t('homepage.sunsetAmber'), val: 'from-orange-950 via-amber-900 to-slate-900' },
+                            { name: t('homepage.rubyRose'), val: 'from-rose-950 via-red-900 to-slate-900' },
+                            { name: t('homepage.cyberpunkPink'), val: 'from-pink-950 via-purple-900 to-slate-900' }
                           ].map(grad => (
                             <button
                               key={grad.val}
@@ -2651,11 +2650,11 @@ export default function AdminHomepageManager() {
 
                       <div className="flex justify-end gap-2 pt-4 border-t border-border/60">
                         <Button variant="ghost" onClick={() => setEditingSlideIndex(null)} className="rounded-xl text-xs font-bold">
-                          {t('إلغاء', 'Cancel')}
+                          {t('homepage.cancel')}
                         </Button>
                         <Button onClick={handleSaveSlide} className="rounded-xl text-xs font-bold gap-1 px-4">
                           <CheckCircle2 className="w-3.5 h-3.5" />
-                          {t('تأكيد السلايد وتحديث اللائحة', 'Confirm & Update list')}
+                          {t('homepage.confirmUpdateList')}
                         </Button>
                       </div>
                     </div>
