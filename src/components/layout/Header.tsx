@@ -794,7 +794,7 @@ export default function Header() {
                   if (e.key === 'Enter' && e.currentTarget.value.trim()) {
                     setSearchFocused(false);
                     useAppStore.getState().setCurrentPage('search' as PageType);
-                    router.push(`/?view=search&q=${encodeURIComponent(e.currentTarget.value.trim())}`);
+                    router.push(`/search?q=${encodeURIComponent(e.currentTarget.value.trim())}`);
                   }
                 }}
               />
@@ -814,7 +814,7 @@ export default function Header() {
                             onClick={() => {
                               setSearchFocused(false);
                               useAppStore.getState().setCurrentPage('search' as PageType);
-                              router.push(`/?view=search&categoryId=${cat.id}`);
+                              router.push(`/search?categoryId=${cat.id}`);
                             }}
                             className="text-[10px] md:text-xs bg-surface/50 hover:bg-brand hover:text-navy px-3 py-1.5 rounded-full transition-colors border border-border/50"
                           >
@@ -836,7 +836,7 @@ export default function Header() {
                           onClick={() => {
                             setSearchFocused(false);
                             useAppStore.getState().setCurrentPage('search' as PageType);
-                            router.push(`/?view=search&q=${encodeURIComponent(searchVal)}`);
+                            router.push(`/search?q=${encodeURIComponent(searchVal)}`);
                           }}
                           className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-muted/40 text-xs font-bold transition-colors text-start"
                         >
@@ -1113,7 +1113,7 @@ export default function Header() {
                   if (e.key === 'Enter' && e.currentTarget.value.trim()) {
                     setMobileSearchOpen(false);
                     useAppStore.getState().setCurrentPage('search' as PageType);
-                    router.push(`/?view=search&q=${encodeURIComponent(e.currentTarget.value.trim())}`);
+                    router.push(`/search?q=${encodeURIComponent(e.currentTarget.value.trim())}`);
                   }
                 }}
               />

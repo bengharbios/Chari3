@@ -47,7 +47,7 @@ export default function SearchPage() {
     e.preventDefault();
     if (inputValue.trim()) {
       setSearchQuery(inputValue.trim());
-      window.history.pushState({}, '', `/?view=search&q=${encodeURIComponent(inputValue.trim())}`);
+      window.history.pushState({}, '', `/search?q=${encodeURIComponent(inputValue.trim())}`);
     }
   };
 
