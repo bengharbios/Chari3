@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { 
   ChevronLeft, ChevronRight, Star, TrendingUp, Shield, Truck, 
@@ -598,6 +598,7 @@ function CustomBannerBlock({ imageArUrl, imageEnUrl, linkUrl, locale }: any) {
 
 export default function StorefrontHomepage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t: globalT } = useTranslation();
   const { locale } = useAppStore();
   const { isAuthenticated } = useAuthStore();
@@ -674,6 +675,24 @@ export default function StorefrontHomepage() {
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [isFilterLoading, setIsFilterLoading] = useState(false);
   const [displayCount, setDisplayCount] = useState(20);
+
+  // Sync with URL search params (Fix for the search functionality)
+  useEffect(() => {
+    const view = searchParams.get('view');
+    const q = searchParams.get('q');
+    const catId = searchParams.get('categoryId');
+
+    if (view === 'search') {
+      if (q) setFilterSearch(q);
+      if (catId) setFilterCategory(catId);
+      setShowFilterPanel(true);
+      
+      // Auto-scroll to the filter panel to ensure the user sees the results
+      setTimeout(() => {
+        document.getElementById('search-results-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 500);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetch(`/api/homepage?t=${Date.now()}`, { cache: 'no-store' })
@@ -1233,6 +1252,7 @@ export default function StorefrontHomepage() {
                 )}
               </Button>
             </div>
+            <div id="search-results-panel"></div>
             {showFilterPanel && (
               <div className="mb-6 p-5 rounded-[24px] bg-white/70 dark:bg-slate-950/70 border border-border/80 backdrop-blur-md space-y-4 animate-in fade-in slide-in-from-top-2">
                 <div className="flex flex-col sm:flex-row gap-3">

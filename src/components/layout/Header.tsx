@@ -856,7 +856,7 @@ export default function Header() {
                                 key={product.id}
                                 onClick={() => {
                                   setSearchFocused(false);
-                                  router.push(`/product/${product.slug}`);
+                                  router.push(`/products/${product.id}`);
                                 }}
                                 className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/40 transition-colors text-start"
                               >
