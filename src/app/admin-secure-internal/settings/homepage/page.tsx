@@ -319,6 +319,8 @@ export default function AdminHomepageManager() {
   // Custom sections state
   const [features, setFeatures] = useState<any[]>([]);
   const [trendingSearches, setTrendingSearches] = useState<any>({ ar: [], en: [], fr: [] });
+  const [realTrendingCategories, setRealTrendingCategories] = useState<any[]>([]);
+  const [isResettingTrending, setIsResettingTrending] = useState(false);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [ctaSettings, setCtaSettings] = useState<any>({});
 
@@ -630,6 +632,25 @@ export default function AdminHomepageManager() {
     }
     await persistConfig(layout, pinned, countdown, updated);
   };
+
+  const handleHeroSlideChange = (index: number, key: keyof HeroSlide, value: any) => {
+    const newSlides = [...heroSlides];
+    newSlides[index] = { ...newSlides[index], [key]: value };
+    setHeroSlides(newSlides);
+  };
+
+  useEffect(() => {
+    if (activeTab === 'trending') {
+      fetch('/api/search/trending')
+        .then(res => res.json())
+        .then(data => {
+          if (data.trendingCategories) {
+            setRealTrendingCategories(data.trendingCategories);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [activeTab]);
 
   const moveSlide = async (index: number, direction: 'up' | 'down') => {
     const nextIndex = direction === 'up' ? index - 1 : index + 1;
@@ -2768,23 +2789,75 @@ export default function AdminHomepageManager() {
           {/* Trending Searches Tab */}
           {activeTab === 'trending' && (
             <div className="grid grid-cols-1 gap-6">
-              <Card className="card-surface rounded-[24px] shadow-sm">
+              <Card className="card-surface rounded-[24px] shadow-sm border-brand/20">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg font-bold">كلمات البحث الشائعة</CardTitle>
-                    <CardDescription>إدارة الكلمات المقترحة في شريط البحث.</CardDescription>
+                    <CardTitle className="text-lg font-bold flex items-center gap-2">
+                      <Search className="w-5 h-5 text-brand" />
+                      إحصائيات البحث الشائع (مؤتمتة)
+                    </CardTitle>
+                    <CardDescription>هذه التصنيفات يتم استنتاجها تلقائياً بناءً على ما يبحث عنه زوار المتجر وتحديث نقاط الترند الخاصة بها يومياً.</CardDescription>
+                  </div>
+                  <Button 
+                    variant="destructive" 
+                    onClick={async () => {
+                      if (!confirm('هل أنت متأكد من تصفير إحصائيات جميع التصنيفات لبدء موسم جديد؟')) return;
+                      setIsResettingTrending(true);
+                      try {
+                        const res = await fetch('/api/admin/trending-searches/reset', { method: 'POST' });
+                        if (res.ok) {
+                          toast.success('تم تصفير الإحصائيات بنجاح');
+                          setRealTrendingCategories([]);
+                        }
+                      } finally {
+                        setIsResettingTrending(false);
+                      }
+                    }} 
+                    disabled={isResettingTrending} 
+                    className="font-bold gap-2 rounded-xl px-5"
+                  >
+                    {isResettingTrending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash className="h-4 w-4" />}
+                    تصفير الإحصائيات
+                  </Button>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-slate-50 dark:bg-slate-900/50 rounded-2xl p-6 border border-border/50">
+                    <h3 className="font-bold mb-4">أعلى 10 تصنيفات ترند حالياً:</h3>
+                    {realTrendingCategories.length > 0 ? (
+                      <div className="flex flex-wrap gap-3">
+                        {realTrendingCategories.map((cat, i) => (
+                          <div key={cat.id} className="flex items-center gap-2 bg-white dark:bg-slate-800 border border-border/80 px-4 py-2 rounded-xl shadow-sm">
+                            <span className="font-bold text-sm">{cat.name}</span>
+                            <span className="text-xs bg-brand/10 text-brand px-2 py-0.5 rounded-full font-bold">
+                              {cat.trendingScore} نقطة
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-sm">لا توجد إحصائيات بحث كافية حتى الآن. ستظهر هنا فور بدء الزوار بالبحث عن المنتجات.</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="card-surface rounded-[24px] shadow-sm mt-4 opacity-70 hover:opacity-100 transition-opacity">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-md font-bold">كلمات البحث الاحتياطية (Manual Fallback)</CardTitle>
+                    <CardDescription>هذه الكلمات ستظهر فقط في حال لم يتوفر تصنيفات شائعة كافية في النظام أعلاه.</CardDescription>
                   </div>
                   <Button onClick={() => persistConfig()} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
                     {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                    حفظ التغييرات
+                    حفظ الاحتياطي
                   </Button>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {['ar', 'en', 'fr'].map((lang) => (
                     <div key={lang} className="space-y-2">
-                      <Label className="font-bold">الكلمات المفتاحية ({lang.toUpperCase()}) - افصل بينها بفاصلة ( , )</Label>
+                      <Label className="font-bold text-sm">الكلمات المفتاحية ({lang.toUpperCase()}) - افصل بينها بفاصلة ( , )</Label>
                       <Textarea 
-                        rows={3} 
+                        rows={2} 
                         value={(trendingSearches[lang] || []).join(', ')}
                         onChange={(e) => {
                           const val = e.target.value;
@@ -2792,7 +2865,7 @@ export default function AdminHomepageManager() {
                           setTrendingSearches((prev: any) => ({ ...prev, [lang]: arr }));
                         }}
                         placeholder="عطور, آيفون, ملابس..."
-                        className="font-mono text-left direction-ltr"
+                        className="font-mono text-left direction-ltr text-sm"
                       />
                     </div>
                   ))}

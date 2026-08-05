@@ -44,7 +44,8 @@ export async function GET() {
       saadaLayoutSetting,
       featuresSetting,
       trendingSearchesSetting,
-      ctaSetting
+      ctaSetting,
+      trendingCategories
     ] = await Promise.all([
       // Active categories with product counts
       db.category.findMany({
@@ -175,7 +176,15 @@ export async function GET() {
       // Fetch SAADA layout directly if it's the active template
       (activeTemplateSetting?.value && activeTemplateSetting.value !== 'homepage_layout') 
         ? db.setting.findUnique({ where: { key: activeTemplateSetting.value } })
-        : Promise.resolve(null)
+        : Promise.resolve(null),
+        
+      // Fetch automated trending categories
+      db.category.findMany({
+        where: { isActive: true, trendingScore: { gt: 0 } },
+        orderBy: { trendingScore: 'desc' },
+        take: 10,
+        select: { id: true, name: true, nameEn: true, trendingScore: true }
+      })
     ]);
 
     // Parse dynamic layout - always ensure core sections exist
@@ -473,6 +482,7 @@ export async function GET() {
       globalCouponCampaigns,
       features: parsedFeatures,
       trendingSearches: parsedTrendingSearches,
+      trendingCategories,
       cta: parsedCta,
       isMaintenance: maintenanceSetting?.value === 'true',
       allowGuestCheckout: allowGuestCheckoutSetting?.value === 'true',

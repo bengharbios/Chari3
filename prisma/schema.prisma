@@ -492,8 +492,9 @@ model Category {
   parentId  String?
   parent    Category?  @relation("CategoryTree", fields: [parentId], references: [id], onUpdate: NoAction, onDelete: NoAction)
   children  Category[] @relation("CategoryTree")
-  sortOrder Int        @default(0)
-  isActive  Boolean    @default(true)
+  sortOrder     Int        @default(0)
+  isActive      Boolean    @default(true)
+  trendingScore Int        @default(0)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
 

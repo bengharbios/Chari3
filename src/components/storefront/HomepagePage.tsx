@@ -1684,14 +1684,29 @@ return (
           {globalT('homepage.searchSuggestions') || 'البحث الشائع:'}
         </span>
         {(() => {
-          // Use DB-stored searches if available (admin-controlled), else use locale-specific defaults
+          // Use Automated Trending Categories if available
+          const trendingCategories = data?.trendingCategories || [];
+          
+          if (trendingCategories.length > 0) {
+            return trendingCategories.map((cat: any) => (
+              <button
+                key={cat.id}
+                onClick={() => { setFilterCategory(cat.id); setShowFilterPanel(true); }}
+                className="text-[10px] md:text-xs bg-white/80 dark:bg-slate-900/60 hover:bg-amber-500 hover:text-slate-950 dark:hover:bg-amber-500 border border-border/80 hover:border-amber-500/50 text-slate-700 dark:text-slate-200 px-3 py-1 rounded-full whitespace-nowrap transition-all duration-300 font-bold shadow-sm snap-start"
+              >
+                {locale === 'ar' ? cat.name : (cat.nameEn || cat.name)}
+              </button>
+            ));
+          }
+
+          // Fallback to legacy string searches or defaults if no trending categories exist yet
           const dbSearches = data?.trendingSearches;
           let terms: string[] = [];
           if (dbSearches) {
             if (locale === 'ar' && Array.isArray(dbSearches.ar)) terms = dbSearches.ar;
             else if (locale === 'fr' && Array.isArray(dbSearches.fr)) terms = dbSearches.fr;
             else if (Array.isArray(dbSearches.en)) terms = dbSearches.en;
-            else if (Array.isArray(dbSearches)) terms = dbSearches; // legacy flat array
+            else if (Array.isArray(dbSearches)) terms = dbSearches;
           }
           if (terms.length === 0) {
             terms = locale === 'fr' ? DEFAULT_TRENDING_SEARCHES_FR : locale === 'ar' ? DEFAULT_TRENDING_SEARCHES_AR : DEFAULT_TRENDING_SEARCHES_EN;

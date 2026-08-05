@@ -252,7 +252,46 @@ export default function Header() {
 
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchVal, setSearchVal] = useState('');
+  const [liveSuggestions, setLiveSuggestions] = useState<any[]>([]);
+  const [isSearchingLive, setIsSearchingLive] = useState(false);
+  const [trendingCategories, setTrendingCategories] = useState<any[]>([]);
   const searchRef = React.useRef<HTMLDivElement>(null);
+
+  // Fetch trending categories
+  useEffect(() => {
+    fetch('/api/search/trending')
+      .then(res => res.json())
+      .then(data => {
+        if (data.trendingCategories) {
+          setTrendingCategories(data.trendingCategories);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Debounced live search
+  useEffect(() => {
+    if (searchVal.trim().length < 2) {
+      setLiveSuggestions([]);
+      setIsSearchingLive(false);
+      return;
+    }
+    
+    setIsSearchingLive(true);
+    const delayDebounceFn = setTimeout(() => {
+      fetch(`/api/search/live?q=${encodeURIComponent(searchVal.trim())}`)
+        .then(res => res.json())
+        .then(data => {
+          setLiveSuggestions(data.products || []);
+          setIsSearchingLive(false);
+        })
+        .catch(() => {
+          setIsSearchingLive(false);
+        });
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchVal]);
 
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
@@ -769,15 +808,30 @@ export default function Header() {
                         {t('الأكثر بحثاً الآن', 'Trending Searches')}
                       </h4>
                       <div className="flex flex-wrap gap-1.5">
-                        {/* TRENDING_SEARCHES removed for brevity */}
+                        {trendingCategories.length > 0 ? trendingCategories.map(cat => (
+                          <button
+                            key={cat.id}
+                            onClick={() => {
+                              setSearchFocused(false);
+                              useAppStore.getState().setCurrentPage('search' as PageType);
+                              router.push(`/?view=search&categoryId=${cat.id}`);
+                            }}
+                            className="text-[10px] md:text-xs bg-surface/50 hover:bg-brand hover:text-navy px-3 py-1.5 rounded-full transition-colors border border-border/50"
+                          >
+                            {locale === 'ar' ? cat.name : (cat.nameEn || cat.name)}
+                          </button>
+                        )) : (
+                          <span className="text-xs text-muted-foreground">{t('لا توجد بيانات', 'No data')}</span>
+                        )}
                       </div>
                     </div>
                   ) : (
                     <div>
-                      <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2.5 px-1">
-                        {t('بحث مقترح عن', 'Suggested Search for')} "{searchVal}"
+                      <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2.5 px-1 flex items-center justify-between">
+                        <span>{t('بحث مقترح عن', 'Suggested Search for')} "{searchVal}"</span>
+                        {isSearchingLive && <Loader2 className="w-3 h-3 animate-spin" />}
                       </h4>
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-col gap-1 mb-3">
                         <button
                           onClick={() => {
                             setSearchFocused(false);
@@ -787,9 +841,43 @@ export default function Header() {
                           className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-muted/40 text-xs font-bold transition-colors text-start"
                         >
                           <Search className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>{t('ابحث عن', 'Search for')} "{searchVal}"</span>
+                          <span>{t('عرض جميع النتائج لـ', 'View all results for')} "{searchVal}"</span>
                         </button>
                       </div>
+                      
+                      {liveSuggestions.length > 0 && (
+                        <div className="pt-2 border-t border-border/50">
+                          <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">
+                            {t('منتجات مطابقة', 'Matching Products')}
+                          </h4>
+                          <div className="flex flex-col gap-1">
+                            {liveSuggestions.map(product => (
+                              <button
+                                key={product.id}
+                                onClick={() => {
+                                  setSearchFocused(false);
+                                  router.push(`/product/${product.slug}`);
+                                }}
+                                className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/40 transition-colors text-start"
+                              >
+                                {product.images && JSON.parse(product.images)[0] ? (
+                                  <img src={JSON.parse(product.images)[0]} alt={product.name} className="w-8 h-8 rounded-lg object-cover bg-white" />
+                                ) : (
+                                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center"><Search className="w-3 h-3 text-muted-foreground" /></div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-bold truncate text-slate-800 dark:text-slate-200">
+                                    {locale === 'ar' ? product.name : (product.nameEn || product.name)}
+                                  </p>
+                                  <p className="text-[10px] text-brand font-bold">
+                                    {product.price} {countryCurrency}
+                                  </p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

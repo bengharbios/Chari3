@@ -134,6 +134,39 @@ export async function GET(request: Request) {
     db.product.count({ where }),
   ]);
 
+  // Automated Category Inference for Trending Searches
+  if (search && products.length > 0 && page === 1) {
+    // Fire-and-forget promise to not delay the API response
+    Promise.resolve().then(async () => {
+      try {
+        const categoryCounts: Record<string, number> = {};
+        let maxCount = 0;
+        let dominantCategoryId: string | null = null;
+        
+        // Analyze top 10 products
+        const topProducts = products.slice(0, 10);
+        for (const p of topProducts) {
+          if (p.categoryId) {
+            categoryCounts[p.categoryId] = (categoryCounts[p.categoryId] || 0) + 1;
+            if (categoryCounts[p.categoryId] > maxCount) {
+              maxCount = categoryCounts[p.categoryId];
+              dominantCategoryId = p.categoryId;
+            }
+          }
+        }
+        
+        if (dominantCategoryId) {
+          await db.category.update({
+            where: { id: dominantCategoryId },
+            data: { trendingScore: { increment: 1 } }
+          });
+        }
+      } catch (error) {
+        console.error('[category-inference] Failed to increment trending score:', error);
+      }
+    });
+  }
+
   return NextResponse.json({ products, total, page, limit, pages: Math.ceil(total / limit) });
 }
 
