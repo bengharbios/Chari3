@@ -27,17 +27,16 @@ const CURRENCY = { symbol: 'د.ج', code: 'DZD' };
 
 // Fallback only — actual values are stored in DB setting `homepage_trending_searches` and managed from admin panel
 const DEFAULT_TRENDING_SEARCHES_AR = [
-  "واقيات الشمس", "العطور", "آيفون", "التلفزيونات", "بلايستيشن 5",
-  "بطاقات هدايا", "قلايات هوائية", "أواني السفرة والتقديم",
-  "أطقم القهوة والشاي", "ديكور البيت", "الأحذية"
+  "هواتف ذكية", "أجهزة كهرومنزلية", "ملابس", "عطور", "مستحضرات تجميل",
+  "أحذية", "ديكور البيت", "إكسسوارات", "أدوات مطبخ"
 ];
 const DEFAULT_TRENDING_SEARCHES_EN = [
-  "Sunscreens", "Perfumes", "iPhone", "TVs", "PlayStation 5",
-  "Gift Cards", "Air Fryers", "Tableware", "Coffee Sets", "Home Decor", "Shoes"
+  "Smartphones", "Home Appliances", "Clothing", "Perfumes", "Cosmetics",
+  "Shoes", "Home Decor", "Accessories", "Kitchenware"
 ];
 const DEFAULT_TRENDING_SEARCHES_FR = [
-  "Écrans solaires", "Parfums", "iPhone", "Télévisions", "PlayStation 5",
-  "Cartes cadeaux", "Friteuses", "Vaisselle", "Sets café", "Déco maison", "Chaussures"
+  "Smartphones", "Électroménager", "Vêtements", "Parfums", "Cosmétiques",
+  "Chaussures", "Déco maison", "Accessoires", "Ustensiles de cuisine"
 ];
 
 function fmt(amount: number) {
@@ -89,32 +88,7 @@ const DEFAULT_HERO_SLIDES = [
   },
 ];
 
-const DEFAULT_TESTIMONIALS = [
-  { 
-    name: 'فاطمة بن علي', 
-    nameEn: 'Fatima Ben Ali', 
-    nameFr: 'Fatima Ben Ali',
-    text: 'خدمة ممتازة وتوصيل سريع، أنصح الجميع بالتسوق من هنا!', 
-    textEn: 'Excellent service and fast delivery, highly recommend shopping here!',
-    textFr: 'Excellent service et livraison rapide, je recommande vivement !',
-    rating: 5, 
-    city: 'الجزائر العاصمة',
-    cityEn: 'Algiers',
-    cityFr: 'Alger'
-  },
-  { 
-    name: 'محمد الأمين', 
-    nameEn: 'Mohamed Lamine',
-    nameFr: 'Mohamed Lamine',
-    text: 'منصة رائعة، المنتجات أصلية والأسعار معقولة جداً', 
-    textEn: 'Great platform, original products and very reasonable prices',
-    textFr: 'Excellente plateforme, produits authentiques et prix très raisonnables',
-    rating: 5, 
-    city: 'وهران',
-    cityEn: 'Oran',
-    cityFr: 'Oran'
-  },
-];
+const DEFAULT_TESTIMONIALS: any[] = [];
 
 const FEATURES = [
   { 
@@ -775,11 +749,11 @@ export default function StorefrontHomepage() {
     switch (section.type) {
       case 'hero':
         // Retrieve custom settings for Side Card 1
-        const card1Badge = getLocalizedField(section, 'card1Badge', locale) || t('أحدث الهواتف', 'Latest Mobiles');
+        const card1Badge = getLocalizedField(section, 'card1Badge', locale) || t('أحدث المنتجات', 'Latest Products');
         
-        const card1Title = getLocalizedField(section, 'card1Title', locale) || t('وفر حتى 50% على أجهزة شاومي وآيفون', 'Save up to 50% on iPhone & Xiaomi');
+        const card1Title = getLocalizedField(section, 'card1Title', locale) || t('تسوق تشكيلة واسعة من أفضل المنتجات', 'Shop a wide selection of top products');
         
-        const card1Cta = getLocalizedField(section, 'card1Cta', locale) || t('تسوق الأجهزة', 'Shop Devices');
+        const card1Cta = getLocalizedField(section, 'card1Cta', locale) || t('تسوق الآن', 'Shop Now');
         
         const card1Link = section.metadata?.card1Link || '/search?q=electronics';
 
@@ -788,11 +762,11 @@ export default function StorefrontHomepage() {
         const card1AdLink = section.metadata?.card1AdLink || '#';
 
         // Retrieve custom settings for Side Card 2
-        const card2Badge = getLocalizedField(section, 'card2Badge', locale) || t('الجمال والعطور', 'Beauty Deals');
+        const card2Badge = getLocalizedField(section, 'card2Badge', locale) || t('عروض مميزة', 'Special Offers');
         
-        const card2Title = getLocalizedField(section, 'card2Title', locale) || t('روائح تسحر الجميع بأسعار لا تقاوم', 'Fragrances that captivate at unbeatable prices');
+        const card2Title = getLocalizedField(section, 'card2Title', locale) || t('خصومات حصرية على مجموعة متنوعة من الأصناف', 'Exclusive discounts on a variety of items');
         
-        const card2Cta = getLocalizedField(section, 'card2Cta', locale) || t('اكتشف العطور', 'Explore Now');
+        const card2Cta = getLocalizedField(section, 'card2Cta', locale) || t('اكتشف المزيد', 'Explore More');
         
         const card2Link = section.metadata?.card2Link || '/search?q=perfumes';
 
@@ -1477,7 +1451,7 @@ export default function StorefrontHomepage() {
                               {seller.storeName || seller.user?.name}
                             </h4>
                             <p className="text-[10px] text-white/40 mt-1.5 truncate">
-                              💼 {t('تاجر مستقل معتمد', 'Certified Freelance Merchant')}
+                              💼 {t('تاجر معتمد', 'Certified Merchant')}
                             </p>
                           </div>
                           <div className="flex items-center justify-center gap-1.5 mt-3 pt-3 border-t border-white/5 w-full font-bold">
@@ -1505,15 +1479,15 @@ export default function StorefrontHomepage() {
           </section>
         );
 
-      case 'testimonials':
+      case 'testimonials': {
+        const testimonialsList = (data?.testimonials?.length ? data.testimonials : DEFAULT_TESTIMONIALS).filter((t2: any) => t2 && typeof t2 === 'object');
+        if (testimonialsList.length === 0) return null;
         return (
           <section key="testimonials" className="container-platform py-14 text-start">
             <SectionHeader section={section} isAr={isAr} locale={locale} t={t} />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {(data?.testimonials?.length ? data.testimonials : DEFAULT_TESTIMONIALS)
-                .filter((t2) => t2 && typeof t2 === 'object')
-                .map((t2, i) => (
-                  <Card key={i} className="border border-border/80 bg-white/70 dark:bg-slate-950/70 backdrop-blur-md hover:shadow-lg transition-all duration-300 rounded-[22px] hover:-translate-y-1">
+              {testimonialsList.map((t2, i) => (
+                <Card key={i} className="border border-border/80 bg-white/70 dark:bg-slate-950/70 backdrop-blur-md hover:shadow-lg transition-all duration-300 rounded-[22px] hover:-translate-y-1">
                     <CardContent className="p-5 flex flex-col h-full justify-between">
                       <Quote className="size-6 text-amber-500/30 mb-3" />
                       <p className="text-xs md:text-sm text-slate-700 dark:text-slate-300 mb-5 leading-relaxed italic">
@@ -1536,6 +1510,7 @@ export default function StorefrontHomepage() {
             </div>
           </section>
         );
+      }
 
       case 'cta': {
         const ctaData = data?.cta || {};
