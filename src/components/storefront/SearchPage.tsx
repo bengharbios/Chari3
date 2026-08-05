@@ -1,8 +1,8 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
-import { Search, ShoppingBag, Star } from 'lucide-react';
+import { Search, ShoppingBag, Star, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,28 +12,38 @@ const fmt = (n: number) => `${n.toLocaleString('ar-DZ')} د.ج`;
 
 export default function SearchPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { locale } = useAppStore();
   const isAr = locale === 'ar';
   const t = (ar: string, en: string) => isAr ? ar : en;
 
-  const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
   const [products, setProducts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [total, setTotal] = useState(0);
 
-  // Read q from URL when component mounts
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const q = urlParams.get('q') || '';
-    setSearchQuery(q);
-    setInputValue(q);
-  }, []);
+  const queryQ = searchParams.get('q') || '';
+  const queryCategoryId = searchParams.get('categoryId') || '';
 
+  // Sync input value with URL query when it changes
   useEffect(() => {
-    if (!searchQuery.trim()) { setProducts([]); return; }
+    setInputValue(queryQ);
+  }, [queryQ]);
+
+  // Fetch products based on search params
+  useEffect(() => {
+    if (!queryQ.trim() && !queryCategoryId) {
+      setProducts([]);
+      setTotal(0);
+      return;
+    }
+
     setIsLoading(true);
-    fetch(`/api/products?q=${encodeURIComponent(searchQuery)}&limit=40&status=active`)
+    const params = new URLSearchParams({ limit: '40', status: 'active' });
+    if (queryQ.trim()) params.set('q', queryQ.trim());
+    if (queryCategoryId) params.set('categoryId', queryCategoryId);
+
+    fetch(`/api/products?${params.toString()}`)
       .then(r => r.json())
       .then(d => {
         setProducts(d.products || []);
@@ -41,13 +51,14 @@ export default function SearchPage() {
       })
       .catch(() => {})
       .finally(() => setIsLoading(false));
-  }, [searchQuery]);
+  }, [queryQ, queryCategoryId]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim()) {
-      setSearchQuery(inputValue.trim());
-      window.history.pushState({}, '', `/search?q=${encodeURIComponent(inputValue.trim())}`);
+      router.push(`/search?q=${encodeURIComponent(inputValue.trim())}`);
+    } else {
+      router.push(`/search`);
     }
   };
 
@@ -56,11 +67,13 @@ export default function SearchPage() {
       {/* Search Header */}
       <div>
         <h1 className="text-2xl font-black mb-2">
-          {searchQuery
-            ? t(`نتائج البحث: "${searchQuery}"`, `Search Results: "${searchQuery}"`)
+          {queryQ
+            ? t(`نتائج البحث: "${queryQ}"`, `Search Results: "${queryQ}"`)
+            : queryCategoryId 
+            ? t('نتائج التصنيف', 'Category Results')
             : t('البحث', 'Search')}
         </h1>
-        {searchQuery && !isLoading && (
+        {(queryQ || queryCategoryId) && !isLoading && (
           <p className="text-sm text-muted-foreground">
             {t(`${total} نتيجة وجدت`, `${total} results found`)}
           </p>
@@ -152,17 +165,20 @@ export default function SearchPage() {
             );
           })}
         </div>
-      ) : searchQuery ? (
+      ) : (queryQ || queryCategoryId) ? (
         <div className="text-center py-20 space-y-4">
           <Search className="size-16 mx-auto text-muted-foreground/30" />
           <p className="text-lg font-semibold">{t('لا توجد نتائج', 'No Results Found')}</p>
           <p className="text-sm text-muted-foreground">
-            {t(
-              `لم نجد أي منتجات تطابق "${searchQuery}"`,
-              `We couldn't find any products matching "${searchQuery}"`
+            {queryQ ? t(
+              `لم نجد أي منتجات تطابق "${queryQ}"`,
+              `We couldn't find any products matching "${queryQ}"`
+            ) : t(
+              'لا توجد منتجات في هذا التصنيف حالياً',
+              'No products found in this category'
             )}
           </p>
-          <Button variant="outline" onClick={() => { setSearchQuery(''); setInputValue(''); }}>
+          <Button variant="outline" onClick={() => { router.push('/search'); }}>
             {t('مسح البحث', 'Clear Search')}
           </Button>
         </div>
