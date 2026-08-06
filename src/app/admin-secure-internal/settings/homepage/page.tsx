@@ -1346,24 +1346,20 @@ export default function AdminHomepageManager() {
                                 <option value="true">{t('homepage.yesEnabled')}</option>
                               </select>
                             </div>
-                            {editSectData.metadata?.enableTimer && (
-                              <div className="space-y-2 text-start">
-                                <Label className="text-xs font-bold">{t('homepage.timerEndDateTime')}</Label>
-                                <Input
-                                  type="datetime-local"
-                                  value={editSectData.metadata?.timerEndDate || ''}
-                                  onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, timerEndDate: e.target.value } }))}
-                                  className="rounded-xl text-sm"
-                              <Input
-                                type="datetime-local"
-                                value={editSectData.metadata?.timerEndDate || ''}
-                                onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, timerEndDate: e.target.value } }))}
-                                className="rounded-xl text-sm"
-                              />
+                              {editSectData.metadata?.enableTimer && (
+                                <div className="space-y-2 text-start">
+                                  <Label className="text-xs font-bold">{t('homepage.timerEndDateTime')}</Label>
+                                  <Input
+                                    type="datetime-local"
+                                    value={editSectData.metadata?.timerEndDate || ''}
+                                    onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, timerEndDate: e.target.value } }))}
+                                    className="rounded-xl text-sm"
+                                  />
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-
+                          </div>
+                        )}
                       {/* Data Source Selection for ALL product-showcasing sections (except slides, features, testimonials, cta, banner, ad_zone) */}
                       {editingSectId && !['hero', 'features', 'testimonials', 'cta', 'banner', 'ad_zone'].includes(layout.find(s => s.id === editingSectId)?.type || '') && (
                         <div className="space-y-4 pt-4 border-t border-border/60">
