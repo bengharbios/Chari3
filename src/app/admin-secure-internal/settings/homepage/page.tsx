@@ -1044,8 +1044,29 @@ export default function AdminHomepageManager() {
                             <span className="font-mono text-xs text-muted-foreground w-6 shrink-0">#{idx + 1}</span>
                             <div className="min-w-0">
                               <p className="font-bold text-sm truncate text-slate-800 dark:text-slate-100">{displayName}</p>
-                              <div className="mt-1 flex items-center gap-1.5">
+                              <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                                 {getSectionBadge(sect.type)}
+                                {['featured_products', 'bento_offers', 'top_sellers', 'category_products'].includes(sect.type) && (
+                                  <div className="flex items-center gap-1 ms-1 bg-slate-100 dark:bg-slate-800 rounded px-1.5 py-0.5 border border-border/50">
+                                    <span className="text-[10px] text-muted-foreground font-bold">{t('homepage.limit', 'العدد')}:</span>
+                                    <input 
+                                      type="number" 
+                                      min={1} 
+                                      max={100}
+                                      value={sect.limit || 10} 
+                                      onChange={(e) => {
+                                        const val = parseInt(e.target.value) || 10;
+                                        setLayout(prev => prev.map((s, i) => i === idx ? { ...s, limit: val } : s));
+                                        if (editingSectId === sect.id) {
+                                          setEditSectData(prev => ({ ...prev, limit: val }));
+                                        }
+                                      }}
+                                      onPointerDown={(e) => e.stopPropagation()}
+                                      onKeyDown={(e) => e.stopPropagation()}
+                                      className="w-10 h-5 text-[10px] text-center bg-white dark:bg-slate-900 border border-border rounded outline-none font-bold text-foreground"
+                                    />
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
