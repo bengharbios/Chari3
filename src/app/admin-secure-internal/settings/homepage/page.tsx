@@ -1305,49 +1305,55 @@ export default function AdminHomepageManager() {
                       )}
 
                       {/* Advanced Customization (Metadata) */}
-                      <div className="space-y-4 pt-4 border-t">
-                        <h4 className="text-xs font-bold text-indigo-500 uppercase flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5" />
-                          {t('homepage.advancedCustomizationTextsBadgesTimers')}
-                        </h4>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          {/* Dynamic Universal Badge based on active languages */}
-                          {languages.map((lang: any) => {
-                            const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
-                            const keyName = `badge${codeSuffix}`;
-                            const inputLabel = `${t('homepage.badgeHashtagIn')} ${lang.name}`;
-                            return (
-                              <div key={lang.code} className="space-y-2 text-start">
-                                <Label className="text-xs font-bold">{inputLabel}</Label>
-                                <Input
-                                  value={editSectData.metadata?.[keyName] || ''}
-                                  onChange={e => setEditSectData((prev: any) => ({
-                                    ...prev,
-                                    metadata: { ...prev.metadata, [keyName]: e.target.value }
-                                  }))}
-                                  className="rounded-xl text-sm"
-                                  placeholder={lang.code === 'ar' ? 'مثال: عروض حصرية' : `e.g. Exclusive Deals (${lang.nameEn})`}
-                                />
-                              </div>
-                            );
-                          })}
+                      {editingSectId && !['hero', 'features', 'categories', 'testimonials', 'cta', 'banner', 'ad_zone', 'category_circles'].includes(layout.find(s => s.id === editingSectId)?.type || '') && (
+                        <div className="space-y-4 pt-4 border-t">
+                          <h4 className="text-xs font-bold text-indigo-500 uppercase flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            {t('homepage.advancedCustomizationTextsBadgesTimers')}
+                          </h4>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Dynamic Universal Badge based on active languages */}
+                            {languages.map((lang: any) => {
+                              const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                              const keyName = `badge${codeSuffix}`;
+                              const inputLabel = `${t('homepage.badgeHashtagIn')} ${lang.name}`;
+                              return (
+                                <div key={lang.code} className="space-y-2 text-start">
+                                  <Label className="text-xs font-bold">{inputLabel}</Label>
+                                  <Input
+                                    value={editSectData.metadata?.[keyName] || ''}
+                                    onChange={e => setEditSectData((prev: any) => ({
+                                      ...prev,
+                                      metadata: { ...prev.metadata, [keyName]: e.target.value }
+                                    }))}
+                                    className="rounded-xl text-sm"
+                                    placeholder={lang.code === 'ar' ? 'مثال: عروض حصرية' : `e.g. Exclusive Deals (${lang.nameEn})`}
+                                  />
+                                </div>
+                              );
+                            })}
 
-                          {/* Universal Timer */}
-                          <div className="space-y-2 text-start">
-                            <Label className="text-xs font-bold">{t('homepage.enableCountdownTimer')}</Label>
-                            <select
-                              value={editSectData.metadata?.enableTimer ? 'true' : 'false'}
-                              onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, enableTimer: e.target.value === 'true' } }))}
-                              className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
-                            >
-                              <option value="false">{t('homepage.noDisabled')}</option>
-                              <option value="true">{t('homepage.yesEnabled')}</option>
-                            </select>
-                          </div>
-                          {editSectData.metadata?.enableTimer && (
+                            {/* Universal Timer */}
                             <div className="space-y-2 text-start">
-                              <Label className="text-xs font-bold">{t('homepage.timerEndDateTime')}</Label>
+                              <Label className="text-xs font-bold">{t('homepage.enableCountdownTimer')}</Label>
+                              <select
+                                value={editSectData.metadata?.enableTimer ? 'true' : 'false'}
+                                onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, enableTimer: e.target.value === 'true' } }))}
+                                className="bg-background border border-border text-foreground px-3.5 py-2.5 rounded-xl text-sm font-bold w-full"
+                              >
+                                <option value="false">{t('homepage.noDisabled')}</option>
+                                <option value="true">{t('homepage.yesEnabled')}</option>
+                              </select>
+                            </div>
+                            {editSectData.metadata?.enableTimer && (
+                              <div className="space-y-2 text-start">
+                                <Label className="text-xs font-bold">{t('homepage.timerEndDateTime')}</Label>
+                                <Input
+                                  type="datetime-local"
+                                  value={editSectData.metadata?.timerEndDate || ''}
+                                  onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, timerEndDate: e.target.value } }))}
+                                  className="rounded-xl text-sm"
                               <Input
                                 type="datetime-local"
                                 value={editSectData.metadata?.timerEndDate || ''}
@@ -1470,6 +1476,17 @@ export default function AdminHomepageManager() {
                         {/* Hero Specific Metadata */}
                         {layout.find(s => s.id === editingSectId)?.type === 'hero' && (
                           <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-border space-y-6">
+                            
+                            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3">
+                              <Sparkles className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                              <div className="text-sm text-blue-700 dark:text-blue-400">
+                                <p className="font-bold">{t('homepage.manageMainSlides', 'إدارة صور السلايدر الرئيسي')}</p>
+                                <p className="text-xs opacity-90 mt-1">
+                                  {t('homepage.manageMainSlidesDesc', 'هذه الإعدادات مخصصة للبطاقات الجانبية فقط. لتعديل الصور المتحركة الرئيسية، يرجى إغلاق هذه النافذة والانتقال إلى تبويبة "Hero Slides" في الأعلى.')}
+                                </p>
+                              </div>
+                            </div>
+
                             <h5 className="text-xs font-bold text-indigo-500 border-b pb-2 flex items-center gap-1.5">
                               <span>⚡</span>
                               {t('homepage.sidePromoCardsSettings')}
@@ -1535,7 +1552,7 @@ export default function AdminHomepageManager() {
                                             value={editSectData.metadata?.[keyName] || ''}
                                             onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
                                             className="rounded-xl text-xs"
-                                            placeholder={lang.code === 'ar' ? 'أحدث الهواتف' : 'Latest Mobiles'}
+                                            placeholder={lang.code === 'ar' ? 'أحدث الهواتف' : lang.code === 'fr' ? 'Derniers Mobiles' : 'Latest Mobiles'}
                                           />
                                         </div>
                                       );
@@ -1553,7 +1570,7 @@ export default function AdminHomepageManager() {
                                             value={editSectData.metadata?.[keyName] || ''}
                                             onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
                                             className="rounded-xl text-xs"
-                                            placeholder={lang.code === 'ar' ? 'وفر حتى 50% على أجهزة شاومي وآيفون' : 'Save up to 50% on iPhone & Xiaomi'}
+                                            placeholder={lang.code === 'ar' ? 'وفر حتى 50% على أجهزة شاومي وآيفون' : lang.code === 'fr' ? 'Économisez jusqu\'à 50% sur iPhone et Xiaomi' : 'Save up to 50% on iPhone & Xiaomi'}
                                           />
                                         </div>
                                       );
@@ -1571,7 +1588,7 @@ export default function AdminHomepageManager() {
                                             value={editSectData.metadata?.[keyName] || ''}
                                             onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
                                             className="rounded-xl text-xs"
-                                            placeholder={lang.code === 'ar' ? 'تسوق الأجهزة' : 'Shop Devices'}
+                                            placeholder={lang.code === 'ar' ? 'تسوق الأجهزة' : lang.code === 'fr' ? 'Acheter des Appareils' : 'Shop Devices'}
                                           />
                                         </div>
                                       );
@@ -1650,7 +1667,7 @@ export default function AdminHomepageManager() {
                                             value={editSectData.metadata?.[keyName] || ''}
                                             onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
                                             className="rounded-xl text-xs"
-                                            placeholder={lang.code === 'ar' ? 'الجمال والعطور' : 'Beauty Deals'}
+                                            placeholder={lang.code === 'ar' ? 'الجمال والعطور' : lang.code === 'fr' ? 'Beauté et Parfums' : 'Beauty Deals'}
                                           />
                                         </div>
                                       );
@@ -1668,7 +1685,7 @@ export default function AdminHomepageManager() {
                                             value={editSectData.metadata?.[keyName] || ''}
                                             onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
                                             className="rounded-xl text-xs"
-                                            placeholder={lang.code === 'ar' ? 'روائح تسحر الجميع بأسعار لا تقاوم' : 'Fragrances that captivate at unbeatable prices'}
+                                            placeholder={lang.code === 'ar' ? 'روائح تسحر الجميع بأسعار لا تقاوم' : lang.code === 'fr' ? 'Des parfums qui captivent à des prix imbattables' : 'Fragrances that captivate at unbeatable prices'}
                                           />
                                         </div>
                                       );
@@ -1686,7 +1703,7 @@ export default function AdminHomepageManager() {
                                             value={editSectData.metadata?.[keyName] || ''}
                                             onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
                                             className="rounded-xl text-xs"
-                                            placeholder={lang.code === 'ar' ? 'اكتشف العطور' : 'Explore Now'}
+                                            placeholder={lang.code === 'ar' ? 'اكتشف العطور' : lang.code === 'fr' ? 'Découvrir' : 'Explore Now'}
                                           />
                                         </div>
                                       );
