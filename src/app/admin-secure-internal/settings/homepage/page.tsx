@@ -1048,7 +1048,7 @@ export default function AdminHomepageManager() {
                                 {getSectionBadge(sect.type)}
                                 {['featured_products', 'bento_offers', 'top_sellers', 'category_products'].includes(sect.type) && (
                                   <div className="flex items-center gap-1 ms-1 bg-slate-100 dark:bg-slate-800 rounded px-1.5 py-0.5 border border-border/50">
-                                    <span className="text-[10px] text-muted-foreground font-bold">{t('homepage.limit', 'العدد')}:</span>
+                                    <span className="text-[10px] text-muted-foreground font-bold">{isAr ? 'العدد' : 'Limit'}:</span>
                                     <input 
                                       type="number" 
                                       min={1} 
