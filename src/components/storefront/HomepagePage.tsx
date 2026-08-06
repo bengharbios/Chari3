@@ -767,6 +767,12 @@ export default function StorefrontHomepage() {
     if (!section || !section.type) return null;
     switch (section.type) {
       case 'hero':
+        // Resolve section specific slides
+        const sectRawSlides = section.metadata?.slides || [];
+        const sectValidSlides = Array.isArray(sectRawSlides) ? sectRawSlides.filter((s: any) => s && typeof s === 'object' && (s.title || s.titleEn || s.titleAr || s.subtitle || s.imageUrl)) : [];
+        const resolvedHeroSlides = sectValidSlides.length > 0 ? sectValidSlides : currentHeroSlides;
+        const resolvedHeroIndex = heroIndex % Math.max(1, resolvedHeroSlides.length);
+
         // Retrieve custom settings for Side Card 1
         const card1Badge = getLocalizedField(section, 'card1Badge', locale) || t('أحدث المنتجات', 'Latest Products');
         
@@ -801,8 +807,8 @@ export default function StorefrontHomepage() {
                 {/* Modern grid lines overlay */}
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff1a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff1a_1px,transparent_1px)] bg-[size:32px_32px] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_60%,transparent_100%)] pointer-events-none z-10" />
                 
-                {currentHeroSlides.map((s: any, idx: number) => {
-                  const isSlideActive = idx === heroIndex;
+                {resolvedHeroSlides.map((s: any, idx: number) => {
+                  const isSlideActive = idx === resolvedHeroIndex;
                   const sTitle = getLocalizedField(s, 'title', locale) || (locale === 'ar' ? s.titleAr : s.titleEn);
                   const sSubtitle = getLocalizedField(s, 'subtitle', locale) || (locale === 'ar' ? s.subtitleAr : s.subtitleEn);
                   const sBadge = getLocalizedField(s, 'badge', locale);
@@ -868,21 +874,21 @@ export default function StorefrontHomepage() {
                   );
                 })}
 
-                {currentHeroSlides.length > 1 && (
+                {resolvedHeroSlides.length > 1 && (
                   <div className="absolute bottom-6 start-1/2 -translate-x-1/2 flex gap-2 z-20 select-none">
-                    {currentHeroSlides.map((_, i) => (
+                    {resolvedHeroSlides.map((_, i) => (
                       <button key={i} onClick={(e) => { e.stopPropagation(); setHeroIndex(i); }}
-                        className={`h-2 rounded-full transition-all duration-300 ${i === heroIndex ? 'w-6 bg-amber-500 shadow-md' : 'w-2 bg-white/20'}`} />
+                        className={`h-2 rounded-full transition-all duration-300 ${i === resolvedHeroIndex ? 'w-6 bg-amber-500 shadow-md' : 'w-2 bg-white/20'}`} />
                     ))}
                   </div>
                 )}
-                {currentHeroSlides.length > 1 && (
+                {resolvedHeroSlides.length > 1 && (
                   <>
-                    <button onClick={(e) => { e.stopPropagation(); setHeroIndex((i) => (i - 1 + currentHeroSlides.length) % currentHeroSlides.length); }}
+                    <button onClick={(e) => { e.stopPropagation(); setHeroIndex((i) => (i - 1 + resolvedHeroSlides.length) % resolvedHeroSlides.length); }}
                       className="absolute start-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white z-20 hidden md:block">
                       {isAr ? <ChevronRight className="size-4.5" /> : <ChevronLeft className="size-4.5" />}
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); setHeroIndex((i) => (i + 1) % currentHeroSlides.length); }}
+                    <button onClick={(e) => { e.stopPropagation(); setHeroIndex((i) => (i + 1) % resolvedHeroSlides.length); }}
                       className="absolute end-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white z-20 hidden md:block">
                       {isAr ? <ChevronLeft className="size-4.5" /> : <ChevronRight className="size-4.5" />}
                     </button>

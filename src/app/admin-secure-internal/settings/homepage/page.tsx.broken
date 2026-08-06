@@ -559,7 +559,7 @@ export default function AdminHomepageManager() {
     }
   };
 
-  // Slides handlers
+  // Slides handlers (now section-specific)
   const handleStartAddSlide = () => {
     const initialSlide: any = {
       bg: 'from-blue-950 via-indigo-900 to-slate-900',
@@ -580,11 +580,12 @@ export default function AdminHomepageManager() {
       }
     });
     setEditSlideData(initialSlide);
-    setEditingSlideIndex(currentSlides.length);
+    setEditingSlideIndex((editSectData.metadata?.slides || []).length);
   };
 
   const handleStartEditSlide = (index: number) => {
-    const slide = currentSlides[index];
+    const slides = editSectData.metadata?.slides || [];
+    const slide = slides[index];
     if (!slide) return;
     const initialSlide: any = {
       bg: slide.bg || 'from-blue-950 via-indigo-900 to-slate-900',
@@ -611,32 +612,43 @@ export default function AdminHomepageManager() {
 
   const handleSaveSlide = async () => {
     if (editingSlideIndex === null) return;
-    const updated = [...heroSlides];
+    const currentSlides = editSectData.metadata?.slides || [];
+    const updated = [...currentSlides];
     if (editingSlideIndex === currentSlides.length) {
       updated.push({ ...editSlideData, id: String(Date.now()) });
     } else {
       updated[editingSlideIndex] = { ...updated[editingSlideIndex], ...editSlideData };
     }
-    setHeroSlides(updated);
+    
+    setEditSectData((prev: any) => ({
+      ...prev,
+      metadata: { ...prev.metadata, slides: updated }
+    }));
     setEditingSlideIndex(null);
-    await persistConfig(layout, pinned, countdown, updated);
   };
 
   const handleDeleteSlide = async (index: number) => {
-    const updated = heroSlides.filter((_, i) => i !== index);
-    setHeroSlides(updated);
+    const currentSlides = editSectData.metadata?.slides || [];
+    const updated = currentSlides.filter((_: any, i: number) => i !== index);
+    setEditSectData((prev: any) => ({
+      ...prev,
+      metadata: { ...prev.metadata, slides: updated }
+    }));
     if (editingSlideIndex === index) {
       setEditingSlideIndex(null);
     } else if (editingSlideIndex !== null && editingSlideIndex > index) {
       setEditingSlideIndex(editingSlideIndex - 1);
     }
-    await persistConfig(layout, pinned, countdown, updated);
   };
 
   const handleHeroSlideChange = (index: number, key: keyof HeroSlide, value: any) => {
-    const newSlides = [...heroSlides];
+    const currentSlides = editSectData.metadata?.slides || [];
+    const newSlides = [...currentSlides];
     newSlides[index] = { ...newSlides[index], [key]: value };
-    setHeroSlides(newSlides);
+    setEditSectData((prev: any) => ({
+      ...prev,
+      metadata: { ...prev.metadata, slides: newSlides }
+    }));
   };
 
   useEffect(() => {
@@ -653,19 +665,22 @@ export default function AdminHomepageManager() {
   }, [activeTab]);
 
   const moveSlide = async (index: number, direction: 'up' | 'down') => {
+    const currentSlides = editSectData.metadata?.slides || [];
     const nextIndex = direction === 'up' ? index - 1 : index + 1;
-    if (nextIndex < 0 || nextIndex >= heroSlides.length) return;
-    const updated = [...heroSlides];
+    if (nextIndex < 0 || nextIndex >= currentSlides.length) return;
+    const updated = [...currentSlides];
     const temp = updated[index];
     updated[index] = updated[nextIndex]!;
     updated[nextIndex] = temp!;
-    setHeroSlides(updated);
+    setEditSectData((prev: any) => ({
+      ...prev,
+      metadata: { ...prev.metadata, slides: updated }
+    }));
     if (editingSlideIndex === index) {
       setEditingSlideIndex(nextIndex);
     } else if (editingSlideIndex === nextIndex) {
       setEditingSlideIndex(index);
     }
-    await persistConfig(layout, pinned, countdown, updated);
   };
 
   // Pinned items handlers (triggered from Selectors)
@@ -959,10 +974,6 @@ export default function AdminHomepageManager() {
           <Clock className="w-4 h-4" />
           {t('homepage.countdownTimer')}
         </button>
-        <button onClick={() => setActiveTab('slides')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'slides' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
-          <Sparkles className="w-4 h-4" />
-          {t('homepage.heroSlides')}
-        </button>
         <button onClick={() => setActiveTab('features')} className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs md:text-sm font-bold transition-all ${activeTab === 'features' ? 'bg-white dark:bg-slate-900 text-slate-950 dark:text-white shadow-md' : 'text-muted-foreground hover:text-foreground'}`}>
           <Shield className="w-4 h-4" />
           الميزات والضمانات
@@ -999,25 +1010,6 @@ export default function AdminHomepageManager() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="mb-4">
-                    <Label className="text-xs font-bold mb-2 block">{t('homepage.selectSliderToEdit', 'اختر السلايدر لتعديله')}</Label>
-                    <select
-                      value={editingTargetSectId || ''}
-                      onChange={(e) => {
-                        setEditingTargetSectId(e.target.value === '' ? null : e.target.value);
-                        setEditingSlideIndex(null);
-                      }}
-                      className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full max-w-sm"
-                    >
-                      <option value="">{t('homepage.mainSliderDefault', 'السلايدر الرئيسي (الافتراضي)')}</option>
-                      {layout.filter(s => s.type === 'hero').map((s, idx) => (
-                        <option key={s.id} value={s.id}>
-                          {t('homepage.sliderForSection', 'سلايدر قسم:')} {isAr ? s.title : (s.titleEn || s.title || `Hero ${idx + 1}`)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
                   <div className="border border-border/85 rounded-[20px] overflow-hidden bg-background shadow-inner">
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                       <SortableContext items={layout.map(s => s.id)} strategy={verticalListSortingStrategy}>
@@ -1180,7 +1172,6 @@ export default function AdminHomepageManager() {
                       <p className="text-sm font-medium">{t('homepage.noSectionSelectedForConfiguration')}</p>
                     </div>
                   ) : (
-                    <>
                     <div className="space-y-4">
                       {/* Dynamic Title Fields based on active languages */}
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1493,14 +1484,175 @@ export default function AdminHomepageManager() {
                         {layout.find(s => s.id === editingSectId)?.type === 'hero' && (
                           <div className="mt-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/50 border border-border space-y-6">
                             
-                            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-start gap-3">
-                              <Sparkles className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                              <div className="text-sm text-blue-700 dark:text-blue-400">
-                                <p className="font-bold">{t('homepage.manageMainSlides', 'إدارة صور السلايدر الرئيسي')}</p>
-                                <p className="text-xs opacity-90 mt-1">
-                                  {t('homepage.manageMainSlidesDesc', 'هذه الإعدادات مخصصة للبطاقات الجانبية فقط. لتعديل الصور المتحركة الرئيسية، يرجى إغلاق هذه النافذة والانتقال إلى تبويبة "Hero Slides" في الأعلى.')}
-                                </p>
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{t('homepage.manageMainSlides', 'إدارة صور السلايدر الرئيسي')}</h4>
+                                  <p className="text-[10px] text-muted-foreground">{t('homepage.manageAndReorderSlidesOnTheMainHomeBanne')}</p>
+                                </div>
+                                <Button size="sm" onClick={handleStartAddSlide} className="rounded-xl font-bold gap-1 px-3">
+                                  <Plus className="w-4 h-4" />
+                                  {t('homepage.addSlide')}
+                                </Button>
                               </div>
+                              
+                              {(editSectData.metadata?.slides || []).length === 0 ? (
+                                <div className="p-8 border border-dashed border-slate-350 rounded-2xl text-center text-sm text-muted-foreground bg-slate-50/20">
+                                  <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-35 text-amber-500 animate-pulse" />
+                                  {t('homepage.noSlidesAddedYetStorefrontWillDisplayFal')}
+                                </div>
+                              ) : (
+                                <div className="border border-border/80 rounded-[20px] divide-y overflow-hidden bg-background shadow-inner">
+                                  {(editSectData.metadata?.slides || []).map((s: any, idx: number) => (
+                                    <div key={s.id || idx} className={`flex items-center justify-between p-4 transition-colors ${editingSlideIndex === idx ? 'bg-muted/40 border-l-4 border-l-brand' : 'bg-background'}`}>
+                                      <div className="min-w-0 flex items-center gap-3">
+                                        <span className="font-mono text-xs text-muted-foreground w-6 shrink-0">#{idx + 1}</span>
+                                        <div className="min-w-0">
+                                          <p className="font-bold text-sm truncate text-slate-800 dark:text-slate-100">{isAr ? s.title : (s.titleEn || s.title || t('homepage.untitled'))}</p>
+                                          <div className="flex items-center gap-1.5 mt-1">
+                                            {s.imageUrl ? (
+                                              <div className="w-5 h-5 rounded overflow-hidden border border-border">
+                                                <img src={s.imageUrl} className="w-full h-full object-cover" alt="" />
+                                              </div>
+                                            ) : (
+                                              <div className={`w-3.5 h-3.5 rounded bg-gradient-to-br ${s.bg || s.bgGradient || 'from-blue-950 to-slate-900'} border border-white/10`} />
+                                            )}
+                                            <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">{s.imageUrl ? t('homepage.backgroundImage') : (s.bg || s.bgGradient)}</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-1">
+                                        <Button variant="ghost" size="icon" disabled={idx === 0} onClick={() => moveSlide(idx, 'up')} className="rounded-full h-8 w-8">
+                                          <ChevronUp className="w-4 h-4" />
+                                        </Button>
+                                        <Button variant="ghost" size="icon" disabled={idx === (editSectData.metadata?.slides || []).length - 1} onClick={() => moveSlide(idx, 'down')} className="rounded-full h-8 w-8">
+                                          <ChevronDown className="w-4 h-4" />
+                                        </Button>
+                                        <Button variant="outline" size="sm" onClick={() => handleStartEditSlide(idx)} className="rounded-xl text-xs px-2.5 h-8">
+                                          {t('homepage.edit')}
+                                        </Button>
+                                        <Button variant="ghost" size="icon" onClick={() => handleDeleteSlide(idx)} className="rounded-full text-destructive h-8 w-8 hover:bg-destructive/10">
+                                          <Trash className="w-4 h-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {editingSlideIndex !== null && (
+                                <div className="mt-4 p-4 border border-brand/30 bg-brand/5 rounded-2xl space-y-4">
+                                  <h4 className="text-sm font-bold text-brand flex items-center gap-1.5">
+                                    <Sparkles className="w-4 h-4" />
+                                    {editingSlideIndex === (editSectData.metadata?.slides || []).length ? t('homepage.addNewPromotionSlide') : `${t('homepage.editSlide')} #${editingSlideIndex + 1}`}
+                                  </h4>
+                                  
+                                  {/* Text inputs */}
+                                  <div className="space-y-3">
+                                    {languages.map((lang: any) => {
+                                      const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                      return (
+                                        <div key={lang.code} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border border-border/50 rounded-xl bg-white dark:bg-slate-950 shadow-sm">
+                                          <div className="col-span-full">
+                                            <Label className="text-xs font-bold text-brand">{lang.name}</Label>
+                                          </div>
+                                          <div className="space-y-2 text-start">
+                                            <Label className="text-[10px] font-bold text-slate-500">{t('homepage.mainTitleIn')}</Label>
+                                            <Input
+                                              value={editSlideData[`title${codeSuffix}`] || ''}
+                                              onChange={e => {
+                                                const val = e.target.value;
+                                                setEditSlideData((prev: any) => {
+                                                  const updated = { ...prev, [`title${codeSuffix}`]: val };
+                                                  if (lang.code === 'ar') updated.title = val;
+                                                  return updated;
+                                                });
+                                              }}
+                                              className="rounded-lg text-xs"
+                                            />
+                                          </div>
+                                          <div className="space-y-2 text-start">
+                                            <Label className="text-[10px] font-bold text-slate-500">{t('homepage.descriptionsubtitleIn')}</Label>
+                                            <Input
+                                              value={editSlideData[`subtitle${codeSuffix}`] || ''}
+                                              onChange={e => {
+                                                const val = e.target.value;
+                                                setEditSlideData((prev: any) => {
+                                                  const updated = { ...prev, [`subtitle${codeSuffix}`]: val };
+                                                  if (lang.code === 'ar') updated.subtitle = val;
+                                                  return updated;
+                                                });
+                                              }}
+                                              className="rounded-lg text-xs"
+                                            />
+                                          </div>
+                                          <div className="space-y-2 text-start">
+                                            <Label className="text-[10px] font-bold text-slate-500">{t('homepage.badgeTextIn')}</Label>
+                                            <Input
+                                              value={editSlideData[`badge${codeSuffix}`] || ''}
+                                              onChange={e => {
+                                                const val = e.target.value;
+                                                setEditSlideData((prev: any) => {
+                                                  const updated = { ...prev, [`badge${codeSuffix}`]: val };
+                                                  if (lang.code === 'ar') updated.badge = val;
+                                                  return updated;
+                                                });
+                                              }}
+                                              className="rounded-lg text-xs"
+                                            />
+                                          </div>
+                                          <div className="space-y-2 text-start">
+                                            <Label className="text-[10px] font-bold text-slate-500">{t('homepage.ctaTextIn1')}</Label>
+                                            <Input
+                                              value={editSlideData[`cta${codeSuffix}`] || ''}
+                                              onChange={e => {
+                                                const val = e.target.value;
+                                                setEditSlideData((prev: any) => {
+                                                  const updated = { ...prev, [`cta${codeSuffix}`]: val };
+                                                  if (lang.code === 'ar') updated.cta = val;
+                                                  return updated;
+                                                });
+                                              }}
+                                              className="rounded-lg text-xs"
+                                            />
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+
+                                  {/* Link */}
+                                  <div className="space-y-2 text-start">
+                                    <Label className="text-xs font-bold">{t('homepage.ctaTargetLinkUrl')}</Label>
+                                    <Input
+                                      value={editSlideData.linkUrl || ''}
+                                      onChange={e => setEditSlideData((prev: any) => ({ ...prev, linkUrl: e.target.value }))}
+                                      className="rounded-xl text-sm font-mono text-start bg-white dark:bg-slate-950"
+                                      placeholder="/search?categoryId=optics-id"
+                                    />
+                                  </div>
+
+                                  {/* Image Upload for Slide Background */}
+                                  <div className="space-y-2 text-start pt-2 border-t border-border/40">
+                                    <Label className="text-xs font-bold">{t('homepage.uploadSlideBackgroundImageOptional')}</Label>
+                                    <ImageUploader
+                                      value={editSlideData.imageUrl || ''}
+                                      onChange={url => setEditSlideData((prev: any) => ({ ...prev, imageUrl: url }))}
+                                      hint={t('homepage.uploadBackgroundImageItTakesPrecedenceOv')}
+                                    />
+                                  </div>
+
+                                  <div className="flex justify-end gap-2 pt-4 border-t border-border/60">
+                                    <Button variant="ghost" onClick={() => setEditingSlideIndex(null)} className="rounded-xl text-xs font-bold bg-white dark:bg-slate-950">
+                                      {t('homepage.cancel')}
+                                    </Button>
+                                    <Button onClick={handleSaveSlide} className="rounded-xl text-xs font-bold gap-1 px-4">
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                      {t('homepage.confirmUpdateList')}
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
                             </div>
 
                             <h5 className="text-xs font-bold text-indigo-500 border-b pb-2 flex items-center gap-1.5">
@@ -1586,7 +1738,7 @@ export default function AdminHomepageManager() {
                                             value={editSectData.metadata?.[keyName] || ''}
                                             onChange={e => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: e.target.value } }))}
                                             className="rounded-xl text-xs"
-                                            placeholder={lang.code === 'ar' ? 'وفر حتى 50% على أجهزة شاومي وآيفون' : lang.code === 'fr' ? 'Économisez jusqu\'à 50% sur iPhone et Xiaomi' : 'Save up to 50% on iPhone & Xiaomi'}
+                                            placeholder={lang.code === 'ar' ? "وفر حتى 50% على أجهزة شاومي وآيفون" : lang.code === 'fr' ? "Économisez jusqu'à 50% sur iPhone et Xiaomi" : "Save up to 50% on iPhone & Xiaomi"}
                                           />
                                         </div>
                                       );
@@ -2218,7 +2370,7 @@ export default function AdminHomepageManager() {
                           {t('homepage.confirmSectionSettings')}
                         </Button>
                       </div>
-                    </>
+                    </div>
                   )}
                 </CardContent>
               </Card>
@@ -2459,321 +2611,7 @@ export default function AdminHomepageManager() {
             </Card>
           )}
 
-          {/* Slides Tab */}
-          {activeTab === 'slides' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left side: Slides List & Order */}
-              <Card className="lg:col-span-5 card-surface rounded-[24px] shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div>
-                    <CardTitle className="text-lg font-bold">{t('homepage.heroSliderManager')}</CardTitle>
-                    <CardDescription>
-                      {t('homepage.manageAndReorderSlidesOnTheMainHomeBanne')}
-                    </CardDescription>
-                  </div>
-                  <Button size="sm" onClick={handleStartAddSlide} className="rounded-xl font-bold gap-1 px-3">
-                    <Plus className="w-4 h-4" />
-                    {t('homepage.addSlide')}
-                  </Button>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {currentSlides.length === 0 ? (
-                    <div className="p-8 border border-dashed border-slate-350 rounded-2xl text-center text-sm text-muted-foreground bg-slate-50/20">
-                      <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-35 text-amber-500 animate-pulse" />
-                      {t('homepage.noSlidesAddedYetStorefrontWillDisplayFal')}
-                    </div>
-                  ) : (
-                    <div className="border border-border/80 rounded-[20px] divide-y overflow-hidden bg-background shadow-inner">
-                      {currentSlides.map((s, idx) => (
-                        <div key={s.id || idx} className={`flex items-center justify-between p-4 transition-colors ${editingSlideIndex === idx ? 'bg-muted/40 border-l-4 border-l-brand' : 'bg-background'}`}>
-                          <div className="min-w-0 flex items-center gap-3">
-                            <span className="font-mono text-xs text-muted-foreground w-6 shrink-0">#{idx + 1}</span>
-                            <div className="min-w-0">
-                              <p className="font-bold text-sm truncate text-slate-800 dark:text-slate-100">{isAr ? s.title : (s.titleEn || s.title || t('homepage.untitled'))}</p>
-                              <div className="flex items-center gap-1.5 mt-1">
-                                {s.imageUrl ? (
-                                  <div className="w-5 h-5 rounded overflow-hidden border border-border">
-                                    <img src={s.imageUrl} className="w-full h-full object-cover" alt="" />
-                                  </div>
-                                ) : (
-                                  <div className={`w-3.5 h-3.5 rounded bg-gradient-to-br ${s.bg || s.bgGradient || 'from-blue-950 to-slate-900'} border border-white/10`} />
-                                )}
-                                <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[120px]">{s.imageUrl ? t('homepage.backgroundImage') : (s.bg || s.bgGradient)}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button variant="ghost" size="icon" disabled={idx === 0} onClick={() => moveSlide(idx, 'up')} className="rounded-full h-8 w-8">
-                              <ChevronUp className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" disabled={idx === currentSlides.length - 1} onClick={() => moveSlide(idx, 'down')} className="rounded-full h-8 w-8">
-                              <ChevronDown className="w-4 h-4" />
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => handleStartEditSlide(idx)} className="rounded-xl text-xs px-2.5 h-8">
-                              {t('homepage.edit')}
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => handleDeleteSlide(idx)} className="rounded-full text-destructive h-8 w-8 hover:bg-destructive/10">
-                              <Trash className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
 
-                  <div className="flex justify-end pt-4 border-t border-border/60">
-                    <Button onClick={handleSave} disabled={isSaving} className="font-bold gap-2 rounded-xl px-5">
-                      {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                      {t('homepage.saveBannerConfiguration')}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Right side: Add / Edit Form with direct image uploader */}
-              <Card className="lg:col-span-7 card-surface rounded-[24px] shadow-sm">
-                <CardHeader>
-                  <CardTitle className="text-lg font-bold flex items-center gap-1.5">
-                    <Sparkles className="w-5 h-5 text-brand" />
-                    {editingSlideIndex !== null
-                      ? editingSlideIndex === currentSlides.length
-                        ? t('homepage.addNewPromotionSlide')
-                        : `${t('homepage.editSlide')} #${editingSlideIndex + 1}`
-                      : t('homepage.selectASlideOrAddOne')}
-                  </CardTitle>
-                  <CardDescription>
-                    {editingSlideIndex !== null
-                      ? t('homepage.provideContentParametersForTheSelectedHe')
-                      : t('homepage.clickEditOrAddToInitializeFormFields')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {editingSlideIndex === null ? (
-                    <div className="flex flex-col items-center justify-center py-24 text-muted-foreground border border-dashed rounded-[20px] bg-background">
-                      <Sparkles className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-3" />
-                      <p className="text-sm font-medium">{t('homepage.noSlideSelectedForEditing')}</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {/* Live preview */}
-                      {(() => {
-                        const codeSuffix = locale.charAt(0).toUpperCase() + locale.slice(1);
-                        const previewTitle = editSlideData[`title${codeSuffix}`] || editSlideData.title || t('homepage.slideTitle');
-                        const previewSubtitle = editSlideData[`subtitle${codeSuffix}`] || editSlideData.subtitle || t('homepage.slideSubtitleOrPromotionDescription');
-                        const previewBadge = editSlideData[`badge${codeSuffix}`] || editSlideData.badge || '';
-                        const previewCta = editSlideData[`cta${codeSuffix}`] || editSlideData.cta || t('homepage.shopNow');
-
-                        return (
-                          <div className="border border-border/80 rounded-[20px] overflow-hidden p-6 text-white relative h-40 flex items-center bg-slate-950">
-                            {editSlideData.imageUrl ? (
-                              <>
-                                <img src={editSlideData.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-80" />
-                                <div className="absolute inset-0 bg-slate-950/40 mix-blend-multiply" />
-                              </>
-                            ) : (
-                              <div className={`absolute inset-0 bg-gradient-to-br ${editSlideData.bg || editSlideData.bgGradient || 'from-blue-950 to-slate-900'} opacity-90`} />
-                            )}
-                            <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
-                            <div className="relative z-10 space-y-2 text-start">
-                              {previewBadge && (
-                                <Badge className="bg-white/10 text-white border-white/10 text-[9px] px-2 py-0.5 rounded">
-                                  {previewBadge}
-                                </Badge>
-                              )}
-                              <h4 className="text-lg font-black">{previewTitle}</h4>
-                              <p className="text-[10px] text-white/70 max-w-sm line-clamp-2">{previewSubtitle}</p>
-                              <Button size="sm" className="bg-amber-500 text-slate-950 font-black rounded-lg pointer-events-none mt-1 h-7 text-[10px]">
-                                {previewCta}
-                              </Button>
-                            </div>
-                            <span className="absolute bottom-2 end-3 text-[9px] font-mono text-white/40 tracking-wider uppercase select-none">{t('homepage.livePreview')}</span>
-                          </div>
-                        );
-                      })()}
-
-                      {/* Title inputs */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {languages.map((lang: any) => {
-                          const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
-                          const keyName = `title${codeSuffix}`;
-                          const inputLabel = `${t('homepage.mainTitleIn')} ${lang.name}`;
-                          return (
-                            <div key={lang.code} className="space-y-2 text-start">
-                              <Label className="text-xs font-bold">{inputLabel}</Label>
-                              <Input
-                                value={editSlideData[keyName] || ''}
-                                onChange={e => {
-                                  const val = e.target.value;
-                                  setEditSlideData((prev: any) => {
-                                    const updated = { ...prev, [keyName]: val };
-                                    if (lang.code === 'ar') {
-                                      updated.title = val;
-                                    }
-                                    return updated;
-                                  });
-                                }}
-                                className="rounded-xl text-sm"
-                                placeholder={lang.code === 'ar' ? 'تسوق بثقة' : lang.code === 'en' ? 'Shop with Confidence' : `Title (${lang.name})`}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Subtitle inputs */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {languages.map((lang: any) => {
-                          const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
-                          const keyName = `subtitle${codeSuffix}`;
-                          const inputLabel = `${t('homepage.descriptionsubtitleIn')} ${lang.name}`;
-                          return (
-                            <div key={lang.code} className="space-y-2 text-start">
-                              <Label className="text-xs font-bold">{inputLabel}</Label>
-                              <Input
-                                value={editSlideData[keyName] || ''}
-                                onChange={e => {
-                                  const val = e.target.value;
-                                  setEditSlideData((prev: any) => {
-                                    const updated = { ...prev, [keyName]: val };
-                                    if (lang.code === 'ar') {
-                                      updated.subtitle = val;
-                                    }
-                                    return updated;
-                                  });
-                                }}
-                                className="rounded-xl text-sm"
-                                placeholder={lang.code === 'ar' ? 'آلاف المنتجات من تجار موثوقين' : lang.code === 'en' ? 'Thousands of products from verified sellers' : `Subtitle (${lang.name})`}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Badges & Buttons text */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {languages.map((lang: any) => {
-                          const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
-                          const keyName = `badge${codeSuffix}`;
-                          const inputLabel = `${t('homepage.badgeTextIn')} ${lang.name}`;
-                          return (
-                            <div key={lang.code} className="space-y-2 text-start">
-                              <Label className="text-xs font-bold">{inputLabel}</Label>
-                              <Input
-                                value={editSlideData[keyName] || ''}
-                                onChange={e => {
-                                  const val = e.target.value;
-                                  setEditSlideData((prev: any) => {
-                                    const updated = { ...prev, [keyName]: val };
-                                    if (lang.code === 'ar') {
-                                      updated.badge = val;
-                                    }
-                                    return updated;
-                                  });
-                                }}
-                                className="rounded-xl text-sm"
-                                placeholder={lang.code === 'ar' ? '🔥 عروض حصرية' : lang.code === 'en' ? '🔥 Exclusive Deals' : `Badge (${lang.name})`}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {languages.map((lang: any) => {
-                          const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
-                          const keyName = `cta${codeSuffix}`;
-                          const inputLabel = `${t('homepage.ctaTextIn1')} ${lang.name}`;
-                          return (
-                            <div key={lang.code} className="space-y-2 text-start">
-                              <Label className="text-xs font-bold">{inputLabel}</Label>
-                              <Input
-                                value={editSlideData[keyName] || ''}
-                                onChange={e => {
-                                  const val = e.target.value;
-                                  setEditSlideData((prev: any) => {
-                                    const updated = { ...prev, [keyName]: val };
-                                    if (lang.code === 'ar') {
-                                      updated.cta = val;
-                                    }
-                                    return updated;
-                                  });
-                                }}
-                                className="rounded-xl text-sm"
-                                placeholder={lang.code === 'ar' ? 'تسوق الآن' : lang.code === 'en' ? 'Shop Now' : `CTA (${lang.name})`}
-                              />
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Link & background setup */}
-                      <div className="space-y-2 text-start">
-                        <Label className="text-xs font-bold">{t('homepage.ctaTargetLinkUrl')}</Label>
-                        <Input
-                          value={editSlideData.linkUrl}
-                          onChange={e => setEditSlideData(prev => ({ ...prev, linkUrl: e.target.value }))}
-                          className="rounded-xl text-sm font-mono text-start"
-                          placeholder="/search?categoryId=optics-id"
-                        />
-                      </div>
-
-                      {/* Image Upload for Slide Background */}
-                      <div className="space-y-2 text-start pt-2 border-t border-border/40">
-                        <Label className="text-xs font-bold">{t('homepage.uploadSlideBackgroundImageOptional')}</Label>
-                        <ImageUploader
-                          value={editSlideData.imageUrl}
-                          onChange={url => setEditSlideData(prev => ({ ...prev, imageUrl: url }))}
-                          hint={t('homepage.uploadBackgroundImageItTakesPrecedenceOv')}
-                        />
-                      </div>
-
-                      <div className="space-y-2 text-start pt-2">
-                        <Label className="text-xs font-bold">{t('homepage.orChooseCssGradientBackgroundIfNoImageUp')}</Label>
-                        <Input
-                          value={editSlideData.bg || editSlideData.bgGradient}
-                          onChange={e => setEditSlideData(prev => ({ ...prev, bg: e.target.value }))}
-                          className="rounded-xl text-sm font-mono mb-2 text-start"
-                          placeholder="from-blue-950 via-indigo-900 to-slate-900"
-                          disabled={!!editSlideData.imageUrl}
-                        />
-                        <div className="flex flex-wrap gap-2 select-none">
-                          {[
-                            { name: t('homepage.navyDark'), val: 'from-blue-950 via-indigo-900 to-slate-900' },
-                            { name: t('homepage.emeraldTeal'), val: 'from-emerald-950 via-teal-900 to-slate-900' },
-                            { name: t('homepage.royalPurple'), val: 'from-purple-950 via-violet-900 to-slate-900' },
-                            { name: t('homepage.sunsetAmber'), val: 'from-orange-950 via-amber-900 to-slate-900' },
-                            { name: t('homepage.rubyRose'), val: 'from-rose-950 via-red-900 to-slate-900' },
-                            { name: t('homepage.cyberpunkPink'), val: 'from-pink-950 via-purple-900 to-slate-900' }
-                          ].map(grad => (
-                            <button
-                              key={grad.val}
-                              type="button"
-                              onClick={() => setEditSlideData(prev => ({ ...prev, bg: grad.val }))}
-                              disabled={!!editSlideData.imageUrl}
-                              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border ${editSlideData.bg === grad.val ? 'border-brand bg-brand/10 text-slate-900 dark:text-slate-100' : 'border-border bg-background text-muted-foreground hover:text-foreground'} ${editSlideData.imageUrl ? 'opacity-40 cursor-not-allowed' : ''}`}
-                            >
-                              <div className={`w-3.5 h-3.5 rounded-full bg-gradient-to-br ${grad.val}`} />
-                              {grad.name}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="flex justify-end gap-2 pt-4 border-t border-border/60">
-                        <Button variant="ghost" onClick={() => setEditingSlideIndex(null)} className="rounded-xl text-xs font-bold">
-                          {t('homepage.cancel')}
-                        </Button>
-                        <Button onClick={handleSaveSlide} className="rounded-xl text-xs font-bold gap-1 px-4">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          {t('homepage.confirmUpdateList')}
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
 
           {/* Features Tab */}
           {activeTab === 'features' && (
