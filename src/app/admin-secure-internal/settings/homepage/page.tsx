@@ -263,24 +263,6 @@ export default function AdminHomepageManager() {
 
   const [isMounted, setIsMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'layout' | 'pinning' | 'timer' | 'slides' | 'features' | 'trending' | 'testimonials' | 'cta'>('layout');
-  const [editingTargetSectId, setEditingTargetSectId] = useState<string | null>(null);
-
-  const currentSlides = React.useMemo(() => {
-    if (editingTargetSectId === null) return heroSlides;
-    const sect = layout.find(s => s.id === editingTargetSectId);
-    return sect?.metadata?.slides || [];
-  }, [editingTargetSectId, heroSlides, layout]);
-
-  const updateCurrentSlides = async (updatedSlides: any[]) => {
-    if (editingTargetSectId === null) {
-      setHeroSlides(updatedSlides);
-      await persistConfig(layout, pinned, countdown, updatedSlides);
-    } else {
-      const newLayout = layout.map(s => s.id === editingTargetSectId ? { ...s, metadata: { ...s.metadata, slides: updatedSlides } } : s);
-      setLayout(newLayout);
-      await persistConfig(newLayout, pinned, countdown, heroSlides);
-    }
-  };
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -359,6 +341,24 @@ export default function AdminHomepageManager() {
   // Live Validation Matching Products Count State
   const [liveMatchingCount, setLiveMatchingCount] = useState(null);
   const [isValidatingCount, setIsValidatingCount] = useState(false);
+  const [editingTargetSectId, setEditingTargetSectId] = useState<string | null>(null);
+
+  const currentSlides = React.useMemo(() => {
+    if (editingTargetSectId === null) return heroSlides;
+    const sect = layout.find(s => s.id === editingTargetSectId);
+    return sect?.metadata?.slides || [];
+  }, [editingTargetSectId, heroSlides, layout]);
+
+  const updateCurrentSlides = async (updatedSlides: any[]) => {
+    if (editingTargetSectId === null) {
+      setHeroSlides(updatedSlides);
+      await persistConfig(layout, pinned, countdown, updatedSlides);
+    } else {
+      const newLayout = layout.map(s => s.id === editingTargetSectId ? { ...s, metadata: { ...s.metadata, slides: updatedSlides } } : s);
+      setLayout(newLayout);
+      await persistConfig(newLayout, pinned, countdown, heroSlides);
+    }
+  };
 
   useEffect(() => {
     const showWarning = (sourceSelectType === 'store' && editSectData.storeId) || 
