@@ -791,10 +791,15 @@ export default function Header() {
                 placeholder={t('ابحث عن منتجات، ماركات، وأكثر...', 'Search for products, brands, and more...')}
                 className="ps-10 pe-4 h-10 rounded-full border-border bg-surface focus:ring-2 focus:ring-brand w-full focus:bg-background transition-all duration-300 shadow-sm"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                  if (e.key === 'Enter') {
                     setSearchFocused(false);
                     useAppStore.getState().setCurrentPage('search' as PageType);
-                    router.push(`/search?q=${encodeURIComponent(e.currentTarget.value.trim())}`);
+                    const val = e.currentTarget.value.trim();
+                    if (val) {
+                      router.push(`/search?q=${encodeURIComponent(val)}`);
+                    } else {
+                      router.push('/search');
+                    }
                   }
                 }}
               />
@@ -1110,10 +1115,15 @@ export default function Header() {
                 className="ps-10 pe-4 h-10 rounded-full border-border bg-surface w-full focus:bg-background transition-all duration-300 shadow-sm"
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                  if (e.key === 'Enter') {
                     setMobileSearchOpen(false);
                     useAppStore.getState().setCurrentPage('search' as PageType);
-                    router.push(`/search?q=${encodeURIComponent(e.currentTarget.value.trim())}`);
+                    const val = e.currentTarget.value.trim();
+                    if (val) {
+                      router.push(`/search?q=${encodeURIComponent(val)}`);
+                    } else {
+                      router.push('/search');
+                    }
                   }
                 }}
               />

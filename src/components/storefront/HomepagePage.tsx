@@ -1640,6 +1640,8 @@ export default function StorefrontHomepage() {
           titleAr: sect.titleAr,
           titleEn: sect.titleEn,
           categoryId: sect.categoryId || '',
+          storeId: sect.storeId || '',
+          sellerId: sect.sellerId || '',
           layoutStyle: sect.layoutStyle || 'carousel',
           imageArUrl: sect.imageArUrl || '',
           imageEnUrl: sect.imageEnUrl || '',

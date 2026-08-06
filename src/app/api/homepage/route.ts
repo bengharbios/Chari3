@@ -40,11 +40,11 @@ export async function GET() {
       heroSlidesSetting,
       maintenanceSetting,
       allowGuestCheckoutSetting,
-      globalCoupons,
-      saadaLayoutSetting,
       featuresSetting,
       trendingSearchesSetting,
       ctaSetting,
+      globalCoupons,
+      saadaLayoutSetting,
       trendingCategories
     ] = await Promise.all([
       // Active categories with product counts
