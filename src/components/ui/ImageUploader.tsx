@@ -143,7 +143,7 @@ export function ImageUploader({
           <img
             src={value}
             alt="uploaded"
-            className="w-full h-36 object-cover"
+            className="w-full h-36 object-contain bg-slate-100 dark:bg-slate-900"
             onError={(e) => {
               (e.target as HTMLImageElement).src = '';
               (e.target as HTMLImageElement).style.display = 'none';

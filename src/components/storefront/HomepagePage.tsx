@@ -553,8 +553,12 @@ function CategoryCirclesRow({ categoryId, section, locale }: any) {
               style={{ minWidth: '100px', maxWidth: '110px' }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-amber-400/0 to-orange-500/0 group-hover:from-amber-400/10 group-hover:to-orange-500/5 transition-colors duration-500" />
-              <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-inner group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors duration-500 relative z-10">
-                <span className="text-3xl drop-shadow-sm select-none group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">{cat.icon || '📦'}</span>
+              <div className="w-14 h-14 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shadow-inner group-hover:bg-white dark:group-hover:bg-slate-700 transition-colors duration-500 relative z-10 overflow-hidden">
+                {cat.image ? (
+                  <img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                ) : (
+                  <span className="text-3xl drop-shadow-sm select-none group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">{cat.icon || '📦'}</span>
+                )}
               </div>
               <span className="text-[11px] font-black text-center leading-tight line-clamp-2 text-slate-700 dark:text-slate-300 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-500 relative z-10">
                 {isAr ? cat.name : (cat.nameEn || cat.name)}
@@ -1030,7 +1034,13 @@ export default function StorefrontHomepage() {
                       }`}
                       style={{ minWidth: '92px' }}
                     >
-                      <span className="text-2xl drop-shadow-sm select-none">{cat.icon || '📦'}</span>
+                      {cat.image ? (
+                        <div className="w-8 h-8 mb-1 rounded-full overflow-hidden shrink-0 border border-border">
+                          <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <span className="text-2xl drop-shadow-sm select-none">{cat.icon || '📦'}</span>
+                      )}
                       <span className="text-[10px] font-bold text-center leading-tight line-clamp-1 max-w-[80px]">
                         {isAr ? cat.name : (cat.nameEn || cat.name)}
                       </span>
