@@ -783,8 +783,8 @@ export default function AdminHomepageManager() {
   const deleteSection = async (index: number) => {
     const sect = layout[index];
     if (!sect) return;
-    // Block deletion of core sections
-    if (CORE_SECTION_TYPES.has(sect.type)) {
+    // Block deletion of core sections if it's the only one left
+    if (CORE_SECTION_TYPES.has(sect.type) && layout.filter(s => s.type === sect.type).length <= 1) {
       toast.error(t('homepage.coreSectionsCannotBeDeletedYouCanHideThe'));
       return;
     }
@@ -1120,7 +1120,7 @@ export default function AdminHomepageManager() {
                             <Button variant="outline" size="icon" onClick={() => toggleSectionVisibility(idx)} className="rounded-full h-8 w-8">
                               {sect.visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4 text-destructive" />}
                             </Button>
-                            {CORE_SECTION_TYPES.has(sect.type) ? (
+                            {CORE_SECTION_TYPES.has(sect.type) && layout.filter(s => s.type === sect.type).length <= 1 ? (
                               <Button variant="ghost" size="icon" disabled className="rounded-full h-8 w-8 opacity-30 cursor-not-allowed" title={t('homepage.coreSectionCannotDelete')}>
                                 <Trash className="w-4 h-4" />
                               </Button>
