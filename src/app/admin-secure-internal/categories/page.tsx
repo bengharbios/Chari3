@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { ImageUploader } from '@/components/ui/ImageUploader';
 import Link from 'next/link';
 
 const CATEGORY_TYPES = [
@@ -58,6 +59,7 @@ export default function AdminCategoriesPage() {
   const [formNameEn, setFormNameEn] = useState('');
   const [formSlug, setFormSlug] = useState('');
   const [formIcon, setFormIcon] = useState('📦');
+  const [formImage, setFormImage] = useState('');
   const [formType, setFormType] = useState('product');
   const [formParentId, setFormParentId] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -93,6 +95,7 @@ export default function AdminCategoriesPage() {
     setFormNameEn(prefill?.nameEn || '');
     setFormSlug(prefill?.nameEn ? prefill.nameEn.toLowerCase().replace(/\s+/g, '-') : '');
     setFormIcon('📦');
+    setFormImage(prefill?.image || '');
     setFormType(prefill?.type || activeType);
     setFormParentId('');
     setShowModal(true);
@@ -104,6 +107,7 @@ export default function AdminCategoriesPage() {
     setFormNameEn(cat.nameEn || '');
     setFormSlug(cat.slug);
     setFormIcon(cat.icon || '📦');
+    setFormImage(cat.image || '');
     setFormType(cat.type);
     setFormParentId(cat.parentId || '');
     setShowModal(true);
@@ -121,6 +125,7 @@ export default function AdminCategoriesPage() {
         nameEn: formNameEn,
         slug: formSlug,
         icon: formIcon,
+        image: formImage,
         type: formType,
         parentId: formParentId || null,
       };
@@ -207,6 +212,16 @@ export default function AdminCategoriesPage() {
               <button onClick={() => setShowModal(false)} className="text-muted-foreground hover:text-foreground rounded-full p-1">
                 <X className="h-5 w-5" />
               </button>
+            </div>
+
+            {/* Image Uploader */}
+            <div className="mb-4">
+              <ImageUploader
+                value={formImage}
+                onChange={setFormImage}
+                label={t('الصورة (اختياري)', 'Image (Optional)')}
+                hint={t('صورة مصغرة للتصنيف', 'Category thumbnail')}
+              />
             </div>
 
             {/* Icon Picker */}
@@ -365,7 +380,11 @@ export default function AdminCategoriesPage() {
                     <div key={cat.id}>
                       <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-background hover:border-brand/30 transition-all group">
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl">{cat.icon || '📦'}</span>
+                          {cat.image ? (
+                            <img src={cat.image} alt={cat.name} className="w-8 h-8 rounded-md object-cover border border-border" />
+                          ) : (
+                            <span className="text-2xl">{cat.icon || '📦'}</span>
+                          )}
                           <div>
                             <p className="font-bold text-sm">{isAr ? cat.name : (cat.nameEn || cat.name)}</p>
                             <p className="text-xs text-muted-foreground">/{cat.slug}</p>
@@ -390,7 +409,11 @@ export default function AdminCategoriesPage() {
                       {categories.filter(c => c.parentId === cat.id).map(sub => (
                         <div key={sub.id} className="flex items-center justify-between p-2.5 ms-8 rounded-xl border border-dashed border-border bg-muted/30 hover:border-brand/20 transition-all group mt-1.5">
                           <div className="flex items-center gap-2">
-                            <span className="text-base">{sub.icon || '📁'}</span>
+                            {sub.image ? (
+                              <img src={sub.image} alt={sub.name} className="w-6 h-6 rounded-md object-cover border border-border" />
+                            ) : (
+                              <span className="text-base">{sub.icon || '📁'}</span>
+                            )}
                             <div>
                               <p className="font-semibold text-xs">{isAr ? sub.name : (sub.nameEn || sub.name)}</p>
                               <p className="text-[10px] text-muted-foreground">/{sub.slug}</p>
