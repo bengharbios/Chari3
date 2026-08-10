@@ -549,6 +549,20 @@ function CategoryCirclesRow({ categoryId, section, locale }: any) {
   if (!categoryId) return null;
   const title = getLocalizedField(section, 'title', locale) || (isAr ? 'التصنيفات الفرعية' : 'Subcategories');
 
+  const renderCategoryIcon = (iconStr: string) => {
+    if (!iconStr) return '📦';
+    const textToEmoji: Record<string, string> = {
+      'trophy': '🏆', 'sparkles': '✨', 'star': '⭐', 'heart': '❤️',
+      'shopping-bag': '🛍️', 'home': '🏠', 'car': '🚗', 'smartphone': '📱',
+      'laptop': '💻', 'shirt': '👕', 'coffee': '☕', 'watch': '⌚',
+      'camera': '📷', 'headphones': '🎧', 'book': '📚', 'gift': '🎁'
+    };
+    const normalized = iconStr.trim().toLowerCase();
+    if (textToEmoji[normalized]) return textToEmoji[normalized];
+    if (iconStr.length > 3) return '📦';
+    return iconStr;
+  };
+
   return (
     <section className="container-platform py-6">
       <div className="flex items-center justify-between mb-5">
@@ -572,7 +586,9 @@ function CategoryCirclesRow({ categoryId, section, locale }: any) {
                 {cat.image ? (
                   <img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                 ) : (
-                  <span className="text-3xl drop-shadow-sm select-none group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">{cat.icon || '📦'}</span>
+                  <span className="text-3xl drop-shadow-sm select-none group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500">
+                    {renderCategoryIcon(cat.icon)}
+                  </span>
                 )}
               </div>
               <span className="text-[11px] font-black text-center leading-tight line-clamp-2 text-slate-700 dark:text-slate-300 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors duration-500 relative z-10">
@@ -1038,25 +1054,51 @@ export default function StorefrontHomepage() {
               <div className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
                 {displayCats.map((cat, idx) => {
                   const isActive = filterCategory === cat.id;
+                  
+                  const renderCategoryIcon = (iconStr: string) => {
+                    if (!iconStr) return '📦';
+                    const textToEmoji: Record<string, string> = {
+                      'trophy': '🏆', 'sparkles': '✨', 'star': '⭐', 'heart': '❤️',
+                      'shopping-bag': '🛍️', 'home': '🏠', 'car': '🚗', 'smartphone': '📱',
+                      'laptop': '💻', 'shirt': '👕', 'coffee': '☕', 'watch': '⌚',
+                      'camera': '📷', 'headphones': '🎧', 'book': '📚', 'gift': '🎁'
+                    };
+                    const normalized = iconStr.trim().toLowerCase();
+                    if (textToEmoji[normalized]) return textToEmoji[normalized];
+                    if (iconStr.length > 3) return '📦';
+                    return iconStr;
+                  };
+
                   return (
                     <button
                       key={cat.id}
                       onClick={() => setFilterCategory(isActive ? '' : cat.id)}
-                      className={`flex flex-col items-center justify-center gap-2 p-3.5 rounded-[22px] transition-all duration-300 shrink-0 snap-start select-none ${
+                      className={`group relative flex flex-col items-center justify-start gap-3 p-4 rounded-[28px] transition-all duration-500 shrink-0 snap-start select-none overflow-hidden ${
                         isActive
-                          ? 'bg-amber-500 text-slate-950 scale-105 shadow-md font-bold'
-                          : 'bg-white/70 dark:bg-slate-950/70 border border-border/80 hover:border-amber-500/30 hover:scale-105 hover:bg-white dark:hover:bg-slate-900'
+                          ? 'bg-gradient-to-b from-amber-500 to-orange-500 text-white shadow-[0_15px_30px_-10px_rgba(245,158,11,0.5)] scale-105 border-0'
+                          : 'bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border border-white/60 dark:border-white/10 hover:border-amber-400/50 hover:shadow-[0_15px_35px_-10px_rgba(245,158,11,0.2)] hover:-translate-y-2 hover:bg-white dark:hover:bg-slate-900 text-slate-800 dark:text-slate-100'
                       }`}
-                      style={{ minWidth: '92px' }}
+                      style={{ minWidth: '105px', maxWidth: '115px' }}
                     >
-                      {cat.image ? (
-                        <div className="w-8 h-8 mb-1 rounded-full overflow-hidden shrink-0 border border-border">
-                          <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
-                        </div>
-                      ) : (
-                        <span className="text-2xl drop-shadow-sm select-none">{cat.icon || '📦'}</span>
-                      )}
-                      <span className="text-[10px] font-bold text-center leading-tight line-clamp-1 max-w-[80px]">
+                      {!isActive && <div className="absolute inset-0 bg-gradient-to-br from-amber-400/0 to-orange-500/0 group-hover:from-amber-400/10 group-hover:to-orange-500/5 transition-colors duration-500" />}
+                      
+                      <div className={`w-14 h-14 rounded-[20px] flex items-center justify-center shadow-inner transition-all duration-500 relative z-10 overflow-hidden ${
+                        isActive 
+                          ? 'bg-white/20 backdrop-blur-sm shadow-[inset_0_2px_10px_rgba(255,255,255,0.3)]' 
+                          : 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 group-hover:bg-white dark:group-hover:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50'
+                      }`}>
+                        {cat.image ? (
+                          <img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        ) : (
+                          <span className={`text-3xl drop-shadow-sm select-none transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110 group-hover:-rotate-6'}`}>
+                            {renderCategoryIcon(cat.icon)}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <span className={`text-[11px] font-black text-center leading-tight line-clamp-2 transition-colors duration-500 relative z-10 ${
+                        isActive ? 'text-white' : 'group-hover:text-amber-600 dark:group-hover:text-amber-400'
+                      }`}>
                         {isAr ? cat.name : (cat.nameEn || cat.name)}
                       </span>
                     </button>
