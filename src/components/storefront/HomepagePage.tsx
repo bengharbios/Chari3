@@ -1051,59 +1051,74 @@ export default function StorefrontHomepage() {
                 <p className="text-sm">{t('لا توجد تصنيفات متاحة حالياً', 'No categories available yet')}</p>
               </div>
             ) : (
-              <div className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
-                {displayCats.map((cat, idx) => {
-                  const isActive = filterCategory === cat.id;
-                  
-                  const renderCategoryIcon = (iconStr: string) => {
-                    if (!iconStr) return '📦';
-                    const textToEmoji: Record<string, string> = {
-                      'trophy': '🏆', 'sparkles': '✨', 'star': '⭐', 'heart': '❤️',
-                      'shopping-bag': '🛍️', 'home': '🏠', 'car': '🚗', 'smartphone': '📱',
-                      'laptop': '💻', 'shirt': '👕', 'coffee': '☕', 'watch': '⌚',
-                      'camera': '📷', 'headphones': '🎧', 'book': '📚', 'gift': '🎁'
-                    };
-                    const normalized = iconStr.trim().toLowerCase();
-                    if (textToEmoji[normalized]) return textToEmoji[normalized];
-                    if (iconStr.length > 3) return '📦';
-                    return iconStr;
-                  };
+              <div className="relative group/slider">
+                <button 
+                  onClick={() => { const el = document.getElementById(`scroll-cat-${section.id}`); if (el) el.scrollBy({ left: isAr ? 300 : -300, behavior: 'smooth' }); }}
+                  className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full shadow-[0_5px_15px_-3px_rgba(0,0,0,0.1)] border border-border/50 items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-white dark:hover:bg-slate-700 hover:text-amber-500"
+                >
+                  <ChevronLeft className={`w-6 h-6 ${isAr ? 'rotate-180' : ''}`} />
+                </button>
+                <button 
+                  onClick={() => { const el = document.getElementById(`scroll-cat-${section.id}`); if (el) el.scrollBy({ left: isAr ? -300 : 300, behavior: 'smooth' }); }}
+                  className="hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full shadow-[0_5px_15px_-3px_rgba(0,0,0,0.1)] border border-border/50 items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-white dark:hover:bg-slate-700 hover:text-amber-500"
+                >
+                  <ChevronRight className={`w-6 h-6 ${isAr ? 'rotate-180' : ''}`} />
+                </button>
 
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setFilterCategory(isActive ? '' : cat.id)}
-                      className={`group relative flex flex-col items-center justify-start gap-3 p-4 rounded-[28px] transition-all duration-500 shrink-0 snap-start select-none overflow-hidden ${
-                        isActive
-                          ? 'bg-gradient-to-b from-amber-500 to-orange-500 text-white shadow-[0_15px_30px_-10px_rgba(245,158,11,0.5)] scale-105 border-0'
-                          : 'bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border border-white/60 dark:border-white/10 hover:border-amber-400/50 hover:shadow-[0_15px_35px_-10px_rgba(245,158,11,0.2)] hover:-translate-y-2 hover:bg-white dark:hover:bg-slate-900 text-slate-800 dark:text-slate-100'
-                      }`}
-                      style={{ minWidth: '105px', maxWidth: '115px' }}
-                    >
-                      {!isActive && <div className="absolute inset-0 bg-gradient-to-br from-amber-400/0 to-orange-500/0 group-hover:from-amber-400/10 group-hover:to-orange-500/5 transition-colors duration-500" />}
-                      
-                      <div className={`w-14 h-14 rounded-[20px] flex items-center justify-center shadow-inner transition-all duration-500 relative z-10 overflow-hidden ${
-                        isActive 
-                          ? 'bg-white/20 backdrop-blur-sm shadow-[inset_0_2px_10px_rgba(255,255,255,0.3)]' 
-                          : 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 group-hover:bg-white dark:group-hover:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50'
-                      }`}>
-                        {cat.image ? (
-                          <img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                        ) : (
-                          <span className={`text-3xl drop-shadow-sm select-none transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110 group-hover:-rotate-6'}`}>
-                            {renderCategoryIcon(cat.icon)}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <span className={`text-[11px] font-black text-center leading-tight line-clamp-2 transition-colors duration-500 relative z-10 ${
-                        isActive ? 'text-white' : 'group-hover:text-amber-600 dark:group-hover:text-amber-400'
-                      }`}>
-                        {isAr ? cat.name : (cat.nameEn || cat.name)}
-                      </span>
-                    </button>
-                  );
-                })}
+                <div id={`scroll-cat-${section.id}`} className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory px-4 md:px-2 relative z-10 scroll-smooth">
+                  {displayCats.map((cat, idx) => {
+                    const isActive = filterCategory === cat.id;
+                    
+                    const renderCategoryIcon = (iconStr: string) => {
+                      if (!iconStr) return '📦';
+                      const textToEmoji: Record<string, string> = {
+                        'trophy': '🏆', 'sparkles': '✨', 'star': '⭐', 'heart': '❤️',
+                        'shopping-bag': '🛍️', 'home': '🏠', 'car': '🚗', 'smartphone': '📱',
+                        'laptop': '💻', 'shirt': '👕', 'coffee': '☕', 'watch': '⌚',
+                        'camera': '📷', 'headphones': '🎧', 'book': '📚', 'gift': '🎁'
+                      };
+                      const normalized = iconStr.trim().toLowerCase();
+                      if (textToEmoji[normalized]) return textToEmoji[normalized];
+                      if (iconStr.length > 3) return '📦';
+                      return iconStr;
+                    };
+
+                    return (
+                      <Link
+                        key={cat.id}
+                        href={`/search?categoryId=${cat.id}`}
+                        className={`group relative flex flex-col items-center justify-start gap-3 p-4 rounded-[28px] transition-all duration-500 shrink-0 snap-start select-none overflow-hidden ${
+                          isActive
+                            ? 'bg-gradient-to-b from-amber-500 to-orange-500 text-white shadow-[0_15px_30px_-10px_rgba(245,158,11,0.5)] scale-105 border-0'
+                            : 'bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl border border-white/60 dark:border-white/10 hover:border-amber-400/50 hover:shadow-[0_15px_35px_-10px_rgba(245,158,11,0.2)] hover:-translate-y-2 hover:bg-white dark:hover:bg-slate-900 text-slate-800 dark:text-slate-100'
+                        }`}
+                        style={{ minWidth: '105px', maxWidth: '115px' }}
+                      >
+                        {!isActive && <div className="absolute inset-0 bg-gradient-to-br from-amber-400/0 to-orange-500/0 group-hover:from-amber-400/10 group-hover:to-orange-500/5 transition-colors duration-500" />}
+                        
+                        <div className={`w-14 h-14 rounded-[20px] flex items-center justify-center shadow-inner transition-all duration-500 relative z-10 overflow-hidden ${
+                          isActive 
+                            ? 'bg-white/20 backdrop-blur-sm shadow-[inset_0_2px_10px_rgba(255,255,255,0.3)]' 
+                            : 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 group-hover:bg-white dark:group-hover:bg-slate-800 border border-slate-200/50 dark:border-slate-700/50'
+                        }`}>
+                          {cat.image ? (
+                            <img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          ) : (
+                            <span className={`text-3xl drop-shadow-sm select-none transition-transform duration-500 ${isActive ? 'scale-110' : 'group-hover:scale-110 group-hover:-rotate-6'}`}>
+                              {renderCategoryIcon(cat.icon)}
+                            </span>
+                          )}
+                        </div>
+                        
+                        <span className={`text-[11px] font-black text-center leading-tight line-clamp-2 transition-colors duration-500 relative z-10 ${
+                          isActive ? 'text-white' : 'group-hover:text-amber-600 dark:group-hover:text-amber-400'
+                        }`}>
+                          {isAr ? cat.name : (cat.nameEn || cat.name)}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </section>
