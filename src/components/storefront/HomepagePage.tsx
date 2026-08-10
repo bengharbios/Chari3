@@ -390,7 +390,22 @@ interface SectionHeaderProps {
 }
 
 function SectionHeader({ section, isAr, locale, t, children }: SectionHeaderProps) {
-  const title = getLocalizedField(section, 'title', locale) || section?.type;
+  let title = getLocalizedField(section, 'title', locale);
+  if (!title && section?.type) {
+    const defaultTitles: Record<string, {ar: string, en: string}> = {
+      hero: { ar: 'الرئيسية', en: 'Hero' },
+      features: { ar: 'ميزات المنصة', en: 'Features' },
+      categories: { ar: 'أيقونات التصنيفات', en: 'Categories' },
+      bento_offers: { ar: 'عروض حصرية', en: 'Exclusive Offers' },
+      featured_products: { ar: 'منتجات مميزة', en: 'Featured Products' },
+      top_sellers: { ar: 'أفضل المتاجر', en: 'Top Stores' },
+      testimonials: { ar: 'آراء العملاء', en: 'Testimonials' },
+      cta: { ar: 'انضم إلينا', en: 'Join Us' },
+      category_products: { ar: 'منتجات التصنيف', en: 'Category Products' },
+    };
+    title = defaultTitles[section.type] ? (isAr ? defaultTitles[section.type].ar : defaultTitles[section.type].en) : section.type;
+  }
+
   const badge = getLocalizedField(section, 'badge', locale);
   const desc = getLocalizedField(section, 'description', locale);
 
@@ -1686,15 +1701,22 @@ export default function StorefrontHomepage() {
 
     const isMobileHidden = section.metadata?.isMobileHidden;
     const isDesktopHidden = section.metadata?.isDesktopHidden;
-    const paddingTop = section.metadata?.paddingTop || '';
-    const paddingBottom = section.metadata?.paddingBottom || '';
-    const backgroundColor = section.metadata?.backgroundColor || '';
+    const paddingTop = section.metadata?.paddingTop;
+    const paddingBottom = section.metadata?.paddingBottom;
+    const backgroundColor = section.metadata?.backgroundColor;
 
     let classes: string[] = [];
     if (isMobileHidden) classes.push('hidden md:block');
     if (isDesktopHidden) classes.push('md:hidden');
-    if (paddingTop) classes.push(paddingTop);
-    if (paddingBottom) classes.push(paddingBottom);
+    
+    if (paddingTop) {
+      classes.push(paddingTop);
+      classes.push('[&>section]:!pt-0 [&>div]:!pt-0');
+    }
+    if (paddingBottom) {
+      classes.push(paddingBottom);
+      classes.push('[&>section]:!pb-0 [&>div]:!pb-0');
+    }
     if (backgroundColor && backgroundColor !== 'transparent') classes.push(backgroundColor);
 
     if (classes.length > 0) {
