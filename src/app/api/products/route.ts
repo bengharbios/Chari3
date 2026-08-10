@@ -105,6 +105,48 @@ export async function GET(request: Request) {
     if (maxPrice) (where.price as Record<string, number>).lte = parseFloat(maxPrice);
   }
 
+  // Brands filter (comma-separated brand IDs)
+  const brandsParam = searchParams.get('brands');
+  if (brandsParam) {
+    const brandIds = brandsParam.split(',').filter(Boolean);
+    if (brandIds.length > 0) {
+      if (where.AND) {
+        where.AND.push({ brandId: { in: brandIds } });
+      } else {
+        where.AND = [{ brandId: { in: brandIds } }];
+      }
+    }
+  }
+
+  // Dynamic Specs Filter (e.g. specs[color]=Red,Blue)
+  const specFilters: Record<string, string[]> = {};
+  searchParams.forEach((value, key) => {
+    if (key.startsWith('specs[') && key.endsWith(']')) {
+      const specKey = key.slice(6, -1);
+      specFilters[specKey] = value.split(',').filter(Boolean);
+    }
+  });
+
+  if (Object.keys(specFilters).length > 0) {
+    // For each spec key, the product MUST have ONE OF the selected values (OR intra-filter, AND inter-filter)
+    const specConditions = Object.entries(specFilters).map(([key, values]) => {
+      // Build an OR condition for the values of this specific spec key
+      return {
+        OR: values.map(val => ({
+          specifications: {
+            contains: `"${key}":"${val}"`, // Simple JSON string matching for PostgreSQL String column
+          }
+        }))
+      };
+    });
+
+    if (where.AND) {
+      where.AND.push(...specConditions);
+    } else {
+      where.AND = specConditions;
+    }
+  }
+
   // Rating filter
   if (minRating) {
     where.rating = { gte: parseFloat(minRating) };
