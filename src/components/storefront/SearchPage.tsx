@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Search, ShoppingBag, Star, X, SlidersHorizontal, Filter, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,8 +30,8 @@ export default function SearchPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { locale } = useAppStore();
+  const { t } = useTranslation();
   const isAr = locale === 'ar';
-  const t = (ar: string, en: string) => isAr ? ar : en;
 
   // URL Params state
   const queryQ = searchParams.get('q') || '';
