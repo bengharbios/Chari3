@@ -1053,16 +1053,16 @@ export default function StorefrontHomepage() {
             ) : (
               <div className="relative group/slider">
                 <button 
-                  onClick={() => { const el = document.getElementById(`scroll-cat-${section.id}`); if (el) el.scrollBy({ left: isAr ? 300 : -300, behavior: 'smooth' }); }}
+                  onClick={() => { const el = document.getElementById(`scroll-cat-${section.id}`); if (el) el.scrollBy({ left: -300, behavior: 'smooth' }); }}
                   className="hidden md:flex absolute -left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full shadow-[0_5px_15px_-3px_rgba(0,0,0,0.1)] border border-border/50 items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-white dark:hover:bg-slate-700 hover:text-amber-500"
                 >
-                  <ChevronLeft className={`w-6 h-6 ${isAr ? 'rotate-180' : ''}`} />
+                  <ChevronLeft className="w-6 h-6" />
                 </button>
                 <button 
-                  onClick={() => { const el = document.getElementById(`scroll-cat-${section.id}`); if (el) el.scrollBy({ left: isAr ? -300 : 300, behavior: 'smooth' }); }}
+                  onClick={() => { const el = document.getElementById(`scroll-cat-${section.id}`); if (el) el.scrollBy({ left: 300, behavior: 'smooth' }); }}
                   className="hidden md:flex absolute -right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-full shadow-[0_5px_15px_-3px_rgba(0,0,0,0.1)] border border-border/50 items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-white dark:hover:bg-slate-700 hover:text-amber-500"
                 >
-                  <ChevronRight className={`w-6 h-6 ${isAr ? 'rotate-180' : ''}`} />
+                  <ChevronRight className="w-6 h-6" />
                 </button>
 
                 <div id={`scroll-cat-${section.id}`} className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory px-4 md:px-2 relative z-10 scroll-smooth">
