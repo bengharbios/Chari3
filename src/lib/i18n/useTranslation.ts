@@ -39,13 +39,19 @@ export function useTranslation() {
   }, [activeLocale, dynamicDicts]);
 
   const t = useCallback((key: string, values?: any, arg3?: any) => {
+    // 1. Try to fetch directly from current dictionary (supports literal texts as keys too!)
+    if (dict && typeof dict === 'object' && key in dict && dict[key]) {
+      return dict[key];
+    }
+    
+    // 2. Fallback to literal translations if key is literal text (contains spaces/Arabic)
     const isLiteralText = /[^a-zA-Z0-9._-]/.test(key);
     if (isLiteralText) {
       if (typeof values === 'string') {
         if (activeLocale === 'ar') return key;
         if (activeLocale === 'en') return values;
         if (activeLocale === 'fr') return arg3 || values || key;
-        return values;
+        return values; // fallback for any other new language (like Spanish) defaults to English
       }
       return key;
     }
