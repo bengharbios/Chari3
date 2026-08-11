@@ -1601,6 +1601,7 @@ model PlatformSettings {
   id                    String   @id @default("global")
   isUpgradeFreePromo    Boolean  @default(true)
   upgradeFeaturesConfig String   @db.LongText // JSON
+  publicMenuConfig      String?  @db.LongText // JSON Array of menu items
   updatedBy             String?
   updatedAt             DateTime @updatedAt
 }
