@@ -31,7 +31,8 @@ import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import DeliverTo from '@/components/storefront/DeliverTo';
 import { localeDirections } from '@/lib/i18n/config';
 import { useTranslation } from '@/lib/i18n/useTranslation';
-
+import PublicMenu from './PublicMenu';
+import MobilePublicMenu from './MobilePublicMenu';
 
 const rolePages: Record<string, PageType> = {
   admin: 'admin',
@@ -762,6 +763,7 @@ export default function Header() {
                 <Menu className="h-5 w-5" />
               </Button>
             )}
+            <MobilePublicMenu />
             <button
               onClick={() => {
                 useAppStore.getState().setCurrentPage('home');
@@ -1131,6 +1133,9 @@ export default function Header() {
           </div>
         )}
       </div>
+
+      {/* Dynamic Global Menu Row (Desktop) */}
+      <PublicMenu />
     </header>
 
     {/* Shopping Cart Drawer — Overlay */}
