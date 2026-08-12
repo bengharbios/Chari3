@@ -179,8 +179,6 @@ function SortableParentItem({ item, children, wrapper, updateItem, removeItem, a
               </Button>
             </div>
           )}
-        </div>
-
       {/* Children List */}
       {item.children && item.children.length > 0 && item.type !== 'categories-grid' && (
         <div className="ms-8 ps-4 border-s-2 border-primary/20 space-y-3 mt-4">
