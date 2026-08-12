@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, GripVertical, Check, ArrowUp, ArrowDown } from 'lucide-react';
+import { Loader2, Plus, Trash2, GripVertical, Check, ArrowUp, ArrowDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 
@@ -41,6 +41,7 @@ import { useTranslationStore } from '@/lib/store/translation-store';
 // ----------------------------------------------------
 function SortableParentItem({ item, children, wrapper, updateItem, removeItem, addChildItem, moveChildItem, categories, languages }: any) {
   const { t } = useTranslation();
+  const [isExpanded, setIsExpanded] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
   const style = {
@@ -52,6 +53,7 @@ function SortableParentItem({ item, children, wrapper, updateItem, removeItem, a
   };
 
   const getLabel = (lang: string) => (item.labels && item.labels[lang]) || '';
+  const currentPrimaryLabel = getLabel('ar') || getLabel('en') || t('عنصر جديد', 'New Item');
   
   useEffect(() => {
     if (item.label && (!item.labels || !item.labels.ar)) {
@@ -60,12 +62,27 @@ function SortableParentItem({ item, children, wrapper, updateItem, removeItem, a
   }, [item]);
 
   return (
-    <div ref={setNodeRef} style={style} className="border border-border rounded-lg p-4 bg-muted/20 space-y-4 shadow-sm relative">
-      <div className="flex gap-4 items-start">
-        <div {...attributes} {...listeners} className="mt-2 text-muted-foreground cursor-grab active:cursor-grabbing hover:text-primary transition-colors p-2 -ms-2">
+    <div ref={setNodeRef} style={style} className="border border-border rounded-lg p-4 bg-muted/20 shadow-sm relative transition-all duration-300">
+      <div className="flex items-center gap-4">
+        <div {...attributes} {...listeners} className="text-muted-foreground cursor-grab active:cursor-grabbing hover:text-primary transition-colors p-2 -ms-2">
            <GripVertical className="w-5 h-5" />
         </div>
-        <div className="flex-1 space-y-4">
+        <div className="flex-1 font-semibold text-lg flex items-center gap-3">
+          <span>{currentPrimaryLabel}</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+            {item.type}
+          </span>
+        </div>
+        <Button variant="ghost" size="icon" onClick={() => setIsExpanded(!isExpanded)}>
+          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        </Button>
+        <Button variant="destructive" size="icon" onClick={() => removeItem(item.id, null)}>
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {isExpanded && (
+        <div className="mt-4 pt-4 border-t border-border/50 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-1">
               <Label className="text-primary font-semibold">{t('نوع العنصر', 'Item Type')}</Label>
@@ -214,6 +231,9 @@ function SortableParentItem({ item, children, wrapper, updateItem, removeItem, a
              )
           })}
         </div>
+      )}
+      
+      </div>
       )}
     </div>
   );
