@@ -27,6 +27,46 @@ interface MenuWrapper {
   items: MenuItem[];
 }
 
+const RecursiveMobileMenuItem = ({ item, level, getLabel, t, isAr, setIsOpen }: any) => {
+  const [isOpenLocal, setIsOpenLocal] = useState(false);
+  const hasChildren = item.children && item.children.length > 0;
+
+  if (hasChildren) {
+    return (
+      <div className="w-full">
+         <button
+            onClick={() => setIsOpenLocal(!isOpenLocal)}
+            className="flex items-center justify-between w-full py-2.5 px-3 text-sm font-semibold hover:bg-muted rounded-md transition-colors"
+         >
+            <div className="flex items-center gap-2">
+               {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={14} height={14} className="object-contain" />}
+               <span className="text-foreground">{t(getLabel(item))}</span>
+            </div>
+            {isOpenLocal ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+         </button>
+         <div className={cn("overflow-hidden transition-all duration-300", isOpenLocal ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0")}>
+            <div className="ps-4 ms-2 space-y-1 border-s border-primary/20">
+               {item.children.map((child: any) => (
+                  <RecursiveMobileMenuItem key={child.id} item={child} level={level + 1} getLabel={getLabel} t={t} isAr={isAr} setIsOpen={setIsOpen} />
+               ))}
+            </div>
+         </div>
+      </div>
+    );
+  }
+
+  return (
+      <Link
+         href={item.url || '#'}
+         className="flex items-center gap-2 py-2.5 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+         onClick={() => setIsOpen(false)}
+      >
+         {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={14} height={14} className="object-contain" />}
+         {t(getLabel(item))}
+      </Link>
+  );
+};
+
 export default function MobilePublicMenu() {
   const { t, isAr } = useTranslation();
   const currentLocale = isAr ? 'ar' : 'en';
@@ -104,7 +144,7 @@ export default function MobilePublicMenu() {
                   )}>
                     <div className="grid grid-cols-3 gap-3 p-2 bg-muted/20 rounded-xl border border-border/50">
                       {categories.map(cat => (
-                         <Link key={cat.id} href={`/search?category=${cat.id}`} className="flex flex-col items-center gap-2 p-2 hover:bg-muted rounded-lg transition-colors">
+                         <Link key={cat.id} href={`/search?category=${cat.id}`} className="flex flex-col items-center gap-2 p-2 hover:bg-muted rounded-lg transition-colors" onClick={() => setIsOpen(false)}>
                             <div className="w-12 h-12 rounded-full overflow-hidden border border-border/50 relative bg-background flex items-center justify-center shadow-sm">
                                {cat.image ? (
                                   <Image src={cat.image} alt={cat.name} fill className="object-cover" sizes="48px" />
@@ -144,10 +184,7 @@ export default function MobilePublicMenu() {
                            {t('عرض جميع المنتجات', 'View All Products')}
                          </Link>
                          {item.children.map(child => (
-                           <Link key={child.id} href={child.url} className="flex items-center gap-2 py-2.5 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors" onClick={() => setIsOpen(false)}>
-                             {child.iconUrl && <Image src={child.iconUrl} alt="icon" width={14} height={14} className="object-contain" />}
-                             {t(getLabel(child))}
-                           </Link>
+                           <RecursiveMobileMenuItem key={child.id} item={child} level={1} getLabel={getLabel} t={t} isAr={isAr} setIsOpen={setIsOpen} />
                          ))}
                        </div>
                      </div>
@@ -170,16 +207,8 @@ export default function MobilePublicMenu() {
                     openSection === item.id ? "max-h-[800px] mt-2 opacity-100" : "max-h-0 opacity-0"
                   )}>
                     <div className="ps-4 ms-2 space-y-1 border-s border-primary/20 relative before:content-[''] before:absolute before:start-[-1px] before:top-0 before:bottom-0 before:w-px before:bg-gradient-to-b before:from-primary/50 before:to-transparent">
-                      {item.children.map(child => (
-                        <Link
-                          key={child.id}
-                          href={child.url}
-                          className="flex items-center gap-2 py-2.5 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          {child.iconUrl && <Image src={child.iconUrl} alt="icon" width={14} height={14} className="object-contain" />}
-                          {t(getLabel(child))}
-                        </Link>
+                      {item.children.map((child: any) => (
+                        <RecursiveMobileMenuItem key={child.id} item={child} level={1} getLabel={getLabel} t={t} isAr={isAr} setIsOpen={setIsOpen} />
                       ))}
                     </div>
                     {item.type === 'mega-custom' && item.imageUrls && item.imageUrls.length > 0 && (
@@ -191,7 +220,7 @@ export default function MobilePublicMenu() {
                 </>
               ) : (
                 <Link
-                  href={item.url}
+                  href={item.url || '#'}
                   className="flex items-center gap-2 py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
@@ -200,7 +229,8 @@ export default function MobilePublicMenu() {
                 </Link>
               )}
             </div>
-          )})}
+            );
+          })}
         </div>
       </SheetContent>
     </Sheet>

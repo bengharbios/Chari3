@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { cn } from '@/lib/utils';
-import { Loader2, PackageSearch, ChevronDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Loader2, PackageSearch, ChevronDown, ChevronRight, ArrowLeft, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 
 interface MenuItem {
@@ -23,6 +23,42 @@ interface MenuWrapper {
   fontFamily: string;
   items: MenuItem[];
 }
+
+const RecursiveMenuItem = ({ item, level = 0, getLabel, t, isAr }: any) => {
+  const hasChildren = item.children && item.children.length > 0;
+  
+  return (
+    <div className="relative group/subitem">
+       <Link href={item.url || '#'} className="px-5 py-2.5 flex items-center justify-between hover:bg-primary/5 text-sm font-medium transition-colors text-muted-foreground hover:text-primary">
+          <span className="flex items-center gap-3">
+             {item.iconUrl && (
+               <div className="w-4 h-4 relative shrink-0">
+                  <Image src={item.iconUrl} alt="icon" fill className="object-contain" sizes="16px" />
+               </div>
+             )}
+             {t(getLabel(item))}
+          </span>
+          {hasChildren && <ChevronRight className={cn("w-4 h-4 opacity-50", isAr ? "rotate-180" : "")} />}
+       </Link>
+       
+       {hasChildren && (
+         <div className={cn(
+            "absolute top-0 opacity-0 invisible translate-y-2 pointer-events-none",
+            "group-hover/subitem:opacity-100 group-hover/subitem:visible group-hover/subitem:translate-y-0 group-hover/subitem:pointer-events-auto",
+            "transition-all duration-300 ease-in-out bg-background border border-border/60 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] rounded-xl z-50",
+            "w-[240px]",
+            "ltr:left-full ltr:-ml-2 rtl:right-full rtl:-mr-2" 
+         )}>
+           <div className="py-2 flex flex-col">
+              {item.children.map((child: any) => (
+                <RecursiveMenuItem key={child.id} item={child} level={level + 1} getLabel={getLabel} t={t} isAr={isAr} />
+              ))}
+           </div>
+         </div>
+       )}
+    </div>
+  );
+};
 
 export default function PublicMenu() {
   const { t, isAr } = useTranslation();
@@ -70,7 +106,6 @@ export default function PublicMenu() {
     <div className="w-full hidden md:block z-[100] border-y border-border/40 bg-background/95 backdrop-blur-md relative" dir={isAr ? 'rtl' : 'ltr'}>
       <div className="container-platform relative" style={fontFamilyStyle}>
         
-        {/* Bedimcode Inspired Nav */}
         <nav className={cn(
           "flex h-14 items-center px-4 w-full",
           alignmentClass
@@ -93,7 +128,7 @@ export default function PublicMenu() {
                     item.type === 'standard' || item.type === 'direct-category' ? 'static md:relative' : 'static'
                   )}
                 >
-                  <Link href={item.type === 'direct-category' && directCat ? `/search?category=${directCat.id}` : item.url} className={cn(
+                  <Link href={item.type === 'direct-category' && directCat ? `/search?category=${directCat.id}` : (item.url || '#')} className={cn(
                     "text-sm font-semibold flex items-center gap-2 h-10 px-3 rounded-lg text-foreground transition-all duration-300",
                     "group-hover/navitem:bg-primary/5 group-hover/navitem:text-primary z-10"
                   )}>
@@ -108,28 +143,20 @@ export default function PublicMenu() {
                     )}
                   </Link>
 
-                  {/* Bedimcode Dropdown CSS Transition */}
                   {hasDropdown && (
                     <div className={cn(
                       "absolute top-full opacity-0 invisible translate-y-3 pointer-events-none",
                       "group-hover/navitem:opacity-100 group-hover/navitem:visible group-hover/navitem:translate-y-0 group-hover/navitem:pointer-events-auto",
-                      "transition-all duration-300 ease-in-out bg-background border border-border/60 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] rounded-b-2xl overflow-hidden z-50",
-                      item.type === 'standard' ? "w-[260px] start-2" : 
-                      item.type === 'direct-category' ? "w-[320px] start-2" :
-                      "start-0 end-0 w-full min-w-[800px] xl:max-w-7xl mx-auto rounded-2xl mt-1"
+                      "transition-all duration-300 ease-in-out bg-background border border-border/60 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] z-50",
+                      item.type === 'standard' ? "w-[260px] ltr:left-2 rtl:right-2 rounded-2xl" : 
+                      item.type === 'direct-category' ? "w-[320px] ltr:left-2 rtl:right-2 rounded-2xl overflow-hidden" :
+                      "start-0 end-0 w-full min-w-[800px] xl:max-w-7xl mx-auto rounded-2xl mt-1 overflow-hidden"
                     )}>
                       {/* 1. Standard Dropdown */}
                       {item.type === 'standard' && (
-                        <div className="py-2 flex flex-col max-h-[60vh] overflow-y-auto">
+                        <div className="py-2 flex flex-col max-h-[70vh] overflow-visible">
                           {item.children.map(child => (
-                            <Link key={child.id} href={child.url} className="px-5 py-2.5 flex items-center gap-3 hover:bg-primary/5 text-sm font-medium transition-colors text-muted-foreground hover:text-primary">
-                              {child.iconUrl && (
-                                <div className="w-4 h-4 relative shrink-0">
-                                   <Image src={child.iconUrl} alt="icon" fill className="object-contain" sizes="16px" />
-                                </div>
-                              )}
-                              {t(getLabel(child))}
-                            </Link>
+                            <RecursiveMenuItem key={child.id} item={child} getLabel={getLabel} t={t} isAr={isAr} />
                           ))}
                         </div>
                       )}
