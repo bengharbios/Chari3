@@ -34,10 +34,12 @@ interface MenuWrapper {
   items: MenuItem[];
 }
 
+import { useTranslationStore } from '@/lib/store/translation-store';
+
 // ----------------------------------------------------
 // SORTABLE PARENT COMPONENT
 // ----------------------------------------------------
-function SortableParentItem({ item, children, wrapper, updateItem, removeItem, addChildItem, moveChildItem, categories }: any) {
+function SortableParentItem({ item, children, wrapper, updateItem, removeItem, addChildItem, moveChildItem, categories, languages }: any) {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
@@ -80,15 +82,16 @@ function SortableParentItem({ item, children, wrapper, updateItem, removeItem, a
               </Select>
             </div>
             
-            <div className="space-y-1">
-              <Label>{t('الاسم (عربي)', 'Label (Arabic)')}</Label>
-              <Input value={getLabel('ar')} onChange={(e) => updateItem(item.id, null, 'labels', { ...item.labels, ar: e.target.value })} placeholder="مثال: الإلكترونيات" />
-            </div>
-            
-            <div className="space-y-1">
-              <Label>{t('الاسم (إنجليزي)', 'Label (English)')}</Label>
-              <Input value={getLabel('en')} onChange={(e) => updateItem(item.id, null, 'labels', { ...item.labels, en: e.target.value })} placeholder="Ex: Electronics" />
-            </div>
+            {languages.map((lang: any) => (
+              <div className="space-y-1" key={lang.code}>
+                <Label>{t(`الاسم (${lang.name})`, `Label (${lang.nameEn})`)}</Label>
+                <Input 
+                  value={getLabel(lang.code)} 
+                  onChange={(e) => updateItem(item.id, null, 'labels', { ...item.labels, [lang.code]: e.target.value })} 
+                  dir={lang.direction}
+                />
+              </div>
+            ))}
 
             {item.type !== 'categories-grid' && item.type !== 'direct-category' && (
               <div className="space-y-1">
@@ -185,14 +188,12 @@ function SortableParentItem({ item, children, wrapper, updateItem, removeItem, a
                  </div>
                  <div className="flex-1 space-y-4">
                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                     <div className="space-y-1">
-                       <Label className="text-xs">{t('الفرع (عربي)', 'Sub (Arabic)')}</Label>
-                       <Input value={getChildLabel('ar')} onChange={(e) => updateItem(item.id, child.id, 'labels', { ...child.labels, ar: e.target.value })} />
-                     </div>
-                     <div className="space-y-1">
-                       <Label className="text-xs">{t('الفرع (إنجليزي)', 'Sub (English)')}</Label>
-                       <Input value={getChildLabel('en')} onChange={(e) => updateItem(item.id, child.id, 'labels', { ...child.labels, en: e.target.value })} />
-                     </div>
+                     {languages.map((lang: any) => (
+                       <div className="space-y-1" key={lang.code}>
+                         <Label className="text-xs">{t(`الفرع (${lang.name})`, `Sub (${lang.nameEn})`)}</Label>
+                         <Input value={getChildLabel(lang.code)} onChange={(e) => updateItem(item.id, child.id, 'labels', { ...child.labels, [lang.code]: e.target.value })} dir={lang.direction} />
+                       </div>
+                     ))}
                      <div className="space-y-1">
                        <Label className="text-xs">{t('الرابط الفرعي', 'Sub URL')}</Label>
                        <Input value={child.url} onChange={(e) => updateItem(item.id, child.id, 'url', e.target.value)} dir="ltr" />
@@ -223,6 +224,7 @@ function SortableParentItem({ item, children, wrapper, updateItem, removeItem, a
 // ----------------------------------------------------
 export default function MenuSettingsPage() {
   const { t } = useTranslation();
+  const { languages, loadTranslations } = useTranslationStore();
   const [wrapper, setWrapper] = useState<MenuWrapper>({
     alignment: 'center',
     fontFamily: 'var(--font-inter)',
@@ -240,6 +242,7 @@ export default function MenuSettingsPage() {
   useEffect(() => {
     fetchMenu();
     fetchCategories();
+    if (languages.length === 0) loadTranslations('ar');
   }, []);
 
   const fetchMenu = async () => {
@@ -451,6 +454,7 @@ export default function MenuSettingsPage() {
                     addChildItem={addChildItem}
                     moveChildItem={moveChildItem}
                     categories={categories}
+                    languages={languages}
                   />
                 ))}
               </div>
