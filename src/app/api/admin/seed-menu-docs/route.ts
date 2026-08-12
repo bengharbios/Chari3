@@ -20,75 +20,87 @@ export async function GET(req: Request) {
     });
 
     const arabicContent = `
-# إدارة القائمة الرئيسية (Global Navigation Menu)
+# دليل استخدام القائمة الرئيسية المتقدمة (Mega Menu)
 
-تتيح لك المنصة التحكم الكامل في شريط التنقل الرئيسي (القائمة العلوية) الذي يظهر لجميع الزوار في الواجهة العامة (سواء من الكمبيوتر أو الجوال). 
+لقد تم ترقية نظام القائمة ليصبح نظاماً متطوراً (Mega Menu) ينافس التطبيقات العالمية مثل Temu و Noon! يمكنك الآن التحكم بتصميم القائمة، أنواع الخطوط، وإضافة قوائم ضخمة تعرض جميع التصنيفات أو اللافتات الإعلانية.
 
-## 1. كيفية إضافة قوائم وروابط
-1. اذهب إلى **الإعدادات > إعدادات القائمة الرئيسية**.
-2. اضغط على زر **إضافة قائمة رئيسية جديدة**.
-3. أدخل **اسم الرابط** باللغة العربية (مثلاً: "الإلكترونيات") وأدخل **الرابط الموجه إليه** (مثلاً: \`/category/electronics\`).
-4. (اختياري) يمكنك إضافة روابط فرعية تحت هذا الرابط بالضغط على **إضافة فرع**. ستظهر القائمة المنسدلة للزوار عند تمرير الماوس عليها.
-5. يمكنك ترتيب القوائم عن طريق سحبها وإفلاتها.
-6. اضغط على **حفظ التغييرات**.
+## 1. الإعدادات العامة للتصميم (Global Settings)
+في أعلى صفحة **الإعدادات > إعدادات القائمة الرئيسية**، ستجد قسم الإعدادات العامة:
+- **المحاذاة:** يمكنك اختيار توسيط القائمة (Center)، أو جعلها في البداية (Start) أو في النهاية (End).
+- **نوع الخط:** يمكنك تغيير خط القائمة والاختيار بين خطوط عصرية مثل (Cairo, Tajawal, Inter).
 
-## 2. كيفية الترجمة للغات أخرى (الإنجليزية، الفرنسية...)
-نظامنا يعتمد على "الترجمة الذكية". عند إضافة قائمة باللغة العربية، سيتم عرضها بالعربية لجميع الزوار.
-إذا كنت تريد أن تتغير هذه القائمة إلى اللغة الإنجليزية عندما يغير الزائر اللغة:
+## 2. أنواع عناصر القائمة (Item Types)
+عند إضافة رابط جديد للقائمة، يمكنك اختيار "نوع العنصر" ليعطيك ميزات مختلفة:
+1. **رابط عادي (Standard):**
+   - يعمل كرابط عادي أو قائمة منسدلة بسيطة للروابط الفرعية.
+2. **شبكة التصنيفات التلقائية (Categories Grid):**
+   - هذا هو الخيار الأقوى! عند اختياره، سيقوم النظام **تلقائياً** بجلب جميع تصنيفات متجرك وصورها وعرضها في شبكة ضخمة (Grid) بمجرد تمرير الماوس، تماماً مثل Temu.
+   - *ملاحظة: الترجمة تتم تلقائياً من قاعدة البيانات.*
+3. **قائمة ضخمة مخصصة (Custom Mega Menu):**
+   - يتيح لك بناء قائمة ضخمة متعددة الأعمدة وإضافة روابط فرعية.
+   - **اللافتة الإعلانية:** يمكنك إرفاق رابط صورة إعلانية (Banner) لتظهر بجانب الروابط لتعطي مظهراً احترافياً مثل موقع Noon.
+
+## 3. كيفية الترجمة للغات أخرى
+نظامنا يعتمد على "الترجمة الذكية". عند كتابة اسم الرابط بالعربية:
 1. اذهب إلى قسم **اللغات والترجمة** في لوحة الإدارة.
-2. ابحث عن الكلمة التي كتبتها بالضبط في القائمة (مثلاً: "الإلكترونيات").
-3. أضف الكلمة الإنجليزية المقابلة لها (Electronics).
-4. احفظ التغييرات.
-
-الآن سيقوم النظام أوتوماتيكياً بتحويل اسم القائمة حسب لغة الزائر دون الحاجة لبرمجة إضافية!
+2. ابحث عن الكلمة التي كتبتها في القائمة.
+3. أضف الكلمة الإنجليزية المقابلة لها.
+4. بالنسبة لـ "شبكة التصنيفات"، تتم الترجمة بناءً على الكلمات الموجودة في قاعدة البيانات وتمرر للقاموس برمجياً.
   `;
 
     const englishContent = `
-# Managing the Global Navigation Menu
+# Advanced Mega Menu Usage Guide
 
-The platform allows you full control over the main navigation bar (Header Menu) that appears to all visitors on the public storefront (Desktop and Mobile).
+The menu system has been upgraded to an advanced Mega Menu system, competing with global apps like Temu and Noon! You can now control the design, fonts, and add massive grids displaying all categories or promotional banners.
 
-## 1. How to Add Menus and Links
-1. Go to **Settings > Main Menu Management**.
-2. Click on **Add New Main Menu**.
-3. Enter the **Link Name** in Arabic (e.g., "الإلكترونيات") and enter the **Destination URL** (e.g., \`/category/electronics\`).
-4. (Optional) You can add sub-links under this link by clicking **Add Child**. A dropdown menu will appear for visitors when they hover over it.
-5. You can reorder menus by dragging and dropping them.
-6. Click **Save Changes**.
+## 1. Global Design Settings
+At the top of **Settings > Main Menu Management**, you will find the global settings:
+- **Alignment:** You can choose to Center the menu, or align it to the Start or End.
+- **Font Family:** Change the menu font by choosing modern fonts like Cairo, Tajawal, or Inter.
 
-## 2. How to Translate to Other Languages
-Our system relies on "Smart Translation". When you add a menu item in Arabic, it is used as the base translation key.
-To make this menu change to English when the visitor changes their language:
-1. Go to the **Languages & Translation** section in the Admin Panel.
-2. Search for the exact Arabic word you entered (e.g., "الإلكترونيات").
-3. Add the corresponding English word (Electronics).
-4. Save the changes.
+## 2. Menu Item Types
+When adding a new menu link, you can choose the "Item Type":
+1. **Standard Link:**
+   - Works as a normal link or a simple dropdown for sub-links.
+2. **Auto Categories Grid:**
+   - The most powerful option! It **automatically** fetches all your store categories and their images, displaying them in a massive grid on hover (just like Temu).
+   - *Note: Translation is handled automatically from the database.*
+3. **Custom Mega Menu:**
+   - Allows you to build a massive multi-column menu and add sub-links.
+   - **Promo Banner:** You can attach an image URL to show a banner next to the links for a professional look like Noon.
 
-Now the system will automatically translate the menu name based on the visitor's language without requiring any extra code!
+## 3. How to Translate to Other Languages
+Our system uses "Smart Translation":
+1. Go to **Languages & Translation** in the Admin Panel.
+2. Search for the exact word you entered in the menu.
+3. Add the corresponding English/French word.
+4. For the "Categories Grid", translation is done automatically based on the database terms passed to the dictionary.
   `;
 
     const frenchContent = `
-# Gestion du Menu de Navigation Principal
+# Guide d'utilisation du Mega Menu Avancé
 
-La plateforme vous permet un contrôle total sur la barre de navigation principale (Menu d'en-tête) qui s'affiche pour tous les visiteurs (Ordinateur et Mobile).
+Le système de menu a été mis à niveau vers un système de Mega Menu avancé (comme Temu et Noon). Vous pouvez désormais contrôler le design, les polices et ajouter des grilles massives affichant toutes les catégories ou des bannières promotionnelles.
 
-## 1. Comment ajouter des menus et des liens
-1. Allez dans **Paramètres > Gestion du Menu Principal**.
-2. Cliquez sur **Ajouter un Nouveau Menu Principal**.
-3. Saisissez le **Nom du lien** en arabe (ex: "الإلكترونيات") et saisissez l'**URL de destination** (ex: \`/category/electronics\`).
-4. (Facultatif) Vous pouvez ajouter des sous-liens sous ce lien en cliquant sur **Ajouter un sous-élément**. Un menu déroulant apparaîtra pour les visiteurs lorsqu'ils le survoleront.
-5. Vous pouvez réorganiser les menus par glisser-déposer.
-6. Cliquez sur **Enregistrer les modifications**.
+## 1. Paramètres de conception globale
+Dans **Paramètres > Gestion du Menu Principal**, vous trouverez :
+- **Alignement :** Centrer le menu, ou l'aligner au début ou à la fin.
+- **Police :** Changer la police du menu (Cairo, Tajawal, Inter).
 
-## 2. Comment traduire dans d'autres langues
-Notre système repose sur la "Traduction Intelligente". Lorsque vous ajoutez un élément de menu en arabe, il est utilisé comme clé de traduction de base.
-Pour que ce menu passe en anglais ou en français lorsque le visiteur change de langue :
-1. Allez dans la section **Langues et Traduction** du panneau d'administration.
-2. Recherchez le mot arabe exact que vous avez saisi (ex: "الإلكترونيات").
-3. Ajoutez le mot français correspondant (Électronique).
-4. Enregistrez les modifications.
+## 2. Types d'éléments de menu
+Lors de l'ajout d'un nouveau lien, vous pouvez choisir le type :
+1. **Lien standard :**
+   - Fonctionne comme un lien normal ou une simple liste déroulante.
+2. **Grille de catégories automatique (Mega Menu) :**
+   - Récupère **automatiquement** toutes les catégories de votre boutique et leurs images dans une grande grille.
+3. **Mega Menu personnalisé :**
+   - Vous permet de créer un grand menu à plusieurs colonnes avec une **bannière promotionnelle** (Image).
 
-Maintenant, le système traduira automatiquement le nom du menu en fonction de la langue du visiteur sans nécessiter de code supplémentaire !
+## 3. Comment traduire
+Notre système utilise la "Traduction Intelligente" :
+1. Allez dans **Langues et Traduction**.
+2. Recherchez le mot exact.
+3. Ajoutez le mot français correspondant.
   `;
 
     await db.docArticle.create({

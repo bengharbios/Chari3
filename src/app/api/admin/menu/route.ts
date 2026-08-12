@@ -18,9 +18,21 @@ export async function GET() {
       select: { publicMenuConfig: true }
     });
 
+    let config = { alignment: 'center', fontFamily: 'var(--font-inter)', items: [] };
+    if (settings?.publicMenuConfig) {
+      try {
+        const parsed = JSON.parse(settings.publicMenuConfig);
+        if (Array.isArray(parsed)) {
+          config.items = parsed; // Fallback for old data
+        } else {
+          config = { ...config, ...parsed };
+        }
+      } catch (e) {}
+    }
+
     return NextResponse.json({
       success: true,
-      menuConfig: settings?.publicMenuConfig ? JSON.parse(settings.publicMenuConfig) : []
+      menuConfig: config
     });
   } catch (error) {
     console.error('Failed to get menu config:', error);
@@ -38,7 +50,7 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const { menuConfig } = body;
 
-    if (!Array.isArray(menuConfig)) {
+    if (!menuConfig || typeof menuConfig !== 'object' || !Array.isArray(menuConfig.items)) {
       return NextResponse.json({ success: false, error: 'Invalid menu configuration' }, { status: 400 });
     }
 

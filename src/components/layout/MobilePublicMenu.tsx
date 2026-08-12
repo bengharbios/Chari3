@@ -4,23 +4,32 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Menu, ChevronDown, ChevronUp } from 'lucide-react';
+import { Menu, ChevronDown, ChevronUp, PackageSearch } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 
 interface MenuItem {
   id: string;
+  type: 'standard' | 'categories-grid' | 'mega-custom';
   label: string;
   url: string;
-  isMega: boolean;
+  imageUrl?: string;
   children: MenuItem[];
+}
+
+interface MenuWrapper {
+  alignment: 'start' | 'center' | 'end';
+  fontFamily: string;
+  items: MenuItem[];
 }
 
 export default function MobilePublicMenu() {
   const { t, isAr } = useTranslation();
   const pathname = usePathname();
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [wrapper, setWrapper] = useState<MenuWrapper | null>(null);
+  const [categories, setCategories] = useState<any[]>([]);
   const [openSection, setOpenSection] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -28,8 +37,11 @@ export default function MobilePublicMenu() {
     fetch('/api/public/menu')
       .then(res => res.json())
       .then(data => {
-        if (data.success && Array.isArray(data.menuConfig)) {
-          setMenuItems(data.menuConfig);
+        if (data.success && data.menuConfig) {
+          setWrapper(data.menuConfig);
+          if (data.categories) {
+            setCategories(data.categories);
+          }
         }
       })
       .catch(console.error);
@@ -39,7 +51,9 @@ export default function MobilePublicMenu() {
     setIsOpen(false);
   }, [pathname]);
 
-  if (menuItems.length === 0) return null;
+  if (!wrapper || !wrapper.items || wrapper.items.length === 0) return null;
+
+  const fontFamilyStyle = wrapper.fontFamily ? { fontFamily: wrapper.fontFamily } : {};
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -48,44 +62,79 @@ export default function MobilePublicMenu() {
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side={isAr ? 'right' : 'left'} className="w-[300px] sm:w-[350px] overflow-y-auto" dir={isAr ? 'rtl' : 'ltr'}>
+      <SheetContent side={isAr ? 'right' : 'left'} className="w-[300px] sm:w-[350px] overflow-y-auto" dir={isAr ? 'rtl' : 'ltr'} style={fontFamilyStyle}>
         <SheetHeader>
           <SheetTitle className="text-start">{t('القائمة الرئيسية', 'Main Menu')}</SheetTitle>
         </SheetHeader>
         <div className="py-6 space-y-2">
-          {menuItems.map(item => (
+          {wrapper.items.map(item => (
             <div key={item.id} className="border-b border-border/50 pb-2 mb-2 last:border-0">
-              {item.children && item.children.length > 0 ? (
+              
+              {item.type === 'categories-grid' ? (
                 <>
                   <button
                     onClick={() => setOpenSection(openSection === item.id ? null : item.id)}
-                    className="flex items-center justify-between w-full py-2 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
+                    className="flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   >
                     <span>{t(item.label)}</span>
                     {openSection === item.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
                   <div className={cn(
-                    "overflow-hidden transition-all duration-200",
-                    openSection === item.id ? "max-h-[500px] mt-2 opacity-100" : "max-h-0 opacity-0"
+                    "overflow-hidden transition-all duration-300",
+                    openSection === item.id ? "max-h-[1000px] mt-2 opacity-100" : "max-h-0 opacity-0"
                   )}>
-                    <div className="ps-4 ms-2 space-y-1 border-s border-primary/20 relative before:content-[''] before:absolute before:start-[-1px] before:top-0 before:bottom-0 before:w-px before:bg-gradient-to-b before:from-brand/50 before:to-transparent">
+                    <div className="grid grid-cols-3 gap-3 p-2 bg-muted/20 rounded-xl border border-border/50">
+                      {categories.map(cat => (
+                         <Link key={cat.id} href={`/search?category=${cat.id}`} className="flex flex-col items-center gap-2 p-2 hover:bg-muted rounded-lg transition-colors">
+                            <div className="w-12 h-12 rounded-full overflow-hidden border border-border/50 relative bg-background flex items-center justify-center shadow-sm">
+                               {cat.image ? (
+                                  <Image src={cat.image} alt={cat.name} fill className="object-cover" sizes="48px" />
+                               ) : (
+                                  <PackageSearch className="w-5 h-5 text-muted-foreground/50" />
+                               )}
+                            </div>
+                            <span className="text-[10px] text-center font-medium line-clamp-2 leading-tight">{t(cat.name)}</span>
+                         </Link>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : item.children && item.children.length > 0 ? (
+                <>
+                  <button
+                    onClick={() => setOpenSection(openSection === item.id ? null : item.id)}
+                    className="flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
+                  >
+                    <span>{t(item.label)}</span>
+                    {openSection === item.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+                  <div className={cn(
+                    "overflow-hidden transition-all duration-300",
+                    openSection === item.id ? "max-h-[800px] mt-2 opacity-100" : "max-h-0 opacity-0"
+                  )}>
+                    <div className="ps-4 ms-2 space-y-1 border-s border-primary/20 relative before:content-[''] before:absolute before:start-[-1px] before:top-0 before:bottom-0 before:w-px before:bg-gradient-to-b before:from-primary/50 before:to-transparent">
                       {item.children.map(child => (
                         <Link
                           key={child.id}
                           href={child.url}
-                          className="block py-2 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+                          className="block py-2.5 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
                           onClick={() => setIsOpen(false)}
                         >
                           {t(child.label)}
                         </Link>
                       ))}
                     </div>
+                    {item.type === 'mega-custom' && item.imageUrl && (
+                      <div className="mt-4 rounded-lg overflow-hidden border border-border/50 relative h-[120px]">
+                         <Image src={item.imageUrl} alt="Banner" fill className="object-cover" />
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
                 <Link
                   href={item.url}
-                  className="block py-2 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
+                  className="block py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
                   {t(item.label)}
