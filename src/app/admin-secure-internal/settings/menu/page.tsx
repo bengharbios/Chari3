@@ -180,12 +180,6 @@ function SortableParentItem({ item, children, wrapper, updateItem, removeItem, a
             </div>
           )}
         </div>
-        <div className="mt-2 flex flex-col gap-2">
-          <Button variant="destructive" size="icon" onClick={() => removeItem(item.id, null)}>
-            <Trash2 className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
 
       {/* Children List */}
       {item.children && item.children.length > 0 && item.type !== 'categories-grid' && (
