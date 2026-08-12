@@ -23,12 +23,29 @@ export async function GET() {
       } catch (e) {}
     }
 
-    // Check if any item is a categories-grid
-    const hasCategoriesGrid = config.items.some((item: any) => item.type === 'categories-grid');
+    // Recursively find all required category IDs
+    const categoryIds = new Set<string>();
+    let hasCategoriesGrid = false;
+    
+    function extractIds(items: any[]) {
+      for (const item of items) {
+        if (item.type === 'categories-grid') hasCategoriesGrid = true;
+        if (item.type === 'direct-category' && item.categoryId) categoryIds.add(item.categoryId);
+        if (item.children) extractIds(item.children);
+      }
+    }
+    extractIds(config.items);
+
     let categories: any[] = [];
-    if (hasCategoriesGrid) {
+    if (hasCategoriesGrid || categoryIds.size > 0) {
       categories = await db.category.findMany({
-        where: { parentId: null, isActive: true },
+        where: { 
+          OR: [
+            hasCategoriesGrid ? { parentId: null } : {},
+            { id: { in: Array.from(categoryIds) } }
+          ],
+          isActive: true
+        },
         select: { id: true, name: true, nameEn: true, slug: true, image: true, icon: true },
         orderBy: { sortOrder: 'asc' }
       });

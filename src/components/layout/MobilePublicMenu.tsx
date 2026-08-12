@@ -12,10 +12,12 @@ import Image from 'next/image';
 
 interface MenuItem {
   id: string;
-  type: 'standard' | 'categories-grid' | 'mega-custom';
-  label: string;
+  type: 'standard' | 'categories-grid' | 'mega-custom' | 'direct-category';
+  labels: Record<string, string>;
   url: string;
   imageUrl?: string;
+  imageUrls?: string[];
+  categoryId?: string;
   children: MenuItem[];
 }
 
@@ -27,6 +29,7 @@ interface MenuWrapper {
 
 export default function MobilePublicMenu() {
   const { t, isAr } = useTranslation();
+  const currentLocale = isAr ? 'ar' : 'en';
   const pathname = usePathname();
   const [wrapper, setWrapper] = useState<MenuWrapper | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
@@ -55,6 +58,13 @@ export default function MobilePublicMenu() {
 
   const fontFamilyStyle = wrapper.fontFamily ? { fontFamily: wrapper.fontFamily } : {};
 
+  const getLabel = (item: MenuItem) => {
+    if (item.labels && item.labels[currentLocale]) return item.labels[currentLocale];
+    if ((item as any).label) return (item as any).label;
+    if (item.labels) return Object.values(item.labels)[0] || 'Menu Item';
+    return 'Menu Item';
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -67,7 +77,13 @@ export default function MobilePublicMenu() {
           <SheetTitle className="text-start">{t('القائمة الرئيسية', 'Main Menu')}</SheetTitle>
         </SheetHeader>
         <div className="py-6 space-y-2">
-          {wrapper.items.map(item => (
+          {wrapper.items.map(item => {
+             let directCat = null;
+             if (item.type === 'direct-category' && item.categoryId) {
+                directCat = categories.find(c => c.id === item.categoryId);
+             }
+
+             return (
             <div key={item.id} className="border-b border-border/50 pb-2 mb-2 last:border-0">
               
               {item.type === 'categories-grid' ? (
@@ -76,7 +92,7 @@ export default function MobilePublicMenu() {
                     onClick={() => setOpenSection(openSection === item.id ? null : item.id)}
                     className="flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   >
-                    <span>{t(item.label)}</span>
+                    <span>{t(getLabel(item))}</span>
                     {openSection === item.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
                   <div className={cn(
@@ -93,19 +109,34 @@ export default function MobilePublicMenu() {
                                   <PackageSearch className="w-5 h-5 text-muted-foreground/50" />
                                )}
                             </div>
-                            <span className="text-[10px] text-center font-medium line-clamp-2 leading-tight">{t(cat.name)}</span>
+                            <span className="text-[10px] text-center font-medium line-clamp-2 leading-tight">{isAr ? cat.name : (cat.nameEn || cat.name)}</span>
                          </Link>
                       ))}
                     </div>
                   </div>
                 </>
+              ) : item.type === 'direct-category' && directCat ? (
+                 <Link
+                   href={`/search?category=${directCat.id}`}
+                   className="flex items-center gap-3 py-2 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
+                   onClick={() => setIsOpen(false)}
+                 >
+                    <div className="w-8 h-8 rounded-full overflow-hidden border border-border/50 relative bg-background flex items-center justify-center shadow-sm">
+                       {directCat.image ? (
+                          <Image src={directCat.image} alt={directCat.name} fill className="object-cover" sizes="32px" />
+                       ) : (
+                          <PackageSearch className="w-4 h-4 text-muted-foreground/50" />
+                       )}
+                    </div>
+                    {isAr ? directCat.name : (directCat.nameEn || directCat.name)}
+                 </Link>
               ) : item.children && item.children.length > 0 ? (
                 <>
                   <button
                     onClick={() => setOpenSection(openSection === item.id ? null : item.id)}
                     className="flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   >
-                    <span>{t(item.label)}</span>
+                    <span>{t(getLabel(item))}</span>
                     {openSection === item.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
                   <div className={cn(
@@ -120,13 +151,13 @@ export default function MobilePublicMenu() {
                           className="block py-2.5 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
                           onClick={() => setIsOpen(false)}
                         >
-                          {t(child.label)}
+                          {t(getLabel(child))}
                         </Link>
                       ))}
                     </div>
-                    {item.type === 'mega-custom' && item.imageUrl && (
+                    {item.type === 'mega-custom' && item.imageUrls && item.imageUrls.length > 0 && (
                       <div className="mt-4 rounded-lg overflow-hidden border border-border/50 relative h-[120px]">
-                         <Image src={item.imageUrl} alt="Banner" fill className="object-cover" />
+                         <Image src={item.imageUrls[0]} alt="Banner" fill className="object-cover" />
                       </div>
                     )}
                   </div>
@@ -137,11 +168,11 @@ export default function MobilePublicMenu() {
                   className="block py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
-                  {t(item.label)}
+                  {t(getLabel(item))}
                 </Link>
               )}
             </div>
-          ))}
+          )})}
         </div>
       </SheetContent>
     </Sheet>

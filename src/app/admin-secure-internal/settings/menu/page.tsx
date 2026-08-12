@@ -7,16 +7,24 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, GripVertical, Check, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Plus, Trash2, GripVertical, Check, Image as ImageIcon, ArrowUp, ArrowDown } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+
+// Dnd Kit Imports
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface MenuItem {
   id: string;
-  type: 'standard' | 'categories-grid' | 'mega-custom';
-  label: string;
+  type: 'standard' | 'categories-grid' | 'mega-custom' | 'direct-category';
+  labels: Record<string, string>;
   url: string;
-  imageUrl?: string;
+  imageUrls?: string[];
+  categoryId?: string;
   children: MenuItem[];
+  // legacy fallback
+  label?: string; 
 }
 
 interface MenuWrapper {
@@ -25,6 +33,193 @@ interface MenuWrapper {
   items: MenuItem[];
 }
 
+// ----------------------------------------------------
+// SORTABLE PARENT COMPONENT
+// ----------------------------------------------------
+function SortableParentItem({ item, children, wrapper, updateItem, removeItem, addChildItem, moveChildItem, categories }: any) {
+  const { t } = useTranslation();
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : 1,
+    position: 'relative' as any,
+  };
+
+  const getLabel = (lang: string) => (item.labels && item.labels[lang]) || '';
+  
+  // Legacy migration
+  useEffect(() => {
+    if (item.label && (!item.labels || !item.labels.ar)) {
+      updateItem(item.id, null, 'labels', { ...item.labels, ar: item.label, en: '' });
+    }
+  }, [item]);
+
+  return (
+    <div ref={setNodeRef} style={style} className="border border-border rounded-lg p-4 bg-muted/20 space-y-4 shadow-sm relative">
+      <div className="flex gap-4 items-start">
+        <div {...attributes} {...listeners} className="mt-2 text-muted-foreground cursor-grab active:cursor-grabbing hover:text-primary transition-colors p-2 -ms-2">
+           <GripVertical className="w-5 h-5" />
+        </div>
+        <div className="flex-1 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-1">
+              <Label className="text-primary font-semibold">{t('نوع العنصر', 'Item Type')}</Label>
+              <Select value={item.type || 'standard'} onValueChange={(v) => updateItem(item.id, null, 'type', v)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="standard">{t('رابط عادي / قائمة بسيطة', 'Standard Link / Dropdown')}</SelectItem>
+                  <SelectItem value="categories-grid">{t('شبكة التصنيفات التلقائية', 'Auto Categories Grid')}</SelectItem>
+                  <SelectItem value="mega-custom">{t('قائمة ضخمة مخصصة', 'Custom Mega Menu')}</SelectItem>
+                  <SelectItem value="direct-category">{t('ربط بتصنيف مباشر', 'Direct Category Link')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-1">
+              <Label>{t('الاسم (عربي)', 'Label (Arabic)')}</Label>
+              <Input value={getLabel('ar')} onChange={(e) => updateItem(item.id, null, 'labels', { ...item.labels, ar: e.target.value })} placeholder="مثال: الإلكترونيات" />
+            </div>
+            
+            <div className="space-y-1">
+              <Label>{t('الاسم (إنجليزي)', 'Label (English)')}</Label>
+              <Input value={getLabel('en')} onChange={(e) => updateItem(item.id, null, 'labels', { ...item.labels, en: e.target.value })} placeholder="Ex: Electronics" />
+            </div>
+
+            {item.type !== 'categories-grid' && item.type !== 'direct-category' && (
+              <div className="space-y-1">
+                <Label>{t('الرابط الموجه إليه', 'Destination URL')}</Label>
+                <Input 
+                  value={item.url} 
+                  onChange={(e) => updateItem(item.id, null, 'url', e.target.value)} 
+                  placeholder="/category/electronics" 
+                  dir="ltr" 
+                />
+              </div>
+            )}
+
+            {item.type === 'direct-category' && (
+               <div className="space-y-1">
+                 <Label>{t('اختر التصنيف', 'Select Category')}</Label>
+                 <Select value={item.categoryId || ''} onValueChange={(v) => updateItem(item.id, null, 'categoryId', v)}>
+                   <SelectTrigger><SelectValue placeholder={t('اختر...', 'Select...')} /></SelectTrigger>
+                   <SelectContent>
+                     {categories.map((cat: any) => (
+                       <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                     ))}
+                   </SelectContent>
+                 </Select>
+               </div>
+            )}
+          </div>
+
+          {item.type === 'mega-custom' && (
+            <div className="grid grid-cols-1 gap-4 p-4 bg-primary/5 rounded-md border border-primary/10">
+              <div className="space-y-1 flex flex-col">
+                <Label className="flex items-center gap-2 mb-2">
+                  <ImageIcon className="w-4 h-4 text-muted-foreground" />
+                  {t('اللافتات الإعلانية (Banners)', 'Promo Banners')}
+                </Label>
+                <div className="flex gap-2">
+                   <Input 
+                     value={item.imageUrls?.[0] || ''} 
+                     onChange={(e) => {
+                       const newArr = [...(item.imageUrls || ['', ''])];
+                       newArr[0] = e.target.value;
+                       updateItem(item.id, null, 'imageUrls', newArr);
+                     }} 
+                     placeholder={t("رابط الصورة الأولى", "First image URL")} 
+                     dir="ltr" 
+                   />
+                   <Input 
+                     value={item.imageUrls?.[1] || ''} 
+                     onChange={(e) => {
+                       const newArr = [...(item.imageUrls || ['', ''])];
+                       newArr[1] = e.target.value;
+                       updateItem(item.id, null, 'imageUrls', newArr);
+                     }} 
+                     placeholder={t("رابط الصورة الثانية (اختياري)", "Second image URL (Optional)")} 
+                     dir="ltr" 
+                   />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('يمكنك رفع ما يصل إلى إعلانين يظهران داخل القائمة', 'You can upload up to 2 banners to show inside the menu')}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {item.type !== 'categories-grid' && item.type !== 'direct-category' && (
+            <div className="pt-2 flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => addChildItem(item.id)} className="gap-1">
+                <Plus className="w-4 h-4" /> {t('إضافة فرع', 'Add Child')}
+              </Button>
+            </div>
+          )}
+        </div>
+        <div className="mt-2 flex flex-col gap-2">
+          <Button variant="destructive" size="icon" onClick={() => removeItem(item.id, null)}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Children List */}
+      {item.children && item.children.length > 0 && item.type !== 'categories-grid' && item.type !== 'direct-category' && (
+        <div className="ms-8 ps-4 border-s-2 border-primary/20 space-y-3 mt-4">
+          {item.children.map((child: any, cIdx: number) => {
+             const getChildLabel = (lang: string) => (child.labels && child.labels[lang]) || '';
+             
+             // Legacy migration
+             useEffect(() => {
+               if (child.label && (!child.labels || !child.labels.ar)) {
+                 updateItem(item.id, child.id, 'labels', { ...child.labels, ar: child.label, en: '' });
+               }
+             }, [child]);
+
+             return (
+               <div key={child.id} className="flex gap-4 items-end bg-background p-3 rounded border border-border shadow-sm">
+                 <div className="flex flex-col gap-1">
+                   <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" disabled={cIdx === 0} onClick={() => moveChildItem(item.id, cIdx, -1)}>
+                     <ArrowUp className="w-3 h-3" />
+                   </Button>
+                   <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" disabled={cIdx === item.children.length - 1} onClick={() => moveChildItem(item.id, cIdx, 1)}>
+                     <ArrowDown className="w-3 h-3" />
+                   </Button>
+                 </div>
+                 <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+                   <div className="space-y-1">
+                     <Label className="text-xs">{t('الفرع (عربي)', 'Sub (Arabic)')}</Label>
+                     <Input value={getChildLabel('ar')} onChange={(e) => updateItem(item.id, child.id, 'labels', { ...child.labels, ar: e.target.value })} />
+                   </div>
+                   <div className="space-y-1">
+                     <Label className="text-xs">{t('الفرع (إنجليزي)', 'Sub (English)')}</Label>
+                     <Input value={getChildLabel('en')} onChange={(e) => updateItem(item.id, child.id, 'labels', { ...child.labels, en: e.target.value })} />
+                   </div>
+                   <div className="space-y-1">
+                     <Label className="text-xs">{t('الرابط الفرعي', 'Sub URL')}</Label>
+                     <Input value={child.url} onChange={(e) => updateItem(item.id, child.id, 'url', e.target.value)} dir="ltr" />
+                   </div>
+                 </div>
+                 <Button variant="ghost" size="icon" onClick={() => removeItem(item.id, child.id)} className="text-destructive mb-1">
+                   <Trash2 className="w-4 h-4" />
+                 </Button>
+               </div>
+             )
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ----------------------------------------------------
+// MAIN PAGE COMPONENT
+// ----------------------------------------------------
 export default function MenuSettingsPage() {
   const { t } = useTranslation();
   const [wrapper, setWrapper] = useState<MenuWrapper>({
@@ -34,9 +229,17 @@ export default function MenuSettingsPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [categories, setCategories] = useState([]);
+
+  // Dnd-kit sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   useEffect(() => {
     fetchMenu();
+    fetchCategories();
   }, []);
 
   const fetchMenu = async () => {
@@ -52,6 +255,14 @@ export default function MenuSettingsPage() {
       setIsLoading(false);
     }
   };
+
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch('/api/categories');
+      const data = await res.json();
+      setCategories(data);
+    } catch (err) {}
+  }
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -79,7 +290,7 @@ export default function MenuSettingsPage() {
   const addParentItem = () => {
     setWrapper(prev => ({
       ...prev,
-      items: [...prev.items, { id: generateId(), type: 'standard', label: '', url: '', children: [] }]
+      items: [...prev.items, { id: generateId(), type: 'standard', labels: {ar: '', en: ''}, label: '', url: '', children: [] }]
     }));
   };
 
@@ -131,10 +342,37 @@ export default function MenuSettingsPage() {
       const newItems = [...prev.items];
       const parentIndex = newItems.findIndex(i => i.id === parentId);
       if (parentIndex > -1) {
-        newItems[parentIndex].children.push({ id: generateId(), type: 'standard', label: '', url: '', children: [] });
+        newItems[parentIndex].children.push({ id: generateId(), type: 'standard', labels: {ar:'', en:''}, label: '', url: '', children: [] });
       }
       return { ...prev, items: newItems };
     });
+  };
+
+  const moveChildItem = (parentId: string, childIndex: number, direction: number) => {
+     setWrapper(prev => {
+        const newItems = [...prev.items];
+        const pIndex = newItems.findIndex(i => i.id === parentId);
+        if (pIndex > -1) {
+           const targetIndex = childIndex + direction;
+           const children = [...newItems[pIndex].children];
+           const temp = children[childIndex];
+           children[childIndex] = children[targetIndex];
+           children[targetIndex] = temp;
+           newItems[pIndex].children = children;
+        }
+        return { ...prev, items: newItems };
+     });
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setWrapper((prev) => {
+        const oldIndex = prev.items.findIndex(item => item.id === active.id);
+        const newIndex = prev.items.findIndex(item => item.id === over.id);
+        return { ...prev, items: arrayMove(prev.items, oldIndex, newIndex) };
+      });
+    }
   };
 
   const setAlignment = (val: 'start'|'center'|'end') => setWrapper(p => ({ ...p, alignment: val }));
@@ -148,10 +386,10 @@ export default function MenuSettingsPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">{t('إدارة القائمة الرئيسية المتقدمة', 'Advanced Mega Menu')}</h1>
-          <p className="text-muted-foreground">{t('تحكم في الروابط والتصميم للقائمة العلوية', 'Manage links and design for the top navigation')}</p>
+          <h1 className="text-2xl font-bold text-primary">{t('إدارة القائمة الرئيسية (V3)', 'Advanced Mega Menu (V3)')}</h1>
+          <p className="text-muted-foreground">{t('تحكم شامل في اللغات، الروابط، الإعلانات، والتصنيفات', 'Full control over languages, links, banners, and categories')}</p>
         </div>
-        <Button onClick={handleSave} disabled={isSaving} className="gap-2">
+        <Button onClick={handleSave} disabled={isSaving} className="gap-2 px-8">
           {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
           {t('حفظ التغييرات', 'Save Changes')}
         </Button>
@@ -197,110 +435,37 @@ export default function MenuSettingsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{t('عناصر القائمة', 'Menu Items')}</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <GripVertical className="w-5 h-5 text-muted-foreground" />
+            {t('عناصر القائمة (السحب والإفلات)', 'Menu Items (Drag & Drop)')}
+          </CardTitle>
           <CardDescription>
-            {t('أضف الروابط أو استخدم ميزات Mega Menu لعرض شبكة تصنيفات أو إعلانات.', 'Add links or use Mega Menu features to show category grids or banners.')}
+            {t('قم بسحب العناصر لإعادة ترتيبها. يمكنك إدخال الأسماء بلغات متعددة مباشرة.', 'Drag items to reorder them. You can enter names in multiple languages directly.')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {wrapper.items.map((item) => (
-            <div key={item.id} className="border border-border rounded-lg p-4 bg-muted/20 space-y-4 shadow-sm">
-              <div className="flex gap-4 items-start">
-                <GripVertical className="mt-2 text-muted-foreground cursor-grab" />
-                <div className="flex-1 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-1">
-                      <Label className="text-primary font-semibold">{t('نوع العنصر', 'Item Type')}</Label>
-                      <Select value={item.type || 'standard'} onValueChange={(v) => updateItem(item.id, null, 'type', v)}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="standard">{t('رابط عادي / قائمة بسيطة', 'Standard Link / Dropdown')}</SelectItem>
-                          <SelectItem value="categories-grid">{t('شبكة التصنيفات التلقائية', 'Auto Categories Grid')}</SelectItem>
-                          <SelectItem value="mega-custom">{t('قائمة ضخمة مخصصة', 'Custom Mega Menu')}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('اسم الرابط (المفتاح)', 'Link Name (Translation Key)')}</Label>
-                      <Input value={item.label} onChange={(e) => updateItem(item.id, null, 'label', e.target.value)} placeholder="مثال: الإلكترونيات" />
-                    </div>
-                    <div className="space-y-1">
-                      <Label>{t('الرابط الموجه إليه', 'Destination URL')}</Label>
-                      <Input 
-                        value={item.url} 
-                        onChange={(e) => updateItem(item.id, null, 'url', e.target.value)} 
-                        disabled={item.type === 'categories-grid'}
-                        placeholder="/category/electronics" 
-                        dir="ltr" 
-                      />
-                    </div>
-                  </div>
-
-                  {item.type === 'mega-custom' && (
-                    <div className="grid grid-cols-1 gap-4 p-4 bg-primary/5 rounded-md border border-primary/10">
-                      <div className="space-y-1">
-                        <Label className="flex items-center gap-2">
-                          <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                          {t('رابط صورة اللافتة الإعلانية (اختياري)', 'Promo Banner Image URL (Optional)')}
-                        </Label>
-                        <Input 
-                          value={item.imageUrl || ''} 
-                          onChange={(e) => updateItem(item.id, null, 'imageUrl', e.target.value)} 
-                          placeholder="https://example.com/banner.jpg" 
-                          dir="ltr" 
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {t('ستظهر الصورة بجانب القوائم الفرعية في الـ Mega Menu', 'Image will appear next to submenus in the Mega Menu')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {item.type !== 'categories-grid' && (
-                    <div className="pt-2 flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => addChildItem(item.id)} className="gap-1">
-                        <Plus className="w-4 h-4" /> {t('إضافة فرع', 'Add Child')}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                <div className="mt-2">
-                  <Button variant="destructive" size="icon" onClick={() => removeItem(item.id, null)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={wrapper.items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-4">
+                {wrapper.items.map((item) => (
+                  <SortableParentItem 
+                    key={item.id} 
+                    item={item} 
+                    wrapper={wrapper} 
+                    updateItem={updateItem} 
+                    removeItem={removeItem} 
+                    addChildItem={addChildItem}
+                    moveChildItem={moveChildItem}
+                    categories={categories}
+                  />
+                ))}
               </div>
+            </SortableContext>
+          </DndContext>
 
-              {/* Children */}
-              {item.children && item.children.length > 0 && item.type !== 'categories-grid' && (
-                <div className="ms-8 ps-4 border-s-2 border-primary/20 space-y-3">
-                  {item.children.map((child) => (
-                    <div key={child.id} className="flex gap-4 items-end bg-background p-3 rounded border border-border shadow-sm">
-                      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <Label className="text-xs">{t('الاسم الفرعي', 'Sub Name')}</Label>
-                          <Input value={child.label} onChange={(e) => updateItem(item.id, child.id, 'label', e.target.value)} />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-xs">{t('الرابط الفرعي', 'Sub URL')}</Label>
-                          <Input value={child.url} onChange={(e) => updateItem(item.id, child.id, 'url', e.target.value)} dir="ltr" />
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="icon" onClick={() => removeItem(item.id, child.id)} className="text-destructive">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-
-          <Button variant="outline" className="w-full border-dashed gap-2 h-12" onClick={addParentItem}>
+          <Button variant="outline" className="w-full border-dashed gap-2 h-14 mt-4" onClick={addParentItem}>
             <Plus className="w-5 h-5" />
-            <span className="font-semibold">{t('إضافة قائمة رئيسية جديدة', 'Add New Main Menu Item')}</span>
+            <span className="font-semibold text-base">{t('إضافة قائمة رئيسية جديدة', 'Add New Main Menu Item')}</span>
           </Button>
         </CardContent>
       </Card>
