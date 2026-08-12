@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, Plus, Trash2, GripVertical, Check, Image as ImageIcon, ArrowUp, ArrowDown } from 'lucide-react';
+import { Loader2, Plus, Trash2, GripVertical, Check, ArrowUp, ArrowDown } from 'lucide-react';
 import { useTranslation } from '@/lib/i18n/useTranslation';
+import { ImageUploader } from '@/components/ui/ImageUploader';
 
 // Dnd Kit Imports
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -20,10 +21,10 @@ interface MenuItem {
   type: 'standard' | 'categories-grid' | 'mega-custom' | 'direct-category';
   labels: Record<string, string>;
   url: string;
+  iconUrl?: string;
   imageUrls?: string[];
   categoryId?: string;
   children: MenuItem[];
-  // legacy fallback
   label?: string; 
 }
 
@@ -50,7 +51,6 @@ function SortableParentItem({ item, children, wrapper, updateItem, removeItem, a
 
   const getLabel = (lang: string) => (item.labels && item.labels[lang]) || '';
   
-  // Legacy migration
   useEffect(() => {
     if (item.label && (!item.labels || !item.labels.ar)) {
       updateItem(item.id, null, 'labels', { ...item.labels, ar: item.label, en: '' });
@@ -117,43 +117,42 @@ function SortableParentItem({ item, children, wrapper, updateItem, removeItem, a
             )}
           </div>
 
+          <div className="bg-background border border-border/50 rounded-xl p-4 shadow-sm">
+             <ImageUploader 
+               label={t('أيقونة الرابط (اختياري)', 'Menu Icon (Optional)')}
+               value={item.iconUrl || ''}
+               onChange={(val) => updateItem(item.id, null, 'iconUrl', val)}
+             />
+          </div>
+
           {item.type === 'mega-custom' && (
-            <div className="grid grid-cols-1 gap-4 p-4 bg-primary/5 rounded-md border border-primary/10">
-              <div className="space-y-1 flex flex-col">
-                <Label className="flex items-center gap-2 mb-2">
-                  <ImageIcon className="w-4 h-4 text-muted-foreground" />
-                  {t('اللافتات الإعلانية (Banners)', 'Promo Banners')}
-                </Label>
-                <div className="flex gap-2">
-                   <Input 
-                     value={item.imageUrls?.[0] || ''} 
-                     onChange={(e) => {
-                       const newArr = [...(item.imageUrls || ['', ''])];
-                       newArr[0] = e.target.value;
-                       updateItem(item.id, null, 'imageUrls', newArr);
-                     }} 
-                     placeholder={t("رابط الصورة الأولى", "First image URL")} 
-                     dir="ltr" 
-                   />
-                   <Input 
-                     value={item.imageUrls?.[1] || ''} 
-                     onChange={(e) => {
-                       const newArr = [...(item.imageUrls || ['', ''])];
-                       newArr[1] = e.target.value;
-                       updateItem(item.id, null, 'imageUrls', newArr);
-                     }} 
-                     placeholder={t("رابط الصورة الثانية (اختياري)", "Second image URL (Optional)")} 
-                     dir="ltr" 
-                   />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t('يمكنك رفع ما يصل إلى إعلانين يظهران داخل القائمة', 'You can upload up to 2 banners to show inside the menu')}
-                </p>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-primary/5 rounded-md border border-primary/10">
+               <div>
+                 <ImageUploader 
+                   label={t("اللافتة الأولى (Banner 1)", "Banner 1")}
+                   value={item.imageUrls?.[0] || ''}
+                   onChange={(val) => {
+                     const newArr = [...(item.imageUrls || ['', ''])];
+                     newArr[0] = val;
+                     updateItem(item.id, null, 'imageUrls', newArr);
+                   }}
+                 />
+               </div>
+               <div>
+                 <ImageUploader 
+                   label={t("اللافتة الثانية (Banner 2 - اختياري)", "Banner 2 (Optional)")}
+                   value={item.imageUrls?.[1] || ''}
+                   onChange={(val) => {
+                     const newArr = [...(item.imageUrls || ['', ''])];
+                     newArr[1] = val;
+                     updateItem(item.id, null, 'imageUrls', newArr);
+                   }}
+                 />
+               </div>
             </div>
           )}
 
-          {item.type !== 'categories-grid' && item.type !== 'direct-category' && (
+          {item.type !== 'categories-grid' && (
             <div className="pt-2 flex gap-2">
               <Button variant="outline" size="sm" onClick={() => addChildItem(item.id)} className="gap-1">
                 <Plus className="w-4 h-4" /> {t('إضافة فرع', 'Add Child')}
@@ -169,21 +168,14 @@ function SortableParentItem({ item, children, wrapper, updateItem, removeItem, a
       </div>
 
       {/* Children List */}
-      {item.children && item.children.length > 0 && item.type !== 'categories-grid' && item.type !== 'direct-category' && (
+      {item.children && item.children.length > 0 && item.type !== 'categories-grid' && (
         <div className="ms-8 ps-4 border-s-2 border-primary/20 space-y-3 mt-4">
           {item.children.map((child: any, cIdx: number) => {
              const getChildLabel = (lang: string) => (child.labels && child.labels[lang]) || '';
              
-             // Legacy migration
-             useEffect(() => {
-               if (child.label && (!child.labels || !child.labels.ar)) {
-                 updateItem(item.id, child.id, 'labels', { ...child.labels, ar: child.label, en: '' });
-               }
-             }, [child]);
-
              return (
-               <div key={child.id} className="flex gap-4 items-end bg-background p-3 rounded border border-border shadow-sm">
-                 <div className="flex flex-col gap-1">
+               <div key={child.id} className="flex gap-4 items-start bg-background p-3 rounded border border-border shadow-sm">
+                 <div className="flex flex-col gap-1 mt-1">
                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground" disabled={cIdx === 0} onClick={() => moveChildItem(item.id, cIdx, -1)}>
                      <ArrowUp className="w-3 h-3" />
                    </Button>
@@ -191,21 +183,30 @@ function SortableParentItem({ item, children, wrapper, updateItem, removeItem, a
                      <ArrowDown className="w-3 h-3" />
                    </Button>
                  </div>
-                 <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
-                   <div className="space-y-1">
-                     <Label className="text-xs">{t('الفرع (عربي)', 'Sub (Arabic)')}</Label>
-                     <Input value={getChildLabel('ar')} onChange={(e) => updateItem(item.id, child.id, 'labels', { ...child.labels, ar: e.target.value })} />
+                 <div className="flex-1 space-y-4">
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                     <div className="space-y-1">
+                       <Label className="text-xs">{t('الفرع (عربي)', 'Sub (Arabic)')}</Label>
+                       <Input value={getChildLabel('ar')} onChange={(e) => updateItem(item.id, child.id, 'labels', { ...child.labels, ar: e.target.value })} />
+                     </div>
+                     <div className="space-y-1">
+                       <Label className="text-xs">{t('الفرع (إنجليزي)', 'Sub (English)')}</Label>
+                       <Input value={getChildLabel('en')} onChange={(e) => updateItem(item.id, child.id, 'labels', { ...child.labels, en: e.target.value })} />
+                     </div>
+                     <div className="space-y-1">
+                       <Label className="text-xs">{t('الرابط الفرعي', 'Sub URL')}</Label>
+                       <Input value={child.url} onChange={(e) => updateItem(item.id, child.id, 'url', e.target.value)} dir="ltr" />
+                     </div>
                    </div>
-                   <div className="space-y-1">
-                     <Label className="text-xs">{t('الفرع (إنجليزي)', 'Sub (English)')}</Label>
-                     <Input value={getChildLabel('en')} onChange={(e) => updateItem(item.id, child.id, 'labels', { ...child.labels, en: e.target.value })} />
-                   </div>
-                   <div className="space-y-1">
-                     <Label className="text-xs">{t('الرابط الفرعي', 'Sub URL')}</Label>
-                     <Input value={child.url} onChange={(e) => updateItem(item.id, child.id, 'url', e.target.value)} dir="ltr" />
+                   <div className="grid grid-cols-1 md:grid-cols-2">
+                      <ImageUploader 
+                        label={t('أيقونة الرابط الفرعي (اختياري)', 'Submenu Icon')}
+                        value={child.iconUrl || ''}
+                        onChange={(val) => updateItem(item.id, child.id, 'iconUrl', val)}
+                      />
                    </div>
                  </div>
-                 <Button variant="ghost" size="icon" onClick={() => removeItem(item.id, child.id)} className="text-destructive mb-1">
+                 <Button variant="ghost" size="icon" onClick={() => removeItem(item.id, child.id)} className="text-destructive mt-1">
                    <Trash2 className="w-4 h-4" />
                  </Button>
                </div>
@@ -231,7 +232,6 @@ export default function MenuSettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [categories, setCategories] = useState([]);
 
-  // Dnd-kit sensors
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -290,7 +290,7 @@ export default function MenuSettingsPage() {
   const addParentItem = () => {
     setWrapper(prev => ({
       ...prev,
-      items: [...prev.items, { id: generateId(), type: 'standard', labels: {ar: '', en: ''}, label: '', url: '', children: [] }]
+      items: [...prev.items, { id: generateId(), type: 'standard', labels: {ar: '', en: ''}, url: '', children: [] }]
     }));
   };
 
@@ -301,12 +301,9 @@ export default function MenuSettingsPage() {
       if (parentIndex > -1) {
         if (!childId) {
           (newItems[parentIndex] as any)[field] = value;
-          // Clean up fields based on type
-          if (field === 'type') {
-            if (value === 'categories-grid') {
-              newItems[parentIndex].url = '/categories';
-              newItems[parentIndex].children = [];
-            }
+          if (field === 'type' && value === 'categories-grid') {
+            newItems[parentIndex].url = '/categories';
+            newItems[parentIndex].children = [];
           }
         } else {
           const childIndex = newItems[parentIndex].children.findIndex(c => c.id === childId);
@@ -342,7 +339,7 @@ export default function MenuSettingsPage() {
       const newItems = [...prev.items];
       const parentIndex = newItems.findIndex(i => i.id === parentId);
       if (parentIndex > -1) {
-        newItems[parentIndex].children.push({ id: generateId(), type: 'standard', labels: {ar:'', en:''}, label: '', url: '', children: [] });
+        newItems[parentIndex].children.push({ id: generateId(), type: 'standard', labels: {ar:'', en:''}, url: '', children: [] });
       }
       return { ...prev, items: newItems };
     });
@@ -386,7 +383,7 @@ export default function MenuSettingsPage() {
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-primary">{t('إدارة القائمة الرئيسية (V3)', 'Advanced Mega Menu (V3)')}</h1>
+          <h1 className="text-2xl font-bold text-primary">{t('إدارة القائمة الرئيسية', 'Main Menu')}</h1>
           <p className="text-muted-foreground">{t('تحكم شامل في اللغات، الروابط، الإعلانات، والتصنيفات', 'Full control over languages, links, banners, and categories')}</p>
         </div>
         <Button onClick={handleSave} disabled={isSaving} className="gap-2 px-8">
@@ -439,9 +436,6 @@ export default function MenuSettingsPage() {
             <GripVertical className="w-5 h-5 text-muted-foreground" />
             {t('عناصر القائمة (السحب والإفلات)', 'Menu Items (Drag & Drop)')}
           </CardTitle>
-          <CardDescription>
-            {t('قم بسحب العناصر لإعادة ترتيبها. يمكنك إدخال الأسماء بلغات متعددة مباشرة.', 'Drag items to reorder them. You can enter names in multiple languages directly.')}
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>

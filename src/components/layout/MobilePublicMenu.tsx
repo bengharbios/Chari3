@@ -15,7 +15,7 @@ interface MenuItem {
   type: 'standard' | 'categories-grid' | 'mega-custom' | 'direct-category';
   labels: Record<string, string>;
   url: string;
-  imageUrl?: string;
+  iconUrl?: string;
   imageUrls?: string[];
   categoryId?: string;
   children: MenuItem[];
@@ -92,7 +92,10 @@ export default function MobilePublicMenu() {
                     onClick={() => setOpenSection(openSection === item.id ? null : item.id)}
                     className="flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   >
-                    <span>{t(getLabel(item))}</span>
+                    <div className="flex items-center gap-2">
+                       {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" />}
+                       <span>{t(getLabel(item))}</span>
+                    </div>
                     {openSection === item.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
                   <div className={cn(
@@ -116,27 +119,50 @@ export default function MobilePublicMenu() {
                   </div>
                 </>
               ) : item.type === 'direct-category' && directCat ? (
-                 <Link
-                   href={`/search?category=${directCat.id}`}
-                   className="flex items-center gap-3 py-2 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
-                   onClick={() => setIsOpen(false)}
-                 >
-                    <div className="w-8 h-8 rounded-full overflow-hidden border border-border/50 relative bg-background flex items-center justify-center shadow-sm">
-                       {directCat.image ? (
-                          <Image src={directCat.image} alt={directCat.name} fill className="object-cover" sizes="32px" />
-                       ) : (
-                          <PackageSearch className="w-4 h-4 text-muted-foreground/50" />
-                       )}
-                    </div>
-                    {isAr ? directCat.name : (directCat.nameEn || directCat.name)}
-                 </Link>
+                 <>
+                   <button
+                     onClick={() => setOpenSection(openSection === item.id ? null : item.id)}
+                     className="flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
+                   >
+                     <div className="flex items-center gap-2">
+                        {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" />}
+                        <span>{isAr ? directCat.name : (directCat.nameEn || directCat.name)}</span>
+                     </div>
+                     {item.children && item.children.length > 0 ? (
+                        openSection === item.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                     ) : (
+                        <Link href={`/search?category=${directCat.id}`} onClick={() => setIsOpen(false)} className="absolute inset-0 z-10" />
+                     )}
+                   </button>
+                   {item.children && item.children.length > 0 && (
+                     <div className={cn(
+                       "overflow-hidden transition-all duration-300",
+                       openSection === item.id ? "max-h-[800px] mt-2 opacity-100" : "max-h-0 opacity-0"
+                     )}>
+                       <div className="ps-4 ms-2 space-y-1 border-s border-primary/20 relative before:content-[''] before:absolute before:start-[-1px] before:top-0 before:bottom-0 before:w-px before:bg-gradient-to-b before:from-primary/50 before:to-transparent">
+                         <Link href={`/search?category=${directCat.id}`} className="block py-2.5 px-3 text-sm font-semibold text-primary hover:bg-primary/10 rounded-md transition-colors" onClick={() => setIsOpen(false)}>
+                           {t('عرض جميع المنتجات', 'View All Products')}
+                         </Link>
+                         {item.children.map(child => (
+                           <Link key={child.id} href={child.url} className="flex items-center gap-2 py-2.5 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors" onClick={() => setIsOpen(false)}>
+                             {child.iconUrl && <Image src={child.iconUrl} alt="icon" width={14} height={14} className="object-contain" />}
+                             {t(getLabel(child))}
+                           </Link>
+                         ))}
+                       </div>
+                     </div>
+                   )}
+                 </>
               ) : item.children && item.children.length > 0 ? (
                 <>
                   <button
                     onClick={() => setOpenSection(openSection === item.id ? null : item.id)}
                     className="flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   >
-                    <span>{t(getLabel(item))}</span>
+                    <div className="flex items-center gap-2">
+                       {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" />}
+                       <span>{t(getLabel(item))}</span>
+                    </div>
                     {openSection === item.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </button>
                   <div className={cn(
@@ -148,9 +174,10 @@ export default function MobilePublicMenu() {
                         <Link
                           key={child.id}
                           href={child.url}
-                          className="block py-2.5 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+                          className="flex items-center gap-2 py-2.5 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
                           onClick={() => setIsOpen(false)}
                         >
+                          {child.iconUrl && <Image src={child.iconUrl} alt="icon" width={14} height={14} className="object-contain" />}
                           {t(getLabel(child))}
                         </Link>
                       ))}
@@ -165,9 +192,10 @@ export default function MobilePublicMenu() {
               ) : (
                 <Link
                   href={item.url}
-                  className="block py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
+                  className="flex items-center gap-2 py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
+                  {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" />}
                   {t(getLabel(item))}
                 </Link>
               )}
