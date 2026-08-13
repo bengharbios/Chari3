@@ -19,7 +19,7 @@ export function useTranslation() {
   const { locale } = useAppStore();
   const { adminLocale } = useAdminAuthStore();
   const pathname = usePathname();
-  const { dictionaries: dynamicDicts } = useTranslationStore();
+  const { dictionaries: dynamicDicts, languages } = useTranslationStore();
 
   const activeLocale = useMemo(() => {
     // Decouple: use adminLocale when inside admin dashboard, else storefront locale
@@ -153,5 +153,9 @@ export function useTranslation() {
     return text;
   }, [dict, dynamicDicts, activeLocale]);
 
-  return { t, locale: activeLocale };
+  const currentLanguage = languages?.find((l: any) => l.code === activeLocale);
+  const dir = currentLanguage?.direction || (['ar', 'he', 'fa', 'ur'].includes(activeLocale) ? 'rtl' : 'ltr');
+  const isAr = dir === 'rtl';
+
+  return { t, locale: activeLocale, isAr, dir };
 }
