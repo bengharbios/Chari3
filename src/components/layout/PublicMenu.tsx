@@ -124,8 +124,8 @@ export default function PublicMenu() {
                 <li 
                   key={item.id} 
                   className={cn(
-                    "relative h-full flex items-center group/navitem px-2", 
-                    item.type === 'standard' || item.type === 'direct-category' ? 'static md:relative' : 'static'
+                    "h-full flex items-center group/navitem px-2", 
+                    item.type === 'standard' || item.type === 'direct-category' ? 'relative' : 'static'
                   )}
                 >
                   <Link href={item.type === 'direct-category' && directCat ? `/search?category=${directCat.id}` : (item.url || '#')} className={cn(
