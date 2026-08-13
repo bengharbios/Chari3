@@ -250,7 +250,7 @@ export default function PublicMenu() {
                                    <Image src={imgUrl} alt={`Banner ${bIdx + 1}`} fill className="object-cover transition-transform duration-700 group-hover/banner:scale-110" sizes="400px" />
                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
                                      <span className="text-white font-bold text-xl drop-shadow-lg flex items-center gap-2">
-                                       {t('تسوق الآن', 'Shop Now')} 
+                                       {t('تسوق الآن', 'Shop Now', 'Achetez maintenant')} 
                                        <span className={cn("transition-transform duration-300", isAr ? "group-hover/banner:-translate-x-2" : "group-hover/banner:translate-x-2")}>→</span>
                                      </span>
                                    </div>
