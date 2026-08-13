@@ -252,7 +252,7 @@ export default function MenuSettingsPage() {
   useEffect(() => {
     fetchMenu();
     fetchCategories();
-    if (languages.length === 0) loadTranslations('ar');
+    loadTranslations('ar');
   }, []);
 
   const fetchMenu = async () => {
