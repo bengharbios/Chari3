@@ -89,10 +89,6 @@ export default function PublicMenu() {
 
   if (!config || !config.items || config.items.length === 0) return null;
 
-  const alignmentClass = 
-    config.alignment === 'start' ? 'justify-start' : 
-    config.alignment === 'end' ? 'justify-end' : 'justify-center';
-
   const fontFamilyStyle = config.fontFamily ? { fontFamily: config.fontFamily } : {};
 
   const getLabel = (item: MenuItem) => {
@@ -106,10 +102,7 @@ export default function PublicMenu() {
     <div className="w-full hidden md:block z-[100] border-y border-border/40 bg-background/95 backdrop-blur-md relative" dir={isAr ? 'rtl' : 'ltr'}>
       <div className="container-platform relative" style={fontFamilyStyle}>
         
-        <nav className={cn(
-          "flex h-14 items-center px-4 w-full",
-          alignmentClass
-        )}>
+        <nav className="flex h-14 items-center px-4 w-full">
           <ul className="flex items-center gap-1 h-full m-0 p-0 list-none">
             {config.items.map((item) => {
               const hasDropdown = item.type !== 'standard' || (item.children && item.children.length > 0);

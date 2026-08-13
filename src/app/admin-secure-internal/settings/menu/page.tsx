@@ -237,7 +237,6 @@ export default function MenuSettingsPage() {
   const { t } = useTranslation();
   const { languages, loadTranslations } = useTranslationStore();
   
-  const [alignment, setAlignment] = useState<'start'|'center'|'end'>('center');
   const [fontFamily, setFontFamily] = useState('var(--font-inter)');
   const [flatItems, setFlatItems] = useState<FlatMenuItem[]>([]);
   
@@ -261,7 +260,6 @@ export default function MenuSettingsPage() {
       const res = await fetch('/api/admin/menu');
       const data = await res.json();
       if (data.success && data.menuConfig) {
-        setAlignment(data.menuConfig.alignment || 'center');
         setFontFamily(data.menuConfig.fontFamily || 'var(--font-inter)');
         setFlatItems(flattenTree(data.menuConfig.items || []));
       }
@@ -284,7 +282,7 @@ export default function MenuSettingsPage() {
     setIsSaving(true);
     try {
       const nestedItems = buildTree(flatItems);
-      const wrapper: MenuWrapper = { alignment, fontFamily, items: nestedItems };
+      const wrapper: MenuWrapper = { alignment: 'start', fontFamily, items: nestedItems };
       
       const res = await fetch('/api/admin/menu', {
         method: 'PUT',
@@ -382,21 +380,8 @@ export default function MenuSettingsPage() {
             {t('اختر طريقة محاذاة القائمة ونوع الخط الذي تفضله', 'Choose the menu alignment and your preferred font')}
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label>{t('محاذاة القائمة', 'Menu Alignment')}</Label>
-            <Select value={alignment} onValueChange={setAlignment as any}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="start">{t('في البداية (Start)', 'Start')}</SelectItem>
-                <SelectItem value="center">{t('توسيط (Center)', 'Center')}</SelectItem>
-                <SelectItem value="end">{t('في النهاية (End)', 'End')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
+        <CardContent className="grid grid-cols-1 gap-6">
+          <div className="space-y-2 max-w-sm">
             <Label>{t('نوع الخط للقائمة', 'Menu Font Family')}</Label>
             <Select value={fontFamily} onValueChange={setFontFamily}>
               <SelectTrigger>
