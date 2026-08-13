@@ -61,8 +61,7 @@ const RecursiveMenuItem = ({ item, level = 0, getLabel, t, isAr }: any) => {
 };
 
 export default function PublicMenu() {
-  const { t, isAr } = useTranslation();
-  const currentLocale = isAr ? 'ar' : 'en'; 
+  const { t, isAr, locale: currentLocale } = useTranslation();
 
   const [config, setConfig] = useState<MenuWrapper | null>(null);
   const [categories, setCategories] = useState<any[]>([]);

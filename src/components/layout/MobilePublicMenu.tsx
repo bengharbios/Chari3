@@ -68,8 +68,7 @@ const RecursiveMobileMenuItem = ({ item, level, getLabel, t, isAr, setIsOpen }: 
 };
 
 export default function MobilePublicMenu() {
-  const { t, isAr } = useTranslation();
-  const currentLocale = isAr ? 'ar' : 'en';
+  const { t, isAr, locale: currentLocale } = useTranslation();
   const pathname = usePathname();
   const [wrapper, setWrapper] = useState<MenuWrapper | null>(null);
   const [categories, setCategories] = useState<any[]>([]);
