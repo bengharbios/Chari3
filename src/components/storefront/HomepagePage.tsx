@@ -818,8 +818,19 @@ export default function StorefrontHomepage() {
         const card1Link = section.metadata?.card1Link || '/search?q=electronics';
 
         const card1Type = section.metadata?.card1Type || 'text';
-        const card1AdImage = getLocalizedField(section, 'card1AdImage', locale);
-        const card1AdLink = section.metadata?.card1AdLink || '#';
+        const card1BgImage = getLocalizedField(section, 'card1BgImage', locale);
+        let card1AdImage = getLocalizedField(section, 'card1AdImage', locale);
+        let card1AdLink = section.metadata?.card1AdLink || '#';
+        let card1AdTitle = card1Title;
+        if (card1Type === 'advertisement' && section.metadata?.card1AdId) {
+          const adsArray = Object.values(data?.advertisements || {}).flat() as any[];
+          const ad = adsArray.find(a => a.id === section.metadata.card1AdId);
+          if (ad) {
+            card1AdImage = ad.imageUrl;
+            card1AdLink = ad.linkUrl || '#';
+            card1AdTitle = locale === 'en' ? (ad.titleEn || ad.title) : ad.title;
+          }
+        }
 
         // Retrieve custom settings for Side Card 2
         const card2Badge = getLocalizedField(section, 'card2Badge', locale) || t('عروض مميزة', 'Special Offers');
@@ -831,8 +842,19 @@ export default function StorefrontHomepage() {
         const card2Link = section.metadata?.card2Link || '/search?q=perfumes';
 
         const card2Type = section.metadata?.card2Type || 'text';
-        const card2AdImage = getLocalizedField(section, 'card2AdImage', locale);
-        const card2AdLink = section.metadata?.card2AdLink || '#';
+        const card2BgImage = getLocalizedField(section, 'card2BgImage', locale);
+        let card2AdImage = getLocalizedField(section, 'card2AdImage', locale);
+        let card2AdLink = section.metadata?.card2AdLink || '#';
+        let card2AdTitle = card2Title;
+        if (card2Type === 'advertisement' && section.metadata?.card2AdId) {
+          const adsArray = Object.values(data?.advertisements || {}).flat() as any[];
+          const ad = adsArray.find(a => a.id === section.metadata.card2AdId);
+          if (ad) {
+            card2AdImage = ad.imageUrl;
+            card2AdLink = ad.linkUrl || '#';
+            card2AdTitle = locale === 'en' ? (ad.titleEn || ad.title) : ad.title;
+          }
+        }
 
         return (
           <section key="hero" className="container-platform py-4">
@@ -939,22 +961,35 @@ export default function StorefrontHomepage() {
                   onClick={() => router.push(card1Type === 'ad' ? card1AdLink : card1Link)}
                 >
                   <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-orange-300/40 rounded-full blur-2xl group-hover:bg-orange-200/50 transition-colors duration-500 -z-10" />
-                  {card1Type === 'ad' && card1AdImage ? (
+                  {(card1Type === 'ad' || card1Type === 'advertisement') && card1AdImage ? (
                     <>
                       <img src={card1AdImage} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
                       <div className="absolute inset-0 bg-black/10 hover:bg-black/20 transition-colors duration-300" />
+                      {card1Type === 'advertisement' && (
+                        <Badge className="absolute top-4 end-4 bg-white/20 backdrop-blur-md text-white border-white/20 text-[10px] font-bold shadow-lg shadow-black/10 pointer-events-none">
+                          {globalT('homepage.advertisementBadge') || 'إعلان'}
+                        </Badge>
+                      )}
                     </>
                   ) : (
                     <>
-                      <div className="absolute inset-0 bg-white/5 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none mix-blend-overlay" />
+                      {card1BgImage ? (
+                        <>
+                          <img src={card1BgImage} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/90 to-orange-600/80 group-hover:opacity-90 transition-opacity duration-300 mix-blend-multiply" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                        </>
+                      ) : (
+                        <div className="absolute inset-0 bg-white/5 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none mix-blend-overlay" />
+                      )}
                       <div className="z-10 p-5 md:p-6 text-start">
-                        <Badge className="bg-slate-950 text-white text-[9px] font-bold py-1 px-2.5 mb-2 select-none shadow-sm border-0">{card1Badge}</Badge>
-                        <h4 className="text-base md:text-lg font-black leading-tight tracking-tight drop-shadow-sm">{card1Title}</h4>
+                        <Badge className={`text-[9px] font-bold py-1 px-2.5 mb-2 select-none shadow-sm border-0 ${card1BgImage ? 'bg-white/20 text-white backdrop-blur-md border border-white/20' : 'bg-slate-950 text-white'}`}>{card1Badge}</Badge>
+                        <h4 className={`text-base md:text-lg font-black leading-tight tracking-tight drop-shadow-sm ${card1BgImage ? 'text-white' : ''}`}>{card1AdTitle}</h4>
                       </div>
                       <div className="z-10 flex justify-between items-center p-5 md:p-6 mt-2 relative">
-                        <span className="text-[11px] font-black underline group-hover:text-slate-700 transition-colors">{card1Cta}</span>
+                        <span className={`text-[11px] font-black underline transition-colors ${card1BgImage ? 'text-white/90 group-hover:text-white' : 'group-hover:text-slate-700'}`}>{card1Cta}</span>
                         <div className="bg-white/20 p-2 rounded-full group-hover:scale-110 transition-transform">
-                          <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
+                          <ShoppingCart className={`w-4 h-4 md:w-5 md:h-5 ${card1BgImage ? 'text-white' : ''}`} />
                         </div>
                       </div>
                     </>
@@ -967,17 +1002,30 @@ export default function StorefrontHomepage() {
                   onClick={() => router.push(card2Type === 'ad' ? card2AdLink : card2Link)}
                 >
                   <div className="absolute -top-10 -left-10 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl group-hover:bg-indigo-400/30 transition-colors duration-500 -z-10" />
-                  {card2Type === 'ad' && card2AdImage ? (
+                  {(card2Type === 'ad' || card2Type === 'advertisement') && card2AdImage ? (
                     <>
                       <img src={card2AdImage} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
                       <div className="absolute inset-0 bg-black/10 hover:bg-black/20 transition-colors duration-300" />
+                      {card2Type === 'advertisement' && (
+                        <Badge className="absolute top-4 end-4 bg-white/20 backdrop-blur-md text-white border-white/20 text-[10px] font-bold shadow-lg shadow-black/10 pointer-events-none">
+                          {globalT('homepage.advertisementBadge') || 'إعلان'}
+                        </Badge>
+                      )}
                     </>
                   ) : (
                     <>
-                      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none -z-10" />
+                      {card2BgImage ? (
+                        <>
+                          <img src={card2BgImage} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="" />
+                          <div className="absolute inset-0 bg-gradient-to-br from-indigo-950/90 to-slate-900/80 group-hover:opacity-90 transition-opacity duration-300 mix-blend-multiply" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                        </>
+                      ) : (
+                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none -z-10" />
+                      )}
                       <div className="z-10 p-5 md:p-6 text-start">
-                        <Badge className="bg-indigo-500/30 text-indigo-100 border-indigo-400/20 text-[9px] font-bold py-1 px-2.5 mb-2 select-none shadow-sm">{card2Badge}</Badge>
-                        <h4 className="text-base md:text-lg font-black leading-tight tracking-tight drop-shadow-sm">{card2Title}</h4>
+                        <Badge className={`text-[9px] font-bold py-1 px-2.5 mb-2 select-none shadow-sm ${card2BgImage ? 'bg-white/20 text-white border-white/20 backdrop-blur-md' : 'bg-indigo-500/30 text-indigo-100 border-indigo-400/20'}`}>{card2Badge}</Badge>
+                        <h4 className="text-base md:text-lg font-black leading-tight tracking-tight drop-shadow-sm text-white">{card2AdTitle}</h4>
                       </div>
                       <div className="z-10 flex justify-between items-center p-5 md:p-6 mt-2 relative">
                         <span className="text-[11px] font-black underline text-amber-400 group-hover:text-amber-300 transition-colors">{card2Cta}</span>

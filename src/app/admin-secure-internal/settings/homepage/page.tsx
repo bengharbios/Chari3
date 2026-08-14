@@ -1539,12 +1539,27 @@ export default function AdminHomepageManager() {
                                   onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1Type: e.target.value } }))}
                                   className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                 >
-                                  <option value="text">✍️ {t('homepage.textGradient')}</option>
-                                  <option value="ad">🖼️ {t('homepage.fullPromotionImage')}</option>
+                                  <option value="text">✍️ {t('homepage.textGradient', 'نصوص مع خلفية اختيارية')}</option>
+                                  <option value="ad">🖼️ {t('homepage.fullPromotionImage', 'صورة ترويجية كاملة')}</option>
+                                  <option value="advertisement">📢 {t('homepage.systemAdvertisement', 'إعلان مدفوع من النظام')}</option>
                                 </select>
                               </div>
 
-                              {editSectData.metadata?.card1Type === 'ad' ? (
+                              {editSectData.metadata?.card1Type === 'advertisement' ? (
+                                <div className="space-y-3">
+                                  <div className="space-y-1">
+                                    <Label className="text-[10px] font-bold text-slate-400">{t('homepage.selectAdvertisement', 'اختر الإعلان')}</Label>
+                                    <SearchableSelector
+                                      items={Object.values(allAds).flat().map((ad: any) => ({ id: ad.id, name: ad.title, image: ad.imageUrl }))}
+                                      selectedValue={editSectData.metadata?.card1AdId || ''}
+                                      onSelect={val => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card1AdId: val } }))}
+                                      placeholder={t('homepage.searchAdvertisement', 'ابحث عن الإعلان...')}
+                                      emptyText={t('homepage.noAdsFound', 'لا توجد إعلانات نشطة')}
+                                      isAr={isAr}
+                                    />
+                                  </div>
+                                </div>
+                              ) : editSectData.metadata?.card1Type === 'ad' ? (
                                 <div className="space-y-3">
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                     {languages.map((lang: any) => {
@@ -1574,6 +1589,25 @@ export default function AdminHomepageManager() {
                                 </div>
                               ) : (
                                 <>
+                                  <div className="space-y-3 border border-border/50 bg-slate-50/50 dark:bg-slate-900/30 p-3 rounded-xl mb-4">
+                                    <Label className="text-[10px] font-bold text-slate-500 mb-2 block">{t('homepage.optionalBackgroundImage', 'صورة خلفية تحت النصوص (اختياري)')}</Label>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                      {languages.map((lang: any) => {
+                                        const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                        const keyName = `card1BgImage${codeSuffix}`;
+                                        return (
+                                          <div key={lang.code} className="space-y-1">
+                                            <Label className="text-[10px] font-bold text-slate-400">{lang.name}</Label>
+                                            <ImageUploader
+                                              value={editSectData.metadata?.[keyName] || ''}
+                                              onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: url } }))}
+                                            />
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
@@ -1654,12 +1688,27 @@ export default function AdminHomepageManager() {
                                   onChange={(e) => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2Type: e.target.value } }))}
                                   className="bg-background border border-border text-foreground px-3 py-2 rounded-xl text-xs font-bold w-full"
                                 >
-                                  <option value="text">✍️ {t('homepage.textGradient')}</option>
-                                  <option value="ad">🖼️ {t('homepage.fullPromotionImage')}</option>
+                                  <option value="text">✍️ {t('homepage.textGradient', 'نصوص مع خلفية اختيارية')}</option>
+                                  <option value="ad">🖼️ {t('homepage.fullPromotionImage', 'صورة ترويجية كاملة')}</option>
+                                  <option value="advertisement">📢 {t('homepage.systemAdvertisement', 'إعلان مدفوع من النظام')}</option>
                                 </select>
                               </div>
 
-                              {editSectData.metadata?.card2Type === 'ad' ? (
+                              {editSectData.metadata?.card2Type === 'advertisement' ? (
+                                <div className="space-y-3">
+                                  <div className="space-y-1">
+                                    <Label className="text-[10px] font-bold text-slate-400">{t('homepage.selectAdvertisement', 'اختر الإعلان')}</Label>
+                                    <SearchableSelector
+                                      items={Object.values(allAds).flat().map((ad: any) => ({ id: ad.id, name: ad.title, image: ad.imageUrl }))}
+                                      selectedValue={editSectData.metadata?.card2AdId || ''}
+                                      onSelect={val => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, card2AdId: val } }))}
+                                      placeholder={t('homepage.searchAdvertisement', 'ابحث عن الإعلان...')}
+                                      emptyText={t('homepage.noAdsFound', 'لا توجد إعلانات نشطة')}
+                                      isAr={isAr}
+                                    />
+                                  </div>
+                                </div>
+                              ) : editSectData.metadata?.card2Type === 'ad' ? (
                                 <div className="space-y-3">
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                     {languages.map((lang: any) => {
@@ -1689,6 +1738,25 @@ export default function AdminHomepageManager() {
                                 </div>
                               ) : (
                                 <>
+                                  <div className="space-y-3 border border-border/50 bg-slate-50/50 dark:bg-slate-900/30 p-3 rounded-xl mb-4">
+                                    <Label className="text-[10px] font-bold text-slate-500 mb-2 block">{t('homepage.optionalBackgroundImage', 'صورة خلفية تحت النصوص (اختياري)')}</Label>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                      {languages.map((lang: any) => {
+                                        const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                                        const keyName = `card2BgImage${codeSuffix}`;
+                                        return (
+                                          <div key={lang.code} className="space-y-1">
+                                            <Label className="text-[10px] font-bold text-slate-400">{lang.name}</Label>
+                                            <ImageUploader
+                                              value={editSectData.metadata?.[keyName] || ''}
+                                              onChange={url => setEditSectData((prev: any) => ({ ...prev, metadata: { ...prev.metadata, [keyName]: url } }))}
+                                            />
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+
                                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                     {languages.map((lang: any) => {
                                       const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
