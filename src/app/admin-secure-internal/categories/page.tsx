@@ -5,7 +5,7 @@ import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import {
   Loader2, FolderTree, ArrowRight, Plus, X, ShieldAlert,
-  CheckCircle2, MessageSquare, Edit2, ToggleLeft, ToggleRight, Tag
+  CheckCircle2, MessageSquare, Edit2, ToggleLeft, ToggleRight, Tag, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -31,6 +31,69 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 const COMMON_ICONS = ['📦','🛍️','👗','👟','📱','💻','🏠','🍕','💊','🚗','📚','🎮','💄','⚽','🎵','🌱','🔧','💎','🏪','🏭'];
+
+const CategoryNode = ({ cat, categories, level = 0, isAr, t, openEditModal, handleToggleActive }: any) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const children = categories.filter((c: any) => c.parentId === cat.id).sort((a: any, b: any) => a.sortOrder - b.sortOrder);
+  const hasChildren = children.length > 0;
+
+  return (
+    <div className={`mt-1.5 ${level > 0 ? 'ms-6 border-s border-dashed border-border/50 ps-3' : ''}`}>
+      <div className={`flex items-center justify-between p-2.5 rounded-xl border bg-background hover:border-brand/30 transition-all group ${level === 0 ? 'border-border' : 'border-dashed border-border bg-muted/10'}`}>
+        <div className="flex items-center gap-3">
+          {hasChildren ? (
+            <button onClick={() => setIsOpen(!isOpen)} className="p-1 hover:bg-muted rounded-md text-muted-foreground">
+              {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className={`h-4 w-4 ${isAr ? 'rotate-180' : ''}`} />}
+            </button>
+          ) : (
+            <div className="w-6" />
+          )}
+          
+          {cat.image ? (
+            <img src={cat.image} alt={cat.name} className="w-8 h-8 rounded-md object-cover border border-border" />
+          ) : (
+            <span className="text-xl">{cat.icon || '📁'}</span>
+          )}
+          <div>
+            <p className="font-bold text-sm">{isAr ? cat.name : (cat.nameEn || cat.name)}</p>
+            <p className="text-[10px] text-muted-foreground">/{cat.slug}</p>
+          </div>
+          {level === 0 && <Badge className={`text-[10px] px-2 ${TYPE_COLORS[cat.type] || ''}`}>{cat.type}</Badge>}
+          {!cat.isActive && <Badge variant="secondary" className="text-[10px]">{t('مخفي', 'Hidden')}</Badge>}
+        </div>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span title={t('منتجات', 'Products')}>🛍️ {cat._count?.products || 0}</span>
+          <span title={t('متاجر', 'Stores')}>🏪 {cat._count?.stores || 0}</span>
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditModal(cat)}>
+              <Edit2 className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleToggleActive(cat)}>
+              {cat.isActive ? <ToggleRight className="h-4 w-4 text-green-500" /> : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {hasChildren && isOpen && (
+        <div className="animate-in slide-in-from-top-2">
+          {children.map((sub: any) => (
+            <CategoryNode 
+              key={sub.id} 
+              cat={sub} 
+              categories={categories} 
+              level={level + 1} 
+              isAr={isAr} 
+              t={t} 
+              openEditModal={openEditModal} 
+              handleToggleActive={handleToggleActive} 
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function AdminCategoriesPage() {
   const { isAdminAuthenticated, adminUser } = useAdminAuthStore();
@@ -375,61 +438,19 @@ export default function AdminCategoriesPage() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {/* Top-level */}
-                  {categories.filter(c => !c.parentId).map(cat => (
-                    <div key={cat.id}>
-                      <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-background hover:border-brand/30 transition-all group">
-                        <div className="flex items-center gap-3">
-                          {cat.image ? (
-                            <img src={cat.image} alt={cat.name} className="w-8 h-8 rounded-md object-cover border border-border" />
-                          ) : (
-                            <span className="text-2xl">{cat.icon || '📦'}</span>
-                          )}
-                          <div>
-                            <p className="font-bold text-sm">{isAr ? cat.name : (cat.nameEn || cat.name)}</p>
-                            <p className="text-xs text-muted-foreground">/{cat.slug}</p>
-                          </div>
-                          <Badge className={`text-[10px] px-2 ${TYPE_COLORS[cat.type] || ''}`}>{cat.type}</Badge>
-                          {!cat.isActive && <Badge variant="secondary" className="text-[10px]">{t('مخفي', 'Hidden')}</Badge>}
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span title={t('منتجات', 'Products')}>🛍️ {cat._count?.products || 0}</span>
-                          <span title={t('متاجر', 'Stores')}>🏪 {cat._count?.stores || 0}</span>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditModal(cat)}>
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleToggleActive(cat)}>
-                              {cat.isActive ? <ToggleRight className="h-4 w-4 text-green-500" /> : <ToggleLeft className="h-4 w-4 text-muted-foreground" />}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                      {/* Sub-categories */}
-                      {categories.filter(c => c.parentId === cat.id).map(sub => (
-                        <div key={sub.id} className="flex items-center justify-between p-2.5 ms-8 rounded-xl border border-dashed border-border bg-muted/30 hover:border-brand/20 transition-all group mt-1.5">
-                          <div className="flex items-center gap-2">
-                            {sub.image ? (
-                              <img src={sub.image} alt={sub.name} className="w-6 h-6 rounded-md object-cover border border-border" />
-                            ) : (
-                              <span className="text-base">{sub.icon || '📁'}</span>
-                            )}
-                            <div>
-                              <p className="font-semibold text-xs">{isAr ? sub.name : (sub.nameEn || sub.name)}</p>
-                              <p className="text-[10px] text-muted-foreground">/{sub.slug}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openEditModal(sub)}>
-                              <Edit2 className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleToggleActive(sub)}>
-                              {sub.isActive ? <ToggleRight className="h-3.5 w-3.5 text-green-500" /> : <ToggleLeft className="h-3.5 w-3.5 text-muted-foreground" />}
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                  {categories
+                    .filter(c => !c.parentId)
+                    .sort((a, b) => a.sortOrder - b.sortOrder)
+                    .map(cat => (
+                      <CategoryNode 
+                        key={cat.id} 
+                        cat={cat} 
+                        categories={categories} 
+                        isAr={isAr} 
+                        t={t} 
+                        openEditModal={openEditModal} 
+                        handleToggleActive={handleToggleActive} 
+                      />
                   ))}
                 </div>
               )}
