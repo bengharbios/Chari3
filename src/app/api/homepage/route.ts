@@ -51,7 +51,7 @@ export async function GET() {
       db.category.findMany({
         where: { isActive: true, parentId: null },
         orderBy: { sortOrder: 'asc' },
-        take: 12,
+        take: 30,
       }),
 
       // Featured, recent, or pinned products

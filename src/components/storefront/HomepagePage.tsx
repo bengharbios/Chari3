@@ -1080,7 +1080,7 @@ export default function StorefrontHomepage() {
 
 
       case 'categories':
-        const displayCats = (data?.categories ?? []).filter((c) => c && c.id).slice(0, 12);
+        const displayCats = (data?.categories ?? []).filter((c) => c && c.id).slice(0, 30);
         return (
           <section key="categories" className="container-platform py-6">
             <SectionHeader section={section} isAr={isAr} locale={locale} t={t}>
