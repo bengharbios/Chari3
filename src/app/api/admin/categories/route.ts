@@ -65,3 +65,46 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) return NextResponse.json({ success: false, error: 'id required' }, { status: 400 });
+
+    // Ensure category is not linked to products before deleting
+    const category = await db.category.findUnique({
+      where: { id },
+      include: {
+        _count: { select: { products: true, children: true } }
+      }
+    });
+
+    if (!category) {
+      return NextResponse.json({ success: false, error: 'Category not found' }, { status: 404 });
+    }
+
+    if (category._count.products > 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'لا يمكن حذف هذا التصنيف لأنه مرتبط بمنتجات. يرجى نقل المنتجات لتصنيف آخر أولاً.'
+      }, { status: 400 });
+    }
+
+    if (category._count.children > 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'لا يمكن حذف هذا التصنيف لأنه يحتوي على تصنيفات فرعية.'
+      }, { status: 400 });
+    }
+
+    await db.category.delete({
+      where: { id }
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
+  }
+}

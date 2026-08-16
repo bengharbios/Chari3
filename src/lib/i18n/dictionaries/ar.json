@@ -208,7 +208,6 @@
     "expiresAt": "ينتهي في: ",
     "searchSuggestions": "البحث الشائع",
     "megaOffers": "عروض ميجا",
-    "viewAll": "عرض الكل",
     "pickedForYou": "اخترناها لك",
     "bestSellers": "الأكثر مبيعاً لك",
     "lowestPrices": "أقل الأسعار على أفضل الماركات",
@@ -402,7 +401,7 @@
     "addSlide": "إضافة سلايد",
     "noSlidesAddedYetStorefrontWillDisplayFal": "لا توجد سلايدات مخصصة حالياً. سيتم استخدام السلايدات الافتراضية.",
     "untitled": "بلا عنوان",
-    "backgroundImage": "صورة خلفية",
+    "backgroundImage": "صورة الخلفية للنصوص",
     "edit": "تعديل",
     "saveBannerConfiguration": "حفظ السلايدات بالداتابيز",
     "addNewPromotionSlide": "إضافة سلايد ترويجي جديد",
@@ -428,7 +427,14 @@
     "sunsetAmber": "غروب الشمس",
     "rubyRose": "أحمر ياقوتي",
     "cyberpunkPink": "وردي مستقبلي",
-    "confirmUpdateList": "تأكيد السلايد وتحديث اللائحة"
+    "confirmUpdateList": "تأكيد السلايد وتحديث اللائحة",
+    "cardTypeText": "✍️ نصوص مع خلفية اختيارية",
+    "cardTypeImage": "🖼️ بانر إعلاني (صورة فقط)",
+    "cardTypeAd": "📢 إعلان مدفوع من النظام",
+    "selectAdvertisement": "اختر الإعلان",
+    "searchAdvertisement": "ابحث عن الإعلان...",
+    "backgroundImageDesc": "ستظهر هذه الصورة كخلفية تحت النصوص بشكل أنيق (اختياري)",
+    "advertisementBadge": "إعلان"
   },
   "notifications": {
     "newOrderTitle": "طلب جديد! 🛍️",

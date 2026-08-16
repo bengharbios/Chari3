@@ -208,7 +208,6 @@
     "expiresAt": "Expires at: ",
     "searchSuggestions": "Popular Searches",
     "megaOffers": "Mega Offers",
-    "viewAll": "View All",
     "pickedForYou": "Picked For You",
     "bestSellers": "Best Sellers For You",
     "lowestPrices": "Lowest Prices on Top Brands",
@@ -402,7 +401,7 @@
     "addSlide": "Add Slide",
     "noSlidesAddedYetStorefrontWillDisplayFal": "No slides added yet. Storefront will display fallback defaults.",
     "untitled": "Untitled",
-    "backgroundImage": "Background Image",
+    "backgroundImage": "Text Background Image",
     "edit": "Edit",
     "saveBannerConfiguration": "Save Banner Configuration",
     "addNewPromotionSlide": "Add New Promotion Slide",
@@ -428,7 +427,14 @@
     "sunsetAmber": "Sunset Amber",
     "rubyRose": "Ruby Rose",
     "cyberpunkPink": "Cyberpunk Pink",
-    "confirmUpdateList": "Confirm & Update list"
+    "confirmUpdateList": "Confirm & Update list",
+    "cardTypeText": "✍️ Text with optional background",
+    "cardTypeImage": "🖼️ Image Banner (Image Only)",
+    "cardTypeAd": "📢 System Advertisement",
+    "selectAdvertisement": "Select Advertisement",
+    "searchAdvertisement": "Search for advertisement...",
+    "backgroundImageDesc": "This image will appear elegantly behind the text (optional)",
+    "advertisementBadge": "Ad"
   },
   "notifications": {
     "newOrderTitle": "New Order! 🛍️",
