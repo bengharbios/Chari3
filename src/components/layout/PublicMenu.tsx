@@ -33,7 +33,7 @@ const RecursiveMenuItem = ({ item, level = 0, getLabel, t, isAr }: any) => {
           <span className="flex items-center gap-3">
              {item.iconUrl && (
                <div className="w-4 h-4 relative shrink-0">
-                  <Image src={item.iconUrl} alt="icon" fill className="object-contain" sizes="16px" />
+                  <Image src={item.iconUrl} alt="icon" fill className="object-contain" sizes="16px" unoptimized />
                </div>
              )}
              {t(getLabel(item))}
@@ -126,7 +126,7 @@ export default function PublicMenu() {
                   )}>
                     {item.iconUrl && (
                       <div className="w-4 h-4 relative shrink-0">
-                         <Image src={item.iconUrl} alt="icon" fill className="object-contain" sizes="16px" />
+                         <Image src={item.iconUrl} alt="icon" fill className="object-contain" sizes="16px" unoptimized />
                       </div>
                     )}
                     {t(label)}
@@ -159,7 +159,7 @@ export default function PublicMenu() {
                            <div className="p-5 flex gap-4 items-center group/direct bg-primary/5">
                               <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden border border-border/50 relative bg-background flex items-center justify-center">
                                  {directCat.image ? (
-                                    <Image src={directCat.image} alt={directCat.name} fill className="object-cover group-hover/direct:scale-110 transition-transform duration-500" sizes="64px" />
+                                    <Image src={directCat.image} alt={directCat.name} fill className="object-cover group-hover/direct:scale-110 transition-transform duration-500" sizes="64px" unoptimized />
                                  ) : <PackageSearch className="w-8 h-8 text-muted-foreground/40" />}
                               </div>
                               <div className="flex-1">
@@ -177,7 +177,7 @@ export default function PublicMenu() {
                                    <Link key={child.id} href={child.url} className="px-4 py-2.5 flex items-center gap-3 hover:bg-muted text-sm font-medium transition-colors text-muted-foreground hover:text-foreground rounded-md">
                                      {child.iconUrl && (
                                        <div className="w-4 h-4 relative shrink-0">
-                                          <Image src={child.iconUrl} alt="icon" fill className="object-contain" sizes="16px" />
+                                          <Image src={child.iconUrl} alt="icon" fill className="object-contain" sizes="16px" unoptimized />
                                        </div>
                                      )}
                                      {t(getLabel(child))}
@@ -195,7 +195,7 @@ export default function PublicMenu() {
                             <Link key={cat.id} href={`/search?category=${cat.id}`} className="flex flex-col items-center gap-3 group/cat p-3 rounded-2xl hover:bg-muted/50 transition-all duration-300">
                               <div className="w-20 h-20 rounded-full overflow-hidden border border-border/50 shadow-sm flex items-center justify-center bg-background relative z-10 transition-transform duration-300 group-hover/cat:scale-110 group-hover/cat:-translate-y-1">
                                 {cat.image ? (
-                                  <Image src={cat.image} alt={cat.name} fill className="object-cover" sizes="80px" />
+                                  <Image src={cat.image} alt={cat.name} fill className="object-cover" sizes="80px" unoptimized />
                                 ) : (
                                   <PackageSearch className="w-8 h-8 text-muted-foreground/40" />
                                 )}
@@ -215,7 +215,7 @@ export default function PublicMenu() {
                             <h3 className="text-xl font-bold mb-6 border-b pb-4 text-primary flex items-center gap-3">
                                {item.iconUrl && (
                                  <div className="w-6 h-6 relative shrink-0">
-                                    <Image src={item.iconUrl} alt="icon" fill className="object-contain" sizes="24px" />
+                                    <Image src={item.iconUrl} alt="icon" fill className="object-contain" sizes="24px" unoptimized />
                                  </div>
                                )}
                                {t(label)}
@@ -226,7 +226,7 @@ export default function PublicMenu() {
                                   <div className="flex items-center gap-3">
                                     {child.iconUrl ? (
                                       <div className="w-4 h-4 relative shrink-0">
-                                         <Image src={child.iconUrl} alt="icon" fill className="object-contain" sizes="16px" />
+                                         <Image src={child.iconUrl} alt="icon" fill className="object-contain" sizes="16px" unoptimized />
                                       </div>
                                     ) : (
                                       <div className="w-1.5 h-1.5 rounded-full bg-primary/20 group-hover/child:bg-primary group-hover/child:scale-125 transition-all" />
@@ -247,7 +247,7 @@ export default function PublicMenu() {
                                    key={bIdx}
                                    className="rounded-2xl overflow-hidden shadow-sm relative group/banner border border-border/40 w-full h-[160px] lg:h-[180px]"
                                  >
-                                   <Image src={imgUrl} alt={`Banner ${bIdx + 1}`} fill className="object-cover transition-transform duration-700 group-hover/banner:scale-110" sizes="400px" />
+                                   <Image src={imgUrl} alt={`Banner ${bIdx + 1}`} fill className="object-cover transition-transform duration-700 group-hover/banner:scale-110" sizes="400px" unoptimized />
                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-6">
                                      <span className="text-white font-bold text-xl drop-shadow-lg flex items-center gap-2">
                                        {t('تسوق الآن', 'Shop Now', 'Achetez maintenant')} 

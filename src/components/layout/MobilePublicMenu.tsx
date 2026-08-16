@@ -39,7 +39,7 @@ const RecursiveMobileMenuItem = ({ item, level, getLabel, t, isAr, setIsOpen }: 
             className="flex items-center justify-between w-full py-2.5 px-3 text-sm font-semibold hover:bg-muted rounded-md transition-colors"
          >
             <div className="flex items-center gap-2">
-               {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={14} height={14} className="object-contain" />}
+               {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={14} height={14} className="object-contain" unoptimized />}
                <span className="text-foreground">{t(getLabel(item))}</span>
             </div>
             {isOpenLocal ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -61,7 +61,7 @@ const RecursiveMobileMenuItem = ({ item, level, getLabel, t, isAr, setIsOpen }: 
          className="flex items-center gap-2 py-2.5 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
          onClick={() => setIsOpen(false)}
       >
-         {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={14} height={14} className="object-contain" />}
+         {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={14} height={14} className="object-contain" unoptimized />}
          {t(getLabel(item))}
       </Link>
   );
@@ -132,7 +132,7 @@ export default function MobilePublicMenu() {
                     className="flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                       {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" />}
+                       {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" unoptimized />}
                        <span>{t(getLabel(item))}</span>
                     </div>
                     {openSection === item.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -146,7 +146,7 @@ export default function MobilePublicMenu() {
                          <Link key={cat.id} href={`/search?category=${cat.id}`} className="flex flex-col items-center gap-2 p-2 hover:bg-muted rounded-lg transition-colors" onClick={() => setIsOpen(false)}>
                             <div className="w-12 h-12 rounded-full overflow-hidden border border-border/50 relative bg-background flex items-center justify-center shadow-sm">
                                {cat.image ? (
-                                  <Image src={cat.image} alt={cat.name} fill className="object-cover" sizes="48px" />
+                                  <Image src={cat.image} alt={cat.name} fill className="object-cover" sizes="48px" unoptimized />
                                ) : (
                                   <PackageSearch className="w-5 h-5 text-muted-foreground/50" />
                                )}
@@ -164,7 +164,7 @@ export default function MobilePublicMenu() {
                      className="flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                    >
                      <div className="flex items-center gap-2">
-                        {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" />}
+                        {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" unoptimized />}
                         <span>{isAr ? directCat.name : (directCat.nameEn || directCat.name)}</span>
                      </div>
                      {item.children && item.children.length > 0 ? (
@@ -196,7 +196,7 @@ export default function MobilePublicMenu() {
                     className="flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                       {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" />}
+                       {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" unoptimized />}
                        <span>{t(getLabel(item))}</span>
                     </div>
                     {openSection === item.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -212,7 +212,7 @@ export default function MobilePublicMenu() {
                     </div>
                     {item.type === 'mega-custom' && item.imageUrls && item.imageUrls.length > 0 && (
                       <div className="mt-4 rounded-lg overflow-hidden border border-border/50 relative h-[120px]">
-                         <Image src={item.imageUrls[0]} alt="Banner" fill className="object-cover" />
+                         <Image src={item.imageUrls[0]} alt="Banner" fill className="object-cover" unoptimized />
                       </div>
                     )}
                   </div>
@@ -223,7 +223,7 @@ export default function MobilePublicMenu() {
                   className="flex items-center gap-2 py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
-                  {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" />}
+                  {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" unoptimized />}
                   {t(getLabel(item))}
                 </Link>
               )}
