@@ -216,6 +216,36 @@ export async function GET() {
       }
     } catch {}
 
+    // Parse countdown configuration early to use in expiration logic
+    let parsedCountdown: any = { enabled: false };
+    try {
+      if (countdownSetting?.value) {
+        parsedCountdown = JSON.parse(countdownSetting.value);
+      }
+    } catch {}
+
+    // Handle expired timers from the backend (Hide timer only, keep products)
+    if (Array.isArray(parsedLayout)) {
+      parsedLayout = parsedLayout.map((section: any) => {
+        const hasCountdown = section.metadata?.enableTimer || parsedCountdown?.enabled || false;
+        const targetDateStr = section.metadata?.timerEndDate || parsedCountdown?.endDate;
+        
+        if (hasCountdown && targetDateStr) {
+          const targetTime = new Date(targetDateStr).getTime();
+          if (targetTime <= Date.now()) {
+            // Expired! Disable the timer for this section but keep the section
+            if (section.metadata) {
+              section.metadata.enableTimer = false;
+            }
+            if (section.type === 'bento_offers') {
+              parsedCountdown.enabled = false;
+            }
+          }
+        }
+        return section;
+      });
+    }
+
     let featuredProductsFilter = 'smart';
     let topSellersFilter = 'smart';
     if (Array.isArray(parsedLayout)) {
@@ -435,14 +465,6 @@ export async function GET() {
     try {
       if (ctaSetting?.value) {
         parsedCta = JSON.parse(ctaSetting.value);
-      }
-    } catch {}
-
-    // Parse countdown configuration
-    let parsedCountdown: any = { enabled: false };
-    try {
-      if (countdownSetting?.value) {
-        parsedCountdown = JSON.parse(countdownSetting.value);
       }
     } catch {}
 
