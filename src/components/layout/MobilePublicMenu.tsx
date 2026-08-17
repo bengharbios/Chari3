@@ -39,7 +39,7 @@ const RecursiveMobileMenuItem = ({ item, level, getLabel, t, isAr, setIsOpen }: 
             className="flex items-center justify-between w-full py-2.5 px-3 text-sm font-semibold hover:bg-muted rounded-md transition-colors"
          >
             <div className="flex items-center gap-2">
-               {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={14} height={14} className="object-contain" unoptimized />}
+               {item.iconUrl ? <Image src={item.iconUrl} alt="icon" width={14} height={14} className="object-contain" unoptimized /> : item.icon ? <span className="text-base leading-none">{item.icon}</span> : null}
                <span className="text-foreground">{t(getLabel(item))}</span>
             </div>
             {isOpenLocal ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -61,7 +61,7 @@ const RecursiveMobileMenuItem = ({ item, level, getLabel, t, isAr, setIsOpen }: 
          className="flex items-center gap-2 py-2.5 px-3 text-sm text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
          onClick={() => setIsOpen(false)}
       >
-         {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={14} height={14} className="object-contain" unoptimized />}
+         {item.iconUrl ? <Image src={item.iconUrl} alt="icon" width={14} height={14} className="object-contain" unoptimized /> : item.icon ? <span className="text-base leading-none">{item.icon}</span> : null}
          {t(getLabel(item))}
       </Link>
   );
@@ -76,7 +76,7 @@ export default function MobilePublicMenu() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    fetch('/api/public/menu')
+    fetch('/api/public/menu', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (data.success && data.menuConfig) {
@@ -176,7 +176,7 @@ export default function MobilePublicMenu() {
                      className="flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                    >
                      <div className="flex items-center gap-2">
-                        {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" unoptimized />}
+                        {item.iconUrl ? <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" unoptimized /> : item.icon ? <span className="text-base leading-none">{item.icon}</span> : null}
                         <span>{getCatName(directCat)}</span>
                      </div>
                      {item.children && item.children.length > 0 ? (
@@ -208,7 +208,7 @@ export default function MobilePublicMenu() {
                     className="flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   >
                     <div className="flex items-center gap-2">
-                       {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" unoptimized />}
+                       {item.iconUrl ? <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" unoptimized /> : item.icon ? <span className="text-base leading-none">{item.icon}</span> : null}
                        <span>{t(getLabel(item))}</span>
                     </div>
                     {openSection === item.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -235,7 +235,7 @@ export default function MobilePublicMenu() {
                   className="flex items-center gap-2 py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                   onClick={() => setIsOpen(false)}
                 >
-                  {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" unoptimized />}
+                  {item.iconUrl ? <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" unoptimized /> : item.icon ? <span className="text-base leading-none">{item.icon}</span> : null}
                   {t(getLabel(item))}
                 </Link>
               )}

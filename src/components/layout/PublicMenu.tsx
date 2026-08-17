@@ -31,11 +31,13 @@ const RecursiveMenuItem = ({ item, level = 0, getLabel, t, isAr }: any) => {
     <div className="relative group/subitem">
        <Link href={item.url || '#'} className="px-5 py-2.5 flex items-center justify-between hover:bg-primary/5 text-sm font-medium transition-colors text-muted-foreground hover:text-primary">
           <span className="flex items-center gap-3">
-             {item.iconUrl && (
+             {item.iconUrl ? (
                <div className="w-4 h-4 relative shrink-0">
                   <Image src={item.iconUrl} alt="icon" fill className="object-contain" sizes="16px" unoptimized />
                </div>
-             )}
+             ) : item.icon ? (
+               <span className="text-lg leading-none">{item.icon}</span>
+             ) : null}
              {t(getLabel(item))}
           </span>
           {hasChildren && <ChevronRight className={cn("w-4 h-4 opacity-50", isAr ? "rotate-180" : "")} />}
@@ -68,7 +70,7 @@ export default function PublicMenu() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/public/menu')
+    fetch('/api/public/menu', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
         if (data.success && data.menuConfig) {
@@ -111,10 +113,10 @@ export default function PublicMenu() {
     <div className="w-full hidden md:block z-[100] border-y border-border/40 bg-background/95 backdrop-blur-md relative" dir={isAr ? 'rtl' : 'ltr'}>
       <div className="container-platform relative" style={fontFamilyStyle}>
         
-        <nav className="flex h-14 items-center px-4 w-full">
+        <nav className="flex h-14 items-center px-4 w-full overflow-x-auto overflow-y-hidden no-scrollbar">
           <ul className="flex items-center gap-1 h-full m-0 p-0 list-none">
             {config.items.map((item) => {
-              const hasDropdown = item.type !== 'standard' || (item.children && item.children.length > 0);
+              const hasDropdown = item.type === 'mega-custom' || item.type === 'categories-grid' || (item.children && item.children.length > 0);
               const label = getLabel(item);
               
               let directCat = null;
@@ -126,19 +128,21 @@ export default function PublicMenu() {
                 <li 
                   key={item.id} 
                   className={cn(
-                    "h-full flex items-center group/navitem px-2", 
+                    "h-full flex items-center group/navitem px-2 shrink-0", 
                     item.type === 'standard' || item.type === 'direct-category' ? 'relative' : 'static'
                   )}
                 >
                   <Link href={item.type === 'direct-category' && directCat ? `/search?category=${directCat.id}` : (item.url || '#')} className={cn(
-                    "text-sm font-semibold flex items-center gap-2 h-10 px-3 rounded-lg text-foreground transition-all duration-300",
+                    "text-sm font-semibold flex items-center gap-2 h-10 px-3 rounded-lg text-foreground transition-all duration-300 whitespace-nowrap",
                     "group-hover/navitem:bg-primary/5 group-hover/navitem:text-primary z-10"
                   )}>
-                    {item.iconUrl && (
+                    {item.iconUrl ? (
                       <div className="w-4 h-4 relative shrink-0">
                          <Image src={item.iconUrl} alt="icon" fill className="object-contain" sizes="16px" unoptimized />
                       </div>
-                    )}
+                    ) : directCat?.icon ? (
+                       <span className="text-base leading-none">{directCat.icon}</span>
+                    ) : null}
                     {t(label)}
                     {hasDropdown && (
                       <ChevronDown className="w-3.5 h-3.5 transition-transform duration-300 group-hover/navitem:rotate-180" />
@@ -186,14 +190,7 @@ export default function PublicMenu() {
                            {item.children && item.children.length > 0 && (
                              <div className="p-2 grid grid-cols-1">
                                 {item.children.map(child => (
-                                   <Link key={child.id} href={child.url} className="px-4 py-2.5 flex items-center gap-3 hover:bg-muted text-sm font-medium transition-colors text-muted-foreground hover:text-foreground rounded-md">
-                                     {child.iconUrl && (
-                                       <div className="w-4 h-4 relative shrink-0">
-                                          <Image src={child.iconUrl} alt="icon" fill className="object-contain" sizes="16px" unoptimized />
-                                       </div>
-                                     )}
-                                     {t(getLabel(child))}
-                                   </Link>
+                                   <RecursiveMenuItem key={child.id} item={child} getLabel={getLabel} t={t} isAr={isAr} />
                                 ))}
                              </div>
                            )}

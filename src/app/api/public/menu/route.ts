@@ -38,17 +38,51 @@ export async function GET() {
 
     let categories: any[] = [];
     if (hasCategoriesGrid || categoryIds.size > 0) {
-      categories = await db.category.findMany({
-        where: { 
-          OR: [
-            hasCategoriesGrid ? { parentId: null } : {},
-            { id: { in: Array.from(categoryIds) } }
-          ],
-          isActive: true
-        },
-        select: { id: true, name: true, nameEn: true, slug: true, image: true, icon: true, translations: true },
+      // Fetch ALL active categories to support infinite nesting
+      const allCategories = await db.category.findMany({
+        where: { isActive: true },
+        select: { id: true, parentId: true, name: true, nameEn: true, slug: true, image: true, icon: true, translations: true },
         orderBy: { sortOrder: 'asc' }
       });
+
+      // Populate top-level categories needed by `categories-grid` or references
+      categories = allCategories.filter(c => c.parentId === null || categoryIds.has(c.id));
+
+      // Recursive function to build category tree
+      const buildCategoryTree = (parentId: string): any[] => {
+        const subs = allCategories.filter(s => s.parentId === parentId);
+        if (subs.length > 0) {
+           console.log(`Found ${subs.length} subs for parentId ${parentId}`);
+        }
+        return subs.map(sub => {
+          const labels: any = { ar: sub.name, en: sub.nameEn || sub.name };
+          if (sub.translations && typeof sub.translations === 'object') {
+            Object.assign(labels, sub.translations);
+          }
+          return {
+            id: sub.id,
+            type: 'standard',
+            url: `/search?category=${sub.id}`,
+            icon: sub.icon,
+            labels,
+            children: buildCategoryTree(sub.id) // Infinite nesting!
+          };
+        });
+      };
+
+      // Auto-populate children for direct-category items
+      if (categoryIds.size > 0) {
+        const populateChildren = (items: any[]) => {
+          for (const item of items) {
+            if (item.type === 'direct-category' && item.categoryId) {
+              item.children = buildCategoryTree(item.categoryId);
+            } else if (item.children && Array.isArray(item.children)) {
+              populateChildren(item.children);
+            }
+          }
+        };
+        populateChildren(config.items);
+      }
     }
 
     return NextResponse.json({
