@@ -201,7 +201,7 @@ function SortableParentItem({ item, depth, allItems, updateItem, removeItem, cat
              />
           </div>
 
-          {item.type === 'mega-custom' && (
+          {(item.type === 'mega-custom' || item.type === 'direct-category') && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-primary/5 rounded-md border border-primary/10">
                <div>
                  <ImageUploader 
