@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
-import { useTranslationStore } from '@/lib/store';
+import { useTranslationStore } from '@/lib/store/translation-store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import {
   Loader2, FolderTree, ArrowRight, Plus, X, ShieldAlert,
