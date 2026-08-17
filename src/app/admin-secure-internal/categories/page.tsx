@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ImageUploader } from '@/components/ui/ImageUploader';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import Link from 'next/link';
 
 const CATEGORY_TYPES = [
@@ -31,7 +32,32 @@ const TYPE_COLORS: Record<string, string> = {
   logistics: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
 };
 
-const COMMON_ICONS = ['📦','🛍️','👗','👟','📱','💻','🏠','🍕','💊','🚗','📚','🎮','💄','⚽','🎵','🌱','🔧','💎','🏪','🏭'];
+const EMOJI_GROUPS = [
+  {
+    label: 'أزياء وملابس', labelEn: 'Fashion',
+    icons: ['👗', '👔', '👖', '🧥', '🧦', '👟', '👠', '👜', '💍', '👒']
+  },
+  {
+    label: 'إلكترونيات', labelEn: 'Electronics',
+    icons: ['📱', '💻', '⌚', '🎧', '📸', '📺', '🎮', '🔋', '🔌', '📡']
+  },
+  {
+    label: 'المنزل والمطبخ', labelEn: 'Home & Kitchen',
+    icons: ['🏠', '🛋️', '🛏️', '🍳', '🍽️', '🧹', '🪴', '🧺', '🖼️', '🚪']
+  },
+  {
+    label: 'صحة وجمال', labelEn: 'Health & Beauty',
+    icons: ['💄', '💅', '🧴', '🧼', '🪥', '💊', '🧬', '🩺', '🩸', '🚿']
+  },
+  {
+    label: 'مركبات وتنقل', labelEn: 'Vehicles',
+    icons: ['🚗', '🚕', '🚙', '🚌', '🚎', '🏎️', '🚓', '🚑', '🚒', '🚐', '🛻', '🚚', '🚜', '🛵', '🚲']
+  },
+  {
+    label: 'أخرى', labelEn: 'Others',
+    icons: ['📦', '🛍️', '📚', '⚽', '🎵', '🌱', '🔧', '💎', '🏪', '🏭', '🍕', '🧸', '🚴', '🎨', '✈️', '🎁']
+  }
+];
 
 const CategoryNode = ({ cat, categories, level = 0, isAr, t, openEditModal, handleToggleActive }: any) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -295,23 +321,49 @@ export default function AdminCategoriesPage() {
             {/* Icon Picker */}
             <div>
               <Label className="text-xs font-bold mb-2 block">{t('اختر أيقونة', 'Choose Icon')}</Label>
-              <div className="flex flex-wrap gap-2">
-                {COMMON_ICONS.map(icon => (
-                  <button
-                    key={icon}
-                    onClick={() => setFormIcon(icon)}
-                    className={`text-xl p-1.5 rounded-lg border-2 transition-all ${formIcon === icon ? 'border-brand bg-brand/10' : 'border-transparent hover:border-border'}`}
-                  >
-                    {icon}
-                  </button>
-                ))}
-                <input
-                  type="text"
-                  value={formIcon}
-                  onChange={e => setFormIcon(e.target.value)}
-                  className="w-12 text-center bg-background border border-border rounded-lg text-xl"
-                  maxLength={2}
-                />
+              <div className="flex items-center gap-3">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-16 h-16 text-3xl border-2 border-dashed flex items-center justify-center bg-muted/20 hover:bg-muted/50 hover:border-brand/50 transition-all p-0">
+                      {formIcon || '📁'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[320px] p-0" align="start">
+                    <div className="max-h-[300px] overflow-y-auto p-4 space-y-4">
+                      {EMOJI_GROUPS.map((group, i) => (
+                        <div key={i}>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase mb-2">
+                            {isAr ? group.label : group.labelEn}
+                          </p>
+                          <div className="grid grid-cols-5 gap-1.5">
+                            {group.icons.map(icon => (
+                              <button
+                                key={icon}
+                                onClick={() => setFormIcon(icon)}
+                                className={`text-xl h-10 w-full flex items-center justify-center rounded-lg border transition-all ${
+                                  formIcon === icon ? 'border-brand bg-brand/10' : 'border-transparent hover:border-border hover:bg-muted'
+                                }`}
+                              >
+                                {icon}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                <div className="flex-1 space-y-1">
+                  <p className="text-xs text-muted-foreground">{t('أيقونة التصنيف', 'Category Icon')}</p>
+                  <input
+                    type="text"
+                    value={formIcon}
+                    onChange={e => setFormIcon(e.target.value)}
+                    className="w-full max-w-[120px] px-3 py-1.5 bg-background border border-border rounded-lg text-sm text-center font-mono"
+                    maxLength={2}
+                    placeholder="أو اكتب..."
+                  />
+                </div>
               </div>
             </div>
 
@@ -335,7 +387,7 @@ export default function AdminCategoriesPage() {
               {dynamicLanguages.map(lang => (
                 <div key={lang.code}>
                   <Label className="text-xs font-bold">
-                    {t(`الاسم بال${lang.nameAr}`, `${lang.nameEn} Name`)}
+                    {t(`الاسم بـ (${lang.nameAr || lang.name})`, `${lang.nameEn} Name`)}
                   </Label>
                   <Input 
                     value={formTranslations[lang.code] || ''} 
