@@ -128,21 +128,19 @@ export default function PublicMenu() {
                 <li 
                   key={item.id} 
                   className={cn(
-                    "h-full flex items-center group/navitem px-2 shrink-0", 
+                    "h-full flex items-center group/navitem px-1 xl:px-2 shrink-0", 
                     item.type === 'standard' || item.type === 'direct-category' ? 'relative' : 'static'
                   )}
                 >
                   <Link href={item.type === 'direct-category' && directCat ? `/search?category=${directCat.id}` : (item.url || '#')} className={cn(
-                    "text-sm font-semibold flex items-center gap-2 h-10 px-3 rounded-lg text-foreground transition-all duration-300 whitespace-nowrap",
+                    "text-[13px] xl:text-sm font-semibold flex items-center gap-1.5 xl:gap-2 h-10 px-2 xl:px-3 rounded-lg text-foreground transition-all duration-300 whitespace-nowrap",
                     "group-hover/navitem:bg-primary/5 group-hover/navitem:text-primary z-10"
                   )}>
-                    {item.iconUrl ? (
+                    {item.iconUrl && (
                       <div className="w-4 h-4 relative shrink-0">
                          <Image src={item.iconUrl} alt="icon" fill className="object-contain" sizes="16px" unoptimized />
                       </div>
-                    ) : directCat?.icon ? (
-                       <span className="text-base leading-none">{directCat.icon}</span>
-                    ) : null}
+                    )}
                     {t(label)}
                     {hasDropdown && (
                       <ChevronDown className="w-3.5 h-3.5 transition-transform duration-300 group-hover/navitem:rotate-180" />
