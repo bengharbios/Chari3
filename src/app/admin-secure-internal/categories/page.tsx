@@ -348,9 +348,21 @@ export default function AdminCategoriesPage() {
                 <Label className="text-xs font-bold">{t('التصنيف الأب (اختياري)', 'Parent Category (optional)')}</Label>
                 <select value={formParentId} onChange={e => setFormParentId(e.target.value)} className="mt-1 w-full bg-background border border-border text-foreground px-3 py-2 rounded-xl text-sm">
                   <option value="">{t('— بدون أب (رئيسي) —', '— None (Top-level) —')}</option>
-                  {categories.filter(c => c.id !== editingCat?.id && !c.parentId).map(c => (
-                    <option key={c.id} value={c.id}>{c.icon} {isAr ? c.name : (c.nameEn || c.name)}</option>
-                  ))}
+                  {(() => {
+                    const renderOptions = (parentId = null, depth = 0): any[] => {
+                      return categories
+                        .filter(c => c.parentId === parentId)
+                        .flatMap(c => {
+                          if (editingCat && c.id === editingCat.id) return [];
+                          const prefix = depth > 0 ? '—'.repeat(depth) + ' ' : '';
+                          return [
+                            <option key={c.id} value={c.id}>{prefix}{c.icon || '📁'} {isAr ? c.name : (c.nameEn || c.name)}</option>,
+                            ...renderOptions(c.id, depth + 1)
+                          ];
+                        });
+                    };
+                    return renderOptions();
+                  })()}
                 </select>
               </div>
             </div>
