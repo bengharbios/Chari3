@@ -104,6 +104,16 @@ export default function MobilePublicMenu() {
     return 'Menu Item';
   };
 
+  const getCatName = (cat: any) => {
+    if (!cat) return '';
+    if (currentLocale === 'ar') return cat.name;
+    if (currentLocale === 'en' && cat.nameEn) return cat.nameEn;
+    if (cat.translations && typeof cat.translations === 'object') {
+       if (cat.translations[currentLocale]) return cat.translations[currentLocale];
+    }
+    return cat.nameEn || cat.name;
+  };
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
@@ -146,12 +156,14 @@ export default function MobilePublicMenu() {
                          <Link key={cat.id} href={`/search?category=${cat.id}`} className="flex flex-col items-center gap-2 p-2 hover:bg-muted rounded-lg transition-colors" onClick={() => setIsOpen(false)}>
                             <div className="w-12 h-12 rounded-full overflow-hidden border border-border/50 relative bg-background flex items-center justify-center shadow-sm">
                                {cat.image ? (
-                                  <Image src={cat.image} alt={cat.name} fill className="object-cover" sizes="48px" unoptimized />
+                                  <Image src={cat.image} alt={cat.name} fill className="object-cover" sizes="40px" unoptimized />
+                               ) : cat.icon ? (
+                                  <span className="text-xl relative z-10">{cat.icon}</span>
                                ) : (
                                   <PackageSearch className="w-5 h-5 text-muted-foreground/50" />
                                )}
                             </div>
-                            <span className="text-[10px] text-center font-medium line-clamp-2 leading-tight">{isAr ? cat.name : (cat.nameEn || cat.name)}</span>
+                            <span className="text-[10px] text-center font-medium line-clamp-2 leading-tight">{getCatName(cat)}</span>
                          </Link>
                       ))}
                     </div>
@@ -165,7 +177,7 @@ export default function MobilePublicMenu() {
                    >
                      <div className="flex items-center gap-2">
                         {item.iconUrl && <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" unoptimized />}
-                        <span>{isAr ? directCat.name : (directCat.nameEn || directCat.name)}</span>
+                        <span>{getCatName(directCat)}</span>
                      </div>
                      {item.children && item.children.length > 0 ? (
                         openSection === item.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />

@@ -97,6 +97,16 @@ export default function PublicMenu() {
     return 'Menu Item';
   };
 
+  const getCatName = (cat: any) => {
+    if (!cat) return '';
+    if (currentLocale === 'ar') return cat.name;
+    if (currentLocale === 'en' && cat.nameEn) return cat.nameEn;
+    if (cat.translations && typeof cat.translations === 'object') {
+       if (cat.translations[currentLocale]) return cat.translations[currentLocale];
+    }
+    return cat.nameEn || cat.name;
+  };
+
   return (
     <div className="w-full hidden md:block z-[100] border-y border-border/40 bg-background/95 backdrop-blur-md relative" dir={isAr ? 'rtl' : 'ltr'}>
       <div className="container-platform relative" style={fontFamilyStyle}>
@@ -160,10 +170,12 @@ export default function PublicMenu() {
                               <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden border border-border/50 relative bg-background flex items-center justify-center">
                                  {directCat.image ? (
                                     <Image src={directCat.image} alt={directCat.name} fill className="object-cover group-hover/direct:scale-110 transition-transform duration-500" sizes="64px" unoptimized />
+                                 ) : directCat.icon ? (
+                                    <span className="text-3xl relative z-10 group-hover/direct:scale-110 transition-transform duration-500">{directCat.icon}</span>
                                  ) : <PackageSearch className="w-8 h-8 text-muted-foreground/40" />}
                               </div>
                               <div className="flex-1">
-                                 <h4 className="font-bold text-base mb-1 text-primary">{isAr ? directCat.name : (directCat.nameEn || directCat.name)}</h4>
+                                 <h4 className="font-bold text-base mb-1 text-primary">{getCatName(directCat)}</h4>
                                  <Link href={`/search?category=${directCat.id}`} className="text-xs font-semibold hover:underline inline-flex items-center gap-1">
                                     {t('عرض منتجات القسم', 'View Category Products')}
                                     {isAr ? <ArrowLeft className="w-3 h-3" /> : <ArrowRight className="w-3 h-3" />}
@@ -196,12 +208,14 @@ export default function PublicMenu() {
                               <div className="w-20 h-20 rounded-full overflow-hidden border border-border/50 shadow-sm flex items-center justify-center bg-background relative z-10 transition-transform duration-300 group-hover/cat:scale-110 group-hover/cat:-translate-y-1">
                                 {cat.image ? (
                                   <Image src={cat.image} alt={cat.name} fill className="object-cover" sizes="80px" unoptimized />
+                                ) : cat.icon ? (
+                                  <span className="text-4xl">{cat.icon}</span>
                                 ) : (
                                   <PackageSearch className="w-8 h-8 text-muted-foreground/40" />
                                 )}
                               </div>
                               <span className="text-sm text-center font-bold text-muted-foreground group-hover/cat:text-primary transition-colors line-clamp-2">
-                                {isAr ? cat.name : (cat.nameEn || cat.name)}
+                                {getCatName(cat)}
                               </span>
                             </Link>
                           ))}

@@ -46,7 +46,7 @@ export async function GET() {
           ],
           isActive: true
         },
-        select: { id: true, name: true, nameEn: true, slug: true, image: true, icon: true },
+        select: { id: true, name: true, nameEn: true, slug: true, image: true, icon: true, translations: true },
         orderBy: { sortOrder: 'asc' }
       });
     }
