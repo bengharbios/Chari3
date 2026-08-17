@@ -186,7 +186,7 @@ export default function PublicMenu() {
                            {/* Subcategories Grid */}
                            <div className="flex-1 p-8">
                              {item.children && item.children.length > 0 ? (
-                               <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                               <div className="grid grid-cols-2 xl:grid-cols-3 gap-8">
                                   {item.children.map(child => (
                                      <div key={child.id} className="space-y-4">
                                         <Link href={`/search?category=${child.id}`} className="font-bold text-foreground hover:text-primary transition-colors text-base block border-b border-border/40 pb-2">
@@ -220,6 +220,30 @@ export default function PublicMenu() {
                                </div>
                              )}
                            </div>
+
+                           {/* Ads / Promotions Section */}
+                           {item.imageUrls && item.imageUrls.length > 0 ? (
+                              <div className="w-[22%] min-w-[220px] p-6 bg-muted/20 shrink-0 border-s border-border/40 flex flex-col gap-4">
+                                 {item.imageUrls.map((img: string, idx: number) => (
+                                    <Link key={idx} href={item.url || '#'} className="relative w-full h-full min-h-[160px] rounded-2xl overflow-hidden group/ad shadow-sm hover:shadow-md transition-all">
+                                       <Image src={img} alt="Promo" fill className="object-cover group-hover/ad:scale-110 transition-transform duration-700" unoptimized />
+                                    </Link>
+                                 ))}
+                              </div>
+                           ) : (
+                              <div className="w-[22%] min-w-[220px] p-6 bg-muted/20 shrink-0 border-s border-border/40 flex flex-col gap-4 justify-center items-center group/adspace cursor-pointer" onClick={() => window.location.href = directCat ? `/search?category=${directCat.id}` : '#'}>
+                                 <div className="w-full h-full min-h-[220px] rounded-2xl flex flex-col items-center justify-center text-muted-foreground/80 bg-background/50 relative overflow-hidden shadow-sm group-hover/adspace:shadow-md transition-all">
+                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10"></div>
+                                    <div className="relative z-10 flex flex-col items-center gap-2 p-4 text-center">
+                                       <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2 group-hover/adspace:scale-110 transition-transform">
+                                          <Megaphone className="w-6 h-6 text-primary" />
+                                       </div>
+                                       <span className="text-base font-bold text-primary">{t('عروض حصرية', 'Exclusive Offers')}</span>
+                                       <span className="text-xs text-muted-foreground">{t('تصفح أحدث الخصومات في قسم', 'Browse latest discounts in')} {getCatName(directCat)}</span>
+                                    </div>
+                                 </div>
+                              </div>
+                           )}
                          </div>
                       )}
 
