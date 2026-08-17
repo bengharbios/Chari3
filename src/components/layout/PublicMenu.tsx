@@ -127,10 +127,7 @@ export default function PublicMenu() {
               return (
                 <li 
                   key={item.id} 
-                  className={cn(
-                    "h-full flex items-center group/navitem px-1 xl:px-2 shrink-0", 
-                    item.type === 'standard' || item.type === 'direct-category' ? 'relative' : 'static'
-                  )}
+                  className="h-full flex items-center group/navitem px-1 xl:px-2 shrink-0 static"
                 >
                   <Link href={item.type === 'direct-category' && directCat ? `/search?category=${directCat.id}` : (item.url || '#')} className={cn(
                     "text-[13px] xl:text-sm font-semibold flex items-center gap-1.5 xl:gap-2 h-10 px-2 xl:px-3 rounded-lg text-foreground transition-all duration-300 whitespace-nowrap",
@@ -153,7 +150,7 @@ export default function PublicMenu() {
                       "group-hover/navitem:opacity-100 group-hover/navitem:visible group-hover/navitem:translate-y-0 group-hover/navitem:pointer-events-auto",
                       "transition-all duration-300 ease-in-out bg-background border border-border/60 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] z-50",
                       item.type === 'standard' ? "w-[260px] ltr:left-2 rtl:right-2 rounded-2xl" : 
-                      item.type === 'direct-category' ? "w-[320px] ltr:left-2 rtl:right-2 rounded-2xl overflow-hidden" :
+                      item.type === 'direct-category' ? "start-0 end-0 w-full xl:max-w-7xl mx-auto rounded-2xl mt-1 overflow-hidden" :
                       "start-0 end-0 w-full min-w-[800px] xl:max-w-7xl mx-auto rounded-2xl mt-1 overflow-hidden"
                     )}>
                       {/* 1. Standard Dropdown */}
@@ -165,33 +162,64 @@ export default function PublicMenu() {
                         </div>
                       )}
 
-                      {/* 2. Direct Category Dropdown */}
+                      {/* 2. Direct Category Dropdown (Mega Menu Style) */}
                       {item.type === 'direct-category' && directCat && (
-                         <div className="flex flex-col max-h-[60vh] overflow-y-auto">
-                           <div className="p-5 flex gap-4 items-center group/direct bg-primary/5">
-                              <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden border border-border/50 relative bg-background flex items-center justify-center">
+                         <div className="flex bg-background w-full max-h-[70vh] overflow-y-auto">
+                           {/* Main Category Info */}
+                           <div className="w-[30%] min-w-[280px] p-8 bg-primary/5 flex flex-col justify-center items-center gap-5 text-center shrink-0">
+                              <div className="w-40 h-40 shrink-0 rounded-2xl overflow-hidden border border-border/50 relative bg-background flex items-center justify-center shadow-sm group-hover/navitem:shadow-md transition-all">
                                  {directCat.image ? (
-                                    <Image src={directCat.image} alt={directCat.name} fill className="object-cover group-hover/direct:scale-110 transition-transform duration-500" sizes="64px" unoptimized />
+                                    <Image src={directCat.image} alt={directCat.name} fill className="object-cover group-hover/navitem:scale-110 transition-transform duration-700" sizes="160px" unoptimized />
                                  ) : directCat.icon ? (
-                                    <span className="text-3xl relative z-10 group-hover/direct:scale-110 transition-transform duration-500">{directCat.icon}</span>
-                                 ) : <PackageSearch className="w-8 h-8 text-muted-foreground/40" />}
+                                    <span className="text-7xl relative z-10 group-hover/navitem:scale-110 transition-transform duration-700">{directCat.icon}</span>
+                                 ) : <PackageSearch className="w-16 h-16 text-muted-foreground/40" />}
                               </div>
-                              <div className="flex-1">
-                                 <h4 className="font-bold text-base mb-1 text-primary">{getCatName(directCat)}</h4>
-                                 <Link href={`/search?category=${directCat.id}`} className="text-xs font-semibold hover:underline inline-flex items-center gap-1">
-                                    {t('عرض منتجات القسم', 'View Category Products')}
-                                    {isAr ? <ArrowLeft className="w-3 h-3" /> : <ArrowRight className="w-3 h-3" />}
+                              <div>
+                                 <h4 className="font-bold text-xl mb-3 text-primary">{getCatName(directCat)}</h4>
+                                 <Link href={`/search?category=${directCat.id}`} className="text-sm font-bold hover:underline inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-colors shadow-sm">
+                                    {t('تصفح القسم', 'Browse Category')}
+                                    {isAr ? <ArrowLeft className="w-4 h-4" /> : <ArrowRight className="w-4 h-4" />}
                                  </Link>
                               </div>
                            </div>
                            
-                           {item.children && item.children.length > 0 && (
-                             <div className="p-2 grid grid-cols-1">
-                                {item.children.map(child => (
-                                   <RecursiveMenuItem key={child.id} item={child} getLabel={getLabel} t={t} isAr={isAr} />
-                                ))}
-                             </div>
-                           )}
+                           {/* Subcategories Grid */}
+                           <div className="flex-1 p-8">
+                             {item.children && item.children.length > 0 ? (
+                               <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                                  {item.children.map(child => (
+                                     <div key={child.id} className="space-y-4">
+                                        <Link href={`/search?category=${child.id}`} className="font-bold text-foreground hover:text-primary transition-colors text-base block border-b border-border/40 pb-2">
+                                           {t(getLabel(child))}
+                                        </Link>
+                                        {child.children && child.children.length > 0 && (
+                                           <ul className="space-y-3">
+                                              {child.children.slice(0, 7).map((grandChild: any) => (
+                                                 <li key={grandChild.id}>
+                                                    <Link href={`/search?category=${grandChild.id}`} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                                                       {t(getLabel(grandChild))}
+                                                    </Link>
+                                                 </li>
+                                              ))}
+                                              {child.children.length > 7 && (
+                                                 <li>
+                                                    <Link href={`/search?category=${child.id}`} className="text-sm font-semibold text-primary hover:underline inline-flex items-center gap-1 mt-1">
+                                                       {t('المزيد...', 'More...')}
+                                                    </Link>
+                                                 </li>
+                                              )}
+                                           </ul>
+                                        )}
+                                     </div>
+                                  ))}
+                               </div>
+                             ) : (
+                               <div className="flex h-full flex-col items-center justify-center text-muted-foreground gap-3 opacity-60">
+                                  <PackageSearch className="w-12 h-12" />
+                                  <span className="text-lg font-medium">{t('لا توجد أقسام فرعية', 'No subcategories found')}</span>
+                               </div>
+                             )}
+                           </div>
                          </div>
                       )}
 
