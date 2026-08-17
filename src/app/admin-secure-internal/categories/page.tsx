@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
+import { useTranslationStore } from '@/lib/store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import {
   Loader2, FolderTree, ArrowRight, Plus, X, ShieldAlert,
@@ -97,10 +98,10 @@ const CategoryNode = ({ cat, categories, level = 0, isAr, t, openEditModal, hand
 
 export default function AdminCategoriesPage() {
   const { isAdminAuthenticated, adminUser } = useAdminAuthStore();
-  const { locale } = useTranslation();
+  const { dir, t, locale } = useTranslation();
+  const { languages } = useTranslationStore();
+  const dynamicLanguages = languages.filter(l => l.code !== 'ar' && l.code !== 'en' && l.isActive !== false);
   const isAr = locale === 'ar';
-  const dir = isAr ? 'rtl' : 'ltr';
-  const t = (ar: string, en: string) => isAr ? ar : en;
 
   const getAdminPath = (subPath: string = '') => {
     if (typeof window === 'undefined') return '/super-admin';
@@ -120,7 +121,7 @@ export default function AdminCategoriesPage() {
   const [editingCat, setEditingCat] = useState<any>(null);
   const [formName, setFormName] = useState('');
   const [formNameEn, setFormNameEn] = useState('');
-  const [formNameFr, setFormNameFr] = useState('');
+  const [formTranslations, setFormTranslations] = useState<Record<string, string>>({});
   const [formSlug, setFormSlug] = useState('');
   const [formIcon, setFormIcon] = useState('📦');
   const [formImage, setFormImage] = useState('');
@@ -157,7 +158,7 @@ export default function AdminCategoriesPage() {
     setEditingCat(null);
     setFormName(prefill?.nameAr || '');
     setFormNameEn(prefill?.nameEn || '');
-    setFormNameFr(prefill?.nameFr || '');
+    setFormTranslations(prefill?.translations || {});
     setFormSlug(prefill?.nameEn ? prefill.nameEn.toLowerCase().replace(/\s+/g, '-') : '');
     setFormIcon('📦');
     setFormImage(prefill?.image || '');
@@ -170,7 +171,7 @@ export default function AdminCategoriesPage() {
     setEditingCat(cat);
     setFormName(cat.name);
     setFormNameEn(cat.nameEn || '');
-    setFormNameFr(cat.nameFr || '');
+    setFormTranslations(typeof cat.translations === 'string' ? JSON.parse(cat.translations || '{}') : (cat.translations || {}));
     setFormSlug(cat.slug);
     setFormIcon(cat.icon || '📦');
     setFormImage(cat.image || '');
@@ -189,7 +190,7 @@ export default function AdminCategoriesPage() {
       const payload = {
         name: formName,
         nameEn: formNameEn,
-        nameFr: formNameFr,
+        translations: formTranslations,
         slug: formSlug,
         icon: formIcon,
         image: formImage,
@@ -314,7 +315,7 @@ export default function AdminCategoriesPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <Label className="text-xs font-bold">{t('الاسم بالعربية *', 'Arabic Name *')}</Label>
                 <Input value={formName} onChange={e => setFormName(e.target.value)} className="mt-1" placeholder="إلكترونيات" />
@@ -331,10 +332,19 @@ export default function AdminCategoriesPage() {
                   placeholder="Electronics"
                 />
               </div>
-              <div>
-                <Label className="text-xs font-bold">{t('الاسم بالفرنسية', 'French Name')}</Label>
-                <Input value={formNameFr} onChange={e => setFormNameFr(e.target.value)} className="mt-1" placeholder="Électronique" />
-              </div>
+              {dynamicLanguages.map(lang => (
+                <div key={lang.code}>
+                  <Label className="text-xs font-bold">
+                    {t(`الاسم بال${lang.nameAr}`, `${lang.nameEn} Name`)}
+                  </Label>
+                  <Input 
+                    value={formTranslations[lang.code] || ''} 
+                    onChange={e => setFormTranslations(prev => ({ ...prev, [lang.code]: e.target.value }))} 
+                    className="mt-1" 
+                    placeholder={lang.nameEn} 
+                  />
+                </div>
+              ))}
             </div>
 
             <div>
