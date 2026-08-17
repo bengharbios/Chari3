@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { cn } from '@/lib/utils';
-import { Loader2, PackageSearch, ChevronDown, ChevronRight, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Loader2, PackageSearch, ChevronDown, ChevronRight, ArrowLeft, ArrowRight, Megaphone } from 'lucide-react';
 import Image from 'next/image';
 
 interface MenuItem {
