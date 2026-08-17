@@ -485,6 +485,7 @@ model Category {
   id        String     @id @default(cuid())
   name      String
   nameEn    String?
+  nameFr    String?
   slug      String     @unique
   type      String     @default("product") // product, store, supplier, logistics
   icon      String?

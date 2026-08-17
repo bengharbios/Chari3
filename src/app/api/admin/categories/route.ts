@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
-    const { name, nameEn, slug, icon, image, parentId, sortOrder, type } = data;
+    const { name, nameEn, nameFr, slug, icon, image, parentId, sortOrder, type } = data;
     
     if (!name || !slug) {
       return NextResponse.json({ success: false, error: 'name and slug are required' }, { status: 400 });
@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
       data: {
         name,
         nameEn,
+        nameFr,
         slug,
         icon,
         image,
