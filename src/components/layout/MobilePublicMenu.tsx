@@ -173,7 +173,7 @@ export default function MobilePublicMenu() {
                  <>
                    <button
                      onClick={() => setOpenSection(openSection === item.id ? null : item.id)}
-                     className="flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
+                     className="relative flex items-center justify-between w-full py-3 px-3 font-semibold hover:bg-muted rounded-lg transition-colors"
                    >
                      <div className="flex items-center gap-2">
                         {item.iconUrl ? <Image src={item.iconUrl} alt="icon" width={16} height={16} className="object-contain" unoptimized /> : item.icon ? <span className="text-base leading-none">{item.icon}</span> : null}
