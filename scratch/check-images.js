@@ -1,10 +1,10 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-async function check() {
-  const p = await prisma.product.findMany({
-    where: { name: { contains: 'نظارات' } },
-    select: { id: true, name: true, images: true }
-  });
-  console.log(JSON.stringify(p, null, 2));
+
+async function main() {
+  const cats = await prisma.category.findMany({ where: { image: null } });
+  console.log('Count:', cats.length);
+  console.log(cats.map(c => c.name).join(', '));
 }
-check().finally(() => prisma.$disconnect());
+
+main().finally(() => prisma.$disconnect());

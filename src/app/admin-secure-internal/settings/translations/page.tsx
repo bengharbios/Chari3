@@ -20,6 +20,7 @@ interface Language {
   code: string;
   name: string;
   nameEn: string;
+  nameAr?: string;
   flag: string;
   direction: 'rtl' | 'ltr';
   isBuiltin?: boolean;
@@ -87,16 +88,16 @@ function codeToFlagEmoji(code: string): string {
 
 // ─── POPULAR LANGUAGES PRESET ────────────────────────────────────────────────
 const POPULAR_LANGS: Language[] = [
-  { code: 'es', name: 'Español',    nameEn: 'Spanish',   flag: '🇪🇸', direction: 'ltr' },
-  { code: 'tr', name: 'Türkçe',     nameEn: 'Turkish',   flag: '🇹🇷', direction: 'ltr' },
-  { code: 'de', name: 'Deutsch',    nameEn: 'German',    flag: '🇩🇪', direction: 'ltr' },
-  { code: 'zh', name: '中文',        nameEn: 'Chinese',   flag: '🇨🇳', direction: 'ltr' },
-  { code: 'ur', name: 'اردو',        nameEn: 'Urdu',      flag: '🇵🇰', direction: 'rtl' },
-  { code: 'fa', name: 'فارسی',       nameEn: 'Persian',   flag: '🇮🇷', direction: 'rtl' },
-  { code: 'ru', name: 'Русский',    nameEn: 'Russian',   flag: '🇷🇺', direction: 'ltr' },
-  { code: 'pt', name: 'Português',  nameEn: 'Portuguese',flag: '🇧🇷', direction: 'ltr' },
-  { code: 'it', name: 'Italiano',   nameEn: 'Italian',   flag: '🇮🇹', direction: 'ltr' },
-  { code: 'ko', name: '한국어',       nameEn: 'Korean',    flag: '🇰🇷', direction: 'ltr' },
+  { code: 'es', name: 'Español',    nameEn: 'Spanish',   nameAr: 'الإسبانية', flag: '🇪🇸', direction: 'ltr' },
+  { code: 'tr', name: 'Türkçe',     nameEn: 'Turkish',   nameAr: 'التركية', flag: '🇹🇷', direction: 'ltr' },
+  { code: 'de', name: 'Deutsch',    nameEn: 'German',    nameAr: 'الألمانية', flag: '🇩🇪', direction: 'ltr' },
+  { code: 'zh', name: '中文',        nameEn: 'Chinese',   nameAr: 'الصينية', flag: '🇨🇳', direction: 'ltr' },
+  { code: 'ur', name: 'اردو',        nameEn: 'Urdu',      nameAr: 'الأردية', flag: '🇵🇰', direction: 'rtl' },
+  { code: 'fa', name: 'فارسی',       nameEn: 'Persian',   nameAr: 'الفارسية', flag: '🇮🇷', direction: 'rtl' },
+  { code: 'ru', name: 'Русский',    nameEn: 'Russian',   nameAr: 'الروسية', flag: '🇷🇺', direction: 'ltr' },
+  { code: 'pt', name: 'Português',  nameEn: 'Portuguese',nameAr: 'البرتغالية',flag: '🇧🇷', direction: 'ltr' },
+  { code: 'it', name: 'Italiano',   nameEn: 'Italian',   nameAr: 'الإيطالية', flag: '🇮🇹', direction: 'ltr' },
+  { code: 'ko', name: '한국어',       nameEn: 'Korean',    nameAr: 'الكورية', flag: '🇰🇷', direction: 'ltr' },
 ];
 
 const COMMON_FLAGS = [
@@ -180,7 +181,7 @@ export default function TranslationsManagerPage() {
   const [showCustomLang, setShowCustomLang] = useState(false);
   const [searchFlagQuery, setSearchFlagQuery] = useState('');
   const [customLang, setCustomLang]       = useState<Language>({
-    code: '', name: '', nameEn: '', flag: '🇩🇿', direction: 'ltr',
+    code: '', name: '', nameEn: '', nameAr: '', flag: '🇩🇿', direction: 'ltr',
   });
   const [editingLang, setEditingLang]     = useState<Language | null>(null);
   const [showEditLang, setShowEditLang]   = useState(false);
@@ -797,12 +798,20 @@ export default function TranslationsManagerPage() {
                       onChange={e => setCustomLang(prev => ({ ...prev, name: e.target.value }))}
                     />
                   </div>
-                  <div className="space-y-1 col-span-2">
+                  <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-600">الاسم بالإنجليزية</label>
                     <Input
                       placeholder="Spanish"
                       value={customLang.nameEn}
                       onChange={e => setCustomLang(prev => ({ ...prev, nameEn: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-600">الاسم بالعربية</label>
+                    <Input
+                      placeholder="الإسبانية"
+                      value={customLang.nameAr || ''}
+                      onChange={e => setCustomLang(prev => ({ ...prev, nameAr: e.target.value }))}
                     />
                   </div>
                 </div>
@@ -931,12 +940,20 @@ export default function TranslationsManagerPage() {
                     onChange={e => setEditingLang(prev => prev ? ({ ...prev, name: e.target.value }) : null)}
                   />
                 </div>
-                <div className="space-y-1 col-span-2">
+                <div className="space-y-1">
                   <label className="text-xs font-semibold text-slate-600">الاسم بالإنجليزية</label>
                   <Input
                     placeholder="Spanish"
                     value={editingLang.nameEn}
                     onChange={e => setEditingLang(prev => prev ? ({ ...prev, nameEn: e.target.value }) : null)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-600">الاسم بالعربية</label>
+                  <Input
+                    placeholder="الإسبانية"
+                    value={editingLang.nameAr || ''}
+                    onChange={e => setEditingLang(prev => prev ? ({ ...prev, nameAr: e.target.value }) : null)}
                   />
                 </div>
               </div>

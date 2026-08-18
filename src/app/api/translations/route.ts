@@ -13,9 +13,9 @@ const builtinDictionaries: Record<string, any> = {
 };
 
 const builtinLanguages = [
-  { code: 'ar', name: 'العربية',  nameEn: 'Arabic',   flag: '🇩🇿', direction: 'rtl', isBuiltin: true },
-  { code: 'en', name: 'English',  nameEn: 'English',  flag: '🇬🇧', direction: 'ltr', isBuiltin: true },
-  { code: 'fr', name: 'Français', nameEn: 'French',   flag: '🇫🇷', direction: 'ltr', isBuiltin: true },
+  { code: 'ar', name: 'العربية',  nameEn: 'Arabic',   nameAr: 'العربية',   flag: '🇩🇿', direction: 'rtl', isBuiltin: true },
+  { code: 'en', name: 'English',  nameEn: 'English',  nameAr: 'الإنجليزية',  flag: '🇬🇧', direction: 'ltr', isBuiltin: true },
+  { code: 'fr', name: 'Français', nameEn: 'French',   nameAr: 'الفرنسية',   flag: '🇫🇷', direction: 'ltr', isBuiltin: true },
 ];
 
 export async function GET(req: NextRequest) {

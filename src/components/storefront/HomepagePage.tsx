@@ -270,46 +270,82 @@ function ProductCard({ product, isOfferCard = false }: { product: any; isOfferCa
 
   return (
     <Card 
-      className="overflow-hidden flex flex-col h-full group transition-all duration-300 cursor-pointer border border-slate-100 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 backdrop-blur-md rounded-[20px] shadow-[0_4px_12px_rgba(0,0,0,0.02),0_8px_24px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.08)] hover:-translate-y-1 relative"
+      className="overflow-hidden flex flex-col h-full group transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer border border-slate-200/60 dark:border-slate-800/80 bg-white dark:bg-slate-950 rounded-[24px] shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(245,158,11,0.15)] hover:border-amber-500/30 hover:-translate-y-1.5 relative z-10 hover:z-20"
       onClick={() => {
         useAppStore.getState().setSelectedProductId(product.id);
         router.push(`/products/${product.id}`);
       }}
     >
-      <div className="relative aspect-square bg-slate-50 dark:bg-slate-950 overflow-hidden shrink-0">
+      <div className="relative aspect-square bg-slate-50 dark:bg-slate-950/50 overflow-hidden shrink-0">
         {images[0] ? (
-          <img src={images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300" />
+          <img src={images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-[1.05] transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-primary/10 to-primary/5">
             <ShoppingBag className="size-8 text-primary/30" />
           </div>
         )}
         {discount > 0 && (
-          <Badge className="absolute top-2.5 start-2.5 bg-rose-600 text-white text-[9px] font-black py-0.5 px-2 rounded-full shadow-sm">-{discount}%</Badge>
+          <div className="absolute top-2 start-2 bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black py-1 px-2.5 rounded-full shadow-md z-10 select-none">
+            {isAr ? `خصم ${discount}%` : `-${discount}%`}
+          </div>
         )}
       </div>
-      <CardContent className="p-3 flex flex-col grow text-start">
-        <p className="text-[9px] text-muted-foreground mb-0.5 truncate">{product.category?.name || ''}</p>
-        <h4 className="text-xs font-bold line-clamp-2 mb-1.5 text-slate-850 dark:text-slate-100 leading-tight min-h-[32px]">{isAr ? product.name : (product.nameEn || product.name)}</h4>
-        <div className="flex items-center gap-1 mb-2">
-          <StarRating rating={product.rating} />
-          <span className="text-[9px] text-muted-foreground font-bold">({product.soldCount || 8})</span>
+      <CardContent className="p-4 flex flex-col grow text-start z-10 relative bg-white dark:bg-slate-950 transition-colors">
+        <p className="text-[10px] text-muted-foreground/80 mb-1.5 truncate font-medium">{product.category?.name || ''}</p>
+        <h4 className="text-sm font-bold line-clamp-2 mb-2 text-slate-800 dark:text-slate-100 leading-snug min-h-[40px] group-hover:text-amber-500 transition-colors">{isAr ? product.name : (product.nameEn || product.name)}</h4>
+        <div className="flex items-center gap-1.5 mb-3 min-h-[16px]">
+          {product.rating && Number(product.rating) > 0 ? (
+            <>
+              <StarRating rating={Number(product.rating)} />
+              {product.soldCount && Number(product.soldCount) > 0 ? (
+                <span className="text-[10px] text-slate-400 font-semibold">({product.soldCount})</span>
+              ) : null}
+            </>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] text-amber-600 dark:text-amber-500 font-bold bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-sm whitespace-nowrap">
+                {isAr ? 'وصل حديثاً' : 'New Arrival'}
+              </span>
+              {product.soldCount && Number(product.soldCount) > 0 ? (
+                <span className="text-[10px] text-slate-400 font-semibold">({product.soldCount})</span>
+              ) : null}
+            </div>
+          )}
         </div>
-        <div className="mt-auto">
-          <div className="flex items-center justify-between gap-1">
-            <div className="w-full">
-              <p className="text-xs md:text-sm font-black text-amber-500 tracking-tight">{fmt(product.price)}</p>
+        <div className="mt-auto relative">
+          <div className="flex items-end justify-between gap-2">
+            <div className="flex flex-col">
+              <span className="text-lg md:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">
+                {fmt(product.price)}
+              </span>
               {product.comparePrice && (
-                <p className="text-[9px] text-muted-foreground line-through font-semibold">{fmt(product.comparePrice)}</p>
+                <span className="text-[11px] text-slate-400 line-through font-semibold leading-none">
+                  {fmt(product.comparePrice)}
+                </span>
               )}
             </div>
+            
+            {/* Dynamic Cart Button */}
             <Button 
-              size="icon" 
+              size="sm" 
               variant={isInCart ? "default" : "secondary"} 
-              className={`rounded-full shrink-0 size-7 shadow ${isInCart ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-100 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-850'}`}
+              className={`rounded-xl shrink-0 h-9 transition-all duration-300 shadow-sm ${
+                isInCart 
+                  ? 'bg-emerald-500 hover:bg-emerald-600 text-white w-9' 
+                  : 'bg-slate-100 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-amber-500 w-9 group-hover:w-auto px-0 group-hover:px-4'
+              }`}
               onClick={handleAddToCart}
             >
-              {isInCart ? <CheckCircle2 className="w-3.5 h-3.5" /> : <ShoppingCart className="w-3.5 h-3.5" />}
+              {isInCart ? (
+                <CheckCircle2 className="w-4 h-4" />
+              ) : (
+                <div className="flex items-center justify-center gap-1.5 w-full">
+                  <ShoppingCart className="w-4 h-4 shrink-0" />
+                  <span className="text-xs font-black hidden group-hover:inline-block whitespace-nowrap overflow-hidden transition-all">
+                    {isAr ? 'أضف' : 'Add'}
+                  </span>
+                </div>
+              )}
             </Button>
           </div>
           
@@ -1367,27 +1403,41 @@ export default function StorefrontHomepage() {
       case 'featured_products':
         const productsToShow = filteredProducts.length > 0 ? filteredProducts : (data?.featuredProducts ?? []);
         return (
-          <section key="featured_products" className="container-platform py-6">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h3 className="text-xl font-black text-navy dark:text-white">
-                  {getLocalizedField(section, 'title', locale) || t('منتجات مميزة', 'Featured Products')}
-                </h3>
-                <p className="text-xs text-muted-foreground mt-1">{t('اختيارات حصرية من أفضل التجار', 'Exclusive picks from top sellers')}</p>
-              </div>
-              <Button
-                variant={showFilterPanel ? 'default' : 'outline'}
-                size="sm"
-                className="gap-2 relative rounded-xl border-border/80"
-                onClick={() => setShowFilterPanel(p => !p)}
-              >
-                <SlidersHorizontal className="size-4" />
-                {t('فلتر', 'Filter')}
-                {hasActiveFilters && (
-                  <span className="absolute -top-1 -end-1 w-2.5 h-2.5 rounded-full bg-amber-500 shadow shadow-amber-500/40" />
+          <section key="featured_products" className="py-10 my-4 bg-gradient-to-b from-slate-50/50 to-white dark:from-slate-900/50 dark:to-slate-950 border-y border-slate-200/50 dark:border-slate-800/50">
+            <div className="container-platform">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-1.5 h-8 bg-gradient-to-b from-amber-400 to-orange-500 rounded-full hidden md:block" />
+                  <div>
+                    <h3 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                      {getLocalizedField(section, 'title', locale) || t('منتجات مميزة', 'Featured Products')}
+                      {section.metadata?.badge && (
+                        <span className="ms-3 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 align-middle">
+                          {getLocalizedField(section.metadata, 'badge', locale)}
+                        </span>
+                      )}
+                    </h3>
+                    <p className="text-xs md:text-sm text-slate-500 mt-1 font-medium">{t('اختيارات حصرية من أفضل التجار', 'Exclusive picks from top sellers')}</p>
+                  </div>
+                </div>
+                {section.metadata?.enableTimer && section.metadata?.timerEndDate && (
+                  <div className="hidden lg:block me-4">
+                    <CountdownTimer targetDate={section.metadata.timerEndDate} />
+                  </div>
                 )}
-              </Button>
-            </div>
+                <Button
+                  variant={showFilterPanel ? 'default' : 'outline'}
+                  size="sm"
+                  className="gap-2 relative rounded-xl border-slate-200 dark:border-slate-800 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  onClick={() => setShowFilterPanel(p => !p)}
+                >
+                  <SlidersHorizontal className="size-4" />
+                  <span className="hidden sm:inline">{t('فلتر', 'Filter')}</span>
+                  {hasActiveFilters && (
+                    <span className="absolute -top-1 -end-1 w-2.5 h-2.5 rounded-full bg-amber-500 shadow shadow-amber-500/40" />
+                  )}
+                </Button>
+              </div>
             <div id="search-results-panel"></div>
             {showFilterPanel && (
               <div className="mb-6 p-5 rounded-[24px] bg-white/70 dark:bg-slate-950/70 border border-border/80 backdrop-blur-md space-y-4 animate-in fade-in slide-in-from-top-2">

@@ -375,6 +375,16 @@ export async function GET() {
       const featuredSection = parsedLayout.find((s: any) => s.type === 'featured_products');
       if (featuredSection?.categoryId || featuredSection?.storeId || featuredSection?.sellerId) {
         const filtered = applyEntityFilter(featuredProducts, featuredSection.categoryId, featuredSection.storeId, featuredSection.sellerId);
+        const limit = featuredSection.limit || 10;
+        
+        // Auto-fill logic: if store has less than limit products, fill the rest from other sellers
+        if (filtered.length < limit) {
+          const existingIds = new Set(filtered.map(p => p.id));
+          const remainingProducts = featuredProducts.filter(p => !existingIds.has(p.id));
+          const needed = limit - filtered.length;
+          filtered.push(...remainingProducts.slice(0, needed));
+        }
+        
         featuredProducts.length = 0;
         featuredProducts.push(...filtered);
       }
