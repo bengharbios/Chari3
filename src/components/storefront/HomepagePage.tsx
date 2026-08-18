@@ -1759,12 +1759,8 @@ export default function StorefrontHomepage() {
     if (!Array.isArray(data?.layout) || data.layout.length === 0) {
       return defaultLayout.map(id => ({ id, type: id, visible: true }));
     }
-    // Map items to normalized objects
     const mapped = data.layout
-      .filter((sect: any) => {
-        if (!sect) return false;
-        return typeof sect === 'string' ? true : sect.visible !== false;
-      })
+      .filter((sect: any) => sect != null)
       .map((sect: any) => {
         if (typeof sect === 'string') {
           const id = sect === 'mega_offers_timer' ? 'bento_offers' : sect;
