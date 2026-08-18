@@ -5,6 +5,9 @@ import BottomNav from '@/components/layout/BottomNav';
 import AppShell from '@/components/layout/AppShell';
 import ChatWidget from '@/components/chat/ChatWidget';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function RootHomePage() {
   return (
     <AppShell>
