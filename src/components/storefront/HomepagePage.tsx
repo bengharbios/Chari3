@@ -1536,6 +1536,7 @@ export default function StorefrontHomepage() {
                 </Button>
               </div>
             )}
+            </div>
           </section>
         );
 
