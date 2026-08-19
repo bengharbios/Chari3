@@ -157,6 +157,10 @@
     "copyright": "منصة شاري داي. جميع الحقوق محفوظة."
   },
   "homepage": {
+    "subtitleIn": "العنوان الفرعي باللغة",
+    "selectSliderToEdit": "اختر القسم لتعديله",
+    "mainSliderDefault": "القسم الرئيسي (الافتراضي)",
+    "sliderForSection": "قسم:",
     "shopNow": "تسوق الآن",
     "exploreMore": "اكتشف المزيد",
     "startShopping": "ابدأ التسوق",

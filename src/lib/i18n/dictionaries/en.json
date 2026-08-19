@@ -157,6 +157,10 @@
     "copyright": "ChariDay Platform. All rights reserved."
   },
   "homepage": {
+    "subtitleIn": "Subtitle in",
+    "selectSliderToEdit": "Select Section to Edit",
+    "mainSliderDefault": "Main Section (Default)",
+    "sliderForSection": "Section:",
     "shopNow": "Shop Now",
     "exploreMore": "Explore More",
     "startShopping": "Start Shopping",
