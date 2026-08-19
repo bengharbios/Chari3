@@ -1372,6 +1372,27 @@ export default function AdminHomepageManager() {
                               );
                             })}
 
+                            {/* Dynamic Universal Subtitle based on active languages */}
+                            {languages.map((lang: any) => {
+                              const codeSuffix = lang.code.charAt(0).toUpperCase() + lang.code.slice(1);
+                              const keyName = `subtitle${codeSuffix}`;
+                              const inputLabel = `${t('homepage.subtitleIn', 'Subtitle in')} ${lang.name}`;
+                              return (
+                                <div key={lang.code} className="space-y-2 text-start">
+                                  <Label className="text-xs font-bold">{inputLabel}</Label>
+                                  <Textarea
+                                    value={editSectData.metadata?.[keyName] || ''}
+                                    onChange={e => setEditSectData((prev: any) => ({
+                                      ...prev,
+                                      metadata: { ...prev.metadata, [keyName]: e.target.value }
+                                    }))}
+                                    className="rounded-xl text-sm"
+                                    placeholder={lang.code === 'ar' ? 'اكتب وصفاً قصيراً...' : 'Enter a short subtitle...'}
+                                  />
+                                </div>
+                              );
+                            })}
+
                             {/* Universal Timer */}
                             <div className="space-y-2 text-start">
                               <Label className="text-xs font-bold">{t('homepage.enableCountdownTimer')}</Label>
