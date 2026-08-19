@@ -1577,8 +1577,8 @@ export default function StorefrontHomepage() {
                 <h3 className="text-xl md:text-2xl font-black mb-1.5 leading-tight tracking-tight font-cairo">
                   {getLocalizedField(section, 'title', locale) || t('تسوق من الشركاء الموثوقين', 'Shop from Our Certified Partners')}
                 </h3>
-                <p className="text-[10px] md:text-xs text-slate-300 max-w-xl mx-auto leading-relaxed font-medium">
-                  {t('نوفر لك نخبة من كبرى المتاجر الجزائرية والتجار الأحرار الموثقين بشارات الجودة والمستويات الاحترافية.', 'We connect you with premier Algerian stores and verified independent merchants possessing professional badges.')}
+                <p className="text-[10px] md:text-xs text-slate-300 max-w-xl mx-auto leading-relaxed font-medium whitespace-pre-line">
+                  {getLocalizedField(section, 'subtitle', locale) || t('نوفر لك نخبة من كبرى المتاجر الجزائرية والتجار الأحرار الموثقين بشارات الجودة والمستويات الاحترافية.', 'We connect you with premier Algerian stores and verified independent merchants possessing professional badges.')}
                 </p>
                 <div className="inline-flex p-1 bg-black/20 backdrop-blur-md rounded-full border border-white/10 mt-3 font-cairo select-none mx-auto max-w-fit shadow-inner scale-90 md:scale-100">
                   <button

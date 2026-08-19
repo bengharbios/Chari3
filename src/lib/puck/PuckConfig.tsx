@@ -159,7 +159,9 @@ export const getSaadaConfig = (locale: string, storeData: any = {}) => {
           ...commonFields, 
           limit: { type: "number", label: "Limit" },
           metadata_badgeAr: { type: "text", label: "Badge (Ar)" },
-          metadata_badgeEn: { type: "text", label: "Badge (En)" }
+          metadata_badgeEn: { type: "text", label: "Badge (En)" },
+          metadata_subtitleAr: { type: "textarea", label: "Subtitle (Ar)" },
+          metadata_subtitleEn: { type: "textarea", label: "Subtitle (En)" }
         },
         defaultProps: { titleAr: "أفضل البائعين", titleEn: "Top Sellers", limit: 8, metadata_backgroundColor: "transparent" },
         render: (props: any) => <TopSellersBlock section={constructSection(props)} data={storeData} locale={locale} />
