@@ -1564,23 +1564,23 @@ export default function StorefrontHomepage() {
         const sellers = (data?.topSellers || []).slice(0, section.limit || 8);
 
         return (
-          <section key="top_sellers" className="bg-gradient-to-br from-stone-950 via-slate-900 to-indigo-950 text-white py-8 mt-6 relative overflow-hidden border-y border-white/5">
+          <section key="top_sellers" className="bg-gradient-to-br from-stone-950 via-slate-900 to-indigo-950 text-white py-4 mt-0 relative overflow-hidden border-y border-white/5">
             <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
               <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary rounded-full blur-[120px]" />
               <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-primary rounded-full blur-[120px]" />
             </div>
             <div className="container-platform relative z-10">
-              <div className="text-center mb-6 px-4 max-w-2xl mx-auto">
-                <Badge className="mb-3.5 bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs px-3.5 py-1.5 rounded-full select-none">
+              <div className="text-center mb-2 px-4 max-w-2xl mx-auto">
+                <Badge className="mb-2 bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px] md:text-xs px-2 md:px-3 py-1 rounded-full select-none">
                   ⭐ {getLocalizedField(section, 'badge', locale) || t('تجار شاري داي المميزين', 'ChariDay Top Merchants')}
                 </Badge>
-                <h3 className="text-2xl md:text-4xl font-black mb-3.5 leading-tight tracking-tight font-cairo">
+                <h3 className="text-xl md:text-2xl font-black mb-1.5 leading-tight tracking-tight font-cairo">
                   {getLocalizedField(section, 'title', locale) || t('تسوق من الشركاء الموثوقين', 'Shop from Our Certified Partners')}
                 </h3>
-                <p className="text-xs md:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed font-medium">
+                <p className="text-[10px] md:text-xs text-slate-300 max-w-xl mx-auto leading-relaxed font-medium">
                   {t('نوفر لك نخبة من كبرى المتاجر الجزائرية والتجار الأحرار الموثقين بشارات الجودة والمستويات الاحترافية.', 'We connect you with premier Algerian stores and verified independent merchants possessing professional badges.')}
                 </p>
-                <div className="inline-flex p-1 bg-black/20 backdrop-blur-md rounded-full border border-white/10 mt-6 font-cairo select-none mx-auto max-w-fit shadow-inner">
+                <div className="inline-flex p-1 bg-black/20 backdrop-blur-md rounded-full border border-white/10 mt-3 font-cairo select-none mx-auto max-w-fit shadow-inner scale-90 md:scale-100">
                   <button
                     onClick={() => setActiveMerchantTab('stores')}
                     className={`px-6 py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
@@ -1700,7 +1700,7 @@ export default function StorefrontHomepage() {
                   </div>
                 )}
               </div>
-              <div className="flex justify-center mt-4 mb-2 select-none">
+              <div className="flex justify-center mt-1 mb-1 select-none">
                 <Button
                   variant="outline"
                   className="border-white/20 text-white hover:bg-white/10 rounded-xl"
