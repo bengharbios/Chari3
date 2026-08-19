@@ -44,6 +44,8 @@ export async function GET() {
       trendingSearchesSetting,
       ctaSetting,
       newArrivalThresholdSetting,
+      newArrivalTextArSetting,
+      newArrivalTextEnSetting,
       globalCoupons,
       saadaLayoutSetting,
       trendingCategories
@@ -159,6 +161,8 @@ export async function GET() {
       db.setting.findUnique({ where: { key: 'homepage_trending_searches' } }),
       db.setting.findUnique({ where: { key: 'homepage_cta' } }),
       db.systemSetting.findUnique({ where: { key: 'new_arrival_threshold_days' } }),
+      db.systemSetting.findUnique({ where: { key: 'new_arrival_text_ar' } }),
+      db.systemSetting.findUnique({ where: { key: 'new_arrival_text_en' } }),
 
       db.coupon.findMany({
         where: { 
@@ -521,6 +525,8 @@ export async function GET() {
       isMaintenance: maintenanceSetting?.value === 'true',
       allowGuestCheckout: allowGuestCheckoutSetting?.value === 'true',
       newArrivalThresholdDays: newArrivalThresholdSetting?.value ? parseInt(newArrivalThresholdSetting.value, 10) : 7,
+      newArrivalTextAr: newArrivalTextArSetting?.value || 'وصل حديثاً',
+      newArrivalTextEn: newArrivalTextEnSetting?.value || 'New Arrival',
     });
   } catch (error) {
     console.error('[homepage] Error: Database connection failed. Returning graceful fallback mock data.', error);
