@@ -1564,13 +1564,13 @@ export default function StorefrontHomepage() {
         const sellers = (data?.topSellers || []).slice(0, section.limit || 8);
 
         return (
-          <section key="top_sellers" className="bg-gradient-to-br from-stone-950 via-slate-900 to-indigo-950 text-white py-16 mt-12 relative overflow-hidden border-y border-white/5">
+          <section key="top_sellers" className="bg-gradient-to-br from-stone-950 via-slate-900 to-indigo-950 text-white py-8 mt-6 relative overflow-hidden border-y border-white/5">
             <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
               <div className="absolute -top-40 -left-40 w-96 h-96 bg-primary rounded-full blur-[120px]" />
               <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-primary rounded-full blur-[120px]" />
             </div>
             <div className="container-platform relative z-10">
-              <div className="text-center mb-10 px-4 max-w-2xl mx-auto">
+              <div className="text-center mb-6 px-4 max-w-2xl mx-auto">
                 <Badge className="mb-3.5 bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs px-3.5 py-1.5 rounded-full select-none">
                   ⭐ {getLocalizedField(section, 'badge', locale) || t('تجار شاري داي المميزين', 'ChariDay Top Merchants')}
                 </Badge>
@@ -1600,9 +1600,9 @@ export default function StorefrontHomepage() {
                 </div>
               </div>
               
-              <div className="relative w-full overflow-hidden px-4 md:px-8 mt-6">
+              <div className="relative w-full overflow-hidden px-4 md:px-8 mt-4">
                 {activeMerchantTab === 'stores' && (
-                  <div className="flex overflow-x-auto gap-4 md:gap-6 pb-8 pt-4 snap-x snap-mandatory hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  <div className="flex overflow-x-auto gap-4 md:gap-6 pb-4 pt-2 snap-x snap-mandatory hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {isLoading ? (
                       Array.from({ length: 8 }).map((_, i) => (
                         <div key={i} className="min-w-[100px] md:min-w-[130px] flex flex-col items-center gap-3 snap-start">
@@ -1650,7 +1650,7 @@ export default function StorefrontHomepage() {
                 )}
 
                 {activeMerchantTab === 'sellers' && (
-                  <div className="flex overflow-x-auto gap-4 md:gap-6 pb-8 pt-4 snap-x snap-mandatory hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  <div className="flex overflow-x-auto gap-4 md:gap-6 pb-4 pt-2 snap-x snap-mandatory hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {isLoading ? (
                       Array.from({ length: 8 }).map((_, i) => (
                         <div key={i} className="min-w-[100px] md:min-w-[130px] flex flex-col items-center gap-3 snap-start">
@@ -1700,7 +1700,7 @@ export default function StorefrontHomepage() {
                   </div>
                 )}
               </div>
-              <div className="flex justify-center mt-10 select-none">
+              <div className="flex justify-center mt-4 mb-2 select-none">
                 <Button
                   variant="outline"
                   className="border-white/20 text-white hover:bg-white/10 rounded-xl"
