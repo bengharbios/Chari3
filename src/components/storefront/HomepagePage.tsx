@@ -238,17 +238,14 @@ function ProductCard({
   product, 
   isOfferCard = false, 
   newArrivalThresholdDays = 7,
-  newArrivalTextAr = 'وصل حديثاً',
-  newArrivalTextEn = 'New Arrival'
 }: { 
   product: any; 
   isOfferCard?: boolean; 
   newArrivalThresholdDays?: number;
-  newArrivalTextAr?: string;
-  newArrivalTextEn?: string;
 }) {
   const { locale } = useAppStore();
   const { items: cartItems, addItem } = useCartStore();
+  const { t } = useTranslation();
   const router = useRouter();
   const isAr = locale === 'ar';
   
@@ -326,7 +323,7 @@ function ProductCard({
           ) : (
             <div className="flex items-center gap-1.5">
               <span className="text-[9px] text-amber-600 dark:text-amber-500 font-bold bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-sm whitespace-nowrap">
-                {isAr ? newArrivalTextAr : newArrivalTextEn}
+                {t('storefront.product.new_arrival', 'وصل حديثاً', 'New Arrival')}
               </span>
               {product.soldCount && Number(product.soldCount) > 0 ? (
                 <span className="text-[10px] text-slate-400 font-semibold">({product.soldCount})</span>
@@ -563,14 +560,14 @@ function CategoryProductsRow({
       ) : layoutStyle === 'grid' ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {products.map((p: any) => (
-            <ProductCard key={p.id} product={p} newArrivalThresholdDays={data?.newArrivalThresholdDays} newArrivalTextAr={data?.newArrivalTextAr} newArrivalTextEn={data?.newArrivalTextEn} />
+            <ProductCard key={p.id} product={p} newArrivalThresholdDays={data?.newArrivalThresholdDays} />
           ))}
         </div>
       ) : (
         <div className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
           {products.map((p: any) => (
             <div key={p.id} className="w-[180px] md:w-[220px] shrink-0 snap-start">
-              <ProductCard product={p} newArrivalThresholdDays={data?.newArrivalThresholdDays} newArrivalTextAr={data?.newArrivalTextAr} newArrivalTextEn={data?.newArrivalTextEn} />
+              <ProductCard product={p} newArrivalThresholdDays={data?.newArrivalThresholdDays} />
             </div>
           ))}
         </div>
@@ -1363,7 +1360,7 @@ export default function StorefrontHomepage() {
                             ? "grid-cols-2 justify-items-center max-w-[480px] mx-auto w-full" 
                             : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3"
                       }`}>
-                        {timerProducts.map((p: any) => <ProductCard key={p.id} product={p} isOfferCard={true} newArrivalThresholdDays={data?.newArrivalThresholdDays} newArrivalTextAr={data?.newArrivalTextAr} newArrivalTextEn={data?.newArrivalTextEn} />)}
+                        {timerProducts.map((p: any) => <ProductCard key={p.id} product={p} isOfferCard={true} newArrivalThresholdDays={data?.newArrivalThresholdDays} />)}
                       </div>
                     )}
                   </>
@@ -1538,7 +1535,7 @@ export default function StorefrontHomepage() {
                 {productsToShow
                   .filter((product: any) => product && product.id)
                   .slice(0, section.limit ? Math.min(displayCount, section.limit) : displayCount)
-                  .map((product: any) => <ProductCard key={product.id} product={product} newArrivalThresholdDays={data?.newArrivalThresholdDays} newArrivalTextAr={data?.newArrivalTextAr} newArrivalTextEn={data?.newArrivalTextEn} />)}
+                  .map((product: any) => <ProductCard key={product.id} product={product} newArrivalThresholdDays={data?.newArrivalThresholdDays} />)}
               </div>
             )}
             

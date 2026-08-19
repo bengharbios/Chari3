@@ -1033,5 +1033,10 @@
     "saveCategories": "Save Country License Settings",
     "resetToDefault": "Reset to Country Defaults",
     "algeriaDecreeNotice": "Compliant with Article 180 of Executive Decree 04-381 (Algeria)"
+  },
+  "storefront": {
+    "product": {
+      "new_arrival": "New Arrival"
+    }
   }
 }

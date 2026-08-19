@@ -1033,5 +1033,10 @@
     "saveCategories": "حفظ إعدادات الرخص للدولة",
     "resetToDefault": "إعادة الضبط للافتراضي",
     "algeriaDecreeNotice": "مطابق للمادة 180 من المرسوم التنفيذي 04-381 (الجزائر)"
+  },
+  "storefront": {
+    "product": {
+      "new_arrival": "وصل حديثاً"
+    }
   }
 }

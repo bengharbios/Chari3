@@ -980,5 +980,10 @@
     "saveCategories": "Enregistrer les paramètres du permis",
     "resetToDefault": "Réinitialiser aux valeurs par défaut",
     "algeriaDecreeNotice": "Conforme à l'article 180 du décret exécutif 04-381 (Algérie)"
+  },
+  "storefront": {
+    "product": {
+      "new_arrival": "Nouveau"
+    }
   }
 }

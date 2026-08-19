@@ -101,8 +101,6 @@ export default function AdminSettingsPage() {
             enable_store_registration: data.settings.enable_store_registration !== undefined ? String(data.settings.enable_store_registration) : 'true',
             tax_rate_auto_entrepreneur: data.settings.tax_rate_auto_entrepreneur !== undefined ? String(data.settings.tax_rate_auto_entrepreneur) : '0.5',
             new_arrival_threshold_days: data.settings.new_arrival_threshold_days || '7',
-            new_arrival_text_ar: data.settings.new_arrival_text_ar || 'وصل حديثاً',
-            new_arrival_text_en: data.settings.new_arrival_text_en || 'New Arrival',
           }));
         }
 
@@ -279,32 +277,6 @@ export default function AdminSettingsPage() {
                     <p className="text-xs text-muted-foreground">
                       {t('إذا كان عمر المنتج أقل من أو يساوي هذا العدد من الأيام، فستظهر الشارة بدلاً من النجوم الفارغة. (ضع 0 لتعطيل الاعتماد على الوقت والاعتماد على التقييم فقط).', 'If product age <= this many days, show badge instead of empty stars. (Set to 0 to disable time-based check and rely solely on rating)')}
                     </p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="new_arrival_text_ar">{t('النص بالعربية', 'Arabic Text')}</Label>
-                    <Input
-                      id="new_arrival_text_ar"
-                      name="new_arrival_text_ar"
-                      value={settings.new_arrival_text_ar}
-                      onChange={handleChange}
-                      placeholder="وصل حديثاً"
-                      className="bg-background"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="new_arrival_text_en">{t('النص بالإنجليزية', 'English Text')}</Label>
-                    <Input
-                      id="new_arrival_text_en"
-                      name="new_arrival_text_en"
-                      value={settings.new_arrival_text_en}
-                      onChange={handleChange}
-                      placeholder="New Arrival"
-                      className="font-mono bg-background text-left"
-                      dir="ltr"
-                    />
                   </div>
                 </div>
               </div>
