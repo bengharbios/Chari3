@@ -1572,13 +1572,13 @@ export default function StorefrontHomepage() {
             <div className="container-platform relative z-10">
               <div className="text-center mb-2 px-4 max-w-2xl mx-auto">
                 <Badge className="mb-2 bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px] md:text-xs px-2 md:px-3 py-1 rounded-full select-none">
-                  ⭐ {getLocalizedField(section, 'badge', locale) || t('تجار شاري داي المميزين', 'ChariDay Top Merchants')}
+                  ⭐ {getLocalizedField(section, 'badge', locale) || t('homepage.topMerchants')}
                 </Badge>
                 <h3 className="text-xl md:text-2xl font-black mb-1.5 leading-tight tracking-tight font-cairo">
-                  {getLocalizedField(section, 'title', locale) || t('تسوق من الشركاء الموثوقين', 'Shop from Our Certified Partners')}
+                  {getLocalizedField(section, 'title', locale) || t('homepage.topMerchantsTitle')}
                 </h3>
                 <p className="text-[10px] md:text-xs text-slate-300 max-w-xl mx-auto leading-relaxed font-medium whitespace-pre-line">
-                  {getLocalizedField(section, 'subtitle', locale) || t('نوفر لك نخبة من كبرى المتاجر الجزائرية والتجار الأحرار الموثقين بشارات الجودة والمستويات الاحترافية.', 'We connect you with premier Algerian stores and verified independent merchants possessing professional badges.')}
+                  {getLocalizedField(section, 'subtitle', locale) || t('homepage.topMerchantsDesc')}
                 </p>
                 <div className="inline-flex p-1 bg-black/20 backdrop-blur-md rounded-full border border-white/10 mt-3 font-cairo select-none mx-auto max-w-fit shadow-inner scale-90 md:scale-100">
                   <button
