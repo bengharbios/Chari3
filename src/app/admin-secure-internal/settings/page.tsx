@@ -264,7 +264,7 @@ export default function AdminSettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-4 bg-muted/30 p-4 rounded-xl border border-border/50">
                 <div className="space-y-2">
-                  <Label htmlFor="new_arrival_threshold_days">{t('مدة عرض شارة "وصل حديثاً" (بالأيام)', 'New Arrival Badge Duration (Days)')}</Label>
+                  <Label htmlFor="new_arrival_threshold_days">{t('مدة عرض شارة المنتجات الجديدة (بالأيام)', 'New Products Badge Duration (Days)')}</Label>
                   <div className="flex flex-col gap-1">
                     <Input
                       id="new_arrival_threshold_days"
@@ -275,7 +275,7 @@ export default function AdminSettingsPage() {
                       className="font-mono bg-background"
                     />
                     <p className="text-xs text-muted-foreground">
-                      {t('إذا كان عمر المنتج أقل من أو يساوي هذا العدد من الأيام، فستظهر الشارة بدلاً من النجوم الفارغة. (ضع 0 لتعطيل الاعتماد على الوقت والاعتماد على التقييم فقط).', 'If product age <= this many days, show badge instead of empty stars. (Set to 0 to disable time-based check and rely solely on rating)')}
+                      {t('إذا كان عمر المنتج أقل من أو يساوي هذا العدد من الأيام، فستظهر شارة المنتجات الجديدة بدلاً من النجوم الفارغة. (ضع 0 لتعطيل الاعتماد على الوقت والاعتماد على التقييم فقط).', 'If product age <= this many days, show the new products badge instead of empty stars. (Set to 0 to disable time-based check and rely solely on rating)')}
                     </p>
                   </div>
                 </div>
