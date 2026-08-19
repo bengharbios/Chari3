@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
 import { useTranslation } from '@/lib/i18n/useTranslation';
-import { Loader2, Save, ArrowRight, Settings as SettingsIcon } from 'lucide-react';
+import { Loader2, Save, ArrowRight, Settings as SettingsIcon, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -278,6 +278,17 @@ export default function AdminSettingsPage() {
                       {t('إذا كان عمر المنتج أقل من أو يساوي هذا العدد من الأيام، فستظهر شارة المنتجات الجديدة بدلاً من النجوم الفارغة. (ضع 0 لتعطيل الاعتماد على الوقت والاعتماد على التقييم فقط).', 'If product age <= this many days, show the new products badge instead of empty stars. (Set to 0 to disable time-based check and rely solely on rating)')}
                     </p>
                   </div>
+                </div>
+
+                <div className="flex items-start gap-2 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mt-2">
+                  <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                  <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
+                    {t('لتغيير كلمة "وصل حديثاً" أو "New Arrival" التي تظهر على المنتجات، يرجى التوجه إلى', 'To change the "New Arrival" text that appears on products, please go to')} 
+                    <Link href={getAdminPath('settings/translations')} className="font-bold underline mx-1 hover:text-blue-900 dark:hover:text-blue-100">
+                      {t('نظام الترجمات', 'Translations System')}
+                    </Link> 
+                    {t('وابحث عن المفتاح:', 'and search for the key:')} <code className="bg-blue-100 dark:bg-blue-800/50 px-1 py-0.5 rounded font-mono text-[10px] mx-1" dir="ltr">storefront.product.new_arrival</code>
+                  </p>
                 </div>
               </div>
 
