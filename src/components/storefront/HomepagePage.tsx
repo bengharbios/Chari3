@@ -234,13 +234,23 @@ const LEVEL_BADGE: Record<number, string> = {
 };
 
 // Standalone reusable Product Card matching Noon/Temu visuals
-function ProductCard({ product, isOfferCard = false }: { product: any; isOfferCard?: boolean }) {
+function ProductCard({ product, isOfferCard = false, newArrivalThresholdDays = 7 }: { product: any; isOfferCard?: boolean; newArrivalThresholdDays?: number }) {
   const { locale } = useAppStore();
   const { items: cartItems, addItem } = useCartStore();
   const router = useRouter();
   const isAr = locale === 'ar';
   
   const isInCart = cartItems.some((item) => item.product.id === product.id);
+
+  const showNewArrival = React.useMemo(() => {
+    // If setting > 0, check age of product
+    if (newArrivalThresholdDays > 0 && product.createdAt) {
+      const daysOld = (new Date().getTime() - new Date(product.createdAt).getTime()) / (1000 * 3600 * 24);
+      return daysOld <= newArrivalThresholdDays;
+    }
+    // If setting is 0, completely disable time-based check and rely solely on rating
+    return !product.rating || Number(product.rating) <= 0;
+  }, [product.rating, product.createdAt, newArrivalThresholdDays]);
 
   let images: string[] = [];
   if (Array.isArray(product.images)) {
@@ -294,9 +304,9 @@ function ProductCard({ product, isOfferCard = false }: { product: any; isOfferCa
         <p className="text-[10px] text-muted-foreground/80 mb-1.5 truncate font-medium">{product.category?.name || ''}</p>
         <h4 className="text-sm font-bold line-clamp-2 mb-2 text-slate-800 dark:text-slate-100 leading-snug min-h-[40px] group-hover:text-amber-500 transition-colors">{isAr ? product.name : (product.nameEn || product.name)}</h4>
         <div className="flex items-center gap-1.5 mb-3 min-h-[16px]">
-          {product.rating && Number(product.rating) > 0 ? (
+          {!showNewArrival ? (
             <>
-              <StarRating rating={Number(product.rating)} />
+              <StarRating rating={Number(product.rating || 0)} />
               {product.soldCount && Number(product.soldCount) > 0 ? (
                 <span className="text-[10px] text-slate-400 font-semibold">({product.soldCount})</span>
               ) : null}
@@ -541,14 +551,14 @@ function CategoryProductsRow({
       ) : layoutStyle === 'grid' ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {products.map((p: any) => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard key={p.id} product={p} newArrivalThresholdDays={data?.newArrivalThresholdDays} />
           ))}
         </div>
       ) : (
         <div className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
           {products.map((p: any) => (
             <div key={p.id} className="w-[180px] md:w-[220px] shrink-0 snap-start">
-              <ProductCard product={p} />
+              <ProductCard product={p} newArrivalThresholdDays={data?.newArrivalThresholdDays} />
             </div>
           ))}
         </div>
@@ -1341,7 +1351,7 @@ export default function StorefrontHomepage() {
                             ? "grid-cols-2 justify-items-center max-w-[480px] mx-auto w-full" 
                             : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3"
                       }`}>
-                        {timerProducts.map((p: any) => <ProductCard key={p.id} product={p} isOfferCard={true} />)}
+                        {timerProducts.map((p: any) => <ProductCard key={p.id} product={p} isOfferCard={true} newArrivalThresholdDays={data?.newArrivalThresholdDays} />)}
                       </div>
                     )}
                   </>
@@ -1516,7 +1526,7 @@ export default function StorefrontHomepage() {
                 {productsToShow
                   .filter((product: any) => product && product.id)
                   .slice(0, section.limit ? Math.min(displayCount, section.limit) : displayCount)
-                  .map((product: any) => <ProductCard key={product.id} product={product} />)}
+                  .map((product: any) => <ProductCard key={product.id} product={product} newArrivalThresholdDays={data?.newArrivalThresholdDays} />)}
               </div>
             )}
             

@@ -43,6 +43,7 @@ export default function AdminSettingsPage() {
     enable_logistics_registration: 'true',
     enable_store_registration: 'true',
     tax_rate_auto_entrepreneur: '0.5',
+    new_arrival_threshold_days: '7',
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -97,6 +98,7 @@ export default function AdminSettingsPage() {
             enable_logistics_registration: data.settings.enable_logistics_registration !== undefined ? String(data.settings.enable_logistics_registration) : 'true',
             enable_store_registration: data.settings.enable_store_registration !== undefined ? String(data.settings.enable_store_registration) : 'true',
             tax_rate_auto_entrepreneur: data.settings.tax_rate_auto_entrepreneur !== undefined ? String(data.settings.tax_rate_auto_entrepreneur) : '0.5',
+            new_arrival_threshold_days: data.settings.new_arrival_threshold_days || '7',
           }));
         }
 
@@ -258,6 +260,23 @@ export default function AdminSettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="new_arrival_threshold_days">{t('مدة عرض شارة "وصل حديثاً" (بالأيام)', 'New Arrival Badge Duration (Days)')}</Label>
+                <div className="flex flex-col gap-1">
+                  <Input
+                    id="new_arrival_threshold_days"
+                    name="new_arrival_threshold_days"
+                    type="number"
+                    value={settings.new_arrival_threshold_days}
+                    onChange={handleChange}
+                    className="font-mono bg-background"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('إذا كان عمر المنتج أقل من أو يساوي هذا العدد من الأيام، فستظهر شارة "وصل حديثاً" بدلاً من النجوم الفارغة. (ضع 0 لتعطيل الاعتماد على الوقت والاعتماد على التقييم فقط).', 'If product age <= this many days, show "New Arrival" badge instead of empty stars. (Set to 0 to disable time-based check and rely solely on rating)')}
+                  </p>
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="enable_brand_system">{t('نظام الماركات والعلامات التجارية', 'Brands & Trademarks System')}</Label>
                 <select
