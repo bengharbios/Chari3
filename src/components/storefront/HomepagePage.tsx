@@ -1580,118 +1580,126 @@ export default function StorefrontHomepage() {
                 <p className="text-xs md:text-sm text-slate-300 max-w-xl mx-auto leading-relaxed font-medium">
                   {t('نوفر لك نخبة من كبرى المتاجر الجزائرية والتجار الأحرار الموثقين بشارات الجودة والمستويات الاحترافية.', 'We connect you with premier Algerian stores and verified independent merchants possessing professional badges.')}
                 </p>
-                <div className="inline-flex p-1 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 mt-8 gap-1.5 font-cairo select-none">
+                <div className="inline-flex p-1 bg-black/20 backdrop-blur-md rounded-full border border-white/10 mt-6 font-cairo select-none mx-auto max-w-fit shadow-inner">
                   <button
                     onClick={() => setActiveMerchantTab('stores')}
-                    className={`px-5 py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${
-                      activeMerchantTab === 'stores' ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]' : 'text-white/70 hover:text-white hover:bg-white/5'
+                    className={`px-6 py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
+                      activeMerchantTab === 'stores' ? 'bg-amber-500 text-slate-950 shadow-md scale-105' : 'text-white/60 hover:text-white'
                     }`}
                   >
-                    🏪 {t('المتاجر الكبرى المتميزة', 'Premium Stores')}
+                    🏪 <span className={activeMerchantTab === 'stores' ? '' : 'hidden sm:inline'}>{t('المتاجر الكبرى', 'Premium Stores')}</span>
                   </button>
                   <button
                     onClick={() => setActiveMerchantTab('sellers')}
-                    className={`px-5 py-2.5 rounded-xl text-xs md:text-sm font-black transition-all ${
-                      activeMerchantTab === 'sellers' ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]' : 'text-white/70 hover:text-white hover:bg-white/5'
+                    className={`px-6 py-2 rounded-full text-xs md:text-sm font-bold transition-all duration-300 flex items-center gap-2 ${
+                      activeMerchantTab === 'sellers' ? 'bg-amber-500 text-slate-950 shadow-md scale-105' : 'text-white/60 hover:text-white'
                     }`}
                   >
-                    💼 {t('التجار المستقلون الأحرار', 'Independent Sellers')}
+                    💼 <span className={activeMerchantTab === 'sellers' ? '' : 'hidden sm:inline'}>{t('التجار المستقلون', 'Independent Sellers')}</span>
                   </button>
                 </div>
               </div>
               
-              {activeMerchantTab === 'stores' && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-6 font-cairo">
-                  {isLoading ? (
-                    Array.from({ length: 4 }).map((_, i) => <div key={i} className="rounded-2xl bg-white/5 animate-pulse h-44" />)
-                  ) : stores.length === 0 ? (
-                    <div className="col-span-full py-12 text-center text-white/50 text-sm">
-                      {t('لا توجد متاجر نشطة حالياً', 'No active stores at the moment.')}
-                    </div>
-                  ) : (
-                    stores.map((store) => (
-                      <Card
-                        key={store.id}
-                        className="bg-white/5 border-white/10 hover:border-amber-500/50 hover:bg-white/10 transition-all duration-300 cursor-pointer group text-white shadow-xl rounded-[24px] hover:scale-105"
-                        onClick={() => router.push(`/store/${store.slug || store.id}`)}
-                      >
-                        <CardContent className="p-5 text-center flex flex-col items-center h-full">
-                          <div className="relative mb-4 w-16 h-16 shrink-0 group-hover:scale-105 transition-transform duration-300">
-                            {store.logo ? (
-                              <img src={store.logo} className="w-full h-full rounded-2xl object-cover border-2 border-white/20 shadow-md" alt={store.name} />
-                            ) : (
-                              <div className="w-full h-full rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-2xl font-bold">🏪</div>
-                            )}
-                            <span className="absolute -bottom-1 -end-1 text-lg">{LEVEL_BADGE[store.level] || '⭐'}</span>
+              <div className="relative w-full overflow-hidden px-4 md:px-8 mt-6">
+                {activeMerchantTab === 'stores' && (
+                  <div className="flex overflow-x-auto gap-4 md:gap-6 pb-8 pt-4 snap-x snap-mandatory hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {isLoading ? (
+                      Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className="min-w-[100px] md:min-w-[130px] flex flex-col items-center gap-3 snap-start">
+                          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/5 animate-pulse" />
+                          <div className="w-20 h-3 bg-white/5 animate-pulse rounded" />
+                        </div>
+                      ))
+                    ) : stores.length === 0 ? (
+                      <div className="w-full py-12 text-center text-white/50 text-sm">
+                        {t('لا توجد متاجر نشطة حالياً', 'No active stores at the moment.')}
+                      </div>
+                    ) : (
+                      stores.map((store) => (
+                        <div
+                          key={store.id}
+                          className="min-w-[100px] md:min-w-[120px] max-w-[100px] md:max-w-[120px] flex flex-col items-center gap-2 md:gap-3 snap-start group cursor-pointer"
+                          onClick={() => router.push(`/store/${store.slug || store.id}`)}
+                        >
+                          <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-full p-[3px] bg-gradient-to-br from-amber-400/30 via-orange-500/30 to-indigo-500/30 group-hover:from-amber-400 group-hover:via-orange-500 group-hover:to-amber-500 transition-all duration-500 shadow-lg group-hover:shadow-[0_0_20px_rgba(245,158,11,0.3)]">
+                            <div className="w-full h-full rounded-full bg-slate-900 border-[3px] border-slate-900 overflow-hidden relative">
+                              {store.logo ? (
+                                <img src={store.logo} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={store.name} />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-2xl bg-slate-800">🏪</div>
+                              )}
+                              <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300" />
+                            </div>
+                            <div className="absolute -bottom-1 -end-1 bg-slate-900 rounded-full p-[2px] border border-white/10 shadow-md z-10 group-hover:scale-110 transition-transform">
+                              <span className="text-[10px] md:text-xs flex items-center justify-center min-w-[20px]">{LEVEL_BADGE[store.level] || '⭐'}</span>
+                            </div>
                           </div>
-                          <div className="grow min-w-0">
-                            <h4 className="font-black text-sm md:text-base truncate group-hover:text-amber-400 transition-colors">
+                          <div className="text-center w-full px-1">
+                            <h4 className="font-bold text-xs md:text-sm text-white/90 group-hover:text-amber-400 truncate transition-colors">
                               {isAr ? store.name : (store.nameEn || store.name)}
                             </h4>
-                            <p className="text-[10px] text-white/40 mt-1.5 truncate">
-                              👤 {t('مدير المتجر:', 'Manager:')} {store.manager?.name || ''}
-                            </p>
+                            <div className="flex items-center justify-center gap-1 mt-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                              <Star className="size-2.5 fill-amber-400 text-amber-400" />
+                              <span className="text-[10px] text-white font-medium">{store.rating.toFixed(1)}</span>
+                            </div>
                           </div>
-                          <div className="flex items-center justify-center gap-1.5 mt-3 pt-3 border-t border-white/5 w-full font-bold">
-                            <Star className="size-3.5 fill-amber-400 text-amber-400" />
-                            <span className="text-xs">{store.rating.toFixed(1)}</span>
-                            <span className="text-white/30 text-[10px]">•</span>
-                            <span className="text-white/50 text-[10px]">{store._count?.products || 0} {t('منتج', 'products')}</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </div>
-              )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
 
-              {activeMerchantTab === 'sellers' && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5 md:gap-6 font-cairo">
-                  {isLoading ? (
-                    Array.from({ length: 4 }).map((_, i) => <div key={i} className="rounded-2xl bg-white/5 animate-pulse h-44" />)
-                  ) : sellers.length === 0 ? (
-                    <div className="col-span-full py-12 text-center text-white/50 text-sm">
-                      {t('لا يوجد تجار مستقلون حالياً', 'No active independent sellers at the moment.')}
-                    </div>
-                  ) : (
-                    sellers.map((seller) => (
-                      <Card
-                        key={seller.id}
-                        className="bg-white/5 border-white/10 hover:border-amber-500/50 hover:bg-white/10 transition-all duration-300 cursor-pointer group text-white shadow-xl rounded-[24px] hover:scale-105"
-                        onClick={() => {
-                          useAppStore.getState().setSelectedSellerId(seller.id);
-                          router.push(`/sellers/${seller.id}`);
-                        }}
-                      >
-                        <CardContent className="p-5 text-center flex flex-col items-center h-full">
-                          <div className="relative mb-4 w-16 h-16 shrink-0 group-hover:scale-105 transition-transform duration-300">
-                            {seller.user?.avatar ? (
-                              <img src={seller.user.avatar} className="w-full h-full rounded-full object-cover border-2 border-white/20 shadow-md" alt={seller.user.name} />
-                            ) : (
-                              <div className="w-full h-full rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-xl font-bold">{seller.user?.name?.charAt(0) || ''}</div>
-                            )}
-                            <span className="absolute -bottom-1 -end-1 text-lg" title={`Level ${seller.level}`}>{LEVEL_BADGE[seller.level] || '⭐'}</span>
+                {activeMerchantTab === 'sellers' && (
+                  <div className="flex overflow-x-auto gap-4 md:gap-6 pb-8 pt-4 snap-x snap-mandatory hide-scrollbar" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {isLoading ? (
+                      Array.from({ length: 8 }).map((_, i) => (
+                        <div key={i} className="min-w-[100px] md:min-w-[130px] flex flex-col items-center gap-3 snap-start">
+                          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-white/5 animate-pulse" />
+                          <div className="w-20 h-3 bg-white/5 animate-pulse rounded" />
+                        </div>
+                      ))
+                    ) : sellers.length === 0 ? (
+                      <div className="w-full py-12 text-center text-white/50 text-sm">
+                        {t('لا يوجد تجار مستقلون حالياً', 'No active independent sellers at the moment.')}
+                      </div>
+                    ) : (
+                      sellers.map((seller) => (
+                        <div
+                          key={seller.id}
+                          className="min-w-[100px] md:min-w-[120px] max-w-[100px] md:max-w-[120px] flex flex-col items-center gap-2 md:gap-3 snap-start group cursor-pointer"
+                          onClick={() => {
+                            useAppStore.getState().setSelectedSellerId(seller.id);
+                            router.push(`/sellers/${seller.id}`);
+                          }}
+                        >
+                          <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-full p-[3px] bg-gradient-to-br from-slate-400/20 to-slate-600/20 group-hover:from-blue-400 group-hover:to-indigo-500 transition-all duration-500 shadow-lg group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+                            <div className="w-full h-full rounded-full bg-slate-900 border-[3px] border-slate-900 overflow-hidden relative">
+                              {seller.user?.avatar ? (
+                                <img src={seller.user.avatar} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={seller.user.name} />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-xl font-bold bg-slate-800 text-white/50">{seller.user?.name?.charAt(0) || ''}</div>
+                              )}
+                              <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors duration-300" />
+                            </div>
+                            <div className="absolute -bottom-1 -end-1 bg-slate-900 rounded-full p-[2px] border border-white/10 shadow-md z-10 group-hover:scale-110 transition-transform">
+                              <span className="text-[10px] md:text-xs flex items-center justify-center min-w-[20px]" title={`Level ${seller.level}`}>{LEVEL_BADGE[seller.level] || '⭐'}</span>
+                            </div>
                           </div>
-                          <div className="grow min-w-0">
-                            <h4 className="font-black text-sm md:text-base truncate group-hover:text-amber-400 transition-colors">
+                          <div className="text-center w-full px-1">
+                            <h4 className="font-bold text-xs md:text-sm text-white/90 group-hover:text-blue-400 truncate transition-colors">
                               {seller.storeName || seller.user?.name}
                             </h4>
-                            <p className="text-[10px] text-white/40 mt-1.5 truncate">
-                              💼 {t('تاجر معتمد', 'Certified Merchant')}
-                            </p>
+                            <div className="flex items-center justify-center gap-1 mt-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                              <Star className="size-2.5 fill-amber-400 text-amber-400" />
+                              <span className="text-[10px] text-white font-medium">{seller.rating.toFixed(1)}</span>
+                            </div>
                           </div>
-                          <div className="flex items-center justify-center gap-1.5 mt-3 pt-3 border-t border-white/5 w-full font-bold">
-                            <Star className="size-3.5 fill-amber-400 text-amber-400" />
-                            <span className="text-xs">{seller.rating.toFixed(1)}</span>
-                            <span className="text-white/30 text-[10px]">•</span>
-                            <span className="text-white/50 text-[10px]">{seller._count?.products || 0} {t('منتج', 'products')}</span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </div>
-              )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
               <div className="flex justify-center mt-10 select-none">
                 <Button
                   variant="outline"
