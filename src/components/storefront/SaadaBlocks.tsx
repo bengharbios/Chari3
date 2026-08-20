@@ -257,16 +257,62 @@ function CountdownTimer({ targetDate }: { targetDate: string }) {
 }
 
 function AdBanner({ ads, className = '' }: { ads?: any[]; className?: string }) {
-  if (!ads || ads.length === 0 || !ads[0]) return null;
-  const ad = ads[0];
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!ads || ads.length <= 1 || !scrollRef.current) return;
+    
+    const interval = setInterval(() => {
+      if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        if (Math.abs(scrollLeft) + clientWidth >= scrollWidth - 10) {
+          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          const dir = document.documentElement.dir === 'rtl' ? -1 : 1;
+          scrollRef.current.scrollBy({ left: clientWidth * dir, behavior: 'smooth' });
+        }
+      }
+    }, 4500);
+    
+    return () => clearInterval(interval);
+  }, [ads]);
+
+  if (!ads || ads.length === 0) return null;
+
   return (
-    <a href={ad.linkUrl || '#'} className={`block overflow-hidden rounded-[24px] ${className}`} onClick={() => fetch(`/api/admin/advertisements`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: ad.id, clicks: 1 }) }).catch(() => {})}>
-      <div className="relative w-full h-full bg-gradient-to-r from-stone-900 via-stone-850 to-indigo-950 flex items-center justify-center p-6 border border-white/5 shadow-2xl">
-        <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
-        <p className="text-amber-400 font-black text-base md:text-lg tracking-wider text-center">{ad.title}</p>
-        <Badge className="absolute top-3 end-3 bg-white/10 text-white border-white/10 text-[10px]">إعلان</Badge>
+    <div className={`relative w-full overflow-hidden rounded-none md:rounded-md bg-stone-900 ${className}`}>
+      <div 
+        ref={scrollRef}
+        className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth"
+      >
+        {ads.map((ad, idx) => (
+          <a 
+            key={ad.id || idx}
+            href={ad.linkUrl || '#'} 
+            className="flex-shrink-0 w-full h-full snap-center block relative" 
+            onClick={() => fetch(`/api/admin/advertisements`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: ad.id, clicks: 1 }) }).catch(() => {})}
+          >
+            {ad.imageUrl ? (
+              <img src={ad.imageUrl} alt={ad.title || 'Ad'} className="w-full h-full object-cover md:object-fill object-center hover:opacity-95 transition-opacity" />
+            ) : (
+              <div className="relative w-full h-full bg-gradient-to-r from-stone-900 via-stone-850 to-indigo-950 flex items-center justify-center p-6">
+                <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
+                <p className="text-amber-400 font-black text-base md:text-lg tracking-wider text-center">{ad.title}</p>
+                <Badge className="absolute top-3 end-3 bg-white/10 text-white border-white/10 text-[10px]">إعلان</Badge>
+              </div>
+            )}
+          </a>
+        ))}
       </div>
-    </a>
+      
+      {ads.length > 1 && (
+        <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1 pointer-events-none">
+          {ads.map((_, i) => (
+            <div key={i} className="w-1.5 h-1.5 rounded-full bg-white/50" />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
