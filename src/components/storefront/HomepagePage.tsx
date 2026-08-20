@@ -494,6 +494,7 @@ function CategoryProductsRow({
   storeId,
   sellerId,
   filterType = 'newest',
+  newArrivalThresholdDays,
   children
 }: any) {
   const [products, setProducts] = useState<any[]>([]);
@@ -560,14 +561,14 @@ function CategoryProductsRow({
       ) : layoutStyle === 'grid' ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {products.map((p: any) => (
-            <ProductCard key={p.id} product={p} newArrivalThresholdDays={data?.newArrivalThresholdDays} />
+            <ProductCard key={p.id} product={p} newArrivalThresholdDays={newArrivalThresholdDays} />
           ))}
         </div>
       ) : (
         <div className="flex gap-4 overflow-x-auto py-2 scrollbar-none snap-x snap-mandatory">
           {products.map((p: any) => (
             <div key={p.id} className="w-[180px] md:w-[220px] shrink-0 snap-start">
-              <ProductCard product={p} newArrivalThresholdDays={data?.newArrivalThresholdDays} />
+              <ProductCard product={p} newArrivalThresholdDays={newArrivalThresholdDays} />
             </div>
           ))}
         </div>
@@ -1792,6 +1793,7 @@ export default function StorefrontHomepage() {
             locale={locale}
             layoutStyle={section.layoutStyle}
             filterType={section.filterType || 'newest'}
+            newArrivalThresholdDays={data?.newArrivalThresholdDays}
           />
         );
 
