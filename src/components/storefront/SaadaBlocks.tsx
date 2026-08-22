@@ -293,7 +293,7 @@ function AdBanner({ ads, className = '' }: { ads?: any[]; className?: string }) 
             onClick={() => fetch(`/api/admin/advertisements`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: ad.id, clicks: 1 }) }).catch(() => {})}
           >
             {ad.imageUrl ? (
-              <img src={ad.imageUrl} alt={ad.title || 'Ad'} className="w-full h-auto object-contain object-center hover:opacity-95 transition-opacity" />
+              <img src={ad.imageUrl} alt={ad.title || 'Ad'} className="w-full h-full object-cover object-center hover:opacity-95 transition-opacity" />
             ) : (
               <div className="relative w-full h-full min-h-[60px] bg-gradient-to-r from-stone-900 via-stone-850 to-indigo-950 flex items-center justify-center p-2 sm:p-4 md:p-6">
                 <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
