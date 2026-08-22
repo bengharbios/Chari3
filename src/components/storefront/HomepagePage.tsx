@@ -1963,8 +1963,8 @@ return (
     <div className="min-h-screen bg-[#FAF9F6] dark:bg-slate-950 font-cairo">
       {/* ── TOP AD BANNER ── */}
       {data?.advertisements?.banner_top && (
-        <div className="w-full relative z-10">
-          <AdBanner ads={data.advertisements.banner_top} className="w-full h-[70px] md:h-[90px] lg:h-[110px] rounded-none shadow-sm" />
+        <div className="container-platform relative z-10 pt-4">
+          <AdBanner ads={data.advertisements.banner_top} className="w-full h-[70px] md:h-[90px] lg:h-[110px] rounded-md shadow-sm" />
         </div>
       )}
  
