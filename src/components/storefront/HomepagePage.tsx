@@ -1969,7 +1969,8 @@ return (
       )}
  
       {/* ── TRENDING SEARCH SUGGESTIONS ── */}
-      <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-none border-b border-border/80 bg-slate-50/50 dark:bg-slate-900/10 px-4 md:px-8 select-none snap-x snap-mandatory">
+      <div className="border-b border-border/80 bg-slate-50/50 dark:bg-slate-900/10 w-full mb-4">
+        <div className="container-platform flex items-center gap-2 py-3 overflow-x-auto scrollbar-none select-none snap-x snap-mandatory">
         <span className="text-[10px] md:text-xs font-black text-slate-500 shrink-0 flex items-center gap-1.5 snap-start">
           <Search className="w-3.5 h-3.5" />
           {globalT('homepage.searchSuggestions') || 'البحث الشائع:'}
@@ -2012,6 +2013,7 @@ return (
             </button>
           ));
         })()}
+        </div>
       </div>
  
       {/* Render Dynamic Order of Sections */}
