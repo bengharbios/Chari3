@@ -1964,7 +1964,7 @@ return (
       {/* ── TOP AD BANNER ── */}
       {data?.advertisements?.banner_top && (
         <div className="w-full relative z-10">
-          <AdBanner ads={data.advertisements.banner_top} className="h-16 sm:h-20 md:h-24 lg:h-32 rounded-none shadow-sm" />
+          <AdBanner ads={data.advertisements.banner_top} className="h-10 sm:h-12 md:h-14 lg:h-16 rounded-none shadow-sm" />
         </div>
       )}
  
