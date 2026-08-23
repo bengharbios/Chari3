@@ -609,7 +609,7 @@ function CategoryProductsRow({
           {isAr ? 'لا توجد منتجات حالياً في هذا القسم' : 'No products available in this section'}
         </div>
       ) : layoutStyle === 'grid' ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
           {products.map((p: any) => (
             <ProductCard key={p.id} product={p} newArrivalThresholdDays={newArrivalThresholdDays} />
           ))}
@@ -1582,7 +1582,7 @@ export default function StorefrontHomepage() {
             {isLoading || isFilterLoading ? (
               <ProductSliderSkeleton />
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3 md:gap-4">
                 {productsToShow
                   .filter((product: any) => product && product.id)
                   .slice(0, section.limit ? Math.min(displayCount, section.limit) : displayCount)
