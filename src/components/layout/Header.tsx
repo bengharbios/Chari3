@@ -783,7 +783,7 @@ export default function Header() {
           </div>
 
           {/* Search Bar — Desktop only */}
-          <div ref={searchRef} className="hidden md:flex flex-1 max-w-2xl mx-4 relative z-50">
+          <div ref={searchRef} className="hidden md:flex flex-1 max-w-2xl mx-4 relative z-[110]">
             <div className="relative w-full">
               <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -1107,7 +1107,7 @@ export default function Header() {
 
         {/* Mobile Search (only when toggled) */}
         {mobileSearchOpen && (
-          <div className="md:hidden pb-3 animate-fade-in relative z-50">
+          <div className="md:hidden pb-3 animate-fade-in relative z-[110]">
             <div className="relative">
               <Search className="absolute top-1/2 -translate-y-1/2 start-3.5 h-4 w-4 text-muted-foreground" />
               <Input
