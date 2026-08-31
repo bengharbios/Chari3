@@ -57,6 +57,26 @@ export default function ProductCard({ product }: { product: any }) {
     }
   };
 
+  // Parse all available images
+  let allImages: string[] = [];
+  if (product?.images) {
+    if (typeof product.images === 'string') {
+      try {
+        const parsed = JSON.parse(product.images);
+        if (Array.isArray(parsed) && parsed.length > 0) allImages = parsed;
+      } catch (e) {}
+    } else if (Array.isArray(product.images) && product.images.length > 0) {
+      allImages = product.images;
+    }
+  }
+  
+  // Ensure mainImage is included (fallback)
+  if (allImages.length === 0 && product?.mainImage) {
+    allImages = [product.mainImage];
+  } else if (product?.mainImage && !allImages.includes(product.mainImage)) {
+    allImages = [product.mainImage, ...allImages];
+  }
+
   return (
     <div 
       className="group bg-surface rounded-[24px] border border-border/60 overflow-hidden hover:shadow-2xl hover:shadow-brand/5 hover:border-brand/30 transition-all duration-500 cursor-pointer flex flex-col h-full relative"
@@ -64,15 +84,24 @@ export default function ProductCard({ product }: { product: any }) {
     >
       {/* Image */}
       <div className="relative aspect-square bg-muted/10 overflow-hidden">
-        {product.mainImage ? (
-          <img 
-            src={`/api/files/${product.mainImage}`}
-            alt={locale === 'ar' ? product.titleAr : product.titleEn}
-            className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
-          />
+        {allImages.length > 0 ? (
+          <>
+            <img 
+              src={allImages[0].startsWith('http') || allImages[0].startsWith('data:') ? allImages[0] : `/api/files/${allImages[0]}`}
+              alt={locale === 'ar' ? product.titleAr : product.titleEn}
+              className={`w-full h-full object-cover transition-all duration-700 ease-out ${allImages.length > 1 ? 'group-hover:opacity-0 group-hover:scale-108' : 'group-hover:scale-108'}`}
+            />
+            {allImages.length > 1 && (
+              <img 
+                src={allImages[1].startsWith('http') || allImages[1].startsWith('data:') ? allImages[1] : `/api/files/${allImages[1]}`}
+                alt={locale === 'ar' ? product.titleAr : product.titleEn}
+                className="w-full h-full object-cover transition-all duration-700 ease-out absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-108"
+              />
+            )}
+          </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-muted/20 text-muted-foreground text-xs">
-            No Image
+          <div className="w-full h-full flex items-center justify-center bg-muted/20 text-muted-foreground text-xs font-medium">
+            {t('لا توجد صورة', 'No Image')}
           </div>
         )}
         
