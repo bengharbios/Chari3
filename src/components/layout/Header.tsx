@@ -808,7 +808,7 @@ export default function Header() {
               
               {/* Smart Search Suggestions Dropdown */}
               {searchFocused && (
-                <div className="absolute top-full start-0 end-0 mt-2 p-4 rounded-2xl glass-premium z-50 text-start animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute top-full start-0 end-0 mt-2 p-4 rounded-2xl bg-white dark:bg-slate-900 shadow-2xl shadow-black/10 border border-border/50 z-[100] text-start animate-in fade-in slide-in-from-top-2 duration-200">
                   {searchVal.trim() === '' ? (
                     <div>
                       <h4 className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider mb-2.5 px-1">
