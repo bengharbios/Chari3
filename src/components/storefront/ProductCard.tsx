@@ -89,13 +89,13 @@ export default function ProductCard({ product }: { product: any }) {
             <img 
               src={allImages[0].startsWith('http') || allImages[0].startsWith('data:') ? allImages[0] : `/api/files/${allImages[0]}`}
               alt={locale === 'ar' ? product.titleAr : product.titleEn}
-              className={`w-full h-full object-cover transition-all duration-700 ease-out ${allImages.length > 1 ? 'group-hover:opacity-0 group-hover:scale-108' : 'group-hover:scale-108'}`}
+              className={`w-full h-full object-cover transition-all duration-700 ease-out ${allImages.length > 1 ? 'group-hover:opacity-0 group-hover:scale-110' : 'group-hover:scale-110'}`}
             />
             {allImages.length > 1 && (
               <img 
                 src={allImages[1].startsWith('http') || allImages[1].startsWith('data:') ? allImages[1] : `/api/files/${allImages[1]}`}
                 alt={locale === 'ar' ? product.titleAr : product.titleEn}
-                className="w-full h-full object-cover transition-all duration-700 ease-out absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-108"
+                className="w-full h-full object-cover transition-all duration-700 ease-out absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-110"
               />
             )}
           </>
