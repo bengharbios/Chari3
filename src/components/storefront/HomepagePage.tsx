@@ -563,31 +563,77 @@ function CategoryCirclesRow({ categoryId, section, locale }: any) {
   );
 }
 
-function CustomBannerBlock({ imageArUrl, imageEnUrl, linkUrl, locale }: any) {
+function CustomBannerBlock({ imageArUrl, imageEnUrl, linkUrl, locale, globalAds = [] }: any) {
   const isAr = locale === 'ar';
-  const imageUrl = isAr ? (imageArUrl || imageEnUrl) : (imageEnUrl || imageArUrl);
-
-  if (!imageUrl) return null;
-
-  const content = (
-    <div className="relative w-full overflow-hidden rounded-[24px] shadow-lg border border-slate-100 dark:border-slate-800/80">
-      <img src={imageUrl} alt="Banner" className="w-full h-auto object-cover hover:scale-[1.01] transition-transform duration-500" />
-    </div>
-  );
-
-  if (linkUrl) {
-    return (
-      <section className="container-platform py-4">
-        <Link href={linkUrl} className="block">
-          {content}
-        </Link>
-      </section>
-    );
+  const customImageUrl = isAr ? (imageArUrl || imageEnUrl) : (imageEnUrl || imageArUrl);
+  
+  // Combine custom image with global ads. Custom image is always first.
+  const allAds = [];
+  if (customImageUrl) {
+    allAds.push({ id: 'custom', imageUrl: customImageUrl, linkUrl });
   }
+  if (Array.isArray(globalAds)) {
+    globalAds.forEach(ad => {
+      // Don't duplicate if same URL, though unlikely
+      if (ad.imageUrl !== customImageUrl) {
+        allAds.push(ad);
+      }
+    });
+  }
+
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (allAds.length <= 1 || !scrollRef.current) return;
+    
+    const interval = setInterval(() => {
+      if (scrollRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+        if (Math.abs(scrollLeft) + clientWidth >= scrollWidth - 10) {
+          scrollRef.current.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          const dir = document.documentElement.dir === 'rtl' ? -1 : 1;
+          scrollRef.current.scrollBy({ left: clientWidth * dir, behavior: 'smooth' });
+        }
+      }
+    }, 4000);
+    
+    return () => clearInterval(interval);
+  }, [allAds.length]);
+
+  if (allAds.length === 0) return null;
 
   return (
     <section className="container-platform py-4">
-      {content}
+      <div className="relative w-full overflow-hidden rounded-[20px] md:rounded-[24px] shadow-lg border border-slate-100 dark:border-slate-800/80 bg-stone-900 group aspect-[16/6] sm:aspect-[21/9] md:aspect-[4/1] lg:aspect-[5/1]">
+        <div 
+          ref={scrollRef}
+          className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-none scroll-smooth"
+        >
+          {allAds.map((ad, idx) => (
+            <a 
+              key={ad.id || idx}
+              href={ad.linkUrl || '#'} 
+              className="flex-shrink-0 w-full h-full snap-center block relative" 
+              onClick={() => {
+                if (ad.id !== 'custom') {
+                  fetch(`/api/admin/advertisements`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: ad.id, clicks: 1 }) }).catch(() => {});
+                }
+              }}
+            >
+              <img src={ad.imageUrl} alt={ad.title || 'Promo Banner'} className="w-full h-full object-cover hover:scale-[1.02] transition-transform duration-700" />
+            </a>
+          ))}
+        </div>
+        
+        {allAds.length > 1 && (
+          <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 pointer-events-none z-10">
+            {allAds.map((_, i) => (
+              <div key={i} className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-white/50 backdrop-blur-md shadow-sm" />
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
@@ -1719,6 +1765,8 @@ export default function StorefrontHomepage() {
             imageArUrl={section.imageArUrl}
             imageEnUrl={section.imageEnUrl}
             linkUrl={section.linkUrl}
+            locale={locale}
+            globalAds={data?.advertisements?.banner_mid || []}
           />
         );
 
