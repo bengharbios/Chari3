@@ -346,8 +346,13 @@ function ProductCard({
       }}
     >
       <div className="relative aspect-square bg-slate-50 dark:bg-slate-950/50 overflow-hidden shrink-0">
-        {images[0] ? (
-          <img src={images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-[1.05] transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]" />
+        {images.length > 0 ? (
+          <>
+            <img src={images[0]} alt={product.name} className={`w-full h-full object-cover transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] ${images.length > 1 ? 'group-hover:opacity-0 group-hover:scale-110' : 'group-hover:scale-110'}`} />
+            {images.length > 1 && (
+              <img src={images[1]} alt={product.name} className="w-full h-full object-cover transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-110" />
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-primary/10 to-primary/5">
             <ShoppingBag className="size-8 text-primary/30" />
