@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Star, ShoppingCart, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { ShoppingBag, ShoppingCart, CheckCircle2, Star } from 'lucide-react';
 import { useAppStore, useCartStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-
-function fmt(amount: number) {
-  return new Intl.NumberFormat('en-DZ', { style: 'currency', currency: 'DZD' }).format(amount);
-}
+import { useTranslation } from '@/lib/i18n/useTranslation';
 
 function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md' }) {
   return (
@@ -21,162 +19,160 @@ function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md
           } ${
             star <= Math.floor(rating)
               ? 'fill-amber-400 text-amber-400'
-              : 'fill-muted text-muted'
+              : 'fill-slate-200 dark:fill-slate-800 text-slate-200 dark:text-slate-800'
           }`}
         />
       ))}
-      <span className={`ms-1 text-muted-foreground ${size === 'sm' ? 'text-xs' : 'text-sm'}`}>
-        ({rating.toFixed(1)})
-      </span>
     </div>
   );
 }
 
-export default function ProductCard({ product }: { product: any }) {
-  const { locale, setCurrentPage } = useAppStore();
-  const isInCart = useCartStore((s) => s.items.some((i) => i.product.id === product?.id));
-  const [isFavorite, setIsFavorite] = useState(false);
+export default function ProductCard({ 
+  product, 
+  isOfferCard = false, 
+  newArrivalThresholdDays = 7,
+}: { 
+  product: any; 
+  isOfferCard?: boolean; 
+  newArrivalThresholdDays?: number;
+}) {
+  const { locale } = useAppStore();
+  const { items: cartItems, addItem } = useCartStore();
+  const { t } = useTranslation();
+  const router = useRouter();
+  const isAr = locale === 'ar';
   
-  const t = (ar: string, en: string) => locale === 'ar' ? ar : en;
-  
+  const isInCart = cartItems.some((item) => item.product.id === product.id);
+
+  // Auto-sliding image carousel state
+  const [isHovered, setIsHovered] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const showNewArrival = React.useMemo(() => {
+    if (newArrivalThresholdDays > 0 && product.createdAt) {
+      const daysOld = (new Date().getTime() - new Date(product.createdAt).getTime()) / (1000 * 3600 * 24);
+      return daysOld <= newArrivalThresholdDays;
+    }
+    return !product.rating || Number(product.rating) <= 0;
+  }, [product.rating, product.createdAt, newArrivalThresholdDays]);
+
+  let images: string[] = [];
+  if (Array.isArray(product.images)) {
+    images = product.images;
+  } else if (typeof product.images === 'string') {
+    try { images = JSON.parse(product.images); } catch {}
+  }
+  if (!Array.isArray(images)) images = [];
+
+  // Auto slide effect
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+    
+    if (isHovered && images.length > 1) {
+      intervalId = setInterval(() => {
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+      }, 1500); // 1.5 seconds per slide
+    } else {
+      setCurrentImageIndex(0); // Reset to first image when not hovered
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isHovered, images.length]);
+
+  const discount = product.comparePrice
+    ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
+    : 0;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const { addItem } = useCartStore.getState();
-    
     addItem(product, 1);
-    toast.success(t('تمت الإضافة للسلة', 'Added to cart'));
+    toast.success(isAr ? 'تمت إضافة المنتج إلى السلة!' : 'Product added to cart!', {
+      icon: <CheckCircle2 className="text-emerald-500 w-5 h-5" />
+    });
   };
 
-  const handleToggleFavorite = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsFavorite(!isFavorite);
-    if (!isFavorite) {
-      toast.success(t('تمت الإضافة للمفضلة', 'Added to wishlist'));
-    } else {
-      toast.success(t('تمت الإزالة من المفضلة', 'Removed from wishlist'));
-    }
+  const fmt = (amount: number) => {
+    return `${amount.toLocaleString(isAr ? 'ar-DZ' : 'en-US')} ${isAr ? 'د.ج' : 'DZD'}`;
   };
-
-  // Parse all available images
-  let allImages: string[] = [];
-  if (product?.images) {
-    if (typeof product.images === 'string') {
-      try {
-        const parsed = JSON.parse(product.images);
-        if (Array.isArray(parsed) && parsed.length > 0) allImages = parsed;
-      } catch (e) {}
-    } else if (Array.isArray(product.images) && product.images.length > 0) {
-      allImages = product.images;
-    }
-  }
-  
-  // Ensure mainImage is included (fallback)
-  if (allImages.length === 0 && product?.mainImage) {
-    allImages = [product.mainImage];
-  } else if (product?.mainImage && !allImages.includes(product.mainImage)) {
-    allImages = [product.mainImage, ...allImages];
-  }
 
   return (
     <div 
-      className="group bg-surface rounded-[24px] border border-border/60 overflow-hidden hover:shadow-2xl hover:shadow-brand/5 hover:border-brand/30 transition-all duration-500 cursor-pointer flex flex-col h-full relative"
-      onClick={() => setCurrentPage(`product:${product.id}` as any)}
+      className="overflow-hidden flex flex-col h-full group transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer border border-slate-200/60 dark:border-slate-800/80 bg-white dark:bg-slate-950 rounded-[24px] shadow-sm hover:shadow-[0_20px_40px_-15px_rgba(245,158,11,0.15)] hover:border-amber-500/30 hover:-translate-y-1.5 relative z-10 hover:z-20"
+      onClick={() => {
+        useAppStore.getState().setSelectedProductId(product.id);
+        router.push(`/products/${product.id}`);
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image */}
-      <div className="relative aspect-square bg-muted/10 overflow-hidden">
-        {allImages.length > 0 ? (
-          <>
+      <div className="relative aspect-square bg-slate-50 dark:bg-slate-950/50 overflow-hidden shrink-0">
+        {images.length > 0 ? (
+          images.map((imgSrc, index) => (
             <img 
-              src={allImages[0].startsWith('http') || allImages[0].startsWith('data:') ? allImages[0] : `/api/files/${allImages[0]}`}
-              alt={locale === 'ar' ? product.titleAr : product.titleEn}
-              className={`w-full h-full object-cover transition-all duration-700 ease-out ${allImages.length > 1 ? 'group-hover:opacity-0 group-hover:scale-110' : 'group-hover:scale-110'}`}
+              key={index}
+              src={imgSrc} 
+              alt={product.name} 
+              className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] 
+                ${index === currentImageIndex ? 'opacity-100 group-hover:scale-[1.05]' : 'opacity-0 scale-100'}`} 
             />
-            {allImages.length > 1 && (
-              <img 
-                src={allImages[1].startsWith('http') || allImages[1].startsWith('data:') ? allImages[1] : `/api/files/${allImages[1]}`}
-                alt={locale === 'ar' ? product.titleAr : product.titleEn}
-                className="w-full h-full object-cover transition-all duration-700 ease-out absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-110"
-              />
-            )}
-          </>
+          ))
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-muted/20 text-muted-foreground text-xs font-medium">
-            {t('لا توجد صورة', 'No Image')}
+          <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-primary/10 to-primary/5">
+            <ShoppingBag className="size-8 text-primary/30" />
           </div>
         )}
-        
-        {/* Favorite/Wishlist Button */}
-        <button 
-          onClick={handleToggleFavorite}
-          className={`absolute top-3 end-3 p-2 rounded-full border shadow-md backdrop-blur-md z-20 transition-all duration-300 ${
-            isFavorite 
-              ? 'bg-rose-50 dark:bg-rose-950/80 text-rose-500 border-rose-200 dark:border-rose-900 fill-rose-500 scale-110' 
-              : 'bg-white/80 dark:bg-slate-900/80 text-slate-500 border-white/20 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50/80 hover:scale-110'
-          }`}
-          aria-label="Toggle favorite"
-        >
-          <Heart className="w-4 h-4 transition-transform active:scale-90" />
-        </button>
-        
-        {/* Discount Badge */}
-        {product.compareAtPrice && product.compareAtPrice > product.price && (
-          <div className="absolute top-2 start-2 bg-rose-500 text-white text-[10px] font-bold px-2 py-1 rounded-full z-10">
-            -{Math.round((1 - product.price / product.compareAtPrice) * 100)}%
+        {discount > 0 && (
+          <div className="absolute top-2 start-2 bg-gradient-to-r from-rose-500 to-orange-500 text-white text-[10px] font-black py-1 px-2.5 rounded-full shadow-md z-10 select-none">
+            {isAr ? `خصم ${discount}%` : `-${discount}%`}
           </div>
         )}
-        
-        {/* Hover Action */}
-        <div className={`absolute inset-x-0 bottom-0 p-3 transition-all duration-500 bg-gradient-to-t from-black/60 via-black/25 to-transparent ${
-          isInCart 
-            ? 'translate-y-0 opacity-100' 
-            : 'translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100'
-        }`}>
-          <Button 
-            size="sm" 
-            className={`w-full font-bold shadow-lg backdrop-blur-sm transition-colors ${
-              isInCart 
-                ? 'bg-green-500 text-white hover:bg-green-600 border-none' 
-                : 'bg-white/90 text-navy hover:bg-brand hover:text-navy'
-            }`}
-            onClick={handleAddToCart}
-          >
-            {isInCart ? (
-              <>
-                <ShoppingCart className="w-4 h-4 me-2 fill-current" />
-                {t('في السلة', 'In Cart')}
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="w-4 h-4 me-2" />
-                {t('أضف للسلة', 'Add to Cart')}
-              </>
-            )}
-          </Button>
-        </div>
       </div>
-      
-      {/* Content */}
-      <div className="p-4 flex-1 flex flex-col">
-        <div className="text-xs font-semibold text-brand mb-1 line-clamp-1">
-          {product.brand || product.store?.name || t('ماركة', 'Brand')}
-        </div>
-        <h3 className="font-bold text-navy text-sm mb-2 line-clamp-2 leading-snug flex-1 group-hover:text-brand transition-colors">
-          {locale === 'ar' ? product.titleAr : product.titleEn}
-        </h3>
-        
-        <div className="mb-3">
-          <StarRating rating={product.rating || 5} />
-        </div>
-        
-        <div className="flex items-end gap-2 mt-auto">
-          <span className="font-black text-lg text-brand">
-            {fmt(product.price)}
-          </span>
-          {product.compareAtPrice && product.compareAtPrice > product.price && (
-            <span className="text-xs text-muted-foreground line-through mb-1">
-              {fmt(product.compareAtPrice)}
-            </span>
+      <div className="p-4 flex flex-col grow text-start z-10 relative bg-white dark:bg-slate-950 transition-colors">
+        <p className="text-[10px] text-muted-foreground/80 mb-1.5 truncate font-medium">{product.category?.name || ''}</p>
+        <h4 className="text-sm font-bold line-clamp-2 mb-2 text-slate-800 dark:text-slate-100 leading-snug min-h-[40px] group-hover:text-amber-500 transition-colors">{isAr ? product.name : (product.nameEn || product.name)}</h4>
+        <div className="flex items-center gap-1.5 mb-3 min-h-[16px]">
+          {!showNewArrival ? (
+            <>
+              <StarRating rating={Number(product.rating || 0)} />
+              {product.soldCount && Number(product.soldCount) > 0 ? (
+                <span className="text-[10px] text-slate-400 font-semibold">({product.soldCount})</span>
+              ) : null}
+            </>
+          ) : (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] text-amber-600 dark:text-amber-500 font-bold bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded-sm whitespace-nowrap">
+                {t('storefront.product.new_arrival', 'وصل حديثاً', 'New Arrival')}
+              </span>
+              {product.soldCount && Number(product.soldCount) > 0 ? (
+                <span className="text-[10px] text-slate-400 font-semibold">({product.soldCount})</span>
+              ) : null}
+            </div>
           )}
+        </div>
+        <div className="mt-auto relative">
+          <div className="flex items-end justify-between gap-2">
+            <div className="flex flex-col">
+              <span className="text-lg md:text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none mb-1">
+                {fmt(product.price)}
+              </span>
+              {product.comparePrice && (
+                <span className="text-[11px] text-slate-400 line-through font-semibold leading-none">
+                  {fmt(product.comparePrice)}
+                </span>
+              )}
+            </div>
+            
+            <Button 
+              size="sm" 
+              variant={isInCart ? "default" : "secondary"} 
+              className={`rounded-full shrink-0 h-9 w-9 p-0 shadow transition-all duration-300 ${isInCart ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-100 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-800 dark:hover:bg-amber-500'}`}
+              onClick={handleAddToCart}
+            >
+              {isInCart ? <CheckCircle2 className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+            </Button>
+          </div>
         </div>
       </div>
     </div>

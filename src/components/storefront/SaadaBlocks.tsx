@@ -7,6 +7,7 @@ import {
   ArrowLeft, ArrowRight, ShoppingBag, Award, Quote, SlidersHorizontal, 
   X, Search, Tag, ShoppingCart, Flame, Sparkles, CheckCircle2 
 } from 'lucide-react';
+import ProductCard from './ProductCard';
 
 const safeImageSrc = (img: any): string => {
   if (!img) return '';
@@ -322,103 +323,7 @@ const LEVEL_BADGE: Record<number, string> = {
 };
 
 // Standalone reusable Product Card matching Noon/Temu visuals
-function ProductCard({ product, isOfferCard = false }: { product: any; isOfferCard?: boolean }) {
-  const { locale } = useAppStore();
-  const { items: cartItems, addItem } = useCartStore();
-  const router = useRouter();
-  const isAr = locale === 'ar';
-  
-  const isInCart = cartItems.some((item) => item.product.id === product.id);
-
-  let images: string[] = [];
-  if (Array.isArray(product.images)) {
-    images = product.images;
-  } else if (typeof product.images === 'string') {
-    try { images = JSON.parse(product.images); } catch {}
-  }
-  if (!Array.isArray(images)) images = [];
-
-  const sellerName = product.seller?.storeName || product.store?.name || '';
-  const sellerLevel = product.seller?.level || product.store?.level || 1;
-  const discount = product.comparePrice
-    ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
-    : 0;
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    addItem(product, 1);
-    toast.success(isAr ? 'تمت إضافة المنتج إلى السلة!' : 'Product added to cart!', {
-      icon: <CheckCircle2 className="text-emerald-500 w-5 h-5" />
-    });
-  };
-
-  const fmt = (amount: number) => {
-    return `${amount.toLocaleString(isAr ? 'ar-DZ' : 'en-US')} ${isAr ? 'د.ج' : 'DZD'}`;
-  };
-
-  return (
-    <Card 
-      className="overflow-hidden flex flex-col h-full group transition-all duration-300 cursor-pointer border border-slate-100 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 backdrop-blur-md rounded-[20px] shadow-[0_4px_12px_rgba(0,0,0,0.02),0_8px_24px_rgba(0,0,0,0.04)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.08)] hover:-translate-y-1 relative"
-      onClick={() => {
-        useAppStore.getState().setSelectedProductId(product.id);
-        router.push(`/products/${product.id}`);
-      }}
-    >
-      <div className="relative aspect-square bg-slate-50 dark:bg-slate-950 overflow-hidden shrink-0">
-        {images.length > 0 ? (
-          <>
-            <img src={images[0]} alt={product.name} className={`w-full h-full object-cover transition-all duration-700 ease-out ${images.length > 1 ? 'group-hover:opacity-0 group-hover:scale-110' : 'group-hover:scale-110'}`} />
-            {images.length > 1 && (
-              <img src={images[1]} alt={product.name} className="w-full h-full object-cover transition-all duration-700 ease-out absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-110" />
-            )}
-          </>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-primary/10 to-primary/5">
-            <ShoppingBag className="size-8 text-primary/30" />
-          </div>
-        )}
-        {discount > 0 && (
-          <Badge className="absolute top-2.5 start-2.5 bg-rose-600 text-white text-[9px] font-black py-0.5 px-2 rounded-full shadow-sm">-{discount}%</Badge>
-        )}
-      </div>
-      <CardContent className="p-3 flex flex-col grow text-start">
-        <p className="text-[9px] text-muted-foreground mb-0.5 truncate">{product.category?.name || ''}</p>
-        <h4 className="text-xs font-bold line-clamp-2 mb-1.5 text-slate-850 dark:text-slate-100 leading-tight min-h-[32px]">{isAr ? product.name : (product.nameEn || product.name)}</h4>
-        <div className="flex items-center gap-1 mb-2">
-          <StarRating rating={product.rating} />
-          <span className="text-[9px] text-muted-foreground font-bold">({product.soldCount || 8})</span>
-        </div>
-        <div className="mt-auto">
-          <div className="flex items-center justify-between gap-1">
-            <div className="w-full">
-              <p className="text-xs md:text-sm font-black text-amber-500 tracking-tight">{fmt(product.price)}</p>
-              {product.comparePrice && (
-                <p className="text-[9px] text-muted-foreground line-through font-semibold">{fmt(product.comparePrice)}</p>
-              )}
-            </div>
-            <Button 
-              size="icon" 
-              variant={isInCart ? "default" : "secondary"} 
-              className={`rounded-full shrink-0 size-7 shadow ${isInCart ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-slate-100 hover:bg-amber-500 hover:text-slate-950 dark:bg-slate-850'}`}
-              onClick={handleAddToCart}
-            >
-              {isInCart ? <CheckCircle2 className="w-3.5 h-3.5" /> : <ShoppingCart className="w-3.5 h-3.5" />}
-            </Button>
-          </div>
-          
-          {sellerName && !isOfferCard && (
-            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 gap-1 text-[9px] text-muted-foreground">
-              <div className="flex items-center gap-1 min-w-0">
-                <span className="text-xs shrink-0">{LEVEL_BADGE[sellerLevel] || '🌱'}</span>
-                <span className="font-bold text-foreground/80 truncate">{sellerName}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+// ProductCard component removed and imported from ./ProductCard.tsx
 
 function getLocalizedField(obj: any, fieldName: string, locale: string, fallbackField?: string): string {
   if (!obj) return '';
