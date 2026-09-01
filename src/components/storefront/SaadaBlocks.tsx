@@ -365,8 +365,13 @@ function ProductCard({ product, isOfferCard = false }: { product: any; isOfferCa
       }}
     >
       <div className="relative aspect-square bg-slate-50 dark:bg-slate-950 overflow-hidden shrink-0">
-        {images[0] ? (
-          <img src={safeImageSrc(images)} alt={product.name} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300" />
+        {images.length > 0 ? (
+          <>
+            <img src={images[0]} alt={product.name} className={`w-full h-full object-cover transition-all duration-700 ease-out ${images.length > 1 ? 'group-hover:opacity-0 group-hover:scale-110' : 'group-hover:scale-110'}`} />
+            {images.length > 1 && (
+              <img src={images[1]} alt={product.name} className="w-full h-full object-cover transition-all duration-700 ease-out absolute inset-0 opacity-0 group-hover:opacity-100 group-hover:scale-110" />
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-4xl bg-gradient-to-br from-primary/10 to-primary/5">
             <ShoppingBag className="size-8 text-primary/30" />
