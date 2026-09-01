@@ -69,9 +69,13 @@ export default function ProductCard({
     let intervalId: NodeJS.Timeout;
     
     if (isHovered && images.length > 1) {
+      // Immediately switch to the second image on hover
+      setCurrentImageIndex(1);
+      
+      // Then continue cycling every 1.5s
       intervalId = setInterval(() => {
         setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
-      }, 1500); // 1.5 seconds per slide
+      }, 1500);
     } else {
       setCurrentImageIndex(0); // Reset to first image when not hovered
     }
