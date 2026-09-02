@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Save, Loader2, Plus, Trash, LayoutPanelTop, LayoutPanelBottom, Settings2 } from 'lucide-react';
+import { Save, Loader2, Plus, Trash, PanelTop, PanelBottom, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { Textarea } from '@/components/ui/textarea';
@@ -179,11 +179,11 @@ export default function HeaderFooterSettingsPage() {
       <Tabs defaultValue="header" className="w-full">
         <TabsList className="mb-6 grid w-full max-w-md grid-cols-2 p-1 bg-slate-100 dark:bg-slate-900/50 rounded-xl">
           <TabsTrigger value="header" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">
-            <LayoutPanelTop className="w-4 h-4 ml-2" />
+            <PanelTop className="w-4 h-4 ml-2" />
             {t('headerFooterSettings.headerTab', 'إعدادات الهيدر (Header)')}
           </TabsTrigger>
           <TabsTrigger value="footer" className="rounded-lg data-[state=active]:bg-white dark:data-[state=active]:bg-slate-800 data-[state=active]:shadow-sm">
-            <LayoutPanelBottom className="w-4 h-4 ml-2" />
+            <PanelBottom className="w-4 h-4 ml-2" />
             {t('headerFooterSettings.footerTab', 'إعدادات الفوتر (Footer)')}
           </TabsTrigger>
         </TabsList>
