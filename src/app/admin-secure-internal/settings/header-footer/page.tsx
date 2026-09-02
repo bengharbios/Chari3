@@ -18,12 +18,17 @@ const DEFAULT_CONFIG = {
     topBarLink: '',
     topBarBgColor: '#0f172a',
     topBarTextColor: '#ffffff',
+    logoType: 'image', // 'image' | 'text' | 'both'
     logoUrl: '',
+    logoWidth: 120,
     primaryColor: '#3b82f6',
   },
   footer: {
     columns: [],
     socialLinks: { facebook: '', instagram: '', twitter: '', tiktok: '' },
+    dynamicSocials: [],
+    titleSize: 'base', // sm, base, lg, xl
+    textSize: 'sm',    // xs, sm, base, lg
   }
 };
 
@@ -107,47 +112,69 @@ export default function HeaderFooterSettingsPage() {
 
   const updateFooterColumn = (idx: number, key: string, value: string) => {
     setConfig((prev: any) => {
-      const cols = [...(prev.footer.columns || [])];
-      cols[idx] = { ...cols[idx], [key]: value };
+      const cols = (prev.footer.columns || []).map((c:any) => ({...c}));
+      cols[idx][key] = value;
       return { ...prev, footer: { ...prev.footer, columns: cols } };
     });
   };
 
   const addFooterLink = (colIdx: number) => {
     setConfig((prev: any) => {
-      const cols = [...(prev.footer.columns || [])];
-      cols[colIdx].links = [...(cols[colIdx].links || []), { id: Math.random().toString(), url: '' }];
+      const cols = (prev.footer.columns || []).map((c:any) => ({...c, links: [...(c.links||[])]}));
+      cols[colIdx].links.push({ id: Math.random().toString(), url: '' });
       return { ...prev, footer: { ...prev.footer, columns: cols } };
     });
   };
 
   const updateFooterLink = (colIdx: number, linkIdx: number, key: string, value: string) => {
     setConfig((prev: any) => {
-      const cols = [...(prev.footer.columns || [])];
-      const links = [...cols[colIdx].links];
-      links[linkIdx] = { ...links[linkIdx], [key]: value };
-      cols[colIdx].links = links;
+      const cols = (prev.footer.columns || []).map((c:any) => ({...c, links: [...(c.links||[])]}));
+      cols[colIdx].links[linkIdx] = { ...cols[colIdx].links[linkIdx], [key]: value };
       return { ...prev, footer: { ...prev.footer, columns: cols } };
     });
   };
 
   const removeFooterLink = (colIdx: number, linkIdx: number) => {
     setConfig((prev: any) => {
-      const cols = [...(prev.footer.columns || [])];
-      const links = [...cols[colIdx].links];
-      links.splice(linkIdx, 1);
-      cols[colIdx].links = links;
+      const cols = (prev.footer.columns || []).map((c:any) => ({...c, links: [...(c.links||[])]}));
+      cols[colIdx].links.splice(linkIdx, 1);
       return { ...prev, footer: { ...prev.footer, columns: cols } };
     });
   };
 
   const removeFooterColumn = (idx: number) => {
     setConfig((prev: any) => {
-      const cols = [...(prev.footer.columns || [])];
+      const cols = (prev.footer.columns || []).map((c:any) => ({...c}));
       cols.splice(idx, 1);
       return { ...prev, footer: { ...prev.footer, columns: cols } };
     });
-  }
+  };
+
+  const addSocialLink = () => {
+    setConfig((prev: any) => ({
+      ...prev,
+      footer: {
+        ...prev.footer,
+        dynamicSocials: [...(prev.footer.dynamicSocials || []), { id: Math.random().toString(), network: 'facebook', url: '' }]
+      }
+    }));
+  };
+
+  const updateSocialLink = (idx: number, key: string, value: string) => {
+    setConfig((prev: any) => {
+      const socials = (prev.footer.dynamicSocials || []).map((s:any) => ({...s}));
+      socials[idx][key] = value;
+      return { ...prev, footer: { ...prev.footer, dynamicSocials: socials } };
+    });
+  };
+
+  const removeSocialLink = (idx: number) => {
+    setConfig((prev: any) => {
+      const socials = (prev.footer.dynamicSocials || []).map((s:any) => ({...s}));
+      socials.splice(idx, 1);
+      return { ...prev, footer: { ...prev.footer, dynamicSocials: socials } };
+    });
+  };
 
   if (loading) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-brand" /></div>;
@@ -239,14 +266,81 @@ export default function HeaderFooterSettingsPage() {
             <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 pb-6">
               <CardTitle className="text-lg">{t('headerFooterSettings.logo', 'الشعار (Logo)')}</CardTitle>
             </CardHeader>
-            <CardContent className="pt-6">
-              <div className="max-w-md">
-                <ImageUploader 
-                  value={config.header.logoUrl ? [config.header.logoUrl] : []}
-                  onChange={(urls) => updateHeader('logoUrl', urls[0] || '')}
-                  maxFiles={1}
-                />
+            <CardContent className="pt-6 space-y-6">
+              <div className="space-y-2 max-w-xs">
+                <Label>نوع الشعار</Label>
+                <select 
+                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-brand"
+                  value={config.header.logoType || 'image'}
+                  onChange={(e) => updateHeader('logoType', e.target.value)}
+                >
+                  <option value="image">صورة فقط</option>
+                  <option value="text">نص فقط</option>
+                  <option value="both">صورة + نص</option>
+                </select>
               </div>
+
+              {(config.header.logoType === 'image' || config.header.logoType === 'both') && (
+                <div className="space-y-4">
+                  <div className="max-w-md">
+                    <Label className="mb-2 block text-sm font-semibold text-slate-800 dark:text-slate-200">صورة الشعار</Label>
+                    <ImageUploader 
+                      value={config.header.logoUrl ? [config.header.logoUrl] : []}
+                      onChange={(urls) => updateHeader('logoUrl', urls[0] || '')}
+                      maxFiles={1}
+                    />
+                  </div>
+                  <div className="max-w-xs space-y-2">
+                    <Label className="text-sm font-semibold text-slate-800 dark:text-slate-200">عرض الشعار (بالبيكسل)</Label>
+                    <Input 
+                      type="number" 
+                      value={config.header.logoWidth || 120} 
+                      onChange={(e) => updateHeader('logoWidth', Number(e.target.value))} 
+                    />
+                  </div>
+                </div>
+              )}
+
+              {(config.header.logoType === 'text' || config.header.logoType === 'both') && (
+                <div className="space-y-6 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  <div className="space-y-4">
+                    <Label className="font-semibold text-slate-800 dark:text-slate-200">النص الرئيسي للشعار</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {activeLangs.map((lang: any) => {
+                        const suffix = getSuffix(lang.code);
+                        const key = `logoTitle${suffix}`;
+                        return (
+                          <Input 
+                            key={`logoTitle-${lang.code}`}
+                            value={config.header[key] || ''}
+                            onChange={(e) => updateHeader(key, e.target.value)}
+                            placeholder={`العنوان (${lang.name})`}
+                            className="bg-slate-50 dark:bg-slate-900"
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <Label className="font-semibold text-slate-800 dark:text-slate-200">النص الفرعي للشعار (اختياري)</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {activeLangs.map((lang: any) => {
+                        const suffix = getSuffix(lang.code);
+                        const key = `logoSubtitle${suffix}`;
+                        return (
+                          <Input 
+                            key={`logoSubtitle-${lang.code}`}
+                            value={config.header[key] || ''}
+                            onChange={(e) => updateHeader(key, e.target.value)}
+                            placeholder={`العنوان الفرعي (${lang.name})`}
+                            className="bg-slate-50 dark:bg-slate-900"
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -279,23 +373,91 @@ export default function HeaderFooterSettingsPage() {
           </Card>
 
           <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 pb-6">
-              <CardTitle className="text-lg">{t('headerFooterSettings.socials', 'التواصل الاجتماعي')}</CardTitle>
+            <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 pb-6 flex flex-row items-center justify-between">
+              <CardTitle className="text-lg">{t('headerFooterSettings.socials', 'التواصل الاجتماعي (الشبكات)')}</CardTitle>
+              <Button onClick={addSocialLink} variant="outline" size="sm" className="bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800">
+                <Plus className="w-4 h-4 ml-2" />
+                إضافة شبكة
+              </Button>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {['facebook', 'instagram', 'twitter', 'tiktok'].map(network => (
-                  <div key={network} className="space-y-2">
-                    <Label className="capitalize text-slate-600 dark:text-slate-400 font-medium">{network}</Label>
-                    <Input 
-                      value={config.footer.socialLinks?.[network] || ''} 
-                      onChange={(e) => updateFooter('socialLinks', { ...config.footer.socialLinks, [network]: e.target.value })} 
-                      placeholder={`https://${network}.com/...`}
-                      dir="ltr"
-                      className="bg-slate-50 dark:bg-slate-900"
-                    />
+              {(!config.footer.dynamicSocials || config.footer.dynamicSocials.length === 0) && (
+                <div className="text-center py-8 text-slate-500 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+                  لا توجد شبكات مضافة
+                </div>
+              )}
+              <div className="space-y-4">
+                {config.footer.dynamicSocials?.map((social: any, idx: number) => (
+                  <div key={social.id} className="flex gap-4 items-center bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <div className="w-40">
+                      <select 
+                        className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-brand"
+                        value={social.network}
+                        onChange={(e) => updateSocialLink(idx, 'network', e.target.value)}
+                      >
+                        <option value="facebook">Facebook</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="twitter">X (Twitter)</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="linkedin">LinkedIn</option>
+                        <option value="snapchat">Snapchat</option>
+                        <option value="whatsapp">WhatsApp</option>
+                        <option value="telegram">Telegram</option>
+                        <option value="pinterest">Pinterest</option>
+                        <option value="other">أخرى (رابط مخصص)</option>
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <Input 
+                        value={social.url} 
+                        onChange={(e) => updateSocialLink(idx, 'url', e.target.value)} 
+                        placeholder="https://..."
+                        dir="ltr"
+                        className="font-mono bg-white dark:bg-slate-950"
+                      />
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={() => removeSocialLink(idx)} className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 shrink-0">
+                      <Trash className="w-4 h-4" />
+                    </Button>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 pb-6">
+              <CardTitle className="text-lg">المظهر والخطوط (Typography)</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
+                <div className="space-y-2">
+                  <Label>حجم خط العناوين (الأعمدة)</Label>
+                  <select 
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-brand"
+                    value={config.footer.titleSize || 'base'}
+                    onChange={(e) => updateFooter('titleSize', e.target.value)}
+                  >
+                    <option value="sm">صغير (Small)</option>
+                    <option value="base">متوسط (Medium - افتراضي)</option>
+                    <option value="lg">كبير (Large)</option>
+                    <option value="xl">كبير جداً (Extra Large)</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>حجم خط النصوص والروابط</Label>
+                  <select 
+                    className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent dark:border-slate-800 dark:bg-slate-950 dark:focus:ring-brand"
+                    value={config.footer.textSize || 'sm'}
+                    onChange={(e) => updateFooter('textSize', e.target.value)}
+                  >
+                    <option value="xs">صغير جداً (Extra Small)</option>
+                    <option value="sm">صغير (Small - افتراضي)</option>
+                    <option value="base">متوسط (Medium)</option>
+                    <option value="lg">كبير (Large)</option>
+                  </select>
+                </div>
               </div>
             </CardContent>
           </Card>

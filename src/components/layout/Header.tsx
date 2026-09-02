@@ -795,13 +795,39 @@ export default function Header() {
               }}
               className="flex items-center gap-2 shrink-0"
             >
-              {hfConfig?.header?.logoUrl ? (
-                <img src={hfConfig.header.logoUrl} alt="Logo" className="h-8 lg:h-10 object-contain" />
-              ) : (
-                <div className="gradient-brand rounded-lg px-2.5 py-1 font-bold text-navy text-lg">
-                  {t('شاري داي', 'CharyDay')}
-                </div>
-              )}
+              {(() => {
+                const suffix = locale ? (locale.charAt(0).toUpperCase() + locale.slice(1).toLowerCase()) : 'Ar';
+                const logoType = hfConfig?.header?.logoType || (hfConfig?.header?.logoUrl ? 'image' : 'text');
+                const logoWidth = hfConfig?.header?.logoWidth || 120;
+                const logoTitle = hfConfig?.header?.[`logoTitle${suffix}`] || hfConfig?.header?.logoTitleEn || hfConfig?.header?.logoTitleAr || t('شاري داي', 'CharyDay');
+                const logoSubtitle = hfConfig?.header?.[`logoSubtitle${suffix}`] || hfConfig?.header?.logoSubtitleEn || hfConfig?.header?.logoSubtitleAr || '';
+
+                return (
+                  <div className="flex items-center gap-2">
+                    {(logoType === 'image' || logoType === 'both') && hfConfig?.header?.logoUrl ? (
+                      <img 
+                        src={hfConfig.header.logoUrl} 
+                        alt={logoTitle} 
+                        className="object-contain transition-all" 
+                        style={{ width: `${logoWidth}px`, maxHeight: '48px' }} 
+                      />
+                    ) : null}
+                    
+                    {(logoType === 'text' || logoType === 'both' || (logoType === 'image' && !hfConfig?.header?.logoUrl)) && (
+                      <div className="flex flex-col items-start justify-center">
+                        <span className={`font-extrabold tracking-tight ${logoType === 'both' ? 'text-lg leading-tight' : 'text-xl md:text-2xl'}`} style={{ color: hfConfig?.header?.primaryColor || 'var(--theme-primary, #1ABB9C)' }}>
+                          {logoTitle}
+                        </span>
+                        {logoSubtitle && (
+                          <span className="text-[10px] font-medium opacity-70 leading-none mt-0.5">
+                            {logoSubtitle}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </button>
             {enableDeliverTo && (
               <div className="hidden sm:block ms-2 border-l border-border/50 pl-4 ml-4 rtl:border-l-0 rtl:border-r rtl:pl-0 rtl:pr-4 rtl:mr-4">
