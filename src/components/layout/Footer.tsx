@@ -172,6 +172,15 @@ export default function Footer({ theme }: FooterProps) {
   const socialConfig = hfConfig?.footer?.socialLinks || activeTheme?.footer?.socialMedia;
   const hfSocialsEnabled = hfConfig?.footer?.socialLinks && (hfConfig.footer.socialLinks.facebook || hfConfig.footer.socialLinks.instagram || hfConfig.footer.socialLinks.twitter || hfConfig.footer.socialLinks.tiktok);
 
+  const currentYear = new Date().getFullYear();
+  const suffix = locale ? (locale.charAt(0).toUpperCase() + locale.slice(1).toLowerCase()) : 'Ar';
+  
+  // Dynamic About Text
+  const aboutText = hfConfig?.footer?.[`aboutText${suffix}`] || hfConfig?.footer?.aboutTextEn || hfConfig?.footer?.aboutTextAr;
+  
+  // Dynamic Copyright
+  const copyrightText = hfConfig?.footer?.[`copyrightText${suffix}`] || hfConfig?.footer?.copyrightTextEn || hfConfig?.footer?.copyrightTextAr;
+
   return (
     <footer 
       className="mt-auto border-t transition-colors"
