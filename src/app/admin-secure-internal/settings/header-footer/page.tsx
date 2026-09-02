@@ -54,13 +54,16 @@ export default function HeaderFooterSettingsPage() {
       .then(data => {
         if (data.success && data.data.headerFooterConfig) {
           try {
-            const parsed = JSON.parse(data.data.headerFooterConfig);
+            const parsed = typeof data.data.headerFooterConfig === 'string' 
+              ? JSON.parse(data.data.headerFooterConfig) 
+              : data.data.headerFooterConfig;
+              
             setConfig({
               header: { ...DEFAULT_CONFIG.header, ...(parsed.header || {}) },
               footer: { ...DEFAULT_CONFIG.footer, ...(parsed.footer || {}) }
             });
           } catch(e) {
-            console.error('Failed to parse config');
+            console.error('Failed to parse config', e);
           }
         }
         setLoading(false);
@@ -69,7 +72,7 @@ export default function HeaderFooterSettingsPage() {
         toast.error(t('settings.fetchError', 'Failed to fetch settings'));
         setLoading(false);
       });
-  }, [t]);
+  }, []); // Remove t from dependencies to prevent re-renders
 
   const handleSave = async () => {
     setSaving(true);
