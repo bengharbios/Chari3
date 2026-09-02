@@ -23,7 +23,10 @@
     "active": "نشط",
     "expired": "منتهي",
     "rows_per_page": "الصفوف لكل صفحة:",
-    "progress": "التقدم"
+    "progress": "التقدم",
+    "arabic": "العربية",
+    "english": "الإنجليزية",
+    "french": "الفرنسية"
   },
   "sidebar": {
     "messages": "الرسائل",
@@ -1060,5 +1063,10 @@
     "footerColumns": "أعمدة روابط الفوتر",
     "footerColumnsDesc": "أضف أعمدة تحتوي على روابط تهم الزائر",
     "socials": "التواصل الاجتماعي"
+  },
+  "settings": {
+    "fetchError": "فشل في جلب الإعدادات",
+    "saveSuccess": "تم حفظ الإعدادات بنجاح",
+    "saveError": "فشل في حفظ الإعدادات"
   }
 }

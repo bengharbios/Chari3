@@ -3,6 +3,31 @@ import { db } from '@/lib/db';
 import { getSession } from '@/lib/better-auth';
 import { headers } from 'next/headers';
 
+export async function GET(req: Request) {
+  try {
+    const session = await getSession(await headers());
+    if (!session || !session.user || (session.user as any).role !== 'admin') {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
+    }
+
+    const settings = await db.platformSettings.findUnique({
+      where: { id: 'global' }
+    });
+
+    if (!settings) {
+      return NextResponse.json({ success: true, data: {} });
+    }
+
+    return NextResponse.json({ success: true, data: settings });
+  } catch (error) {
+    console.error('Error fetching platform settings:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to fetch platform settings' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PUT(req: Request) {
   try {
     const session = await getSession(await headers());

@@ -195,9 +195,7 @@ export default function Footer({ theme }: FooterProps) {
               {t('شاري داي', 'CharyDay')}
             </div>
             <p className="text-sm mb-4 leading-relaxed opacity-80">
-              {hfConfig?.footer?.aboutTextAr || hfConfig?.footer?.aboutTextEn ? (
-                locale === 'ar' ? (hfConfig.footer.aboutTextAr || hfConfig.footer.aboutTextEn) : (hfConfig.footer.aboutTextEn || hfConfig.footer.aboutTextAr)
-              ) : t(locale,
+              {aboutText ? aboutText : t(locale,
                 'منصة التجارة الإلكترونية الأولى في المنطقة. تسوق الآن واستمتع بأفضل العروض والخصومات.',
                 'The leading e-commerce platform in the region. Shop now and enjoy the best deals and discounts.'
               )}
@@ -255,10 +253,8 @@ export default function Footer({ theme }: FooterProps) {
       <div className="border-t" style={{ borderColor: 'var(--theme-bg-sidebar, #e2e8f0)' }}>
         <div className="container-platform py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs opacity-70">
-            {hfConfig?.footer?.copyrightTextAr || hfConfig?.footer?.copyrightTextEn ? (
-              locale === 'ar' ? (hfConfig.footer.copyrightTextAr || hfConfig.footer.copyrightTextEn) : (hfConfig.footer.copyrightTextEn || hfConfig.footer.copyrightTextAr)
-            ) : (
-              `© 2025 ${t('منصة شاري داي. جميع الحقوق محفوظة.', 'CharyDay Platform. All rights reserved.')}`
+            {copyrightText ? copyrightText : (
+              `© ${currentYear} ${t('منصة شاري داي. جميع الحقوق محفوظة.', 'CharyDay Platform. All rights reserved.')}`
             )}
           </p>
           {theme?.footer.paymentMethods?.enabled && (

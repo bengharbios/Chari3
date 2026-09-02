@@ -23,7 +23,10 @@
     "active": "Active",
     "expired": "Expired",
     "rows_per_page": "Rows per page:",
-    "progress": "Progress"
+    "progress": "Progress",
+    "arabic": "Arabic",
+    "english": "English",
+    "french": "French"
   },
   "sidebar": {
     "messages": "Messages",
@@ -1060,5 +1063,10 @@
     "footerColumns": "Footer Link Columns",
     "footerColumnsDesc": "Add columns containing useful links",
     "socials": "Social Media"
+  },
+  "settings": {
+    "fetchError": "Failed to fetch settings",
+    "saveSuccess": "Settings saved successfully",
+    "saveError": "Failed to save settings"
   }
 }

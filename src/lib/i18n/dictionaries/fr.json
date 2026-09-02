@@ -23,7 +23,10 @@
     "active": "Actif",
     "expired": "Expiré",
     "rows_per_page": "Lignes par page:",
-    "progress": "Progression"
+    "progress": "Progression",
+    "arabic": "Arabe",
+    "english": "Anglais",
+    "french": "Français"
   },
   "sidebar": {
     "sectionStore": "Boutique",
@@ -1003,5 +1006,10 @@
     "footerColumns": "Colonnes de liens",
     "footerColumnsDesc": "Ajoutez des colonnes avec des liens utiles",
     "socials": "Réseaux Sociaux"
+  },
+  "settings": {
+    "fetchError": "Échec de la récupération des paramètres",
+    "saveSuccess": "Paramètres enregistrés avec succès",
+    "saveError": "Échec de l'enregistrement des paramètres"
   }
 }
