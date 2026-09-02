@@ -153,6 +153,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { label: t('admin.storefrontCMS'), path: 'cms' },
         { label: 'SAADA Builder', path: 'cms/saada-builder' },
         { label: t('admin.manageDocs'), path: 'cms/docs' },
+        { label: locale === 'ar' ? 'الصفحات المخصصة' : 'Custom Pages', path: 'pages' },
         { label: t('admin.homepageSettings'), path: 'settings/homepage' },
         { label: locale === 'ar' ? 'إعدادات الهيدر والفوتر' : 'Header & Footer Settings', path: 'settings/header-footer' },
         { label: locale === 'ar' ? 'إعدادات القائمة الرئيسية' : 'Main Menu', path: 'settings/menu' },

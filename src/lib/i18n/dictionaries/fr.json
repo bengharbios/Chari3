@@ -102,7 +102,12 @@
     "manageTranslations": "Gérer les traductions",
     "themeDesign": "Thème et design",
     "homepageSettings": "Paramètres de la page d'accueil",
-    "manageAdvertisements": "Gérer les Publicités"
+    "manageAdvertisements": "Gérer les Publicités",
+    "customPages": "Pages personnalisées",
+    "customPagesDesc": "Créer et gérer des pages indépendantes",
+    "createNewPage": "Créer une nouvelle page",
+    "noPagesYet": "Pas encore de pages personnalisées",
+    "noPagesDesc": "Commencez par créer votre première page personnalisée"
   },
   "header": {
     "notice": "Notification",

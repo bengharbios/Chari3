@@ -29,10 +29,16 @@ export default async function CustomPageViewer({ params }: { params: { slug: str
     notFound();
   }
 
-  let puckData = { content: [], root: {} };
+  let puckData = { content: [], root: {}, zones: {} };
   if (page.content) {
     try {
-      puckData = JSON.parse(page.content);
+      const parsed = JSON.parse(page.content);
+      if (parsed && typeof parsed === 'object') {
+        puckData = parsed;
+        if (!puckData.content) puckData.content = [];
+        if (!puckData.root) puckData.root = {};
+        if (!puckData.zones) puckData.zones = {};
+      }
     } catch(e) {
       console.error('Failed to parse page content');
     }

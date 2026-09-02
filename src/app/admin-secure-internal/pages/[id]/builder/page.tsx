@@ -28,10 +28,16 @@ export default function CustomPageBuilder({ params }: { params: { id: string } }
         setPageMeta(data.data);
         
         // Parse content safely
-        let content = { content: [], root: {} };
+        let content = { content: [], root: {}, zones: {} };
         if (data.data.content) {
           try {
-            content = JSON.parse(data.data.content);
+            const parsed = JSON.parse(data.data.content);
+            if (parsed && typeof parsed === 'object') {
+              content = parsed;
+              if (!content.content) content.content = [];
+              if (!content.root) content.root = {};
+              if (!content.zones) content.zones = {};
+            }
           } catch(e) {
             console.error('Failed to parse Puck data');
           }

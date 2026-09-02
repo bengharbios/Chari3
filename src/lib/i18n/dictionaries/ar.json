@@ -108,7 +108,12 @@
     "homepageSettings": "تصميم وإدارة الواجهة الرئيسية",
     "manageAdvertisements": "إدارة الإعلانات والبنرات",
     "paymentMethods": "طرق الدفع",
-    "mapSettings": "إعدادات الخرائط"
+    "mapSettings": "إعدادات الخرائط",
+    "customPages": "الصفحات المخصصة",
+    "customPagesDesc": "إنشاء وإدارة الصفحات المستقلة للمتجر",
+    "createNewPage": "إنشاء صفحة جديدة",
+    "noPagesYet": "لا توجد صفحات مخصصة بعد",
+    "noPagesDesc": "ابدأ بإنشاء أول صفحة مخصصة لمتجرك"
   },
   "header": {
     "notice": "تنبيه",

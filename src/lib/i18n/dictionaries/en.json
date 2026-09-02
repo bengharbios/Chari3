@@ -108,7 +108,12 @@
     "homepageSettings": "Homepage Settings",
     "manageAdvertisements": "Manage Advertisements",
     "paymentMethods": "Payment Methods",
-    "mapSettings": "Map Settings"
+    "mapSettings": "Map Settings",
+    "customPages": "Custom Pages",
+    "customPagesDesc": "Create and manage standalone store pages",
+    "createNewPage": "Create New Page",
+    "noPagesYet": "No Custom Pages Yet",
+    "noPagesDesc": "Start by creating your first custom page"
   },
   "header": {
     "notice": "Notice",
