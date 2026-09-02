@@ -1,0 +1,46 @@
+import { prisma } from '@/lib/db';
+import { notFound } from 'next/navigation';
+import { Metadata } from 'next';
+import PuckClientRenderer from './PuckClientRenderer';
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const page = await prisma.customPage.findUnique({
+    where: { slug: params.slug, isPublished: true }
+  });
+
+  if (!page) {
+    return { title: 'Page Not Found' };
+  }
+
+  // Next.js generates metadata on the server, we don't have access to useTranslation hook here.
+  // We can just use titleEn or try to detect locale from cookies if possible, 
+  // but for now we'll just return a generic title or all of them.
+  return {
+    title: page.titleAr, // Defaulting to Arabic for metadata since it's the primary market
+  };
+}
+
+export default async function CustomPageViewer({ params }: { params: { slug: string } }) {
+  const page = await prisma.customPage.findUnique({
+    where: { slug: params.slug, isPublished: true }
+  });
+
+  if (!page) {
+    notFound();
+  }
+
+  let puckData = { content: [], root: {} };
+  if (page.content) {
+    try {
+      puckData = JSON.parse(page.content);
+    } catch(e) {
+      console.error('Failed to parse page content');
+    }
+  }
+
+  return (
+    <div className="w-full flex-1">
+      <PuckClientRenderer data={puckData} />
+    </div>
+  );
+}
