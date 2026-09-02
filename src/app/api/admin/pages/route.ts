@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { getServerSession } from '@/lib/better-auth';
-import { z } from 'zObject'; // wait, it's 'zod' usually. Let me check if 'zod' is available. I'll just use standard validation to avoid import errors if zod is missing or not zObject.
+import { db } from '@/lib/db';
+import { getSession } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession();
-    if (!session || session.user.role !== 'SUPER_ADMIN') {
+    const session = await getSession(await headers());
+    if (!session || (session.user as any).role !== 'admin') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const pages = await prisma.customPage.findMany({
+    const pages = await db.customPage.findMany({
       orderBy: { createdAt: 'desc' }
     });
 
@@ -23,8 +23,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession();
-    if (!session || session.user.role !== 'SUPER_ADMIN') {
+    const session = await getSession(await headers());
+    if (!session || (session.user as any).role !== 'admin') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -36,12 +36,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if slug exists
-    const existing = await prisma.customPage.findUnique({ where: { slug } });
+    const existing = await db.customPage.findUnique({ where: { slug } });
     if (existing) {
       return NextResponse.json({ success: false, error: 'Slug already exists' }, { status: 400 });
     }
 
-    const page = await prisma.customPage.create({
+    const page = await db.customPage.create({
       data: {
         slug,
         titleAr,

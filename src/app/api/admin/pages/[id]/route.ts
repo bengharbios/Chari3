@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import { getServerSession } from '@/lib/better-auth';
+import { db } from '@/lib/db';
+import { getSession } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession();
-    if (!session || session.user.role !== 'SUPER_ADMIN') {
+    const session = await getSession(await headers());
+    if (!session || (session.user as any).role !== 'admin') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    const page = await prisma.customPage.findUnique({
+    const page = await db.customPage.findUnique({
       where: { id: params.id }
     });
 
@@ -25,8 +26,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession();
-    if (!session || session.user.role !== 'SUPER_ADMIN') {
+    const session = await getSession(await headers());
+    if (!session || (session.user as any).role !== 'admin') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -35,7 +36,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     
     // Check if updating slug to something that already exists
     if (body.slug) {
-      const existing = await prisma.customPage.findFirst({
+      const existing = await db.customPage.findFirst({
         where: { slug: body.slug, id: { not: params.id } }
       });
       if (existing) {
@@ -43,7 +44,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       }
     }
 
-    const updated = await prisma.customPage.update({
+    const updated = await db.customPage.update({
       where: { id: params.id },
       data: {
         ...(body.slug && { slug: body.slug }),
@@ -64,12 +65,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const session = await getServerSession();
-    if (!session || session.user.role !== 'SUPER_ADMIN') {
+    const session = await getSession(await headers());
+    if (!session || (session.user as any).role !== 'admin') {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    await prisma.customPage.delete({
+    await db.customPage.delete({
       where: { id: params.id }
     });
 

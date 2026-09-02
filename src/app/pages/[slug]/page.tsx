@@ -1,10 +1,10 @@
-import { prisma } from '@/lib/db';
+import { db } from '@/lib/db';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import PuckClientRenderer from './PuckClientRenderer';
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const page = await prisma.customPage.findUnique({
+  const page = await db.customPage.findUnique({
     where: { slug: params.slug, isPublished: true }
   });
 
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function CustomPageViewer({ params }: { params: { slug: string } }) {
-  const page = await prisma.customPage.findUnique({
+  const page = await db.customPage.findUnique({
     where: { slug: params.slug, isPublished: true }
   });
 
