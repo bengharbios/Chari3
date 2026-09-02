@@ -288,9 +288,8 @@ export default function HeaderFooterSettingsPage() {
                   <div className="max-w-md">
                     <Label className="mb-2 block text-sm font-semibold text-slate-800 dark:text-slate-200">صورة الشعار</Label>
                     <ImageUploader 
-                      value={config.header.logoUrl ? [config.header.logoUrl] : []}
-                      onChange={(urls) => updateHeader('logoUrl', urls[0] || '')}
-                      maxFiles={1}
+                      value={config.header.logoUrl || ''}
+                      onChange={(url) => updateHeader('logoUrl', url || '')}
                     />
                   </div>
                   <div className="max-w-xs space-y-2">
