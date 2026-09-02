@@ -247,6 +247,7 @@ export default function Header() {
   const [selectedNeighborhood, setSelectedNeighborhood] = useState('');
   const [customCities, setCustomCities] = useState<any[]>([]);
   const [isLoadingCities, setIsLoadingCities] = useState(false);
+  const [hfConfig, setHfConfig] = useState<any>(null);
 
   // Dynamic Header CMS Blocks
   const [headerBlocks, setHeaderBlocks] = useState<any[]>([]);
@@ -311,8 +312,15 @@ export default function Header() {
     fetch('/api/settings/public')
       .then(res => res.json())
       .then(data => {
-        if (data.success && data.settings?.header_blocks) {
-          setHeaderBlocks(JSON.parse(data.settings.header_blocks));
+        if (data.success) {
+          if (data.settings?.header_blocks) {
+            setHeaderBlocks(JSON.parse(data.settings.header_blocks));
+          }
+          if (data.settings?.headerFooterConfig) {
+            try {
+              setHfConfig(JSON.parse(data.settings.headerFooterConfig));
+            } catch(e) {}
+          }
         }
       })
       .catch(() => {});
@@ -680,6 +688,22 @@ export default function Header() {
           : 'bg-background border-b border-transparent'
       }`}
     >
+      {/* Custom Header Footer Top Promo Bar */}
+      {hfConfig?.header?.topBarTextAr && (hfConfig.header.topBarTextAr || hfConfig.header.topBarTextEn) && (
+        <div 
+          className="w-full relative flex items-center justify-center py-2 px-8 text-xs font-bold transition-all duration-300"
+          style={{ backgroundColor: hfConfig.header.topBarBgColor || '#0f172a', color: hfConfig.header.topBarTextColor || '#ffffff' }}
+        >
+          {hfConfig.header.topBarLink ? (
+            <a href={hfConfig.header.topBarLink} className="hover:underline flex items-center gap-1">
+              <span>{isRTL ? (hfConfig.header.topBarTextAr || hfConfig.header.topBarTextEn) : (hfConfig.header.topBarTextEn || hfConfig.header.topBarTextAr)}</span>
+              <ArrowLeft className={`h-3 w-3 ${isRTL ? '' : 'rotate-180'}`} />
+            </a>
+          ) : (
+            <span>{isRTL ? (hfConfig.header.topBarTextAr || hfConfig.header.topBarTextEn) : (hfConfig.header.topBarTextEn || hfConfig.header.topBarTextAr)}</span>
+          )}
+        </div>
+      )}
       {/* Super Admin Announcement Banners */}
       {dbAnnouncements
         .filter((ann) => !dismissedBanners.includes(ann.id))
@@ -769,11 +793,15 @@ export default function Header() {
                 useAppStore.getState().setCurrentPage('home');
                 router.push('/');
               }}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 shrink-0"
             >
-              <div className="gradient-brand rounded-lg px-2.5 py-1 font-bold text-navy text-lg">
-                {t('شاري داي', 'CharyDay')}
-              </div>
+              {hfConfig?.header?.logoUrl ? (
+                <img src={hfConfig.header.logoUrl} alt="Logo" className="h-8 lg:h-10 object-contain" />
+              ) : (
+                <div className="gradient-brand rounded-lg px-2.5 py-1 font-bold text-navy text-lg">
+                  {t('شاري داي', 'CharyDay')}
+                </div>
+              )}
             </button>
             {enableDeliverTo && (
               <div className="hidden sm:block ms-2 border-l border-border/50 pl-4 ml-4 rtl:border-l-0 rtl:border-r rtl:pl-0 rtl:pr-4 rtl:mr-4">
@@ -1306,6 +1334,7 @@ export default function Header() {
                 </div>
               </div>
             ))}
+
           </div>
 
         ) : (

@@ -154,6 +154,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { label: 'SAADA Builder', path: 'cms/saada-builder' },
         { label: t('admin.manageDocs'), path: 'cms/docs' },
         { label: t('admin.homepageSettings'), path: 'settings/homepage' },
+        { label: locale === 'ar' ? 'إعدادات الهيدر والفوتر' : 'Header & Footer Settings', path: 'settings/header-footer' },
         { label: locale === 'ar' ? 'إعدادات القائمة الرئيسية' : 'Main Menu', path: 'settings/menu' },
         { label: t('admin.manageAdvertisements'), path: 'advertisements' },
         { label: t('admin.featureFlags'), path: 'flags' },

@@ -45,6 +45,7 @@ export default function Footer({ theme }: FooterProps) {
 
   const [footerBlocks, setFooterBlocks] = useState<any[]>([]);
   const [storefrontTheme, setStorefrontTheme] = useState<any>(null);
+  const [hfConfig, setHfConfig] = useState<any>(null);
 
   useEffect(() => {
     fetch('/api/settings/public')
@@ -59,6 +60,11 @@ export default function Footer({ theme }: FooterProps) {
           if (data.settings?.theme_storefront) {
             try {
               setStorefrontTheme(JSON.parse(data.settings.theme_storefront));
+            } catch (e) {}
+          }
+          if (data.settings?.headerFooterConfig) {
+            try {
+              setHfConfig(JSON.parse(data.settings.headerFooterConfig));
             } catch (e) {}
           }
         }
@@ -140,7 +146,7 @@ export default function Footer({ theme }: FooterProps) {
     }))
   }));
 
-  const dynamicColumns = footerBlocks.length > 0 
+  let dynamicColumns = footerBlocks.length > 0 
     ? footerBlocks.map(b => ({
         id: b.id,
         titleKey: locale === 'ar' ? b.titleAr : b.titleEn,
@@ -150,8 +156,21 @@ export default function Footer({ theme }: FooterProps) {
         }))
       }))
     : (mappedDbColumns.length > 0 ? mappedDbColumns : defaultFooterColumns);
+
+  // Override with new headerFooterConfig if present
+  if (hfConfig?.footer?.columns && hfConfig.footer.columns.length > 0) {
+    dynamicColumns = hfConfig.footer.columns.map((c: any) => ({
+      id: c.id || Math.random().toString(),
+      titleKey: locale === 'ar' ? c.titleAr : c.titleEn,
+      links: (c.links || []).map((l: any) => ({
+        textKey: locale === 'ar' ? l.textAr : l.textEn,
+        url: l.url || '#'
+      }))
+    }));
+  }
   
-  const socialConfig = activeTheme?.footer?.socialMedia;
+  const socialConfig = hfConfig?.footer?.socialLinks || activeTheme?.footer?.socialMedia;
+  const hfSocialsEnabled = hfConfig?.footer?.socialLinks && (hfConfig.footer.socialLinks.facebook || hfConfig.footer.socialLinks.instagram || hfConfig.footer.socialLinks.twitter || hfConfig.footer.socialLinks.tiktok);
 
   return (
     <footer 
@@ -176,32 +195,34 @@ export default function Footer({ theme }: FooterProps) {
               {t('شاري داي', 'CharyDay')}
             </div>
             <p className="text-sm mb-4 leading-relaxed opacity-80">
-              {t(locale,
+              {hfConfig?.footer?.aboutTextAr || hfConfig?.footer?.aboutTextEn ? (
+                locale === 'ar' ? (hfConfig.footer.aboutTextAr || hfConfig.footer.aboutTextEn) : (hfConfig.footer.aboutTextEn || hfConfig.footer.aboutTextAr)
+              ) : t(locale,
                 'منصة التجارة الإلكترونية الأولى في المنطقة. تسوق الآن واستمتع بأفضل العروض والخصومات.',
                 'The leading e-commerce platform in the region. Shop now and enjoy the best deals and discounts.'
               )}
             </p>
             {/* Dynamic Social Icons */}
-            {socialConfig?.enabled && (
+            {(hfSocialsEnabled || socialConfig?.enabled) && (
               <div className="flex items-center gap-2">
-                {socialConfig.facebookUrl !== '#' && (
-                  <a href={socialConfig.facebookUrl} className="h-9 w-9 rounded-full border flex items-center justify-center opacity-70 hover:opacity-100 transition-all">
+                {(socialConfig?.facebookUrl || socialConfig?.facebook) && (socialConfig?.facebookUrl !== '#' || socialConfig?.facebook !== '#') && (
+                  <a href={socialConfig.facebookUrl || socialConfig.facebook} className="h-9 w-9 rounded-full border flex items-center justify-center opacity-70 hover:opacity-100 transition-all">
                     <FacebookIcon />
                   </a>
                 )}
-                {socialConfig.instagramUrl !== '#' && (
-                  <a href={socialConfig.instagramUrl} className="h-9 w-9 rounded-full border flex items-center justify-center opacity-70 hover:opacity-100 transition-all">
+                {(socialConfig?.instagramUrl || socialConfig?.instagram) && (socialConfig?.instagramUrl !== '#' || socialConfig?.instagram !== '#') && (
+                  <a href={socialConfig.instagramUrl || socialConfig.instagram} className="h-9 w-9 rounded-full border flex items-center justify-center opacity-70 hover:opacity-100 transition-all">
                     <InstagramIcon />
                   </a>
                 )}
-                {socialConfig.twitterUrl !== '#' && (
-                  <a href={socialConfig.twitterUrl} className="h-9 w-9 rounded-full border flex items-center justify-center opacity-70 hover:opacity-100 transition-all">
+                {(socialConfig?.twitterUrl || socialConfig?.twitter) && (socialConfig?.twitterUrl !== '#' || socialConfig?.twitter !== '#') && (
+                  <a href={socialConfig.twitterUrl || socialConfig.twitter} className="h-9 w-9 rounded-full border flex items-center justify-center opacity-70 hover:opacity-100 transition-all">
                     <TwitterXIcon />
                   </a>
                 )}
-                {socialConfig.linkedinUrl !== '#' && (
-                  <a href={socialConfig.linkedinUrl} className="h-9 w-9 rounded-full border flex items-center justify-center opacity-70 hover:opacity-100 transition-all">
-                    <LinkedInIcon />
+                {(socialConfig?.linkedinUrl || socialConfig?.tiktok) && (socialConfig?.linkedinUrl !== '#' || socialConfig?.tiktok !== '#') && (
+                  <a href={socialConfig.linkedinUrl || socialConfig.tiktok} className="h-9 w-9 rounded-full border flex items-center justify-center opacity-70 hover:opacity-100 transition-all">
+                    {socialConfig.tiktok ? <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 2.23-.9 4.45-2.43 6.08-1.74 1.83-4.32 2.87-6.85 2.58-2.61-.31-5.02-1.92-6.19-4.28-1.22-2.45-1.07-5.5.38-7.8 1.4-2.22 3.84-3.69 6.42-3.83v4.06c-1.34.09-2.63.76-3.4 1.82-.76 1.05-.98 2.45-.63 3.73.34 1.25 1.35 2.31 2.59 2.66 1.41.38 3.01.07 4.12-.9 1.04-1.01 1.47-2.48 1.45-3.95.03-5.59.01-11.18.01-16.77z"/></svg> : <LinkedInIcon />}
                   </a>
                 )}
               </div>
@@ -234,7 +255,11 @@ export default function Footer({ theme }: FooterProps) {
       <div className="border-t" style={{ borderColor: 'var(--theme-bg-sidebar, #e2e8f0)' }}>
         <div className="container-platform py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs opacity-70">
-            © 2025 {t('منصة شاري داي. جميع الحقوق محفوظة.', 'CharyDay Platform. All rights reserved.')}
+            {hfConfig?.footer?.copyrightTextAr || hfConfig?.footer?.copyrightTextEn ? (
+              locale === 'ar' ? (hfConfig.footer.copyrightTextAr || hfConfig.footer.copyrightTextEn) : (hfConfig.footer.copyrightTextEn || hfConfig.footer.copyrightTextAr)
+            ) : (
+              `© 2025 ${t('منصة شاري داي. جميع الحقوق محفوظة.', 'CharyDay Platform. All rights reserved.')}`
+            )}
           </p>
           {theme?.footer.paymentMethods?.enabled && (
             <div className="flex items-center gap-2">

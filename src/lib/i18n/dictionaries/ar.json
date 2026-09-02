@@ -1042,5 +1042,23 @@
     "product": {
       "new_arrival": "وصل حديثاً"
     }
+  },
+  "headerFooterSettings": {
+    "title": "إعدادات الهيدر والفوتر",
+    "subtitle": "تحكم في تصميم وروابط الهيدر والفوتر الخاص بالمنصة",
+    "headerTab": "إعدادات الهيدر (Header)",
+    "footerTab": "إعدادات الفوتر (Footer)",
+    "topBar": "الشريط العلوي الترويجي",
+    "topBarDesc": "شريط صغير يظهر أعلى الموقع للإعلانات والخصومات",
+    "topBarTextAr": "نص الشريط (عربي)",
+    "topBarTextEn": "نص الشريط (إنجليزي)",
+    "topBarLink": "رابط الشريط الترويجي (اختياري)",
+    "topBarBgColor": "لون الخلفية",
+    "topBarTextColor": "لون النص",
+    "logo": "الشعار (Logo)",
+    "footerAbout": "نص تعريفي للفوتر",
+    "footerColumns": "أعمدة روابط الفوتر",
+    "footerColumnsDesc": "أضف أعمدة تحتوي على روابط تهم الزائر",
+    "socials": "التواصل الاجتماعي"
   }
 }

@@ -985,5 +985,23 @@
     "product": {
       "new_arrival": "Nouveau"
     }
+  },
+  "headerFooterSettings": {
+    "title": "Paramètres d'en-tête et pied de page",
+    "subtitle": "Gérez le design et les liens de l'en-tête et du pied de page",
+    "headerTab": "Paramètres d'en-tête",
+    "footerTab": "Paramètres du pied de page",
+    "topBar": "Barre promotionnelle",
+    "topBarDesc": "Petite barre en haut du site pour les annonces",
+    "topBarTextAr": "Texte (Arabe)",
+    "topBarTextEn": "Texte (Anglais)",
+    "topBarLink": "Lien (Optionnel)",
+    "topBarBgColor": "Couleur de fond",
+    "topBarTextColor": "Couleur du texte",
+    "logo": "Logo",
+    "footerAbout": "Texte de présentation",
+    "footerColumns": "Colonnes de liens",
+    "footerColumnsDesc": "Ajoutez des colonnes avec des liens utiles",
+    "socials": "Réseaux Sociaux"
   }
 }

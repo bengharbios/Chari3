@@ -1042,5 +1042,23 @@
     "product": {
       "new_arrival": "New Arrival"
     }
+  },
+  "headerFooterSettings": {
+    "title": "Header & Footer Settings",
+    "subtitle": "Manage the design and links of the platform header and footer",
+    "headerTab": "Header Settings",
+    "footerTab": "Footer Settings",
+    "topBar": "Top Promo Bar",
+    "topBarDesc": "Small bar at the top of the site for announcements and discounts",
+    "topBarTextAr": "Top Bar Text (Arabic)",
+    "topBarTextEn": "Top Bar Text (English)",
+    "topBarLink": "Top Bar Link (Optional)",
+    "topBarBgColor": "Background Color",
+    "topBarTextColor": "Text Color",
+    "logo": "Logo",
+    "footerAbout": "Footer About Text",
+    "footerColumns": "Footer Link Columns",
+    "footerColumnsDesc": "Add columns containing useful links",
+    "socials": "Social Media"
   }
 }

@@ -11,27 +11,27 @@ export async function PUT(req: Request) {
     }
 
     const body = await req.json();
-    const { isUpgradeFreePromo, upgradeFeaturesConfig } = body;
+    const { isUpgradeFreePromo, upgradeFeaturesConfig, headerFooterConfig } = body;
 
     const oldSettings = await db.platformSettings.findUnique({
       where: { id: 'global' }
     });
 
     const updateData: any = {
-      isUpgradeFreePromo,
       updatedBy: session.user.id
     };
-    if (upgradeFeaturesConfig !== undefined) {
-      updateData.upgradeFeaturesConfig = JSON.stringify(upgradeFeaturesConfig);
-    }
+    if (isUpgradeFreePromo !== undefined) updateData.isUpgradeFreePromo = isUpgradeFreePromo;
+    if (upgradeFeaturesConfig !== undefined) updateData.upgradeFeaturesConfig = JSON.stringify(upgradeFeaturesConfig);
+    if (headerFooterConfig !== undefined) updateData.headerFooterConfig = JSON.stringify(headerFooterConfig);
 
     const settings = await db.platformSettings.upsert({
       where: { id: 'global' },
       update: updateData,
       create: {
         id: 'global',
-        isUpgradeFreePromo,
+        isUpgradeFreePromo: isUpgradeFreePromo ?? true,
         upgradeFeaturesConfig: upgradeFeaturesConfig ? JSON.stringify(upgradeFeaturesConfig) : '{}',
+        headerFooterConfig: headerFooterConfig ? JSON.stringify(headerFooterConfig) : '{}',
         updatedBy: session.user.id
       }
     });

@@ -35,6 +35,10 @@ export async function GET() {
       where: { key: { in: ['map_enabled', 'map_provider', 'map_default_lat', 'map_default_lng', 'map_default_zoom'] } }
     });
 
+    const platformSettings = await db.platformSettings.findUnique({
+      where: { id: 'global' }
+    });
+
     const settingsMap = settings.reduce((acc: any, curr: any) => {
       acc[curr.key] = curr.value;
       return acc;
@@ -70,6 +74,7 @@ export async function GET() {
         enable_logistics_registration: settingsMap.enable_logistics_registration !== undefined ? settingsMap.enable_logistics_registration : 'true',
         enable_store_registration: settingsMap.enable_store_registration !== undefined ? settingsMap.enable_store_registration : 'true',
         tax_rate_auto_entrepreneur: settingsMap.tax_rate_auto_entrepreneur || '0.5',
+        headerFooterConfig: platformSettings?.headerFooterConfig || null,
       }
     });
   } catch (error) {

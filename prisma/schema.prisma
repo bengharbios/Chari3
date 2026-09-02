@@ -1603,6 +1603,7 @@ model PlatformSettings {
   isUpgradeFreePromo    Boolean  @default(true)
   upgradeFeaturesConfig String   @db.LongText // JSON
   publicMenuConfig      String?  @db.LongText // JSON Array of menu items
+  headerFooterConfig    String?  @db.LongText // JSON Header and Footer settings
   updatedBy             String?
   updatedAt             DateTime @updatedAt
 }
