@@ -9,7 +9,8 @@ import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { Save, ArrowRight, ArrowLeft } from 'lucide-react';
 
-export default function CustomPageBuilder({ params }: { params: { id: string } }) {
+export default function CustomPageBuilder(props: { params: Promise<{ id: string }> }) {
+  const params = React.use(props.params);
   const { t, isAr, locale } = useTranslation();
   const router = useRouter();
   const [initialData, setInitialData] = useState<any>(null);

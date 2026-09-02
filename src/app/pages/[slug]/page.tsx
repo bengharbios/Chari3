@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import PuckClientRenderer from './PuckClientRenderer';
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const page = await db.customPage.findUnique({
     where: { slug: params.slug, isPublished: true }
   });
@@ -20,7 +21,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function CustomPageViewer({ params }: { params: { slug: string } }) {
+export default async function CustomPageViewer(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const page = await db.customPage.findUnique({
     where: { slug: params.slug, isPublished: true }
   });

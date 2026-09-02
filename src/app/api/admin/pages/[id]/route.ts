@@ -3,7 +3,8 @@ import { db } from '@/lib/db';
 import { getSession } from '@/lib/better-auth';
 import { headers } from 'next/headers';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getSession(await headers());
     if (!session || (session.user as any).role !== 'admin') {
@@ -24,7 +25,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getSession(await headers());
     if (!session || (session.user as any).role !== 'admin') {
@@ -63,7 +65,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     const session = await getSession(await headers());
     if (!session || (session.user as any).role !== 'admin') {
