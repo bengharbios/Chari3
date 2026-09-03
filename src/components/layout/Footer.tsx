@@ -110,9 +110,10 @@ export default function Footer({ theme }: FooterProps) {
       titleKey: locale === 'ar' ? 'بِع معنا والدعم' : 'Partnership & Support',
       links: [
         { textKey: locale === 'ar' ? 'بِع معنا على شاري داي' : 'Sell with us on ChariDay', url: '/?view=login&role=seller' },
-        { textKey: locale === 'ar' ? 'مركز المساعدة' : 'Help Center', url: '#' },
-        { textKey: locale === 'ar' ? 'تواصل معنا' : 'Contact Us', url: '#' },
-        { textKey: locale === 'ar' ? 'سياسة الشحن والضمان' : 'Shipping & Guarantee', url: '#' }
+        { textKey: locale === 'ar' ? 'المقاول الذاتي' : 'Auto Entrepreneur', url: '/pages/auto-entrepreneur' },
+        { textKey: locale === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions', url: '/pages/terms' },
+        { textKey: locale === 'ar' ? 'سياسة الاسترجاع' : 'Return Policy', url: '/pages/return-policy' },
+        { textKey: locale === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy', url: '/pages/privacy-policy' }
       ]
     }
   ];
