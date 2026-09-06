@@ -1618,6 +1618,7 @@ model CustomPage {
   titleAr     String
   titleEn     String
   titleFr     String
+  titleJson   String?  @db.LongText // Unified JSON title supporting unlimited locales
   content     String?  @db.LongText // Puck JSON Data
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
