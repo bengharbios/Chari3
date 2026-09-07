@@ -1,6 +1,9 @@
 import React from "react";
 import type { Config } from "@measured/puck";
 import { useTranslationStore } from "@/lib/store/translation-store";
+import WysiwygEditor from "@/components/puck/WysiwygEditor";
+
+const RTL_LOCALES = ['ar', 'ur', 'fa', 'he', 'ps', 'ks', 'sd'];
 
 export const PuckLocaleContext = React.createContext<string>('ar');
 
@@ -32,7 +35,7 @@ export const config: Config<Record<string, any>> = {
       },
       render: ({ content, bgImage }) => {
         const locale = usePuckLocale();
-        const dir = locale === 'ar' ? 'rtl' : 'ltr';
+        const dir = RTL_LOCALES.includes(locale) ? 'rtl' : 'ltr';
         
         // Find the translation object for the current locale, fallback to first item
         const translation = (Array.isArray(content) ? content.find(c => c.locale === locale) : null) || (Array.isArray(content) && content.length > 0 ? content[0] : { title: '', desc: '' });
@@ -64,7 +67,15 @@ export const config: Config<Record<string, any>> = {
           label: "Translations",
           arrayFields: {
             locale: { type: "text", label: "Locale Code (ar, en, fr...)" },
-            html: { type: "textarea", label: "HTML Content" }
+            html: { 
+              type: "custom", 
+              render: ({ value, onChange }) => (
+                <div className="my-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">HTML Content</label>
+                  <WysiwygEditor value={value || ''} onChange={onChange} />
+                </div>
+              )
+            }
           }
         }
       },
@@ -77,7 +88,7 @@ export const config: Config<Record<string, any>> = {
       },
       render: ({ content }) => {
         const locale = usePuckLocale();
-        const dir = locale === 'ar' ? 'rtl' : 'ltr';
+        const dir = RTL_LOCALES.includes(locale) ? 'rtl' : 'ltr';
         
         const translation = (Array.isArray(content) ? content.find(c => c.locale === locale) : null) || (Array.isArray(content) && content.length > 0 ? content[0] : { html: '' });
 
@@ -99,7 +110,15 @@ export const config: Config<Record<string, any>> = {
           arrayFields: {
             locale: { type: "text", label: "Locale Code (ar, en, fr...)" },
             title: { type: "text", label: "Title" },
-            html: { type: "textarea", label: "HTML Content" }
+            html: { 
+              type: "custom", 
+              render: ({ value, onChange }) => (
+                <div className="my-2">
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">HTML Content</label>
+                  <WysiwygEditor value={value || ''} onChange={onChange} />
+                </div>
+              )
+            }
           }
         }
       },
@@ -112,7 +131,7 @@ export const config: Config<Record<string, any>> = {
       },
       render: ({ content }) => {
         const locale = usePuckLocale();
-        const dir = locale === 'ar' ? 'rtl' : 'ltr';
+        const dir = RTL_LOCALES.includes(locale) ? 'rtl' : 'ltr';
         
         const translation = (Array.isArray(content) ? content.find(c => c.locale === locale) : null) || (Array.isArray(content) && content.length > 0 ? content[0] : { title: '', html: '' });
 
@@ -155,7 +174,7 @@ export const config: Config<Record<string, any>> = {
       },
       render: ({ content, bgColor, puck }) => {
         const locale = usePuckLocale();
-        const dir = locale === 'ar' ? 'rtl' : 'ltr';
+        const dir = RTL_LOCALES.includes(locale) ? 'rtl' : 'ltr';
         
         const translation = (Array.isArray(content) ? content.find(c => c.locale === locale) : null) || (Array.isArray(content) && content.length > 0 ? content[0] : { title: '' });
         
