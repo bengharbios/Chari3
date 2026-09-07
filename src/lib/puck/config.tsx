@@ -84,7 +84,7 @@ export const config: Config<Record<string, any>> = {
         return (
           <div className="container-platform py-8" dir={dir}>
             <div 
-              className={`prose prose-lg dark:prose-invert prose-headings:text-primary max-w-4xl mx-auto marker:text-primary prose-a:text-primary hover:prose-a:text-primary-dark ${dir === 'rtl' ? 'text-right' : 'text-left'}`}
+              className={`rich-document max-w-4xl mx-auto`}
               dangerouslySetInnerHTML={{ __html: translation.html }}
             />
           </div>

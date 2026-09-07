@@ -3,143 +3,153 @@ const prisma = new PrismaClient();
 
 const termsAr = `
 <h2>المقدمة والقبول</h2>
-<p>مرحباً بكم في شاري داي (ChariDay). تحدد هذه الشروط والأحكام القواعد واللوائح الخاصة باستخدام منصتنا، بما يتوافق مع القوانين التجارية المعمول بها في الجمهورية الجزائرية الديمقراطية الشعبية والتشريعات المتعلقة بالتجارة الإلكترونية (القانون 18-05).</p>
-<p>بوصولك إلى هذا الموقع واستخدامه، فإنك توافق على الامتثال لهذه الشروط والأحكام. إذا كنت لا توافق على جميع الشروط والأحكام الواردة في هذه الصفحة، يُرجى عدم استخدام منصة شاري داي.</p>
+<p>مرحباً بكم في منصة شاري داي (ChariDay). تمثل هذه الشروط والأحكام اتفاقية ملزمة قانوناً بينك كـ (مستخدم أو بائع أو مشترٍ) وبين إدارة منصة شاري داي، وتنظم استخدامك لموقعنا الإلكتروني وتطبيقنا وجميع الخدمات المرتبطة بها.</p>
+<p>باستخدامك لمنصتنا بأي شكل من الأشكال، فإنك تقر بقراءتك، وفهمك، وموافقتك الكاملة وغير المشروطة على جميع البنود الواردة أدناه، والتي تتوافق تماماً مع القوانين والتشريعات التجارية المعمول بها في الجمهورية الجزائرية الديمقراطية الشعبية، وتحديداً القانون 18-05 المتعلق بالتجارة الإلكترونية.</p>
+<p>في حال عدم موافقتك على أي بند من هذه الشروط والأحكام، يرجى التوقف الفوري عن استخدام المنصة وإغلاق الحساب إن وُجد.</p>
 
-<h2>حقوق الملكية الفكرية</h2>
-<p>ما لم يُنص على خلاف ذلك، تمتلك شاري داي و/أو المرخصون لها حقوق الملكية الفكرية لجميع المواد الموجودة على المنصة. جميع حقوق الملكية الفكرية محفوظة.</p>
+<h2>حقوق الملكية الفكرية والعلامات التجارية</h2>
+<p>جميع المحتويات المتوفرة على منصة شاري داي، بما في ذلك على سبيل المثال لا الحصر، النصوص، الرسومات، الشعارات، أيقونات الأزرار، الصور، المقاطع الصوتية، التنزيلات الرقمية، تجميع البيانات والبرمجيات، هي ملكية حصرية لشاري داي أو مزودي المحتوى التابعين لها، وهي محمية بموجب قوانين حقوق الملكية الفكرية وحقوق النشر الجزائرية والدولية.</p>
 <ul>
-    <li>يُمنع إعادة نشر المواد من شاري داي.</li>
-    <li>يُمنع بيع أو تأجير أو ترخيص المواد من شاري داي.</li>
-    <li>يُمنع إعادة إنتاج أو نسخ المواد من شاري داي.</li>
+    <li>يُمنع منعاً باتاً استنساخ أو إعادة إنتاج أي جزء من الموقع لأغراض تجارية.</li>
+    <li>يُحظر استخدام أي من علاماتنا التجارية أو شعاراتنا في أي منتج أو خدمة غير تابعة لنا بطريقة قد تسبب ارتباكاً للعملاء أو تسيء إلى سمعة المنصة.</li>
+    <li>أي استخدام غير مصرح به قد يعرضك للمساءلة القانونية والمطالبة بالتعويض عن الأضرار.</li>
 </ul>
 
-<h2>شروط النقل والتوصيل (بالشراكة مع ياليدين)</h2>
-<p>نحن نعتمد في توصيل طلبياتنا على شركاء لوجستيين معتمدين مثل "ياليدين إكسبريس" لضمان التوصيل الآمن والسريع عبر 58 ولاية. تخضع خدمات النقل للشروط التالية:</p>
+<h2>شروط النقل والتوصيل (بالشراكة مع شركات الشحن المعتمدة)</h2>
+<p>لضمان وصول طلبياتكم بأمان وفي أسرع وقت ممكن، تعتمد منصة شاري داي في عمليات اللوجستيات على شبكة واسعة من <b>شركات الشحن الرائدة والمعتمدة</b> لتغطية جميع التراب الوطني (58 ولاية). تخضع عمليات النقل للسياسات الصارمة التالية:</p>
 <ul>
-    <li><b>مدة التوصيل:</b> تختلف حسب الولاية، وتتراوح عادة بين 24 ساعة للولايات الشمالية والوسطى، و3 إلى 5 أيام لولايات الجنوب.</li>
-    <li><b>الطرود والمغلفات:</b> تشمل خدمات التوصيل الطرود التي لا يتجاوز وزنها الفعلي أو الحجمي 20 كغ للتوصيل المنزلي.</li>
-    <li><b>فتح الطرد قبل تأكيد التسليم:</b> يُمنع فتح الطرد قبل دفع مستحقاته لعامل التوصيل، وفي حال السماح بذلك بشكل استثنائي، تُعفى شركة النقل والمنصة من أية مسؤولية في حالة التلف أو النقص.</li>
+    <li><b>الالتزام بالمواعيد:</b> تختلف مدة التوصيل بناءً على الموقع الجغرافي. نسعى لضمان التوصيل خلال 24 إلى 48 ساعة للولايات الشمالية والوسطى، بينما قد تستغرق الولايات الجنوبية من 3 إلى 7 أيام عمل.</li>
+    <li><b>القيود على الطرود:</b> خدماتنا مخصصة للطرود التي لا يتجاوز وزنها الفعلي أو الحجمي 20 كغ لتوصيلها مباشرة إلى باب المنزل (Home Delivery)، وتُطبق رسوم إضافية للطرود ذات الوزن الزائد.</li>
+    <li><b>معاينة الطرد:</b> وفقاً لسياسات شركات النقل المعتمدة لدينا، <b>يُمنع فتح الطرد أو تجربة المنتج قبل تسديد كامل المبلغ المستحق لعامل التوصيل</b>. في الحالات الاستثنائية التي يُسمح فيها بذلك، تخلي المنصة وشركة النقل مسؤوليتهما الكاملة عن أي تلف أو نقص يحدث للمنتج.</li>
+    <li><b>الاستلام والإرجاع:</b> في حال رفض استلام الطرد بدون مبرر قانوني مقنع، تحتفظ المنصة بحقها في تعليق حساب العميل أو حظره من ميزة الدفع عند الاستلام في الطلبات المستقبلية.</li>
 </ul>
 
 <h2>المواد المحظورة من النقل والبيع</h2>
-<p>يُحظر تماماً بيع أو شحن المواد التالية عبر منصتنا، وفقاً لقوانين التجارة الجزائرية وشروط شركات النقل:</p>
+<p>سعياً منا لضمان بيئة تجارية آمنة وقانونية، يُمنع منعاً باتاً إدراج، بيع، أو محاولة شحن أي من المواد التالية عبر منصتنا:</p>
 <ul>
-    <li>المشروبات الكحولية والمؤثرات العقلية.</li>
-    <li>الأسلحة النارية والأسلحة البيضاء والذخائر.</li>
-    <li>المواد سريعة الاشتعال، المتفجرات، والألعاب النارية.</li>
-    <li>المواد الإشعاعية أو الكيميائية الخطرة.</li>
-    <li>الحيوانات الحية والنباتات الممنوعة.</li>
-    <li>الأوراق النقدية والعملات الأجنبية غير المصرح بها.</li>
+    <li>المشروبات الكحولية، المؤثرات العقلية، المخدرات، والأدوية غير المرخصة.</li>
+    <li>الأسلحة النارية، الأسلحة البيضاء، الذخائر، والمعدات العسكرية بأي شكل من الأشكال.</li>
+    <li>المواد سريعة الاشتعال، المتفجرات، الألعاب النارية، والمواد الكيميائية والإشعاعية الخطرة.</li>
+    <li>الحيوانات الحية بجميع أنواعها، والنباتات المحظورة بموجب القانون الجمركي والبيئي.</li>
+    <li>الأوراق النقدية، العملات الأجنبية غير المصرح بها، والوثائق المزورة.</li>
+    <li>المواد المقرصنة، المقلدة، وتلك التي تنتهك حقوق النشر والملكية الفكرية لأطراف ثالثة.</li>
+    <li>المنتجات التي تحرض على الكراهية أو العنف أو تتنافى مع الآداب العامة وقيم المجتمع.</li>
 </ul>
 
-<h2>سياسة الدفع والفوترة</h2>
-<p>نوفر خيارات دفع متعددة لتسهيل تجربة الشراء:</p>
+<h2>سياسة الدفع والفوترة والتسعير</h2>
+<p>نسعى لتوفير بيئة دفع آمنة ومرنة تلبي احتياجات جميع المستخدمين في الجزائر:</p>
 <ul>
-    <li><b>الدفع عند الاستلام (C.O.D):</b> الدفع نقداً عند استلام الطرد، وهو متاح لجميع الطلبيات التي لا تتجاوز قيمتها 150,000 دج.</li>
-    <li><b>الدفع الإلكتروني:</b> سيتم توفيره قريباً عبر البطاقات الذهبية والبنكية CIB.</li>
+    <li><b>الدفع عند الاستلام (C.O.D):</b> نتيح للعملاء ميزة الدفع نقداً عند استلام الطرد من عامل التوصيل. هذا الخيار متاح حصرياً للطلبيات التي لا تتجاوز قيمتها الإجمالية 150,000 دج.</li>
+    <li><b>الدفع الإلكتروني (البطاقة الذهبية / CIB):</b> سيتم قريباً توفير خدمة الدفع الإلكتروني عبر بوابة الدفع الوطنية، مع ضمان تشفير جميع بيانات الدفع باستخدام بروتوكولات حماية متطورة.</li>
+    <li><b>شفافية الفوترة:</b> الفاتورة المرفقة مع الطلب تمثل القيمة الإجمالية، وتشمل السعر النهائي للمنتج بالإضافة إلى تكاليف الشحن. لا توجد أي رسوم خفية.</li>
 </ul>
-<p>يتوجب على المشتري دفع المبلغ الإجمالي الموضح في الفاتورة، والذي يشمل سعر المنتج وتكلفة التوصيل. تحتفظ المنصة بحق إلغاء الطلبات التي يُشتبه في كونها وهمية أو احتيالية.</p>
 
 <h2>إخلاء المسؤولية وتحديد المسؤولية</h2>
-<p>إلى أقصى حد يسمح به القانون المعمول به، نستبعد جميع الإقرارات والضمانات والشروط المتعلقة بموقعنا واستخدام هذا الموقع. لا تتحمل شاري داي أي مسؤولية عن الأضرار المباشرة أو غير المباشرة الناتجة عن تأخير شركات الشحن أو سوء استخدام المنتجات من قبل المشتري.</p>
+<p>إلى أقصى حد يسمح به القانون المعمول به، يتم توفير منصة شاري داي وجميع الخدمات المرتبطة بها "كما هي" وبدون أي ضمانات من أي نوع، سواء صريحة أو ضمنية:</p>
+<ul>
+    <li>لا تضمن المنصة أن الخدمات ستكون خالية من الأخطاء أو غير منقطعة بشكل دائم.</li>
+    <li>المنصة غير مسؤولة عن التأخيرات الخارجة عن إرادتها (القوة القاهرة) كالكوارث الطبيعية، الإضرابات، أو الأعطال في شبكات شركات الشحن.</li>
+    <li>لا نتحمل مسؤولية أي أضرار غير مباشرة، تبعية، أو عرضية (بما في ذلك فقدان الأرباح أو البيانات) الناتجة عن سوء استخدام المشتري للمنتجات.</li>
+</ul>
 
-<h2>القانون المطبق وحل النزاعات</h2>
-<p>تخضع هذه الشروط والأحكام وتُفسر وفقاً لقوانين الجمهورية الجزائرية. أي نزاع ينشأ عن استخدام المنصة يخضع للاختصاص الحصري للمحاكم الجزائرية المختصة.</p>
+<h2>القانون المطبق وحل النزاعات وفض الخلافات</h2>
+<p>تخضع هذه الشروط والأحكام بالكامل وتُفسر وفقاً للقوانين السارية في الجمهورية الجزائرية. في حال حدوث أي نزاع ينشأ عن استخدام المنصة أو يتعلق بمنتج تم شراؤه من خلالها، يلتزم الطرفان بمحاولة حل الخلاف ودياً عن طريق التواصل مع خدمة العملاء. وفي حال تعذر الحل الودي، فإن النزاع يخضع للاختصاص الحصري للمحاكم الجزائرية المختصة قانونياً وإقليمياً.</p>
 `;
 
 const termsEn = `
 <h2>Introduction and Acceptance</h2>
-<p>Welcome to ChariDay. These terms and conditions outline the rules and regulations for the use of our platform, in accordance with the commercial laws applicable in the People's Democratic Republic of Algeria and legislation relating to e-commerce (Law 18-05).</p>
-<p>By accessing and using this website, you agree to comply with these terms and conditions. If you do not agree to all the terms and conditions stated on this page, please do not use the ChariDay platform.</p>
+<p>Welcome to the ChariDay platform. These Terms and Conditions constitute a legally binding agreement between you (as a user, seller, or buyer) and the management of ChariDay, governing your use of our website, application, and all related services.</p>
+<p>By using our platform in any way, you acknowledge that you have read, understood, and fully and unconditionally agree to all the clauses listed below, which fully comply with the commercial laws and legislation in force in the People's Democratic Republic of Algeria, specifically Law 18-05 on e-commerce.</p>
 
-<h2>Intellectual Property Rights</h2>
-<p>Unless otherwise stated, ChariDay and/or its licensors own the intellectual property rights for all material on the platform. All intellectual property rights are reserved.</p>
+<h2>Intellectual Property and Trademarks</h2>
+<p>All content available on the ChariDay platform, including but not limited to texts, graphics, logos, button icons, images, audio clips, digital downloads, data compilations, and software, is the exclusive property of ChariDay or its content suppliers and is protected by Algerian and international intellectual property and copyright laws.</p>
 <ul>
-    <li>You must not republish material from ChariDay.</li>
-    <li>You must not sell, rent, or sub-license material from ChariDay.</li>
-    <li>You must not reproduce, duplicate, or copy material from ChariDay.</li>
+    <li>It is strictly prohibited to copy or reproduce any part of the site for commercial purposes.</li>
+    <li>The use of any of our trademarks or logos in any product or service not affiliated with us is prohibited.</li>
 </ul>
 
-<h2>Transport and Delivery Terms (in partnership with Yalidine)</h2>
-<p>We rely on certified logistics partners like "Yalidine Express" to ensure safe and fast delivery across 58 wilayas. Transport services are subject to the following conditions:</p>
+<h2>Transport and Delivery Terms (in partnership with approved shipping companies)</h2>
+<p>To ensure your orders arrive safely and as quickly as possible, ChariDay relies on a vast network of <b>leading and approved shipping companies</b> to cover the entire national territory (58 wilayas). Transport operations are subject to strict policies:</p>
 <ul>
-    <li><b>Delivery Time:</b> Varies by Wilaya, typically ranging between 24 hours for Northern and Central Wilayas, and 3 to 5 days for Southern Wilayas.</li>
-    <li><b>Parcels and Envelopes:</b> Delivery services include parcels whose actual or volumetric weight does not exceed 20 kg for home delivery.</li>
-    <li><b>Opening the parcel before delivery confirmation:</b> It is prohibited to open the parcel before paying its dues to the delivery agent. If exceptionally allowed, the transport company and the platform are exempt from any liability in case of damage or shortage.</li>
+    <li><b>Punctuality:</b> Delivery times vary based on geographical location (typically 24 to 48 hours for the North, and 3 to 7 business days for the South).</li>
+    <li><b>Parcel Restrictions:</b> Our services are intended for parcels whose actual or volumetric weight does not exceed 20 kg for home delivery.</li>
+    <li><b>Parcel Inspection:</b> According to the policies of our shipping partners, <b>it is prohibited to open the parcel or try the product before paying the full amount</b> to the delivery agent.</li>
 </ul>
 
 <h2>Prohibited Items for Sale and Transport</h2>
-<p>It is strictly prohibited to sell or ship the following items via our platform, in accordance with Algerian trade laws and transport company conditions:</p>
+<p>In our effort to ensure a safe and legal trading environment, it is strictly forbidden to list, sell, or attempt to ship any of the following items:</p>
 <ul>
-    <li>Alcoholic beverages and psychotropic substances.</li>
-    <li>Firearms, bladed weapons, and ammunition.</li>
-    <li>Flammable materials, explosives, and fireworks.</li>
-    <li>Radioactive or hazardous chemical materials.</li>
-    <li>Live animals and prohibited plants.</li>
-    <li>Banknotes and unauthorized foreign currencies.</li>
+    <li>Alcoholic beverages, psychotropic substances, drugs, and unlicensed medicines.</li>
+    <li>Firearms, bladed weapons, ammunition, and military equipment.</li>
+    <li>Flammable materials, explosives, fireworks, and dangerous chemicals.</li>
+    <li>Counterfeit materials, pirated goods, and those infringing on intellectual property.</li>
 </ul>
 
-<h2>Payment and Billing Policy</h2>
-<p>We provide multiple payment options to facilitate the purchasing experience:</p>
+<h2>Payment, Billing, and Pricing Policy</h2>
+<p>We strive to provide a secure and flexible payment environment:</p>
 <ul>
-    <li><b>Cash on Delivery (C.O.D):</b> Payment in cash upon receipt of the parcel, available for all orders not exceeding 150,000 DZD.</li>
-    <li><b>Electronic Payment:</b> Will be available soon via Edahabia and CIB bank cards.</li>
+    <li><b>Cash on Delivery (C.O.D):</b> Available exclusively for orders not exceeding 150,000 DZD.</li>
+    <li><b>Electronic Payment (Edahabia / CIB):</b> Coming soon via the national payment gateway.</li>
+    <li><b>Billing Transparency:</b> The invoice includes the final product price plus shipping costs. There are no hidden fees.</li>
 </ul>
-<p>The buyer must pay the total amount shown on the invoice, which includes the product price and delivery cost. The platform reserves the right to cancel orders suspected of being fake or fraudulent.</p>
 
 <h2>Disclaimer and Limitation of Liability</h2>
-<p>To the maximum extent permitted by applicable law, we exclude all representations, warranties, and conditions relating to our website and the use of this website. ChariDay shall not be held liable for any direct or indirect damages resulting from shipping delays or product misuse by the buyer.</p>
+<p>To the fullest extent permitted by applicable law, the ChariDay platform is provided "as is" and without any warranties of any kind.</p>
+<ul>
+    <li>The platform is not responsible for delays beyond its control (force majeure) such as natural disasters or strikes.</li>
+    <li>We assume no liability for any indirect, consequential, or incidental damages resulting from the buyer's misuse of products.</li>
+</ul>
 
 <h2>Applicable Law and Dispute Resolution</h2>
-<p>These terms and conditions are governed by and construed in accordance with the laws of the Algerian Republic. Any dispute arising from the use of the platform is subject to the exclusive jurisdiction of the competent Algerian courts.</p>
+<p>These terms and conditions are fully governed by and construed in accordance with the laws of the Algerian Republic. In the event of any dispute, parties must attempt to resolve the disagreement amicably. If an amicable resolution is impossible, the dispute is subject to the exclusive jurisdiction of the competent Algerian courts.</p>
 `;
 
 const termsFr = `
 <h2>Introduction et Acceptation</h2>
-<p>Bienvenue sur ChariDay. Ces termes et conditions décrivent les règles et règlements pour l'utilisation de notre plateforme, conformément aux lois commerciales applicables en République Algérienne Démocratique et Populaire et à la législation relative au commerce électronique (Loi 18-05).</p>
-<p>En accédant et en utilisant ce site Web, vous acceptez de vous conformer à ces termes et conditions. Si vous n'acceptez pas tous les termes et conditions énoncés sur cette page, veuillez ne pas utiliser la plateforme ChariDay.</p>
+<p>Bienvenue sur la plateforme ChariDay. Ces Conditions Générales constituent un accord juridiquement contraignant entre vous et la direction de ChariDay, régissant votre utilisation de notre site Web et de nos services.</p>
+<p>En utilisant notre plateforme, vous reconnaissez avoir lu, compris et accepté pleinement et inconditionnellement toutes les clauses énumérées ci-dessous, qui sont conformes aux lois commerciales en vigueur en République Algérienne Démocratique et Populaire, spécifiquement la Loi 18-05 sur le commerce électronique.</p>
 
-<h2>Droits de Propriété Intellectuelle</h2>
-<p>Sauf indication contraire, ChariDay et/ou ses concédants de licence détiennent les droits de propriété intellectuelle de tout le matériel sur la plateforme. Tous les droits de propriété intellectuelle sont réservés.</p>
+<h2>Propriété Intellectuelle et Marques Déposées</h2>
+<p>Tout le contenu disponible sur la plateforme, y compris les textes, graphiques, logos, et logiciels, est la propriété exclusive de ChariDay et est protégé par les lois algériennes et internationales sur la propriété intellectuelle.</p>
 <ul>
-    <li>Vous ne devez pas republier le matériel de ChariDay.</li>
-    <li>Vous ne devez pas vendre, louer ou sous-licencier le matériel de ChariDay.</li>
-    <li>Vous ne devez pas reproduire, dupliquer ou copier le matériel de ChariDay.</li>
+    <li>Il est strictement interdit de copier ou reproduire toute partie du site à des fins commerciales.</li>
+    <li>L'utilisation de nos marques dans tout produit ou service non affilié à nous est interdite.</li>
 </ul>
 
-<h2>Conditions de Transport et de Livraison (en partenariat avec Yalidine)</h2>
-<p>Nous nous appuyons sur des partenaires logistiques certifiés comme "Yalidine Express" pour assurer une livraison sûre et rapide à travers les 58 wilayas. Les services de transport sont soumis aux conditions suivantes :</p>
+<h2>Conditions de Transport et de Livraison (en partenariat avec des sociétés de transport agréées)</h2>
+<p>Pour garantir que vos commandes arrivent en toute sécurité et le plus rapidement possible, ChariDay s'appuie sur un vaste réseau de <b>sociétés de transport agréées</b> pour couvrir l'ensemble du territoire (58 wilayas) :</p>
 <ul>
-    <li><b>Délai de livraison :</b> Varie selon la Wilaya, allant généralement de 24 heures pour les Wilayas du Nord et du Centre, à 3 à 5 jours pour les Wilayas du Sud.</li>
-    <li><b>Colis et enveloppes :</b> Les services de livraison incluent les colis dont le poids réel ou volumétrique ne dépasse pas 20 kg pour la livraison à domicile.</li>
-    <li><b>Ouverture du colis avant confirmation de livraison :</b> Il est interdit d'ouvrir le colis avant d'avoir payé ses frais à l'agent de livraison. Si exceptionnellement autorisé, la société de transport et la plateforme sont exemptées de toute responsabilité en cas de dommage ou de manque.</li>
+    <li><b>Ponctualité :</b> Les délais de livraison varient (24-48h pour le Nord, 3-7 jours pour le Sud).</li>
+    <li><b>Restrictions sur les colis :</b> Le poids réel ou volumétrique ne doit pas dépasser 20 kg pour la livraison à domicile.</li>
+    <li><b>Inspection du colis :</b> Il est strictement <b>interdit d'ouvrir le colis avant d'avoir payé la totalité du montant</b> au livreur.</li>
 </ul>
 
 <h2>Articles Interdits à la Vente et au Transport</h2>
-<p>Il est strictement interdit de vendre ou d'expédier les articles suivants via notre plateforme, conformément aux lois commerciales algériennes et aux conditions des sociétés de transport :</p>
+<p>Il est strictement interdit de lister, vendre ou expédier les articles suivants :</p>
 <ul>
-    <li>Boissons alcoolisées et substances psychotropes.</li>
+    <li>Boissons alcoolisées, drogues et médicaments non autorisés.</li>
     <li>Armes à feu, armes blanches et munitions.</li>
-    <li>Matières inflammables, explosifs et feux d'artifice.</li>
-    <li>Matières radioactives ou chimiques dangereuses.</li>
-    <li>Animaux vivants et plantes interdites.</li>
-    <li>Billets de banque et devises étrangères non autorisées.</li>
+    <li>Matières inflammables, explosifs et produits chimiques dangereux.</li>
+    <li>Produits contrefaits ou enfreignant la propriété intellectuelle.</li>
 </ul>
 
 <h2>Politique de Paiement et de Facturation</h2>
-<p>Nous proposons plusieurs options de paiement pour faciliter l'expérience d'achat :</p>
+<p>Nous offrons un environnement de paiement sécurisé :</p>
 <ul>
-    <li><b>Paiement à la livraison (C.O.D) :</b> Paiement en espèces à la réception du colis, disponible pour toutes les commandes ne dépassant pas 150 000 DZD.</li>
-    <li><b>Paiement Électronique :</b> Sera bientôt disponible via les cartes bancaires Edahabia et CIB.</li>
+    <li><b>Paiement à la livraison (C.O.D) :</b> Disponible pour les commandes ne dépassant pas 150 000 DZD.</li>
+    <li><b>Paiement Électronique (Edahabia / CIB) :</b> Bientôt disponible via le portail national.</li>
+    <li><b>Transparence :</b> La facture comprend le prix final du produit plus les frais d'expédition. Aucun frais caché.</li>
 </ul>
-<p>L'acheteur doit payer le montant total indiqué sur la facture, qui inclut le prix du produit et les frais de livraison. La plateforme se réserve le droit d'annuler les commandes suspectées d'être fausses ou frauduleuses.</p>
 
-<h2>Clause de Non-responsabilité et Limitation de Responsabilité</h2>
-<p>Dans toute la mesure permise par la loi applicable, nous excluons toutes les représentations, garanties et conditions relatives à notre site Web et à l'utilisation de ce site Web. ChariDay ne saurait être tenue responsable des dommages directs ou indirects résultant de retards d'expédition ou d'une mauvaise utilisation des produits par l'acheteur.</p>
+<h2>Limitation de Responsabilité</h2>
+<p>Dans toute la mesure permise par la loi, la plateforme est fournie "telle quelle" sans aucune garantie d'aucune sorte.</p>
+<ul>
+    <li>La plateforme n'est pas responsable des retards indépendants de sa volonté (force majeure).</li>
+    <li>Nous n'assumons aucune responsabilité pour les dommages indirects résultant d'une mauvaise utilisation des produits par l'acheteur.</li>
+</ul>
 
 <h2>Droit Applicable et Règlement des Litiges</h2>
-<p>Ces termes et conditions sont régis et interprétés conformément aux lois de la République Algérienne. Tout litige découlant de l'utilisation de la plateforme est soumis à la compétence exclusive des tribunaux algériens compétents.</p>
+<p>Ces termes et conditions sont régis par les lois de la République Algérienne. Tout litige est soumis à la compétence exclusive des tribunaux algériens compétents.</p>
 `;
 
 function createPagePuckData() {
@@ -150,9 +160,9 @@ function createPagePuckData() {
         props: {
           bgImage: "",
           content: [
-            { locale: "ar", title: "الشروط والأحكام", desc: "نحن نلتزم بتقديم تجربة تسوق شفافة وعادلة. يرجى قراءة شروطنا وسياساتنا بدقة لضمان حقوقك وواجباتك." },
-            { locale: "en", title: "Terms and Conditions", desc: "We are committed to providing a transparent and fair shopping experience. Please read our terms carefully." },
-            { locale: "fr", title: "Conditions Générales", desc: "Nous nous engageons à offrir une expérience d'achat transparente. Veuillez lire nos conditions." }
+            { locale: "ar", title: "الشروط والأحكام", desc: "نحن نلتزم بتقديم تجربة تسوق شفافة وعادلة ووفقاً لأعلى المعايير القانونية والتجارية. يرجى قراءة شروطنا وسياساتنا بدقة لضمان حقوقك وواجباتك." },
+            { locale: "en", title: "Terms and Conditions", desc: "We are committed to providing a transparent and fair shopping experience according to the highest legal standards. Please read our terms carefully." },
+            { locale: "fr", title: "Conditions Générales", desc: "Nous nous engageons à offrir une expérience d'achat transparente et conforme aux normes légales. Veuillez lire nos conditions." }
           ],
           id: "Hero-Terms"
         }
@@ -200,7 +210,7 @@ async function main() {
     },
     create: termsPage
   });
-  console.log("Updated terms page with exhaustive content!");
+  console.log("Updated terms page with exhaustive, professional content without mentioning specific companies.");
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());
