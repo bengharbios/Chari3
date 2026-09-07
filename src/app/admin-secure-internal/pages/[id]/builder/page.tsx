@@ -16,6 +16,7 @@ export default function CustomPageBuilder(props: { params: Promise<{ id: string 
   const [initialData, setInitialData] = useState<any>(null);
   const [pageMeta, setPageMeta] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [builderLocale, setBuilderLocale] = useState<string>(locale);
 
   useEffect(() => {
     fetchPage();
@@ -81,9 +82,7 @@ export default function CustomPageBuilder(props: { params: Promise<{ id: string 
     );
   }
 
-  // We provide PuckLocaleContext as 'ar' in the editor to preview it in Arabic by default, 
-  // or we could use the current dashboard locale! Let's use current dashboard locale.
-  const previewLocale = locale === 'en' ? 'en' : locale === 'fr' ? 'fr' : 'ar';
+  // We provide PuckLocaleContext as 'builderLocale' in the editor to preview it dynamically.
 
   return (
     <div className="flex flex-col h-screen -m-6"> {/* Negative margin to break out of dashboard padding */}
@@ -105,6 +104,18 @@ export default function CustomPageBuilder(props: { params: Promise<{ id: string 
         </div>
         
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 ltr:ml-4 rtl:mr-4">
+            <label className="text-xs font-semibold text-slate-600 dark:text-slate-300">لغة المعاينة (Preview Language):</label>
+            <select 
+              value={builderLocale} 
+              onChange={(e) => setBuilderLocale(e.target.value)}
+              className="text-xs border rounded-md px-2 py-1.5 bg-slate-50 dark:bg-slate-800 dark:border-slate-700 cursor-pointer focus:ring-2 focus:ring-brand outline-none"
+            >
+              <option value="ar">العربية (Arabic)</option>
+              <option value="en">English (الإنجليزية)</option>
+              <option value="fr">Français (الفرنسية)</option>
+            </select>
+          </div>
           <div className="px-3 py-1 bg-amber-50 text-amber-700 dark:bg-amber-900/30 rounded-lg text-xs font-medium">
             تلميح: أضف المحتوى بجميع اللغات من القائمة الجانبية
           </div>
@@ -112,7 +123,7 @@ export default function CustomPageBuilder(props: { params: Promise<{ id: string 
       </div>
       
       <div className="flex-1 relative">
-        <PuckLocaleContext.Provider value={previewLocale}>
+        <PuckLocaleContext.Provider value={builderLocale}>
           <Puck
             config={config}
             data={initialData}
