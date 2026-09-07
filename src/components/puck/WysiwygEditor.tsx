@@ -2,10 +2,10 @@
 
 import React, { useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import 'react-quill/dist/quill.snow.css'; // Quill styles
+import 'react-quill-new/dist/quill.snow.css'; // Quill styles
 
 // Import Quill dynamically to avoid SSR issues
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 interface WysiwygEditorProps {
   value: string;
