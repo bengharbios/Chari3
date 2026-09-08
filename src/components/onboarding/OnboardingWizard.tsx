@@ -171,7 +171,7 @@ function extractUrl(f: string | null): string | null {
 
 function maskIban(iban: string): string {
   if (!iban || iban.length < 8) return iban;
-  return `${iban.slice(0, 2)}${'ΓÇó'.repeat(iban.length - 6)}${iban.slice(-4)}`;
+  return `${iban.slice(0, 2)}${'•'.repeat(iban.length - 6)}${iban.slice(-4)}`;
 }
 
 // ============================================
