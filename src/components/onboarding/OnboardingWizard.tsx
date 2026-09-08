@@ -624,7 +624,7 @@ export default function OnboardingWizard() {
       } else if (role === 'store_manager' && (!idFrontFile || !idBackFile)) {
         missingMsg = t(locale, 'يرجى رفع صور الهوية الوطنية', 'Please upload ID photos');
       } else if (role === 'supplier' && (!commercialLicenseFile || !importLicenseFile)) {
-        missingMsg = t(locale, '┘è╪▒╪¼┘ë ╪▒┘ü╪╣ التراخيص التجارية', 'Please upload commercial licenses');
+        missingMsg = t(locale, 'يرجى رفع التراخيص التجارية', 'Please upload commercial licenses');
       } else if (role === 'supplier' && !supplierIban) {
         missingMsg = t(locale, 'يرجى إدخال رقم IBAN البنكي', 'Please enter bank IBAN');
       } else if (role === 'logistics' && (!transportLicenseFile || !insuranceCertificateFile)) {
@@ -1025,7 +1025,7 @@ export default function OnboardingWizard() {
                   {t(locale, 'توثيق الهوية الوطنية', 'Identity Verification')}
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  {t(locale, '╪╡┘ê╪▒╪⌐ ╪º┘ä┘ç┘ê┘è╪⌐ ╪º┘ä┘ê╪╖┘å┘è╪⌐ (╪ú┘à╪º┘à ┘ê╪«┘ä┘ü)', 'National ID (front & back)')}
+                  {t(locale, 'صورة الهوية الوطنية (أمام وخلف)', 'National ID (front & back)')}
                 </p>
               </div>
             </div>
@@ -1564,7 +1564,7 @@ export default function OnboardingWizard() {
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span>
                 {isReviewStep
-                  ? t(locale, '╪º┘äمراجعة ╪º┘ä┘å┘ç╪º╪ª┘è╪⌐', 'Final Review')
+                  ? t(locale, 'المراجعة النهائية', 'Final Review')
                   : currentStepData
                     ? t(locale, currentStepData.titleAr, currentStepData.titleEn)
                     : ''}
