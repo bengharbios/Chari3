@@ -72,48 +72,43 @@ export default function Footer({ theme }: FooterProps) {
       .catch(() => {});
   }, []);
 
-  const activeTheme = theme || storefrontTheme;
-
   const defaultFooterColumns = [
     {
-      id: 'electronics',
-      titleKey: locale === 'ar' ? 'الإلكترونيات' : 'Electronics',
+      id: 'fashion_beauty',
+      titleKey: locale === 'ar' ? 'الأقسام الشائعة' : 'Popular Categories',
       links: [
         { textKey: locale === 'ar' ? 'الهواتف المحمولة' : 'Mobile Phones', url: '/search?q=phones' },
         { textKey: locale === 'ar' ? 'أجهزة الكمبيوتر' : 'Laptops', url: '/search?q=laptops' },
-        { textKey: locale === 'ar' ? 'التلفزيونات' : 'Televisions', url: '/search?q=tvs' },
-        { textKey: locale === 'ar' ? 'ألعاب الفيديو' : 'Video Games', url: '/search?q=games' }
-      ]
-    },
-    {
-      id: 'fashion_beauty',
-      titleKey: locale === 'ar' ? 'الأزياء والجمال' : 'Fashion & Beauty',
-      links: [
         { textKey: locale === 'ar' ? 'أزياء نسائية' : 'Women\'s Fashion', url: '/search?q=women' },
-        { textKey: locale === 'ar' ? 'أزياء رجالية' : 'Men\'s Fashion', url: '/search?q=men' },
-        { textKey: locale === 'ar' ? 'العطور' : 'Perfumes', url: '/search?q=perfume' },
-        { textKey: locale === 'ar' ? 'الساعات والمجوهرات' : 'Watches & Jewelry', url: '/search?q=watches' }
+        { textKey: locale === 'ar' ? 'العطور والمكياج' : 'Perfumes & Makeup', url: '/search?q=perfume' }
       ]
     },
     {
-      id: 'home_kitchen',
-      titleKey: locale === 'ar' ? 'المنزل والمطبخ' : 'Home & Kitchen',
+      id: 'about_support',
+      titleKey: locale === 'ar' ? 'المساعدة والدعم' : 'Help & Support',
       links: [
-        { textKey: locale === 'ar' ? 'أدوات المطبخ' : 'Kitchenware', url: '/search?q=kitchen' },
-        { textKey: locale === 'ar' ? 'الأثاث' : 'Furniture', url: '/search?q=furniture' },
-        { textKey: locale === 'ar' ? 'ديكور البيت' : 'Home Decor', url: '/search?q=decor' },
-        { textKey: locale === 'ar' ? 'أواني السفرة والتقديم' : 'Tableware & Dining', url: '/search?q=dining' }
+        { textKey: locale === 'ar' ? 'من نحن' : 'About Us', url: '/pages/about-us' },
+        { textKey: locale === 'ar' ? 'تواصل معنا' : 'Contact Us', url: '/pages/contact-us' },
+        { textKey: locale === 'ar' ? 'الأسئلة الشائعة' : 'FAQ', url: '/pages/faq' },
+        { textKey: locale === 'ar' ? 'المساعدة والدعم' : 'Help & Support', url: '/pages/help-and-support' }
       ]
     },
     {
-      id: 'support_selling',
-      titleKey: locale === 'ar' ? 'بِع معنا والدعم' : 'Partnership & Support',
+      id: 'legal_policies',
+      titleKey: locale === 'ar' ? 'الشؤون القانونية' : 'Legal Policies',
+      links: [
+        { textKey: locale === 'ar' ? 'سياسة الشحن والتوصيل' : 'Shipping Policy', url: '/pages/shipping-policy' },
+        { textKey: locale === 'ar' ? 'سياسة الاسترجاع' : 'Return Policy', url: '/pages/return-policy' },
+        { textKey: locale === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy', url: '/pages/privacy-policy' },
+        { textKey: locale === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions', url: '/pages/terms-and-conditions' }
+      ]
+    },
+    {
+      id: 'partnership',
+      titleKey: locale === 'ar' ? 'بِع معنا' : 'Partnership',
       links: [
         { textKey: locale === 'ar' ? 'بِع معنا على شاري داي' : 'Sell with us on ChariDay', url: '/?view=login&role=seller' },
-        { textKey: locale === 'ar' ? 'المقاول الذاتي' : 'Auto Entrepreneur', url: '/pages/auto-entrepreneur' },
-        { textKey: locale === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions', url: '/pages/terms' },
-        { textKey: locale === 'ar' ? 'سياسة الاسترجاع' : 'Return Policy', url: '/pages/return-policy' },
-        { textKey: locale === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy', url: '/pages/privacy-policy' }
+        { textKey: locale === 'ar' ? 'اتفاقية البائع' : 'Seller Agreement', url: '/pages/seller-agreement' }
       ]
     }
   ];
