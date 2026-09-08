@@ -46,6 +46,23 @@ export default function SellerOnboardingPage() {
             useOnboardingStore.getState().setAccountStatus(data.accountStatus);
             router.push('/seller/verification');
             return;
+          } else {
+            // Restore draft from DB if missing locally
+            try {
+              const draftRes = await fetch(`/api/onboarding/draft?userId=${user.id}`);
+              const draftData = await draftRes.json();
+              if (draftData.success && draftData.hasDraft) {
+                const store = useOnboardingStore.getState();
+                if (draftData.step !== undefined) store.setStep(draftData.step);
+                Object.keys(draftData).forEach((key) => {
+                  if (key !== 'success' && key !== 'hasDraft' && key !== 'step' && key !== 'role' && draftData[key] !== null) {
+                    store.setField(key as any, draftData[key]);
+                  }
+                });
+              }
+            } catch (e) {
+              console.error('Failed to restore draft:', e);
+            }
           }
         }
       } catch (err) {

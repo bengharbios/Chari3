@@ -764,13 +764,8 @@ export default function OnboardingWizard() {
         toast.success(
           t(locale, 'تم حفظ المسودة بنجاح', 'Draft saved successfully')
         );
-        // Navigate back to dashboard
-        useAppStore.getState().setCurrentPage(
-          role === 'store_manager' ? 'store' :
-          role === 'seller' ? 'seller' :
-          role === 'supplier' ? 'supplier' :
-          role === 'logistics' ? 'logistics' : 'login'
-        );
+        // Navigate back to dashboard via root redirect
+        window.location.href = '/';
       } else {
         toast.error(
           data.error || t(locale, 'فشل حفظ المسودة', 'Failed to save draft')
@@ -783,12 +778,8 @@ export default function OnboardingWizard() {
       toast.success(
         t(locale, 'تم حفظ المسودة محلياً', 'Draft saved locally')
       );
-      useAppStore.getState().setCurrentPage(
-        role === 'store_manager' ? 'store' :
-        role === 'seller' ? 'seller' :
-        role === 'supplier' ? 'supplier' :
-        role === 'logistics' ? 'logistics' : 'login'
-      );
+      // Navigate back to dashboard via root redirect
+      window.location.href = '/';
     }
   };
 
