@@ -210,7 +210,7 @@ export default function Footer({ theme }: FooterProps) {
                 <button 
                   type="submit" 
                   className="h-12 px-8 rounded-xl font-bold text-white transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: 'var(--theme-primary)' }}
+                  style={{ backgroundColor: 'var(--theme-primary, #1ABB9C)' }}
                 >
                   {locale === 'ar' ? 'اشترك' : 'Subscribe'}
                 </button>
@@ -291,16 +291,12 @@ export default function Footer({ theme }: FooterProps) {
                 <div className="pt-2">
                   <p className="text-sm font-semibold mb-3 opacity-90">{t(locale, hfConfig.footer.appLinksTitleAr, hfConfig.footer.appLinksTitleEn)}</p>
                   <div className="flex gap-2">
-                    {hfConfig.footer.googlePlayUrl && (
-                      <a href={hfConfig.footer.googlePlayUrl} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" className="h-10" />
-                      </a>
-                    )}
-                    {hfConfig.footer.appStoreUrl && (
-                      <a href={hfConfig.footer.appStoreUrl} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" alt="Download on the App Store" className="h-10" />
-                      </a>
-                    )}
+                    <a href={hfConfig.footer.googlePlayUrl || '#'} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" className="h-10" />
+                    </a>
+                    <a href={hfConfig.footer.appStoreUrl || '#'} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+                      <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" alt="Download on the App Store" className="h-10" />
+                    </a>
                   </div>
                 </div>
               )}
@@ -339,8 +335,14 @@ export default function Footer({ theme }: FooterProps) {
           </p>
           {(hfConfig?.footer?.enablePaymentMethods || theme?.footer.paymentMethods?.enabled) && (
             <div className="flex items-center gap-3">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Mastercard_2019_logo.svg" alt="Mastercard" className="h-5" />
-              <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-4" />
+              <svg className="h-5" viewBox="0 0 44 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M28.465 14C28.465 9.71 30.34 5.86 33.285 3.23C30.395 1.18 26.855 0 23.085 0C15.355 0 9.08496 6.27 9.08496 14C9.08496 21.73 15.355 28 23.085 28C26.855 28 30.395 26.82 33.285 24.77C30.34 22.14 28.465 18.29 28.465 14Z" fill="#EB001B"/>
+                <path d="M43.9149 14C43.9149 21.73 37.6449 28 29.9149 28C26.0449 28 22.425 26.74 19.505 24.62C22.475 21.99 24.365 18.15 24.365 14C24.365 9.85 22.475 6.01 19.505 3.38C22.425 1.26 26.0449 0 29.9149 0C37.6449 0 43.9149 6.27 43.9149 14Z" fill="#F79E1B"/>
+                <path d="M33.285 14C33.285 18.29 31.41 22.14 28.465 24.77C25.545 26.89 21.925 28.15 18.055 28.15C14.285 28.15 10.745 26.97 7.855 24.92C4.91 22.29 3.035 18.44 3.035 14.15C3.035 9.86 4.91 6.01 7.855 3.38C10.745 1.33 14.285 0.15 18.055 0.15C21.925 0.15 25.545 1.41 28.465 3.53C31.41 6.16 33.285 10.01 33.285 14Z" fill="#FF5F00"/>
+              </svg>
+              <svg className="h-4" viewBox="0 0 66 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M25.688 0.612001L16.89 19.467H22.424L23.532 16.32H30.292L30.938 19.467H35.795L30.25 0.612001H25.688ZM27.915 4.542L29.419 12.311H24.636L27.915 4.542ZM45.859 6.54C45.859 6.012 45.421 5.574 44.893 5.574H36.326L35.619 9.076H41.52C42.048 9.076 42.486 9.514 42.486 10.042V10.152C42.486 10.68 42.048 11.118 41.52 11.118H35.187L33.491 19.467H38.56L39.022 17.151H44.893C45.421 17.151 45.859 16.713 45.859 16.185V14.546C45.859 14.168 45.626 13.824 45.275 13.673C45.626 13.522 45.859 13.178 45.859 12.8V6.54ZM65.85 13.66C65.85 13.132 65.412 12.694 64.884 12.694H55.452L56.096 9.49H64.085C64.613 9.49 65.051 9.052 65.051 8.524V6.89C65.051 6.362 64.613 5.924 64.085 5.924H50.569L47.818 19.468H53.076L54.108 14.39H64.884C65.412 14.39 65.85 13.952 65.85 13.424V13.66ZM14.996 0.612001H9.864L0 19.467H5.21L14.996 0.612001Z" fill="#1434CB"/>
+              </svg>
               <div className="h-5 px-2 bg-white rounded flex items-center justify-center font-bold text-[#facc15] text-[10px] border border-slate-200 shadow-sm" style={{ fontFamily: 'sans-serif' }}>EDAHABIA</div>
               <div className="h-5 px-2 bg-white rounded flex items-center justify-center font-bold text-[#1e3a8a] text-[10px] border border-slate-200 shadow-sm" style={{ fontFamily: 'sans-serif' }}>CIB</div>
               <div className="h-5 px-2 bg-white rounded flex items-center justify-center font-bold text-slate-700 text-[10px] border border-slate-200 shadow-sm" style={{ fontFamily: 'sans-serif' }}>COD</div>
