@@ -3,6 +3,7 @@ import { useTranslation } from '@/lib/i18n/useTranslation';
 import { ThemeSettings } from '@/lib/theme-defaults';
 import { useEffect, useState } from 'react';
 import { useAppStore } from '@/lib/store';
+import { toast } from 'sonner';
 
 // ... social icons omitted for brevity but they are the same SVG
 function FacebookIcon() { return <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>; }
@@ -188,6 +189,37 @@ export default function Footer({ theme }: FooterProps) {
         color: 'var(--theme-text-footer, #555555)'
       }}
     >
+      {hfConfig?.footer?.enableNewsletter && (
+        <div className="border-b" style={{ borderColor: 'var(--theme-bg-sidebar, #e2e8f0)', backgroundColor: 'var(--theme-bg-sidebar, #f8fafc)' }}>
+          <div className="container-platform py-10 md:py-16">
+            <div className="max-w-2xl mx-auto text-center space-y-4">
+              <h3 className="text-2xl md:text-3xl font-bold" style={{ color: 'var(--theme-text-footer, #1f2937)' }}>
+                {t(locale, hfConfig.footer.newsletterTitleAr, hfConfig.footer.newsletterTitleEn)}
+              </h3>
+              <p className="opacity-80" style={{ color: 'var(--theme-text-footer, #4b5563)' }}>
+                {t(locale, hfConfig.footer.newsletterDescAr, hfConfig.footer.newsletterDescEn)}
+              </p>
+              <form className="mt-6 flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto" onSubmit={(e) => { e.preventDefault(); toast.success(locale === 'ar' ? 'تم الاشتراك بنجاح!' : 'Subscribed successfully!'); }}>
+                <input 
+                  type="email" 
+                  placeholder={locale === 'ar' ? 'البريد الإلكتروني' : 'Email Address'} 
+                  className="flex-1 h-12 px-4 rounded-xl border bg-white focus:outline-none focus:ring-2"
+                  style={{ borderColor: 'var(--theme-bg-sidebar)', focusRingColor: 'var(--theme-primary)' }}
+                  required
+                />
+                <button 
+                  type="submit" 
+                  className="h-12 px-8 rounded-xl font-bold text-white transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: 'var(--theme-primary)' }}
+                >
+                  {locale === 'ar' ? 'اشترك' : 'Subscribe'}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="container-platform py-8 md:py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Brand Column */}
@@ -207,8 +239,9 @@ export default function Footer({ theme }: FooterProps) {
                 'The leading e-commerce platform in the region. Shop now and enjoy the best deals and discounts.'
               )}
             </p>
-            {/* Dynamic Social Icons */}
-            {(hfConfig?.footer?.dynamicSocials?.length > 0 || hfSocialsEnabled || socialConfig?.enabled) && (
+            {/* Dynamic Social Icons & App Links */}
+            <div className="space-y-4">
+              {(hfConfig?.footer?.dynamicSocials?.length > 0 || hfSocialsEnabled || socialConfig?.enabled) && (
               <div className="flex items-center gap-2 flex-wrap">
                 {hfConfig?.footer?.dynamicSocials?.length > 0 ? (
                   hfConfig.footer.dynamicSocials.map((social: any) => (
@@ -252,6 +285,26 @@ export default function Footer({ theme }: FooterProps) {
                 )}
               </div>
             )}
+            
+              {/* App Links */}
+              {hfConfig?.footer?.enableAppLinks && (
+                <div className="pt-2">
+                  <p className="text-sm font-semibold mb-3 opacity-90">{t(locale, hfConfig.footer.appLinksTitleAr, hfConfig.footer.appLinksTitleEn)}</p>
+                  <div className="flex gap-2">
+                    {hfConfig.footer.googlePlayUrl && (
+                      <a href={hfConfig.footer.googlePlayUrl} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" className="h-10" />
+                      </a>
+                    )}
+                    {hfConfig.footer.appStoreUrl && (
+                      <a href={hfConfig.footer.appStoreUrl} target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/3c/Download_on_the_App_Store_Badge.svg" alt="Download on the App Store" className="h-10" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Dynamic Links Columns */}
@@ -284,16 +337,13 @@ export default function Footer({ theme }: FooterProps) {
               `© ${currentYear} ${t('منصة شاري داي. جميع الحقوق محفوظة.', 'CharyDay Platform. All rights reserved.')}`
             )}
           </p>
-          {theme?.footer.paymentMethods?.enabled && (
-            <div className="flex items-center gap-2">
-              {theme.footer.paymentMethods.methods.map((method) => (
-                <span
-                  key={method}
-                  className="text-[10px] font-medium opacity-70"
-                >
-                  {method}
-                </span>
-              ))}
+          {(hfConfig?.footer?.enablePaymentMethods || theme?.footer.paymentMethods?.enabled) && (
+            <div className="flex items-center gap-3">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Mastercard_2019_logo.svg" alt="Mastercard" className="h-5" />
+              <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-4" />
+              <div className="h-5 px-2 bg-white rounded flex items-center justify-center font-bold text-[#facc15] text-[10px] border border-slate-200 shadow-sm" style={{ fontFamily: 'sans-serif' }}>EDAHABIA</div>
+              <div className="h-5 px-2 bg-white rounded flex items-center justify-center font-bold text-[#1e3a8a] text-[10px] border border-slate-200 shadow-sm" style={{ fontFamily: 'sans-serif' }}>CIB</div>
+              <div className="h-5 px-2 bg-white rounded flex items-center justify-center font-bold text-slate-700 text-[10px] border border-slate-200 shadow-sm" style={{ fontFamily: 'sans-serif' }}>COD</div>
             </div>
           )}
         </div>

@@ -12,6 +12,7 @@ import { Save, Loader2, Plus, Trash, PanelTop, PanelBottom, Settings2 } from 'lu
 import { toast } from 'sonner';
 import { ImageUploader } from '@/components/ui/ImageUploader';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 
 const DEFAULT_CONFIG = {
   header: {
@@ -29,6 +30,13 @@ const DEFAULT_CONFIG = {
     dynamicSocials: [],
     titleSize: 'base', // sm, base, lg, xl
     textSize: 'sm',    // xs, sm, base, lg
+    enablePaymentMethods: false,
+    enableAppLinks: false,
+    appLinksTitleAr: 'حمل تطبيقنا', appLinksTitleEn: 'Download our app', appLinksTitleFr: 'Téléchargez notre app',
+    googlePlayUrl: '', appStoreUrl: '',
+    enableNewsletter: false,
+    newsletterTitleAr: 'اشترك في النشرة البريدية', newsletterTitleEn: 'Subscribe to Newsletter', newsletterTitleFr: 'Abonnez-vous à la newsletter',
+    newsletterDescAr: 'احصل على آخر العروض والأخبار مباشرة على بريدك.', newsletterDescEn: 'Get the latest offers and news directly in your inbox.', newsletterDescFr: 'Recevez les dernières offres et actualités directement dans votre boîte de réception.',
   }
 };
 
@@ -579,6 +587,106 @@ export default function HeaderFooterSettingsPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">طرق الدفع (Payment Methods)</CardTitle>
+                  <CardDescription>عرض أيقونات الدفع أسفل الفوتر</CardDescription>
+                </div>
+                <Switch 
+                  checked={config.footer.enablePaymentMethods || false}
+                  onCheckedChange={(checked) => updateFooter('enablePaymentMethods', checked)}
+                />
+              </div>
+            </CardHeader>
+          </Card>
+
+          <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">روابط التطبيقات (App Links)</CardTitle>
+                  <CardDescription>عرض أزرار تحميل التطبيق</CardDescription>
+                </div>
+                <Switch 
+                  checked={config.footer.enableAppLinks || false}
+                  onCheckedChange={(checked) => updateFooter('enableAppLinks', checked)}
+                />
+              </div>
+            </CardHeader>
+            {config.footer.enableAppLinks && (
+              <CardContent className="pt-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {activeLangs.map((lang: any) => {
+                    const suffix = getSuffix(lang.code);
+                    const key = `appLinksTitle${suffix}`;
+                    return (
+                      <div key={lang.code} className="space-y-2">
+                        <Label>العنوان ({lang.name})</Label>
+                        <Input value={config.footer[key] || ''} onChange={(e) => updateFooter(key, e.target.value)} />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Google Play URL</Label>
+                    <Input value={config.footer.googlePlayUrl || ''} onChange={(e) => updateFooter('googlePlayUrl', e.target.value)} dir="ltr" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>App Store URL</Label>
+                    <Input value={config.footer.appStoreUrl || ''} onChange={(e) => updateFooter('appStoreUrl', e.target.value)} dir="ltr" />
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+
+          <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">النشرة البريدية (Newsletter)</CardTitle>
+                  <CardDescription>عرض نموذج الاشتراك في النشرة البريدية</CardDescription>
+                </div>
+                <Switch 
+                  checked={config.footer.enableNewsletter || false}
+                  onCheckedChange={(checked) => updateFooter('enableNewsletter', checked)}
+                />
+              </div>
+            </CardHeader>
+            {config.footer.enableNewsletter && (
+              <CardContent className="pt-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {activeLangs.map((lang: any) => {
+                    const suffix = getSuffix(lang.code);
+                    const key = `newsletterTitle${suffix}`;
+                    return (
+                      <div key={lang.code} className="space-y-2">
+                        <Label>العنوان ({lang.name})</Label>
+                        <Input value={config.footer[key] || ''} onChange={(e) => updateFooter(key, e.target.value)} />
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {activeLangs.map((lang: any) => {
+                    const suffix = getSuffix(lang.code);
+                    const key = `newsletterDesc${suffix}`;
+                    return (
+                      <div key={lang.code} className="space-y-2">
+                        <Label>الوصف ({lang.name})</Label>
+                        <Textarea value={config.footer[key] || ''} onChange={(e) => updateFooter(key, e.target.value)} />
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            )}
+          </Card>
+
         </TabsContent>
       </Tabs>
     </div>
