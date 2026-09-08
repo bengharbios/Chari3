@@ -136,8 +136,8 @@ export const config: Config<Record<string, any>> = {
         const translation = (Array.isArray(content) ? content.find(c => c.locale === locale) : null) || (Array.isArray(content) && content.length > 0 ? content[0] : { title: '', html: '' });
 
         return (
-          <div className="container-platform py-2 max-w-4xl mx-auto" dir={dir}>
-            <details className="group border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 [&_summary::-webkit-details-marker]:hidden">
+          <div className="py-2 max-w-4xl mx-auto w-full" dir={dir}>
+            <details className="group border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 shadow-sm [&_summary::-webkit-details-marker]:hidden">
               <summary className="flex cursor-pointer items-center justify-between gap-1.5 rounded-lg p-4 text-gray-900 dark:text-white font-semibold">
                 <h3 className={`text-lg ${dir === 'rtl' ? 'text-right' : 'text-left'}`}>{translation.title}</h3>
                 <span className="shrink-0 rounded-full bg-slate-100 dark:bg-slate-700 p-1.5 text-gray-900 sm:p-3">
