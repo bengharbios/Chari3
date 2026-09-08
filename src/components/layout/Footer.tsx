@@ -72,6 +72,8 @@ export default function Footer({ theme }: FooterProps) {
       .catch(() => {});
   }, []);
 
+  const activeTheme = theme || storefrontTheme;
+
   const defaultFooterColumns = [
     {
       id: 'fashion_beauty',
