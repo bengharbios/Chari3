@@ -89,7 +89,40 @@ const DEFAULT_HERO_SLIDES = [
   },
 ];
 
-const DEFAULT_TESTIMONIALS: any[] = [];
+const DEFAULT_TESTIMONIALS: any[] = [
+  {
+    name: 'أحمد محمود', nameEn: 'Ahmed Mahmoud', nameFr: 'Ahmed Mahmoud',
+    city: 'الجزائر العاصمة', cityEn: 'Algiers', cityFr: 'Alger',
+    rating: 5,
+    text: 'تجربة تسوق ممتازة، المنتجات أصلية والتوصيل سريع جداً.',
+    textEn: 'Excellent shopping experience, original products and very fast delivery.',
+    textFr: 'Excellente expérience d\'achat, produits originaux et livraison très rapide.'
+  },
+  {
+    name: 'سارة بن علي', nameEn: 'Sarah Benali', nameFr: 'Sarah Benali',
+    city: 'وهران', cityEn: 'Oran', cityFr: 'Oran',
+    rating: 5,
+    text: 'أفضل منصة للتسوق الإلكتروني في الجزائر، أسعار تنافسية.',
+    textEn: 'The best e-commerce platform in Algeria, competitive prices.',
+    textFr: 'La meilleure plateforme e-commerce en Algérie, prix compétitifs.'
+  },
+  {
+    name: 'كريم سعيد', nameEn: 'Karim Said', nameFr: 'Karim Said',
+    city: 'قسنطينة', cityEn: 'Constantine', cityFr: 'Constantine',
+    rating: 4,
+    text: 'خدمة عملاء رائعة وتجاوب سريع مع الاستفسارات.',
+    textEn: 'Great customer service and quick response to inquiries.',
+    textFr: 'Excellent service client et réponse rapide aux demandes.'
+  },
+  {
+    name: 'مريم يوسف', nameEn: 'Meriem Youcef', nameFr: 'Meriem Youcef',
+    city: 'عنابة', cityEn: 'Annaba', cityFr: 'Annaba',
+    rating: 5,
+    text: 'التغليف ممتاز والمنتج مطابق تماماً للوصف.',
+    textEn: 'Packaging is excellent and the product exactly matches the description.',
+    textFr: 'L\'emballage est excellent et le produit correspond exactement à la description.'
+  }
+];
 
 const FEATURES = [
   { 

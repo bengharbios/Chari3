@@ -191,7 +191,7 @@ export async function GET(req: NextRequest) {
     // Wallet balance
     const wallet = await db.wallet.findUnique({ where: { userId } });
     const pendingLedger = await db.ledgerEntry.aggregate({
-      where: { userId, status: 'pending_clearance' },
+      where: { wallet: { userId }, status: 'pending_clearance' },
       _sum: { amount: true }
     });
 

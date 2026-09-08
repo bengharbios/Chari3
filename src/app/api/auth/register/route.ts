@@ -204,6 +204,17 @@ export async function POST(request: Request) {
                 currency: 'DZD',
               },
             },
+            // Account for Better Auth credential provider
+            accounts: {
+              create: {
+                id: randomUUID(),
+                providerId: 'credential',
+                accountId: defaultEmail,
+                password: passwordHash,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              }
+            }
           },
           select: USER_SELECT,
         }),
