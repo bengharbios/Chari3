@@ -194,13 +194,15 @@ export function StickyStatusBanner() {
             onClick={handleAction}
           />
 
-          <button
-            onClick={dismissBanner}
-            className={cn('p-1 rounded-full hover:opacity-80 transition-colors', config.iconColor)}
-            aria-label={isAr ? 'إغلاق' : 'Dismiss'}
-          >
-            <X className="size-4" />
-          </button>
+          {accountStatus !== 'incomplete' && (
+            <button
+              onClick={dismissBanner}
+              className={cn('p-1 rounded-full hover:opacity-80 transition-colors', config.iconColor)}
+              aria-label={isAr ? 'إغلاق' : 'Dismiss'}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </div>

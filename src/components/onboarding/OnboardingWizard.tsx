@@ -921,7 +921,7 @@ export default function OnboardingWizard() {
                 {t(locale, 'رقم السجل التجاري', 'Commercial Register Number')}
               </Label>
               <Input
-                placeholder={t(locale, '╪ú╪»╪«┘ä رقم السجل التجاري (10 ╪ú╪▒┘é╪º┘à)', 'Enter CR number (10 digits)')}
+                placeholder={t(locale, 'أدخل رقم السجل التجاري (10 أرقام)', 'Enter CR number (10 digits)')}
                 maxLength={10}
                 value={commercialRegisterNumber}
                 onChange={(e) => {
