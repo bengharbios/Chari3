@@ -425,21 +425,26 @@ export default function NotificationPanel() {
         });
 
         // Inject mock verification notification if needed
-        if (accountStatus === 'incomplete') {
+        if (accountStatus === 'incomplete' || accountStatus === 'rejected') {
+          const isRejected = accountStatus === 'rejected';
           dbNotifications.unshift({
             id: 'mock-verification-required',
             category: 'verification',
-            titleAr: 'يجب إكمال التوثيق',
-            titleEn: 'Verification Required',
-            bodyAr: 'لن يظهر متجرك للعملاء حتى تقوم بإكمال متطلبات التوثيق',
-            bodyEn: 'Your store will not be visible to customers until verification is complete',
+            titleAr: isRejected ? 'الرجاء تصحيح طلب التوثيق' : 'يجب إكمال التوثيق',
+            titleEn: isRejected ? 'Please Correct Verification' : 'Verification Required',
+            bodyAr: isRejected 
+              ? 'تم رفض طلبك السابق. يرجى مراجعة الملاحظات وتحديث المستندات.'
+              : 'لن يظهر متجرك للعملاء حتى تقوم بإكمال متطلبات التوثيق',
+            bodyEn: isRejected
+              ? 'Your previous request was rejected. Please review feedback and update documents.'
+              : 'Your store will not be visible to customers until verification is complete',
             isRead: false,
             createdAt: new Date().toISOString(),
-            actionLabelAr: 'استكمال التوثيق',
-            actionLabelEn: 'Complete Verification',
-            actionUrl: '/seller/billing',
+            actionLabelAr: isRejected ? 'تحديث المستندات' : 'استكمال التوثيق',
+            actionLabelEn: isRejected ? 'Update Documents' : 'Complete Verification',
+            actionUrl: '/seller/verification',
             actionPage: null as any,
-            iconBg: 'bg-amber-100 dark:bg-amber-900/30',
+            iconBg: 'bg-red-100 dark:bg-red-900/30',
             urgency: 'high',
             type: 'VERIFICATION_REQUIRED'
           });
