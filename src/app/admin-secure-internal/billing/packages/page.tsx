@@ -35,6 +35,7 @@ const INITIAL_PACKAGE = {
   hasApiAccess: false,
   hasPrioritySupport: false,
   maxTeamMembers: 1,
+  maxBranches: 1,
   hasCustomDomain: false,
   hasPixels: false,
   hasMultiCurrency: false,
@@ -421,6 +422,17 @@ export default function BillingPackagesPage() {
                           min="1"
                           value={editingPackage.maxImagesPerProduct}
                           onChange={e => setEditingPackage({ ...editingPackage, maxImagesPerProduct: parseInt(e.target.value) || 3 })}
+                          className="h-9 rounded-xl font-mono font-bold"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold">{t(locale, 'الحد الأقصى للفروع', 'Max Branches')}</Label>
+                        <Input 
+                          type="number" 
+                          min={1}
+                          value={editingPackage.maxBranches ?? 1}
+                          onChange={e => setEditingPackage({ ...editingPackage, maxBranches: parseInt(e.target.value) === 0 ? 0 : (parseInt(e.target.value) || 1) })}
                           className="h-9 rounded-xl font-mono font-bold"
                         />
                       </div>

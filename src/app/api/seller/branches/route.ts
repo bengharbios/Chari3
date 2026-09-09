@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'only_business_sellers_allowed' }, { status: 403 });
     }
 
-    // Check current branch count for this user (limit to reasonable number)
+    // Check current branch count for this user
     const existingCount = await db.store.count({
       where: {
         OR: [
@@ -115,7 +115,14 @@ export async function POST(req: NextRequest) {
         ]
       }
     });
-    if (existingCount >= 10) {
+
+    const subscription = await db.subscription.findFirst({
+      where: { userId, status: 'ACTIVE' },
+      include: { package: true }
+    });
+    const maxBranches = subscription?.package?.maxBranches || 10;
+
+    if (existingCount >= maxBranches) {
       return NextResponse.json({ success: false, error: 'branch_limit_reached' }, { status: 400 });
     }
 

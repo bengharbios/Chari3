@@ -95,9 +95,9 @@ export default function SellerBranchesPage() {
       if (user?.id) {
         const subRes = await fetch(`/api/billing/subscription?userId=${user.id}`);
         const subData = await subRes.json();
-        if (subData.subscription?.package?.maxTeamMembers) {
-          // Use maxTeamMembers as a proxy for branch limit, or default to 10
-          setBranchLimit(subData.subscription.package.maxTeamMembers || 10);
+        if (subData.subscription?.package?.maxBranches !== undefined) {
+          // Use maxBranches for branch limit, or default to 10
+          setBranchLimit(subData.subscription.package.maxBranches || 10);
         }
       }
     } catch {

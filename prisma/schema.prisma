@@ -232,6 +232,7 @@ model SellerPackage {
 
   // Advanced features
   maxTeamMembers   Int     @default(1)
+  maxBranches      Int     @default(1)
   hasCustomDomain  Boolean @default(false)
   hasPixels        Boolean @default(false)
   hasMultiCurrency Boolean @default(false)
