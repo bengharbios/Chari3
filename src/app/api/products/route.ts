@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { getUserPackageLimits } from '@/lib/billing';
 
 export const dynamic = 'force-dynamic';
 
@@ -258,6 +259,26 @@ export async function POST(request: Request) {
           where: { managerId: seller.userId }
         });
         if (crossStore) storeId = crossStore.id;
+      }
+    }
+
+    // Enforce package limits
+    if (sellerId) {
+      const limits = await getUserPackageLimits(sellerId);
+      const currentProductsCount = await db.product.count({ where: { sellerId } });
+      
+      if (limits.maxProducts !== -1 && currentProductsCount >= limits.maxProducts) {
+        return NextResponse.json(
+          { success: false, error: `product_limit_reached`, message: `Maximum limit of ${limits.maxProducts} products reached.` },
+          { status: 403 }
+        );
+      }
+      
+      if (body.images && body.images.length > limits.maxImagesPerProduct) {
+        return NextResponse.json(
+          { success: false, error: `images_limit_reached`, message: `Maximum limit of ${limits.maxImagesPerProduct} images per product reached.` },
+          { status: 403 }
+        );
       }
     }
 

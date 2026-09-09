@@ -427,7 +427,7 @@ export default function BillingPackagesPage() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-bold">{t(locale, 'الحد الأقصى للفروع', 'Max Branches')}</Label>
+                        <Label className="text-xs font-bold">{t(locale, 'إجمالي المتاجر (الرئيسي + الفروع)', 'Total Stores (Primary + Branches)')}</Label>
                         <Input 
                           type="number" 
                           min={1}

@@ -34,6 +34,26 @@ export async function GET(req: NextRequest) {
     });
 
     if (!subscription) {
+      // Check for unverified fallback package
+      const unverifiedSetting = await db.systemSetting.findUnique({
+        where: { key: 'billing_unverified_package_id' },
+      });
+      if (unverifiedSetting?.value && unverifiedSetting.value !== 'none') {
+        const fallbackPackage = await db.sellerPackage.findUnique({
+          where: { id: unverifiedSetting.value },
+        });
+        if (fallbackPackage) {
+          return NextResponse.json({
+            subscription: {
+              status: 'INCOMPLETE',
+              packageId: fallbackPackage.id,
+              package: fallbackPackage,
+            },
+            addons: {},
+            invoices: [],
+          });
+        }
+      }
       return NextResponse.json({ subscription: null });
     }
 

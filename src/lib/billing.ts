@@ -417,3 +417,41 @@ export async function checkAndUpdateExpiredSubscriptions(userId: string) {
   }
 }
 
+/**
+ * Gets the effective limits for a user, handling active subscription, unverified fallback, and defaults.
+ */
+export async function getUserPackageLimits(userId: string) {
+  // 1. Check for active subscription
+  const activeSub = await db.subscription.findFirst({
+    where: { userId, status: { in: ['ACTIVE', 'TRIAL'] } },
+    include: { package: true },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (activeSub?.package) {
+    return activeSub.package;
+  }
+
+  // 2. If no active sub, check if there's an unverified fallback package
+  const unverifiedSetting = await db.systemSetting.findUnique({
+    where: { key: 'billing_unverified_package_id' },
+  });
+
+  if (unverifiedSetting?.value && unverifiedSetting.value !== 'none') {
+    const fallbackPackage = await db.sellerPackage.findUnique({
+      where: { id: unverifiedSetting.value },
+    });
+    if (fallbackPackage) {
+      return fallbackPackage;
+    }
+  }
+
+  // 3. Fallback to hardcoded absolute minimum limits if nothing is found
+  return {
+    maxProducts: 5,
+    maxImagesPerProduct: 3,
+    maxBranches: 1,
+    maxTeamMembers: 1,
+  };
+}
+

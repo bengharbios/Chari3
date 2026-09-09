@@ -87,6 +87,7 @@ export default function BillingSettingsPage() {
 
   // Registration Default Plan States
   const [defaultPackageId, setDefaultPackageId] = useState('none');
+  const [unverifiedPackageId, setUnverifiedPackageId] = useState('none');
   const [trialOnRegistration, setTrialOnRegistration] = useState(true);
   const [availablePackages, setAvailablePackages] = useState<any[]>([]);
 
@@ -148,6 +149,7 @@ export default function BillingSettingsPage() {
         if (s.ccp_account_name) setCcpName(s.ccp_account_name);
         if (s.ccp_account_rip) setCcpRip(s.ccp_account_rip);
         if (s.billing_default_package_id) setDefaultPackageId(s.billing_default_package_id);
+        if (s.billing_unverified_package_id) setUnverifiedPackageId(s.billing_unverified_package_id);
         if (s.billing_trial_on_registration !== undefined) setTrialOnRegistration(s.billing_trial_on_registration === 'true' || s.billing_trial_on_registration === true);
         if (s.billing_expiry_action) setExpiryAction(s.billing_expiry_action);
         if (s.currency) setCurrency(s.currency);
@@ -212,6 +214,7 @@ export default function BillingSettingsPage() {
             ccp_account_name: ccpName,
             ccp_account_rip: ccpRip,
             billing_default_package_id: defaultPackageId,
+            billing_unverified_package_id: unverifiedPackageId,
             billing_trial_on_registration: trialOnRegistration,
             billing_expiry_action: expiryAction,
             withdrawal_min_amount: withdrawalMinAmount,
@@ -481,6 +484,35 @@ export default function BillingSettingsPage() {
                           />
                         </div>
                       )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-dashed">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="unverifiedPackageId" className="text-xs font-semibold text-rose-600">
+                          {t(locale, 'باقة المسجلين غير الموثقين (لتقييد الموارد)', 'Unverified Users Package (Limits)')}
+                        </Label>
+                        <Select value={unverifiedPackageId} onValueChange={setUnverifiedPackageId}>
+                          <SelectTrigger className="h-9 rounded-xl text-xs font-bold border-rose-200 bg-rose-50/50">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="text-xs">
+                            <SelectItem value="none">
+                              {t(locale, 'لا يوجد (لا يتم تطبيق قيود الباقة)', 'None (No package limits applied)')}
+                            </SelectItem>
+                            {availablePackages.map(pkg => (
+                              <SelectItem key={pkg.id} value={pkg.id}>
+                                {locale === 'ar' ? pkg.name : (pkg.nameEn || pkg.name)} ({pkg.price} دج)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">
+                          {t(locale, 
+                            'إذا اخترت باقة هنا، سيتم تطبيق حدودها (عدد المنتجات، الفروع، إلخ) على التجار قبل توثيقهم لحماية النظام من الإغراق.',
+                            'If selected, its limits (products, branches, etc) will be applied to unverified merchants to protect the system.'
+                          )}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

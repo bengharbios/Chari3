@@ -58,3 +58,18 @@ ChariDay is a custom-built, multi-vendor B2B/B2C marketplace platform. It allows
 - **Geo-Location & IPs:** The `Session` model parses `x-forwarded-for` to obtain clean IPs, falling back safely to unassigned values instead of hardcoding "Alger, DZ".
 - **Language Routing:** `currentPage` is persisted in `useAppStore`'s `partialize`. Changing the language relies on `window.location.reload()`, which retains the active dashboard without falling back to `/`.
 - **UI Localization:** When localizing long components without dedicated JSON keys, ensure that the ternary (`isAr ? ar : en`) is avoided. Use `t(ar, en, fr)` or standard dictionary keys.
+
+## 🔀 Branching & Multi-Store Logic
+- **Store Manager Unique Constraint:** `managerId` is marked as `@unique` in the database. To allow a merchant to have multiple branches, the platform uses a **Dummy Entity Pattern**:
+  1. A background dummy user account (e.g., "Branch Owner") is created to satisfy the DB constraint.
+  2. The branch is assigned to this dummy user.
+  3. The real merchant is added to the branch as a `StoreStaff` with `store_manager` role.
+- **Store Switcher:** The global Store Switcher component automatically detects all stores where the user is either the direct owner or an authorized `StoreStaff`, allowing seamless switching.
+- **Branch Limits:** The max number of branches is defined by `maxBranches` in `SellerPackage`.
+
+## 🛡️ Unverified Users & Default Billing Limits
+- **Unverified Phase:** New merchants start with `accountStatus: 'incomplete'`. They do **not** get a `Subscription` record automatically.
+- **Fallback Package:** Instead, the system looks up the `billing_unverified_package_id` in `SystemSetting`. 
+  - If a package is assigned to this setting, the backend dynamically mocks a subscription with this package's limits for the unverified user. 
+  - This ensures they can test the dashboard but are hard-limited (e.g., max 5 products) on the backend via `/api/products/route.ts` enforcement.
+  - Once verified by admin, a real `ACTIVE` subscription is created.
