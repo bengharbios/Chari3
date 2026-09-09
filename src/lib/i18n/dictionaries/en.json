@@ -449,34 +449,77 @@
     "advertisementBadge": "Ad"
   },
   "notifications": {
-    "newOrderTitle": "New Order! 🛍️",
-    "orderConfirmedTitle": "Your order has been confirmed 📦",
-    "orderShippedTitle": "Your order has been shipped 📦",
-    "orderDeliveredTitle": "Your order has been delivered 📦",
-    "orderCancelledTitle": "Your order has been cancelled 📦",
-    "title": "Notifications",
-    "all": "All",
-    "unread": "Unread",
-    "readAll": "Read all",
-    "clearAll": "Clear all",
-    "noNotifications": "No notifications",
-    "noUnread": "No unread notifications",
-    "newNotificationsWillAppear": "New notifications will appear here",
-    "allCaughtUp": "You're all caught up!",
-    "new": "new",
-    "delete": "Delete",
-    "countTemplate": "%count% notifications • %unread% unread",
-    "timeAgo": {
-      "now": "Now",
-      "minutes": "%minutes%m ago",
-      "hours": "%hours%h ago",
-      "days": "%days%d ago"
+    "PRODUCT_APPROVED": {
+      "title": "🎉 Product Approved & Published ({{productName}})",
+      "body": "Your product {{productName}} has been reviewed and approved, it is now available to the public."
     },
-    "urgency": {
-      "urgent": "Urgent",
-      "high": "Important",
-      "normal": "Normal",
-      "low": "Info"
+    "PRODUCT_REJECTED": {
+      "title": "⚠️ Action Required on Product ({{productName}})",
+      "body": "Unfortunately, your product {{productName}} has been rejected. Reason: {{reason}}"
+    },
+    "VERIFICATION_APPROVED": {
+      "title": "Verification Approved",
+      "body": "Your verification request has been approved. Your account is now active."
+    },
+    "VERIFICATION_REJECTED": {
+      "title": "Verification Rejected",
+      "body": "We apologize, your verification request has been rejected. Please check details to correct errors."
+    },
+    "VERIFICATION_EDIT_REQUIRED": {
+      "title": "Verification Edit Required",
+      "body": "Please edit some details in your verification request. Note: {{reason}}"
+    },
+    "VERIFICATION_EXPIRED_ADMIN_ALERT": {
+      "title": "Commercial register expired",
+      "body": "The commercial register for store {{storeName}} has expired."
+    },
+    "RECEIPT_AWAITING_APPROVAL": {
+      "title": "New Payment Receipt Awaiting Approval 🧾",
+      "body": "Merchant {{merchantName}} has submitted a new payment receipt pending review."
+    },
+    "RECEIPT_APPROVED": {
+      "title": "Payment Receipt Approved! 🎉",
+      "body": "Your payment receipt has been successfully verified and confirmed. Thank you!"
+    },
+    "SUBSCRIPTION_ACTIVATED": {
+      "title": "Subscription Activated! 🎉",
+      "body": "Congratulations! Your subscription to the {{planName}} plan has been successfully activated."
+    },
+    "RECEIPT_REJECTED": {
+      "title": "Payment Receipt Rejected ❌",
+      "body": "Unfortunately, your payment receipt could not be verified. Please check and re-upload."
+    },
+    "SUBSCRIPTION_REQUEST": {
+      "title": "New Subscription Request 📦",
+      "body": "New subscription request for the {{planName}} plan pending approval."
+    },
+    "UPGRADE_REQUEST": {
+      "title": "New Upgrade Request 📦",
+      "body": "New upgrade request pending approval."
+    },
+    "ORDER_NEW": {
+      "title": "New Order! 🛍️",
+      "body": "New order #{{orderNumber}} worth {{total}} DZD"
+    },
+    "ORDER_STATUS_CHANGED": {
+      "title": "{{statusName}} 📦",
+      "body": "Your order #{{orderNumber}} status has been updated to: {{statusName}}"
+    },
+    "QA_NEW": {
+      "title": "New Pending Question! ❓",
+      "body": "You have a new pending question on your product \"{{productName}}\" waiting for your answer."
+    },
+    "PRODUCT_PENDING_APPROVAL": {
+      "title": "⏳ New product pending approval ({{productName}})",
+      "body": "A merchant added a new product that is waiting for your review and approval."
+    },
+    "PRODUCT_UPDATED_PENDING_APPROVAL": {
+      "title": "⏳ Updated product pending approval ({{productName}})",
+      "body": "A merchant updated a product that is waiting for your review and approval."
+    },
+    "UPGRADE_REQUEST_PAYMENT": {
+      "title": "Store Upgrade Receipt Submitted",
+      "body": "A merchant has submitted a payment receipt for their store upgrade."
     }
   },
   "saada": {

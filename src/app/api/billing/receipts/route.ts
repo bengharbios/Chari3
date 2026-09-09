@@ -77,8 +77,8 @@ export async function POST(req: NextRequest) {
             titleEn: 'New Payment Receipt Awaiting Approval 🧾',
             body: `قام التاجر بإرسال وصل تحويل بقيمة ${parseFloat(amount).toLocaleString()} دج للمراجعة.`,
             bodyEn: `A merchant submitted a transfer slip of ${parseFloat(amount).toLocaleString()} DZD for approval.`,
-            type: 'admin_action',
-            data: JSON.stringify({ receiptId: receipt.id }),
+            type: 'RECEIPT_AWAITING_APPROVAL',
+            data: JSON.stringify({ receiptId: receipt.id, merchantName: '' }),
           },
         });
       }
@@ -243,8 +243,8 @@ export async function PATCH(req: NextRequest) {
             bodyEn: subscriptionActivated 
               ? `Your receipt was approved and your subscription is active.` 
               : `Deposited ${receipt.amount.toLocaleString()} DZD / cleared your debt.`,
-            type: 'billing',
-            data: JSON.stringify({ receiptId: receipt.id, status: 'approved' }),
+            type: subscriptionActivated ? 'SUBSCRIPTION_ACTIVATED' : 'RECEIPT_APPROVED',
+            data: JSON.stringify({ receiptId: receipt.id, status: 'approved', planName: '' }),
           },
         });
       } catch (notifErr) {
@@ -260,7 +260,7 @@ export async function PATCH(req: NextRequest) {
             titleEn: 'Payment Receipt Rejected ❌',
             body: `تم رفض إيصال الدفع بقيمة ${receipt.amount.toLocaleString()} دج. السبب: ${adminNote || 'غير محدد'}. يرجى التحقق وإعادة الإرسال.`,
             bodyEn: `Your payment receipt of ${receipt.amount.toLocaleString()} DZD was rejected. Reason: ${adminNote || 'Not specified'}.`,
-            type: 'billing',
+            type: 'RECEIPT_REJECTED',
             data: JSON.stringify({ receiptId: receipt.id, status: 'rejected' }),
           },
         });

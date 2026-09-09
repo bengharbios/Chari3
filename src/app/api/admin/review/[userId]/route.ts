@@ -393,6 +393,7 @@ async function rejectUser(
       titleEn: 'Verification Rejected',
       body: `تم رفض طلب التوثيق الخاص بك. السبب: ${reason || 'تم رفض الطلب'}`,
       bodyEn: `Your verification request has been rejected. Reason: ${reason || 'Request rejected'}`,
+      data: JSON.stringify({ reason: reason || 'Request rejected' })
     }
   });
 
@@ -497,6 +498,7 @@ async function requestEditUser(
       titleEn: 'Verification Edit Required',
       body: `يرجى تعديل بعض بيانات طلب التوثيق الخاص بك. ملاحظة: ${reason || 'تعديل مطلوب'}`,
       bodyEn: `Please edit some details in your verification request. Note: ${reason || 'Edit required'}`,
+      data: JSON.stringify({ reason: reason || 'Edit required' })
     }
   });
 

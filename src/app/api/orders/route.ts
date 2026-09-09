@@ -166,7 +166,7 @@ export async function POST(request: Request) {
             titleEn: 'New Order! 🛍️',
             body: `طلب جديد #${order.orderNumber} بقيمة ${order.total.toLocaleString()} دج`,
             bodyEn: `New order #${order.orderNumber} worth ${order.total.toLocaleString()} DZD`,
-            type: 'new_order',
+            type: 'ORDER_NEW',
             data: JSON.stringify({ orderId: order.id, orderNumber: order.orderNumber, total: order.total }),
             userId: notifyUserId,
           }
@@ -240,8 +240,8 @@ export async function PATCH(request: Request) {
                 titleEn: `${label.en} 📦`,
                 body: `طلبك رقم #${orderWithBuyer.orderNumber} - ${label.ar}`,
                 bodyEn: `Order #${orderWithBuyer.orderNumber} - ${label.en}`,
-                type: 'shipment',
-                data: JSON.stringify({ orderId: id, orderNumber: orderWithBuyer.orderNumber }),
+                type: 'ORDER_STATUS_CHANGED',
+                data: JSON.stringify({ orderId: id, orderNumber: orderWithBuyer.orderNumber, statusName: label.ar }),
                 userId: orderWithBuyer.buyerId,
               }
             });

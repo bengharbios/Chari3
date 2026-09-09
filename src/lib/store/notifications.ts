@@ -22,6 +22,7 @@ export interface AppNotification {
   actionLabelEn: string;
   actionPage: PageType | null;
   actionUrl: string | null; // external URL if any
+  type?: string; // Original notification type string from backend
   // Visual
   iconBg: string;
   urgency: 'low' | 'normal' | 'high' | 'urgent';

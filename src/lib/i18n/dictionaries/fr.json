@@ -439,34 +439,77 @@
     "advertisementBadge": "Pub"
   },
   "notifications": {
-    "newOrderTitle": "Nouvelle commande ! 🛍️",
-    "orderConfirmedTitle": "Votre commande a été confirmée 📦",
-    "orderShippedTitle": "Votre commande a été expédiée 📦",
-    "orderDeliveredTitle": "Votre commande a été livrée 📦",
-    "orderCancelledTitle": "Votre commande a été annulée 📦",
-    "title": "Notifications",
-    "all": "Tout",
-    "unread": "Non lues",
-    "readAll": "Tout marquer comme lu",
-    "clearAll": "Tout effacer",
-    "noNotifications": "Aucune notification",
-    "noUnread": "Aucune notification non lue",
-    "newNotificationsWillAppear": "Les nouvelles notifications apparaîtront ici",
-    "allCaughtUp": "Vous êtes à jour !",
-    "new": "nouvelle(s)",
-    "delete": "Supprimer",
-    "countTemplate": "%count% notifications • %unread% non lues",
-    "timeAgo": {
-      "now": "À l'instant",
-      "minutes": "Il y a %minutes% min",
-      "hours": "Il y a %hours% h",
-      "days": "Il y a %days% j"
+    "PRODUCT_APPROVED": {
+      "title": "🎉 Produit approuvé et publié ({{productName}})",
+      "body": "Votre produit {{productName}} a été examiné et approuvé, il est maintenant accessible au public."
     },
-    "urgency": {
-      "urgent": "Urgent",
-      "high": "Important",
-      "normal": "Normal",
-      "low": "Info"
+    "PRODUCT_REJECTED": {
+      "title": "⚠️ Action requise sur le produit ({{productName}})",
+      "body": "Malheureusement, votre produit {{productName}} a été refusé. Raison: {{reason}}"
+    },
+    "VERIFICATION_APPROVED": {
+      "title": "Vérification approuvée",
+      "body": "Votre demande de vérification a été approuvée. Votre compte est maintenant actif."
+    },
+    "VERIFICATION_REJECTED": {
+      "title": "Vérification refusée",
+      "body": "Nous sommes désolés, votre demande de vérification a été refusée. Veuillez vérifier les détails pour corriger les erreurs."
+    },
+    "VERIFICATION_EDIT_REQUIRED": {
+      "title": "Modification de vérification requise",
+      "body": "Veuillez modifier certains détails dans votre demande de vérification. Remarque: {{reason}}"
+    },
+    "VERIFICATION_EXPIRED_ADMIN_ALERT": {
+      "title": "Registre de commerce expiré",
+      "body": "Le registre de commerce du magasin {{storeName}} a expiré."
+    },
+    "RECEIPT_AWAITING_APPROVAL": {
+      "title": "Nouveau reçu de paiement en attente d'approbation 🧾",
+      "body": "Le marchand {{merchantName}} a soumis un nouveau reçu de paiement en attente d'examen."
+    },
+    "RECEIPT_APPROVED": {
+      "title": "Reçu de paiement approuvé ! 🎉",
+      "body": "Votre reçu de paiement a été vérifié et confirmé avec succès. Merci !"
+    },
+    "SUBSCRIPTION_ACTIVATED": {
+      "title": "Abonnement activé ! 🎉",
+      "body": "Félicitations ! Votre abonnement au forfait {{planName}} a été activé avec succès."
+    },
+    "RECEIPT_REJECTED": {
+      "title": "Reçu de paiement refusé ❌",
+      "body": "Malheureusement, votre reçu de paiement n'a pas pu être vérifié. Veuillez vérifier et le télécharger à nouveau."
+    },
+    "SUBSCRIPTION_REQUEST": {
+      "title": "Nouvelle demande d'abonnement 📦",
+      "body": "Nouvelle demande d'abonnement pour le forfait {{planName}} en attente d'approbation."
+    },
+    "UPGRADE_REQUEST": {
+      "title": "Nouvelle demande de mise à niveau 📦",
+      "body": "Nouvelle demande de mise à niveau en attente d'approbation."
+    },
+    "ORDER_NEW": {
+      "title": "Nouvelle commande ! 🛍️",
+      "body": "Nouvelle commande #{{orderNumber}} d'une valeur de {{total}} DZD"
+    },
+    "ORDER_STATUS_CHANGED": {
+      "title": "{{statusName}} 📦",
+      "body": "Le statut de votre commande #{{orderNumber}} a été mis à jour vers: {{statusName}}"
+    },
+    "QA_NEW": {
+      "title": "Nouvelle question en attente ! ❓",
+      "body": "Vous avez une nouvelle question en attente sur votre produit \"{{productName}}\" qui attend votre réponse."
+    },
+    "PRODUCT_PENDING_APPROVAL": {
+      "title": "⏳ Nouveau produit en attente d'approbation ({{productName}})",
+      "body": "Un marchand a ajouté un nouveau produit qui attend votre examen et votre approbation."
+    },
+    "PRODUCT_UPDATED_PENDING_APPROVAL": {
+      "title": "⏳ Produit mis à jour en attente d'approbation ({{productName}})",
+      "body": "Un marchand a mis à jour un produit qui attend votre examen et votre approbation."
+    },
+    "UPGRADE_REQUEST_PAYMENT": {
+      "title": "Reçu de mise à niveau du magasin soumis",
+      "body": "Un marchand a soumis un reçu de paiement pour la mise à niveau de son magasin."
     }
   },
   "saada": {

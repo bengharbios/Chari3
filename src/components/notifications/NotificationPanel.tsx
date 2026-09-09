@@ -210,7 +210,15 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
             'text-sm font-medium line-clamp-1',
             !notification.isRead ? 'text-foreground' : 'text-foreground/80'
           )}>
-            {isAr ? notification.titleAr : notification.titleEn}
+            {(() => {
+              if (notification.type) {
+                const titleKey = `notifications.${notification.type}.title`;
+                const parsedData = notification.data ? JSON.parse(notification.data) : {};
+                const translated = t(titleKey, parsedData);
+                if (translated !== titleKey) return translated;
+              }
+              return isAr ? notification.titleAr : notification.titleEn;
+            })()}
           </p>
           {/* Delete button */}
           <button
@@ -230,7 +238,15 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
           'text-xs text-muted-foreground line-clamp-2 mt-0.5',
           !notification.isRead && 'text-foreground/60'
         )}>
-          {isAr ? notification.bodyAr : notification.bodyEn}
+          {(() => {
+            if (notification.type) {
+              const bodyKey = `notifications.${notification.type}.body`;
+              const parsedData = notification.data ? JSON.parse(notification.data) : {};
+              const translated = t(bodyKey, parsedData);
+              if (translated !== bodyKey) return translated;
+            }
+            return isAr ? notification.bodyAr : notification.bodyEn;
+          })()}
         </p>
 
         {/* Bottom row: Time + Urgency + Action */}
@@ -402,6 +418,7 @@ export default function NotificationPanel() {
             iconBg: iconBgMap[cat] || iconBgMap.system,
             urgency: urgency as any,
             data: dbNotif.data,
+            type: dbNotif.type,
           };
         });
 

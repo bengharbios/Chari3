@@ -115,8 +115,8 @@ export async function POST(req: Request) {
             titleEn: `🎉 Product Approved & Published (${product.nameEn || product.name})`,
             body: `تمت موافقة الأدمن على نشر المنتج (${product.name}) وهو الآن معروض حياً للمشترين في المتجر.`,
             bodyEn: `Your product (${product.nameEn || product.name}) was approved and is now live in the store.`,
-            type: 'system',
-            data: JSON.stringify({ productId: product.id, action: 'approved' }),
+            type: 'PRODUCT_APPROVED',
+            data: JSON.stringify({ productId: product.id, action: 'approved', productName: product.name }),
           },
         });
       } else {
@@ -127,8 +127,8 @@ export async function POST(req: Request) {
             titleEn: `⚠️ Action Required on Product (${product.nameEn || product.name})`,
             body: `سبب الرفض/طلب التعديل: ${notes || 'يرجى مراجعة تفاصيل المنتج وتعديله'}. يمكنك تعديل المنتج وإعادة إرساله للمراجعة.`,
             bodyEn: `Rejection reason: ${notes || 'Please update product details'}. You can edit and resubmit for approval.`,
-            type: 'alert',
-            data: JSON.stringify({ productId: product.id, action: 'rejected', notes }),
+            type: 'PRODUCT_REJECTED',
+            data: JSON.stringify({ productId: product.id, action: 'rejected', notes, productName: product.name, reason: notes || '' }),
           },
         });
       }

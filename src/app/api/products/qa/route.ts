@@ -80,8 +80,8 @@ export async function POST(req: NextRequest) {
               titleEn: 'New Pending Question! ❓',
               body: `لديك سؤال جديد معلق على منتجك "${product.name}" بانتظار إجابتك.`,
               bodyEn: `You have a new pending question on your product "${product.name}" waiting for your answer.`,
-              type: 'new_qa',
-              data: JSON.stringify({ productId, qaId: qa.id }),
+              type: 'QA_NEW',
+              data: JSON.stringify({ productId, qaId: qa.id, productName: product.name }),
               userId: notifyUserId,
             }
           });

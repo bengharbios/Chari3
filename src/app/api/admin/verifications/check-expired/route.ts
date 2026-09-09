@@ -72,6 +72,7 @@ export async function GET(req: NextRequest) {
             titleEn: 'Your verification documents have expired',
             body: 'لقد انتهت صلاحية السجل التجاري الخاص بمتجرك. يرجى تعديل وإعادة إرسال وثائق سارية المفعول لتفعيل حسابك مجدداً.',
             bodyEn: 'Your store\'s commercial register has expired. Please update and resubmit valid documents to reactivate your account.',
+            data: JSON.stringify({ reason: 'Commercial register expired' }),
           },
         });
 
@@ -83,11 +84,12 @@ export async function GET(req: NextRequest) {
 
         const adminNotifications = admins.map((admin) => ({
           userId: admin.id,
-          type: 'NEW_VERIFICATION_SUBMISSION',
+          type: 'VERIFICATION_EXPIRED_ADMIN_ALERT',
           title: 'انتهاء صلاحية توثيق متجر',
           titleEn: 'Store Verification Expired',
           body: `انتهت صلاحية السجل التجاري لمتجر ${ver.user.name || ver.userId}. تم تعليق التوثيق تلقائياً.`,
           bodyEn: `The commercial register of ${ver.user.name || ver.userId} has expired. Verification suspended.`,
+          data: JSON.stringify({ storeName: ver.user.name || ver.userId }),
         }));
 
         if (adminNotifications.length > 0) {

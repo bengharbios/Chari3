@@ -191,9 +191,9 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
             titleEn: `⏳ Updated product pending approval (${product.nameEn || product.name})`,
             body: `قام التاجر بتحديث منتج وهو بانتظار مراجعك وموافقتك في لوحة التحكم.`,
             bodyEn: `A merchant updated a product that is waiting for your review and approval.`,
-            type: 'alert',
+            type: 'PRODUCT_UPDATED_PENDING_APPROVAL',
             link: '/admin-secure-internal/products/approvals',
-            data: JSON.stringify({ productId: product.id, action: 'pending_approval', actionUrl: '/admin-secure-internal/products/approvals', actionLabelAr: 'مراجعة وقبول المنتجات' }),
+            data: JSON.stringify({ productId: product.id, action: 'pending_approval', actionUrl: '/admin-secure-internal/products/approvals', actionLabelAr: 'مراجعة وقبول المنتجات', productName: product.name }),
           },
         });
       }

@@ -449,34 +449,78 @@
     "advertisementBadge": "إعلان"
   },
   "notifications": {
-    "newOrderTitle": "طلب جديد! 🛍️",
-    "orderConfirmedTitle": "تم تأكيد طلبك 📦",
-    "orderShippedTitle": "تم شحن طلبك 📦",
-    "orderDeliveredTitle": "تم تسليم طلبك 📦",
-    "orderCancelledTitle": "تم إلغاء طلبك 📦",
-    "title": "الإشعارات",
-    "all": "الكل",
-    "unread": "غير المقروء",
-    "readAll": "قراءة الكل",
-    "clearAll": "مسح الكل",
-    "noNotifications": "لا توجد إشعارات",
-    "noUnread": "لا توجد إشعارات غير مقروءة",
-    "newNotificationsWillAppear": "ستظهر الإشعارات الجديدة هنا",
-    "allCaughtUp": "لقد قرأت جميع الإشعارات!",
-    "new": "جديد",
-    "delete": "حذف",
-    "countTemplate": "%count% إشعار • %unread% غير مقروء",
-    "timeAgo": {
-      "now": "الآن",
-      "minutes": "منذ %minutes% دقيقة",
-      "hours": "منذ %hours% ساعة",
-      "days": "منذ %days% يوم"
+    "PRODUCT_APPROVED": {
+      "title": "🎉 تمت الموافقة على نشر منتجك ({{productName}})",
+      "body": "تمت مراجعة منتجك {{productName}} والموافقة عليه، وهو الآن متاح للجمهور."
     },
-    "urgency": {
-      "urgent": "عاجل",
-      "high": "مهم",
-      "normal": "عادي",
-      "low": "معلومات"
+    "PRODUCT_REJECTED": {
+      "title": "⚠️ مطلوب تعديل على منتجك ({{productName}})",
+      "body": "للأسف تم رفض منتجك {{productName}}. السبب: {{reason}}"
+    },
+    "VERIFICATION_APPROVED": {
+      "title": "تم قبول طلب التوثيق",
+      "body": "تم قبول طلب التوثيق الخاص بك، حسابك الآن مفعل ويمكنك استخدام كافة الصلاحيات."
+    },
+    "VERIFICATION_REJECTED": {
+      "title": "تم رفض طلب التوثيق",
+      "body": "نعتذر، تم رفض طلب التوثيق الخاص بك. يرجى مراجعة التفاصيل لتصحيح الأخطاء."
+    },
+    "VERIFICATION_EDIT_REQUIRED": {
+      "title": "مطلوب تعديل على طلب التوثيق",
+      "body": "يرجى تعديل بعض بيانات طلب التوثيق الخاص بك. ملاحظة: {{reason}}"
+    },
+    "VERIFICATION_EXPIRED_ADMIN_ALERT": {
+      "title": "انتهت صلاحية السجل التجاري",
+      "body": "انتهت صلاحية السجل التجاري للمتجر {{storeName}}."
+    },
+    "RECEIPT_AWAITING_APPROVAL": {
+      "title": "وصل دفع جديد بانتظار التأكيد 🧾",
+      "body": "قام التاجر {{merchantName}} برفع وصل سداد جديد بانتظار المراجعة."
+    },
+    "RECEIPT_APPROVED": {
+      "title": "تم تأكيد وصل الدفع بنجاح! 🎉",
+      "body": "لقد تم التحقق من وصل سدادك وتأكيده بنجاح. شكراً لك!"
+    },
+    "SUBSCRIPTION_ACTIVATED": {
+      "title": "تم تفعيل اشتراكك بنجاح! 🎉",
+      "body": "تهانينا! تم تفعيل اشتراكك في باقة {{planName}} بنجاح."
+    },
+    "RECEIPT_REJECTED": {
+      "title": "تم رفض وصل الدفع ❌",
+      "body": "للأسف، تعذر تأكيد وصل الدفع الخاص بك. يرجى التحقق وإعادة الرفع."
+    },
+    "SUBSCRIPTION_REQUEST": {
+      "title": "طلب اشتراك جديد 📦",
+      "body": "طلب اشتراك جديد لباقة {{planName}} بانتظار الموافقة."
+    },
+    "UPGRADE_REQUEST": {
+      "title": "طلب ترقية باقة جديد 📦",
+      "body": "طلب ترقية باقة جديد بانتظار الموافقة."
+    },
+    "ORDER_NEW": {
+      "title": "طلب جديد! 🛍️",
+      "body": "طلب جديد #{{orderNumber}} بقيمة {{total}} دج"
+    },
+    "ORDER_STATUS_CHANGED": {
+      "title": "{{statusName}} 📦",
+      "body": "تم تحديث حالة طلبك #{{orderNumber}} إلى: {{statusName}}"
+    },
+    "QA_NEW": {
+      "title": "سؤال جديد معلق! ❓",
+      "titleEn": "New Pending Question! ❓",
+      "body": "لديك سؤال جديد معلق حول المنتج \"{{productName}}\" بانتظار إجابتك."
+    },
+    "PRODUCT_PENDING_APPROVAL": {
+      "title": "⏳ منتج جديد بانتظار المراجعة والموافقة ({{productName}})",
+      "body": "قام البائع بإضافة منتج جديد وهو بانتظار المراجعة."
+    },
+    "PRODUCT_UPDATED_PENDING_APPROVAL": {
+      "title": "⏳ تعديل منتج بانتظار المراجعة والموافقة ({{productName}})",
+      "body": "قام البائع بتحديث منتج وهو بانتظار المراجعة."
+    },
+    "UPGRADE_REQUEST_PAYMENT": {
+      "title": "رفع وصل سداد ترقية متجر",
+      "body": "قام التاجر برفع وصل سداد لترقية متجره."
     }
   },
   "saada": {

@@ -307,8 +307,8 @@ export async function POST(req: NextRequest) {
             titleEn: actionType === 'upgrade' ? 'New Upgrade Request 📦' : 'New Subscription Request 📦',
             body: `${user?.name || 'تاجر'} يطلب ${actionType === 'upgrade' ? 'ترقية إلى' : 'الاشتراك في'} ${pkg.name} — ${currency} ${invoiceAmount.toLocaleString()}`,
             bodyEn: `${user?.name || 'Merchant'} requests ${actionType === 'upgrade' ? 'upgrade to' : 'subscription to'} ${pkg.nameEn || pkg.name} — ${currency} ${invoiceAmount.toLocaleString()}`,
-            type: 'billing_request',
-            data: JSON.stringify({ subscriptionId: subscription.id, invoiceId: invoice.id, actionType }),
+            type: actionType === 'upgrade' ? 'UPGRADE_REQUEST' : 'SUBSCRIPTION_REQUEST',
+            data: JSON.stringify({ subscriptionId: subscription.id, invoiceId: invoice.id, actionType, planName: pkg.name }),
             userId: admin.id,
           },
         });
