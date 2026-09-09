@@ -8,7 +8,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { User, Settings, LogOut, Globe, ShieldCheck } from 'lucide-react';
+import { User, Settings, LogOut, Globe, ShieldCheck, Store, ChevronDown, CheckCircle } from 'lucide-react';
 import { useGentelellaTheme } from './theme';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
@@ -35,13 +35,33 @@ const t = (locale: string, ar: string, en: string, fr?: string) => {
 };
 
 export default function GentelellaHeader() {
-  const { locale, setLocale, toggleDesktopSidebar, setSidebarOpen, isSidebarOpen, setCurrentPage, currentPage } = useAppStore();
+  const { locale, setLocale, toggleDesktopSidebar, setSidebarOpen, isSidebarOpen, setCurrentPage, currentPage, activeStoreId, setActiveStoreId } = useAppStore();
   const { user, logout, isBuyerMode, setBuyerMode } = useAuthStore();
   const { isDark, toggleDark: toggle } = useGentelellaTheme();
   const { setTheme } = useTheme();
   const router = useRouter();
   const isRTL = localeDirections[locale] === 'rtl';
   const [merchantType, setMerchantType] = React.useState<string>('individual');
+  const [userStores, setUserStores] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    if (user?.id && (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer' || user.role === 'store_manager')) {
+      fetch(`/api/seller/stores?userId=${user.id}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.stores)) {
+            setUserStores(data.stores);
+            const exists = data.stores.some((s: any) => s.id === activeStoreId);
+            if (!exists && data.stores.length > 0) {
+              setActiveStoreId(data.stores[0].id);
+            }
+          }
+        })
+        .catch(err => console.error('Failed to fetch user stores:', err));
+    } else {
+      setUserStores([]);
+    }
+  }, [user?.id, activeStoreId, setActiveStoreId]);
 
   React.useEffect(() => {
     if (user?.id && (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer' || user.role === 'store_manager')) {
@@ -224,6 +244,55 @@ export default function GentelellaHeader() {
 
       {/* RIGHT: Action buttons */}
       <div className="flex items-center gap-0.5 shrink-0">
+
+        {/* Store / Branch Switcher — visible to store owners and multi-store sellers */}
+        {user && userStores.length >= 1 && !isBuyerMode && ['store_manager', 'store', 'seller', 'freelancer'].includes(user.role) && (
+          <DropdownMenu dir={isRTL ? 'rtl' : 'ltr'}>
+            <DropdownMenuTrigger asChild>
+              <button
+                className={cn(
+                  'hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-md border text-xs font-bold transition-colors mx-2',
+                  isDark
+                    ? 'border-[#344760] text-[#1ABB9C] hover:bg-white/5'
+                    : 'border-[#e4e9f0] text-[#1ABB9C] hover:bg-gray-50'
+                )}
+              >
+                <Store className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate max-w-[120px]">
+                  {userStores.find(s => s.id === activeStoreId)?.name || t(locale, 'المتجر النشط', 'Active Store')}
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-60" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 z-[var(--z-modal)]">
+              <div className="px-2 py-1.5 text-xs text-muted-foreground font-bold uppercase tracking-wider">
+                {t(locale, 'تبديل الفرع / المتجر', 'Switch Store / Branch')}
+              </div>
+              <DropdownMenuSeparator />
+              {userStores.map((store) => (
+                <DropdownMenuItem
+                  key={store.id}
+                  className={`flex items-center gap-2 font-medium cursor-pointer ${store.id === activeStoreId ? 'bg-primary/10 text-primary' : ''}`}
+                  onClick={() => {
+                    setActiveStoreId(store.id);
+                    window.location.reload();
+                  }}
+                >
+                  <Store className={`h-4 w-4 shrink-0 ${store.id === activeStoreId ? 'text-primary' : 'text-muted-foreground'}`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-sm">{isRTL ? store.name : (store.nameEn || store.name)}</p>
+                    {store.slug && (
+                      <p className="text-xs text-muted-foreground font-mono truncate">/{store.slug}</p>
+                    )}
+                  </div>
+                  {store.id === activeStoreId && (
+                    <CheckCircle className="h-3.5 w-3.5 text-primary shrink-0" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         {/* Language toggle */}
         <LanguageSwitcher />

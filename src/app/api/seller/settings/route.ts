@@ -368,14 +368,8 @@ export async function POST(req: NextRequest) {
       data: updatePayload
     });
 
-    // Update user's name
-    await db.user.update({
-      where: { id: userId },
-      data: {
-        name: settings.name ?? undefined,
-        nameEn: settings.nameEn ?? undefined,
-      }
-    });
+    // Intentionally omitted updating user's personal name to match store's name, 
+    // to allow them to be independent.
 
     return NextResponse.json({ success: true, settings: updatedStore });
   } catch (error) {
