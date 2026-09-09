@@ -2,7 +2,8 @@
 import React from 'react';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useAppStore, useAuthStore, useOnboardingStore } from '@/lib/store';
+import { useAppStore, useAuthStore } from '@/lib/store';
+import { useOnboardingStore } from '@/lib/store/onboarding';
 import { useNotificationStore, type AppNotification } from '@/lib/store/notifications';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import {
