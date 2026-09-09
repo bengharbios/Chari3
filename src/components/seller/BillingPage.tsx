@@ -677,7 +677,7 @@ export default function BillingPage() {
                     <div className="flex items-center justify-between flex-wrap gap-2">
                       <CardTitle className="text-base font-bold flex items-center gap-2">
                         <Receipt className="h-5 w-5 text-brand" />
-                        {t(locale, 'الفاتورة الحالية', 'Current Invoice')} #{inv.id.slice(-6).toUpperCase()}
+                        {t(locale, 'الفاتورة', 'Invoice')} #{inv.id.slice(-6).toUpperCase()}
                       </CardTitle>
                       <Badge className={`border text-xs font-bold px-2 ${inv.status === 'PAID' || inv.amount === 0 ? 'bg-green-500/10 text-green-500 border-green-500/20' : inv.status === 'OVERDUE' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
                         {inv.status === 'PAID' || inv.amount === 0 ? t(locale, 'مدفوعة', 'Paid') : inv.status === 'OVERDUE' ? t(locale, 'متأخرة', 'Overdue') : t(locale, 'معلقة', 'Pending')}

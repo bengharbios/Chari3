@@ -69,9 +69,27 @@ function generateNotifications(
   accountStatus: string,
   isVerified: boolean
 ): AppNotification[] {
-  // Mock notifications have been removed to prevent confusion for new stores.
-  // All real notifications are fetched from /api/notifications.
-  return [];
+  const notifs: AppNotification[] = [];
+
+  if (accountStatus === 'incomplete') {
+    notifs.push({
+      id: 'mock-verification-required',
+      userId: 'mock',
+      title: 'يجب إكمال التوثيق',
+      titleEn: 'Verification Required',
+      message: 'لن يظهر متجرك للعملاء حتى تقوم بإكمال متطلبات التوثيق',
+      messageEn: 'Your store will not be visible to customers until verification is complete',
+      category: 'verification',
+      urgency: 'high',
+      isRead: false,
+      createdAt: new Date().toISOString(),
+      actionUrl: '/seller/billing',
+      actionLabel: 'استكمال التوثيق',
+      actionLabelEn: 'Complete Verification',
+    });
+  }
+
+  return notifs;
 }
 
 // ============================================

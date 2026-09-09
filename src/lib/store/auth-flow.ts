@@ -179,7 +179,7 @@ export const useAuthFlowStore = create<AuthFlowState>()((set, get) => ({
             isLoading: false,
             error: null,
           });
-          return true;
+          return 'password_login';
         }
 
         if (data._telegramLink && typeof window !== 'undefined') {

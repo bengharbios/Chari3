@@ -95,8 +95,8 @@ export default function ContactStep() {
     } else {
       setMethod(activeTab);
     }
-    const ok = await sendOtp();
-    if (ok) {
+    const result: any = await sendOtp();
+    if (result === true || (result && result.success && result.otpSent)) {
       toast.success(
         t(locale, 'تم إرسال رمز التحقق', 'Verification code sent')
       );

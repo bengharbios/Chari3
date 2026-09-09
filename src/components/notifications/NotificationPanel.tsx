@@ -486,11 +486,11 @@ export default function NotificationPanel() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold">
-                  {t('notifications.title')}
+                  {t('الإشعارات', 'Notifications')}
                 </h3>
                 {unreadCount > 0 && (
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-0">
-                    {unreadCount} {t('notifications.new')}
+                    {unreadCount} {t('جديد', 'New')}
                   </Badge>
                 )}
               </div>
@@ -512,7 +512,7 @@ export default function NotificationPanel() {
                     }}
                   >
                     <CheckCheck className="size-3.5" />
-                    <span>{t('notifications.readAll')}</span>
+                    <span>{t('تحديد الكل كمقروء', 'Mark all as read')}</span>
                   </Button>
                 )}
                 {notifications.length > 0 && (
@@ -523,7 +523,7 @@ export default function NotificationPanel() {
                     onClick={() => clearAll(user?.id)}
                   >
                     <Trash2 className="size-3.5" />
-                    <span>{t('notifications.clearAll')}</span>
+                    <span>{t('مسح الكل', 'Clear all')}</span>
                   </Button>
                 )}
               </div>
@@ -541,7 +541,7 @@ export default function NotificationPanel() {
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <span>{t('notifications.all')}</span>
+                  <span>{t('الكل', 'All')}</span>
                   <Badge variant="secondary" className={cn(
                     "text-[10px] px-1.5 py-0 border-0 pointer-events-none h-4 min-w-4 flex items-center justify-center p-0",
                     activeTab === 'all' ? "bg-muted text-foreground" : "bg-muted/50 text-muted-foreground"
@@ -558,7 +558,7 @@ export default function NotificationPanel() {
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <span>{t('notifications.unread')}</span>
+                  <span>{t('غير مقروء', 'Unread')}</span>
                   {unreadCount > 0 ? (
                     <Badge className="text-[10px] px-1.5 py-0 border-0 bg-primary text-primary-foreground font-bold animate-pulse h-4 min-w-4 flex items-center justify-center p-0">
                       {unreadCount}
@@ -587,12 +587,12 @@ export default function NotificationPanel() {
                   <Bell className="size-6 text-muted-foreground" />
                 </div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  {activeTab === 'unread' ? t('notifications.noUnread') : t('notifications.noNotifications')}
+                  {activeTab === 'unread' ? t('لا توجد إشعارات غير مقروءة', 'No unread notifications') : t('لا توجد إشعارات', 'No notifications')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {activeTab === 'unread' 
-                    ? t('notifications.allCaughtUp') 
-                    : t('notifications.newNotificationsWillAppear')}
+                    ? t('لقد قرأت كل شيء!', 'You are all caught up!') 
+                    : t('الإشعارات الجديدة ستظهر هنا', 'New notifications will appear here')}
                 </p>
               </div>
             )}
@@ -603,7 +603,7 @@ export default function NotificationPanel() {
                 <Separator />
                 <div className="px-4 py-2">
                   <p className="text-[11px] text-muted-foreground text-center">
-                    {t('notifications.countTemplate', { count: notifications.length, unread: unreadCount })}
+                    {t('لديك %count% إشعارات إجمالاً، منها %unread% غير مقروءة', { count: notifications.length, unread: unreadCount }, 'You have %count% total notifications, %unread% unread')}
                   </p>
                 </div>
               </>
