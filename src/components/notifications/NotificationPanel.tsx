@@ -2,7 +2,7 @@
 import React from 'react';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useAppStore, useAuthStore } from '@/lib/store';
+import { useAppStore, useAuthStore, useOnboardingStore } from '@/lib/store';
 import { useNotificationStore, type AppNotification } from '@/lib/store/notifications';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import {
@@ -281,6 +281,7 @@ export default function NotificationPanel() {
   const { t, locale } = useTranslation();
   const isAr = locale === 'ar';
   const { user, isAuthenticated } = useAuthStore();
+  const { accountStatus } = useOnboardingStore();
   const {
     notifications,
     unreadCount,
@@ -421,6 +422,27 @@ export default function NotificationPanel() {
             type: dbNotif.type,
           };
         });
+
+        // Inject mock verification notification if needed
+        if (accountStatus === 'incomplete') {
+          dbNotifications.unshift({
+            id: 'mock-verification-required',
+            category: 'verification',
+            titleAr: 'يجب إكمال التوثيق',
+            titleEn: 'Verification Required',
+            bodyAr: 'لن يظهر متجرك للعملاء حتى تقوم بإكمال متطلبات التوثيق',
+            bodyEn: 'Your store will not be visible to customers until verification is complete',
+            isRead: false,
+            createdAt: new Date().toISOString(),
+            actionLabelAr: 'استكمال التوثيق',
+            actionLabelEn: 'Complete Verification',
+            actionUrl: '/seller/billing',
+            actionPage: null as any,
+            iconBg: 'bg-amber-100 dark:bg-amber-900/30',
+            urgency: 'high',
+            type: 'VERIFICATION_REQUIRED'
+          });
+        }
 
         // Completely replace notifications in store to sync deletions and read state
         setNotifications(dbNotifications);
