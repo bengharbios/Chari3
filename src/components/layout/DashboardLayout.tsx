@@ -22,7 +22,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isSidebarOpen, locale } = useAppStore();
-  const { user, isBuyerMode, setBuyerMode, hasPassword, setHasPassword, _hasHydrated } = useAuthStore();
+  const { user, isAuthenticated, isBuyerMode, setBuyerMode, hasPassword, setHasPassword, _hasHydrated } = useAuthStore();
   const pathname = usePathname();
   const [dashboardTemplate, setDashboardTemplate] = useState<string>(() => {
     if (typeof window !== 'undefined') {
@@ -53,6 +53,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, isBuyerRoute, isSellerRoute, setBuyerMode, user]);
+
+  // Redirect to login if user is not authenticated
+  useEffect(() => {
+    if (_hasHydrated && !isAuthenticated) {
+      window.location.href = '/login';
+    }
+  }, [_hasHydrated, isAuthenticated]);
 
   // Use correct default theme based on role
   const getInitialTheme = () => {

@@ -30,6 +30,16 @@ export default function AuthSync() {
     }
   }, [mounted, isPending, data, isAuthenticated, loginWithUser]);
 
+  // Redirect authenticated users away from the login page
+  useEffect(() => {
+    if (mounted && isAuthenticated && pathname === '/login') {
+      const user = useAuthStore.getState().user;
+      if (user?.role === 'admin') router.push('/admin-secure-internal');
+      else if (user?.role === 'buyer') router.push('/');
+      else router.push('/seller');
+    }
+  }, [mounted, isAuthenticated, pathname, router]);
+
   // Global standard: Intercept fetch requests to catch 401 Unauthorized responses
   // This definitively proves the session is dead without relying on flaky background polling.
   useEffect(() => {
