@@ -105,6 +105,21 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
     ]
   },
   {
+    id: 'business',
+    labelKey: 'sidebar.sectionBusinessManagement',
+    trees: [
+      {
+        id: 'business-tree',
+        labelKey: 'sidebar.sectionBusinessManagement',
+        icon: Layers,
+        children: [
+          { id: 'seller-branches', labelKey: 'sidebar.branches', path: '/seller/branches' },
+          { id: 'seller-taxes', labelKey: 'sidebar.taxes', path: '#' }
+        ]
+      }
+    ]
+  },
+  {
     id: 'finance',
     labelKey: 'sidebar.finance',
     trees: [
@@ -427,7 +442,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
 
   const isBusiness = merchantType === 'business' || ['store_manager', 'store'].includes(user.role) || (user.role === 'store_manager' && isOwner);
 
-  if (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer') {
+  if (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer' || user.role === 'store_manager') {
     activeGroups = activeGroups.map(group => {
       if (group.id === 'business' && !isBusiness) return null;
 
