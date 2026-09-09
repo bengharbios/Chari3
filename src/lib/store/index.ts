@@ -511,7 +511,9 @@ export const useAuthStore = create<AuthState>()(
         if (typeof window !== 'undefined') {
           // If we are already on the login page, don't force a reload, just let React update the UI
           if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 100);
           }
         }
       },

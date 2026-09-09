@@ -841,7 +841,7 @@ export default function BillingManager({ currency = 'DZD' }: BillingManagerProps
                       <TableHead className="text-start text-xs">{t(locale, 'الباقة', 'Plan')}</TableHead>
                       <TableHead className="text-start text-xs">{t(locale, 'الحالة', 'Status')}</TableHead>
                       <TableHead className="text-start text-xs">{t(locale, 'تاريخ الانتهاء', 'Expiry')}</TableHead>
-                      <TableHead className="text-start text-xs">{t(locale, 'الفاتورة الحالية', 'Current Bill')}</TableHead>
+                      <TableHead className="text-start text-xs">{t(locale, 'رسوم الاشتراك', 'Subscription Fees')}</TableHead>
                       <TableHead className="text-start text-xs pe-4">{t(locale, 'إجراءات', 'Actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
