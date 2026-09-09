@@ -281,15 +281,7 @@ export default function NotificationPanel() {
 
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
 
-  // Refresh role-based notifications when user changes
-  useEffect(() => {
-    if (!isAuthenticated || !user) return;
-    refreshForUser(
-      user.role,
-      user.accountStatus || 'incomplete',
-      user.isVerified
-    );
-  }, [isAuthenticated, user?.id, user?.accountStatus, user?.isVerified, refreshForUser]);
+  // Removed refreshForUser as mock notifications are deprecated and it overwrote DB notifications
 
   // Sync mounted state
   useEffect(() => {
