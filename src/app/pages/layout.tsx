@@ -14,7 +14,6 @@ export default function PagesLayout({ children }: { children: React.ReactNode })
       </main>
       <Footer />
       <BottomNav />
-      <ChatWidget />
     </AppShell>
   );
 }

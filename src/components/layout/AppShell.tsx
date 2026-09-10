@@ -7,6 +7,7 @@ import FloatingCart from './FloatingCart';
 import AuthSync from '@/components/auth/AuthSync';
 import AppInitializer from '@/components/layout/AppInitializer';
 import ResizeObserverPatcher from '@/components/layout/ResizeObserverPatcher';
+import ChatWidget from '@/components/chat/ChatWidget';
 
 import { Wrench, Eye, Loader2 } from 'lucide-react';
 import { useAdminAuthStore } from '@/lib/store/admin-auth';
@@ -138,6 +139,7 @@ export default function AppShell({ children }: AppShellProps) {
       )}
 
       {children}
+      <ChatWidget />
       <FloatingCart />
     </div>
   );

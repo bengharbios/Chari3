@@ -17,7 +17,6 @@ export default function RootHomePage() {
       </main>
       <Footer />
       <BottomNav />
-      <ChatWidget />
     </AppShell>
   );
 }
