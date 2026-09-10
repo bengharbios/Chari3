@@ -12,8 +12,12 @@ export async function POST(req: Request) {
       console.warn('[logout] better-auth signOut failed on server:', e);
     }
 
-    // 2. Force clear cookies
-    const cookieStore = await cookies();
+    // 2. Force clear cookies manually to avoid Next.js cookie map overwriting
+    const response = NextResponse.json({
+      success: true,
+      message: 'Logged out successfully',
+    });
+
     const cookieNames = [
       'better-auth.session_token',
       '__Secure-better-auth.session_token',
@@ -21,17 +25,18 @@ export async function POST(req: Request) {
       'better-auth.session_data_sig'
     ];
 
+    const domains = ['', 'domain=.chariday.com', 'domain=chariday.com', 'domain=localhost'];
+
     cookieNames.forEach(name => {
-      cookieStore.delete(name);
-      cookieStore.delete({ name, domain: '.chariday.com', path: '/' });
-      cookieStore.delete({ name, domain: 'chariday.com', path: '/' });
-      cookieStore.delete({ name, domain: 'localhost', path: '/' });
+      domains.forEach(domain => {
+        response.headers.append(
+          'Set-Cookie',
+          `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; ${domain}`
+        );
+      });
     });
 
-    return NextResponse.json({
-      success: true,
-      message: 'Logged out successfully',
-    });
+    return response;
   } catch (error) {
     console.error('[logout] Error:', error);
     return NextResponse.json(
