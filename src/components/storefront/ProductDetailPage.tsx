@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   Star, ShoppingCart, Heart, Share2, Shield, Truck, RefreshCw,
   ArrowLeft, ArrowRight, ChevronRight, ChevronLeft, Package,
@@ -701,10 +702,13 @@ export default function ProductDetailPage() {
           <div className="space-y-3">
             <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted border border-border group">
               {images[selectedImg] ? (
-                <img
+                <Image
                   src={images[selectedImg]}
                   alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  fill
+                  priority
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -740,8 +744,8 @@ export default function ProductDetailPage() {
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {images.map((img, i) => (
                   <button key={i} onClick={() => setSelectedImg(i)}
-                    className={`shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${i === selectedImg ? 'border-primary scale-105' : 'border-border hover:border-primary/50'}`}>
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    className={`relative shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all ${i === selectedImg ? 'border-primary scale-105' : 'border-border hover:border-primary/50'}`}>
+                    <Image src={img} alt="" fill sizes="64px" className="object-cover" />
                   </button>
                 ))}
               </div>

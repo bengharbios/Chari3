@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShoppingBag, ShoppingCart, CheckCircle2, Star } from 'lucide-react';
+import Image from 'next/image';
 import { useAppStore, useCartStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -114,11 +115,13 @@ export default function ProductCard({
       <div className="relative aspect-square bg-slate-50 dark:bg-slate-950/50 overflow-hidden shrink-0">
         {images.length > 0 ? (
           images.map((imgSrc, index) => (
-            <img 
+            <Image
               key={index}
               src={imgSrc} 
-              alt={product.name} 
-              className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] 
+              alt={product.name}
+              fill
+              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              className={`object-cover transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] 
                 ${index === currentImageIndex ? 'opacity-100 group-hover:scale-[1.05]' : 'opacity-0 scale-100'}`} 
             />
           ))

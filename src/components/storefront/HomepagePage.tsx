@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { 
   ChevronLeft, ChevronRight, Star, TrendingUp, Shield, Truck, 
   ArrowLeft, ArrowRight, ShoppingBag, Award, Quote, SlidersHorizontal, 
@@ -18,7 +20,7 @@ import {
   HeroSliderSkeleton, CategoryCirclesSkeleton, BentoPromoGridSkeleton, 
   ProductSliderSkeleton 
 } from './SkeletonLoaders';
-import { Render } from '@measured/puck';
+const Render = dynamic(() => import('@measured/puck').then((mod) => mod.Render), { ssr: true });
 import { getSaadaConfig } from '@/lib/puck/PuckConfig';
 import "@measured/puck/puck.css";
 import { toast } from 'sonner';
@@ -288,7 +290,7 @@ function AdBanner({ ads, className = '' }: { ads?: any[]; className?: string }) 
             onClick={() => fetch(`/api/admin/advertisements`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: ad.id, clicks: 1 }) }).catch(() => {})}
           >
             {ad.imageUrl ? (
-              <img src={ad.imageUrl} alt={ad.title || 'Ad'} className="w-full h-full object-cover object-center hover:opacity-95 transition-opacity" />
+              <Image src={ad.imageUrl} alt={ad.title || 'Ad'} fill sizes="(max-width: 1200px) 100vw, 1200px" className="object-cover object-center hover:opacity-95 transition-opacity" />
             ) : (
               <div className="relative w-full h-full min-h-[60px] bg-gradient-to-r from-stone-900 via-stone-850 to-indigo-950 flex items-center justify-center p-2 sm:p-4 md:p-6">
                 <div className="absolute inset-0 bg-white/5 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none" />
@@ -869,7 +871,7 @@ export default function StorefrontHomepage() {
                     >
                       {s.imageUrl ? (
                         <>
-                          <img src={s.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-[15000ms] ease-out scale-100 group-hover:scale-110" />
+                          <Image src={s.imageUrl} alt="" fill priority={idx === 0} sizes="100vw" className="object-cover transition-transform duration-[15000ms] ease-out scale-100 group-hover:scale-110" />
                           <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/40 to-transparent mix-blend-multiply" />
                           <div className="absolute inset-0 bg-black/20" />
                         </>

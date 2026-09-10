@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   ChevronLeft, ChevronRight, Star, TrendingUp, Shield, Truck, 
   ArrowLeft, ArrowRight, ShoppingBag, Award, Quote, SlidersHorizontal, 
@@ -559,7 +560,7 @@ export function HeroSliderBlock({ section, data, locale }: SectionProps) {
         <div className={`absolute inset-0 bg-gradient-to-br ${slide.bg || 'from-slate-900 to-indigo-950'} opacity-100 transition-colors duration-1000`} />
         {slide.image && (
           <div className="absolute inset-0 opacity-40 mix-blend-overlay">
-            <img src={safeImageSrc(slide.image)} alt="" className="w-full h-full object-cover" />
+            <Image src={safeImageSrc(slide.image)} alt="" fill priority sizes="100vw" className="object-cover" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
