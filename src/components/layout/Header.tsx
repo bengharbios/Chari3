@@ -962,6 +962,7 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="icon"
+                className="hidden sm:inline-flex"
                 onClick={() => setTheme(resolvedTheme === 'light' ? 'dark' : 'light')}
               >
                 {resolvedTheme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
@@ -969,7 +970,9 @@ export default function Header() {
             )}
 
             {/* Language Toggle */}
-            <LanguageSwitcher />
+            <div className="hidden sm:block">
+              <LanguageSwitcher />
+            </div>
 
             {/* Notifications */}
             {isAuthenticated && <NotificationPanel />}
