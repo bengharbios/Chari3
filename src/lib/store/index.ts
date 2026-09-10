@@ -463,26 +463,32 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
-        const doRedirect = () => {
-          if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-            window.location.href = '/login';
-          }
-        };
+        // 1. Clear all Zustand state immediately
+        set({
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+          error: null,
+          hasPassword: null,
+        });
+        
+        const { setCurrentPage } = useAppStore.getState();
+        setCurrentPage('home');
+        
+        const onboardingState = useOnboardingStore.getState();
+        onboardingState.resetOtpFlow();
 
-        try {
-          const res = await fetch('/api/auth/logout', { method: 'POST' });
-          if (res.ok) {
-            doRedirect();
-          } else {
-            console.error('[logout] custom logout route failed');
-            doRedirect();
-          }
-        } catch (e) {
-          console.error('[logout] logout fetch threw error:', e);
-          doRedirect();
+        // 2. Clear all local/session storage completely
+        if (typeof window !== 'undefined') {
+          try { localStorage.removeItem('platform-auth-store'); } catch {}
+          try { sessionStorage.removeItem('__login_ts'); } catch {}
+          try { sessionStorage.setItem('just_logged_out', Date.now().toString()); } catch {}
+          // Clear any potential better-auth caches
+          try { localStorage.removeItem('better-auth.session'); } catch {}
+          try { sessionStorage.removeItem('better-auth.session'); } catch {}
         }
 
-        // Force delete cookies on client side as fallback
+        // 3. Force delete cookies on client side as fallback
         if (typeof document !== 'undefined') {
           const domains = [window.location.hostname, `.${window.location.hostname.replace('www.', '')}`];
           const cookieNames = ['better-auth.session_token', '__Secure-better-auth.session_token'];
@@ -494,28 +500,23 @@ export const useAuthStore = create<AuthState>()(
             });
           });
         }
-        
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('just_logged_out', Date.now().toString());
-          try {
-            localStorage.removeItem('platform-auth-store');
-          } catch (e) {
-            console.error('[logout] Failed to clear localStorage', e);
+
+        // 4. Helper to hard-redirect bypassing Next.js cache
+        const doRedirect = () => {
+          if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+            window.location.href = `/login?refresh=${Date.now()}`;
           }
+        };
+
+        // 5. Server-side logout to destroy DB session and send Set-Cookie headers
+        try {
+          await fetch('/api/auth/logout', { method: 'POST', cache: 'no-store' });
+        } catch (e) {
+          console.error('[logout] logout fetch threw error:', e);
         }
 
-        set({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false,
-          error: null,
-          hasPassword: null,
-        });
-        const { setCurrentPage } = useAppStore.getState();
-        setCurrentPage('home');
-        // Reset OTP flow and onboarding state on logout
-        const onboardingState = useOnboardingStore.getState();
-        onboardingState.resetOtpFlow();
+        // 6. Finally redirect
+        doRedirect();
       },
 
       updateProfile: (data) => {
