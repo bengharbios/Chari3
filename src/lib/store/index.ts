@@ -463,14 +463,28 @@ export const useAuthStore = create<AuthState>()(
       },
 
       logout: async () => {
+        const doRedirect = () => {
+          if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+            window.location.href = '/login';
+          }
+        };
+
         try {
           const { signOut } = await import('@/lib/auth-client');
           await signOut({
-            redirect: false
+            fetchOptions: {
+              onSuccess: () => {
+                doRedirect();
+              },
+              onError: (ctx) => {
+                console.error('[logout] better-auth signOut failed:', ctx.error);
+                doRedirect();
+              }
+            }
           });
         } catch (e) {
-
-          console.error('[logout] better-auth signOut failed:', e);
+          console.error('[logout] better-auth signOut threw error:', e);
+          doRedirect();
         }
 
         // Force delete cookies on client side as fallback
@@ -507,15 +521,6 @@ export const useAuthStore = create<AuthState>()(
         // Reset OTP flow and onboarding state on logout
         const onboardingState = useOnboardingStore.getState();
         onboardingState.resetOtpFlow();
-
-        if (typeof window !== 'undefined') {
-          // If we are already on the login page, don't force a reload, just let React update the UI
-          if (window.location.pathname !== '/login') {
-            setTimeout(() => {
-              window.location.href = '/login';
-            }, 100);
-          }
-        }
       },
 
       updateProfile: (data) => {
