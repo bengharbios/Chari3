@@ -205,7 +205,7 @@ export default function ChatWidget({ storeSellerId, storeName }: ChatWidgetProps
   if (!chatEnabled) return null;
 
   return (
-    <div className="fixed bottom-6 end-6 z-[var(--z-modal)] flex flex-col items-end" dir={isAr ? 'rtl' : 'ltr'}>
+    <div className="fixed bottom-[85px] md:bottom-6 end-6 z-[var(--z-modal)] flex flex-col items-end" dir={isAr ? 'rtl' : 'ltr'}>
       {/* Chat Window Panel */}
       {isOpen && (
         <div className="w-[360px] sm:w-[380px] h-[500px] bg-background/95 backdrop-blur-xl border border-border shadow-2xl rounded-2xl flex flex-col mb-4 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">

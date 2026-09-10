@@ -30,7 +30,7 @@ export default function FloatingCart() {
   }
 
   return (
-    <div className="fixed bottom-24 end-6 z-[90] animate-bounce-in sm:bottom-24 sm:end-6">
+    <div className="fixed bottom-[155px] md:bottom-24 end-6 z-[90] animate-bounce-in">
       <Button
         onClick={() => setCartOpen(true)}
         className="relative h-14 w-14 rounded-full shadow-2xl gradient-brand border-2 border-background flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
