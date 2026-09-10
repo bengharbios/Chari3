@@ -510,7 +510,8 @@ export const useAuthStore = create<AuthState>()(
 
         // 5. Server-side logout to destroy DB session and send Set-Cookie headers
         try {
-          await fetch('/api/auth/logout', { method: 'POST', cache: 'no-store' });
+          const { authClient } = await import('@/lib/auth-client');
+          await authClient.signOut();
         } catch (e) {
           console.error('[logout] logout fetch threw error:', e);
         }
