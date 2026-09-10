@@ -20,6 +20,10 @@ export default function AuthSync() {
     if (!mounted || isPending) return;
 
     if (data?.user && !isAuthenticated) {
+      if (typeof window !== 'undefined' && sessionStorage.getItem('just_logged_out')) {
+        console.warn('[AuthSync] Ignoring stale cached session because user just logged out.');
+        return;
+      }
       // User is authenticated on the server but not in Zustand
       loginWithUser(data.user as any); // Cast to any to map BetterAuth User to Zustand User
     } else if (!data?.user && isAuthenticated) {

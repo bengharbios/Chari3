@@ -392,6 +392,7 @@ export const useAuthStore = create<AuthState>()(
         // Zustand persist rehydration from overwriting us with stale data.
         const state = { user, isAuthenticated: true };
         if (typeof window !== 'undefined') {
+          try { sessionStorage.removeItem('just_logged_out'); } catch {}
           try { localStorage.setItem('platform-auth-store', JSON.stringify({ state, version: 0 })); } catch {}
           // Store login timestamp so the global 401 interceptor knows to
           // ignore false 401s while the session cookie propagates to the browser jar.
