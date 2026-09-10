@@ -470,20 +470,15 @@ export const useAuthStore = create<AuthState>()(
         };
 
         try {
-          const { signOut } = await import('@/lib/auth-client');
-          await signOut({
-            fetchOptions: {
-              onSuccess: () => {
-                doRedirect();
-              },
-              onError: (ctx) => {
-                console.error('[logout] better-auth signOut failed:', ctx.error);
-                doRedirect();
-              }
-            }
-          });
+          const res = await fetch('/api/auth/logout', { method: 'POST' });
+          if (res.ok) {
+            doRedirect();
+          } else {
+            console.error('[logout] custom logout route failed');
+            doRedirect();
+          }
         } catch (e) {
-          console.error('[logout] better-auth signOut threw error:', e);
+          console.error('[logout] logout fetch threw error:', e);
           doRedirect();
         }
 
