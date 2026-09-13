@@ -164,7 +164,7 @@ export function StickyStatusBanner() {
   };
 
   return (
-    <div className={cn('sticky top-0 z-30 border-b', config.bg, config.border)}>
+    <div id="tour-verification-widget" className={cn('sticky top-0 z-30 border-b', config.bg, config.border)}>
       <div className="flex items-center justify-between px-4 py-3 max-w-7xl mx-auto gap-3">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <Icon className={cn('size-5 shrink-0', config.iconColor, config.pulse && 'animate-pulse')} />

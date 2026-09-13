@@ -575,6 +575,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
                       return (
                         <li key={tree.id} className="relative group">
                           <button
+                            id={tree.id === 'products-tree' ? 'tour-products-menu' : tree.id === 'settings-tree' ? 'tour-settings-menu' : undefined}
                             dir={isRTL ? 'rtl' : 'ltr'}
                             onClick={() => {
                               if (hasChildren) {

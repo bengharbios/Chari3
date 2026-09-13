@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface MenuItem {
   id: string;
@@ -242,6 +244,18 @@ export default function MobilePublicMenu() {
             </div>
             );
           })}
+        </div>
+        
+        {/* Mobile Menu Footer for Settings */}
+        <div className="mt-auto border-t border-border/50 pt-4 pb-8 flex items-center justify-between px-2 gap-4">
+           <div className="flex-1">
+              <span className="text-xs text-muted-foreground block mb-2">{t('تغيير اللغة', 'Change Language')}</span>
+              <LanguageSwitcher className="w-full justify-between border border-border/50" />
+           </div>
+           <div>
+              <span className="text-xs text-muted-foreground block mb-2 text-center">{t('المظهر', 'Theme')}</span>
+              <ThemeToggle />
+           </div>
         </div>
       </SheetContent>
     </Sheet>

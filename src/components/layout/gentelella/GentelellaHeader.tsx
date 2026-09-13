@@ -12,7 +12,9 @@ import { User, Settings, LogOut, Globe, ShieldCheck, Store, ChevronDown, CheckCi
 import { useGentelellaTheme } from './theme';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useTranslation } from '@/lib/i18n/useTranslation';
+import { useTour } from '@/components/onboarding/SellerTour';
 import type { PageType } from '@/types';
 import { useTheme } from 'next-themes';
 import { localeDirections } from '@/lib/i18n/config';
@@ -37,6 +39,7 @@ const t = (locale: string, ar: string, en: string, fr?: string) => {
 export default function GentelellaHeader() {
   const { locale, setLocale, toggleDesktopSidebar, setSidebarOpen, isSidebarOpen, setCurrentPage, currentPage, activeStoreId, setActiveStoreId } = useAppStore();
   const { user, logout, isBuyerMode, setBuyerMode } = useAuthStore();
+  const { startTour } = useTour();
   const { isDark, toggleDark: toggle } = useGentelellaTheme();
   const { setTheme } = useTheme();
   const router = useRouter();
@@ -437,6 +440,17 @@ export default function GentelellaHeader() {
               <svg className="h-4 w-4 opacity-70" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg>
               {t(locale, 'مركز المساعدة', 'Help Center')}
             </DropdownMenuItem>
+            
+            {user.role === 'seller' && (
+              <DropdownMenuItem 
+                onClick={() => startTour()}
+                className={cn('py-2 px-3 cursor-pointer gap-2', isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50')}
+              >
+                <svg className="h-4 w-4 opacity-70 text-[#1ABB9C]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                {t(locale, 'إعادة الجولة التعريفية', 'Restart Guided Tour')}
+              </DropdownMenuItem>
+            )}
+
             <DropdownMenuSeparator className="opacity-20 my-1" />
             <DropdownMenuItem
               onClick={logout}

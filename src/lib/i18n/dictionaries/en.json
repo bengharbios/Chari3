@@ -1116,5 +1116,20 @@
     "fetchError": "Failed to fetch settings",
     "saveSuccess": "Settings saved successfully",
     "saveError": "Failed to save settings"
+  },
+  "tour": {
+    "next": "Next",
+    "previous": "Previous",
+    "done": "Done",
+    "skip": "Skip",
+    "restart_tour": "Restart Guided Tour",
+    "welcome_title": "Welcome to ChariDay Dashboard! 🎉",
+    "welcome_desc": "We are thrilled to have you as a seller. Let us take you on a quick tour to familiarize yourself with the dashboard so you can launch your store successfully.",
+    "verify_title": "Account Verification",
+    "verify_desc": "Here you can track your account verification status. Verification is required to receive payouts and fully activate your store.",
+    "products_title": "Product Management",
+    "products_desc": "From this section, you can add, edit, and track your products and inventory easily.",
+    "settings_title": "Store Settings",
+    "settings_desc": "Here you can configure your store settings, shipping options, and return policies."
   }
 }

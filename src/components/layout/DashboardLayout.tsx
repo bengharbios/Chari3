@@ -20,6 +20,8 @@ interface DashboardLayoutProps {
   children: ReactNode;
 }
 
+import SellerTourProvider from '@/components/onboarding/SellerTour';
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { isSidebarOpen, locale } = useAppStore();
   const { user, isAuthenticated, isBuyerMode, setBuyerMode, hasPassword, setHasPassword, _hasHydrated } = useAuthStore();
@@ -260,32 +262,34 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   } as React.CSSProperties;
 
   return (
-    <div 
-      id={isGentelella ? 'gentelella-root' : undefined} 
-      className={`flex-1 flex flex-col overflow-hidden ${isGentelella ? 'min-h-screen max-h-screen' : 'min-h-[calc(100dvh-var(--header-height))] max-h-[calc(100dvh-var(--header-height))]'}`}
-      style={themeStyles}
-    >
-      {theme.customCss && <style>{theme.customCss}</style>}
-      {!isGentelella && <Header />}
-      <div className="flex flex-1 overflow-hidden">
-        {isGentelella ? <GentelellaSidebar /> : <Sidebar />}
-        <main
-          className={`flex-1 min-w-0 overflow-y-auto overflow-x-hidden transition-all duration-300 flex flex-col ${isSidebarOpen ? 'lg:ms-0' : 'lg:ms-0'} ${
-            isGentelella
-              ? isDark
-                ? 'bg-[#0f172a] text-[#cbd5e1]'
-                : 'bg-[#F7F7F7] text-[#73879C]'
-              : ''
-          }`}
-        >
-          {isGentelella && <GentelellaHeader />}
-          <div className={`p-4 md:p-6 lg:p-8 pb-24 md:pb-8 w-full flex-1 ${isGentelella ? '' : 'max-w-[1750px] mx-auto'}`}>
-            <StickyStatusBanner />
-            {children}
-          </div>
-          {theme.footer.enabled && <Footer theme={theme} />}
-        </main>
+    <SellerTourProvider>
+      <div 
+        id={isGentelella ? 'gentelella-root' : undefined} 
+        className={`flex-1 flex flex-col overflow-hidden ${isGentelella ? 'min-h-screen max-h-screen' : 'min-h-[calc(100dvh-var(--header-height))] max-h-[calc(100dvh-var(--header-height))]'}`}
+        style={themeStyles}
+      >
+        {theme.customCss && <style>{theme.customCss}</style>}
+        {!isGentelella && <Header />}
+        <div className="flex flex-1 overflow-hidden">
+          {isGentelella ? <GentelellaSidebar /> : <Sidebar />}
+          <main
+            className={`flex-1 min-w-0 overflow-y-auto overflow-x-hidden transition-all duration-300 flex flex-col ${isSidebarOpen ? 'lg:ms-0' : 'lg:ms-0'} ${
+              isGentelella
+                ? isDark
+                  ? 'bg-[#0f172a] text-[#cbd5e1]'
+                  : 'bg-[#F7F7F7] text-[#73879C]'
+                : ''
+            }`}
+          >
+            {isGentelella && <GentelellaHeader />}
+            <div className={`p-4 md:p-6 lg:p-8 pb-24 md:pb-8 w-full flex-1 ${isGentelella ? '' : 'max-w-[1750px] mx-auto'}`}>
+              <StickyStatusBanner />
+              {children}
+            </div>
+            {theme.footer.enabled && <Footer theme={theme} />}
+          </main>
+        </div>
       </div>
-    </div>
+    </SellerTourProvider>
   );
 }

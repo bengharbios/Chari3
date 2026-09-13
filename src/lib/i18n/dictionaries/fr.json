@@ -1059,5 +1059,20 @@
     "fetchError": "Échec de la récupération des paramètres",
     "saveSuccess": "Paramètres enregistrés avec succès",
     "saveError": "Échec de l'enregistrement des paramètres"
+  },
+  "tour": {
+    "next": "Suivant",
+    "previous": "Précédent",
+    "done": "Terminé",
+    "skip": "Passer",
+    "restart_tour": "Redémarrer la visite guidée",
+    "welcome_title": "Bienvenue sur le tableau de bord ChariDay ! 🎉",
+    "welcome_desc": "Nous sommes ravis de vous compter parmi nos vendeurs. Faisons un tour rapide pour vous familiariser avec le tableau de bord afin que vous puissiez lancer votre boutique avec succès.",
+    "verify_title": "Vérification du compte",
+    "verify_desc": "Ici, vous pouvez suivre l'état de vérification de votre compte. La vérification est nécessaire pour recevoir vos paiements et activer pleinement votre boutique.",
+    "products_title": "Gestion des produits",
+    "products_desc": "Depuis cette section, vous pouvez facilement ajouter, modifier et suivre vos produits et votre inventaire.",
+    "settings_title": "Paramètres de la boutique",
+    "settings_desc": "Ici, vous pouvez configurer les paramètres de votre boutique, les options de livraison et les politiques de retour."
   }
 }
