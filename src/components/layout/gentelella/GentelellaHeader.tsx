@@ -441,7 +441,7 @@ export default function GentelellaHeader() {
               {t(locale, 'مركز المساعدة', 'Help Center')}
             </DropdownMenuItem>
             
-            {user.role === 'seller' && (
+            {user.role !== 'admin' && user.role !== 'buyer' && (
               <DropdownMenuItem 
                 onClick={() => startTour()}
                 className={cn('py-2 px-3 cursor-pointer gap-2', isDark ? 'hover:bg-white/10' : 'hover:bg-gray-50')}

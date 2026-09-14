@@ -114,7 +114,7 @@ export default function SellerTourProvider({ children }: { children: React.React
 
   // Auto-start logic
   useEffect(() => {
-    if (!_hasHydrated || !isAuthenticated || !user || user.role !== 'seller') return;
+    if (!_hasHydrated || !isAuthenticated || !user || user.role === 'admin' || user.role === 'buyer') return;
     
     // Check version
     const userVersion = user.sellerTourVersion || 0;
