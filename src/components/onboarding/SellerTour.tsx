@@ -28,7 +28,6 @@ export default function SellerTourProvider({ children }: { children: React.React
 
     const steps: DriveStep[] = [
       {
-        element: 'body',
         popover: {
           title: t('tour.welcome_title'),
           description: t('tour.welcome_desc'),
