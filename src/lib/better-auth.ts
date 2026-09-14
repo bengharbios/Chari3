@@ -156,6 +156,11 @@ export const auth = betterAuth({
         type: "string",
         required: true,
         defaultValue: "ar"
+      },
+      sellerTourVersion: {
+        type: "number",
+        required: false,
+        defaultValue: 0
       }
     }
   }
