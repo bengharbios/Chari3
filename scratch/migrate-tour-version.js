@@ -9,7 +9,7 @@ async function main() {
     const result = await prisma.$executeRaw`
       UPDATE User 
       SET sellerTourVersion = 1 
-      WHERE role = 'seller' 
+      WHERE role NOT IN ('admin', 'buyer') 
       AND sellerTourVersion = 0
     `;
     console.log(`Migration successful. Updated ${result} existing sellers to sellerTourVersion = 1.`);

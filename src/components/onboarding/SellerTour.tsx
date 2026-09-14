@@ -81,17 +81,19 @@ export default function SellerTourProvider({ children }: { children: React.React
       overlayOpacity: 0.75,
       steps: steps,
       onDestroyStarted: () => {
-        if (!driverObj.hasNextStep() || confirm(t('tour.skip', 'Skip tour?'))) {
-          driverObj.destroy();
-          // Mark as complete in backend
-          if (user && (user.sellerTourVersion || 0) < CURRENT_TOUR_VERSION) {
-            setSellerTourVersion(CURRENT_TOUR_VERSION);
-            fetch('/api/seller/tour/complete', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ version: CURRENT_TOUR_VERSION }),
-            }).catch(console.error);
-          }
+        if (!driverObj.hasNextStep() || driverObj.isFirstStep()) {
+           // We don't want to skip if it was accidentally destroyed on the very first step on load, but if they actively dismiss it we do.
+           // Actually, let's just mark it as complete whenever it is destroyed.
+        }
+        driverObj.destroy();
+        // Mark as complete in backend
+        if (user && (user.sellerTourVersion || 0) < CURRENT_TOUR_VERSION) {
+          setSellerTourVersion(CURRENT_TOUR_VERSION);
+          fetch('/api/seller/tour/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ version: CURRENT_TOUR_VERSION }),
+          }).catch(console.error);
         }
       },
       onHighlightStarted: (el) => {
@@ -115,6 +117,10 @@ export default function SellerTourProvider({ children }: { children: React.React
   useEffect(() => {
     if (!_hasHydrated || !isAuthenticated || !user || user.role === 'admin' || user.role === 'buyer') return;
     
+    // Only auto-start on the main dashboard page, avoid popping up inside verification forms
+    const path = window.location.pathname;
+    if (path.includes('/onboarding') || path.includes('/verification')) return;
+
     // Check version
     const userVersion = user.sellerTourVersion || 0;
     if (userVersion >= CURRENT_TOUR_VERSION) return;
