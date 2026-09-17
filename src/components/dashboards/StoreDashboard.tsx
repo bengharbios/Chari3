@@ -206,21 +206,16 @@ export default function StoreDashboard() {
   };
 
   // Chart Data Preparation
-  const chartData = [
-    { name: getMonthLabel(0, locale), [t(locale, 'المبيعات', 'Sales')]: 320, [t(locale, 'الزوار', 'Visitors')]: 1500 },
-    { name: getMonthLabel(1, locale), [t(locale, 'المبيعات', 'Sales')]: 480, [t(locale, 'الزوار', 'Visitors')]: 2100 },
-    { name: getMonthLabel(2, locale), [t(locale, 'المبيعات', 'Sales')]: 640, [t(locale, 'الزوار', 'Visitors')]: 3400 },
-    { name: getMonthLabel(3, locale), [t(locale, 'المبيعات', 'Sales')]: 410, [t(locale, 'الزوار', 'Visitors')]: 1800 },
-    { name: getMonthLabel(4, locale), [t(locale, 'المبيعات', 'Sales')]: 520, [t(locale, 'الزوار', 'Visitors')]: 2900 },
-    { name: getMonthLabel(5, locale), [t(locale, 'المبيعات', 'Sales')]: 890, [t(locale, 'الزوار', 'Visitors')]: 4200 },
-  ];
+  const chartData = (dashboardData?.chartData || []).map((item: any) => ({
+    name: getMonthLabel(item.monthOffset, locale),
+    [t(locale, 'المبيعات', 'Sales')]: item.sales,
+    // [t(locale, 'الزوار', 'Visitors')]: item.visitors || 0, // Delayed to Phase 4
+  }));
 
-  const donutData = [
-    { name: t(locale, 'إلكترونيات', 'Electronics'), sales: 450 },
-    { name: t(locale, 'أزياء', 'Fashion'), sales: 300 },
-    { name: t(locale, 'منزل', 'Home'), sales: 250 },
-    { name: t(locale, 'أخرى', 'Other'), sales: 100 },
-  ];
+  const donutData = (dashboardData?.donutData || []).map((item: any) => ({
+    name: isAr ? item.nameAr : item.nameEn,
+    sales: item.sales
+  }));
 
   return (
     <motion.div 
@@ -281,12 +276,11 @@ export default function StoreDashboard() {
                   <Users className="h-5 w-5 text-emerald-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'إجمالي المستخدمين', 'TOTAL USERS')}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'إجمالي العملاء', 'TOTAL CUSTOMERS')}</p>
                   <div className="flex items-baseline gap-2">
-                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">2,500</h3>
-                    <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 12%</span>
+                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">{kpis?.totalCustomers ?? 0}</h3>
                   </div>
-                  <p className="text-[10px] text-muted-foreground truncate mt-1">342 {t(locale, 'جديد هذا الأسبوع', 'new this week')}</p>
+                  <p className="text-[10px] text-muted-foreground truncate mt-1">{t(locale, 'عملاء فريدين', 'unique customers')}</p>
                 </div>
               </div>
             </div>
@@ -305,12 +299,11 @@ export default function StoreDashboard() {
                   <Activity className="h-5 w-5 text-blue-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'متوسط الجلسة', 'AVG SESSION')}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'متوسط قيمة الطلب', 'AVG ORDER VALUE')}</p>
                   <div className="flex items-baseline gap-2">
-                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">123.5<span className="text-[13px] ml-0.5">min</span></h3>
-                    <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 8%</span>
+                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">{formatStoreCurrency(kpis?.averageOrderValue ?? 0)}</h3>
                   </div>
-                  <p className="text-[10px] text-muted-foreground truncate mt-1">+14min {t(locale, 'من الأسبوع الماضي', 'from last week')}</p>
+                  <p className="text-[10px] text-muted-foreground truncate mt-1">{t(locale, 'من الطلبات المكتملة', 'from completed orders')}</p>
                 </div>
               </div>
             </div>
@@ -329,12 +322,11 @@ export default function StoreDashboard() {
                   <Package className="h-5 w-5 text-orange-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'الطلبات', 'ORDERS')}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'الطلبات الشهرية', 'MONTHLY ORDERS')}</p>
                   <div className="flex items-baseline gap-2">
-                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">1,240</h3>
-                    <span className="text-[11px] font-bold text-red-500 flex items-center"><TrendingUp className="h-3 w-3 rotate-180" /> 3%</span>
+                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">{kpis?.monthOrderCount ?? 0}</h3>
                   </div>
-                  <p className="text-[10px] text-muted-foreground truncate mt-1">78 {t(locale, 'تم شحنها اليوم', 'shipped today')}</p>
+                  <p className="text-[10px] text-muted-foreground truncate mt-1">{kpis?.completedMonthOrders ?? 0} {t(locale, 'مكتملة', 'completed')}</p>
                 </div>
               </div>
             </div>
@@ -376,18 +368,17 @@ export default function StoreDashboard() {
                   <TrendingUp className="h-5 w-5 text-red-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'التحويلات', 'CONVERSIONS')}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'نسبة الإكمال', 'COMPLETION RATE')}</p>
                   <div className="flex items-baseline gap-2">
-                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">2,315</h3>
-                    <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 5%</span>
+                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">{(kpis?.completionRate ?? 0).toFixed(1)}%</h3>
                   </div>
-                  <p className="text-[10px] text-muted-foreground truncate mt-1">{t(locale, 'المعدل:', 'Rate:')} 4.2%</p>
+                  <p className="text-[10px] text-muted-foreground truncate mt-1">{t(locale, 'طلبات مكتملة / إجمالي', 'completed / total')}</p>
                 </div>
               </div>
             </div>
             <div className="w-full px-4 pb-4">
               <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                 <div className="h-full bg-red-500 w-[42%] rounded-full" />
+                 <div className="h-full bg-red-500 rounded-full" style={{ width: `${kpis?.completionRate ?? 0}%` }} />
               </div>
             </div>
           </div>
@@ -400,18 +391,17 @@ export default function StoreDashboard() {
                   <Activity className="h-5 w-5 text-purple-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'مشاهدات الصفحة', 'PAGE VIEWS')}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'إجمالي الأرباح', 'TOTAL EARNINGS')}</p>
                   <div className="flex items-baseline gap-2">
-                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">47,325</h3>
-                    <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 22%</span>
+                    <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">{formatStoreCurrency(kpis?.totalEarnings ?? 0)}</h3>
                   </div>
-                  <p className="text-[10px] text-muted-foreground truncate mt-1">6,854 {t(locale, 'زائر فريد', 'unique visitors')}</p>
+                  <p className="text-[10px] text-muted-foreground truncate mt-1">{t(locale, 'طوال الوقت', 'all time')}</p>
                 </div>
               </div>
             </div>
             <div className="w-full px-4 pb-4">
               <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                 <div className="h-full bg-purple-500 w-[85%] rounded-full" />
+                 <div className="h-full bg-purple-500 rounded-full" style={{ width: (kpis?.totalEarnings ?? 0) > 0 ? '100%' : '0%' }} />
               </div>
             </div>
           </div>
@@ -443,8 +433,8 @@ export default function StoreDashboard() {
                     className="h-72"
                     data={chartData}
                     index="name"
-                    categories={[t(locale, 'المبيعات', 'Sales'), t(locale, 'الزوار', 'Visitors')]}
-                    colors={["emerald", "blue"]}
+                    categories={[t(locale, 'المبيعات', 'Sales')]}
+                    colors={["emerald"]}
                     valueFormatter={(number: number) => formatNumber(number)}
                     showAnimation={true}
                     curveType="monotone"

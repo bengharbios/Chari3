@@ -237,6 +237,71 @@ export async function GET(req: NextRequest) {
     const monthRevenue = completedMonthOrders.reduce((s: number, i: any) => s + Number(i.total || 0), 0);
     const monthCommission = monthRevenue * ((seller.package?.commissionRate ?? 10) / 100);
     const monthNetEarnings = monthRevenue - monthCommission;
+    
+    // Phase 2 KPIs
+    const totalMonthOrders = monthOrders.length;
+    const completedMonthOrdersCount = completedMonthOrders.length;
+    const completionRate = totalMonthOrders > 0 ? (completedMonthOrdersCount / totalMonthOrders) * 100 : 0;
+    const averageOrderValue = completedMonthOrdersCount > 0 ? monthRevenue / completedMonthOrdersCount : 0;
+
+    const uniqueBuyersResult = await db.order.findMany({
+      where: {
+        items: { some: { productId: { in: products.map(p => p.id) } } },
+        status: { in: ['completed', 'delivered'] }
+      },
+      distinct: ['buyerId'],
+      select: { buyerId: true }
+    });
+    const totalCustomers = uniqueBuyersResult.length;
+
+    // 6-Month Chart Data
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const chartOrders = await db.orderItem.findMany({
+      where: {
+        productId: { in: products.map((p) => p.id) },
+        order: {
+          createdAt: { gte: sixMonthsAgo },
+          status: { in: ['completed', 'delivered'] }
+        }
+      },
+      include: {
+        order: { select: { createdAt: true } }
+      }
+    });
+
+    const salesByMonth = chartOrders.reduce((acc: any, item: any) => {
+      const date = item.order?.createdAt;
+      if (!date) return acc;
+      const key = `${date.getFullYear()}-${date.getMonth()}`;
+      if (!acc[key]) acc[key] = 0;
+      acc[key] += Number(item.total || 0);
+      return acc;
+    }, {});
+
+    // Fill last 6 months array
+    const chartDataRaw = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      chartDataRaw.push({
+        monthOffset: i, // 0 = current month, 5 = five months ago
+        sales: salesByMonth[key] || 0
+      });
+    }
+
+    // Category Donut Data
+    const categorySales = chartOrders.reduce((acc: any, item: any) => {
+      const product = products.find(p => p.id === item.productId);
+      if (!product || !product.category) return acc;
+      const catNameAr = product.category.name || 'أخرى';
+      const catNameEn = product.category.nameEn || 'Other';
+      const key = `${catNameAr}|${catNameEn}`;
+      if (!acc[key]) acc[key] = { nameAr: catNameAr, nameEn: catNameEn, sales: 0 };
+      acc[key].sales += Number(item.total || 0);
+      return acc;
+    }, {});
+    
+    const donutDataRaw = Object.values(categorySales).sort((a: any, b: any) => b.sales - a.sales).slice(0, 4);
 
     // Subscription status for suspension banner
     let subscription: any = null;
@@ -294,18 +359,24 @@ export async function GET(req: NextRequest) {
         monthRevenue,
         monthCommission,
         monthNetEarnings,
-        monthOrderCount: monthOrders.length,
+        monthOrderCount: totalMonthOrders,
+        completedMonthOrders: completedMonthOrdersCount,
+        averageOrderValue,
+        completionRate,
+        totalCustomers,
         totalSales: seller.totalSales,
         totalEarnings: seller.totalEarnings,
         rating: seller.rating,
         level: seller.level,
         wantsUpgrade: seller.wantsUpgrade,
-        completionRate: seller.completionRate,
+        completionRateStore: seller.completionRate,
         responseRate: seller.responseRate,
         walletBalance: wallet?.balance ?? 0,
         pendingBalance: Number(pendingLedger._sum.amount || 0),
         walletCurrency: wallet?.currency ?? 'DZD',
       },
+      chartData: chartDataRaw,
+      donutData: donutDataRaw,
       products,
       recentOrders,
       reviews,
