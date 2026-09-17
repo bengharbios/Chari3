@@ -414,20 +414,19 @@ export default function StoreDashboard() {
           <Card className="rounded-md shadow-sm border-border h-full flex flex-col card-surface">
             <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/50 px-5 pt-5">
               <CardTitle className="text-[15px] font-bold text-[var(--gentelella-heading)]">
-                {t(locale, 'نشاط الشبكة', 'Network Activities')}
+                {t(locale, 'المبيعات', 'Sales')}
               </CardTitle>
               <div className="flex items-center text-[11px] font-bold border border-border rounded divide-x divide-border">
-                 <button className="px-3 py-1 hover:bg-muted transition-colors">7 days</button>
-                 <button className="px-3 py-1 bg-muted">30 days</button>
-                 <button className="px-3 py-1 hover:bg-muted transition-colors">90 days</button>
+                 <button className="px-3 py-1 bg-muted">{t(locale, '6 أشهر', '6 Months')}</button>
               </div>
             </CardHeader>
             <CardContent className="pt-5 px-5">
                <div className="flex items-baseline gap-2 mb-1">
-                 <h2 className="text-[28px] font-bold">6,782</h2>
-                 <span className="text-emerald-500 text-sm font-bold flex items-center"><ArrowUpRight className="h-3 w-3" /> 7%</span>
+                 <h2 className="text-[28px] font-bold">
+                   {formatStoreCurrency(chartData.reduce((acc: number, curr: any) => acc + (curr[t(locale, 'المبيعات', 'Sales')] || 0), 0))}
+                 </h2>
                </div>
-               <p className="text-[12px] text-muted-foreground mb-6">{t(locale, 'إجمالي الجلسات هذا الأسبوع', 'Total sessions this week')}</p>
+               <p className="text-[12px] text-muted-foreground mb-6">{t(locale, 'إجمالي المبيعات لآخر 6 أشهر', 'Total sales for the last 6 months')}</p>
                <div dir="ltr">
                   <AreaChart
                     className="h-72"
