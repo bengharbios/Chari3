@@ -1086,5 +1086,12 @@
     "products_desc": "Depuis cette section, vous pouvez facilement ajouter, modifier et suivre vos produits et votre inventaire.",
     "settings_title": "Paramètres de la boutique",
     "settings_desc": "Ici, vous pouvez configurer les paramètres de votre boutique, les options de livraison et les politiques de retour."
+  },
+  "sellerDashboard": {
+    "TOTAL_CUSTOMERS": "Clients Totaux",
+    "AVG_ORDER_VALUE": "Valeur Moyenne de Commande",
+    "MONTHLY_ORDERS": "Commandes Mensuelles",
+    "COMPLETION_RATE": "Taux d Achèvement",
+    "TOTAL_EARNINGS": "Gains Totaux"
   }
 }

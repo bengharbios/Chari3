@@ -1143,5 +1143,12 @@
     "products_desc": "From this section, you can add, edit, and track your products and inventory easily.",
     "settings_title": "Store Settings",
     "settings_desc": "Here you can configure your store settings, shipping options, and return policies."
+  },
+  "sellerDashboard": {
+    "TOTAL_CUSTOMERS": "Total Customers",
+    "AVG_ORDER_VALUE": "Avg Order Value",
+    "MONTHLY_ORDERS": "Monthly Orders",
+    "COMPLETION_RATE": "Completion Rate",
+    "TOTAL_EARNINGS": "Total Earnings"
   }
 }
