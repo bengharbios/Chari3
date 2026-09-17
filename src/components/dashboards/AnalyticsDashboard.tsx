@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAppStore } from '@/lib/store';
+import { useAppStore, useAuthStore } from '@/lib/store';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -46,7 +46,8 @@ const FADE_IN_VARIANTS = {
 };
 
 export default function AnalyticsDashboard({ sellerPackage }: { sellerPackage?: any }) {
-  const { user, locale, activeStoreId } = useAppStore();
+  const { locale, activeStoreId } = useAppStore();
+  const { user } = useAuthStore();
   const isAr = locale === 'ar';
   
   const [data, setData] = useState<any>(null);
