@@ -252,14 +252,14 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
 
         {/* Bottom row: Time + Urgency + Action */}
         <div className="flex items-center justify-between gap-2 mt-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <TimeAgo dateStr={notification.createdAt} />
             {notification.urgency !== 'normal' && <UrgencyBadge urgency={notification.urgency} />}
           </div>
 
           {/* QUICK ACTION — Unified */}
           {(notification.actionPage || notification.actionUrl) && (
-            <span onClick={(e) => e.stopPropagation()}>
+            <span onClick={(e) => e.stopPropagation()} className="shrink-0">
               <QuickActionButton
                 labelAr={notification.actionLabelAr}
                 labelEn={notification.actionLabelEn}

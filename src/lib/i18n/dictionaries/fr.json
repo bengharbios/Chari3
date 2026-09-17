@@ -510,6 +510,18 @@
     "UPGRADE_REQUEST_PAYMENT": {
       "title": "Reçu de mise à niveau du magasin soumis",
       "body": "Un marchand a soumis un reçu de paiement pour la mise à niveau de son magasin."
+    },
+    "urgency": {
+      "urgent": "Urgent",
+      "high": "Haute",
+      "normal": "Normale",
+      "low": "Basse"
+    },
+    "timeAgo": {
+      "now": "À l'instant",
+      "minutes": "Il y a %minutes% min",
+      "hours": "Il y a %hours% h",
+      "days": "Il y a %days% jours"
     }
   },
   "saada": {

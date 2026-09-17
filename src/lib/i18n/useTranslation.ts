@@ -49,13 +49,20 @@ export function useTranslation() {
     // 2. Fallback to literal translations if key is literal text (contains spaces/Arabic)
     const isLiteralText = /[^a-zA-Z0-9._-]/.test(key);
     if (isLiteralText) {
+      let textToReturn = key;
       if (typeof values === 'string') {
-        if (activeLocale === 'ar') return key;
-        if (activeLocale === 'en') return values;
-        if (activeLocale === 'fr') return arg3 || values || key;
-        return values; // fallback for any other new language (like Spanish) defaults to English
+        if (activeLocale === 'en') textToReturn = values;
+        else if (activeLocale === 'fr') textToReturn = arg3 || values || key;
+        else if (activeLocale !== 'ar') textToReturn = values; // fallback for other languages
       }
-      return key;
+
+      // Perform interpolation if values is an object
+      if (values && typeof values === 'object') {
+        Object.entries(values).forEach(([k, v]) => {
+          textToReturn = textToReturn.replace(new RegExp(`%${k}%`, 'g'), String(v));
+        });
+      }
+      return textToReturn;
     }
 
     const keys = key.split('.');

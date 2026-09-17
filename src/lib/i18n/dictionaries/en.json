@@ -520,6 +520,18 @@
     "UPGRADE_REQUEST_PAYMENT": {
       "title": "Store Upgrade Receipt Submitted",
       "body": "A merchant has submitted a payment receipt for their store upgrade."
+    },
+    "urgency": {
+      "urgent": "Urgent",
+      "high": "High",
+      "normal": "Normal",
+      "low": "Low"
+    },
+    "timeAgo": {
+      "now": "Just now",
+      "minutes": "%minutes% minutes ago",
+      "hours": "%hours% hours ago",
+      "days": "%days% days ago"
     }
   },
   "saada": {

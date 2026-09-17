@@ -521,6 +521,18 @@
     "UPGRADE_REQUEST_PAYMENT": {
       "title": "رفع وصل سداد ترقية متجر",
       "body": "قام التاجر برفع وصل سداد لترقية متجره."
+    },
+    "urgency": {
+      "urgent": "عاجل جدًا",
+      "high": "هام",
+      "normal": "عادي",
+      "low": "منخفض"
+    },
+    "timeAgo": {
+      "now": "الآن",
+      "minutes": "منذ %minutes% دقيقة",
+      "hours": "منذ %hours% ساعة",
+      "days": "منذ %days% يوم"
     }
   },
   "saada": {
