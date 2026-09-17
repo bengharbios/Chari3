@@ -353,18 +353,17 @@ export default function StoreDashboard() {
                   <DollarSign className="h-5 w-5 text-emerald-500" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'الإيرادات', 'REVENUE')}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5">{t(locale, 'الإيرادات الشهرية', 'MONTHLY REVENUE')}</p>
                   <div className="flex items-baseline gap-2">
                     <h3 className="text-[22px] font-bold truncate text-[var(--gentelella-heading)]">{formatStoreCurrency(kpis?.monthRevenue ?? 0)}</h3>
-                    <span className="text-[11px] font-bold text-emerald-500 flex items-center"><ArrowUpRight className="h-3 w-3" /> 18%</span>
                   </div>
-                  <p className="text-[10px] text-muted-foreground truncate mt-1">{formatStoreCurrency(3218)} {t(locale, 'اليوم', 'today')}</p>
+                  <p className="text-[10px] text-muted-foreground truncate mt-1">{t(locale, 'من الطلبات المكتملة', 'From completed orders')}</p>
                 </div>
               </div>
             </div>
             <div className="w-full px-4 pb-4">
               <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                 <div className="h-full bg-[#1ABB9C] w-[65%] rounded-full" />
+                 <div className="h-full bg-[#1ABB9C] rounded-full" style={{ width: (kpis?.monthRevenue ?? 0) > 0 ? '100%' : '0%' }} />
               </div>
             </div>
           </div>

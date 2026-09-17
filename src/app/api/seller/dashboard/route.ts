@@ -147,7 +147,7 @@ export async function GET(req: NextRequest) {
         order: { createdAt: { gte: startOfMonth } },
       },
       include: {
-        order: { select: { id: true, total: true } },
+        order: { select: { id: true, total: true, status: true } },
       },
     });
 
@@ -231,7 +231,10 @@ export async function GET(req: NextRequest) {
     });
 
     // KPIs
-    const monthRevenue = monthOrders.reduce((s: number, i: any) => s + (i.order?.total || 0), 0);
+    const completedMonthOrders = monthOrders.filter(
+      (i: any) => i.order && (i.order.status === 'completed' || i.order.status === 'delivered')
+    );
+    const monthRevenue = completedMonthOrders.reduce((s: number, i: any) => s + Number(i.total || 0), 0);
     const monthCommission = monthRevenue * ((seller.package?.commissionRate ?? 10) / 100);
     const monthNetEarnings = monthRevenue - monthCommission;
 
