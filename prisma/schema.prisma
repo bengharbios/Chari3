@@ -574,6 +574,9 @@ model Product {
   variants      ProductVariant[]
 
   coupons Coupon[] @relation("CouponProducts")
+
+  @@index([storeId])
+  @@index([sellerId])
 }
 
 model Brand {
@@ -645,6 +648,9 @@ model Order {
   statusHistory OrderStatusHistory[]
 
   ledgerEntries LedgerEntry[]
+
+  @@index([createdAt])
+  @@index([buyerId])
 }
 
 model OrderItem {
@@ -661,6 +667,9 @@ model OrderItem {
   status       String    @default("pending") // pending, shipped, delivered, cancelled, returned
   cancelReason String?
   cancelledAt  DateTime?
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model Shipment {

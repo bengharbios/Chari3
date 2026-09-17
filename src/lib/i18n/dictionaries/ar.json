@@ -1151,5 +1151,15 @@
     "MONTHLY_ORDERS": "الطلبات الشهرية",
     "COMPLETION_RATE": "نسبة الإكمال",
     "TOTAL_EARNINGS": "إجمالي الأرباح"
+  },
+  "sellerAnalytics": {
+    "ANALYTICS_FILTERS": "فلاتر التحليلات",
+    "ORDER_STATUS": "حالة الطلب",
+    "ALL_ORDERS": "جميع الطلبات",
+    "COMPLETED_ONLY": "الطلبات المكتملة فقط",
+    "DATE_RANGE": "نطاق التاريخ",
+    "TODAY": "اليوم",
+    "LAST_7_DAYS": "آخر 7 أيام",
+    "LAST_30_DAYS": "آخر 30 يوم"
   }
 }

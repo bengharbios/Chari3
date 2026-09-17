@@ -32,6 +32,7 @@ import StoreOrdersPage from './StoreOrdersPage';
 import { toast } from 'sonner';
 import SellerChatTab from '@/components/seller/chat/SellerChatTab';
 import StoreDashboard from '@/components/dashboards/StoreDashboard';
+import AnalyticsDashboard from '@/components/dashboards/AnalyticsDashboard';
 import {
   Card as TremorCard,
   Metric,
@@ -402,9 +403,11 @@ export default function SellerDashboard() {
   );
 
   if (pathname.includes('/analytics')) return (
-    <div className="space-y-4 text-center py-20 bg-card rounded-xl border border-border shadow-sm">
-      <h2 className="text-2xl font-bold">{t('التحليلات التفصيلية', 'Detailed Analytics')}</h2>
-      <p className="text-muted-foreground">{t('هذه الميزة قيد التطوير وستتوفر قريباً.', 'This feature is under development and will be available soon.')}</p>
+    <div className="space-y-4">
+      {isSuspended && data?.storeStatus && (
+        <SuspensionBanner storeStatus={data.storeStatus} t={t} isAr={isAr} />
+      )}
+      <AnalyticsDashboard sellerPackage={data?.seller?.package} />
     </div>
   );
 

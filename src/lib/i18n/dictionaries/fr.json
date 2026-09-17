@@ -1093,5 +1093,15 @@
     "MONTHLY_ORDERS": "Commandes Mensuelles",
     "COMPLETION_RATE": "Taux d Achèvement",
     "TOTAL_EARNINGS": "Gains Totaux"
+  },
+  "sellerAnalytics": {
+    "ANALYTICS_FILTERS": "Filtres Analytiques",
+    "ORDER_STATUS": "Statut Commande",
+    "ALL_ORDERS": "Toutes les Commandes",
+    "COMPLETED_ONLY": "Commandes Terminées Uniquement",
+    "DATE_RANGE": "Plage de Dates",
+    "TODAY": "Aujourd hui",
+    "LAST_7_DAYS": "7 Derniers Jours",
+    "LAST_30_DAYS": "30 Derniers Jours"
   }
 }

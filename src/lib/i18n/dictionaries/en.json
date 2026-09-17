@@ -1150,5 +1150,15 @@
     "MONTHLY_ORDERS": "Monthly Orders",
     "COMPLETION_RATE": "Completion Rate",
     "TOTAL_EARNINGS": "Total Earnings"
+  },
+  "sellerAnalytics": {
+    "ANALYTICS_FILTERS": "Analytics Filters",
+    "ORDER_STATUS": "Order Status",
+    "ALL_ORDERS": "All Orders",
+    "COMPLETED_ONLY": "Completed Orders Only",
+    "DATE_RANGE": "Date Range",
+    "TODAY": "Today",
+    "LAST_7_DAYS": "Last 7 Days",
+    "LAST_30_DAYS": "Last 30 Days"
   }
 }
