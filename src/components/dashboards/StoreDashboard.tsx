@@ -459,26 +459,33 @@ export default function StoreDashboard() {
             </CardHeader>
             <CardContent className="pt-5 px-5 flex-1">
                <div className="space-y-6 relative before:absolute before:inset-0 before:ms-4 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-                  {[
-                    { initial: 'SK', color: 'bg-emerald-500', title: 'Sarah K. placed a new order for $245.00', time: '2 min ago' },
-                    { initial: 'MR', color: 'bg-blue-600', title: 'Michael R. registered a new account', time: '18 min ago' },
-                    { initial: 'SY', color: 'bg-emerald-600', title: 'Payment processed — Invoice #4521', time: '45 min ago' },
-                    { initial: 'JL', color: 'bg-orange-500', title: 'Jeffie L. reviewed Dashboard Kit', time: '1 hour ago' },
-                    { initial: 'EL', color: 'bg-purple-500', title: 'Emmy L. created project Morning Clock', time: '4 hours ago' },
-                    { initial: 'DS', color: 'bg-red-500', title: 'Shipment dispatched — Order #3847', time: '8 hours ago' },
-                  ].map((activity, idx) => (
-                    <div key={idx} className="relative flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className={`h-8 w-8 rounded-full ${activity.color} text-white flex items-center justify-center text-[10px] font-bold shrink-0 ring-4 ring-card z-10`}>
-                          {activity.initial}
-                        </div>
-                        <div>
-                          <p className="text-[13px] font-medium leading-tight">{activity.title}</p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">{activity.time}</p>
+                  {recentOrders.length > 0 ? recentOrders.slice(0, 6).map((item: any, idx: number) => {
+                    if (!item || !item.order) return null;
+                    const isCompleted = item.order.status === 'completed' || item.order.status === 'delivered';
+                    const color = isCompleted ? 'bg-emerald-500' : 'bg-blue-600';
+                    const initial = item.order.buyer?.name ? item.order.buyer.name.substring(0, 2).toUpperCase() : 'O';
+                    const title = `${t(locale, 'طلب جديد', 'New order')} #${item.order.orderNumber} ${t(locale, 'بقيمة', 'for')} ${formatStoreCurrency(Number(item.total || 0))}`;
+                    const time = new Date(item.order.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-DZ' : 'en-US', { day: 'numeric', month: 'short' });
+                    
+                    return (
+                      <div key={idx} className="relative flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className={`h-8 w-8 rounded-full ${color} text-white flex items-center justify-center text-[10px] font-bold shrink-0 ring-4 ring-card z-10`}>
+                            {initial}
+                          </div>
+                          <div>
+                            <p className="text-[13px] font-medium leading-tight">{title}</p>
+                            <p className="text-[11px] text-muted-foreground mt-0.5">{time}</p>
+                          </div>
                         </div>
                       </div>
+                    );
+                  }) : (
+                    <div className="relative flex flex-col items-center justify-center py-6 z-10 bg-card rounded-md border border-dashed border-border text-center">
+                      <Activity className="h-8 w-8 text-muted-foreground/30 mb-2" />
+                      <p className="text-[12px] text-muted-foreground">{t(locale, 'لا توجد نشاطات حالياً', 'No recent activity yet')}</p>
                     </div>
-                  ))}
+                  )}
                </div>
             </CardContent>
           </Card>
@@ -512,7 +519,7 @@ export default function StoreDashboard() {
                      </tr>
                    </thead>
                    <tbody className="divide-y divide-border">
-                     {(recentOrders || []).slice(0, 5).map((item: any, idx: number) => {
+                     {recentOrders && recentOrders.length > 0 ? (recentOrders || []).slice(0, 5).map((item: any, idx: number) => {
                         if (!item || !item.order) return null;
                         const st = STATUS_CONFIG[item.order.status] ?? STATUS_CONFIG.pending;
                         return (
@@ -531,7 +538,13 @@ export default function StoreDashboard() {
                             </td>
                           </tr>
                         );
-                     })}
+                     }) : (
+                       <tr>
+                         <td colSpan={6} className="px-5 py-8 text-center text-muted-foreground text-[13px]">
+                           {t(locale, 'لا توجد طلبات حديثة', 'No recent orders')}
+                         </td>
+                       </tr>
+                     )}
                    </tbody>
                  </table>
                </div>
@@ -539,50 +552,35 @@ export default function StoreDashboard() {
           </Card>
         </motion.div>
 
-        {/* Storage */}
+        {/* Products Summary */}
         <motion.div variants={FADE_IN_VARIANTS} className="xl:col-span-1">
           <Card className="rounded-md shadow-sm border-border h-full flex flex-col card-surface">
             <CardHeader className="flex flex-row items-center justify-between pb-3 border-b border-border/50 px-5 pt-5">
               <CardTitle className="text-[15px] font-bold text-[var(--gentelella-heading)]">
-                {t(locale, 'مساحة التخزين', 'Storage')}
+                {t(locale, 'المنتجات', 'Products')}
               </CardTitle>
-              <span className="text-[11px] text-muted-foreground">6.8 GB of 8 GB used</span>
+              <span className="text-[11px] text-muted-foreground">{products.length} {t(locale, 'عنصر', 'Items')}</span>
             </CardHeader>
-            <CardContent className="pt-6 px-5">
-               <div className="w-full h-2 bg-muted flex rounded-full overflow-hidden mb-6">
-                 <div className="h-full bg-emerald-500 w-[40%]" />
-                 <div className="h-full bg-blue-500 w-[20%]" />
-                 <div className="h-full bg-orange-500 w-[15%]" />
+            <CardContent className="pt-6 px-5 flex flex-col items-center justify-center">
+               <div className="h-32 w-32 rounded-full border-8 border-emerald-500/20 flex flex-col items-center justify-center shrink-0 mb-6">
+                 <span className="text-3xl font-bold text-emerald-500">{products.length}</span>
+                 <span className="text-[10px] text-muted-foreground uppercase">{t(locale, 'نشط', 'ACTIVE')}</span>
                </div>
                
-               <div className="space-y-4">
-                 <div className="flex items-center justify-between text-[13px]">
+               <div className="space-y-4 w-full">
+                 <div className="flex items-center justify-between text-[13px] w-full px-4 py-2 bg-muted/30 rounded border border-border">
                    <div className="flex items-center gap-2">
                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                     <span>Regular</span>
+                     <span>{t(locale, 'منتجات معروضة', 'Published Products')}</span>
                    </div>
-                   <span className="font-bold">3.4 GB</span>
+                   <span className="font-bold">{products.filter((p:any) => p.status === 'active').length || products.length}</span>
                  </div>
-                 <div className="flex items-center justify-between text-[13px]">
+                 <div className="flex items-center justify-between text-[13px] w-full px-4 py-2 bg-muted/30 rounded border border-border">
                    <div className="flex items-center gap-2">
-                     <span className="h-2 w-2 rounded-full bg-blue-500" />
-                     <span>System</span>
+                     <span className="h-2 w-2 rounded-full bg-red-500" />
+                     <span>{t(locale, 'نفدت الكمية', 'Out of Stock')}</span>
                    </div>
-                   <span className="font-bold">1.4 GB</span>
-                 </div>
-                 <div className="flex items-center justify-between text-[13px]">
-                   <div className="flex items-center gap-2">
-                     <span className="h-2 w-2 rounded-full bg-orange-500" />
-                     <span>Shared</span>
-                   </div>
-                   <span className="font-bold">1.0 GB</span>
-                 </div>
-                 <div className="flex items-center justify-between text-[13px]">
-                   <div className="flex items-center gap-2">
-                     <span className="h-2 w-2 rounded-full bg-muted-foreground" />
-                     <span>Free</span>
-                   </div>
-                   <span className="font-bold">1.2 GB</span>
+                   <span className="font-bold">{products.filter((p:any) => p.stock === 0).length || 0}</span>
                  </div>
                </div>
             </CardContent>
