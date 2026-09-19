@@ -11,7 +11,7 @@ import {
   Store as StoreIcon, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
   Wallet, Heart, Star, Bell, ChevronLeft, ChevronRight, LogOut,
   TrendingUp, CreditCard, Boxes, ChevronUp, ChevronDown, ArrowLeftRight, Layers,
-  Receipt, Sparkles, Monitor, KeyRound, MoreHorizontal
+  Receipt, Sparkles, Monitor, KeyRound, MoreHorizontal, MessageSquare
 } from 'lucide-react';
 
 import { usePathname, useRouter } from 'next/navigation';
@@ -201,6 +201,13 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         icon: Truck,
         directPageId: 'seller-shipping',
         path: '/seller/shipping'
+      },
+      {
+        id: 'coupons-tree',
+        labelKey: 'sidebar.coupons',
+        icon: Sparkles,
+        directPageId: 'seller-coupons',
+        path: '/seller/coupons'
       }
     ]
   },
@@ -251,6 +258,13 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
     id: 'admin',
     labelKey: 'sidebar.admin',
     trees: [
+      {
+        id: 'messages-tree',
+        labelKey: 'sidebar.messages',
+        icon: MessageSquare,
+        directPageId: 'seller-messages',
+        path: '/seller/messages'
+      },
       {
         id: 'verification-tree',
         labelKey: 'header.verificationStatus',

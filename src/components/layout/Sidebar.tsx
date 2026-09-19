@@ -75,22 +75,55 @@ const STORE_NAV_GROUPS: NavGroup[] = [
 
 const SELLER_NAV_GROUPS: NavGroup[] = [
   {
-    id: 'seller-group',
-    labelAr: 'التاجر',
-    labelEn: 'Seller',
-    icon: 'UserCircle',
+    id: 'overview-group',
+    labelAr: 'الرئيسية والتحليلات',
+    labelEn: 'Overview & Analytics',
+    icon: 'LayoutDashboard',
     items: [
       { id: 'seller', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard', path: '/seller/dashboard' },
-      { id: 'seller-products', labelAr: 'منتجاتي', labelEn: 'My Products', icon: 'Boxes', path: '/seller/products' },
-      { id: 'seller-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 4, path: '/seller/orders' },
       { id: 'store-analytics', labelAr: 'التحليلات المتقدمة', labelEn: 'Analytics', icon: 'BarChart3', path: '/seller/analytics' },
-      { id: 'seller-messages', labelAr: 'الرسائل والمحادثات', labelEn: 'Messages', icon: 'MessageSquare', path: '/seller/messages' },
+    ]
+  },
+  {
+    id: 'catalog-group',
+    labelAr: 'المنتجات والمخزون',
+    labelEn: 'Catalog & Inventory',
+    icon: 'Boxes',
+    items: [
+      { id: 'seller-products', labelAr: 'منتجاتي', labelEn: 'My Products', icon: 'Boxes', path: '/seller/products' },
+    ]
+  },
+  {
+    id: 'sales-group',
+    labelAr: 'المبيعات والطلبات',
+    labelEn: 'Sales & Orders',
+    icon: 'Package',
+    items: [
+      { id: 'seller-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 4, path: '/seller/orders' },
+    ]
+  },
+  {
+    id: 'logistics-group',
+    labelAr: 'الشحن واللوجستيات',
+    labelEn: 'Shipping & Logistics',
+    icon: 'Truck',
+    items: [
+      { id: 'seller-shipping', labelAr: 'الشحن والتوصيل', labelEn: 'Logistics', icon: 'Truck', path: '/seller/shipping' },
+    ]
+  },
+  {
+    id: 'marketing-group',
+    labelAr: 'التسويق والعروض',
+    labelEn: 'Marketing & Discounts',
+    icon: 'Sparkles',
+    items: [
+      { id: 'seller-coupons', labelAr: 'الكوبونات والخصومات', labelEn: 'Coupons', icon: 'CreditCard', path: '/seller/coupons' },
     ]
   },
   {
     id: 'business-group',
-    labelAr: 'إدارة الأعمال',
-    labelEn: 'Business Management',
+    labelAr: 'إدارة الفروع والفريق',
+    labelEn: 'Branches & Staff',
     icon: 'Layers',
     items: [
       { id: 'seller-branches', labelAr: 'إدارة الفروع', labelEn: 'Branches', icon: 'Store', path: '/seller/branches' },
@@ -115,11 +148,12 @@ const SELLER_NAV_GROUPS: NavGroup[] = [
   },
   {
     id: 'settings-group',
-    labelAr: 'الإعدادات',
-    labelEn: 'Settings',
+    labelAr: 'الإعدادات والمحادثات',
+    labelEn: 'Settings & Messages',
     icon: 'Settings',
     items: [
-      { id: 'seller-settings', labelAr: 'الإعدادات', labelEn: 'Settings', icon: 'Settings', path: '/seller/settings' },
+      { id: 'seller-messages', labelAr: 'الرسائل والمحادثات', labelEn: 'Messages', icon: 'MessageSquare', path: '/seller/messages' },
+      { id: 'seller-settings', labelAr: 'إعدادات المتجر', labelEn: 'Settings', icon: 'Settings', path: '/seller/settings' },
       { id: 'seller-upgrade', labelAr: 'ترقية لمتجر', labelEn: 'Upgrade to Store', icon: 'TrendingUp', path: '/seller/upgrade' },
     ]
   }
@@ -223,15 +257,20 @@ interface SidebarProps {
       const idMap: Record<string, string> = {
         'store-group': 'sidebar.sectionStore',
         'seller-group': 'sidebar.sectionSeller',
+        'overview-group': 'sidebar.sectionOverview',
+        'catalog-group': 'sidebar.sectionCatalog',
+        'sales-group': 'sidebar.sectionSales',
+        'logistics-group': 'sidebar.sectionLogistics',
+        'marketing-group': 'sidebar.sectionMarketing',
         'business-group': 'sidebar.sectionBusinessManagement',
         'supplier-group': 'sidebar.sectionSupplier',
-        'logistics-group': 'sidebar.sectionLogistics',
         'buyer-group': 'sidebar.sectionBuyer',
         'billing-group': 'sidebar.sectionBilling',
         'settings-group': 'sidebar.sectionSettings',
         'store': 'sidebar.overview',
         'store-products': 'sidebar.products',
         'store-orders': 'sidebar.orders',
+        'store-shipping': 'sidebar.shipping',
         'store-coupons': 'sidebar.coupons',
         'store-staff': 'sidebar.team',
         'store-analytics': 'sidebar.analytics',
@@ -244,6 +283,11 @@ interface SidebarProps {
         'seller': 'sidebar.overview',
         'seller-products': 'sidebar.myProducts',
         'seller-orders': 'sidebar.orders',
+        'seller-shipping': 'sidebar.shipping',
+        'seller-coupons': 'sidebar.coupons',
+        'seller-branches': 'sidebar.branches',
+        'seller-staff': 'sidebar.team',
+        'seller-taxes': 'sidebar.taxes',
         'seller-messages': 'sidebar.messages',
         'seller-wallet': 'sidebar.wallet',
         'seller-debts': 'sidebar.debts',

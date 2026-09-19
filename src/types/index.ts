@@ -90,6 +90,12 @@ export type PageType =
   | 'seller-billing-addons'
   | 'seller-billing-pay'
   | 'seller-billing-history'
+  | 'seller-coupons'
+  | 'seller-branches'
+  | 'seller-staff'
+  | 'seller-taxes'
+  | 'seller-wallet'
+  | 'seller-debts'
   | 'security';
 
 export interface NavItem {
