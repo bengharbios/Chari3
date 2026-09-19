@@ -149,24 +149,40 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // 3. Sales By State (Optimized via GroupBy)
-    const stateGroups = await db.order.groupBy({
-      by: ['shippingState'],
-      where: {
-        items: { some: { product: productCondition } },
-        createdAt: { gte: startDate, lte: endDate },
-        status: orderStatusCondition,
-        shippingState: { not: null }
-      },
-      _count: { id: true },
-      orderBy: { _count: { id: 'desc' } },
-      take: 10
-    });
+    // 3. Sales By State (Safely parsed from address)
+    let ordersByState: { state: string; count: number }[] = [];
+    try {
+      const recentOrdersForStates = await db.order.findMany({
+        where: {
+          items: { some: { product: productCondition } },
+          createdAt: { gte: startDate, lte: endDate },
+          status: orderStatusCondition,
+        },
+        select: { address: true },
+        take: 200,
+      });
 
-    const ordersByState = stateGroups.map(s => ({
-      state: s.shippingState || 'Unknown',
-      count: s._count.id
-    }));
+      const stateCountMap: Record<string, number> = {};
+      for (const ord of recentOrdersForStates) {
+        let stateName = 'غير محدد';
+        if (ord.address) {
+          try {
+            const parsed = typeof ord.address === 'string' ? JSON.parse(ord.address) : ord.address;
+            stateName = parsed?.state || parsed?.wilaya || parsed?.city || (typeof ord.address === 'string' && ord.address.length < 30 ? ord.address : 'الجزائر');
+          } catch {
+            stateName = (typeof ord.address === 'string' && ord.address.length < 30) ? ord.address : 'الجزائر';
+          }
+        }
+        stateCountMap[stateName] = (stateCountMap[stateName] || 0) + 1;
+      }
+
+      ordersByState = Object.entries(stateCountMap)
+        .map(([state, count]) => ({ state, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10);
+    } catch (err) {
+      console.warn('[analytics/ordersByState]', err);
+    }
 
     return NextResponse.json({
       success: true,

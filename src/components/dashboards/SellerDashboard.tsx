@@ -303,7 +303,7 @@ export default function SellerDashboard() {
       fetch(`/api/seller/dashboard?${params.toString()}`).then(r => r.json()),
     ];
     if (isSellerRole) {
-      apiCalls.push(fetch(`/api/seller/verification`).then(r => r.json()));
+      apiCalls.push(fetch(`/api/seller/verification?userId=${encodeURIComponent(user.id)}`).then(r => r.json()));
     }
 
     Promise.all(apiCalls)

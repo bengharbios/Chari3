@@ -20,8 +20,9 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    if (!userId || !['seller', 'store_manager'].includes(role || '')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const allowedRoles = ['seller', 'store_manager', 'freelancer', 'admin', 'SUPER_ADMIN', 'super_admin'];
+    if (!userId || (role && !allowedRoles.includes(role))) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
     }
 
     const sellerProfile = await prisma.sellerProfile.findUnique({
@@ -69,8 +70,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (!userId || !['seller', 'store_manager'].includes(role || '')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const allowedRoles = ['seller', 'store_manager', 'freelancer', 'admin', 'SUPER_ADMIN', 'super_admin'];
+    if (!userId || (role && !allowedRoles.includes(role))) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 403 });
     }
 
     const sellerProfile = await prisma.sellerProfile.findUnique({
