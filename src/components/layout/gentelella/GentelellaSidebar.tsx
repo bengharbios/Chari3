@@ -171,6 +171,7 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         icon: LayoutDashboard,
         children: [
           { id: 'seller', labelKey: 'sidebar.operations', path: '/seller/dashboard' },
+          { id: 'store-analytics', labelKey: 'sidebar.analytics', path: '/seller/analytics' },
         ]
       }
     ]

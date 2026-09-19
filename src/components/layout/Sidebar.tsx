@@ -83,6 +83,7 @@ const SELLER_NAV_GROUPS: NavGroup[] = [
       { id: 'seller', labelAr: 'نظرة عامة', labelEn: 'Overview', icon: 'LayoutDashboard', path: '/seller/dashboard' },
       { id: 'seller-products', labelAr: 'منتجاتي', labelEn: 'My Products', icon: 'Boxes', path: '/seller/products' },
       { id: 'seller-orders', labelAr: 'الطلبات', labelEn: 'Orders', icon: 'Package', badge: 4, path: '/seller/orders' },
+      { id: 'store-analytics', labelAr: 'التحليلات المتقدمة', labelEn: 'Analytics', icon: 'BarChart3', path: '/seller/analytics' },
       { id: 'seller-messages', labelAr: 'الرسائل والمحادثات', labelEn: 'Messages', icon: 'MessageSquare', path: '/seller/messages' },
     ]
   },
