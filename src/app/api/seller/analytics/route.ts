@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { startOfDay, subDays } from 'date-fns';
-import { auth } from '@/lib/better-auth';
+import { auth, getSession } from '@/lib/better-auth';
 import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth.api.getSession({ headers: await headers() });
+    const session = await getSession(await headers());
     if (!session || !session.user) {
+      // Return 403 instead of 401 to prevent the global AuthSync interceptor from force-logging out the user
+      // if the session parsing fails in edge cases or if it's truly a stale session.
+      // But actually, if they don't have a session, 401 is correct. We just need to parse headers correctly.
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 

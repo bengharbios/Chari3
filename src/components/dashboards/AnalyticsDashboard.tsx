@@ -66,7 +66,7 @@ export default function AnalyticsDashboard({ sellerPackage }: { sellerPackage?: 
     params.append('range', dateRange);
     params.append('statusFilter', statusFilter);
 
-    fetch(`/api/seller/analytics?${params.toString()}`)
+    fetch(`/api/seller/analytics?${params.toString()}`, { credentials: 'include' })
       .then(r => {
         if (r.status === 403) {
           setIsForbidden(true);
