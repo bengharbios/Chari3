@@ -1103,5 +1103,117 @@
     "TODAY": "Aujourd hui",
     "LAST_7_DAYS": "7 Derniers Jours",
     "LAST_30_DAYS": "30 Derniers Jours"
+  },
+  "sidebar": {
+    "sectionStore": "Boutique & Opérations",
+    "sectionSeller": "Tableau de Bord Vendeur",
+    "sectionBusinessManagement": "Gestion d'Entreprise",
+    "sectionSupplier": "Fournisseur",
+    "sectionLogistics": "Logistique & Livraison",
+    "sectionBuyer": "Compte Acheteur",
+    "sectionBilling": "Facturation & Abonnements",
+    "sectionSettings": "Paramètres & Système",
+    "general": "Général",
+    "dashboard": "Tableau de bord",
+    "operations": "Aperçu & Opérations",
+    "analytics": "Analyses & Métriques",
+    "team": "Équipe & Personnel",
+    "ecommerce": "E-Commerce",
+    "products": "Produits & Stock",
+    "myProducts": "Mes Produits",
+    "orders": "Commandes & Ventes",
+    "allOrders": "Toutes les Commandes",
+    "logistics": "Logistique",
+    "marketing": "Marketing & Coupons",
+    "coupons": "Coupons & Réductions",
+    "branches": "Gestion des Succursales",
+    "taxes": "Rapports Fiscaux (B2B)",
+    "finance": "Finance & Portefeuille",
+    "billing": "Facturation & Abonnements",
+    "currentInvoice": "Facture Actuelle",
+    "plans": "Choisir un Forfait",
+    "addons": "Modules Complémentaires",
+    "payment": "Paiement",
+    "history": "Historique des Factures",
+    "wallet": "Portefeuille & Revenus",
+    "debts": "Régler les Dettes",
+    "admin": "Administration & Vérification",
+    "settings": "Paramètres de la Boutique",
+    "upgrade": "Passer à un Compte Vendeur",
+    "messages": "Messagerie & Chat",
+    "verification": "Vérification du Compte",
+    "overview": "Aperçu",
+    "inventory": "Gestion d'Entrepôt",
+    "activeShipments": "Expéditions en Cours",
+    "deliveries": "Livraisons",
+    "earnings": "Revenus",
+    "myOrders": "Mes Commandes",
+    "wishlist": "Liste de Souhaits",
+    "addresses": "Mes Adresses",
+    "reviews": "Avis"
+  },
+  "seller": {
+    "erp": {
+      "modules": {
+        "dashboard": {
+          "title": "Tableau de Bord Exécutif",
+          "overview": "Aperçu & Opérations",
+          "analytics": "Analyses Avancées"
+        },
+        "catalog": {
+          "title": "Catalogue & Stock",
+          "products": "Gestion des Produits",
+          "stock": "Niveaux de Stock",
+          "categories": "Catégories"
+        },
+        "sales": {
+          "title": "Ventes & Commandes",
+          "orders": "Traitement des Commandes",
+          "coupons": "Coupons & Promotions"
+        },
+        "logistics": {
+          "title": "Logistique & Livraison",
+          "shipping": "Expédition & Livraison",
+          "tracking": "Suivi des Colis"
+        },
+        "finance": {
+          "title": "Finance & Abonnements",
+          "wallet": "Portefeuille & Paiements",
+          "debts": "Payer les Dettes",
+          "billing": "Facturation & Abonnement",
+          "plans": "Plans d'Abonnement",
+          "addons": "Fonctionnalités Supplémentaires",
+          "history": "Historique des Factures"
+        },
+        "organization": {
+          "title": "Succursales & RH Équipe",
+          "branches": "Gestion des Succursales",
+          "staff": "Équipe & Permissions"
+        },
+        "crm": {
+          "title": "CRM Client & Messages",
+          "messages": "Conversations & Chat",
+          "reviews": "Avis Clients"
+        },
+        "settings": {
+          "title": "Paramètres d'Entreprise",
+          "storeSettings": "Paramètres Boutique",
+          "verification": "Identité & Vérification",
+          "upgrade": "Mise à Niveau"
+        }
+      },
+      "components": {
+        "searchPlaceholder": "Recherche rapide...",
+        "filterBy": "Filtrer par",
+        "export": "Exporter les Données",
+        "bulkActions": "Actions Groupées",
+        "selectedCount": "{count} sélectionné(s)",
+        "noData": "Aucun enregistrement disponible",
+        "noResults": "Aucun résultat trouvé",
+        "resetFilters": "Réinitialiser les Filtres",
+        "syncNow": "Synchroniser",
+        "lastSync": "Dernière mise à jour"
+      }
+    }
   }
 }

@@ -1160,5 +1160,117 @@
     "TODAY": "Today",
     "LAST_7_DAYS": "Last 7 Days",
     "LAST_30_DAYS": "Last 30 Days"
+  },
+  "sidebar": {
+    "sectionStore": "Store & Operations",
+    "sectionSeller": "Seller Dashboard",
+    "sectionBusinessManagement": "Business Management",
+    "sectionSupplier": "Supplier",
+    "sectionLogistics": "Logistics & Shipping",
+    "sectionBuyer": "Buyer Account",
+    "sectionBilling": "Billing & Subscriptions",
+    "sectionSettings": "Settings & System",
+    "general": "General",
+    "dashboard": "Dashboard",
+    "operations": "Overview & Operations",
+    "analytics": "Analytics & Metrics",
+    "team": "Team & Staff",
+    "ecommerce": "E-Commerce",
+    "products": "Products & Inventory",
+    "myProducts": "My Products",
+    "orders": "Orders & Sales",
+    "allOrders": "All Orders",
+    "logistics": "Logistics",
+    "marketing": "Marketing & Coupons",
+    "coupons": "Coupons & Discounts",
+    "branches": "Branch Management",
+    "taxes": "Tax Reports (B2B)",
+    "finance": "Finance & Wallet",
+    "billing": "Billing & Subscriptions",
+    "currentInvoice": "Current Invoice",
+    "plans": "Choose Plan",
+    "addons": "Add-ons",
+    "payment": "Payment",
+    "history": "Invoice & Transaction History",
+    "wallet": "Wallet & Payouts",
+    "debts": "Pay Debts",
+    "admin": "Admin & Verification",
+    "settings": "Store Settings",
+    "upgrade": "Upgrade to Store",
+    "messages": "Messages & Chat",
+    "verification": "Account Verification",
+    "overview": "Overview",
+    "inventory": "Warehouse Inventory",
+    "activeShipments": "Active Shipments",
+    "deliveries": "Deliveries",
+    "earnings": "Earnings",
+    "myOrders": "My Orders",
+    "wishlist": "Wishlist",
+    "addresses": "Addresses",
+    "reviews": "Reviews"
+  },
+  "seller": {
+    "erp": {
+      "modules": {
+        "dashboard": {
+          "title": "Executive Dashboard",
+          "overview": "Overview & Operations",
+          "analytics": "Advanced Analytics"
+        },
+        "catalog": {
+          "title": "Catalog & Inventory",
+          "products": "Product Management",
+          "stock": "Stock Levels",
+          "categories": "Categories"
+        },
+        "sales": {
+          "title": "Sales & Orders",
+          "orders": "Order Processing",
+          "coupons": "Coupons & Promotions"
+        },
+        "logistics": {
+          "title": "Logistics & Shipping",
+          "shipping": "Shipping & Delivery",
+          "tracking": "Package Tracking"
+        },
+        "finance": {
+          "title": "Finance & Subscriptions",
+          "wallet": "Wallet & Payouts",
+          "debts": "Pay Debts",
+          "billing": "Invoice & Plan",
+          "plans": "Subscription Plans",
+          "addons": "Feature Add-ons",
+          "history": "Billing History"
+        },
+        "organization": {
+          "title": "Branches & Team HR",
+          "branches": "Branch Management",
+          "staff": "Team & Permissions"
+        },
+        "crm": {
+          "title": "Customer CRM & Messages",
+          "messages": "Conversations & Chat",
+          "reviews": "Customer Reviews"
+        },
+        "settings": {
+          "title": "Enterprise & Store Settings",
+          "storeSettings": "Store Settings",
+          "verification": "Identity & Verification",
+          "upgrade": "Account Upgrade"
+        }
+      },
+      "components": {
+        "searchPlaceholder": "Quick search records...",
+        "filterBy": "Filter by",
+        "export": "Export Data",
+        "bulkActions": "Bulk Actions",
+        "selectedCount": "{count} selected",
+        "noData": "No records available",
+        "noResults": "No results matched your search",
+        "resetFilters": "Reset Filters",
+        "syncNow": "Sync Now",
+        "lastSync": "Last updated"
+      }
+    }
   }
 }

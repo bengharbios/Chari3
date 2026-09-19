@@ -1161,5 +1161,117 @@
     "TODAY": "اليوم",
     "LAST_7_DAYS": "آخر 7 أيام",
     "LAST_30_DAYS": "آخر 30 يوم"
+  },
+  "sidebar": {
+    "sectionStore": "المتجر والعمليات",
+    "sectionSeller": "لوحة التاجر",
+    "sectionBusinessManagement": "إدارة الأعمال والمنشأة",
+    "sectionSupplier": "المورد",
+    "sectionLogistics": "اللوجستيات والشحن",
+    "sectionBuyer": "حساب المشتري",
+    "sectionBilling": "المالية والاشتراكات",
+    "sectionSettings": "الإعدادات والنظام",
+    "general": "عام",
+    "dashboard": "لوحة التحكم",
+    "operations": "نظرة عامة والعمليات",
+    "analytics": "التحليلات ومؤشرات الأداء",
+    "team": "فريق العمل والموظفون",
+    "ecommerce": "التجارة الإلكترونية",
+    "products": "المنتجات والمخزون",
+    "myProducts": "منتجاتي",
+    "orders": "الطلبات والمبيعات",
+    "allOrders": "جميع الطلبات",
+    "logistics": "الشحن واللوجستيات",
+    "marketing": "التسويق والكوبونات",
+    "coupons": "الكوبونات والخصومات",
+    "branches": "إدارة الفروع",
+    "taxes": "التقارير الضريبية (B2B)",
+    "finance": "المالية والمحفظة",
+    "billing": "الفواتير والاشتراكات",
+    "currentInvoice": "فاتورتي الحالية",
+    "plans": "الباقات والترقية",
+    "addons": "الميزات الإضافية",
+    "payment": "الدفع والتسديد",
+    "history": "سجل الفواتير والمعاملات",
+    "wallet": "محفظتي والأرباح",
+    "debts": "سداد المديونية",
+    "admin": "الإدارة والتوثيق",
+    "settings": "إعدادات المتجر",
+    "upgrade": "ترقية الحساب لمتجر",
+    "messages": "الرسائل والمحادثات",
+    "verification": "توثيق الحساب",
+    "overview": "نظرة عامة",
+    "inventory": "إدارة المستودع",
+    "activeShipments": "شحنات جارية",
+    "deliveries": "التوصيلات",
+    "earnings": "الأرباح",
+    "myOrders": "طلباتي",
+    "wishlist": "قائمة الرغبات",
+    "addresses": "عناويني",
+    "reviews": "التقييمات"
+  },
+  "seller": {
+    "erp": {
+      "modules": {
+        "dashboard": {
+          "title": "لوحة التحكم المركزية",
+          "overview": "نظرة عامة والعمليات",
+          "analytics": "التحليلات المتقدمة"
+        },
+        "catalog": {
+          "title": "المنتجات والمخزون",
+          "products": "قائمة المنتجات",
+          "stock": "مستويات المخزون",
+          "categories": "التصنيفات"
+        },
+        "sales": {
+          "title": "المبيعات والطلبات",
+          "orders": "إدارة الطلبات",
+          "coupons": "الكوبونات والعروض"
+        },
+        "logistics": {
+          "title": "اللوجستيات والشحن",
+          "shipping": "إدارة الشحن والتوصيل",
+          "tracking": "تتبع الطرود"
+        },
+        "finance": {
+          "title": "المالية والاشتراكات",
+          "wallet": "المحفظة والأرباح",
+          "debts": "سداد المديونية",
+          "billing": "الفاتورة والاشتراك",
+          "plans": "باقات الاشتراك",
+          "addons": "الميزات الإضافية",
+          "history": "سجل الفواتير"
+        },
+        "organization": {
+          "title": "الفروع وفريق العمل",
+          "branches": "إدارة الفروع",
+          "staff": "فريق العمل والصلاحيات"
+        },
+        "crm": {
+          "title": "خدمة العملاء والرسائل",
+          "messages": "المحادثات والرسائل",
+          "reviews": "التقييمات والمراجعات"
+        },
+        "settings": {
+          "title": "إعدادات المتجر والتوثيق",
+          "storeSettings": "إعدادات المتجر",
+          "verification": "توثيق الهوية والنشاط",
+          "upgrade": "ترقية الحساب"
+        }
+      },
+      "components": {
+        "searchPlaceholder": "بحث سريع في البيانات...",
+        "filterBy": "تصفية حسب",
+        "export": "تصدير",
+        "bulkActions": "إجراءات جماعية",
+        "selectedCount": "تم تحديد {count} عنصر",
+        "noData": "لا توجد سجلات حالياً",
+        "noResults": "لا توجد نتائج مطابقة لبحثك",
+        "resetFilters": "إعادة تعيين الفلاتر",
+        "syncNow": "مزامنة الآن",
+        "lastSync": "آخر تحديث"
+      }
+    }
   }
 }
