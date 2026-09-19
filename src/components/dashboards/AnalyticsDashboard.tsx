@@ -108,7 +108,7 @@ export default function AnalyticsDashboard({ sellerPackage }: { sellerPackage?: 
           )}
         </p>
         <Button asChild size="lg" className="rounded-full px-8">
-          <Link href={`/${locale}/seller/billing`}>
+          <Link href="/seller/billing">
             {t(locale, 'ترقية الباقة الآن', 'Upgrade Package Now')}
           </Link>
         </Button>

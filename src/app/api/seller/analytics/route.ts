@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { startOfDay, subDays } from 'date-fns';
 import { auth, getSession } from '@/lib/better-auth';
 import { headers } from 'next/headers';
+import { getUserPackageLimits } from '@/lib/billing';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,7 +58,8 @@ export async function GET(req: NextRequest) {
     }
 
     // Feature Toggling: Check if package allows analytics
-    if (!finalStore.package?.hasAnalytics) {
+    const activePackage = await getUserPackageLimits(userId);
+    if (!activePackage?.hasAnalytics) {
       return NextResponse.json({ success: false, error: 'Analytics feature not available in your current package.' }, { status: 403 });
     }
 
