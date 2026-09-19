@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000",
-    "build": "next build",
+    "build": "node scripts/generate-prisma.js && next build",
     "start": "next start",
     "lint": "eslint .",
-    "postinstall": "prisma generate",
+    "postinstall": "node scripts/generate-prisma.js",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
     "db:migrate:dev": "prisma migrate dev",
