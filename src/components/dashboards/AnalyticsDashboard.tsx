@@ -91,7 +91,15 @@ export default function AnalyticsDashboard({ sellerPackage }: { sellerPackage?: 
     return `DZD ${formattedAmount}`;
   };
 
-  if ((sellerPackage && !sellerPackage.hasAnalytics) || isForbidden) {
+  if (isLoading && !data) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (isForbidden || (!data && sellerPackage && !sellerPackage.hasAnalytics)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] text-center px-4">
         <div className="bg-primary/10 p-4 rounded-full mb-6">
@@ -112,14 +120,6 @@ export default function AnalyticsDashboard({ sellerPackage }: { sellerPackage?: 
             {t(locale, 'ترقية الباقة الآن', 'Upgrade Package Now')}
           </Link>
         </Button>
-      </div>
-    );
-  }
-
-  if (isLoading && !data) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }

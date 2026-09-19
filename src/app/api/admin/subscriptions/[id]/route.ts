@@ -143,6 +143,11 @@ export async function PATCH(
         },
         data: { status: 'EXPIRED', cancelReason: 'ترقية/تفعيل باقة جديدة' }
       });
+      // Synchronize store packageId for the user's stores
+      await prisma.store.updateMany({
+        where: { managerId: subscription.userId },
+        data: { packageId: subscription.packageId }
+      });
     } else if (updateData.startDate || updateData.endDate) {
       // Even if not changing status to ACTIVE, sync invoice dates if they were changed
       const invoices = await prisma.invoice.findMany({ where: { subscriptionId: subscription.id } });

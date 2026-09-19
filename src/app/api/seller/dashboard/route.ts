@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { checkAndUpdateExpiredSubscriptions } from '@/lib/billing';
+import { checkAndUpdateExpiredSubscriptions, getUserPackageLimits } from '@/lib/billing';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,7 +67,17 @@ export async function GET(req: NextRequest) {
       select: { wantsUpgrade: true }
     });
 
+    const activePackage = await getUserPackageLimits(userId);
+    const effectivePackage = (activePackage && 'id' in activePackage) ? activePackage : store?.package;
+
     if (store) {
+      if (activePackage && 'id' in activePackage && store.packageId !== activePackage.id) {
+        db.store.update({
+          where: { id: store.id },
+          data: { packageId: activePackage.id as string }
+        }).catch(() => {});
+      }
+
       isStoreManager = true;
       seller = {
         id: store.id,
@@ -84,8 +94,8 @@ export async function GET(req: NextRequest) {
         totalEarnings: store.totalEarnings,
         completionRate: store.completionRate,
         responseRate: 98,
-        packageId: store.packageId,
-        package: store.package,
+        packageId: effectivePackage?.id || store.packageId,
+        package: effectivePackage || store.package,
         user: store.manager,
         wantsUpgrade: sellerProfile?.wantsUpgrade ?? false,
       };
@@ -98,6 +108,10 @@ export async function GET(req: NextRequest) {
           user: { select: { name: true, email: true, phone: true } },
         },
       });
+      if (seller && effectivePackage) {
+        seller.packageId = effectivePackage.id;
+        seller.package = effectivePackage;
+      }
     }
 
     if (!seller) {

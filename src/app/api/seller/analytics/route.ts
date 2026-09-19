@@ -9,15 +9,10 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSession(await headers());
-    if (!session || !session.user) {
-      // Return 403 instead of 401 to prevent the global AuthSync interceptor from force-logging out the user
-      // if the session parsing fails in edge cases or if it's truly a stale session.
-      // But actually, if they don't have a session, 401 is correct. We just need to parse headers correctly.
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    const userId = req.nextUrl.searchParams.get('userId');
+    if (!userId) {
+      return NextResponse.json({ success: false, error: 'User ID required' }, { status: 400 });
     }
-
-    const userId = session.user.id;
     const storeId = req.nextUrl.searchParams.get('storeId');
     const range = req.nextUrl.searchParams.get('range') || '30days';
     const statusFilter = req.nextUrl.searchParams.get('statusFilter') || 'all';
@@ -46,11 +41,17 @@ export async function GET(req: NextRequest) {
 
     // Allow SUPER_ADMIN to masquerade if store isn't found by the rules above
     let finalStore = store;
-    if (!finalStore && storeId && session.user.role === 'SUPER_ADMIN') {
-      finalStore = await db.store.findUnique({
-        where: { id: storeId },
-        include: { package: true }
+    if (!finalStore && storeId) {
+      const userRecord = await db.user.findUnique({
+        where: { id: userId },
+        select: { role: true }
       });
+      if (userRecord?.role === 'SUPER_ADMIN') {
+        finalStore = await db.store.findUnique({
+          where: { id: storeId },
+          include: { package: true }
+        });
+      }
     }
 
     if (!finalStore) {
@@ -61,6 +62,14 @@ export async function GET(req: NextRequest) {
     const activePackage = await getUserPackageLimits(userId);
     if (!activePackage?.hasAnalytics) {
       return NextResponse.json({ success: false, error: 'Analytics feature not available in your current package.' }, { status: 403 });
+    }
+
+    // Sync store package if out of sync with active package
+    if (finalStore && activePackage && 'id' in activePackage && finalStore.packageId !== activePackage.id) {
+      db.store.update({
+        where: { id: finalStore.id },
+        data: { packageId: activePackage.id as string }
+      }).catch(() => {});
     }
 
     // Determine date range
