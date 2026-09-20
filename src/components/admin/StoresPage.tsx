@@ -52,9 +52,9 @@ interface StoreData {
   } | null;
   package?: {
     id: string;
-    nameAr: string;
-    nameEn: string;
-    priceMonthly: number;
+    name: string;
+    nameEn?: string | null;
+    price: number;
     maxProducts: number;
     maxBranches: number;
   } | null;
@@ -101,7 +101,7 @@ export default function StoresPage() {
   // State
   const [loading, setLoading] = useState(true);
   const [stores, setStores] = useState<StoreData[]>([]);
-  const [packages, setPackages] = useState<Array<{ id: string; nameAr: string; nameEn: string }>>([]);
+  const [packages, setPackages] = useState<Array<{ id: string; name: string; nameEn?: string | null }>>([]);
   const [aggregates, setAggregates] = useState({
     totalStores: 0,
     activeStores: 0,
@@ -467,7 +467,7 @@ export default function StoresPage() {
                 <SelectItem value="all">{t('adminStores.packagesAll')}</SelectItem>
                 {packages.map(p => (
                   <SelectItem key={p.id} value={p.id}>
-                    {locale === 'ar' ? p.nameAr : p.nameEn}
+                    {locale === 'ar' ? p.name : (p.nameEn || p.name)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -586,7 +586,7 @@ export default function StoresPage() {
 
                       <td className="p-3.5 hidden lg:table-cell">
                         <Badge variant="secondary" className="font-medium text-[11px] bg-surface text-foreground border">
-                          {store.package ? (locale === 'ar' ? store.package.nameAr : store.package.nameEn) : (locale === 'ar' ? 'بدون باقة' : 'No Plan')}
+                          {store.package ? (locale === 'ar' ? store.package.name : (store.package.nameEn || store.package.name)) : (locale === 'ar' ? 'بدون باقة' : 'No Plan')}
                         </Badge>
                       </td>
 
@@ -980,7 +980,7 @@ export default function StoresPage() {
                           <SelectContent dir={dir}>
                             {packages.map(pkg => (
                               <SelectItem key={pkg.id} value={pkg.id}>
-                                {locale === 'ar' ? pkg.nameAr : pkg.nameEn}
+                                {locale === 'ar' ? pkg.name : (pkg.nameEn || pkg.name)}
                               </SelectItem>
                             ))}
                           </SelectContent>

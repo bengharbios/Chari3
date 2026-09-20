@@ -69,9 +69,9 @@ export async function GET(req: Request) {
           package: {
             select: {
               id: true,
-              nameAr: true,
+              name: true,
               nameEn: true,
-              priceMonthly: true,
+              price: true,
               maxProducts: true,
               maxBranches: true,
             }
@@ -113,7 +113,7 @@ export async function GET(req: Request) {
 
     // Also fetch all packages for the filter dropdown
     const packages = await db.sellerPackage.findMany({
-      select: { id: true, nameAr: true, nameEn: true },
+      select: { id: true, name: true, nameEn: true },
       orderBy: { sortOrder: 'asc' }
     });
 
