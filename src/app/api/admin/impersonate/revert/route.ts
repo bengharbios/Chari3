@@ -42,6 +42,8 @@ export async function POST() {
         userId: adminUser.id,
         token: token,
         expiresAt: expiresAt,
+        createdAt: new Date(),
+        updatedAt: new Date(),
         ipAddress: '127.0.0.1', 
         userAgent: 'Admin-Returned'
       }

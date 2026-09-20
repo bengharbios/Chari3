@@ -630,7 +630,12 @@ export default function StoresPage() {
                             className="h-8 w-8 text-purple-600 hover:text-purple-700 hover:bg-purple-500/10"
                             title={t('adminStores.impersonate')}
                             disabled={impersonating}
-                            onClick={() => handleImpersonate(store.manager?.id)}
+                            onClick={() => {
+                              const targetId = (store.manager?.id?.startsWith('branch-owner-') && store.staff?.[0]?.user?.id)
+                                ? store.staff[0].user.id
+                                : store.manager?.id;
+                              handleImpersonate(targetId);
+                            }}
                           >
                             <Eye className="h-4 w-4" />
                           </Button>

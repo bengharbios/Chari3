@@ -36,6 +36,8 @@ export async function POST(req: Request) {
         userId: targetUser.id,
         token: token,
         expiresAt: expiresAt,
+        createdAt: new Date(),
+        updatedAt: new Date(),
         ipAddress: '127.0.0.1', 
         userAgent: 'Admin-Impersonation'
       }
@@ -70,9 +72,13 @@ export async function POST(req: Request) {
     });
 
     let redirectUrl = '/buyer';
-    if (targetUser.role === 'seller' || targetUser.role === 'store_manager') redirectUrl = '/seller/dashboard';
-    else if (targetUser.role === 'logistics') redirectUrl = '/logistics';
-    else if (targetUser.role === 'supplier') redirectUrl = '/supplier';
+    if (['seller', 'store', 'store_manager', 'editor', 'freelancer'].includes(targetUser.role)) {
+      redirectUrl = '/seller/dashboard';
+    } else if (targetUser.role === 'logistics') {
+      redirectUrl = '/logistics';
+    } else if (targetUser.role === 'supplier') {
+      redirectUrl = '/supplier';
+    }
 
     return NextResponse.json({ success: true, redirectUrl });
 
