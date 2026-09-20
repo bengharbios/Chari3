@@ -24,6 +24,7 @@ export const useTranslationStore = create<TranslationState>((set, get) => ({
     { code: 'ar', name: 'العربية',  nameEn: 'Arabic',   nameAr: 'العربية',   flag: '🇩🇿', direction: 'rtl', isBuiltin: true },
     { code: 'en', name: 'English',  nameEn: 'English',  nameAr: 'الإنجليزية',  flag: '🇬🇧', direction: 'ltr', isBuiltin: true },
     { code: 'fr', name: 'Français', nameEn: 'French',   nameAr: 'الفرنسية',   flag: '🇫🇷', direction: 'ltr', isBuiltin: true },
+    { code: 'es', name: 'Español',  nameEn: 'Spanish',  nameAr: 'الإسبانية',  flag: '🇪🇸', direction: 'ltr', isBuiltin: true },
   ],
   dictionaries: {},
   isLoading: false,

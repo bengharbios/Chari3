@@ -50,13 +50,18 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
     labelKey: 'sidebar.general',
     trees: [
       {
-        id: 'dashboards',
+        id: 'overview-tree',
         labelKey: 'sidebar.dashboard',
         icon: LayoutDashboard,
-        children: [
-          { id: 'store', labelKey: 'sidebar.operations', path: '/seller/dashboard' },
-          { id: 'store-analytics', labelKey: 'sidebar.analytics', path: '/seller/analytics' },
-        ]
+        directPageId: 'store',
+        path: '/seller/dashboard'
+      },
+      {
+        id: 'analytics-tree',
+        labelKey: 'sidebar.analytics',
+        icon: BarChart3,
+        directPageId: 'store-analytics',
+        path: '/seller/analytics'
       }
     ]
   },
@@ -75,9 +80,8 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
         id: 'orders-tree',
         labelKey: 'sidebar.orders',
         icon: Package,
-        children: [
-          { id: 'store-orders', labelKey: 'sidebar.allOrders', badge: 12, path: '/seller/orders' },
-        ]
+        directPageId: 'store-orders',
+        path: '/seller/orders'
       },
       {
         id: 'shipping-tree',
@@ -119,6 +123,13 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
     id: 'finance',
     labelKey: 'sidebar.finance',
     trees: [
+      {
+        id: 'wallet-tree',
+        labelKey: 'sidebar.wallet',
+        icon: Wallet,
+        directPageId: 'seller-wallet',
+        path: '/seller/wallet'
+      },
       {
         id: 'billing-tree',
         labelKey: 'sidebar.billing',
@@ -171,13 +182,18 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
     labelKey: 'sidebar.general',
     trees: [
       {
-        id: 'dashboards',
+        id: 'overview-tree',
         labelKey: 'sidebar.dashboard',
         icon: LayoutDashboard,
-        children: [
-          { id: 'seller', labelKey: 'sidebar.operations', path: '/seller/dashboard' },
-          { id: 'store-analytics', labelKey: 'sidebar.analytics', path: '/seller/analytics' },
-        ]
+        directPageId: 'seller',
+        path: '/seller/dashboard'
+      },
+      {
+        id: 'analytics-tree',
+        labelKey: 'sidebar.analytics',
+        icon: BarChart3,
+        directPageId: 'store-analytics',
+        path: '/seller/analytics'
       }
     ]
   },
@@ -196,9 +212,8 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         id: 'orders-tree',
         labelKey: 'sidebar.orders',
         icon: Package,
-        children: [
-          { id: 'seller-orders', labelKey: 'sidebar.allOrders', badge: 4, path: '/seller/orders' },
-        ]
+        directPageId: 'seller-orders',
+        path: '/seller/orders'
       },
       {
         id: 'shipping-tree',
@@ -244,10 +259,8 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         id: 'wallet-tree',
         labelKey: 'sidebar.wallet',
         icon: Wallet,
-        children: [
-          { id: 'seller-wallet' as PageType, labelKey: 'sidebar.payouts', path: '/seller/wallet' },
-          { id: 'seller-debts' as PageType, labelKey: 'sidebar.debts', path: '/seller/debts' },
-        ]
+        directPageId: 'seller-wallet',
+        path: '/seller/wallet'
       },
       {
         id: 'billing-tree',
@@ -588,9 +601,9 @@ export default function GentelellaSidebar({ className }: { className?: string })
           <div className="flex-1 py-2">
             <nav className="flex flex-col w-full">
               {activeGroups.map((group, gIdx) => (
-                <div key={group.id} className="mb-4">
+                <div key={group.id} className={cn("mb-3", gIdx > 0 && "pt-3.5 border-t border-white/5")}>
                   <div className={cn("px-6 mb-2 transition-opacity", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                    <span className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-widest">
+                    <span className="text-[11.5px] font-bold text-[#94a3b8] tracking-wider">
                       {t(group.labelKey)}
                     </span>
                   </div>

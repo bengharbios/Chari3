@@ -1044,32 +1044,34 @@ function SellerProductsTab({
           </Button>
 
           {/* Value props */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto mt-10 pt-8 border-t border-border/60 text-start">
-            <div className="flex items-start gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 max-w-2xl mx-auto mt-10 pt-8 border-t border-border/60 text-start">
+            <div className="p-3.5 rounded-xl border border-border/70 bg-card/70 shadow-sm flex items-start gap-3 hover:border-emerald-500/40 transition-colors">
               <div className="size-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                 <CheckCircle className="size-4" />
               </div>
               <div>
                 <h4 className="text-xs font-bold text-foreground">{t('إدارة مخزون ذكية', 'Smart Inventory')}</h4>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{t('تنبيهات تلقائية عند انخفاض الكمية', 'Instant low-stock alerts')}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{t('تنبيهات تلقائية عند انخفاض الكمية', 'Instant low-stock alerts')}</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
+
+            <div className="p-3.5 rounded-xl border border-border/70 bg-card/70 shadow-sm flex items-start gap-3 hover:border-blue-500/40 transition-colors">
               <div className="size-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
                 <Layers className="size-4" />
               </div>
               <div>
                 <h4 className="text-xs font-bold text-foreground">{t('متغيرات غير محدودة', 'Unlimited Variants')}</h4>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{t('دعم الألوان، المقاسات، والخيارات', 'Colors, sizes, & custom attributes')}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{t('دعم الألوان، المقاسات، والخيارات', 'Colors, sizes, & custom attributes')}</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
+
+            <div className="p-3.5 rounded-xl border border-border/70 bg-card/70 shadow-sm flex items-start gap-3 hover:border-purple-500/40 transition-colors">
               <div className="size-8 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
                 <TrendingUp className="size-4" />
               </div>
               <div>
                 <h4 className="text-xs font-bold text-foreground">{t('تحليلات مبيعات دقيقة', 'Sales Analytics')}</h4>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{t('متابعة المنتجات الأكثر طلباً وربحاً', 'Track best-sellers and margins')}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">{t('متابعة المنتجات الأكثر طلباً وربحاً', 'Track best-sellers and margins')}</p>
               </div>
             </div>
           </div>

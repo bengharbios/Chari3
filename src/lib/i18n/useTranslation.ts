@@ -6,11 +6,13 @@ import { usePathname } from 'next/navigation';
 import arDict from './dictionaries/ar.json';
 import enDict from './dictionaries/en.json';
 import frDict from './dictionaries/fr.json';
+import esDict from './dictionaries/es.json';
 
 const staticDictionaries: Record<string, any> = {
   ar: arDict,
   en: enDict,
   fr: frDict,
+  es: esDict,
 };
 
 import { isAdminPath } from './config';

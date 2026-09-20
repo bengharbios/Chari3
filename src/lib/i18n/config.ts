@@ -1,12 +1,13 @@
 export type AppLocale = string;
 
-export const locales: AppLocale[] = ['ar', 'en', 'fr'];
+export const locales: AppLocale[] = ['ar', 'en', 'fr', 'es'];
 
 export const localeDirections: Record<string, 'rtl' | 'ltr'> = new Proxy(
   {
     ar: 'rtl',
     en: 'ltr',
     fr: 'ltr',
+    es: 'ltr',
   } as Record<string, 'rtl' | 'ltr'>,
   {
     get(target, prop: string) {
@@ -34,6 +35,7 @@ export const localeNames: Record<string, string> = {
   ar: 'العربية',
   en: 'English',
   fr: 'Français',
+  es: 'Español',
 };
 
 export function isAdminPath(pathname: string | null): boolean {

@@ -6,12 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function FloatingCart() {
   const { itemCount, setCartOpen, isCartOpen } = useCartStore();
   const { currentPage } = useAppStore();
   const { isBuyerMode, user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
@@ -19,13 +21,22 @@ export default function FloatingCart() {
 
   if (!mounted) return null;
 
+  // Never render in dashboard environments
+  if (
+    pathname?.startsWith('/seller') ||
+    pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/logistics')
+  ) {
+    return null;
+  }
+
   // Hide on login page
   if (currentPage === 'login') {
     return null;
   }
 
   // Hide for sellers/suppliers unless they are in Buyer Mode
-  if (user && ['seller', 'supplier'].includes(user.role) && !isBuyerMode) {
+  if (user && ['seller', 'supplier', 'store', 'store_manager', 'freelancer'].includes(user.role) && !isBuyerMode) {
     return null;
   }
 

@@ -262,13 +262,13 @@ export default function GentelellaHeader() {
           return (
             <nav className="hidden sm:flex items-center gap-2 text-[13px]">
               <span
-                className={cn('opacity-70 cursor-pointer hover:underline hover:opacity-100 transition-opacity', isDark ? 'text-[#c8d3e0]' : 'text-[#555]')}
+                className="cursor-pointer hover:underline text-muted-foreground hover:text-foreground transition-colors font-medium"
                 onClick={() => router.push(rootHref)}
               >
                 {rootLabel}
               </span>
-              <span className="opacity-40 text-[10px]">/</span>
-              <span className={cn('font-semibold', isDark ? 'text-emerald-400' : 'text-emerald-700')}>
+              <span className="text-muted-foreground/40 text-[11px]">/</span>
+              <span className={cn('font-semibold', isDark ? 'text-slate-100' : 'text-slate-800')}>
                 {pageTitle}
               </span>
             </nav>
