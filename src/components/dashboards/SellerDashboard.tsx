@@ -8,7 +8,7 @@ import {
   Wallet, AlertTriangle, ChevronUp, BarChart3, Clock, CheckCircle,
   XCircle, Eye, Plus, Edit, Trash2, Trophy, Target, Zap, Wrench, Loader2, Upload, X, Layers,
   LayoutGrid, List, ClipboardCheck, Truck, CheckSquare, Check, Image as ImageIcon, ChevronLeft, ChevronRight,
-  ShieldAlert, Ban, Lock, Info, Activity, Store as StoreIcon
+  ShieldAlert, Ban, Lock, Info, Activity, Store as StoreIcon, Search
 } from 'lucide-react';
 import { useAppStore, useAuthStore } from '@/lib/store';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -787,6 +787,8 @@ function SellerProductsTab({
   onDeleteSuccess: () => void;
 }) {
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'low_stock' | 'out_of_stock'>('all');
   const walletCurrency = data?.kpis?.walletCurrency || 'DZD';
   const fmtProd = (n: number) => {
     const formattedAmount = Number(n || 0).toLocaleString(isAr ? 'ar-DZ' : 'en-US');
@@ -804,6 +806,28 @@ function SellerProductsTab({
     draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
     inactive: 'bg-red-100 text-red-600 dark:bg-red-950/30 dark:text-red-400',
   };
+
+  const allProducts = data?.products ?? [];
+  const totalCount = allProducts.length;
+  const activeCount = allProducts.filter((p: any) => p.status === 'active' && (p.stock ?? 0) > 0).length;
+  const lowStockCount = allProducts.filter((p: any) => (p.stock ?? 0) > 0 && (p.stock ?? 0) <= 5).length;
+  const outOfStockCount = allProducts.filter((p: any) => (p.stock ?? 0) === 0 || p.status === 'draft').length;
+
+  const filteredProducts = allProducts.filter((p: any) => {
+    const matchesSearch = !searchTerm ||
+      (p.name && p.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (p.nameEn && p.nameEn.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (p.sku && p.sku.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (p.category?.name && p.category.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    if (!matchesSearch) return false;
+
+    if (statusFilter === 'active') return p.status === 'active' && (p.stock ?? 0) > 0;
+    if (statusFilter === 'low_stock') return (p.stock ?? 0) > 0 && (p.stock ?? 0) <= 5;
+    if (statusFilter === 'out_of_stock') return (p.stock ?? 0) === 0;
+    return true;
+  });
 
   useEffect(() => {
     if (!previewProductId) {
@@ -844,15 +868,135 @@ function SellerProductsTab({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h1 className="text-xl font-bold">{t('إدارة المنتجات', 'Product Management')}</h1>
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          {/* View Mode Toggle Buttons */}
-          <div className="flex items-center bg-muted border border-border p-1 rounded-xl">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">{t('إدارة المنتجات والمخزون', 'Products & Inventory')}</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+            {t('عرض وتحرير كتالوج المنتجات، متابعة المخزون والأسعار بدقة', 'Manage your product catalog, track inventory levels and pricing')}
+          </p>
+        </div>
+        <Button className="gap-2 shadow-md self-start sm:self-auto" onClick={onAddClick}>
+          <Plus className="size-4" />
+          {t('إضافة منتج جديد', 'Add New Product')}
+        </Button>
+      </div>
+
+      {/* KPI Summary Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+        <div className="p-4 rounded-xl border border-border bg-card shadow-sm hover:border-primary/40 transition-all flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">{t('إجمالي المنتجات', 'Total Products')}</p>
+            <h3 className="text-2xl font-bold text-foreground mt-1">{totalCount}</h3>
+          </div>
+          <div className="size-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+            <Package className="size-5" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl border border-border bg-card shadow-sm hover:border-emerald-500/40 transition-all flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">{t('منتجات نشطة', 'Active Products')}</p>
+            <h3 className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{activeCount}</h3>
+          </div>
+          <div className="size-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <CheckCircle className="size-5" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl border border-border bg-card shadow-sm hover:border-amber-500/40 transition-all flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">{t('مخزون منخفض', 'Low Stock')}</p>
+            <h3 className="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-1">{lowStockCount}</h3>
+          </div>
+          <div className="size-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <AlertTriangle className="size-5" />
+          </div>
+        </div>
+
+        <div className="p-4 rounded-xl border border-border bg-card shadow-sm hover:border-rose-500/40 transition-all flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium text-muted-foreground">{t('نفذت الكمية / مسودات', 'Out of Stock / Draft')}</p>
+            <h3 className="text-2xl font-bold text-rose-600 dark:text-rose-400 mt-1">{outOfStockCount}</h3>
+          </div>
+          <div className="size-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+            <XCircle className="size-5" />
+          </div>
+        </div>
+      </div>
+
+      {/* Controls & Filter Bar */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-card p-3 rounded-xl border border-border shadow-sm">
+        {/* Status Filter Tabs */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+          <button
+            onClick={() => setStatusFilter('all')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+              statusFilter === 'all'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+          >
+            {t('الكل', 'All')} ({totalCount})
+          </button>
+          <button
+            onClick={() => setStatusFilter('active')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+              statusFilter === 'active'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+          >
+            {t('نشط', 'Active')} ({activeCount})
+          </button>
+          <button
+            onClick={() => setStatusFilter('low_stock')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+              statusFilter === 'low_stock'
+                ? 'bg-amber-600 text-white shadow-sm'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+          >
+            {t('مخزون منخفض', 'Low Stock')} ({lowStockCount})
+          </button>
+          <button
+            onClick={() => setStatusFilter('out_of_stock')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+              statusFilter === 'out_of_stock'
+                ? 'bg-rose-600 text-white shadow-sm'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            }`}
+          >
+            {t('نفذت الكمية', 'Out of Stock')}
+          </button>
+        </div>
+
+        {/* Search & View Mode */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 md:w-64">
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={t('بحث بالاسم، الباركود...', 'Search by name, barcode...')}
+              className="w-full ps-9 pe-8 py-1.5 text-xs bg-muted/40 border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute end-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center bg-muted border border-border p-1 rounded-lg shrink-0">
             <button
               onClick={() => setViewMode('table')}
-              className={`p-1.5 rounded-lg transition-all ${
+              className={`p-1.5 rounded-md transition-all ${
                 viewMode === 'table'
                   ? 'bg-background shadow-sm text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -863,7 +1007,7 @@ function SellerProductsTab({
             </button>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-lg transition-all ${
+              className={`p-1.5 rounded-md transition-all ${
                 viewMode === 'grid'
                   ? 'bg-background shadow-sm text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -873,42 +1017,95 @@ function SellerProductsTab({
               <LayoutGrid className="size-4" />
             </button>
           </div>
-          <Button className="gap-2" onClick={onAddClick}>
-            <Plus className="size-4" />
-            {t('إضافة منتج', 'Add Product')}
-          </Button>
         </div>
       </div>
 
-      <Card>
-        <CardContent className="pt-4 px-3 sm:px-6">
-          {isLoading ? (
-            <div className="h-48 animate-pulse bg-muted rounded-xl" />
-          ) : (data?.products ?? []).length === 0 ? (
-            <div className="text-center py-10 text-muted-foreground">
-              <Package className="size-10 mx-auto mb-2 opacity-30" />
-              <p>{t('لا توجد منتجات بعد', 'No products yet')}</p>
-              <Button size="sm" className="mt-3" onClick={onAddClick}>
-                <Plus className="size-4 me-1" />
-                {t('أضف أول منتج', 'Add first product')}
-              </Button>
+      {/* Main Content Area */}
+      {isLoading ? (
+        <div className="h-64 animate-pulse bg-muted/60 rounded-2xl border border-border" />
+      ) : totalCount === 0 ? (
+        /* Rich Hero Onboarding Card */
+        <div className="relative overflow-hidden rounded-2xl border border-dashed border-border bg-gradient-to-b from-muted/30 via-background to-muted/20 p-8 md:p-14 text-center">
+          <div className="mx-auto size-20 rounded-2xl bg-gradient-to-br from-primary/20 via-emerald-500/10 to-transparent flex items-center justify-center mb-5 border border-primary/20 shadow-inner">
+            <Package className="size-10 text-primary animate-pulse" />
+          </div>
+          <h2 className="text-xl md:text-2xl font-bold text-foreground mb-2">
+            {t('كتالوج منتجاتك فارغ حالياً', 'Your product catalog is currently empty')}
+          </h2>
+          <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-6 leading-relaxed">
+            {t(
+              'ابدأ بعرض منتجاتك للزبائن! يمكنك إضافة تفاصيل المنتج، الصور المتعددة، المتغيرات (المقاسات والألوان)، والباركود وإدارة المخزون بدقة تامة.',
+              'Start showcasing your products! You can add product details, multiple high-res photos, color/size variants, barcodes, and manage your inventory with precision.'
+            )}
+          </p>
+          <Button size="lg" className="gap-2 px-6 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform" onClick={onAddClick}>
+            <Plus className="size-5" />
+            {t('إضافة أول منتج الآن', 'Add Your First Product Now')}
+          </Button>
+
+          {/* Value props */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto mt-10 pt-8 border-t border-border/60 text-start">
+            <div className="flex items-start gap-3">
+              <div className="size-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                <CheckCircle className="size-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-foreground">{t('إدارة مخزون ذكية', 'Smart Inventory')}</h4>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{t('تنبيهات تلقائية عند انخفاض الكمية', 'Instant low-stock alerts')}</p>
+              </div>
             </div>
-          ) : viewMode === 'table' ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-start border-collapse">
-                <thead>
-                  <tr className="border-b border-border bg-muted/20 text-muted-foreground text-xs font-bold">
-                    <th className="py-3 px-4 text-start font-bold">{t('المنتج', 'Product')}</th>
-                    <th className="py-3 px-4 text-start font-bold hidden md:table-cell">{t('الفئة', 'Category')}</th>
-                    <th className="py-3 px-4 text-start font-bold">{t('السعر', 'Price')}</th>
-                    <th className="py-3 px-4 text-start font-bold">{t('المخزون', 'Stock')}</th>
-                    <th className="py-3 px-4 text-start font-bold hidden sm:table-cell">{t('المبيعات', 'Sales')}</th>
-                    <th className="py-3 px-4 text-start font-bold hidden lg:table-cell">{t('الحالة', 'Status')}</th>
-                    <th className="py-3 px-4 text-end font-bold">{t('إجراءات', 'Actions')}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/60">
-                  {(data?.products ?? []).map((p) => {
+            <div className="flex items-start gap-3">
+              <div className="size-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+                <Layers className="size-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-foreground">{t('متغيرات غير محدودة', 'Unlimited Variants')}</h4>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{t('دعم الألوان، المقاسات، والخيارات', 'Colors, sizes, & custom attributes')}</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="size-8 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
+                <TrendingUp className="size-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-bold text-foreground">{t('تحليلات مبيعات دقيقة', 'Sales Analytics')}</h4>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{t('متابعة المنتجات الأكثر طلباً وربحاً', 'Track best-sellers and margins')}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="p-10 text-center bg-card rounded-2xl border border-border">
+          <Package className="size-12 mx-auto text-muted-foreground/30 mb-3" />
+          <h3 className="text-base font-semibold text-foreground mb-1">
+            {t('لا توجد منتجات تطابق معايير البحث', 'No products match your search')}
+          </h3>
+          <p className="text-xs text-muted-foreground mb-4">
+            {t('جرب تغيير الكلمات المفتاحية أو إزالة عوامل التصفية', 'Try changing your keywords or resetting filters')}
+          </p>
+          <Button variant="outline" size="sm" onClick={() => { setSearchTerm(''); setStatusFilter('all'); }}>
+            {t('إعادة ضبط التصفية', 'Reset Filters')}
+          </Button>
+        </div>
+      ) : (
+        <Card>
+          <CardContent className="pt-4 px-3 sm:px-6">
+            {viewMode === 'table' ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-start border-collapse">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/20 text-muted-foreground text-xs font-bold">
+                      <th className="py-3 px-4 text-start font-bold">{t('المنتج', 'Product')}</th>
+                      <th className="py-3 px-4 text-start font-bold hidden md:table-cell">{t('الفئة', 'Category')}</th>
+                      <th className="py-3 px-4 text-start font-bold">{t('السعر', 'Price')}</th>
+                      <th className="py-3 px-4 text-start font-bold">{t('المخزون', 'Stock')}</th>
+                      <th className="py-3 px-4 text-start font-bold hidden sm:table-cell">{t('المبيعات', 'Sales')}</th>
+                      <th className="py-3 px-4 text-start font-bold hidden lg:table-cell">{t('الحالة', 'Status')}</th>
+                      <th className="py-3 px-4 text-end font-bold">{t('إجراءات', 'Actions')}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {filteredProducts.map((p: any) => {
                     const productImg = parseImages(p.images)[0];
                     return (
                       <tr key={p.id} className="hover:bg-muted/10 transition-colors group">
@@ -993,7 +1190,7 @@ function SellerProductsTab({
           ) : (
             /* Grid View */
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-              {(data?.products ?? []).map((p) => {
+              {filteredProducts.map((p) => {
                 const productImg = parseImages(p.images)[0];
                 return (
                   <div key={p.id} className="group relative bg-card border border-border/80 hover:border-border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
@@ -1095,6 +1292,7 @@ function SellerProductsTab({
           )}
         </CardContent>
       </Card>
+    )}
 
       {/* Preview Modal */}
       {previewProductId && (

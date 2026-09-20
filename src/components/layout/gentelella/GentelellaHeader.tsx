@@ -43,6 +43,7 @@ export default function GentelellaHeader() {
   const { isDark, toggleDark: toggle } = useGentelellaTheme();
   const { setTheme } = useTheme();
   const router = useRouter();
+  const pathname = usePathname();
   const isRTL = localeDirections[locale] === 'rtl';
   const [merchantType, setMerchantType] = React.useState<string>('individual');
   const [userStores, setUserStores] = React.useState<any[]>([]);
@@ -171,6 +172,51 @@ export default function GentelellaHeader() {
     return page.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
   };
 
+  const getBreadcrumb = () => {
+    let rootLabel = t(locale, 'الرئيسية', 'Home', 'Accueil');
+    let rootHref = '/';
+
+    if (pathname?.startsWith('/seller')) {
+      rootLabel = t(locale, 'لوحة التاجر', 'Merchant Dashboard', 'Tableau Vendeur');
+      rootHref = '/seller/dashboard';
+    } else if (pathname?.startsWith('/admin')) {
+      rootLabel = t(locale, 'لوحة الإدارة', 'Admin Panel', 'Administration');
+      rootHref = '/admin-secure-internal';
+    } else if (pathname?.startsWith('/buyer')) {
+      rootLabel = t(locale, 'حسابي', 'My Account', 'Mon Compte');
+      rootHref = '/buyer';
+    }
+
+    const pathMap: Record<string, { ar: string; en: string; fr: string }> = {
+      '/seller/products': { ar: 'المنتجات والمخزون', en: 'Products & Inventory', fr: 'Produits & Stock' },
+      '/seller/orders': { ar: 'إدارة الطلبات', en: 'Orders Management', fr: 'Commandes' },
+      '/seller/analytics': { ar: 'التحليلات والمبيعات', en: 'Analytics & Insights', fr: 'Statistiques' },
+      '/seller/coupons': { ar: 'العروض والكوبونات', en: 'Coupons & Discounts', fr: 'Coupons' },
+      '/seller/branches': { ar: 'إدارة الفروع', en: 'Branches Management', fr: 'Succursales' },
+      '/seller/staff': { ar: 'فريق العمل والموظفون', en: 'Staff & Team', fr: 'Équipe' },
+      '/seller/taxes': { ar: 'التقارير الضريبية', en: 'Tax Reports (B2B)', fr: 'Rapports Fiscaux' },
+      '/seller/wallet': { ar: 'المحفظة الرقمية', en: 'Digital Wallet', fr: 'Portefeuille' },
+      '/seller/billing': { ar: 'الاشتراكات والفواتير', en: 'Billing & Plans', fr: 'Facturation & Plans' },
+      '/seller/debts': { ar: 'الديون والمستحقات', en: 'Debts & Receivables', fr: 'Dettes & Créances' },
+      '/seller/settings': { ar: 'إعدادات المتجر', en: 'Store Settings', fr: 'Paramètres' },
+      '/seller/dashboard': { ar: 'نظرة عامة', en: 'Overview', fr: 'Vue d\'ensemble' },
+      '/seller': { ar: 'نظرة عامة', en: 'Overview', fr: 'Vue d\'ensemble' },
+    };
+
+    let pageTitle = '';
+    if (pathname && pathMap[pathname]) {
+      const item = pathMap[pathname];
+      pageTitle = locale === 'ar' ? item.ar : (locale === 'fr' ? item.fr : item.en);
+    } else {
+      pageTitle = getPageTitle(currentPage);
+      if (pageTitle === rootLabel || (pageTitle === 'الرئيسية' && pathname?.startsWith('/seller'))) {
+        pageTitle = t(locale, 'نظرة عامة', 'Overview', 'Vue d\'ensemble');
+      }
+    }
+
+    return { rootLabel, rootHref, pageTitle };
+  };
+
   return (
     <header
       className={cn(
@@ -211,15 +257,23 @@ export default function GentelellaHeader() {
           </svg>
         </button>
         {/* Breadcrumb */}
-        <nav className="hidden sm:flex items-center gap-2 text-[13px]">
-          <span className={cn('opacity-70 cursor-pointer hover:underline', isDark ? 'text-[#c8d3e0]' : 'text-[#555]')} onClick={() => navigateToDashboard(rolePages[user.role] || 'home')}>
-            {t(locale, 'الرئيسية', 'Home')}
-          </span>
-          <span className="opacity-50 text-[10px]">/</span>
-          <span className={cn('font-medium', isDark ? 'text-white' : 'text-[var(--gentelella-heading)]')}>
-            {getPageTitle(currentPage)}
-          </span>
-        </nav>
+        {(() => {
+          const { rootLabel, rootHref, pageTitle } = getBreadcrumb();
+          return (
+            <nav className="hidden sm:flex items-center gap-2 text-[13px]">
+              <span
+                className={cn('opacity-70 cursor-pointer hover:underline hover:opacity-100 transition-opacity', isDark ? 'text-[#c8d3e0]' : 'text-[#555]')}
+                onClick={() => router.push(rootHref)}
+              >
+                {rootLabel}
+              </span>
+              <span className="opacity-40 text-[10px]">/</span>
+              <span className={cn('font-semibold', isDark ? 'text-emerald-400' : 'text-emerald-700')}>
+                {pageTitle}
+              </span>
+            </nav>
+          );
+        })()}
       </div>
 
       {/* CENTER: Search box */}

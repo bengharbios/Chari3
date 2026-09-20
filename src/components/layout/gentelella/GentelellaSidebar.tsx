@@ -69,8 +69,6 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
         labelKey: 'sidebar.products',
         icon: Boxes,
         directPageId: 'store-products',
-        badge: 5,
-        badgeColor: 'bg-blue-500',
         path: '/seller/products'
       },
       {
@@ -102,13 +100,18 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
     labelKey: 'sidebar.sectionBusinessManagement',
     trees: [
       {
-        id: 'business-tree',
-        labelKey: 'sidebar.sectionBusinessManagement',
-        icon: Layers,
-        children: [
-          { id: 'seller-branches', labelKey: 'sidebar.branches', path: '/seller/branches' },
-          { id: 'store-staff', labelKey: 'sidebar.team', path: '/seller/staff' },
-        ]
+        id: 'branches-tree',
+        labelKey: 'sidebar.branches',
+        icon: StoreIcon,
+        directPageId: 'seller-branches',
+        path: '/seller/branches'
+      },
+      {
+        id: 'staff-tree',
+        labelKey: 'sidebar.team',
+        icon: Users,
+        directPageId: 'store-staff',
+        path: '/seller/staff'
       }
     ]
   },
@@ -218,13 +221,18 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
     labelKey: 'sidebar.sectionBusinessManagement',
     trees: [
       {
-        id: 'business-tree',
-        labelKey: 'sidebar.sectionBusinessManagement',
-        icon: Layers,
-        children: [
-          { id: 'seller-branches', labelKey: 'sidebar.branches', path: '/seller/branches' },
-          { id: 'seller-staff', labelKey: 'sidebar.team', path: '/seller/staff' },
-        ]
+        id: 'branches-tree',
+        labelKey: 'sidebar.branches',
+        icon: StoreIcon,
+        directPageId: 'seller-branches',
+        path: '/seller/branches'
+      },
+      {
+        id: 'staff-tree',
+        labelKey: 'sidebar.team',
+        icon: Users,
+        directPageId: 'seller-staff',
+        path: '/seller/staff'
       }
     ]
   },

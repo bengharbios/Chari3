@@ -286,7 +286,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <StickyStatusBanner />
               {children}
             </div>
-            {theme.footer.enabled && <Footer theme={theme} />}
+            {!isSellerRoute && !isGentelella && theme.footer.enabled && <Footer theme={theme} />}
           </main>
         </div>
       </div>
