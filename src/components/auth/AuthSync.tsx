@@ -19,13 +19,24 @@ export default function AuthSync() {
   useEffect(() => {
     if (!mounted || isPending) return;
 
-    if (data?.user && !isAuthenticated) {
-      if (typeof window !== 'undefined' && sessionStorage.getItem('just_logged_out')) {
-        console.warn('[AuthSync] Ignoring stale cached session because user just logged out.');
-        return;
+    if (data?.user) {
+      if (!isAuthenticated) {
+        if (typeof window !== 'undefined' && sessionStorage.getItem('just_logged_out')) {
+          console.warn('[AuthSync] Ignoring stale cached session because user just logged out.');
+          return;
+        }
+        // User is authenticated on the server but not in Zustand
+        loginWithUser(data.user as any); // Cast to any to map BetterAuth User to Zustand User
+      } else {
+        const currentUser = useAuthStore.getState().user;
+        const serverRole = (data.user as any).role;
+        if (currentUser && serverRole && currentUser.role !== serverRole) {
+          useAuthStore.getState().updateProfile({ 
+            role: serverRole, 
+            accountStatus: (data.user as any).accountStatus 
+          });
+        }
       }
-      // User is authenticated on the server but not in Zustand
-      loginWithUser(data.user as any); // Cast to any to map BetterAuth User to Zustand User
     } else if (!data?.user && isAuthenticated) {
       // Background session polling (useSession) returned null.
       // We DO NOT force logout here because of Cloudflare Bot Fight Mode 
