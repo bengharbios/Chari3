@@ -96,6 +96,16 @@ export type PageType =
   | 'seller-taxes'
   | 'seller-wallet'
   | 'seller-debts'
+  | 'seller-inventory'
+  | 'seller-categories'
+  | 'seller-drafts'
+  | 'seller-returns'
+  | 'seller-carriers'
+  | 'seller-tracking'
+  | 'seller-customers'
+  | 'seller-roles'
+  | 'seller-help'
+  | 'seller-analytics'
   | 'security';
 
 export interface NavItem {

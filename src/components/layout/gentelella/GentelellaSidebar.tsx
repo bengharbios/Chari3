@@ -11,7 +11,8 @@ import {
   Store as StoreIcon, UserCircle, FileText, ShieldCheck, Truck, MapPin, Navigation,
   Wallet, Heart, Star, Bell, ChevronLeft, ChevronRight, LogOut,
   TrendingUp, CreditCard, Boxes, ChevronUp, ChevronDown, ArrowLeftRight, Layers,
-  Receipt, Sparkles, Monitor, KeyRound, MoreHorizontal, MessageSquare
+  Receipt, Sparkles, Monitor, KeyRound, MoreHorizontal, MessageSquare,
+  RotateCcw, HelpCircle
 } from 'lucide-react';
 
 import { usePathname, useRouter } from 'next/navigation';
@@ -31,6 +32,7 @@ type GentelellaNavTree = {
   labelKey: string;
   icon: any;
   badge?: number | string;
+  badgeKey?: string;
   badgeColor?: string;
   children?: GentelellaNavSubItem[];
   directPageId?: PageType; // If it has no children, it links directly
@@ -43,11 +45,12 @@ type GentelellaNavGroup = {
   trees: GentelellaNavTree[];
 };
 
-// Define structure for STORE MANAGER
+// 8 Core Modules Architecture - STORE MANAGER
 const STORE_GROUPS: GentelellaNavGroup[] = [
+  // 1. Overview & Analytics
   {
-    id: 'general',
-    labelKey: 'sidebar.general',
+    id: 'overview',
+    labelKey: 'sidebar.modOverview',
     trees: [
       {
         id: 'overview-tree',
@@ -65,9 +68,10 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
       }
     ]
   },
+  // 2. Catalog & Inventory
   {
-    id: 'ecommerce',
-    labelKey: 'sidebar.ecommerce',
+    id: 'catalog',
+    labelKey: 'sidebar.modCatalog',
     trees: [
       {
         id: 'products-tree',
@@ -77,31 +81,105 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
         path: '/seller/products'
       },
       {
+        id: 'stock-tree',
+        labelKey: 'sidebar.stock',
+        icon: Package,
+        badgeKey: 'sidebar.soon',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-inventory',
+        path: '/seller/products?tab=inventory'
+      },
+      {
+        id: 'categories-tree',
+        labelKey: 'sidebar.categories',
+        icon: Layers,
+        badgeKey: 'sidebar.soon',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-categories',
+        path: '/seller/products?tab=categories'
+      }
+    ]
+  },
+  // 3. Sales & Orders
+  {
+    id: 'sales',
+    labelKey: 'sidebar.modSales',
+    trees: [
+      {
         id: 'orders-tree',
         labelKey: 'sidebar.orders',
-        icon: Package,
+        icon: ShoppingCart,
         directPageId: 'store-orders',
         path: '/seller/orders'
       },
       {
+        id: 'returns-tree',
+        labelKey: 'sidebar.returns',
+        icon: RotateCcw,
+        badgeKey: 'sidebar.soon',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-returns',
+        path: '/seller/returns'
+      }
+    ]
+  },
+  // 4. Shipping & Logistics
+  {
+    id: 'shipping',
+    labelKey: 'sidebar.modShipping',
+    trees: [
+      {
         id: 'shipping-tree',
-        labelKey: 'sidebar.logistics',
+        labelKey: 'sidebar.shipments',
         icon: Truck,
         directPageId: 'store-shipping',
         path: '/seller/shipping'
       },
       {
-        id: 'marketing-tree',
-        labelKey: 'sidebar.marketing',
-        icon: CreditCard,
-        directPageId: 'store-coupons',
-        path: '/seller/coupons'
+        id: 'carriers-tree',
+        labelKey: 'sidebar.carriers',
+        icon: Navigation,
+        badgeKey: 'sidebar.soon',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-carriers',
+        path: '/seller/shipping'
       }
     ]
   },
+  // 5. Marketing & CRM
+  {
+    id: 'marketing',
+    labelKey: 'sidebar.modMarketing',
+    trees: [
+      {
+        id: 'messages-tree',
+        labelKey: 'sidebar.messages',
+        icon: MessageSquare,
+        directPageId: 'seller-messages',
+        path: '/seller/messages'
+      },
+      {
+        id: 'coupons-tree',
+        labelKey: 'sidebar.coupons',
+        icon: Sparkles,
+        directPageId: 'store-coupons',
+        path: '/seller/coupons'
+      },
+      {
+        id: 'customers-tree',
+        labelKey: 'sidebar.customers',
+        icon: UserCircle,
+        badgeKey: 'sidebar.soon',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-customers',
+        path: '/seller/customers'
+      }
+    ]
+  },
+  // 6. Branches & Staff
   {
     id: 'business',
-    labelKey: 'sidebar.sectionBusinessManagement',
+    labelKey: 'sidebar.modBusiness',
     trees: [
       {
         id: 'branches-tree',
@@ -119,9 +197,10 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
       }
     ]
   },
+  // 7. Finance & Subscriptions
   {
     id: 'finance',
-    labelKey: 'sidebar.finance',
+    labelKey: 'sidebar.modFinance',
     trees: [
       {
         id: 'wallet-tree',
@@ -139,47 +218,58 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
           { id: 'store-billing-plans', labelKey: 'sidebar.plans', path: '/seller/billing/plans' },
           { id: 'store-billing-addons', labelKey: 'sidebar.addons', path: '/seller/billing/addons' },
           { id: 'store-billing-pay', labelKey: 'sidebar.payment', path: '/seller/billing/pay' },
-          { id: 'store-billing-history', labelKey: 'sidebar.history', path: '/seller/billing/history' },
+          { id: 'store-billing-history', labelKey: 'sidebar.history', path: '/seller/billing/history' }
         ]
       },
       {
         id: 'taxes-tree',
         labelKey: 'sidebar.taxes',
         icon: FileText,
-        badge: 'قريباً',
+        badgeKey: 'sidebar.soon',
         badgeColor: 'bg-amber-500/80',
         directPageId: 'seller-taxes',
         path: '#'
       }
     ]
   },
+  // 8. Settings & Documentation
   {
-    id: 'admin',
-    labelKey: 'sidebar.admin',
+    id: 'settings',
+    labelKey: 'sidebar.modSettings',
     trees: [
       {
+        id: 'settings-tree',
+        labelKey: 'sidebar.settings',
+        icon: Settings,
+        directPageId: 'store-settings',
+        path: '/seller/settings'
+      },
+      {
         id: 'verification-tree',
-        labelKey: 'header.verificationStatus',
+        labelKey: 'sidebar.verification',
         icon: ShieldCheck,
         directPageId: 'verification',
         path: '/seller/verification'
       },
       {
-        id: 'settings-tree',
-        labelKey: 'common.settings',
-        icon: Settings,
-        directPageId: 'store-settings',
-        path: '/seller/settings'
+        id: 'help-tree',
+        labelKey: 'sidebar.help',
+        icon: HelpCircle,
+        badgeKey: 'sidebar.soon',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-help',
+        path: '/docs'
       }
     ]
   }
 ];
 
-// Define structure for SELLER
+// 8 Core Modules Architecture - SELLER
 const SELLER_GROUPS: GentelellaNavGroup[] = [
+  // 1. Overview & Analytics
   {
-    id: 'general',
-    labelKey: 'sidebar.general',
+    id: 'overview',
+    labelKey: 'sidebar.modOverview',
     trees: [
       {
         id: 'overview-tree',
@@ -197,9 +287,10 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
       }
     ]
   },
+  // 2. Catalog & Inventory
   {
-    id: 'ecommerce',
-    labelKey: 'sidebar.ecommerce',
+    id: 'catalog',
+    labelKey: 'sidebar.modCatalog',
     trees: [
       {
         id: 'products-tree',
@@ -209,18 +300,82 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         path: '/seller/products'
       },
       {
+        id: 'stock-tree',
+        labelKey: 'sidebar.stock',
+        icon: Package,
+        badgeKey: 'sidebar.soon',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-inventory',
+        path: '/seller/products?tab=inventory'
+      },
+      {
+        id: 'categories-tree',
+        labelKey: 'sidebar.categories',
+        icon: Layers,
+        badgeKey: 'sidebar.soon',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-categories',
+        path: '/seller/products?tab=categories'
+      }
+    ]
+  },
+  // 3. Sales & Orders
+  {
+    id: 'sales',
+    labelKey: 'sidebar.modSales',
+    trees: [
+      {
         id: 'orders-tree',
         labelKey: 'sidebar.orders',
-        icon: Package,
+        icon: ShoppingCart,
         directPageId: 'seller-orders',
         path: '/seller/orders'
       },
       {
+        id: 'returns-tree',
+        labelKey: 'sidebar.returns',
+        icon: RotateCcw,
+        badgeKey: 'sidebar.soon',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-returns',
+        path: '/seller/returns'
+      }
+    ]
+  },
+  // 4. Shipping & Logistics
+  {
+    id: 'shipping',
+    labelKey: 'sidebar.modShipping',
+    trees: [
+      {
         id: 'shipping-tree',
-        labelKey: 'sidebar.logistics',
+        labelKey: 'sidebar.shipments',
         icon: Truck,
         directPageId: 'seller-shipping',
         path: '/seller/shipping'
+      },
+      {
+        id: 'carriers-tree',
+        labelKey: 'sidebar.carriers',
+        icon: Navigation,
+        badgeKey: 'sidebar.soon',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-carriers',
+        path: '/seller/shipping'
+      }
+    ]
+  },
+  // 5. Marketing & CRM
+  {
+    id: 'marketing',
+    labelKey: 'sidebar.modMarketing',
+    trees: [
+      {
+        id: 'messages-tree',
+        labelKey: 'sidebar.messages',
+        icon: MessageSquare,
+        directPageId: 'seller-messages',
+        path: '/seller/messages'
       },
       {
         id: 'coupons-tree',
@@ -228,12 +383,22 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         icon: Sparkles,
         directPageId: 'seller-coupons',
         path: '/seller/coupons'
+      },
+      {
+        id: 'customers-tree',
+        labelKey: 'sidebar.customers',
+        icon: UserCircle,
+        badgeKey: 'sidebar.soon',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-customers',
+        path: '/seller/customers'
       }
     ]
   },
+  // 6. Branches & Staff
   {
     id: 'business',
-    labelKey: 'sidebar.sectionBusinessManagement',
+    labelKey: 'sidebar.modBusiness',
     trees: [
       {
         id: 'branches-tree',
@@ -251,9 +416,10 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
       }
     ]
   },
+  // 7. Finance & Subscriptions
   {
     id: 'finance',
-    labelKey: 'sidebar.finance',
+    labelKey: 'sidebar.modFinance',
     trees: [
       {
         id: 'wallet-tree',
@@ -271,53 +437,47 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
           { id: 'seller-billing-plans', labelKey: 'sidebar.plans', path: '/seller/billing/plans' },
           { id: 'seller-billing-addons', labelKey: 'sidebar.addons', path: '/seller/billing/addons' },
           { id: 'seller-billing-pay', labelKey: 'sidebar.payment', path: '/seller/billing/pay' },
-          { id: 'seller-billing-history', labelKey: 'sidebar.history', path: '/seller/billing/history' },
+          { id: 'seller-billing-history', labelKey: 'sidebar.history', path: '/seller/billing/history' }
         ]
       },
       {
         id: 'taxes-tree',
         labelKey: 'sidebar.taxes',
         icon: FileText,
-        badge: 'قريباً',
+        badgeKey: 'sidebar.soon',
         badgeColor: 'bg-amber-500/80',
         directPageId: 'seller-taxes',
         path: '#'
       }
     ]
   },
+  // 8. Settings & Documentation
   {
-    id: 'admin',
-    labelKey: 'sidebar.admin',
+    id: 'settings',
+    labelKey: 'sidebar.modSettings',
     trees: [
       {
-        id: 'messages-tree',
-        labelKey: 'sidebar.messages',
-        icon: MessageSquare,
-        directPageId: 'seller-messages',
-        path: '/seller/messages'
-      },
-      {
-        id: 'verification-tree',
-        labelKey: 'header.verificationStatus',
-        icon: ShieldCheck,
-        directPageId: 'verification',
-        path: '/seller/verification'
-      },
-      {
         id: 'settings-tree',
-        labelKey: 'common.settings',
+        labelKey: 'sidebar.settings',
         icon: Settings,
         directPageId: 'seller-settings',
         path: '/seller/settings'
       },
       {
-        id: 'upgrade-tree',
-        labelKey: 'sidebar.upgrade',
-        icon: TrendingUp,
-        directPageId: 'seller-upgrade',
-        badge: 'New',
-        badgeColor: 'bg-teal-500',
-        path: '/seller/upgrade'
+        id: 'verification-tree',
+        labelKey: 'sidebar.verification',
+        icon: ShieldCheck,
+        directPageId: 'verification',
+        path: '/seller/verification'
+      },
+      {
+        id: 'help-tree',
+        labelKey: 'sidebar.help',
+        icon: HelpCircle,
+        badgeKey: 'sidebar.soon',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-help',
+        path: '/docs'
       }
     ]
   }
@@ -490,20 +650,12 @@ export default function GentelellaSidebar({ className }: { className?: string })
 
   if (user.role === 'seller' || user.role === 'store' || user.role === 'freelancer' || user.role === 'store_manager') {
     activeGroups = activeGroups.map(group => {
-      if (group.id === 'business' && !isBusiness) return null;
-
-      if (group.id === 'admin' && isBusiness) {
-        return {
-          ...group,
-          trees: group.trees.filter(tree => tree.id !== 'upgrade-tree')
-        };
-      }
-
       if (group.id !== 'finance') return group;
       return {
         ...group,
         trees: group.trees.map(tree => {
           if (tree.id !== 'wallet-tree') return tree;
+          if (!tree.children) return tree;
           return {
             ...tree,
             children: tree.children?.filter(child => {
@@ -513,7 +665,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
               return true;
             })
           };
-        }).filter(tree => tree.children && tree.children.length > 0)
+        }).filter(tree => !tree.children || tree.children.length > 0)
       };
     }).filter(Boolean) as GentelellaNavGroup[];
   }
@@ -601,14 +753,14 @@ export default function GentelellaSidebar({ className }: { className?: string })
           <div className="flex-1 py-2">
             <nav className="flex flex-col w-full">
               {activeGroups.map((group, gIdx) => (
-                <div key={group.id} className={cn("mb-3", gIdx > 0 && "pt-3.5 border-t border-white/5")}>
-                  <div className={cn("px-6 mb-2 transition-opacity", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                    <span className="text-[11.5px] font-bold text-[#94a3b8] tracking-wider">
+                <div key={group.id} className={cn("mb-2", gIdx > 0 && "pt-2 mt-1 border-t border-white/10")}>
+                  <div className={cn("px-4 mb-1 transition-opacity", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+                    <span className="text-[11px] font-bold text-[#94a3b8]/75 tracking-wider">
                       {t(group.labelKey)}
                     </span>
                   </div>
                   
-                  <ul className="flex flex-col px-3 gap-0.5">
+                  <ul className="flex flex-col px-2.5 gap-0.5">
                     {group.trees.map(tree => {
                       const hasChildren = tree.children && tree.children.length > 0;
                       const isOpen = openTrees[tree.id] || false;
@@ -635,9 +787,9 @@ export default function GentelellaSidebar({ className }: { className?: string })
                               }
                             }}
                             className={cn(
-                              'w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[14px] font-medium transition-all duration-200 outline-none',
+                              'w-full flex items-center justify-between px-3 py-2 rounded-lg text-[13.5px] font-medium transition-all duration-200 outline-none',
                               isTreeActive && !hasChildren
-                                ? 'bg-white/10 text-white' 
+                                ? 'bg-white/10 text-white font-semibold' 
                                 : isOpen 
                                   ? 'text-white font-semibold'
                                   : 'text-[#e2e8f0] hover:bg-white/10 hover:text-white',
@@ -645,26 +797,26 @@ export default function GentelellaSidebar({ className }: { className?: string })
                             )}
                             title={isDesktopSidebarCollapsed ? t(tree.labelKey) : undefined}
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2.5 min-w-0">
                               <Icon className={cn(
-                                "h-[20px] w-[20px] shrink-0 transition-colors", 
+                                "h-[18px] w-[18px] shrink-0 transition-colors", 
                                 isTreeActive ? "text-[#1ABB9C]" : "group-hover:text-[#1ABB9C]"
                               )} strokeWidth={isTreeActive ? 2.5 : 2} />
-                              <span className={cn("text-start transition-opacity", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
+                              <span className={cn("text-start truncate transition-opacity", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
                                 {t(tree.labelKey)}
                               </span>
                             </div>
                             
                             {!isDesktopSidebarCollapsed && (
-                              <div className="flex items-center gap-2">
-                                {tree.badge && (
-                                  <Badge className={cn("h-[20px] px-2 text-[10px] font-bold text-white border-0 shrink-0", tree.badgeColor || 'bg-blue-500')}>
-                                    {tree.badge}
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {(tree.badge || tree.badgeKey) && (
+                                  <Badge className={cn("h-[18px] px-1.5 text-[10px] font-semibold text-white border-0 shrink-0", tree.badgeColor || 'bg-blue-500')}>
+                                    {tree.badgeKey ? t(tree.badgeKey) : tree.badge}
                                   </Badge>
                                 )}
                                 {hasChildren && (
                                   <ChevronDown className={cn(
-                                    "h-4 w-4 transition-transform duration-200 opacity-50",
+                                    "h-3.5 w-3.5 transition-transform duration-200 opacity-60",
                                     isOpen && (isRTL ? "rotate-90" : "-rotate-90") // Depending on RTL, point up/down
                                   )} />
                                 )}
@@ -702,7 +854,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
                                           if (window.innerWidth < 1024) setSidebarOpen(false);
                                         }}
                                         className={cn(
-                                          "w-full flex items-center justify-between py-2 px-3 rounded-lg text-[13px] transition-colors relative",
+                                          "w-full flex items-center justify-between py-1.5 px-2.5 rounded-lg text-[12.5px] transition-colors relative",
                                           isChildActive ? "text-[#1ABB9C] bg-white/10 font-semibold" : "text-[#cbd5e1] hover:text-white hover:bg-white/5"
                                         )}
                                       >
