@@ -1262,5 +1262,41 @@
         "lastSync": "Last updated"
       }
     }
+  },
+  "adminStores": {
+    "title": "Centro de Tiendas y Comercios",
+    "subtitle": "Centro de control para supervisar y configurar las tiendas de la plataforma",
+    "totalStores": "Total de Tiendas",
+    "activeStores": "Tiendas Activas",
+    "suspendedStores": "Tiendas Suspendidas",
+    "totalSalesVolume": "Volumen Total de Ventas",
+    "searchPlaceholder": "Buscar por nombre, gerente, correo o slug...",
+    "statusAll": "Todos los estados",
+    "statusActive": "Activa",
+    "statusSuspended": "Suspendida",
+    "packagesAll": "Todos los planes",
+    "rowsPerPage": "Filas por página:",
+    "impersonate": "Iniciar sesión como comerciante",
+    "manageStore": "Gestionar tienda",
+    "drawerTitle": "Centro de Control de Tienda",
+    "tabOverview": "Resumen",
+    "tabConfig": "Configuración y Comisión",
+    "tabFeatures": "Módulos y Funciones",
+    "tabPlan": "Plan y Suscripción",
+    "tabStaff": "Equipo de la tienda",
+    "tabAudit": "Historial de auditoría",
+    "commission": "Tasa de comisión (%)",
+    "storeStatus": "Estado de la tienda",
+    "storeSlug": "Enlace de tienda (Slug)",
+    "paymentModel": "Modelo de procesamiento de pago",
+    "saveChanges": "Guardar cambios",
+    "saving": "Guardando...",
+    "bulkSelected": "{count} tiendas seleccionadas",
+    "bulkActivate": "Activar seleccionadas",
+    "bulkSuspend": "Suspender seleccionadas",
+    "bulkCommission": "Fijar comisión",
+    "cancel": "Cancelar",
+    "apply": "Aplicar",
+    "noStoresFound": "No se encontraron tiendas coincidentes."
   }
 }

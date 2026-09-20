@@ -83,7 +83,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
       icon: Users,
       items: [
         { label: locale === 'ar' ? 'إدارة المستخدمين' : 'User Management', path: 'users' },
-        { label: t('admin.storesSellers'), path: '?tab=stores-sellers' },
+        { label: t('admin.storesSellers'), path: 'stores' },
         { label: locale === 'ar' ? 'توثيق المتاجر (KYC/KYB)' : 'KYC/KYB Verification', path: 'verifications' },
         { label: locale === 'ar' ? 'سجل التدقيق' : 'Audit Trail', path: 'verifications/audit' },
         { label: locale === 'ar' ? 'طلبات ترقية الأعمال' : 'Business Upgrades', path: 'upgrade-requests' },

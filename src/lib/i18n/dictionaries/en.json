@@ -1251,5 +1251,41 @@
         "lastSync": "Last updated"
       }
     }
+  },
+  "adminStores": {
+    "title": "Merchants & Stores Hub",
+    "subtitle": "Supervisory command center to monitor and configure platform stores",
+    "totalStores": "Total Stores",
+    "activeStores": "Active Stores",
+    "suspendedStores": "Suspended Stores",
+    "totalSalesVolume": "Total Sales Volume",
+    "searchPlaceholder": "Search by store, manager, email, or slug...",
+    "statusAll": "All Statuses",
+    "statusActive": "Active",
+    "statusSuspended": "Suspended",
+    "packagesAll": "All Packages",
+    "rowsPerPage": "Rows per page:",
+    "impersonate": "Login As Merchant",
+    "manageStore": "Manage Store",
+    "drawerTitle": "Store Control Center",
+    "tabOverview": "Overview",
+    "tabConfig": "Config & Commission",
+    "tabFeatures": "Feature Toggles",
+    "tabPlan": "Plan & Subscription",
+    "tabStaff": "Store Staff",
+    "tabAudit": "Audit History",
+    "commission": "Commission Rate (%)",
+    "storeStatus": "Store Status",
+    "storeSlug": "Store Slug URL",
+    "paymentModel": "Payment Processing Model",
+    "saveChanges": "Save Changes",
+    "saving": "Saving...",
+    "bulkSelected": "{count} stores selected",
+    "bulkActivate": "Activate Selected",
+    "bulkSuspend": "Suspend Selected",
+    "bulkCommission": "Set Commission",
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "noStoresFound": "No stores match your search criteria."
   }
 }

@@ -1197,5 +1197,41 @@
         "lastSync": "Dernière mise à jour"
       }
     }
+  },
+  "adminStores": {
+    "title": "Gestion des Boutiques et Partenaires",
+    "subtitle": "Centre de commandement pour superviser et configurer les boutiques",
+    "totalStores": "Total Boutiques",
+    "activeStores": "Boutiques Actives",
+    "suspendedStores": "Boutiques Suspendues",
+    "totalSalesVolume": "Volume Total Ventes",
+    "searchPlaceholder": "Rechercher par nom, gérant, email ou slug...",
+    "statusAll": "Tous les statuts",
+    "statusActive": "Actif",
+    "statusSuspended": "Suspendu",
+    "packagesAll": "Tous les forfaits",
+    "rowsPerPage": "Lignes par page:",
+    "impersonate": "Se connecter en tant que marchand",
+    "manageStore": "Gérer la boutique",
+    "drawerTitle": "Centre de Contrôle de la Boutique",
+    "tabOverview": "Aperçu",
+    "tabConfig": "Configuration & Commission",
+    "tabFeatures": "Fonctionnalités",
+    "tabPlan": "Forfait & Abonnement",
+    "tabStaff": "Équipe du magasin",
+    "tabAudit": "Journal d audit",
+    "commission": "Taux de commission (%)",
+    "storeStatus": "Statut de la boutique",
+    "storeSlug": "Identifiant URL (Slug)",
+    "paymentModel": "Modèle de paiement",
+    "saveChanges": "Enregistrer les modifications",
+    "saving": "Enregistrement...",
+    "bulkSelected": "{count} boutiques sélectionnées",
+    "bulkActivate": "Activer la sélection",
+    "bulkSuspend": "Suspendre la sélection",
+    "bulkCommission": "Définir la commission",
+    "cancel": "Annuler",
+    "apply": "Appliquer",
+    "noStoresFound": "Aucune boutique ne correspond aux critères."
   }
 }

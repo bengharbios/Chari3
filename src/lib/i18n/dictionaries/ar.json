@@ -1252,5 +1252,41 @@
         "lastSync": "آخر تحديث"
       }
     }
+  },
+  "adminStores": {
+    "title": "إدارة المتاجر والشركاء",
+    "subtitle": "لوحة القيادة الإشرافية لمتابعة وتخصيص المتاجر والتجار على المنصة",
+    "totalStores": "إجمالي المتاجر",
+    "activeStores": "المتاجر النشطة",
+    "suspendedStores": "المتاجر المعلقة",
+    "totalSalesVolume": "إجمالي المبيعات",
+    "searchPlaceholder": "ابحث بالاسم، المدير، البريد، أو الـ Slug...",
+    "statusAll": "جميع الحالات",
+    "statusActive": "نشط",
+    "statusSuspended": "معلق",
+    "packagesAll": "جميع الباقات",
+    "rowsPerPage": "عدد السجلات:",
+    "impersonate": "الدخول كتاجر (Login As)",
+    "manageStore": "إدارة المتجر",
+    "drawerTitle": "مركز التحكم في المتجر",
+    "tabOverview": "نظرة عامة",
+    "tabConfig": "التهيئة والعمولة",
+    "tabFeatures": "الميزات الإضافية",
+    "tabPlan": "الباقة والاشتراك",
+    "tabStaff": "فريق العمل",
+    "tabAudit": "سجل التعديلات",
+    "commission": "نسبة العمولة (%)",
+    "storeStatus": "حالة المتجر",
+    "storeSlug": "الرابط التجاري (Slug)",
+    "paymentModel": "نموذج معالجة الدفع",
+    "saveChanges": "حفظ التعديلات",
+    "saving": "جاري الحفظ...",
+    "bulkSelected": "تم تحديد {count} متجر",
+    "bulkActivate": "تفعيل المحددين",
+    "bulkSuspend": "تعليق المحددين",
+    "bulkCommission": "تعديل العمولة",
+    "cancel": "إلغاء",
+    "apply": "تطبيق",
+    "noStoresFound": "لم يتم العثور على متاجر مطابقة لمعايير البحث."
   }
 }
