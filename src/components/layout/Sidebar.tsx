@@ -128,7 +128,6 @@ const SELLER_NAV_GROUPS: NavGroup[] = [
     items: [
       { id: 'seller-branches', labelAr: 'إدارة الفروع', labelEn: 'Branches', icon: 'Store', path: '/seller/branches' },
       { id: 'seller-staff', labelAr: 'طاقم العمل والشركاء', labelEn: 'Team & Staff', icon: 'Users', path: '/seller/staff' },
-      { id: 'seller-taxes', labelAr: 'التقارير الضريبية (B2B)', labelEn: 'Taxes (B2B)', icon: 'Receipt' },
     ]
   },
   {
@@ -144,6 +143,7 @@ const SELLER_NAV_GROUPS: NavGroup[] = [
       { id: 'seller-billing-addons', labelAr: 'الميزات الإضافية', labelEn: 'Add-ons', icon: 'Sparkles', path: '/seller/billing/addons' },
       { id: 'seller-billing-pay', labelAr: 'الدفع والتسديد', labelEn: 'Payment', icon: 'CreditCard', path: '/seller/billing/pay' },
       { id: 'seller-billing-history', labelAr: 'سجل الفواتير', labelEn: 'Invoice History', icon: 'FileText', path: '/seller/billing/history' },
+      { id: 'seller-taxes', labelAr: 'التقارير الضريبية (B2B)', labelEn: 'Taxes (B2B)', icon: 'Receipt', path: '#' },
     ]
   },
   {

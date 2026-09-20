@@ -57,13 +57,6 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
           { id: 'store', labelKey: 'sidebar.operations', path: '/seller/dashboard' },
           { id: 'store-analytics', labelKey: 'sidebar.analytics', path: '/seller/analytics' },
         ]
-      },
-      {
-        id: 'team',
-        labelKey: 'sidebar.team',
-        icon: Users,
-        directPageId: 'store-staff',
-        path: '/seller/staff'
       }
     ]
   },
@@ -114,7 +107,7 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
         icon: Layers,
         children: [
           { id: 'seller-branches', labelKey: 'sidebar.branches', path: '/seller/branches' },
-          { id: 'seller-taxes', labelKey: 'sidebar.taxes', path: '#' }
+          { id: 'store-staff', labelKey: 'sidebar.team', path: '/seller/staff' },
         ]
       }
     ]
@@ -134,6 +127,15 @@ const STORE_GROUPS: GentelellaNavGroup[] = [
           { id: 'store-billing-pay', labelKey: 'sidebar.payment', path: '/seller/billing/pay' },
           { id: 'store-billing-history', labelKey: 'sidebar.history', path: '/seller/billing/history' },
         ]
+      },
+      {
+        id: 'taxes-tree',
+        labelKey: 'sidebar.taxes',
+        icon: FileText,
+        badge: 'قريباً',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-taxes',
+        path: '#'
       }
     ]
   },
@@ -222,7 +224,6 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
         children: [
           { id: 'seller-branches', labelKey: 'sidebar.branches', path: '/seller/branches' },
           { id: 'seller-staff', labelKey: 'sidebar.team', path: '/seller/staff' },
-          { id: 'seller-taxes', labelKey: 'sidebar.taxes', path: '#' }
         ]
       }
     ]
@@ -251,6 +252,15 @@ const SELLER_GROUPS: GentelellaNavGroup[] = [
           { id: 'seller-billing-pay', labelKey: 'sidebar.payment', path: '/seller/billing/pay' },
           { id: 'seller-billing-history', labelKey: 'sidebar.history', path: '/seller/billing/history' },
         ]
+      },
+      {
+        id: 'taxes-tree',
+        labelKey: 'sidebar.taxes',
+        icon: FileText,
+        badge: 'قريباً',
+        badgeColor: 'bg-amber-500/80',
+        directPageId: 'seller-taxes',
+        path: '#'
       }
     ]
   },
@@ -572,7 +582,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
               {activeGroups.map((group, gIdx) => (
                 <div key={group.id} className="mb-4">
                   <div className={cn("px-6 mb-2 transition-opacity", isDesktopSidebarCollapsed ? "opacity-0 hidden" : "opacity-100")}>
-                    <span className="text-[11px] font-bold text-[#64748b] uppercase tracking-widest">
+                    <span className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-widest">
                       {t(group.labelKey)}
                     </span>
                   </div>
@@ -608,8 +618,8 @@ export default function GentelellaSidebar({ className }: { className?: string })
                               isTreeActive && !hasChildren
                                 ? 'bg-white/10 text-white' 
                                 : isOpen 
-                                  ? 'text-white'
-                                  : 'text-[#94a3b8] hover:bg-white/5 hover:text-white',
+                                  ? 'text-white font-semibold'
+                                  : 'text-[#e2e8f0] hover:bg-white/10 hover:text-white',
                               isDesktopSidebarCollapsed && 'justify-center px-0'
                             )}
                             title={isDesktopSidebarCollapsed ? t(tree.labelKey) : undefined}
@@ -672,7 +682,7 @@ export default function GentelellaSidebar({ className }: { className?: string })
                                         }}
                                         className={cn(
                                           "w-full flex items-center justify-between py-2 px-3 rounded-lg text-[13px] transition-colors relative",
-                                          isChildActive ? "text-white font-semibold" : "text-[#64748b] hover:text-white hover:bg-white/5"
+                                          isChildActive ? "text-[#1ABB9C] bg-white/10 font-semibold" : "text-[#cbd5e1] hover:text-white hover:bg-white/5"
                                         )}
                                       >
                                         {/* Horizontal line connector for active item */}
