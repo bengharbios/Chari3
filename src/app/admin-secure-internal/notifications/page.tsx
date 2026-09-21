@@ -47,6 +47,9 @@ interface BroadcastHistoryItem {
   type: string;
   createdAt: string;
   recipientCount: number;
+  readCount: number;
+  unreadCount: number;
+  readRate: number;
   senderAdminName: string;
   targetCriteria: {
     target?: string;
@@ -415,6 +418,22 @@ export default function AdminNotificationsPage() {
   // ============================================
   const [historyItems, setHistoryItems] = useState<BroadcastHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [historyStats, setHistoryStats] = useState<{
+    totalBroadcasts: number;
+    totalDelivered: number;
+    totalRead: number;
+    overallReadRate: number;
+  } | null>(null);
+
+  // Search & Filters for History
+  const [searchHistoryQuery, setSearchHistoryQuery] = useState('');
+  const [filterHistoryRole, setFilterHistoryRole] = useState('all');
+  const [filterHistoryType, setFilterHistoryType] = useState('all');
+  const [filterHistoryEngagement, setFilterHistoryEngagement] = useState('all');
+
+  // Full Details Dialog
+  const [selectedDetailsItem, setSelectedDetailsItem] = useState<BroadcastHistoryItem | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const fetchHistory = async () => {
     setIsLoadingHistory(true);
@@ -423,6 +442,9 @@ export default function AdminNotificationsPage() {
       const data = await res.json();
       if (data.success) {
         setHistoryItems(data.history || []);
+        if (data.stats) {
+          setHistoryStats(data.stats);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -430,6 +452,42 @@ export default function AdminNotificationsPage() {
       setIsLoadingHistory(false);
     }
   };
+
+  const filteredHistory = useMemo(() => {
+    return historyItems.filter((item) => {
+      // 1. Search Query in title or body
+      if (searchHistoryQuery.trim()) {
+        const q = searchHistoryQuery.toLowerCase();
+        const matchTitle = (item.title || '').toLowerCase().includes(q) || (item.titleEn || '').toLowerCase().includes(q);
+        const matchBody = (item.body || '').toLowerCase().includes(q) || (item.bodyEn || '').toLowerCase().includes(q);
+        if (!matchTitle && !matchBody) return false;
+      }
+
+      // 2. Filter Role
+      if (filterHistoryRole !== 'all') {
+        const target = item.targetCriteria?.target || 'all';
+        if (target !== filterHistoryRole) return false;
+      }
+
+      // 3. Filter Type
+      if (filterHistoryType !== 'all') {
+        if (item.type !== filterHistoryType) return false;
+      }
+
+      // 4. Filter Engagement / Read Status
+      if (filterHistoryEngagement === 'high') {
+        if (item.readRate < 50) return false;
+      } else if (filterHistoryEngagement === 'low') {
+        if (item.readRate >= 50 || item.readRate === 0) return false;
+      } else if (filterHistoryEngagement === 'unread') {
+        if (item.readCount > 0) return false;
+      } else if (filterHistoryEngagement === 'read') {
+        if (item.readCount === 0) return false;
+      }
+
+      return true;
+    });
+  }, [historyItems, searchHistoryQuery, filterHistoryRole, filterHistoryType, filterHistoryEngagement]);
 
   useEffect(() => {
     fetchAnnouncements();
@@ -1160,105 +1218,437 @@ export default function AdminNotificationsPage() {
       )}
 
       {/* ==================================================== */}
-      {/* TAB 3: BROADCAST HISTORY & AUDIT */}
+      {/* TAB 3: BROADCAST HISTORY & AUDIT WITH READ STATS */}
       {/* ==================================================== */}
       {activeTab === 'history' && (
-        <Card className="border shadow-sm">
-          <CardHeader className="border-b bg-muted/20 pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base font-bold flex items-center gap-2 text-foreground">
-                  <History className="size-4 text-primary" />
-                  {t('سجل الإشعارات المرسلة من الإدارة (Broadcast History)', 'Admin Broadcast History & Audit', 'Historique des diffusions')}
-                </CardTitle>
-                <CardDescription className="text-xs mt-0.5">
-                  {t(
-                    'أرشيف كامل للإشعارات الجماعية المرسلة للمستخدمين مع أعداد المستلمين وخيار استخدام الإشعار كقالب جديد.',
-                    'Full archive of broadcast notifications with recipient counts and template cloning.',
-                    'Archive complète des notifications diffusées avec clonage de modèles.'
-                  )}
-                </CardDescription>
+        <div className="space-y-6">
+          {/* Summary KPIs Row */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <Card className="border shadow-sm p-4 bg-card">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground font-bold">{t('إجمالي الحملات', 'Campaigns', 'Campagnes')}</span>
+                <span className="p-2 rounded-xl bg-primary/10 text-primary"><Megaphone className="size-4" /></span>
               </div>
+              <div className="text-2xl font-black mt-2 text-foreground">{historyStats?.totalBroadcasts || historyItems.length}</div>
+              <div className="text-[10px] text-muted-foreground mt-1">{t('حملات إشعار مرسلة', 'Broadcast campaigns', 'Diffusions envoyées')}</div>
+            </Card>
 
-              <Button variant="outline" size="sm" onClick={fetchHistory} className="h-8 text-xs gap-1.5 font-bold">
-                <RefreshCw className={cn('size-3.5', isLoadingHistory && 'animate-spin')} />
-                {t('تحديث السجل', 'Refresh History', 'Actualiser')}
-              </Button>
-            </div>
-          </CardHeader>
-
-          <CardContent className="p-0">
-            {isLoadingHistory ? (
-              <div className="py-20 flex justify-center">
-                <Loader2 className="size-8 animate-spin text-primary" />
+            <Card className="border shadow-sm p-4 bg-card">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground font-bold">{t('إجمالي المسلّم', 'Delivered', 'Distribuées')}</span>
+                <span className="p-2 rounded-xl bg-blue-500/10 text-blue-600"><Users className="size-4" /></span>
               </div>
-            ) : historyItems.length === 0 ? (
-              <div className="py-20 text-center text-muted-foreground space-y-2">
-                <div className="p-3 bg-muted rounded-full inline-block">
-                  <History className="size-6 text-muted-foreground" />
+              <div className="text-2xl font-black mt-2 text-foreground">{historyStats?.totalDelivered || 0}</div>
+              <div className="text-[10px] text-muted-foreground mt-1">{t('إشعار وصل للمستخدمين', 'Notifications delivered', 'Reçues')}</div>
+            </Card>
+
+            <Card className="border shadow-sm p-4 bg-card">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground font-bold">{t('تمت قراءتها 👁️', 'Read Count', 'Lues')}</span>
+                <span className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600"><CheckCircle2 className="size-4" /></span>
+              </div>
+              <div className="text-2xl font-black mt-2 text-emerald-600 dark:text-emerald-400">{historyStats?.totalRead || 0}</div>
+              <div className="text-[10px] text-muted-foreground mt-1">{t('إشعار تم فتحه وقراءته', 'Opened and read', 'Ouvertes et lues')}</div>
+            </Card>
+
+            <Card className="border shadow-sm p-4 bg-card">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground font-bold">{t('معدل القراءة العام', 'Avg Read Rate', 'Taux de lecture')}</span>
+                <span className="p-2 rounded-xl bg-violet-500/10 text-violet-600"><Eye className="size-4" /></span>
+              </div>
+              <div className="text-2xl font-black mt-2 text-violet-600 dark:text-violet-400">{historyStats?.overallReadRate || 0}%</div>
+              <div className="w-full bg-muted rounded-full h-1.5 mt-2 overflow-hidden">
+                <div className="bg-violet-600 h-1.5 rounded-full" style={{ width: `${historyStats?.overallReadRate || 0}%` }} />
+              </div>
+            </Card>
+          </div>
+
+          {/* Main History Card */}
+          <Card className="border shadow-sm">
+            <CardHeader className="border-b bg-muted/20 pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <CardTitle className="text-base font-bold flex items-center gap-2 text-foreground">
+                    <History className="size-4 text-primary" />
+                    {t('سجل الإشعارات المرسلة من الإدارة والتحليلات', 'Admin Broadcast History & Analytics', 'Historique et analyses')}
+                  </CardTitle>
+                  <CardDescription className="text-xs mt-0.5">
+                    {t(
+                      'تتبع دقيق لنسبة قراءة كل إشعار، تفاصيل اللغات، والفلترة المتقدمة، وخاصية الاستخدام كقالب.',
+                      'Track read rates per notification, multilingual payloads, advanced filtering, and clone as template.',
+                      'Suivez le taux de lecture de chaque envoi et clonez des modèles.'
+                    )}
+                  </CardDescription>
                 </div>
-                <p className="text-sm font-semibold">{t('لا يوجد سجل إشعارات مرسلة حالياً', 'No broadcast history found', 'Aucun historique')}</p>
-                <p className="text-xs">{t('الإشعارات التي ترسلها مستقبلاً ستظهر هنا مع إحصائيات المستلمين.', 'Broadcasts sent will be audited here.', 'Les notifications apparaîtront ici.')}</p>
+
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs font-bold">
+                    {t('المطابق:', 'Matching:', 'Correspondants :')} {filteredHistory.length}
+                  </Badge>
+                  <Button variant="outline" size="sm" onClick={fetchHistory} className="h-8 text-xs gap-1.5 font-bold">
+                    <RefreshCw className={cn('size-3.5', isLoadingHistory && 'animate-spin')} />
+                    {t('تحديث السجل', 'Refresh History', 'Actualiser')}
+                  </Button>
+                </div>
               </div>
-            ) : (
-              <div className="divide-y">
-                {historyItems.map((item) => (
-                  <div key={item.batchId} className="p-5 hover:bg-muted/5 transition-colors flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="space-y-1.5 max-w-2xl">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="secondary" className="text-[10px] font-bold">
-                          {item.type.toUpperCase()}
-                        </Badge>
-                        <Badge variant="outline" className="text-[10px]">
-                          {t('المستهدف:', 'Target:', 'Cible :')} {item.targetCriteria?.target || 'ALL'}
-                        </Badge>
-                        {item.targetCriteria?.targetStatus && item.targetCriteria.targetStatus !== 'all' && (
-                          <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-300">
-                            {item.targetCriteria.targetStatus}
-                          </Badge>
-                        )}
-                        <span className="text-[11px] text-muted-foreground">
-                          {new Date(item.createdAt).toLocaleString(isAr ? 'ar-DZ' : 'en-GB')}
-                        </span>
-                      </div>
 
-                      <h4 className="text-sm font-bold text-foreground">
-                        {isAr ? item.title : (item.titleEn || item.title)}
-                      </h4>
-                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                        {isAr ? item.body : (item.bodyEn || item.body)}
-                      </p>
+              {/* Filters Toolbar */}
+              <div className="pt-4 mt-2 border-t grid grid-cols-1 sm:grid-cols-4 gap-2.5">
+                <div className="relative">
+                  <Input
+                    placeholder={t('بحث بالعنوان أو المحتوى...', 'Search title or content...', 'Rechercher...')}
+                    value={searchHistoryQuery}
+                    onChange={(e) => setSearchHistoryQuery(e.target.value)}
+                    className="text-xs h-8"
+                  />
+                </div>
+
+                <div>
+                  <select
+                    value={filterHistoryRole}
+                    onChange={(e) => setFilterHistoryRole(e.target.value)}
+                    className="w-full bg-background border border-input rounded-md px-2.5 h-8 text-xs font-bold outline-none cursor-pointer"
+                  >
+                    <option value="all">{t('كافة الفئات المستهدفة', 'All Target Roles', 'Tous les rôles')}</option>
+                    <option value="seller">🏪 {t('التجار (Sellers)', 'Sellers', 'Vendeurs')}</option>
+                    <option value="store_manager">👔 {t('مدراء المتاجر', 'Store Managers', 'Gérants')}</option>
+                    <option value="buyer">🛒 {t('المشترين (Buyers)', 'Buyers', 'Acheteurs')}</option>
+                    <option value="logistics">🚚 {t('اللوجستيات والشحن', 'Logistics', 'Livreurs')}</option>
+                    <option value="admin">🛡️ {t('الإدارة والمشرفين', 'Admins', 'Administrateurs')}</option>
+                    <option value="user">👤 {t('مستخدم محدد', 'Specific User', 'Utilisateur spécifique')}</option>
+                    <option value="specific_store">🏬 {t('متجر محدد', 'Specific Store', 'Boutique spécifique')}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <select
+                    value={filterHistoryType}
+                    onChange={(e) => setFilterHistoryType(e.target.value)}
+                    className="w-full bg-background border border-input rounded-md px-2.5 h-8 text-xs font-bold outline-none cursor-pointer"
+                  >
+                    <option value="all">{t('كافة الأنواع والتصنيفات', 'All Categories', 'Toutes les catégories')}</option>
+                    <option value="system">💡 {t('النظام (عام)', 'System', 'Système')}</option>
+                    <option value="wallet">💜 {t('المحفظة والمالية', 'Wallet', 'Portefeuille')}</option>
+                    <option value="order">📦 {t('الطلبات والمبيعات', 'Orders', 'Commandes')}</option>
+                    <option value="verification">🛡️ {t('التوثيق والأمان', 'Verification', 'Vérification')}</option>
+                    <option value="alert">⚠️ {t('تحذير وتنبيه خطر', 'Warning', 'Alerte')}</option>
+                    <option value="promotion">🏷️ {t('العروض والكوبونات', 'Promotions', 'Promotions')}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <select
+                    value={filterHistoryEngagement}
+                    onChange={(e) => setFilterHistoryEngagement(e.target.value)}
+                    className="w-full bg-background border border-input rounded-md px-2.5 h-8 text-xs font-bold outline-none cursor-pointer"
+                  >
+                    <option value="all">{t('كافة نسب القراءة', 'All Read Statuses', 'Tous les statuts de lecture')}</option>
+                    <option value="high">🔥 {t('تفاعل عالي (>50% قرأوه)', 'High Engagement (>50% Read)', 'Forte lecture (>50%)')}</option>
+                    <option value="low">📉 {t('تفاعل متوسط / منخفض (<50%)', 'Moderate/Low (<50%)', 'Faible lecture (<50%)')}</option>
+                    <option value="unread">⭕ {t('لم يُقرأ بعد (0% مقروء)', 'Unread (0%)', 'Non lues (0%)')}</option>
+                    <option value="read">✅ {t('تمت قراءته على الأقل مرة', 'Read at least once', 'Lues au moins une fois')}</option>
+                  </select>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-0">
+              {isLoadingHistory ? (
+                <div className="py-20 flex justify-center">
+                  <Loader2 className="size-8 animate-spin text-primary" />
+                </div>
+              ) : filteredHistory.length === 0 ? (
+                <div className="py-20 text-center text-muted-foreground space-y-2">
+                  <div className="p-3 bg-muted rounded-full inline-block">
+                    <History className="size-6 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-semibold">{t('لا توجد نتائج مطابقة لشروط البحث والفلترة', 'No matching broadcasts found', 'Aucun résultat correspondant')}</p>
+                  <p className="text-xs">{t('جرب تعديل خيارات الفلترة أو إفراغ خانة البحث.', 'Try adjusting filter options or clear search.', 'Modifiez vos filtres.')}</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {filteredHistory.map((item) => {
+                    const rateColor =
+                      item.readRate >= 60
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : item.readRate >= 25
+                        ? 'text-amber-600 dark:text-amber-400'
+                        : 'text-muted-foreground';
+
+                    const barColor =
+                      item.readRate >= 60
+                        ? 'bg-emerald-500'
+                        : item.readRate >= 25
+                        ? 'bg-amber-500'
+                        : 'bg-muted-foreground/40';
+
+                    return (
+                      <div key={item.batchId} className="p-5 hover:bg-muted/5 transition-colors flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                        {/* Left: Info & Badges */}
+                        <div className="space-y-2 max-w-2xl">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <Badge variant="secondary" className="text-[10px] font-bold">
+                              {item.type.toUpperCase()}
+                            </Badge>
+                            <Badge variant="outline" className="text-[10px]">
+                              {t('المستهدف:', 'Target:', 'Cible :')} {item.targetCriteria?.target?.toUpperCase() || 'ALL'}
+                            </Badge>
+                            {item.targetCriteria?.targetStatus && item.targetCriteria.targetStatus !== 'all' && (
+                              <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-300">
+                                {item.targetCriteria.targetStatus}
+                              </Badge>
+                            )}
+                            {item.parsedData?.urgency && item.parsedData.urgency !== 'normal' && (
+                              <Badge variant="outline" className="text-[10px] text-rose-600 border-rose-300">
+                                {item.parsedData.urgency.toUpperCase()}
+                              </Badge>
+                            )}
+                            <span className="text-[11px] text-muted-foreground">
+                              {new Date(item.createdAt).toLocaleString(isAr ? 'ar-DZ' : 'en-GB')}
+                            </span>
+                          </div>
+
+                          <h4 className="text-sm font-bold text-foreground">
+                            {isAr ? item.title : (item.titleEn || item.title)}
+                          </h4>
+                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                            {isAr ? item.body : (item.bodyEn || item.body)}
+                          </p>
+                        </div>
+
+                        {/* Right: Read Stats & Action Buttons */}
+                        <div className="flex items-center gap-5 shrink-0 justify-between lg:justify-end border-t lg:border-t-0 pt-3 lg:pt-0">
+                          {/* Read Rate Metric Badge & Progress */}
+                          <div className="min-w-[130px] text-end">
+                            <div className="flex items-center justify-end gap-1.5 text-xs font-bold">
+                              <Eye className={cn('size-3.5', rateColor)} />
+                              <span className={rateColor}>
+                                <strong>{item.readCount}</strong> / {item.recipientCount} ({item.readRate}%)
+                              </span>
+                            </div>
+
+                            <div className="text-[10px] text-muted-foreground mt-0.5">
+                              {item.readCount > 0
+                                ? t(`قرأه ${item.readCount} مستخدم`, `Read by ${item.readCount}`, `Lu par ${item.readCount}`)
+                                : t('لم يُقرأ بعد', 'Not read yet', 'Non encore lu')}
+                            </div>
+
+                            {/* Mini Progress Bar */}
+                            <div className="w-full bg-muted rounded-full h-1.5 mt-1.5 overflow-hidden">
+                              <div className={cn('h-1.5 rounded-full transition-all', barColor)} style={{ width: `${item.readRate}%` }} />
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex items-center gap-2">
+                            {/* View Full Details Modal */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedDetailsItem(item);
+                                setIsDetailsOpen(true);
+                              }}
+                              className="h-8 text-xs font-bold gap-1"
+                              title={t('عرض تفاصيل الإشعار والترجمات', 'View full details', 'Détails')}
+                            >
+                              <Eye className="size-3 text-primary" />
+                              <span>{t('التفاصيل', 'Details', 'Détails')}</span>
+                            </Button>
+
+                            {/* Clone as Template */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCloneTemplate(item)}
+                              className="h-8 text-xs font-bold gap-1 hover:border-primary hover:text-primary"
+                              title={t('تحميل بيانات هذا الإشعار في نموذج الإرسال', 'Load into compose form', 'Cloner')}
+                            >
+                              <Copy className="size-3" />
+                              <span>{t('استخدام كقالب', 'Clone Template', 'Cloner')}</span>
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Details Dialog */}
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center gap-2 text-primary">
+              <Eye className="size-4 text-primary" />
+              {t('تفاصيل وتحليلات الإشعار المرسل', 'Notification Details & Analytics', 'Détails de la notification')}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {t('استعراض المحتوى بكافة اللغات ومعدل القراءة وتفاصيل التوجيه.', 'Review content across all languages, read metrics, and routing.', 'Détails multilingues et statistiques.')}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedDetailsItem && (
+            <div className="space-y-4 text-xs">
+              {/* Engagement Stats Banner */}
+              <div className="grid grid-cols-3 gap-3 p-3.5 bg-muted/40 rounded-xl border text-center">
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold">{t('إجمالي المستلمين', 'Total Delivered', 'Total')}</span>
+                  <div className="text-lg font-black mt-0.5 text-foreground">{selectedDetailsItem.recipientCount}</div>
+                </div>
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold">{t('قرأوا الإشعار 👁️', 'Read Count', 'Lues')}</span>
+                  <div className="text-lg font-black mt-0.5 text-emerald-600 dark:text-emerald-400">{selectedDetailsItem.readCount}</div>
+                </div>
+                <div>
+                  <span className="text-[10px] text-muted-foreground uppercase font-bold">{t('نسبة القراءة', 'Read Rate', 'Taux')}</span>
+                  <div className="text-lg font-black mt-0.5 text-primary">{selectedDetailsItem.readRate}%</div>
+                </div>
+              </div>
+
+              {/* Targeting & Meta Info */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] p-3 rounded-lg border bg-card">
+                <div>
+                  <span className="text-muted-foreground">{t('الفئة:', 'Role:', 'Rôle :')}</span>
+                  <div className="font-bold">{selectedDetailsItem.targetCriteria?.target?.toUpperCase() || 'ALL'}</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('الحالة:', 'Status:', 'Statut :')}</span>
+                  <div className="font-bold">{selectedDetailsItem.targetCriteria?.targetStatus?.toUpperCase() || 'ALL'}</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('المرسِل:', 'Sender:', 'Expéditeur :')}</span>
+                  <div className="font-bold">{selectedDetailsItem.senderAdminName}</div>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">{t('التاريخ:', 'Date:', 'Date :')}</span>
+                  <div className="font-bold">{new Date(selectedDetailsItem.createdAt).toLocaleDateString()}</div>
+                </div>
+              </div>
+
+              {/* Multilingual Content Showcase */}
+              <div className="space-y-2">
+                <div className="font-bold text-xs flex items-center gap-1.5 text-foreground">
+                  <Globe className="size-3.5 text-primary" />
+                  {t('المحتوى بمختلف اللغات المتوفرة:', 'Multilingual Content Showcase:', 'Contenu multilingue :')}
+                </div>
+
+                <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+                  {/* Arabic */}
+                  <div className="p-3 rounded-lg border bg-muted/20 space-y-1 text-right" dir="rtl">
+                    <div className="text-[10px] font-bold text-primary flex items-center justify-between">
+                      <span>العربية (AR)</span>
+                      {selectedDetailsItem.parsedData?.translations?.ar?.actionLabel && (
+                        <span className="text-muted-foreground">زر: {selectedDetailsItem.parsedData.translations.ar.actionLabel}</span>
+                      )}
                     </div>
-
-                    <div className="flex items-center gap-4 shrink-0 justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0">
-                      <div className="text-end">
-                        <div className="text-xs font-bold text-foreground flex items-center gap-1">
-                          <Users className="size-3.5 text-primary" />
-                          <span>{item.recipientCount} {t('مستلم', 'recipients', 'destinataires')}</span>
-                        </div>
-                        <div className="text-[10px] text-muted-foreground mt-0.5">
-                          {t('بواسطة:', 'By:', 'Par :')} {item.senderAdminName}
-                        </div>
-                      </div>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCloneTemplate(item)}
-                        className="h-8 text-xs font-bold gap-1.5 hover:border-primary hover:text-primary"
-                        title={t('تحميل بيانات هذا الإشعار في نموذج الإرسال', 'Load into compose form', 'Charger dans le formulaire')}
-                      >
-                        <Copy className="size-3" />
-                        <span>{t('استخدام كقالب', 'Clone Template', 'Cloner le modèle')}</span>
-                      </Button>
+                    <div className="font-bold text-foreground">
+                      {selectedDetailsItem.parsedData?.translations?.ar?.title || selectedDetailsItem.title}
+                    </div>
+                    <div className="text-muted-foreground text-[11px]">
+                      {selectedDetailsItem.parsedData?.translations?.ar?.body || selectedDetailsItem.body}
                     </div>
                   </div>
-                ))}
+
+                  {/* English */}
+                  {(selectedDetailsItem.parsedData?.translations?.en || selectedDetailsItem.titleEn) && (
+                    <div className="p-3 rounded-lg border bg-muted/20 space-y-1 text-left" dir="ltr">
+                      <div className="text-[10px] font-bold text-primary flex items-center justify-between">
+                        <span>English (EN)</span>
+                        {selectedDetailsItem.parsedData?.translations?.en?.actionLabel && (
+                          <span className="text-muted-foreground">Btn: {selectedDetailsItem.parsedData.translations.en.actionLabel}</span>
+                        )}
+                      </div>
+                      <div className="font-bold text-foreground">
+                        {selectedDetailsItem.parsedData?.translations?.en?.title || selectedDetailsItem.titleEn}
+                      </div>
+                      <div className="text-muted-foreground text-[11px]">
+                        {selectedDetailsItem.parsedData?.translations?.en?.body || selectedDetailsItem.bodyEn}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* French */}
+                  {selectedDetailsItem.parsedData?.translations?.fr && (
+                    <div className="p-3 rounded-lg border bg-muted/20 space-y-1 text-left" dir="ltr">
+                      <div className="text-[10px] font-bold text-primary flex items-center justify-between">
+                        <span>Français (FR)</span>
+                        {selectedDetailsItem.parsedData.translations.fr.actionLabel && (
+                          <span className="text-muted-foreground">Bouton: {selectedDetailsItem.parsedData.translations.fr.actionLabel}</span>
+                        )}
+                      </div>
+                      <div className="font-bold text-foreground">
+                        {selectedDetailsItem.parsedData.translations.fr.title}
+                      </div>
+                      <div className="text-muted-foreground text-[11px]">
+                        {selectedDetailsItem.parsedData.translations.fr.body}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Spanish */}
+                  {selectedDetailsItem.parsedData?.translations?.es && (
+                    <div className="p-3 rounded-lg border bg-muted/20 space-y-1 text-left" dir="ltr">
+                      <div className="text-[10px] font-bold text-primary flex items-center justify-between">
+                        <span>Español (ES)</span>
+                        {selectedDetailsItem.parsedData.translations.es.actionLabel && (
+                          <span className="text-muted-foreground">Botón: {selectedDetailsItem.parsedData.translations.es.actionLabel}</span>
+                        )}
+                      </div>
+                      <div className="font-bold text-foreground">
+                        {selectedDetailsItem.parsedData.translations.es.title}
+                      </div>
+                      <div className="text-muted-foreground text-[11px]">
+                        {selectedDetailsItem.parsedData.translations.es.body}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+
+              {/* Redirection Page Details */}
+              {(selectedDetailsItem.parsedData?.actionPage || selectedDetailsItem.parsedData?.actionUrl) && (
+                <div className="p-3 bg-muted/20 rounded-lg border space-y-1">
+                  <span className="font-bold text-muted-foreground">{t('التوجيه المرفق:', 'Attached Action:', 'Action attachée :')}</span>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[10px]">
+                      {selectedDetailsItem.parsedData.actionPage || selectedDetailsItem.parsedData.actionUrl}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+
+              <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsDetailsOpen(false)}
+                  className="text-xs"
+                >
+                  {t('إغلاق', 'Close', 'Fermer')}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    setIsDetailsOpen(false);
+                    handleCloneTemplate(selectedDetailsItem);
+                  }}
+                  className="text-xs font-bold bg-[#1ABB9C] hover:bg-[#159a80] text-white gap-1.5"
+                >
+                  <Copy className="size-3" />
+                  {t('استخدام كقالب جديد', 'Use as Template', 'Utiliser comme modèle')}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Confirmation Dialog for Wide / Large Broadcasts */}
       <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>

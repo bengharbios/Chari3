@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Fetch the last 200 admin broadcast notifications
+    // Fetch the last 500 admin broadcast notifications
     const recentNotifs = await db.notification.findMany({
       where: {
         data: {
@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
         },
       },
       orderBy: { createdAt: 'desc' },
-      take: 300,
+      take: 500,
       select: {
         id: true,
         title: true,
@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
         body: true,
         bodyEn: true,
         type: true,
+        isRead: true,
         data: true,
         createdAt: true,
         userId: true,
@@ -44,6 +45,9 @@ export async function GET(req: NextRequest) {
       type: string;
       createdAt: string;
       recipientCount: number;
+      readCount: number;
+      unreadCount: number;
+      readRate: number;
       senderAdminName: string;
       targetCriteria: any;
       parsedData: any;
@@ -67,19 +71,40 @@ export async function GET(req: NextRequest) {
           type: notif.type,
           createdAt: notif.createdAt.toISOString(),
           recipientCount: 1,
+          readCount: notif.isRead ? 1 : 0,
+          unreadCount: notif.isRead ? 0 : 1,
+          readRate: notif.isRead ? 100 : 0,
           senderAdminName: parsed.senderAdminName || 'Admin',
-          targetCriteria: parsed.targetCriteria || { role: 'all' },
+          targetCriteria: parsed.targetCriteria || { target: 'all', targetStatus: 'all', targetLanguage: 'all' },
           parsedData: parsed,
         });
       } else {
         const existing = batchesMap.get(batchId)!;
         existing.recipientCount += 1;
+        if (notif.isRead) {
+          existing.readCount += 1;
+        } else {
+          existing.unreadCount += 1;
+        }
+        existing.readRate = Math.round((existing.readCount / existing.recipientCount) * 100);
       }
     }
 
-    const history = Array.from(batchesMap.values()).slice(0, 50);
+    const history = Array.from(batchesMap.values()).slice(0, 100);
 
-    return NextResponse.json({ success: true, history });
+    // Calculate aggregated KPIs
+    const totalDelivered = history.reduce((sum, item) => sum + item.recipientCount, 0);
+    const totalRead = history.reduce((sum, item) => sum + item.readCount, 0);
+    const overallReadRate = totalDelivered > 0 ? Math.round((totalRead / totalDelivered) * 100) : 0;
+
+    const stats = {
+      totalBroadcasts: history.length,
+      totalDelivered,
+      totalRead,
+      overallReadRate,
+    };
+
+    return NextResponse.json({ success: true, history, stats });
   } catch (error) {
     console.error('[notifications-history error]', error);
     return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
