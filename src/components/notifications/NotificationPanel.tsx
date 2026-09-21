@@ -3,6 +3,8 @@ import React from 'react';
 
 import { useEffect, useMemo, useState } from 'react';
 import { useAppStore, useAuthStore } from '@/lib/store';
+import { useAdminAuthStore } from '@/lib/store/admin-auth';
+import { useSession } from '@/lib/auth-client';
 import { useOnboardingStore } from '@/lib/store/onboarding';
 import { useNotificationStore, type AppNotification } from '@/lib/store/notifications';
 import { useTranslation } from '@/lib/i18n/useTranslation';
@@ -119,12 +121,19 @@ function TimeAgo({ dateStr }: { dateStr: string }) {
 
 import { useRouter, usePathname } from 'next/navigation';
 
-function NotificationItem({ notification }: { notification: AppNotification }) {
+function NotificationItem({
+  notification,
+  currentUser,
+}: {
+  notification: AppNotification;
+  currentUser?: { id: string; role?: string } | null;
+}) {
   const { t, locale } = useTranslation();
   const isAr = locale === 'ar';
   const { markAsRead, clearNotification, setOpen } = useNotificationStore();
   const { setCurrentPage } = useAppStore();
-  const { user } = useAuthStore();
+  const { user: authUser } = useAuthStore();
+  const effectiveUserId = currentUser?.id || authUser?.id;
   const router = useRouter();
   const pathname = usePathname();
 
@@ -135,13 +144,13 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
   const handleMarkAsRead = async () => {
     if (notification.isRead) return;
     markAsRead(notification.id);
-    if (user?.id && notification.id.startsWith('db-')) {
+    if (effectiveUserId && notification.id.startsWith('db-')) {
       const dbId = notification.id.replace('db-', '');
       try {
         await fetch('/api/notifications', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id, notificationId: dbId })
+          body: JSON.stringify({ userId: effectiveUserId, notificationId: dbId })
         });
       } catch (err) {
         console.error(err);
@@ -225,7 +234,7 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              clearNotification(notification.id, user?.id);
+              clearNotification(notification.id, effectiveUserId);
             }}
             className="opacity-60 md:opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted transition-all shrink-0"
             aria-label={t('notifications.delete')}
@@ -281,7 +290,19 @@ function NotificationItem({ notification }: { notification: AppNotification }) {
 export default function NotificationPanel() {
   const { t, locale } = useTranslation();
   const isAr = locale === 'ar';
-  const { user, isAuthenticated } = useAuthStore();
+  
+  // Resolve user and authentication from both client auth and admin session
+  const { user: authUser, isAuthenticated: isAuthAuthenticated } = useAuthStore();
+  const { adminUser, isAdminAuthenticated } = useAdminAuthStore();
+  const { data: clientSession } = useSession();
+
+  const user = authUser || 
+    adminUser || 
+    (clientSession?.user ? { id: clientSession.user.id, role: (clientSession.user as any).role, name: clientSession.user.name, email: clientSession.user.email } : null);
+
+  const isAuthenticated = Boolean(isAuthAuthenticated || isAdminAuthenticated || clientSession?.user?.id);
+  const isAdmin = user?.role === 'admin' || user?.role === 'SUPER_ADMIN' || user?.role === 'super_admin';
+
   const { accountStatus } = useOnboardingStore();
   const {
     notifications,
@@ -290,174 +311,183 @@ export default function NotificationPanel() {
     setOpen,
     markAllAsRead,
     clearAll,
-    refreshForUser,
-    addNotification,
     setNotifications,
   } = useNotificationStore();
 
   const [mounted, setMounted] = useState(false);
-
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
-
-  // Removed refreshForUser as mock notifications are deprecated and it overwrote DB notifications
 
   // Sync mounted state
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Fetch notifications from DB on mount and when panel is opened (eliminates heavy background polling)
+  const fetchDbNotifications = React.useCallback(async () => {
+    if (!isAuthenticated || !user?.id) return;
+
+    try {
+      const res = await fetch(`/api/notifications?userId=${user.id}&limit=30`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.success || !data.notifications) return;
+
+      const dbNotifications = data.notifications.map((dbNotif: {
+        id: string; title: string; titleEn?: string;
+        body: string; bodyEn?: string; type: string;
+        isRead: boolean; createdAt: string; data?: string;
+      }) => {
+        const getCategory = (type: string) => {
+          const lowerType = type.toLowerCase();
+          if (lowerType.includes('order')) return 'order';
+          if (lowerType.includes('shipment')) return 'shipment';
+          if (lowerType.includes('verification')) return 'verification';
+          if (lowerType.includes('wallet')) return 'wallet';
+          if (lowerType.includes('promotion')) return 'promotion';
+          if (lowerType.includes('alert')) return 'alert';
+          return 'system';
+        };
+
+        const cat = getCategory(dbNotif.type);
+        const iconBgMap: Record<string, string> = {
+          order: 'bg-blue-100 dark:bg-blue-900/30',
+          shipment: 'bg-emerald-100 dark:bg-emerald-900/30',
+          verification: 'bg-amber-100 dark:bg-amber-900/30',
+          system: 'bg-gray-100 dark:bg-gray-800',
+          promotion: 'bg-rose-100 dark:bg-rose-900/30',
+          wallet: 'bg-violet-100 dark:bg-violet-900/30',
+          alert: 'bg-red-100 dark:bg-red-900/30',
+        };
+
+        // Determine action label & target dynamically based on role and notification type
+        let actionLabelAr = 'عرض التفاصيل';
+        let actionLabelEn = 'View Details';
+        let actionPage: string | null = null;
+        let actionUrl: string | null = null;
+        let urgency = dbNotif.type === 'new_order' ? 'high' : 'normal';
+
+        const isProductApproval = dbNotif.title.includes('مراجعة والموافقة') || dbNotif.title.includes('pending approval') || dbNotif.title.includes('منتج');
+
+        if (isProductApproval && isAdmin) {
+          actionLabelAr = 'مراجعة وقبول المنتجات';
+          actionLabelEn = 'Review & Approve Products';
+          actionUrl = '/admin-secure-internal/products/approvals';
+          actionPage = null;
+        } else if (cat === 'verification') {
+          if (isAdmin) {
+            actionLabelAr = 'عرض طلبات التوثيق';
+            actionLabelEn = 'View Verification Requests';
+            actionUrl = '/admin-secure-internal/verifications';
+            actionPage = null;
+          } else {
+            actionLabelAr = dbNotif.type === 'VERIFICATION_EDIT_REQUIRED' ? 'تعديل طلب التوثيق' : 'عرض حالة التوثيق';
+            actionLabelEn = dbNotif.type === 'VERIFICATION_EDIT_REQUIRED' ? 'Edit Verification' : 'View Verification Status';
+            actionUrl = '/seller/verification';
+            actionPage = null;
+          }
+        } else if (cat === 'order') {
+          actionLabelAr = 'عرض الطلبات';
+          actionLabelEn = 'View Orders';
+          actionPage = user.role === 'store_manager' ? 'store-orders' : 'seller-orders';
+        } else if (cat === 'wallet') {
+          actionLabelAr = 'عرض المحفظة';
+          actionLabelEn = 'View Wallet';
+          actionPage = 'seller-wallet';
+        } else if (isAdmin) {
+          actionLabelAr = 'عرض التنبيه الإداري';
+          actionLabelEn = 'View Admin Alert';
+          actionUrl = '/admin-secure-internal';
+          actionPage = null;
+        } else {
+          actionLabelAr = 'عرض التفاصيل';
+          actionLabelEn = 'View Details';
+          actionPage = user.role === 'store_manager' ? 'store-orders' : 'seller-orders';
+        }
+
+        if (dbNotif.data) {
+          try {
+            const parsed = JSON.parse(dbNotif.data);
+            if ('actionPage' in parsed && parsed.actionPage) actionPage = parsed.actionPage;
+            if ('actionUrl' in parsed && parsed.actionUrl) actionUrl = parsed.actionUrl;
+            if ('link' in parsed && parsed.link) actionUrl = parsed.link;
+            if ('actionLabelAr' in parsed) actionLabelAr = parsed.actionLabelAr;
+            if ('actionLabelEn' in parsed) actionLabelEn = parsed.actionLabelEn;
+            if ('urgency' in parsed) urgency = parsed.urgency;
+          } catch (e) {}
+        }
+
+        return {
+          id: `db-${dbNotif.id}`,
+          category: cat as any,
+          titleAr: dbNotif.title,
+          titleEn: dbNotif.titleEn || dbNotif.title,
+          bodyAr: dbNotif.body,
+          bodyEn: dbNotif.bodyEn || dbNotif.body,
+          isRead: dbNotif.isRead,
+          createdAt: dbNotif.createdAt,
+          actionLabelAr,
+          actionLabelEn,
+          actionPage: actionPage as any,
+          actionUrl,
+          iconBg: iconBgMap[cat] || iconBgMap.system,
+          urgency: urgency as any,
+          data: dbNotif.data,
+          type: dbNotif.type,
+        };
+      });
+
+      // Inject mock verification notification if needed (for seller/store accounts)
+      if (!isAdmin && (accountStatus === 'incomplete' || accountStatus === 'rejected')) {
+        const isRejected = accountStatus === 'rejected';
+        dbNotifications.unshift({
+          id: 'mock-verification-required',
+          category: 'verification',
+          titleAr: isRejected ? 'الرجاء تصحيح طلب التوثيق' : 'يجب إكمال التوثيق',
+          titleEn: isRejected ? 'Please Correct Verification' : 'Verification Required',
+          bodyAr: isRejected 
+            ? 'تم رفض طلبك السابق. يرجى مراجعة الملاحظات وتحديث المستندات.'
+            : 'لن يظهر متجرك للعملاء حتى تقوم بإكمال متطلبات التوثيق',
+          bodyEn: isRejected
+            ? 'Your previous request was rejected. Please review feedback and update documents.'
+            : 'Your store will not be visible to customers until verification is complete',
+          isRead: false,
+          createdAt: new Date().toISOString(),
+          actionLabelAr: isRejected ? 'تحديث المستندات' : 'استكمال التوثيق',
+          actionLabelEn: isRejected ? 'Update Documents' : 'Complete Verification',
+          actionUrl: '/seller/verification',
+          actionPage: null as any,
+          iconBg: 'bg-red-100 dark:bg-red-900/30',
+          urgency: 'high',
+          type: 'VERIFICATION_REQUIRED'
+        });
+      }
+
+      setNotifications(dbNotifications);
+    } catch {
+      // Silent fail — notifications are non-blocking
+    }
+  }, [isAuthenticated, user?.id, user?.role, isAdmin, accountStatus, setNotifications]);
+
+  // Fetch immediately on mount or user change, and poll every 25s when tab is active
   useEffect(() => {
     if (!isAuthenticated || !user?.id) return;
 
-    // Prevent fetching if the panel is closed and we already loaded initial notifications
-    if (mounted && !isOpen && notifications.length > 0) return;
-
-    const fetchDbNotifications = async () => {
-      try {
-        const res = await fetch(`/api/notifications?userId=${user.id}&limit=20`);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!data.success || !data.notifications) return;
-
-        const dbNotifications = data.notifications.map((dbNotif: {
-          id: string; title: string; titleEn?: string;
-          body: string; bodyEn?: string; type: string;
-          isRead: boolean; createdAt: string; data?: string;
-        }) => {
-          const getCategory = (type: string) => {
-            const lowerType = type.toLowerCase();
-            if (lowerType.includes('order')) return 'order';
-            if (lowerType.includes('shipment')) return 'shipment';
-            if (lowerType.includes('verification')) return 'verification';
-            if (lowerType.includes('wallet')) return 'wallet';
-            if (lowerType.includes('promotion')) return 'promotion';
-            if (lowerType.includes('alert')) return 'alert';
-            return 'system';
-          };
-
-          const cat = getCategory(dbNotif.type);
-          const iconBgMap: Record<string, string> = {
-            order: 'bg-blue-100 dark:bg-blue-900/30',
-            shipment: 'bg-emerald-100 dark:bg-emerald-900/30',
-            verification: 'bg-amber-100 dark:bg-amber-900/30',
-            system: 'bg-gray-100 dark:bg-gray-800',
-            promotion: 'bg-rose-100 dark:bg-rose-900/30',
-            wallet: 'bg-violet-100 dark:bg-violet-900/30',
-            alert: 'bg-red-100 dark:bg-red-900/30',
-          };
-
-          // Determine action label & target dynamically based on role and notification type
-          let actionLabelAr = 'عرض التفاصيل';
-          let actionLabelEn = 'View Details';
-          let actionPage: string | null = null;
-          let actionUrl: string | null = null;
-          let urgency = dbNotif.type === 'new_order' ? 'high' : 'normal';
-
-          const isProductApproval = dbNotif.title.includes('مراجعة والموافقة') || dbNotif.title.includes('pending approval') || dbNotif.title.includes('منتج');
-
-          if (isProductApproval && isAdmin) {
-            actionLabelAr = 'مراجعة وقبول المنتجات';
-            actionLabelEn = 'Review & Approve Products';
-            actionUrl = '/admin-secure-internal/products/approvals';
-            actionPage = null;
-          } else if (cat === 'verification') {
-            if (isAdmin) {
-              actionLabelAr = 'عرض طلبات التوثيق';
-              actionLabelEn = 'View Verification Requests';
-              actionUrl = '/admin-secure-internal/verifications';
-              actionPage = null;
-            } else {
-              actionLabelAr = dbNotif.type === 'VERIFICATION_EDIT_REQUIRED' ? 'تعديل طلب التوثيق' : 'عرض حالة التوثيق';
-              actionLabelEn = dbNotif.type === 'VERIFICATION_EDIT_REQUIRED' ? 'Edit Verification' : 'View Verification Status';
-              actionUrl = '/seller/verification';
-              actionPage = null;
-            }
-          } else if (cat === 'order') {
-            actionLabelAr = 'عرض الطلبات';
-            actionLabelEn = 'View Orders';
-            actionPage = user.role === 'store_manager' ? 'store-orders' : 'seller-orders';
-          } else if (cat === 'wallet') {
-            actionLabelAr = 'عرض المحفظة';
-            actionLabelEn = 'View Wallet';
-            actionPage = 'seller-wallet';
-          } else if (isAdmin) {
-            actionLabelAr = 'عرض التنبيه الإداري';
-            actionLabelEn = 'View Admin Alert';
-            actionUrl = '/admin-secure-internal/products/approvals';
-            actionPage = null;
-          } else {
-            actionLabelAr = 'عرض التفاصيل';
-            actionLabelEn = 'View Details';
-            actionPage = user.role === 'store_manager' ? 'store-orders' : 'seller-orders';
-          }
-
-          if (dbNotif.data) {
-            try {
-              const parsed = JSON.parse(dbNotif.data);
-              if ('actionPage' in parsed && parsed.actionPage) actionPage = parsed.actionPage;
-              if ('actionUrl' in parsed && parsed.actionUrl) actionUrl = parsed.actionUrl;
-              if ('link' in parsed && parsed.link) actionUrl = parsed.link;
-              if ('actionLabelAr' in parsed) actionLabelAr = parsed.actionLabelAr;
-              if ('actionLabelEn' in parsed) actionLabelEn = parsed.actionLabelEn;
-              if ('urgency' in parsed) urgency = parsed.urgency;
-            } catch (e) {}
-          }
-
-          return {
-            id: `db-${dbNotif.id}`,
-            category: cat as any,
-            titleAr: dbNotif.title,
-            titleEn: dbNotif.titleEn || dbNotif.title,
-            bodyAr: dbNotif.body,
-            bodyEn: dbNotif.bodyEn || dbNotif.body,
-            isRead: dbNotif.isRead,
-            createdAt: dbNotif.createdAt,
-            actionLabelAr,
-            actionLabelEn,
-            actionPage: actionPage as any,
-            actionUrl,
-            iconBg: iconBgMap[cat] || iconBgMap.system,
-            urgency: urgency as any,
-            data: dbNotif.data,
-            type: dbNotif.type,
-          };
-        });
-
-        // Inject mock verification notification if needed
-        if (accountStatus === 'incomplete' || accountStatus === 'rejected') {
-          const isRejected = accountStatus === 'rejected';
-          dbNotifications.unshift({
-            id: 'mock-verification-required',
-            category: 'verification',
-            titleAr: isRejected ? 'الرجاء تصحيح طلب التوثيق' : 'يجب إكمال التوثيق',
-            titleEn: isRejected ? 'Please Correct Verification' : 'Verification Required',
-            bodyAr: isRejected 
-              ? 'تم رفض طلبك السابق. يرجى مراجعة الملاحظات وتحديث المستندات.'
-              : 'لن يظهر متجرك للعملاء حتى تقوم بإكمال متطلبات التوثيق',
-            bodyEn: isRejected
-              ? 'Your previous request was rejected. Please review feedback and update documents.'
-              : 'Your store will not be visible to customers until verification is complete',
-            isRead: false,
-            createdAt: new Date().toISOString(),
-            actionLabelAr: isRejected ? 'تحديث المستندات' : 'استكمال التوثيق',
-            actionLabelEn: isRejected ? 'Update Documents' : 'Complete Verification',
-            actionUrl: '/seller/verification',
-            actionPage: null as any,
-            iconBg: 'bg-red-100 dark:bg-red-900/30',
-            urgency: 'high',
-            type: 'VERIFICATION_REQUIRED'
-          });
-        }
-
-        // Completely replace notifications in store to sync deletions and read state
-        setNotifications(dbNotifications);
-      } catch {
-        // Silent fail — notifications are not critical
-      }
-    };
     fetchDbNotifications();
-  }, [isAuthenticated, user?.id, isOpen, mounted, setNotifications, user?.role, accountStatus]);
+
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetchDbNotifications();
+      }
+    }, 25000);
+
+    return () => clearInterval(interval);
+  }, [isAuthenticated, user?.id, fetchDbNotifications]);
+
+  // Also refetch when dropdown opens to guarantee freshest view
+  useEffect(() => {
+    if (isOpen && isAuthenticated && user?.id) {
+      fetchDbNotifications();
+    }
+  }, [isOpen, isAuthenticated, user?.id, fetchDbNotifications]);
 
   // Filter and Sort: filter by active tab, then sort: unread first → by urgency → newest first
   const filteredAndSortedNotifications = useMemo(() => {
@@ -605,7 +635,7 @@ export default function NotificationPanel() {
               <div className="max-h-[400px] overflow-y-auto overflow-x-hidden" dir={isAr ? 'rtl' : 'ltr'}>
                 <div className="divide-y divide-border/50 p-2">
                   {filteredAndSortedNotifications.map((notification) => (
-                    <NotificationItem key={notification.id} notification={notification} />
+                    <NotificationItem key={notification.id} notification={notification} currentUser={user} />
                   ))}
                 </div>
               </div>

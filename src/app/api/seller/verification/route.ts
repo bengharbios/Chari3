@@ -102,13 +102,15 @@ export async function POST(req: NextRequest) {
       select: { id: true }
     });
     
+    const submitterName = session?.user?.name || sellerProfile.storeName || 'تاجر';
     const adminNotifications = superAdmins.map(admin => ({
       userId: admin.id,
       type: 'NEW_VERIFICATION_SUBMISSION',
       title: 'طلب توثيق جديد (KYC/KYB)',
       titleEn: 'New Verification Request (KYC/KYB)',
-      body: `تم تقديم طلب توثيق قانوني جديد بواسطة ${session.user.name}. يرجى مراجعته.`,
-      bodyEn: `A new legal verification request has been submitted by ${session.user.name}. Please review it.`,
+      body: `تم تقديم طلب توثيق قانوني جديد بواسطة ${submitterName}. يرجى مراجعته.`,
+      bodyEn: `A new legal verification request has been submitted by ${submitterName}. Please review it.`,
+      data: JSON.stringify({ actionUrl: '/admin-secure-internal/verifications' }),
     }));
 
     if (adminNotifications.length > 0) {

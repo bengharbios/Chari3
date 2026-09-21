@@ -66,17 +66,64 @@ export async function PATCH(
         }
       });
 
-      // 4. Update SellerProfile isVerified flag if APPROVED
+      // 4. Update SellerProfile & User flags
       if (newStatus === 'APPROVED' && oldStatus !== 'APPROVED') {
         await tx.sellerProfile.update({
           where: { id: verification.sellerId },
           data: { isVerified: true }
         });
+        if (verification.seller?.userId) {
+          await tx.user.update({
+            where: { id: verification.seller.userId },
+            data: { isVerified: true, accountStatus: 'active' }
+          });
+        }
       } else if (oldStatus === 'APPROVED' && newStatus !== 'APPROVED') {
         await tx.sellerProfile.update({
           where: { id: verification.sellerId },
           data: { isVerified: false }
         });
+      }
+
+      // 5. Send In-App Notification to the Store / Merchant
+      if (verification.seller?.userId) {
+        if (newStatus === 'APPROVED') {
+          await tx.notification.create({
+            data: {
+              userId: verification.seller.userId,
+              type: 'VERIFICATION_APPROVED',
+              title: 'تم اعتماد توثيق المتجر بنجاح ✅',
+              titleEn: 'Store Verification Approved ✅',
+              body: 'تهانينا! تمت مراجعة واعتماد وثائق التوثيق الخاصة بمتجرك بنجاح، وأصبح متجرك موثقاً رسمياً.',
+              bodyEn: 'Congratulations! Your store verification documents have been approved. Your store is now officially verified.',
+              data: JSON.stringify({ actionUrl: '/seller/verification' }),
+            }
+          });
+        } else if (newStatus === 'REJECTED') {
+          await tx.notification.create({
+            data: {
+              userId: verification.seller.userId,
+              type: 'VERIFICATION_REJECTED',
+              title: 'تم رفض طلب توثيق المتجر ❌',
+              titleEn: 'Store Verification Rejected ❌',
+              body: notes ? `تم رفض طلب التوثيق. السبب: ${notes}` : 'تم رفض طلب التوثيق لعدم استيفاء الشروط المطلوبة.',
+              bodyEn: notes ? `Verification rejected. Reason: ${notes}` : 'Your store verification request has been rejected.',
+              data: JSON.stringify({ actionUrl: '/seller/verification', reason: notes }),
+            }
+          });
+        } else if (newStatus === 'EDIT_REQUIRED') {
+          await tx.notification.create({
+            data: {
+              userId: verification.seller.userId,
+              type: 'VERIFICATION_EDIT_REQUIRED',
+              title: 'مطلوب تعديل على وثائق التوثيق ⚠️',
+              titleEn: 'Verification Edit Required ⚠️',
+              body: notes ? `يرجى تعديل الوثائق: ${notes}` : 'يرجى مراجعة وتعديل بعض الوثائق المرفوعة لإكمال التوثيق.',
+              bodyEn: notes ? `Please edit the requested documents: ${notes}` : 'Please edit the requested documents to complete verification.',
+              data: JSON.stringify({ actionUrl: '/seller/verification', reason: notes }),
+            }
+          });
+        }
       }
 
       return updatedVer;
