@@ -73,3 +73,25 @@ ChariDay is a custom-built, multi-vendor B2B/B2C marketplace platform. It allows
   - If a package is assigned to this setting, the backend dynamically mocks a subscription with this package's limits for the unverified user. 
   - This ensures they can test the dashboard but are hard-limited (e.g., max 5 products) on the backend via `/api/products/route.ts` enforcement.
   - Once verified by admin, a real `ACTIVE` subscription is created.
+
+## 🧭 Admin Dashboard Navigation & Routing Standards
+The Admin Dashboard (`/admin-secure-internal`) is structured into **13 Enterprise Domains** in `AdminSidebar.tsx`:
+1. **Overview & Analytics (`overview`)**: Key metrics, dynamic revenue charts, platform aggregates.
+2. **Products Catalog (`products`)**: Top products, approvals, categories, brands, specs, and settings.
+3. **Orders & Operations (`orders`)**: Orders dispatch, status workflows, returns and disputes.
+4. **Merchants & Accounts (`accounts`)**: Stores, KYC/KYB verifications, audit logs, upgrade requests, users.
+5. **Finance & Billing (`finance`)**: Payment methods, payment engine, packages, subscriptions, wallets, payouts, receipts.
+6. **Logistics & Fulfillment (`logistics`)**: Logistics hub, 3PL settlements, states and cities shipping config.
+7. **Communications & Alerts (`communications`)**: Push & banner notification center, advertisements.
+8. **Support & Operations (`support`)**: Suspension appeals, customer support tickets & live user chats.
+9. **Content & Community (`community`)**: Customer reviews moderation, product Q&A questions.
+10. **Security & Access Control (`security`)**: Account security, critical pending actions, roles (RBAC), auth logs, active sessions, ban list, OTP settings, advanced security.
+11. **CMS & Storefront (`cms`)**: Custom pages, SAADA builder, layout blocks, docs/articles, storefront CMS, plugins app store.
+12. **Platform Settings (`platform`)**: General settings, themes, translations, homepage, header/footer, main menu, coupons, maps, feature flags.
+13. **Advanced Tools & AI Labs (`tools`)**: OCR Sandbox, intelligent document extraction.
+
+### Rules for Adding New Admin Features:
+- **Never overload `settings` or `accounts`**: Place new features in their designated domain.
+- **Route Depth Convention**: Max 3 levels: `/admin-secure-internal/{domain}/{subdomain}`.
+- **Roadmap Items**: Future features without a backend route yet must use `disabled: true` and `badge: 'قريباً' / 'Soon'` in `AdminSidebar.tsx` to prevent 404 errors.
+- **Strict 4-Language i18n**: All sidebar labels and group titles must support Arabic, English, French, and Spanish (`t` or `locale === 'ar' ? ... : ...`).

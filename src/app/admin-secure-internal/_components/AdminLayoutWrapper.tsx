@@ -35,13 +35,14 @@ function AdminBreadcrumb() {
        key = path;
     }
 
-    // Map path/tab keys to translation keys
+    // Map path/tab keys to translation keys or localized strings
     const keyMap: Record<string, string> = {
       'overview': 'admin.dashboardOverview',
       'products': 'admin.topProducts',
       'orders': 'admin.fulfilledOrders',
       'order-statuses': 'admin.orderStatuses',
       'users': 'admin.userAccounts',
+      'stores': 'admin.storesSellers',
       'stores-sellers': 'admin.storesSellers',
       'settings': 'admin.generalSettings',
       'theme': 'admin.themeDesign',
@@ -53,19 +54,48 @@ function AdminBreadcrumb() {
       'revenue': 'admin.revenueReports',
       'coupons': 'admin.globalCoupons',
       'categories': 'admin.manageCategories',
-      'spec-definitions': 'مواصفات المنتجات',
-      'products/settings': 'إعدادات وخصائص المنتجات',
-      'products/approvals': 'مراجعة وقبول المنتجات',
+      'spec-definitions': locale === 'ar' ? 'مواصفات المنتجات' : 'Product Specs',
+      'approvals': locale === 'ar' ? 'مراجعة وقبول المنتجات' : 'Product Approvals',
       'brands': 'admin.manageBrands',
       'cms': 'admin.storefrontCMS',
       'advertisements': 'admin.manageAdvertisements',
       'flags': 'admin.featureFlags',
-      'users': 'admin.userAccounts',
       'roles': 'security.roles',
+      'auth-logs': 'security.auth_logs',
+      'bans': 'security.ban_list',
+      'sessions': locale === 'ar' ? 'الجلسات النشطة والأجهزة' : 'Active Sessions',
+      'pending-actions': locale === 'ar' ? 'الإجراءات المعلقة' : 'Pending Actions',
+      'my-account': locale === 'ar' ? 'أمان حسابي الشخصي' : 'My Account Security',
+      'notifications': locale === 'ar' ? '📢 مركز الإشعارات والتنبيهات' : (locale === 'fr' ? '📢 Centre de notifications' : '📢 Notifications & Alerts'),
+      'appeals': locale === 'ar' ? 'استئنافات تعليق الحسابات' : 'Suspension Appeals',
+      'verifications': locale === 'ar' ? 'توثيق المتاجر KYC/KYB' : 'KYC/KYB Verification',
+      'audit': locale === 'ar' ? 'سجل تدقيق التوثيق' : 'Audit Trail',
+      'upgrade-requests': locale === 'ar' ? 'طلبات ترقية الأعمال' : 'Business Upgrades',
+      'payment-methods': 'admin.paymentMethods',
+      'payment-engine': locale === 'ar' ? 'محرك بوابات الدفع' : 'Payment Engine',
+      'logistics': locale === 'ar' ? 'مركز اللوجستيات والمناطق' : 'Logistics Hub',
+      'settlements': locale === 'ar' ? 'تسويات شركات التوصيل 3PL' : '3PL Settlements',
+      'shipping': locale === 'ar' ? 'إدارة المناطق والولايات' : 'States & Regions',
+      'plugins': locale === 'ar' ? 'متجر الإضافات (App Store)' : 'Plugin Manager',
+      'pages': locale === 'ar' ? 'الصفحات المخصصة' : 'Custom Pages',
+      'saada-builder': 'SAADA Builder',
+      'layout-blocks': locale === 'ar' ? 'كتل وقوالب التنسيق' : 'Layout Blocks',
+      'docs': 'admin.manageDocs',
+      'homepage': 'admin.homepageSettings',
+      'header-footer': locale === 'ar' ? 'إعدادات الهيدر والفوتر' : 'Header & Footer Settings',
+      'menu': locale === 'ar' ? 'إعدادات القائمة الرئيسية' : 'Main Menu',
+      'translations': 'admin.manageTranslations',
+      'maps': locale === 'ar' ? 'إعدادات الخرائط والمواقع' : 'Maps Settings',
+      'otp': locale === 'ar' ? 'إعدادات التوثيق والدخول (OTP)' : 'Auth & OTP',
+      'ocr-sandbox': locale === 'ar' ? 'مختبر سحب البيانات (OCR)' : 'OCR Sandbox',
     };
 
     const translationKey = keyMap[key];
-    if (translationKey) return t(translationKey);
+    if (translationKey) {
+      // If key exists in translation dictionary return translated value, else return string as-is
+      const translated = t(translationKey);
+      return translated !== translationKey ? translated : translationKey;
+    }
     
     return t('admin.title');
   };
