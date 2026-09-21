@@ -90,6 +90,8 @@ export type QuickActionVariant = 'primary' | 'warning' | 'danger' | 'subtle';
 interface QuickActionButtonProps {
   labelAr: string;
   labelEn: string;
+  labelFr?: string;
+  labelEs?: string;
   variant?: QuickActionVariant;
   onClick: () => void;
   icon?: LucideIcon;
@@ -106,12 +108,22 @@ const variantStyles: Record<QuickActionVariant, string> = {
 export default function QuickActionButton({
   labelAr,
   labelEn,
+  labelFr,
+  labelEs,
   variant = 'subtle',
   onClick,
   className,
 }: QuickActionButtonProps) {
-  const isAr = useAppStore((s) => s.locale === 'ar');
+  const locale = useAppStore((s) => s.locale);
+  const isAr = locale === 'ar';
   const ChevronIcon = isAr ? ArrowLeft : ArrowRight;
+
+  const displayLabel = (() => {
+    if (locale === 'ar') return labelAr;
+    if (locale === 'fr') return labelFr || labelEn;
+    if (locale === 'es') return labelEs || labelEn;
+    return labelEn;
+  })();
 
   return (
     <Button
@@ -125,7 +137,7 @@ export default function QuickActionButton({
       )}
       onClick={onClick}
     >
-      {isAr ? labelAr : labelEn}
+      {displayLabel}
       <ChevronIcon className="size-3.5" />
     </Button>
   );

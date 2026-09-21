@@ -544,8 +544,24 @@
       "body": "Your order #{{orderNumber}} status has been updated to: {{statusName}}"
     },
     "QA_NEW": {
-      "title": "New Pending Question! ❓",
-      "body": "You have a new pending question on your product \"{{productName}}\" waiting for your answer."
+      "title": "¡Nueva pregunta pendiente! ❓",
+      "body": "Tienes una nueva pregunta pendiente sobre tu producto \"{{productName}}\" esperando tu respuesta."
+    },
+    "new_qa": {
+      "title": "¡Nueva pregunta pendiente! ❓",
+      "body": "Tienes una nueva pregunta pendiente sobre tu producto \"{{productName}}\" esperando tu respuesta."
+    },
+    "new_order": {
+      "title": "¡Nuevo pedido! 🛍️",
+      "body": "Nuevo pedido #{{orderNumber}} por un valor de {{total}} DZD"
+    },
+    "NEW_VERIFICATION_SUBMISSION": {
+      "title": "Nueva solicitud de verificación 📋",
+      "body": "Se ha enviado una nueva solicitud de verificación por {{submitterName}}. Por favor revísela."
+    },
+    "billing_downgrade": {
+      "title": "Suscripción degradada automáticamente ⚠️",
+      "body": "Su suscripción anterior ha caducado. Su cuenta se ha degradado automáticamente al plan predeterminado."
     },
     "PRODUCT_PENDING_APPROVAL": {
       "title": "⏳ New product pending approval ({{productName}})",

@@ -529,6 +529,22 @@
       "title": "Nouvelle question en attente ! ❓",
       "body": "Vous avez une nouvelle question en attente sur votre produit \"{{productName}}\" qui attend votre réponse."
     },
+    "new_qa": {
+      "title": "Nouvelle question en attente ! ❓",
+      "body": "Vous avez une nouvelle question en attente sur votre produit \"{{productName}}\" qui attend votre réponse."
+    },
+    "new_order": {
+      "title": "Nouvelle commande ! 🛍️",
+      "body": "Nouvelle commande #{{orderNumber}} d'une valeur de {{total}} DZD"
+    },
+    "NEW_VERIFICATION_SUBMISSION": {
+      "title": "Nouvelle demande de vérification 📋",
+      "body": "Une nouvelle demande de vérification a été soumise par {{submitterName}}. Veuillez l'examiner."
+    },
+    "billing_downgrade": {
+      "title": "Abonnement rétrogradé automatiquement ⚠️",
+      "body": "Votre abonnement précédent a expiré. Votre compte a été automatiquement rétrogradé vers le forfait par défaut."
+    },
     "PRODUCT_PENDING_APPROVAL": {
       "title": "⏳ Nouveau produit en attente d'approbation ({{productName}})",
       "body": "Un marchand a ajouté un nouveau produit qui attend votre examen et votre approbation."

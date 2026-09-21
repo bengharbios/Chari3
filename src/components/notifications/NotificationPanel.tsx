@@ -171,19 +171,19 @@ function NotificationItem({
       } catch (err) {}
     }
 
-    if (notification.actionPage) {
+    if (notification.actionUrl) {
+      if (notification.actionUrl.startsWith('/')) {
+        router.push(notification.actionUrl);
+      } else {
+        window.open(notification.actionUrl, '_blank');
+      }
+    } else if (notification.actionPage) {
       const url = `/?view=${notification.actionPage}${targetOrderId ? '&orderId=' + targetOrderId : ''}`;
       if (pathname !== '/') {
         router.push(url);
       } else {
         router.push(url);
         setCurrentPage(notification.actionPage);
-      }
-    } else if (notification.actionUrl) {
-      if (notification.actionUrl.startsWith('/')) {
-        router.push(notification.actionUrl);
-      } else {
-        window.open(notification.actionUrl, '_blank');
       }
     }
   };
@@ -222,8 +222,14 @@ function NotificationItem({
           )}>
             {(() => {
               if (notification.type) {
-                const titleKey = `notifications.${notification.type}.title`;
-                const parsedData = notification.data ? JSON.parse(notification.data) : {};
+                const normType = notification.type === 'new_qa' ? 'QA_NEW' : (notification.type === 'new_order' ? 'ORDER_NEW' : notification.type);
+                const titleKey = `notifications.${normType}.title`;
+                let parsedData: any = {};
+                if (notification.data) {
+                  try {
+                    parsedData = JSON.parse(notification.data);
+                  } catch (e) {}
+                }
                 const translated = t(titleKey, parsedData);
                 if (translated !== titleKey) return translated;
               }
@@ -250,8 +256,14 @@ function NotificationItem({
         )}>
           {(() => {
             if (notification.type) {
-              const bodyKey = `notifications.${notification.type}.body`;
-              const parsedData = notification.data ? JSON.parse(notification.data) : {};
+              const normType = notification.type === 'new_qa' ? 'QA_NEW' : (notification.type === 'new_order' ? 'ORDER_NEW' : notification.type);
+              const bodyKey = `notifications.${normType}.body`;
+              let parsedData: any = {};
+              if (notification.data) {
+                try {
+                  parsedData = JSON.parse(notification.data);
+                } catch (e) {}
+              }
               const translated = t(bodyKey, parsedData);
               if (translated !== bodyKey) return translated;
             }
@@ -266,12 +278,14 @@ function NotificationItem({
             {notification.urgency !== 'normal' && <UrgencyBadge urgency={notification.urgency} />}
           </div>
 
-          {/* QUICK ACTION — Unified */}
+          {/* QUICK ACTION — Unified with 4-language support */}
           {(notification.actionPage || notification.actionUrl) && (
             <span onClick={(e) => e.stopPropagation()} className="shrink-0">
               <QuickActionButton
                 labelAr={notification.actionLabelAr}
                 labelEn={notification.actionLabelEn}
+                labelFr={notification.actionLabelFr}
+                labelEs={notification.actionLabelEs}
                 variant={urgency.actionVariant}
                 onClick={() => handleAction()}
               />
@@ -361,46 +375,81 @@ export default function NotificationPanel() {
         // Determine action label & target dynamically based on role and notification type
         let actionLabelAr = 'عرض التفاصيل';
         let actionLabelEn = 'View Details';
+        let actionLabelFr = 'Voir les détails';
+        let actionLabelEs = 'Ver detalles';
         let actionPage: string | null = null;
         let actionUrl: string | null = null;
         let urgency = dbNotif.type === 'new_order' ? 'high' : 'normal';
 
+        const isQA = dbNotif.type === 'new_qa' || dbNotif.type === 'QA_NEW';
         const isProductApproval = dbNotif.title.includes('مراجعة والموافقة') || dbNotif.title.includes('pending approval') || dbNotif.title.includes('منتج');
 
-        if (isProductApproval && isAdmin) {
+        if (isQA) {
+          actionLabelAr = 'الإجابة على السؤال';
+          actionLabelEn = 'Answer Question';
+          actionLabelFr = 'Répondre à la question';
+          actionLabelEs = 'Responder pregunta';
+          let prodId = '';
+          if (dbNotif.data) {
+            try {
+              const p = JSON.parse(dbNotif.data);
+              if (p.productId) prodId = p.productId;
+            } catch (e) {}
+          }
+          actionUrl = prodId ? `/seller/products?previewId=${prodId}` : '/seller/products';
+          actionPage = null;
+        } else if (isProductApproval && isAdmin) {
           actionLabelAr = 'مراجعة وقبول المنتجات';
           actionLabelEn = 'Review & Approve Products';
+          actionLabelFr = 'Examiner les produits';
+          actionLabelEs = 'Revisar productos';
           actionUrl = '/admin-secure-internal/products/approvals';
           actionPage = null;
         } else if (cat === 'verification') {
           if (isAdmin) {
             actionLabelAr = 'عرض طلبات التوثيق';
             actionLabelEn = 'View Verification Requests';
+            actionLabelFr = 'Voir les vérifications';
+            actionLabelEs = 'Ver solicitudes de verificación';
             actionUrl = '/admin-secure-internal/verifications';
             actionPage = null;
           } else {
-            actionLabelAr = dbNotif.type === 'VERIFICATION_EDIT_REQUIRED' ? 'تعديل طلب التوثيق' : 'عرض حالة التوثيق';
-            actionLabelEn = dbNotif.type === 'VERIFICATION_EDIT_REQUIRED' ? 'Edit Verification' : 'View Verification Status';
+            const isEditReq = dbNotif.type === 'VERIFICATION_EDIT_REQUIRED';
+            actionLabelAr = isEditReq ? 'تعديل طلب التوثيق' : 'عرض حالة التوثيق';
+            actionLabelEn = isEditReq ? 'Edit Verification' : 'View Verification Status';
+            actionLabelFr = isEditReq ? 'Modifier la vérification' : 'Voir la vérification';
+            actionLabelEs = isEditReq ? 'Editar verificación' : 'Ver verificación';
             actionUrl = '/seller/verification';
             actionPage = null;
           }
         } else if (cat === 'order') {
           actionLabelAr = 'عرض الطلبات';
           actionLabelEn = 'View Orders';
-          actionPage = user.role === 'store_manager' ? 'store-orders' : 'seller-orders';
+          actionLabelFr = 'Voir les commandes';
+          actionLabelEs = 'Ver pedidos';
+          actionUrl = '/seller/orders';
+          actionPage = null;
         } else if (cat === 'wallet') {
           actionLabelAr = 'عرض المحفظة';
           actionLabelEn = 'View Wallet';
-          actionPage = 'seller-wallet';
+          actionLabelFr = 'Voir le portefeuille';
+          actionLabelEs = 'Ver billetera';
+          actionUrl = '/seller/wallet';
+          actionPage = null;
         } else if (isAdmin) {
           actionLabelAr = 'عرض التنبيه الإداري';
           actionLabelEn = 'View Admin Alert';
+          actionLabelFr = 'Voir l\'alerte';
+          actionLabelEs = 'Ver alerta';
           actionUrl = '/admin-secure-internal';
           actionPage = null;
         } else {
           actionLabelAr = 'عرض التفاصيل';
           actionLabelEn = 'View Details';
-          actionPage = user.role === 'store_manager' ? 'store-orders' : 'seller-orders';
+          actionLabelFr = 'Voir les détails';
+          actionLabelEs = 'Ver detalles';
+          actionUrl = '/seller/dashboard';
+          actionPage = null;
         }
 
         if (dbNotif.data) {
@@ -411,6 +460,8 @@ export default function NotificationPanel() {
             if ('link' in parsed && parsed.link) actionUrl = parsed.link;
             if ('actionLabelAr' in parsed) actionLabelAr = parsed.actionLabelAr;
             if ('actionLabelEn' in parsed) actionLabelEn = parsed.actionLabelEn;
+            if ('actionLabelFr' in parsed) actionLabelFr = parsed.actionLabelFr;
+            if ('actionLabelEs' in parsed) actionLabelEs = parsed.actionLabelEs;
             if ('urgency' in parsed) urgency = parsed.urgency;
           } catch (e) {}
         }
@@ -426,6 +477,8 @@ export default function NotificationPanel() {
           createdAt: dbNotif.createdAt,
           actionLabelAr,
           actionLabelEn,
+          actionLabelFr,
+          actionLabelEs,
           actionPage: actionPage as any,
           actionUrl,
           iconBg: iconBgMap[cat] || iconBgMap.system,

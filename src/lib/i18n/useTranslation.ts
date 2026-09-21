@@ -61,8 +61,15 @@ export function useTranslation() {
       // Perform interpolation if values is an object
       if (values && typeof values === 'object') {
         Object.entries(values).forEach(([k, v]) => {
-          textToReturn = textToReturn.replace(new RegExp(`%${k}%`, 'g'), String(v));
+          const valStr = v !== undefined && v !== null ? String(v) : '';
+          textToReturn = textToReturn
+            .replace(new RegExp(`%${k}%`, 'g'), valStr)
+            .replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), valStr)
+            .replace(new RegExp(`\\{${k}\\}`, 'g'), valStr);
         });
+        textToReturn = textToReturn
+          .replace(/\{\{[a-zA-Z0-9_]+\}\}/g, '')
+          .replace(/\{[a-zA-Z0-9_]+\}/g, '');
       }
       return textToReturn;
     }
@@ -153,10 +160,22 @@ export function useTranslation() {
 
     let text = String(result);
 
-    if (values) {
+    if (values && typeof values === 'object') {
       Object.entries(values).forEach(([k, v]) => {
-        text = text.replace(new RegExp(`%${k}%`, 'g'), String(v));
+        const valStr = v !== undefined && v !== null ? String(v) : '';
+        text = text
+          .replace(new RegExp(`%${k}%`, 'g'), valStr)
+          .replace(new RegExp(`\\{\\{${k}\\}\\}`, 'g'), valStr)
+          .replace(new RegExp(`\\{${k}\\}`, 'g'), valStr);
       });
+      // Gracefully handle any leftover reason placeholder
+      text = text
+        .replace(/Remarque:\s*\{\{reason\}\}/gi, '')
+        .replace(/Notice:\s*\{\{reason\}\}/gi, '')
+        .replace(/ملاحظة:\s*\{\{reason\}\}/gi, '')
+        .replace(/\{\{[a-zA-Z0-9_]+\}\}/g, '')
+        .replace(/\{[a-zA-Z0-9_]+\}/g, '')
+        .trim();
     }
 
     return text;

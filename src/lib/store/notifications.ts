@@ -20,6 +20,8 @@ export interface AppNotification {
   // Quick action
   actionLabelAr: string;
   actionLabelEn: string;
+  actionLabelFr?: string;
+  actionLabelEs?: string;
   actionPage: PageType | null;
   actionUrl: string | null; // external URL if any
   type?: string; // Original notification type string from backend

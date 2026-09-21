@@ -536,6 +536,22 @@
       "title": "New Pending Question! ❓",
       "body": "You have a new pending question on your product \"{{productName}}\" waiting for your answer."
     },
+    "new_qa": {
+      "title": "New Pending Question! ❓",
+      "body": "You have a new pending question on your product \"{{productName}}\" waiting for your answer."
+    },
+    "new_order": {
+      "title": "New Order! 🛍️",
+      "body": "New order #{{orderNumber}} with value {{total}} DZD"
+    },
+    "NEW_VERIFICATION_SUBMISSION": {
+      "title": "New Verification Request 📋",
+      "body": "A new verification request has been submitted by {{submitterName}}. Please review it."
+    },
+    "billing_downgrade": {
+      "title": "Subscription Downgraded Automatically ⚠️",
+      "body": "Your previous subscription has expired. Your account has been automatically downgraded to the default plan."
+    },
     "PRODUCT_PENDING_APPROVAL": {
       "title": "⏳ New product pending approval ({{productName}})",
       "body": "A merchant added a new product that is waiting for your review and approval."
