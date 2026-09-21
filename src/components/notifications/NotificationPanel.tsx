@@ -255,12 +255,28 @@ function NotificationItem({
                 else if (tAr.includes('إلغاء') || tEn.includes('cancelled')) normType = 'SHIPMENT_CANCELLED';
               }
 
+              // 1. Nested translations check (active locale)
+              if (parsedData.translations?.[locale]?.title) {
+                return parsedData.translations[locale].title;
+              }
+
+              // 2. Nested translations fallback (en or ar)
+              if (locale !== 'ar' && parsedData.translations?.['en']?.title) {
+                return parsedData.translations['en'].title;
+              }
+              if (parsedData.translations?.['ar']?.title) {
+                return parsedData.translations['ar'].title;
+              }
+
+              // 3. Standard dictionary keys if type matches
               if (normType) {
                 const titleKey = `notifications.${normType}.title`;
                 const translated = t(titleKey, parsedData);
                 if (translated !== titleKey) return translated;
               }
-              return isAr ? notification.titleAr : notification.titleEn;
+
+              // 4. Legacy database columns
+              return isAr ? notification.titleAr : (notification.titleEn || notification.titleAr);
             })()}
           </p>
           {/* Delete button */}
@@ -314,12 +330,28 @@ function NotificationItem({
               else if (tAr.includes('إلغاء') || tEn.includes('cancelled')) normType = 'SHIPMENT_CANCELLED';
             }
 
+            // 1. Nested translations check (active locale)
+            if (parsedData.translations?.[locale]?.body) {
+              return parsedData.translations[locale].body;
+            }
+
+            // 2. Nested translations fallback (en or ar)
+            if (locale !== 'ar' && parsedData.translations?.['en']?.body) {
+              return parsedData.translations['en'].body;
+            }
+            if (parsedData.translations?.['ar']?.body) {
+              return parsedData.translations['ar'].body;
+            }
+
+            // 3. Standard dictionary keys if type matches
             if (normType) {
               const bodyKey = `notifications.${normType}.body`;
               const translated = t(bodyKey, parsedData);
               if (translated !== bodyKey) return translated;
             }
-            return isAr ? notification.bodyAr : notification.bodyEn;
+
+            // 4. Legacy database columns
+            return isAr ? notification.bodyAr : (notification.bodyEn || notification.bodyAr);
           })()}
         </p>
 
@@ -330,19 +362,28 @@ function NotificationItem({
             {notification.urgency !== 'normal' && <UrgencyBadge urgency={notification.urgency} />}
           </div>
 
-          {/* QUICK ACTION — Unified with 4-language support */}
-          {(notification.actionPage || notification.actionUrl) && (
-            <span onClick={(e) => e.stopPropagation()} className="shrink-0">
-              <QuickActionButton
-                labelAr={notification.actionLabelAr}
-                labelEn={notification.actionLabelEn}
-                labelFr={notification.actionLabelFr}
-                labelEs={notification.actionLabelEs}
-                variant={urgency.actionVariant}
-                onClick={() => handleAction()}
-              />
-            </span>
-          )}
+          {/* QUICK ACTION — Unified with 4-language & nested translations support */}
+          {(() => {
+            let parsedData: any = {};
+            if (notification.data) {
+              try { parsedData = JSON.parse(notification.data); } catch (e) {}
+            }
+            const hasAction = notification.actionPage || notification.actionUrl || parsedData.actionPage || parsedData.actionUrl;
+            if (!hasAction) return null;
+
+            return (
+              <span onClick={(e) => e.stopPropagation()} className="shrink-0">
+                <QuickActionButton
+                  labelAr={parsedData.translations?.['ar']?.actionLabel || notification.actionLabelAr}
+                  labelEn={parsedData.translations?.['en']?.actionLabel || notification.actionLabelEn}
+                  labelFr={parsedData.translations?.['fr']?.actionLabel || notification.actionLabelFr}
+                  labelEs={parsedData.translations?.['es']?.actionLabel || notification.actionLabelEs}
+                  variant={urgency.actionVariant}
+                  onClick={() => handleAction()}
+                />
+              </span>
+            );
+          })()}
         </div>
       </div>
     </div>

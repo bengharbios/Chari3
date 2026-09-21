@@ -87,6 +87,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { label: locale === 'ar' ? 'توثيق المتاجر (KYC/KYB)' : 'KYC/KYB Verification', path: 'verifications' },
         { label: locale === 'ar' ? 'سجل التدقيق' : 'Audit Trail', path: 'verifications/audit' },
         { label: locale === 'ar' ? 'طلبات ترقية الأعمال' : 'Business Upgrades', path: 'upgrade-requests' },
+        { label: locale === 'ar' ? '📢 مركز الإشعارات والتنبيهات' : (locale === 'fr' ? '📢 Centre de notifications' : (locale === 'es' ? '📢 Centro de notificaciones' : '📢 Notifications & Alerts')), path: 'notifications' },
         { label: locale === 'ar' ? 'مختبر سحب البيانات (OCR)' : 'OCR Sandbox', path: 'ocr-sandbox' },
       ]
     },
