@@ -48,14 +48,82 @@ export function useTranslation() {
       return dict[key];
     }
     
+const commonLiteralTranslations: Record<string, { fr?: string; es?: string; en?: string }> = {
+  'منتج جديد': { fr: 'Nouveau produit', es: 'Nuevo producto', en: 'New Product' },
+  'إضافة منتج جديد': { fr: 'Ajouter un nouveau produit', es: 'Añadir nuevo producto', en: 'Add New Product' },
+  'New Product': { fr: 'Nouveau produit', es: 'Nuevo producto' },
+  'Add New Product': { fr: 'Ajouter un nouveau produit', es: 'Añadir nuevo producto' },
+  'نفذت الكمية': { fr: 'Rupture de stock', es: 'Agotado', en: 'Out of Stock' },
+  'نافذة الكمية': { fr: 'Rupture de stock', es: 'Agotado', en: 'Out of Stock' },
+  'Out of Stock': { fr: 'Rupture de stock', es: 'Agotado' },
+  'المنتجات النشطة': { fr: 'Produits actifs', es: 'Productos activos', en: 'Active Products' },
+  'Active Products': { fr: 'Produits actifs', es: 'Productos activos' },
+  'إجمالي المخزون': { fr: 'Stock total', es: 'Inventario total', en: 'Total Inventory' },
+  'Total Inventory': { fr: 'Stock total', es: 'Inventario total' },
+  'إجمالي المتغيرات': { fr: 'Variantes totales', es: 'Variantes totales', en: 'Total Variants' },
+  'استيراد / تصدير': { fr: 'Importer / Exporter', es: 'Importar / Exportar', en: 'Import / Export' },
+  'المنتج': { fr: 'Produit', es: 'Producto', en: 'Product' },
+  'التصنيف': { fr: 'Catégorie', es: 'Categoría', en: 'Category' },
+  'السعر': { fr: 'Prix', es: 'Precio', en: 'Price' },
+  'المخزون': { fr: 'Stock', es: 'Inventario', en: 'Inventory' },
+  'الحالة': { fr: 'Statut', es: 'Estado', en: 'Status' },
+  'الإجراءات': { fr: 'Actions', es: 'Acciones', en: 'Actions' },
+  'Actions': { fr: 'Actions', es: 'Acciones' },
+  'الكل': { fr: 'Toutes', es: 'Todos', en: 'All' },
+  'All': { fr: 'Toutes', es: 'Todos' },
+  'غير مقروء': { fr: 'Non lues', es: 'No leídos', en: 'Unread' },
+  'Unread': { fr: 'Non lues', es: 'No leídos' },
+  'تحديد الكل كمقروء': { fr: 'Tout marquer comme lu', es: 'Marcar todo como leído', en: 'Mark all as read' },
+  'Mark all as read': { fr: 'Tout marquer comme lu', es: 'Marcar todo como leído' },
+  'مسح الكل': { fr: 'Tout effacer', es: 'Borrar todo', en: 'Clear all' },
+  'Clear all': { fr: 'Tout effacer', es: 'Borrar todo' },
+  'الإشعارات': { fr: 'Notifications', es: 'Notificaciones', en: 'Notifications' },
+  'Notifications': { fr: 'Notifications', es: 'Notificaciones' },
+  'جديد': { fr: 'Nouveau', es: 'Nuevo', en: 'New' },
+  'New': { fr: 'Nouveau', es: 'Nuevo' },
+  'عرض التفاصيل': { fr: 'Voir les détails', es: 'Ver detalles', en: 'View Details' },
+  'View Details': { fr: 'Voir les détails', es: 'Ver detalles' },
+  'عرض حالة التوثيق': { fr: 'Voir la vérification', es: 'Ver verificación', en: 'View Verification Status' },
+  'View Verification Status': { fr: 'Voir la vérification', es: 'Ver verificación' },
+  'تعديل طلب التوثيق': { fr: 'Modifier la vérification', es: 'Editar verificación', en: 'Edit Verification' },
+  'Edit Verification': { fr: 'Modifier la vérification', es: 'Editar verificación' },
+  'الإجابة على السؤال': { fr: 'Répondre à la question', es: 'Responder pregunta', en: 'Answer Question' },
+  'Answer Question': { fr: 'Répondre à la question', es: 'Responder pregunta' },
+  'عرض الطلبات': { fr: 'Voir les commandes', es: 'Ver pedidos', en: 'View Orders' },
+  'View Orders': { fr: 'Voir les commandes', es: 'Ver pedidos' },
+  'عرض المحفظة': { fr: 'Voir le portefeuille', es: 'Ver billetera', en: 'View Wallet' },
+  'View Wallet': { fr: 'Voir le portefeuille', es: 'Ver billetera' },
+  'لا توجد إشعارات': { fr: 'Aucune notification', es: 'Sin notificaciones', en: 'No notifications' },
+  'لا توجد إشعارات غير مقروءة': { fr: 'Aucune notification non lue', es: 'Sin notificaciones no leídas', en: 'No unread notifications' },
+  'لقد قرأت كل شيء!': { fr: 'Vous êtes à jour !', es: '¡Estás al día!', en: 'You are all caught up!' },
+  'الإشعارات الجديدة ستظهر هنا': { fr: 'Les nouvelles notifications apparaîtront ici', es: 'Las nuevas notificaciones aparecerán aquí', en: 'New notifications will appear here' },
+};
+
     // 2. Fallback to literal translations if key is literal text (contains spaces/Arabic)
     const isLiteralText = /[^a-zA-Z0-9._-]/.test(key);
     if (isLiteralText) {
       let textToReturn = key;
-      if (typeof values === 'string') {
-        if (activeLocale === 'en') textToReturn = values;
-        else if (activeLocale === 'fr') textToReturn = arg3 || values || key;
-        else if (activeLocale !== 'ar') textToReturn = values; // fallback for other languages
+
+      // Handle notification footer count template
+      if (key.includes('إشعارات إجمالاً') || key.includes('total notifications')) {
+        if (activeLocale === 'fr') textToReturn = 'Vous avez {{count}} notifications au total, dont {{unread}} non lue(s)';
+        else if (activeLocale === 'en') textToReturn = 'You have {{count}} total notifications, {{unread}} unread';
+        else if (activeLocale === 'es') textToReturn = 'Tienes {{count}} notificaciones en total, {{unread}} no leídas';
+        else textToReturn = 'لديك {{count}} إشعارات إجمالاً، منها {{unread}} غير مقروءة';
+      } else if (typeof values === 'string') {
+        if (activeLocale === 'en') {
+          textToReturn = values;
+        } else if (activeLocale === 'fr') {
+          textToReturn = arg3 || commonLiteralTranslations[key]?.fr || commonLiteralTranslations[values]?.fr || values || key;
+        } else if (activeLocale === 'es') {
+          textToReturn = commonLiteralTranslations[key]?.es || commonLiteralTranslations[values]?.es || values || key;
+        } else if (activeLocale !== 'ar') {
+          textToReturn = values;
+        }
+      } else if (values && typeof values === 'object' && commonLiteralTranslations[key]) {
+        if (activeLocale === 'fr' && commonLiteralTranslations[key].fr) textToReturn = commonLiteralTranslations[key].fr;
+        else if (activeLocale === 'es' && commonLiteralTranslations[key].es) textToReturn = commonLiteralTranslations[key].es;
+        else if (activeLocale === 'en' && commonLiteralTranslations[key].en) textToReturn = commonLiteralTranslations[key].en;
       }
 
       // Perform interpolation if values is an object

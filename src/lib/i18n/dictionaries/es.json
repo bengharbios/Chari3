@@ -563,6 +563,22 @@
       "title": "Suscripción degradada automáticamente ⚠️",
       "body": "Su suscripción anterior ha caducado. Su cuenta se ha degradado automáticamente al plan predeterminado."
     },
+    "SHIPMENT_CONFIRMED": {
+      "title": "Su pedido ha sido confirmado 📦",
+      "body": "Pedido #{{orderNumber}} - Su pedido ha sido confirmado"
+    },
+    "SHIPMENT_SHIPPED": {
+      "title": "Su pedido ha sido enviado 📦",
+      "body": "Pedido #{{orderNumber}} - Su pedido ha sido enviado"
+    },
+    "SHIPMENT_DELIVERED": {
+      "title": "Su pedido ha sido entregado 📦",
+      "body": "Pedido #{{orderNumber}} - Su pedido ha sido entregado"
+    },
+    "SHIPMENT_CANCELLED": {
+      "title": "Su pedido ha sido cancelado 📦",
+      "body": "Pedido #{{orderNumber}} - Su pedido ha sido cancelado"
+    },
     "PRODUCT_PENDING_APPROVAL": {
       "title": "⏳ New product pending approval ({{productName}})",
       "body": "A merchant added a new product that is waiting for your review and approval."

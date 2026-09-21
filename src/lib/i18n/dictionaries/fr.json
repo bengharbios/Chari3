@@ -545,6 +545,22 @@
       "title": "Abonnement rétrogradé automatiquement ⚠️",
       "body": "Votre abonnement précédent a expiré. Votre compte a été automatiquement rétrogradé vers le forfait par défaut."
     },
+    "SHIPMENT_CONFIRMED": {
+      "title": "Votre commande a été confirmée 📦",
+      "body": "Commande #{{orderNumber}} - Votre commande a été confirmée"
+    },
+    "SHIPMENT_SHIPPED": {
+      "title": "Votre commande a été expédiée 📦",
+      "body": "Commande #{{orderNumber}} - Votre commande a été expédiée"
+    },
+    "SHIPMENT_DELIVERED": {
+      "title": "Votre commande a été livrée 📦",
+      "body": "Commande #{{orderNumber}} - Votre commande a été livrée"
+    },
+    "SHIPMENT_CANCELLED": {
+      "title": "Votre commande a été annulée 📦",
+      "body": "Commande #{{orderNumber}} - Votre commande a été annulée"
+    },
     "PRODUCT_PENDING_APPROVAL": {
       "title": "⏳ Nouveau produit en attente d'approbation ({{productName}})",
       "body": "Un marchand a ajouté un nouveau produit qui attend votre examen et votre approbation."

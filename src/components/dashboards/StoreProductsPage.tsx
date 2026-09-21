@@ -117,20 +117,20 @@ import { useEffect } from 'react';export default function StoreProductsPage() {
     >
       <motion.div variants={FADE_UP} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <PageHeader
-          title={t('إدارة المنتجات المتطورة', 'Advanced Product Management')}
-          description={t('كتالوج المتجر، إدارة المخزون، السيو (SEO)، والمتغيرات.', 'Store catalog, inventory management, SEO, and variants.')}
+          title={t('إدارة المنتجات المتطورة', 'Advanced Product Management', 'Gestion avancée des produits')}
+          description={t('كتالوج المتجر، إدارة المخزون، السيو (SEO)، والمتغيرات.', 'Store catalog, inventory management, SEO, and variants.', 'Catalogue du magasin, gestion des stocks, SEO et variantes.')}
         />
         <div className="flex items-center gap-2">
           <Button variant="outline" className="rounded-xl font-bold bg-background/50 backdrop-blur-md">
             <Copy className="h-4 w-4 me-2" />
-            {t('استيراد / تصدير', 'Import / Export')}
+            {t('استيراد / تصدير', 'Import / Export', 'Importer / Exporter')}
           </Button>
           <Button 
             className="rounded-xl font-bold bg-gradient-to-r from-primary to-primary/80 shadow-lg shadow-primary/20 hover:scale-105 transition-all"
             onClick={() => setShowAddForm(true)}
           >
             <Plus className="h-4 w-4 me-2" />
-            {t('منتج جديد', 'New Product')}
+            {t('منتج جديد', 'New Product', 'Nouveau produit')}
           </Button>
         </div>
       </motion.div>
@@ -138,10 +138,10 @@ import { useEffect } from 'react';export default function StoreProductsPage() {
       {/* KPI mini-cards */}
       <motion.div variants={FADE_UP} className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: t('المنتجات النشطة', 'Active Products'), value: '342', color: 'text-emerald-500' },
-          { label: t('نفذت الكمية', 'Out of Stock'), value: '12', color: 'text-red-500' },
-          { label: t('إجمالي المخزون', 'Total Inventory'), value: '8,430', color: 'text-blue-500' },
-          { label: t('إجمالي المتغيرات', 'Total Variants'), value: '1,204', color: 'text-purple-500' },
+          { label: t('المنتجات النشطة', 'Active Products', 'Produits actifs'), value: '342', color: 'text-emerald-500' },
+          { label: t('نفذت الكمية', 'Out of Stock', 'Rupture de stock'), value: '12', color: 'text-red-500' },
+          { label: t('إجمالي المخزون', 'Total Inventory', 'Stock total'), value: '8,430', color: 'text-blue-500' },
+          { label: t('إجمالي المتغيرات', 'Total Variants', 'Variantes totales'), value: '1,204', color: 'text-purple-500' },
         ].map((kpi, idx) => (
           <Card key={idx} className="border-white/10 bg-background/60 backdrop-blur-xl shadow-sm rounded-2xl">
             <CardContent className="p-4">
@@ -161,10 +161,10 @@ import { useEffect } from 'react';export default function StoreProductsPage() {
             {/* Tabs */}
             <div className="flex bg-muted/50 p-1 rounded-xl w-full md:w-auto overflow-x-auto hide-scrollbar">
               {[
-                { id: 'all', label: t('الكل', 'All') },
-                { id: 'active', label: t('النشطة', 'Active') },
-                { id: 'draft', label: t('المسودات', 'Drafts') },
-                { id: 'out_of_stock', label: t('نافذة الكمية', 'Out of Stock') },
+                { id: 'all', label: t('الكل', 'All', 'Toutes') },
+                { id: 'active', label: t('النشطة', 'Active', 'Actifs') },
+                { id: 'draft', label: t('المسودات', 'Drafts', 'Brouillons') },
+                { id: 'out_of_stock', label: t('نافذة الكمية', 'Out of Stock', 'Rupture de stock') },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -185,7 +185,7 @@ import { useEffect } from 'react';export default function StoreProductsPage() {
               <div className="relative w-full md:w-64">
                 <Search className={`absolute ${isAr ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground`} />
                 <Input 
-                  placeholder={t('ابحث بالاسم أو الرمز (SKU)...', 'Search by name or SKU...')}
+                  placeholder={t('ابحث بالاسم أو الرمز (SKU)...', 'Search by name or SKU...', 'Rechercher par nom ou SKU...')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className={`rounded-xl bg-background/50 border-white/10 focus-visible:ring-primary ${isAr ? 'pr-9' : 'pl-9'}`}
@@ -202,17 +202,17 @@ import { useEffect } from 'react';export default function StoreProductsPage() {
             <Table>
               <TableHeader className="bg-muted/30">
                 <TableRow className="border-border/50 hover:bg-transparent">
-                  <TableHead className="w-[300px]">{t('المنتج', 'Product')}</TableHead>
-                  <TableHead>{t('التصنيف', 'Category')}</TableHead>
-                  <TableHead className="text-center">{t('السعر', 'Price')}</TableHead>
+                  <TableHead className="w-[300px]">{t('المنتج', 'Product', 'Produit')}</TableHead>
+                  <TableHead>{t('التصنيف', 'Category', 'Catégorie')}</TableHead>
+                  <TableHead className="text-center">{t('السعر', 'Price', 'Prix')}</TableHead>
                   <TableHead className="text-center">
                     <div className="flex items-center justify-center gap-1 cursor-pointer hover:text-primary transition-colors">
-                      {t('المخزون', 'Inventory')}
+                      {t('المخزون', 'Inventory', 'Stock')}
                       <ArrowUpDown className="h-3 w-3" />
                     </div>
                   </TableHead>
-                  <TableHead className="text-center">{t('الحالة', 'Status')}</TableHead>
-                  <TableHead className="text-end">{t('الإجراءات', 'Actions')}</TableHead>
+                  <TableHead className="text-center">{t('الحالة', 'Status', 'Statut')}</TableHead>
+                  <TableHead className="text-end">{t('الإجراءات', 'Actions', 'Actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

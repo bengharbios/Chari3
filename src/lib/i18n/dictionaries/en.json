@@ -552,6 +552,22 @@
       "title": "Subscription Downgraded Automatically ⚠️",
       "body": "Your previous subscription has expired. Your account has been automatically downgraded to the default plan."
     },
+    "SHIPMENT_CONFIRMED": {
+      "title": "Your order has been confirmed 📦",
+      "body": "Order #{{orderNumber}} - Your order has been confirmed"
+    },
+    "SHIPMENT_SHIPPED": {
+      "title": "Your order has been shipped 📦",
+      "body": "Order #{{orderNumber}} - Your order has been shipped"
+    },
+    "SHIPMENT_DELIVERED": {
+      "title": "Your order has been delivered 📦",
+      "body": "Order #{{orderNumber}} - Your order has been delivered"
+    },
+    "SHIPMENT_CANCELLED": {
+      "title": "Your order has been cancelled 📦",
+      "body": "Order #{{orderNumber}} - Your order has been cancelled"
+    },
     "PRODUCT_PENDING_APPROVAL": {
       "title": "⏳ New product pending approval ({{productName}})",
       "body": "A merchant added a new product that is waiting for your review and approval."

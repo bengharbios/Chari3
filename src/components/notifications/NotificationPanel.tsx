@@ -221,15 +221,42 @@ function NotificationItem({
             !notification.isRead ? 'text-foreground' : 'text-foreground/80'
           )}>
             {(() => {
-              if (notification.type) {
-                const normType = notification.type === 'new_qa' ? 'QA_NEW' : (notification.type === 'new_order' ? 'ORDER_NEW' : notification.type);
-                const titleKey = `notifications.${normType}.title`;
-                let parsedData: any = {};
-                if (notification.data) {
-                  try {
-                    parsedData = JSON.parse(notification.data);
-                  } catch (e) {}
+              let parsedData: any = {};
+              if (notification.data) {
+                try {
+                  parsedData = JSON.parse(notification.data);
+                } catch (e) {}
+              }
+
+              // Extract product name if missing from parsedData
+              if (!parsedData.productName) {
+                const match = notification.bodyAr?.match(/"([^"]+)"/) || notification.bodyEn?.match(/"([^"]+)"/);
+                if (match && match[1].trim()) {
+                  parsedData.productName = match[1].trim();
+                } else if (notification.type === 'new_qa' || notification.type === 'QA_NEW') {
+                  parsedData.productName = isAr ? 'المنتج' : (locale === 'fr' ? 'votre produit' : 'your product');
                 }
+              }
+
+              if (!parsedData.orderNumber) {
+                const match = notification.bodyAr?.match(/#(CHARI-[0-9]+)/) || notification.bodyEn?.match(/#(CHARI-[0-9]+)/);
+                if (match) parsedData.orderNumber = match[1];
+              }
+
+              let normType = notification.type === 'new_qa' ? 'QA_NEW' : (notification.type === 'new_order' ? 'ORDER_NEW' : notification.type);
+
+              // Detect specific shipment types from title/content
+              if (notification.type === 'shipment') {
+                const tAr = notification.titleAr || '';
+                const tEn = (notification.titleEn || '').toLowerCase();
+                if (tAr.includes('تأكيد') || tEn.includes('confirmed')) normType = 'SHIPMENT_CONFIRMED';
+                else if (tAr.includes('شحن') || tEn.includes('shipped')) normType = 'SHIPMENT_SHIPPED';
+                else if (tAr.includes('تسليم') || tEn.includes('delivered')) normType = 'SHIPMENT_DELIVERED';
+                else if (tAr.includes('إلغاء') || tEn.includes('cancelled')) normType = 'SHIPMENT_CANCELLED';
+              }
+
+              if (normType) {
+                const titleKey = `notifications.${normType}.title`;
                 const translated = t(titleKey, parsedData);
                 if (translated !== titleKey) return translated;
               }
@@ -243,7 +270,7 @@ function NotificationItem({
               clearNotification(notification.id, effectiveUserId);
             }}
             className="opacity-60 md:opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-muted transition-all shrink-0"
-            aria-label={t('notifications.delete')}
+            aria-label={t('مسح', 'Delete', 'Supprimer')}
           >
             <Trash2 className="size-3 text-muted-foreground hover:text-destructive" />
           </button>
@@ -255,15 +282,40 @@ function NotificationItem({
           !notification.isRead && 'text-foreground/60'
         )}>
           {(() => {
-            if (notification.type) {
-              const normType = notification.type === 'new_qa' ? 'QA_NEW' : (notification.type === 'new_order' ? 'ORDER_NEW' : notification.type);
-              const bodyKey = `notifications.${normType}.body`;
-              let parsedData: any = {};
-              if (notification.data) {
-                try {
-                  parsedData = JSON.parse(notification.data);
-                } catch (e) {}
+            let parsedData: any = {};
+            if (notification.data) {
+              try {
+                parsedData = JSON.parse(notification.data);
+              } catch (e) {}
+            }
+
+            if (!parsedData.productName) {
+              const match = notification.bodyAr?.match(/"([^"]+)"/) || notification.bodyEn?.match(/"([^"]+)"/);
+              if (match && match[1].trim()) {
+                parsedData.productName = match[1].trim();
+              } else if (notification.type === 'new_qa' || notification.type === 'QA_NEW') {
+                parsedData.productName = isAr ? 'المنتج' : (locale === 'fr' ? 'votre produit' : 'your product');
               }
+            }
+
+            if (!parsedData.orderNumber) {
+              const match = notification.bodyAr?.match(/#(CHARI-[0-9]+)/) || notification.bodyEn?.match(/#(CHARI-[0-9]+)/);
+              if (match) parsedData.orderNumber = match[1];
+            }
+
+            let normType = notification.type === 'new_qa' ? 'QA_NEW' : (notification.type === 'new_order' ? 'ORDER_NEW' : notification.type);
+
+            if (notification.type === 'shipment') {
+              const tAr = notification.titleAr || '';
+              const tEn = (notification.titleEn || '').toLowerCase();
+              if (tAr.includes('تأكيد') || tEn.includes('confirmed')) normType = 'SHIPMENT_CONFIRMED';
+              else if (tAr.includes('شحن') || tEn.includes('shipped')) normType = 'SHIPMENT_SHIPPED';
+              else if (tAr.includes('تسليم') || tEn.includes('delivered')) normType = 'SHIPMENT_DELIVERED';
+              else if (tAr.includes('إلغاء') || tEn.includes('cancelled')) normType = 'SHIPMENT_CANCELLED';
+            }
+
+            if (normType) {
+              const bodyKey = `notifications.${normType}.body`;
               const translated = t(bodyKey, parsedData);
               if (translated !== bodyKey) return translated;
             }
@@ -597,11 +649,11 @@ export default function NotificationPanel() {
             <div className="flex items-center justify-between px-4 py-3 border-b border-border">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-semibold">
-                  {t('الإشعارات', 'Notifications')}
+                  {t('الإشعارات', 'Notifications', 'Notifications')}
                 </h3>
                 {unreadCount > 0 && (
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary border-0">
-                    {unreadCount} {t('جديد', 'New')}
+                    {unreadCount} {t('جديد', 'New', 'Nouveau')}
                   </Badge>
                 )}
               </div>
@@ -623,7 +675,7 @@ export default function NotificationPanel() {
                     }}
                   >
                     <CheckCheck className="size-3.5" />
-                    <span>{t('تحديد الكل كمقروء', 'Mark all as read')}</span>
+                    <span>{t('تحديد الكل كمقروء', 'Mark all as read', 'Tout marquer comme lu')}</span>
                   </Button>
                 )}
                 {notifications.length > 0 && (
@@ -634,7 +686,7 @@ export default function NotificationPanel() {
                     onClick={() => clearAll(user?.id)}
                   >
                     <Trash2 className="size-3.5" />
-                    <span>{t('مسح الكل', 'Clear all')}</span>
+                    <span>{t('مسح الكل', 'Clear all', 'Tout effacer')}</span>
                   </Button>
                 )}
               </div>
@@ -652,7 +704,7 @@ export default function NotificationPanel() {
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <span>{t('الكل', 'All')}</span>
+                  <span>{t('الكل', 'All', 'Toutes')}</span>
                   <Badge variant="secondary" className={cn(
                     "text-[10px] px-1.5 py-0 border-0 pointer-events-none h-4 min-w-4 flex items-center justify-center p-0",
                     activeTab === 'all' ? "bg-muted text-foreground" : "bg-muted/50 text-muted-foreground"
@@ -669,7 +721,7 @@ export default function NotificationPanel() {
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <span>{t('غير مقروء', 'Unread')}</span>
+                  <span>{t('غير مقروء', 'Unread', 'Non lues')}</span>
                   {unreadCount > 0 ? (
                     <Badge className="text-[10px] px-1.5 py-0 border-0 bg-primary text-primary-foreground font-bold animate-pulse h-4 min-w-4 flex items-center justify-center p-0">
                       {unreadCount}
@@ -698,12 +750,12 @@ export default function NotificationPanel() {
                   <Bell className="size-6 text-muted-foreground" />
                 </div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  {activeTab === 'unread' ? t('لا توجد إشعارات غير مقروءة', 'No unread notifications') : t('لا توجد إشعارات', 'No notifications')}
+                  {activeTab === 'unread' ? t('لا توجد إشعارات غير مقروءة', 'No unread notifications', 'Aucune notification non lue') : t('لا توجد إشعارات', 'No notifications', 'Aucune notification')}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   {activeTab === 'unread' 
-                    ? t('لقد قرأت كل شيء!', 'You are all caught up!') 
-                    : t('الإشعارات الجديدة ستظهر هنا', 'New notifications will appear here')}
+                    ? t('لقد قرأت كل شيء!', 'You are all caught up!', 'Vous êtes à jour !') 
+                    : t('الإشعارات الجديدة ستظهر هنا', 'New notifications will appear here', 'Les nouvelles notifications apparaîtront ici')}
                 </p>
               </div>
             )}
