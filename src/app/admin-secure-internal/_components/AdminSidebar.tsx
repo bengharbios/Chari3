@@ -225,11 +225,11 @@ export default function AdminSidebar({ className }: { className?: string }) {
       title: locale === 'ar' ? 'المحتوى والواجهة (CMS)' : (locale === 'fr' ? 'Contenu et vitrine (CMS)' : (locale === 'es' ? 'Contenido y escaparate' : 'CMS & Storefront')),
       icon: Layers,
       items: [
-        { label: locale === 'ar' ? 'إدارة الصفحات المخصصة' : (locale === 'fr' ? 'Pages personnalisées' : (locale === 'es' ? 'Páginas personalizadas' : 'Custom Pages')), path: 'pages' },
+        { label: locale === 'ar' ? 'تصميم وإدارة الواجهة الرئيسية' : (locale === 'fr' ? 'Gestion de la page d\'accueil' : (locale === 'es' ? 'Gestión de página principal' : 'Homepage Storefront')), path: 'settings/homepage' },
         { label: 'SAADA Builder', path: 'cms/saada-builder' },
         { label: locale === 'ar' ? 'كتل وقوالب التنسيق' : (locale === 'fr' ? 'Blocs de mise en page' : (locale === 'es' ? 'Bloques de diseño' : 'Layout Blocks')), path: 'cms/layout-blocks' },
+        { label: locale === 'ar' ? 'إدارة الصفحات المخصصة' : (locale === 'fr' ? 'Pages personnalisées' : (locale === 'es' ? 'Páginas personalizadas' : 'Custom Pages')), path: 'pages' },
         { label: t('admin.manageDocs'), path: 'cms/docs' },
-        { label: t('admin.storefrontCMS'), path: 'cms' },
         { label: locale === 'ar' ? 'متجر الإضافات (App Store)' : (locale === 'fr' ? 'Gestionnaire de plugins' : (locale === 'es' ? 'Gestor de complementos' : 'Plugin Manager')), path: 'plugins' },
       ]
     },
@@ -242,7 +242,6 @@ export default function AdminSidebar({ className }: { className?: string }) {
         { label: t('admin.generalSettings'), path: 'settings' },
         { label: t('admin.themeDesign'), path: 'settings/theme' },
         { label: t('admin.manageTranslations'), path: 'settings/translations' },
-        { label: t('admin.homepageSettings'), path: 'settings/homepage' },
         { label: locale === 'ar' ? 'إعدادات الهيدر والفوتر' : (locale === 'fr' ? 'En-tête et pied de page' : (locale === 'es' ? 'Encabezado y pie de página' : 'Header & Footer Settings')), path: 'settings/header-footer' },
         { label: locale === 'ar' ? 'إعدادات القائمة الرئيسية' : (locale === 'fr' ? 'Menu principal' : (locale === 'es' ? 'Menú principal' : 'Main Menu')), path: 'settings/menu' },
         { label: t('admin.globalCoupons'), path: 'coupons' },
@@ -253,7 +252,7 @@ export default function AdminSidebar({ className }: { className?: string }) {
     // 13. Advanced Tools & AI Labs
     {
       id: 'tools',
-      title: locale === 'ar' ? 'الأدوات والذكاء الاصطناعي' : (locale === 'fr' ? 'Outils avancés et IA' : (locale === 'es' ? 'Herramientas avanzadas e IA' : 'Advanced Tools & AI')),
+      title: locale === 'ar' ? 'الأدوات والذكاء الاصطناعي' : (locale === 'fr' ? 'Outils avancés et IA' : (locale === 'es' ? 'Herramientas avancadas e IA' : 'Advanced Tools & AI')),
       icon: Cpu,
       items: [
         { label: locale === 'ar' ? 'مختبر سحب البيانات (OCR)' : (locale === 'fr' ? 'Bac à sable OCR' : (locale === 'es' ? 'Entorno de pruebas OCR' : 'OCR Sandbox')), path: 'ocr-sandbox' },
@@ -262,20 +261,15 @@ export default function AdminSidebar({ className }: { className?: string }) {
   ];
 
   useEffect(() => {
-    const activeGroupIndex = navGroups.findIndex(g => g.items.some(i => !i.disabled && getIsActive(i.path)));
+    // Find group containing currently active item, default to overview if on root
+    const activeGroup = navGroups.find(g => g.items.some(i => !i.disabled && getIsActive(i.path)));
+    const activeGroupTitle = activeGroup?.title || navGroups[0].title;
+    
     const initialCollapsed: Record<string, boolean> = {};
     navGroups.forEach(g => {
-      // Keep overview, products, and orders open by default for quick access
-      if (g.id === 'overview' || g.id === 'products' || g.id === 'orders') {
-        initialCollapsed[g.title] = false;
-      } else {
-        initialCollapsed[g.title] = true;
-      }
+      // Strict single-open: ONLY the active group is open, all others are collapsed!
+      initialCollapsed[g.title] = g.title !== activeGroupTitle;
     });
-    if (activeGroupIndex !== -1) {
-      const activeGroupTitle = navGroups[activeGroupIndex].title;
-      initialCollapsed[activeGroupTitle] = false;
-    }
     setCollapsedSections(initialCollapsed);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, currentTab]);
@@ -283,12 +277,14 @@ export default function AdminSidebar({ className }: { className?: string }) {
   const toggleSection = (sectionTitle: string) => {
     if (isCollapsed) return;
     setCollapsedSections(prev => {
-      const isCurrentlyCollapsed = prev[sectionTitle] ?? true;
+      const isCurrentlyOpen = !(prev[sectionTitle] ?? true);
       const newCollapsed: Record<string, boolean> = {};
+      // Strict accordion: close all sections
       navGroups.forEach(g => {
         newCollapsed[g.title] = true;
       });
-      newCollapsed[sectionTitle] = !isCurrentlyCollapsed;
+      // If it was open, close it (all closed). If it was closed, open only this one.
+      newCollapsed[sectionTitle] = isCurrentlyOpen;
       return newCollapsed;
     });
   };
