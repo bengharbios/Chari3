@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { auth } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 import { filterValidPermissions } from '@/lib/permissions';
 
 // ============================================
@@ -13,6 +15,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user || (session.user.role !== 'admin' && (session.user as any).role !== 'SUPER_ADMIN')) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Admin access required' },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
 
     const role = await db.role.findUnique({
@@ -83,6 +93,14 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user || (session.user.role !== 'admin' && (session.user as any).role !== 'SUPER_ADMIN')) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Admin access required' },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
     const body = await request.json();
 
@@ -231,8 +249,8 @@ export async function PATCH(
 
     await db.auditLog.create({
       data: {
-        userId: body.adminId || 'system',
-        adminId: body.adminId || null,
+        userId: session.user.id,
+        adminId: session.user.id,
         action: 'admin_role_updated',
         roleId: id,
         details: JSON.stringify({
@@ -279,6 +297,14 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user || (session.user.role !== 'admin' && (session.user as any).role !== 'SUPER_ADMIN')) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Admin access required' },
+        { status: 401 }
+      );
+    }
+
     const { id } = await params;
     const body = await request.json().catch(() => ({}));
 
@@ -337,8 +363,8 @@ export async function DELETE(
     // ---- Audit log ----
     await db.auditLog.create({
       data: {
-        userId: body.adminId || 'system',
-        adminId: body.adminId || null,
+        userId: session.user.id,
+        adminId: session.user.id,
         action: 'admin_role_deleted',
         details: JSON.stringify({
           deletedRoleKey: existing.key,

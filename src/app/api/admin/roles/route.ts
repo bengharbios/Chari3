@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { auth } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 import { seedRoles } from '@/lib/seed-roles';
 import {
   TOTAL_PERMISSIONS,
@@ -16,13 +18,28 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user || (session.user.role !== 'admin' && (session.user as any).role !== 'SUPER_ADMIN')) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Admin access required' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const shouldSeed = searchParams.get('seed') === 'true';
 
-    // Seed roles if requested
+    // Seed roles if requested (strictly restricted: development or SUPER_ADMIN only)
     if (shouldSeed) {
+      const isSuperAdmin = (session.user as any).role === 'SUPER_ADMIN';
+      if (process.env.NODE_ENV === 'production' && !isSuperAdmin) {
+        return NextResponse.json(
+          { success: false, error: 'Role seeding in production is restricted to SUPER_ADMIN' },
+          { status: 403 }
+        );
+      }
       const seedResult = await seedRoles();
-      console.log(`[GET /api/admin/roles] Seeding triggered:`, seedResult);
+      console.log(`[GET /api/admin/roles] Seeding triggered by admin ${session.user.id}:`, seedResult);
     }
 
     // Fix MySQL zero-date values that Prisma cannot parse (0000-00-00 00:00:00)
@@ -103,6 +120,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user || (session.user.role !== 'admin' && (session.user as any).role !== 'SUPER_ADMIN')) {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized: Admin access required' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const {
       key,
@@ -190,8 +215,8 @@ export async function POST(request: Request) {
 
     await db.auditLog.create({
       data: {
-        userId: body.adminId || 'system',
-        adminId: body.adminId || null,
+        userId: session.user.id,
+        adminId: session.user.id,
         action: 'admin_role_created',
         roleId: role.id,
         details: JSON.stringify({
