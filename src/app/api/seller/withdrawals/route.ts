@@ -1,21 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { auth } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   try {
-    const sellerId = req.nextUrl.searchParams.get('sellerId');
-    if (!sellerId) return NextResponse.json({ success: false, error: 'sellerId required' }, { status: 400 });
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Authentication required' }, { status: 401 });
+    }
 
-    // Try finding seller by id, fallback to userId
-    let seller = await db.sellerProfile.findUnique({
-      where: { id: sellerId }
-    });
+    const isAdmin = session.user.role === 'admin' || (session.user as any).role === 'SUPER_ADMIN';
 
-    if (!seller) {
+    // If admin, they can pass sellerId to view. If seller, force their own profile.
+    let seller = null;
+    const requestedSellerId = req.nextUrl.searchParams.get('sellerId');
+
+    if (isAdmin && requestedSellerId) {
+      seller = await db.sellerProfile.findFirst({
+        where: {
+          OR: [
+            { id: requestedSellerId },
+            { userId: requestedSellerId }
+          ]
+        }
+      });
+    } else {
+      // Strictly resolve to authenticated user's own profile
       seller = await db.sellerProfile.findUnique({
-        where: { userId: sellerId }
+        where: { userId: session.user.id }
       });
     }
 
@@ -53,9 +68,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { sellerId, amount, method, accountNumber, accountName, bankName } = await req.json();
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Authentication required' }, { status: 401 });
+    }
 
-    if (!sellerId || !amount || !method) {
+    const { amount, method, accountNumber, accountName, bankName } = await req.json();
+
+    if (!amount || !method) {
       return NextResponse.json({ success: false, error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -69,21 +89,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: `Minimum withdrawal amount is ${minAmount}` }, { status: 400 });
     }
 
-    // 2. Get Seller Wallet & Pending Withdrawals
-    let seller = await db.sellerProfile.findUnique({
-      where: { id: sellerId },
+    // 2. Get Authenticated Seller Wallet & Pending Withdrawals
+    const seller = await db.sellerProfile.findUnique({
+      where: { userId: session.user.id },
       select: { id: true, userId: true }
     });
 
     if (!seller) {
-      seller = await db.sellerProfile.findUnique({
-        where: { userId: sellerId },
-        select: { id: true, userId: true }
-      });
-    }
-
-    if (!seller) {
-      return NextResponse.json({ success: false, error: 'Seller not found' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Forbidden: You do not have an active seller profile' }, { status: 403 });
     }
 
     // Security check: Check for sensitive changes dynamically using admin-configured hold hours

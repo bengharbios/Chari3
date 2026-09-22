@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { auth } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -95,6 +97,33 @@ export async function PUT(req: Request, context: { params: Promise<{ id: string 
   const id = resolvedParams.id;
 
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Authentication required' }, { status: 401 });
+    }
+
+    const existingProduct = await db.product.findUnique({
+      where: { id },
+      include: {
+        store: { select: { managerId: true, ownerId: true } },
+        seller: { select: { userId: true } },
+      },
+    });
+
+    if (!existingProduct) {
+      return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
+    }
+
+    const isAdmin = session.user.role === 'admin' || (session.user as any).role === 'SUPER_ADMIN';
+    const isOwner =
+      existingProduct.seller?.userId === session.user.id ||
+      existingProduct.store?.managerId === session.user.id ||
+      existingProduct.store?.ownerId === session.user.id;
+
+    if (!isAdmin && !isOwner) {
+      return NextResponse.json({ success: false, error: 'Forbidden: You do not have permission to modify this product' }, { status: 403 });
+    }
+
     const body = await req.json();
     const slug = body.name?.toLowerCase().replace(/\s+/g, '-') || `product-${Date.now()}`;
 
@@ -235,6 +264,33 @@ export async function DELETE(req: Request, context: { params: Promise<{ id: stri
   const id = resolvedParams.id;
 
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      return NextResponse.json({ success: false, error: 'Unauthorized: Authentication required' }, { status: 401 });
+    }
+
+    const existingProduct = await db.product.findUnique({
+      where: { id },
+      include: {
+        store: { select: { managerId: true, ownerId: true } },
+        seller: { select: { userId: true } },
+      },
+    });
+
+    if (!existingProduct) {
+      return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 });
+    }
+
+    const isAdmin = session.user.role === 'admin' || (session.user as any).role === 'SUPER_ADMIN';
+    const isOwner =
+      existingProduct.seller?.userId === session.user.id ||
+      existingProduct.store?.managerId === session.user.id ||
+      existingProduct.store?.ownerId === session.user.id;
+
+    if (!isAdmin && !isOwner) {
+      return NextResponse.json({ success: false, error: 'Forbidden: You do not have permission to delete this product' }, { status: 403 });
+    }
+
     await db.product.delete({
       where: { id },
     });

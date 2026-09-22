@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { chargeOrderCommission, reverseOrderCommission } from '@/lib/billing';
+import { auth } from '@/lib/better-auth';
+import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -185,11 +187,58 @@ export async function POST(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized: Authentication required' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { id, status, paymentStatus, note } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
+    }
+
+    const order = await db.order.findUnique({
+      where: { id },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                storeId: true,
+                sellerId: true,
+                store: { select: { managerId: true, ownerId: true } },
+                seller: { select: { userId: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    const isAdmin = session.user.role === 'admin' || (session.user as any).role === 'SUPER_ADMIN';
+    const isCourier = session.user.role === 'logistics';
+    const isBuyer = order.buyerId === session.user.id;
+    const isMerchantOwner = order.items.some(
+      (item) =>
+        item.product?.seller?.userId === session.user.id ||
+        item.product?.store?.managerId === session.user.id ||
+        item.product?.store?.ownerId === session.user.id
+    );
+
+    // Authorization evaluation:
+    if (isBuyer && !isAdmin && !isMerchantOwner && !isCourier) {
+      // Buyers can only cancel pending orders
+      if (status !== 'cancelled' || order.status !== 'pending') {
+        return NextResponse.json({ error: 'Forbidden: Buyers can only cancel pending orders' }, { status: 403 });
+      }
+    } else if (!isAdmin && !isCourier && !isMerchantOwner) {
+      return NextResponse.json({ error: 'Forbidden: You do not have permission to update this order' }, { status: 403 });
     }
 
     const updateData: Record<string, any> = {};
